@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import org.bson.BsonRegularExpression
 import org.springframework.data.geo.Circle
 import org.springframework.data.geo.Point
 import org.springframework.data.geo.Shape
+import org.springframework.data.mapping.toDotPath
 import org.springframework.data.mongodb.core.geo.GeoJson
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject
 import java.util.regex.Pattern
@@ -31,7 +32,7 @@ import kotlin.reflect.KProperty
  * @see Criteria.isEqualTo
  */
 infix fun <T> KProperty<T>.isEqualTo(value: T) =
-		Criteria(asString(this)).isEqualTo(value)
+		Criteria(this.toDotPath()).isEqualTo(value)
 
 /**
  * Creates a criterion using the $ne operator.
@@ -42,7 +43,7 @@ infix fun <T> KProperty<T>.isEqualTo(value: T) =
  * @see Criteria.ne
  */
 infix fun <T> KProperty<T>.ne(value: T): Criteria =
-		Criteria(asString(this)).ne(value)
+		Criteria(this.toDotPath()).ne(value)
 
 /**
  * Creates a criterion using the $lt operator.
@@ -53,7 +54,7 @@ infix fun <T> KProperty<T>.ne(value: T): Criteria =
  * @see Criteria.lt
  */
 infix fun <T> KProperty<T>.lt(value: T): Criteria =
-		Criteria(asString(this)).lt(value)
+		Criteria(this.toDotPath()).lt(value)
 
 /**
  * Creates a criterion using the $lte operator.
@@ -64,7 +65,7 @@ infix fun <T> KProperty<T>.lt(value: T): Criteria =
  * @see Criteria.lte
  */
 infix fun <T> KProperty<T>.lte(value: T): Criteria =
-		Criteria(asString(this)).lte(value)
+		Criteria(this.toDotPath()).lte(value)
 
 /**
  * Creates a criterion using the $gt operator.
@@ -75,7 +76,7 @@ infix fun <T> KProperty<T>.lte(value: T): Criteria =
  * @see Criteria.gt
  */
 infix fun <T> KProperty<T>.gt(value: T): Criteria =
-		Criteria(asString(this)).gt(value)
+		Criteria(this.toDotPath()).gt(value)
 
 /**
  * Creates a criterion using the $gte operator.
@@ -86,7 +87,7 @@ infix fun <T> KProperty<T>.gt(value: T): Criteria =
  * @see Criteria.gte
  */
 infix fun <T> KProperty<T>.gte(value: T): Criteria =
-		Criteria(asString(this)).gte(value)
+		Criteria(this.toDotPath()).gte(value)
 
 /**
  * Creates a criterion using the $in operator.
@@ -97,7 +98,7 @@ infix fun <T> KProperty<T>.gte(value: T): Criteria =
  * @see Criteria.inValues
  */
 fun <T> KProperty<T>.inValues(vararg o: Any): Criteria =
-		Criteria(asString(this)).`in`(*o)
+		Criteria(this.toDotPath()).`in`(*o)
 
 /**
  * Creates a criterion using the $in operator.
@@ -108,7 +109,7 @@ fun <T> KProperty<T>.inValues(vararg o: Any): Criteria =
  * @see Criteria.inValues
  */
 infix fun <T> KProperty<T>.inValues(value: Collection<T>): Criteria =
-		Criteria(asString(this)).`in`(value)
+		Criteria(this.toDotPath()).`in`(value)
 
 /**
  * Creates a criterion using the $nin operator.
@@ -119,7 +120,7 @@ infix fun <T> KProperty<T>.inValues(value: Collection<T>): Criteria =
  * @see Criteria.nin
  */
 fun <T> KProperty<T>.nin(vararg o: Any): Criteria =
-		Criteria(asString(this)).nin(*o)
+		Criteria(this.toDotPath()).nin(*o)
 
 /**
  * Creates a criterion using the $nin operator.
@@ -130,7 +131,7 @@ fun <T> KProperty<T>.nin(vararg o: Any): Criteria =
  * @see Criteria.nin
  */
 infix fun <T> KProperty<T>.nin(value: Collection<T>): Criteria =
-		Criteria(asString(this)).nin(value)
+		Criteria(this.toDotPath()).nin(value)
 
 /**
  * Creates a criterion using the $mod operator.
@@ -141,7 +142,7 @@ infix fun <T> KProperty<T>.nin(value: Collection<T>): Criteria =
  * @see Criteria.mod
  */
 fun KProperty<Number>.mod(value: Number, remainder: Number): Criteria =
-		Criteria(asString(this)).mod(value, remainder)
+		Criteria(this.toDotPath()).mod(value, remainder)
 
 /**
  * Creates a criterion using the $all operator.
@@ -152,7 +153,7 @@ fun KProperty<Number>.mod(value: Number, remainder: Number): Criteria =
  * @see Criteria.all
  */
 fun KProperty<*>.all(vararg o: Any): Criteria =
-		Criteria(asString(this)).all(*o)
+		Criteria(this.toDotPath()).all(*o)
 
 /**
  * Creates a criterion using the $all operator.
@@ -163,7 +164,7 @@ fun KProperty<*>.all(vararg o: Any): Criteria =
  * @see Criteria.all
  */
 infix fun KProperty<*>.all(value: Collection<*>): Criteria =
-		Criteria(asString(this)).all(value)
+		Criteria(this.toDotPath()).all(value)
 
 /**
  * Creates a criterion using the $size operator.
@@ -174,7 +175,7 @@ infix fun KProperty<*>.all(value: Collection<*>): Criteria =
  * @see Criteria.size
  */
 infix fun KProperty<*>.size(s: Int): Criteria =
-		Criteria(asString(this)).size(s)
+		Criteria(this.toDotPath()).size(s)
 
 /**
  * Creates a criterion using the $exists operator.
@@ -185,7 +186,7 @@ infix fun KProperty<*>.size(s: Int): Criteria =
  * @see Criteria.exists
  */
 infix fun KProperty<*>.exists(b: Boolean): Criteria =
-		Criteria(asString(this)).exists(b)
+		Criteria(this.toDotPath()).exists(b)
 
 /**
  * Creates a criterion using the $type operator.
@@ -196,7 +197,7 @@ infix fun KProperty<*>.exists(b: Boolean): Criteria =
  * @see Criteria.type
  */
 infix fun KProperty<*>.type(t: Int): Criteria =
-		Criteria(asString(this)).type(t)
+		Criteria(this.toDotPath()).type(t)
 
 /**
  * Creates a criterion using the $type operator.
@@ -207,7 +208,7 @@ infix fun KProperty<*>.type(t: Int): Criteria =
  * @see Criteria.type
  */
 infix fun KProperty<*>.type(t: Collection<JsonSchemaObject.Type>): Criteria =
-		Criteria(asString(this)).type(*t.toTypedArray())
+		Criteria(this.toDotPath()).type(*t.toTypedArray())
 
 /**
  * Creates a criterion using the $type operator.
@@ -218,7 +219,7 @@ infix fun KProperty<*>.type(t: Collection<JsonSchemaObject.Type>): Criteria =
  * @see Criteria.type
  */
 fun KProperty<*>.type(vararg t: JsonSchemaObject.Type): Criteria =
-		Criteria(asString(this)).type(*t)
+		Criteria(this.toDotPath()).type(*t)
 
 /**
  * Creates a criterion using the $not meta operator which affects the clause directly following
@@ -229,7 +230,7 @@ fun KProperty<*>.type(vararg t: JsonSchemaObject.Type): Criteria =
  * @see Criteria.not
  */
 fun KProperty<*>.not(): Criteria =
-		Criteria(asString(this)).not()
+		Criteria(this.toDotPath()).not()
 
 /**
  * Creates a criterion using a $regex operator.
@@ -240,7 +241,7 @@ fun KProperty<*>.not(): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: String): Criteria =
-		Criteria(asString(this)).regex(re, null)
+		Criteria(this.toDotPath()).regex(re, null)
 
 /**
  * Creates a criterion using a $regex and $options operator.
@@ -251,7 +252,7 @@ infix fun KProperty<String?>.regex(re: String): Criteria =
  * @see Criteria.regex
  */
 fun KProperty<String?>.regex(re: String, options: String?): Criteria =
-		Criteria(asString(this)).regex(re, options)
+		Criteria(this.toDotPath()).regex(re, options)
 
 /**
  * Syntactical sugar for [isEqualTo] making obvious that we create a regex predicate.
@@ -260,7 +261,7 @@ fun KProperty<String?>.regex(re: String, options: String?): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: Regex): Criteria =
-		Criteria(asString(this)).regex(re.toPattern())
+		Criteria(this.toDotPath()).regex(re.toPattern())
 
 /**
  * Syntactical sugar for [isEqualTo] making obvious that we create a regex predicate.
@@ -269,7 +270,7 @@ infix fun KProperty<String?>.regex(re: Regex): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: Pattern): Criteria =
-		Criteria(asString(this)).regex(re)
+		Criteria(this.toDotPath()).regex(re)
 
 /**
  * Syntactical sugar for [isEqualTo] making obvious that we create a regex predicate.
@@ -278,7 +279,7 @@ infix fun KProperty<String?>.regex(re: Pattern): Criteria =
  * @see Criteria.regex
  */
 infix fun KProperty<String?>.regex(re: BsonRegularExpression): Criteria =
-		Criteria(asString(this)).regex(re)
+		Criteria(this.toDotPath()).regex(re)
 
 /**
  * Creates a geospatial criterion using a $geoWithin $centerSphere operation. This is only available for
@@ -294,7 +295,7 @@ infix fun KProperty<String?>.regex(re: BsonRegularExpression): Criteria =
  * @see Criteria.withinSphere
  */
 infix fun KProperty<GeoJson<*>>.withinSphere(circle: Circle): Criteria =
-		Criteria(asString(this)).withinSphere(circle)
+		Criteria(this.toDotPath()).withinSphere(circle)
 
 /**
  * Creates a geospatial criterion using a $geoWithin operation.
@@ -306,7 +307,7 @@ infix fun KProperty<GeoJson<*>>.withinSphere(circle: Circle): Criteria =
  * @see Criteria.within
  */
 infix fun KProperty<GeoJson<*>>.within(shape: Shape): Criteria =
-		Criteria(asString(this)).within(shape)
+		Criteria(this.toDotPath()).within(shape)
 
 /**
  * Creates a geospatial criterion using a $near operation.
@@ -317,7 +318,7 @@ infix fun KProperty<GeoJson<*>>.within(shape: Shape): Criteria =
  * @see Criteria.near
  */
 infix fun KProperty<GeoJson<*>>.near(point: Point): Criteria =
-		Criteria(asString(this)).near(point)
+		Criteria(this.toDotPath()).near(point)
 
 /**
  * Creates a geospatial criterion using a $nearSphere operation. This is only available for Mongo 1.7 and
@@ -330,7 +331,7 @@ infix fun KProperty<GeoJson<*>>.near(point: Point): Criteria =
  * @see Criteria.nearSphere
  */
 infix fun KProperty<GeoJson<*>>.nearSphere(point: Point): Criteria =
-		Criteria(asString(this)).nearSphere(point)
+		Criteria(this.toDotPath()).nearSphere(point)
 
 /**
  * Creates criterion using `$geoIntersects` operator which matches intersections of the given `geoJson`
@@ -340,7 +341,7 @@ infix fun KProperty<GeoJson<*>>.nearSphere(point: Point): Criteria =
  * @see Criteria.intersects
  */
 infix fun KProperty<GeoJson<*>>.intersects(geoJson: GeoJson<*>): Criteria =
-		Criteria(asString(this)).intersects(geoJson)
+		Criteria(this.toDotPath()).intersects(geoJson)
 
 /**
  * Creates a geo-spatial criterion using a $maxDistance operation, for use with $near
@@ -352,7 +353,7 @@ infix fun KProperty<GeoJson<*>>.intersects(geoJson: GeoJson<*>): Criteria =
  * @see Criteria.maxDistance
  */
 infix fun KProperty<GeoJson<*>>.maxDistance(d: Double): Criteria =
-		Criteria(asString(this)).maxDistance(d)
+		Criteria(this.toDotPath()).maxDistance(d)
 
 /**
  * Creates a geospatial criterion using a $minDistance operation, for use with $near or
@@ -362,7 +363,7 @@ infix fun KProperty<GeoJson<*>>.maxDistance(d: Double): Criteria =
  * @see Criteria.minDistance
  */
 infix fun KProperty<GeoJson<*>>.minDistance(d: Double): Criteria =
-		Criteria(asString(this)).minDistance(d)
+		Criteria(this.toDotPath()).minDistance(d)
 
 /**
  * Creates a geo-spatial criterion using a $maxDistance operation, for use with $near
@@ -396,7 +397,7 @@ infix fun Criteria.minDistance(d: Double): Criteria =
  * @see Criteria.elemMatch
  */
 infix fun KProperty<*>.elemMatch(c: Criteria): Criteria =
-		Criteria(asString(this)).elemMatch(c)
+		Criteria(this.toDotPath()).elemMatch(c)
 
 /**
  * Use [Criteria.BitwiseCriteriaOperators] as gateway to create a criterion using one of the
@@ -412,4 +413,4 @@ infix fun KProperty<*>.elemMatch(c: Criteria): Criteria =
  * @see Criteria.bits
  */
 infix fun KProperty<*>.bits(bitwiseCriteria: Criteria.BitwiseCriteriaOperators.() -> Criteria) =
-		Criteria(asString(this)).bits().let(bitwiseCriteria)
+		Criteria(this.toDotPath()).bits().let(bitwiseCriteria)

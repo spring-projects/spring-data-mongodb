@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -262,18 +262,6 @@ public final class NearQuery {
 	 */
 	public Metric getMetric() {
 		return metric;
-	}
-
-	/**
-	 * Configures the maximum number of results to return.
-	 *
-	 * @param num
-	 * @return
-	 * @deprecated since 2.2. Please use {@link #limit(long)} instead.
-	 */
-	@Deprecated
-	public NearQuery num(long num) {
-		return limit(num);
 	}
 
 	/**

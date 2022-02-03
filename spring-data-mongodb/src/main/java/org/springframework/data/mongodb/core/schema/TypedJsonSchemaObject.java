@@ -883,7 +883,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 				length.getUpperBound().getValue().ifPresent(it -> doc.append("maxLength", it));
 			}
 
-			if (!StringUtils.isEmpty(pattern)) {
+			if (StringUtils.hasText(pattern)) {
 				doc.append("pattern", pattern);
 			}
 

@@ -27,7 +27,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -119,7 +118,6 @@ public class QueryMapper {
 	 * @param entity can be {@literal null}.
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	public Document getMappedObject(Bson query, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (isNestedKeyword(query)) {

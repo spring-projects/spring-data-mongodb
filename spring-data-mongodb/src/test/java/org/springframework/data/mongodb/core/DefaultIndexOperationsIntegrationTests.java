@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -119,8 +118,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition id = new Index().named("partial-with-inheritance").on("k3y", Direction.ASC)
 				.partial(of(where("age").gte(10)));
 
-		indexOps = new DefaultIndexOperations(template.getMongoDbFactory(), COLLECTION_NAME,
-				new QueryMapper(template.getConverter()), MappingToSameCollection.class);
+		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
 
 		indexOps.ensureIndex(id);
 
@@ -150,8 +148,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
 				.collation(Collation.of("de_AT").caseFirst(CaseFirst.off()));
 
-		new DefaultIndexOperations(template.getMongoDbFactory(), COLLECTION_NAME, new QueryMapper(template.getConverter()),
-				MappingToSameCollection.class);
+		new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
 
 		indexOps.ensureIndex(id);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public class GeoJsonTests {
 
 		createIndexAndAddVenues();
 
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).limit(10).maxDistance(150);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 
@@ -134,7 +134,7 @@ public class GeoJsonTests {
 
 		createIndexAndAddVenues();
 
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).limit(10).maxDistance(150);
 
 		GeoResults<VenueWithDistanceField> result = template.geoNear(geoNear, VenueWithDistanceField.class);
 
@@ -153,7 +153,7 @@ public class GeoJsonTests {
 
 		createIndexAndAddVenues();
 
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).limit(10).maxDistance(150);
 
 		GeoResults<VenueWithDistanceField> result = template.geoNear(geoNear, Venue2DSphere.class,
 				template.getCollectionName(Venue2DSphere.class), VenueWithDistanceField.class);
@@ -172,7 +172,7 @@ public class GeoJsonTests {
 	public void geoNearShouldReturnDistanceCorrectlyUsingGeoJson/*which is using the meters*/() {
 
 		createIndexAndAddVenues();
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868), Metrics.KILOMETERS).num(10)
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868), Metrics.KILOMETERS).limit(10)
 				.maxDistance(0.4);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
@@ -188,7 +188,7 @@ public class GeoJsonTests {
 	public void geoNearShouldReturnDistanceCorrectly/*which is using the meters*/() {
 
 		createIndexAndAddVenues();
-		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).num(10).maxDistance(0.4);
+		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).limit(10).maxDistance(0.4);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 
@@ -203,7 +203,7 @@ public class GeoJsonTests {
 	public void geoNearWithMiles() {
 
 		createIndexAndAddVenues();
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.MILES).num(10).maxDistance(93.2057);
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.MILES).limit(10).maxDistance(93.2057);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 

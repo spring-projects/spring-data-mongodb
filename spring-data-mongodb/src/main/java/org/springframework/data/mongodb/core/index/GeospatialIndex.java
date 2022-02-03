@@ -109,7 +109,9 @@ public class GeospatialIndex implements IndexDefinition {
 	/**
 	 * @param bucketSize
 	 * @return this.
+	 * @deprecated since MongoDB server version 4.4
 	 */
+	@Deprecated
 	public GeospatialIndex withBucketSize(double bucketSize) {
 		this.bucketSize = bucketSize;
 		return this;

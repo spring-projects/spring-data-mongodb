@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -85,8 +83,7 @@ class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 		Document idClause = DocumentTestUtils.getAsDocument(groupClause, UNDERSCORE_ID);
 
-		assertThat(idClause).containsEntry("a", "$a")
-				.containsEntry("b", "$c");
+		assertThat(idClause).containsEntry("a", "$a").containsEntry("b", "$c");
 	}
 
 	@Test
@@ -186,15 +183,13 @@ class GroupOperationUnitTests {
 
 		GroupOperation groupOperation = Aggregation //
 				.group("username") //
-				.first(SIZE.of(field("tags"))) //
+				.first(ArrayOperators.arrayOf("tags").length()) //
 				.as("tags_count");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document tagsCount = DocumentTestUtils.getAsDocument(groupClause, "tags_count");
 
-		assertThat(tagsCount)
-				.containsEntry("$first", new Document("$size", Collections
-						.singletonList("$tags")));
+		assertThat(tagsCount).containsEntry("$first", new Document("$size", "$tags"));
 	}
 
 	@Test // DATAMONGO-1327

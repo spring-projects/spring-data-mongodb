@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.projection.EntityProjection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -45,7 +44,6 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -114,6 +112,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -351,8 +350,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
 	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the
-	 * {@link ReactiveBeforeSaveCallback}.
-	 * <br />
+	 * {@link ReactiveBeforeSaveCallback}. <br />
 	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
@@ -478,39 +476,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public void setSessionSynchronization(SessionSynchronization sessionSynchronization) {
 		this.sessionSynchronization = sessionSynchronization;
-	}
-
-	@Override
-	public ReactiveSessionScoped inTransaction() {
-		return inTransaction(
-				mongoDatabaseFactory.getSession(ClientSessionOptions.builder().causallyConsistent(true).build()));
-	}
-
-	@Override
-	public ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider) {
-
-		Mono<ClientSession> cachedSession = Mono.from(sessionProvider).cache();
-
-		return new ReactiveSessionScoped() {
-
-			@Override
-			public <T> Flux<T> execute(ReactiveSessionCallback<T> action, Consumer<ClientSession> doFinally) {
-
-				return cachedSession.flatMapMany(session -> {
-
-					if (!session.hasActiveTransaction()) {
-						session.startTransaction();
-					}
-
-					return Flux.usingWhen(Mono.just(session), //
-							s -> ReactiveMongoTemplate.this.withSession(action, s), //
-							ClientSession::commitTransaction, //
-							(sess, err) -> sess.abortTransaction(), //
-							ClientSession::commitTransaction) //
-							.doFinally(signalType -> doFinally.accept(session));
-				});
-			}
-		};
 	}
 
 	private <T> Flux<T> withSession(ReactiveSessionCallback<T> action, ClientSession session) {
@@ -888,8 +853,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		String collection = StringUtils.hasText(collectionName) ? collectionName : getCollectionName(entityClass);
 		String distanceField = operations.nearQueryDistanceFieldName(entityClass);
-		EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
-				entityClass);
+		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, entityClass);
 
 		GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
@@ -951,8 +915,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
-		EntityProjection<T, S> projection = operations.introspectProjection(resultType,
-				entityType);
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -975,8 +938,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}).flatMap(it -> {
 
 				Mono<T> afterFindAndReplace = doFindAndReplace(it.getCollection(), mappedQuery, mappedFields, mappedSort,
-						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options,
-						projection);
+						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options, projection);
 				return afterFindAndReplace.flatMap(saved -> {
 					maybeEmitEvent(new AfterSaveEvent<>(saved, it.getTarget(), it.getCollection()));
 					return maybeCallAfterSave(saved, it.getTarget(), it.getCollection());
@@ -1078,7 +1040,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(objectToSave, "Object to insert must not be null!");
 
-		ensureNotIterable(objectToSave);
+		ensureNotCollectionLike(objectToSave);
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
@@ -1086,7 +1048,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(objectToSave, "Object to insert must not be null!");
 
-		ensureNotIterable(objectToSave);
+		ensureNotCollectionLike(objectToSave);
 		return doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
@@ -1988,8 +1950,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		QueryContext queryContext = queryOperations
 				.createQueryContext(new BasicQuery(query, fields != null ? fields : new Document()));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2041,8 +2002,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2064,8 +2024,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Class<T> targetClass, FindPublisherPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
-				sourceClass);
+		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2140,8 +2099,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
-	 * The first document that matches the query is returned and also removed from the collection in the database.
-	 * <br />
+	 * The first document that matches the query is returned and also removed from the collection in the database. <br />
 	 * The query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -2212,8 +2170,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
 			FindAndReplaceOptions options, Class<T> resultType) {
 
-		EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
-					entityType);
+		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
 				options, projection);
@@ -2309,17 +2266,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
-	}
-
-	/**
-	 * Ensure the given {@literal source} is not an {@link java.lang.reflect.Array}, {@link Collection} or
-	 * {@link Iterator}.
-	 *
-	 * @param source can be {@literal null}.
-	 * @deprecated since 3.2. Call {@link #ensureNotCollectionLike(Object)} instead.
-	 */
-	protected void ensureNotIterable(@Nullable Object source) {
-		ensureNotCollectionLike(source);
 	}
 
 	/**
@@ -2832,8 +2778,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(MongoConverter reader, EntityProjection<T, S> projection,
-				String collectionName) {
+		ProjectingReadCallback(MongoConverter reader, EntityProjection<T, S> projection, String collectionName) {
 			this.reader = reader;
 			this.projection = projection;
 			this.collectionName = collectionName;
@@ -2987,8 +2932,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		@Override
 		public ReadPreference getReadPreference() {
-			return (query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS)
-					|| query.getMeta().getFlags().contains(CursorOption.SLAVE_OK)) ? ReadPreference.primaryPreferred() : null;
+			return query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS) ? ReadPreference.primaryPreferred()
+					: null;
 		}
 	}
 
@@ -3010,8 +2955,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
-	 * server through the driver API.
-	 * <br />
+	 * server through the driver API. <br />
 	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
 	 * target method matching the actual arguments plus a {@link ClientSession}.
 	 *

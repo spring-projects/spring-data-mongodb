@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -1004,14 +1003,14 @@ public class ReactiveMongoTemplateTests {
 		IndexOperationsAdapter.blocking(template.indexOps(Venue.class))
 				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2D));
 
-		NearQuery geoFar = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150, Metrics.KILOMETERS);
+		NearQuery geoFar = NearQuery.near(-73, 40, Metrics.KILOMETERS).limit(10).maxDistance(150, Metrics.KILOMETERS);
 
 		template.geoNear(geoFar, Venue.class) //
 				.as(StepVerifier::create) //
 				.expectNextCount(4) //
 				.verifyComplete();
 
-		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(120, Metrics.KILOMETERS);
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).limit(10).maxDistance(120, Metrics.KILOMETERS);
 
 		template.geoNear(geoNear, Venue.class) //
 				.as(StepVerifier::create) //

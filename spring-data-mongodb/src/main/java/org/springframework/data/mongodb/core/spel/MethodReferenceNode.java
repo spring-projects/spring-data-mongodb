@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,11 +123,11 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("trim", mapArgRef().forOperator("$trim").mappingParametersTo("input", "chars"));
 		map.put("ltrim", mapArgRef().forOperator("$ltrim").mappingParametersTo("input", "chars"));
 		map.put("rtrim", mapArgRef().forOperator("$rtrim").mappingParametersTo("input", "chars"));
-		map.put("regexFind", mapArgRef().forOperator("$regexFind").mappingParametersTo("input", "regex" , "options"));
-		map.put("regexFindAll", mapArgRef().forOperator("$regexFindAll").mappingParametersTo("input", "regex" , "options"));
-		map.put("regexMatch", mapArgRef().forOperator("$regexMatch").mappingParametersTo("input", "regex" , "options"));
-		map.put("replaceOne", mapArgRef().forOperator("$replaceOne").mappingParametersTo("input", "find" , "replacement"));
-		map.put("replaceAll", mapArgRef().forOperator("$replaceAll").mappingParametersTo("input", "find" , "replacement"));
+		map.put("regexFind", mapArgRef().forOperator("$regexFind").mappingParametersTo("input", "regex", "options"));
+		map.put("regexFindAll", mapArgRef().forOperator("$regexFindAll").mappingParametersTo("input", "regex", "options"));
+		map.put("regexMatch", mapArgRef().forOperator("$regexMatch").mappingParametersTo("input", "regex", "options"));
+		map.put("replaceOne", mapArgRef().forOperator("$replaceOne").mappingParametersTo("input", "find", "replacement"));
+		map.put("replaceAll", mapArgRef().forOperator("$replaceAll").mappingParametersTo("input", "find", "replacement"));
 
 		// TEXT SEARCH OPERATORS
 		map.put("meta", singleArgRef().forOperator("$meta"));
@@ -159,8 +159,10 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("literal", singleArgRef().forOperator("$literal"));
 
 		// DATE OPERATORS
-		map.put("dateAdd", mapArgRef().forOperator("$dateAdd").mappingParametersTo("startDate", "unit", "amount", "timezone"));
-		map.put("dateDiff", mapArgRef().forOperator("$dateDiff").mappingParametersTo("startDate", "endDate", "unit","timezone", "startOfWeek"));
+		map.put("dateAdd",
+				mapArgRef().forOperator("$dateAdd").mappingParametersTo("startDate", "unit", "amount", "timezone"));
+		map.put("dateDiff", mapArgRef().forOperator("$dateDiff").mappingParametersTo("startDate", "endDate", "unit",
+				"timezone", "startOfWeek"));
 		map.put("dayOfYear", singleArgRef().forOperator("$dayOfYear"));
 		map.put("dayOfMonth", singleArgRef().forOperator("$dayOfMonth"));
 		map.put("dayOfWeek", singleArgRef().forOperator("$dayOfWeek"));
@@ -229,19 +231,6 @@ public class MethodReferenceNode extends ExpressionNode {
 
 	MethodReferenceNode(MethodReference reference, ExpressionState state) {
 		super(reference, state);
-	}
-
-	/**
-	 * Returns the name of the method.
-	 *
-	 * @deprecated since 1.10. Please use {@link #getMethodReference()}.
-	 */
-	@Nullable
-	@Deprecated
-	public String getMethodName() {
-
-		AggregationMethodReference methodReference = getMethodReference();
-		return methodReference != null ? methodReference.getMongoOperator() : null;
 	}
 
 	/**

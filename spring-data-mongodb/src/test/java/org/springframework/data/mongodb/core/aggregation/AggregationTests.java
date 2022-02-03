@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1426,7 +1426,7 @@ public class AggregationTests {
 
 		mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
 
-		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).limit(10).maxDistance(150);
 
 		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
@@ -1448,7 +1448,7 @@ public class AggregationTests {
 		mongoTemplate.indexOps(Venue.class)
 				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
 
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).limit(10).maxDistance(150);
 
 		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Venue.class, Document.class);
@@ -1470,7 +1470,7 @@ public class AggregationTests {
 		mongoTemplate.indexOps(Venue.class)
 				.ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
 
-		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150)
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).limit(10).maxDistance(150)
 				.inMiles();
 
 		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
@@ -1684,7 +1684,7 @@ public class AggregationTests {
 		mongoTemplate.insert(Arrays.asList(sales1, sales2, sales3), Sales.class);
 
 		TypedAggregation<Sales> agg = newAggregation(Sales.class, project().and("items")
-				.filter("item", AggregationFunctionExpressions.GTE.of(field("item.price"), 100)).as("items"));
+				.filter("item", ComparisonOperators.valueOf("item.price").greaterThanEqualToValue(100)).as("items"));
 
 		assertThat(mongoTemplate.aggregate(agg, Sales.class).getMappedResults()).contains(
 				Sales.builder().id("0").items(Collections.singletonList(item2)).build(),
@@ -1701,14 +1701,14 @@ public class AggregationTests {
 		mongoTemplate.insert(Arrays.asList(sales1, sales2), Sales2.class);
 
 		ExpressionVariable total = ExpressionVariable.newVariable("total")
-				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
+				.forExpression(ArithmeticOperators.valueOf("price").sum().and("tax"));
 		ExpressionVariable discounted = ExpressionVariable.newVariable("discounted")
 				.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
 
 		TypedAggregation<Sales2> agg = Aggregation.newAggregation(Sales2.class,
 				Aggregation.project()
 						.and(VariableOperators.Let.define(total, discounted).andApply(
-								AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted"))))
+								ArithmeticOperators.valueOf("total").multiplyBy("discounted")))
 						.as("finalTotal"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);

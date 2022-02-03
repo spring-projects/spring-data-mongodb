@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
@@ -29,7 +28,6 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -380,13 +378,13 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation //
 				.project() //
-				.and(SIZE.of(field("tags"))) //
+				.and(ArrayOperators.arrayOf("tags").length()) //
 				.as("tags_count");
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document projected = extractOperation("$project", document);
-		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
+		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", "$tags"));
 	}
 
 	@Test // DATAMONGO-1457
@@ -626,9 +624,8 @@ public class ProjectionOperationUnitTests {
 	void shouldRenderAbsAggregationExpresssion() {
 
 		Document agg = project()
-				.and(
-						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).abs())
-				.as("delta").toDocument(Aggregation.DEFAULT_CONTEXT);
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).abs()).as("delta")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { delta: { $abs: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -654,9 +651,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderCeilAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ceil())
-				.as("delta").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).ceil()).as("delta")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { delta: { $ceil: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -665,8 +662,7 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderDivide() {
 
-		Document agg = project().and("value")
-				.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+		Document agg = project().and("value").divide(ArithmeticOperators.valueOf("start").subtract("end")).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(
@@ -677,8 +673,7 @@ public class ProjectionOperationUnitTests {
 	void shouldRenderDivideAggregationExpresssion() {
 
 		Document agg = project()
-				.and(ArithmeticOperators.valueOf("anyNumber")
-						.divideBy(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))))
+				.and(ArithmeticOperators.valueOf("anyNumber").divideBy(ArithmeticOperators.valueOf("start").subtract("end")))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document
@@ -697,9 +692,8 @@ public class ProjectionOperationUnitTests {
 	void shouldRenderExpAggregationExpresssion() {
 
 		Document agg = project()
-				.and(
-						ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).exp())
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).exp()).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $exp: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -716,9 +710,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderFloorAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).floor())
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).floor()).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $floor: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -735,8 +729,7 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderLnAggregationExpresssion() {
 
-		Document agg = project()
-				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ln())
+		Document agg = project().and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).ln())
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
@@ -754,9 +747,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderLogAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2))
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).log(2)).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $log: [ { $subtract: [ \"$start\", \"$end\" ] }, 2] } }}"));
@@ -773,9 +766,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderLog10AggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log10())
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).log10()).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $log10: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -784,8 +777,8 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderMod() {
 
-		Document agg = project().and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project().and("value").mod(ArithmeticOperators.valueOf("start").subtract("end")).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(
 				Document.parse("{ $project: { result: { $mod: [\"$value\", { $subtract: [ \"$start\", \"$end\" ] }] } }}"));
@@ -794,9 +787,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderModAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2))
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).mod(2)).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $mod: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}"));
@@ -805,8 +798,7 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderMultiply() {
 
-		Document agg = project().and("value")
-				.multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
+		Document agg = project().and("value").multiply(ArithmeticOperators.valueOf("start").subtract("end")).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document
@@ -816,10 +808,8 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderMultiplyAggregationExpresssion() {
 
-		Document agg = project()
-				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
-						.multiplyBy(2).multiplyBy("refToAnotherNumber"))
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project().and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end"))
+				.multiplyBy(2).multiplyBy("refToAnotherNumber")).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse(
 				"{ $project: { result: { $multiply: [{ $subtract: [ \"$start\", \"$end\" ] }, 2, \"$refToAnotherNumber\"] } }}"));
@@ -836,9 +826,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderPowAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2))
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).pow(2)).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $pow: [{ $subtract: [ \"$start\", \"$end\" ] }, 2] } }}"));
@@ -855,9 +845,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderSqrtAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).sqrt())
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).sqrt()).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $sqrt: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -866,23 +856,22 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderSubtract() {
 
-		Document agg = project().and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project().and("numericField").minus(ArrayOperators.arrayOf("someArray").length()).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(
-				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }"));
+				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : \"$someArray\"}] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
 	void shouldRenderSubtractAggregationExpresssion() {
 
 		Document agg = project()
-				.and(ArithmeticOperators.valueOf("numericField")
-						.subtract(AggregationFunctionExpressions.SIZE.of(field("someArray"))))
+				.and(ArithmeticOperators.valueOf("numericField").subtract(ArrayOperators.arrayOf("someArray").length()))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(
-				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : [\"$someArray\"]}] } } }"));
+				Document.parse("{ $project: { result: { $subtract: [ \"$numericField\", { $size : \"$someArray\"}] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
@@ -896,9 +885,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1536
 	void shouldRenderTruncAggregationExpresssion() {
 
-		Document agg = project().and(
-				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).trunc())
-				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project()
+				.and(ArithmeticOperators.valueOf(ArithmeticOperators.valueOf("start").subtract("end")).trunc()).as("result")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project: { result: { $trunc: { $subtract: [ \"$start\", \"$end\" ] } } }}"));
@@ -1591,8 +1580,7 @@ public class ProjectionOperationUnitTests {
 	void shouldRenderMapAggregationExpression() {
 
 		Document agg = Aggregation.project()
-				.and(VariableOperators.mapItemsOf("quizzes").as("grade")
-						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
+				.and(VariableOperators.mapItemsOf("quizzes").as("grade").andApply(ArithmeticOperators.valueOf("grade").add(2)))
 				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse(
@@ -1603,12 +1591,12 @@ public class ProjectionOperationUnitTests {
 	void shouldRenderMapAggregationExpressionOnExpression() {
 
 		Document agg = Aggregation.project()
-				.and(VariableOperators.mapItemsOf(AggregationFunctionExpressions.SIZE.of("foo")).as("grade")
-						.andApply(AggregationFunctionExpressions.ADD.of(field("grade"), 2)))
+				.and(VariableOperators.mapItemsOf(ArrayOperators.arrayOf("foo").length()).as("grade")
+						.andApply(ArithmeticOperators.valueOf("grade").add(2)))
 				.as("adjustedGrades").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse(
-				"{ $project:{ adjustedGrades:{ $map: { input: { $size : [\"foo\"]}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}"));
+				"{ $project:{ adjustedGrades:{ $map: { input: { $size : \"$foo\"}, as: \"grade\",in: { $add: [ \"$$grade\", 2 ] }}}}}"));
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
@@ -1648,12 +1636,10 @@ public class ProjectionOperationUnitTests {
 
 		Document agg = Aggregation.project()
 				.and(VariableOperators
-						.define(
-								newVariable("total")
-										.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax"))),
+						.define(newVariable("total").forExpression(ArithmeticOperators.valueOf("price").add("tax")),
 								newVariable("discounted")
 										.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D)))
-						.andApply(AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))) //
+						.andApply(ArithmeticOperators.valueOf("total").multiplyBy("discounted"))) //
 				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project:{  \"finalTotal\" : { \"$let\": {" + //
@@ -1668,16 +1654,14 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1538
 	void shouldRenderLetExpressionCorrectlyWhenUsingLetOnProjectionBuilder() {
 
-		ExpressionVariable var1 = newVariable("total")
-				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
+		ExpressionVariable var1 = newVariable("total").forExpression(ArithmeticOperators.valueOf("price").add("tax"));
 
 		ExpressionVariable var2 = newVariable("discounted")
 				.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
 
 		Document agg = Aggregation.project().and("foo")
-				.let(Arrays.asList(var1, var2),
-						AggregationFunctionExpressions.MULTIPLY.of(Fields.field("total"), Fields.field("discounted")))
-				.as("finalTotal").toDocument(Aggregation.DEFAULT_CONTEXT);
+				.let(Arrays.asList(var1, var2), ArithmeticOperators.valueOf("total").multiplyBy("discounted")).as("finalTotal")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project:{ \"finalTotal\" : { \"$let\": {" + //
 				"\"vars\": {" + //
@@ -1774,7 +1758,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("field1").regexFind("e")).as("regex")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexFind: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project : { regex: { $regexFind: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
 	}
 
 	@Test // GH-3725
@@ -1783,7 +1768,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("field1").regexFindAll("e")).as("regex")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexFindAll: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project : { regex: { $regexFindAll: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
 	}
 
 	@Test // GH-3725
@@ -1792,7 +1778,8 @@ public class ProjectionOperationUnitTests {
 		Document agg = project().and(StringOperators.valueOf("field1").regexMatch("e")).as("regex")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexMatch: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $project : { regex: { $regexMatch: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
 	}
 
 	@Test // DATAMONGO-1548

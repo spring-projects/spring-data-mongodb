@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,14 +47,6 @@ class ReactiveFindOperationExtensionsTests {
 	val reactiveFind = mockk<ReactiveFindOperation.ReactiveFind<KotlinUser>>(relaxed = true)
 
 	@Test // DATAMONGO-1719
-	@Suppress("DEPRECATION")
-	fun `ReactiveFind#query(KClass) extension should call its Java counterpart`() {
-
-		operation.query(First::class)
-		verify { operation.query(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1719
 	fun `ReactiveFind#query() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.query<First>()
@@ -62,26 +54,10 @@ class ReactiveFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1719, DATAMONGO-2086
-	@Suppress("DEPRECATION")
-	fun `ReactiveFind#FindOperatorWithProjection#asType(KClass) extension should call its Java counterpart`() {
-
-		operationWithProjection.asType(User::class)
-		verify { operationWithProjection.`as`(User::class.java) }
-	}
-
-	@Test // DATAMONGO-1719, DATAMONGO-2086
 	fun `ReactiveFind#FindOperatorWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
 		operationWithProjection.asType<User>()
 		verify { operationWithProjection.`as`(User::class.java) }
-	}
-
-	@Test // DATAMONGO-1761, DATAMONGO-2086
-	@Suppress("DEPRECATION")
-	fun `ReactiveFind#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
-
-		distinctWithProjection.asType(User::class)
-		verify { distinctWithProjection.`as`(User::class.java) }
 	}
 
 	@Test // DATAMONGO-2086

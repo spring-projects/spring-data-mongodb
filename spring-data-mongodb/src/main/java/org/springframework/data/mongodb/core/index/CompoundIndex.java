@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark a class to use compound indexes.
- * <br />
+ * Mark a class to use compound indexes. <br />
  * <p>
  * <b>NOTE: This annotation is repeatable according to Java 8 conventions using {@link CompoundIndexes#value()} as
  * container.</b>
@@ -80,15 +79,6 @@ public @interface CompoundIndex {
 	String def() default "";
 
 	/**
-	 * It does not actually make sense to use that attribute as the direction has to be defined in the {@link #def()}
-	 * attribute actually.
-	 *
-	 * @return {@link IndexDirection#ASCENDING} by default.
-	 */
-	@Deprecated
-	IndexDirection direction() default IndexDirection.ASCENDING;
-
-	/**
 	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
@@ -104,15 +94,6 @@ public @interface CompoundIndex {
 	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	boolean sparse() default false;
-
-	/**
-	 * @return {@literal false} by default.
-	 * @see <a href=
-	 *      "https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
-	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
-	 */
-	@Deprecated
-	boolean dropDups() default false;
 
 	/**
 	 * Index name of the index to be created either as plain value or as

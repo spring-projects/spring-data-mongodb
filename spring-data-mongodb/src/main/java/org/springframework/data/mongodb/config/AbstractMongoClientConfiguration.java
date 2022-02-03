@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoClientSettings.Builder;
@@ -78,24 +76,6 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	@Bean
 	public MongoDatabaseFactory mongoDbFactory() {
 		return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
-	}
-
-	/**
-	 * Return the base package to scan for mapped {@link Document}s. Will return the package name of the configuration
-	 * class' (the concrete class, not this one here) by default. So if you have a {@code com.acme.AppConfig} extending
-	 * {@link AbstractMongoClientConfiguration} the base package will be considered {@code com.acme} unless the method is
-	 * overridden to implement alternate behavior.
-	 *
-	 * @return the base package to scan for mapped {@link Document} classes or {@literal null} to not enable scanning for
-	 *         entities.
-	 * @deprecated use {@link #getMappingBasePackages()} instead.
-	 */
-	@Deprecated
-	@Nullable
-	protected String getMappingBasePackage() {
-
-		Package mappingBasePackage = getClass().getPackage();
-		return mappingBasePackage == null ? null : mappingBasePackage.getName();
 	}
 
 	/**

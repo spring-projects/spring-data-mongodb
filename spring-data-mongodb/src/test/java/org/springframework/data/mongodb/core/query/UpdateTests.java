@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,30 +88,6 @@ public class UpdateTests {
 
 		Update u = new Update().push("authors", Collections.singletonMap("name", "Sven"));
 		assertThat(u.getUpdateObject()).isEqualTo(Document.parse("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
-	}
-
-	@Test
-	public void testPushAll() {
-
-		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
-		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
-
-		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
-		assertThat(u.getUpdateObject()).isEqualTo(
-				Document.parse("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
-	}
-
-	@Test // DATAMONGO-354
-	public void testMultiplePushAllShouldBePossibleWhenUsingDifferentFields() {
-
-		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
-		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
-
-		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
-		u.pushAll("books", new Object[] { "Spring in Action" });
-
-		assertThat(u.getUpdateObject()).isEqualTo(Document.parse(
-				"{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}] , \"books\" : [ \"Spring in Action\"]}}"));
 	}
 
 	@Test
@@ -245,8 +221,8 @@ public class UpdateTests {
 
 	@Test // DATAMONGO-853
 	public void testAddingSingleFieldOperationThrowsExceptionWhenCalledWithNullKey() {
-		assertThatIllegalArgumentException()
-				.isThrownBy(() -> new Update().addFieldOperation("$op", null, "exprected to throw IllegalArgumentException."));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException."));
 	}
 
 	@Test // DATAMONGO-853
@@ -256,7 +232,6 @@ public class UpdateTests {
 
 	@Test // DATAMONGO-953
 	public void testEquality() {
-
 		Update actualUpdate = new Update() //
 				.inc("size", 1) //
 				.set("nl", null) //

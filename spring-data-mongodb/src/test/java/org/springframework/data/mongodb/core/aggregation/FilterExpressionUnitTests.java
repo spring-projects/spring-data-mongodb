@@ -1,5 +1,5 @@
 /*
- * Copyright 2016. the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,8 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -58,7 +54,7 @@ class FilterExpressionUnitTests {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
 				Aggregation.project()
-						.and(filter("items").as("item").by(AggregationFunctionExpressions.GTE.of(Fields.field("item.price"), 100)))
+						.and(filter("items").as("item").by(ComparisonOperators.valueOf("item.price").greaterThanEqualToValue(100)))
 						.as("items"));
 
 		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", aggregationContext));
@@ -75,7 +71,7 @@ class FilterExpressionUnitTests {
 	void shouldConstructFilterExpressionCorrectlyWhenUsingFilterOnProjectionBuilder() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class, Aggregation.project().and("items")
-				.filter("item", AggregationFunctionExpressions.GTE.of(Fields.field("item.price"), 100)).as("items"));
+				.filter("item", ComparisonOperators.valueOf("item.price").greaterThanEqualToValue(100)).as("items"));
 
 		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", aggregationContext));
 		Document expected = Document.parse("{" + //
@@ -92,7 +88,7 @@ class FilterExpressionUnitTests {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
 				Aggregation.project().and(filter(Arrays.<Object> asList(1, "a", 2, null, 3.1D, 4, "5")).as("num")
-						.by(AggregationFunctionExpressions.GTE.of(Fields.field("num"), 3))).as("items"));
+						.by(ComparisonOperators.valueOf("num").greaterThanEqualToValue(3))).as("items"));
 
 		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", aggregationContext));
 		Document expected = Document.parse("{" + //

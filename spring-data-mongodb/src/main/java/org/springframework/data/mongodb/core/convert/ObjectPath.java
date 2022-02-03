@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.util.Lazy;
@@ -88,38 +87,6 @@ class ObjectPath {
 		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
 
 		return new ObjectPath(this, object, id, Lazy.of(entity::getCollection));
-	}
-
-	/**
-	 * Returns the object with the given id and stored in the given collection if it's contained in the
-	 * {@link ObjectPath}.
-	 *
-	 * @param id must not be {@literal null}.
-	 * @param collection must not be {@literal null} or empty.
-	 * @return
-	 * @deprecated use {@link #getPathItem(Object, String, Class)}.
-	 */
-	@Nullable
-	@Deprecated
-	Object getPathItem(Object id, String collection) {
-
-		Assert.notNull(id, "Id must not be null!");
-		Assert.hasText(collection, "Collection name must not be null!");
-
-		for (ObjectPath current = this; current != null; current = current.parent) {
-
-			Object object = current.getObject();
-
-			if (object == null || current.getIdValue() == null) {
-				continue;
-			}
-
-			if (collection.equals(current.getCollection()) && id.equals(current.getIdValue())) {
-				return object;
-			}
-		}
-
-		return null;
 	}
 
 	/**

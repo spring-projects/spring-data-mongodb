@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,14 +37,6 @@ class ReactiveMongoOperationsExtensionsTests {
 	val operations = mockk<ReactiveMongoOperations>(relaxed = true)
 
 	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `indexOps(KClass) extension should call its Java counterpart`() {
-
-		operations.indexOps(First::class)
-		verify { operations.indexOps(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
 	fun `indexOps() with reified type parameter extension should call its Java counterpart`() {
 
 		operations.indexOps<First>()
@@ -58,24 +50,6 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.execute(collectionCallback)
 		verify { operations.execute(First::class.java, collectionCallback) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `createCollection(KClass) extension should call its Java counterpart`() {
-
-		operations.createCollection(First::class)
-		verify { operations.createCollection(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `createCollection(KClass, CollectionOptions) extension should call its Java counterpart`() {
-
-		val collectionOptions = mockk<CollectionOptions>()
-
-		operations.createCollection(First::class, collectionOptions)
-		verify { operations.createCollection(First::class.java, collectionOptions) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -95,26 +69,10 @@ class ReactiveMongoOperationsExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `collectionExists(KClass) extension should call its Java counterpart`() {
-
-		operations.collectionExists(First::class)
-		verify { operations.collectionExists(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
 	fun `collectionExists() with reified type parameter extension should call its Java counterpart`() {
 
 		operations.collectionExists<First>()
 		verify { operations.collectionExists(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `dropCollection(KClass) extension should call its Java counterpart`() {
-
-		operations.dropCollection(First::class)
-		verify { operations.dropCollection(First::class.java) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -157,16 +115,6 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.findOne<First>(query, collectionName)
 		verify { operations.findOne(query, First::class.java, collectionName) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `exists(Query, KClass) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-
-		operations.exists(query, First::class)
-		verify { operations.exists(query, First::class.java) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -214,27 +162,6 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.findById<First>(id, collectionName)
 		verify { operations.findById(id, First::class.java, collectionName) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `geoNear(Query) with reified type parameter extension should call its Java counterpart`() {
-
-		val query = NearQuery.near(0.0, 0.0)
-
-		operations.geoNear<First>(query)
-		verify { operations.geoNear(query, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `geoNear(Query, String) with reified type parameter extension should call its Java counterpart`() {
-
-		val collectionName = "foo"
-		val query = NearQuery.near(0.0, 0.0)
-
-		operations.geoNear<First>(query, collectionName)
-		verify { operations.geoNear(query, First::class.java, collectionName) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -305,37 +232,6 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.count(query, First::class.java, collectionName) }
 	}
 
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `count(Query, KClass) with reified type parameter extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-
-		operations.count(query, First::class)
-		verify { operations.count(query, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `count(Query, KClass, String) with reified type parameter extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val collectionName = "foo"
-
-		operations.count(query, First::class, collectionName)
-		verify { operations.count(query, First::class.java, collectionName) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `insert(Collection, KClass) extension should call its Java counterpart`() {
-
-		val collection = listOf(First(), First())
-
-		operations.insert(collection, First::class)
-		verify { operations.insert(collection, First::class.java) }
-	}
-
 	@Test // DATAMONGO-2208
 	fun `insert(Collection) with reified type parameter extension should call its Java counterpart`() {
 
@@ -343,39 +239,6 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.insert<First>(collection)
 		verify { operations.insert(collection, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `insertAll(Mono, KClass) extension should call its Java counterpart`() {
-
-		val collection = Mono.just(listOf(First(), First()))
-
-		operations.insertAll(collection, First::class)
-		verify { operations.insertAll(collection, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `upsert(Query, Update, KClass) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val update = mockk<Update>()
-
-		operations.upsert(query, update, First::class)
-		verify { operations.upsert(query, update, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `upsert(Query, Update, KClass, String) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val update = mockk<Update>()
-		val collectionName = "foo"
-
-		operations.upsert(query, update, First::class, collectionName)
-		verify { operations.upsert(query, update, First::class.java, collectionName) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -400,29 +263,6 @@ class ReactiveMongoOperationsExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `updateFirst(Query, Update, KClass) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val update = mockk<Update>()
-
-		operations.updateFirst(query, update, First::class)
-		verify { operations.updateFirst(query, update, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `updateFirst(Query, Update, KClass, String) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val update = mockk<Update>()
-		val collectionName = "foo"
-
-		operations.updateFirst(query, update, First::class, collectionName)
-		verify { operations.updateFirst(query, update, First::class.java, collectionName) }
-	}
-
-	@Test // DATAMONGO-1689
 	fun `updateFirst(Query, Update) with reified type parameter extension should call its Java counterpart`() {
 
 		val query = mockk<Query>()
@@ -444,29 +284,6 @@ class ReactiveMongoOperationsExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `updateMulti(Query, Update, KClass) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val update = mockk<Update>()
-
-		operations.updateMulti(query, update, First::class)
-		verify { operations.updateMulti(query, update, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `updateMulti(Query, Update, KClass, String) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val update = mockk<Update>()
-		val collectionName = "foo"
-
-		operations.updateMulti(query, update, First::class, collectionName)
-		verify { operations.updateMulti(query, update, First::class.java, collectionName) }
-	}
-
-	@Test // DATAMONGO-1689
 	fun `updateMulti(Query, Update) with reified type parameter extension should call its Java counterpart`() {
 
 		val query = mockk<Query>()
@@ -485,27 +302,6 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.updateMulti<First>(query, update, collectionName)
 		verify { operations.updateMulti(query, update, First::class.java, collectionName) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `remove(Query, KClass) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-
-		operations.remove(query, First::class)
-		verify { operations.remove(query, First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `remove(Query, KClass, String) extension should call its Java counterpart`() {
-
-		val query = mockk<Query>()
-		val collectionName = "foo"
-
-		operations.remove(query, First::class, collectionName)
-		verify { operations.remove(query, First::class.java, collectionName) }
 	}
 
 	@Test // DATAMONGO-1689
@@ -556,34 +352,6 @@ class ReactiveMongoOperationsExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1761
-	@Suppress("DEPRECATION")
-	fun `findDistinct(String, KClass) should call java counterpart`() {
-
-		operations.findDistinct<String>("field", First::class)
-		verify { operations.findDistinct("field", First::class.java, String::class.java) }
-	}
-
-	@Test // DATAMONGO-1761
-	@Suppress("DEPRECATION")
-	fun `findDistinct(Query, String, KClass) should call java counterpart`() {
-
-		val query = mockk<Query>()
-
-		operations.findDistinct<String>(query, "field", First::class)
-		verify { operations.findDistinct(query, "field", First::class.java, String::class.java) }
-	}
-
-	@Test // DATAMONGO-1761
-	@Suppress("DEPRECATION")
-	fun `findDistinct(Query, String, String, KClass) should call java counterpart`() {
-
-		val query = mockk<Query>()
-
-		operations.findDistinct<String>(query, "field", "collection", First::class)
-		verify { operations.findDistinct(query, "field", "collection", First::class.java, String::class.java) }
-	}
-
-	@Test // DATAMONGO-1761
 	fun `findDistinctImplicit(Query, String) should call java counterpart`() {
 
 		val query = mockk<Query>()
@@ -599,23 +367,6 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.findDistinct<String, First>(query, "field", "collection")
 		verify { operations.findDistinct(query, "field", "collection", First::class.java, String::class.java) }
-	}
-
-	@Test // DATAMONGO-1761
-	@Suppress("DEPRECATION")
-	fun `findDistinct(Query, String,  KClass) should call java counterpart`() {
-
-		val query = mockk<Query>()
-
-		operations.findDistinct<String>(query, "field", First::class)
-		verify {
-			operations.findDistinct(
-				query,
-				"field",
-				First::class.java,
-				String::class.java
-			)
-		}
 	}
 
 	@Test  // #893

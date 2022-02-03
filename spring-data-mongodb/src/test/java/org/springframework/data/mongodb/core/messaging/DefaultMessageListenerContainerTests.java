@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class DefaultMessageListenerContainerTests {
 	@Template(database = DATABASE_NAME, initialEntitySet = Person.class) //
 	static MongoTemplate template;
 
-	MongoDatabaseFactory dbFactory = template.getMongoDbFactory();
+	MongoDatabaseFactory dbFactory = template.getMongoDatabaseFactory();
 
 	MongoCollection<Document> collection = template.getCollection(COLLECTION_NAME);
 	MongoCollection<Document> collection2 = template.getCollection(COLLECTION_2_NAME);

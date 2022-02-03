@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,6 @@ import reactor.core.publisher.Flux
 class ReactiveAggregationOperationExtensionsTests {
 
 	val operation = mockk<ReactiveAggregationOperation>(relaxed = true)
-
-	@Test // DATAMONGO-1719
-	@Suppress("DEPRECATION")
-	fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
-
-		operation.aggregateAndReturn(First::class)
-		verify { operation.aggregateAndReturn(First::class.java) }
-	}
 
 	@Test // DATAMONGO-1719
 	fun `aggregateAndReturn() with reified type parameter extension should call its Java counterpart`() {

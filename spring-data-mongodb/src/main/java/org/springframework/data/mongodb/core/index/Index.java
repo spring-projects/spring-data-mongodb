@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,14 +36,6 @@ import org.springframework.util.StringUtils;
  */
 @SuppressWarnings("deprecation")
 public class Index implements IndexDefinition {
-
-	/**
-	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
-	 */
-	@Deprecated
-	public enum Duplicates {
-		RETAIN
-	}
 
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
 	private @Nullable String name;

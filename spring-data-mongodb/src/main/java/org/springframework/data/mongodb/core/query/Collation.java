@@ -126,7 +126,7 @@ public class Collation {
 
 		Assert.notNull(collation, "Collation must not be null!");
 
-		return StringUtils.trimLeadingWhitespace(collation).startsWith("{") ? from(Document.parse(collation))
+		return collation.stripLeading().startsWith("{") ? from(Document.parse(collation))
 				: of(collation);
 	}
 

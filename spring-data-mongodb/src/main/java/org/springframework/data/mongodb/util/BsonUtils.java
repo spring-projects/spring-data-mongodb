@@ -376,7 +376,7 @@ public class BsonUtils {
 	 */
 	public static Document toDocumentOrElse(String source, Function<String, Document> orElse) {
 
-		if (StringUtils.trimLeadingWhitespace(source).startsWith("{")) {
+		if (source.stripLeading().startsWith("{")) {
 			return Document.parse(source);
 		}
 

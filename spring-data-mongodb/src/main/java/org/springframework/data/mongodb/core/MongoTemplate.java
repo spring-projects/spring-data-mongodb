@@ -29,7 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -87,13 +86,10 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.*;
-import org.springframework.data.mongodb.core.mapreduce.GroupBy;
-import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -386,8 +382,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <T> Stream<T> doStream(Query query, Class<?> entityType, String collectionName,
-			Class<T> returnType) {
+	protected <T> Stream<T> doStream(Query query, Class<?> entityType, String collectionName, Class<T> returnType) {
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(entityType, "Entity type must not be null!");
@@ -399,8 +394,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
 			QueryContext queryContext = queryOperations.createQueryContext(query);
-			EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
-					entityType);
+			EntityProjection<T, ?> projection = operations.introspectProjection(returnType, entityType);
 
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
 			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
@@ -570,7 +564,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			@Nullable CollectionOptions collectionOptions) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
-		return doCreateCollection(collectionName, convertToDocument(collectionOptions));
+		return doCreateCollection(collectionName, convertToDocument(collectionOptions, Object.class));
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -836,8 +830,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
 		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
-		EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
-				domainType);
+		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, domainType);
 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
@@ -920,8 +913,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
-		EntityProjection<T, S> projection = operations.introspectProjection(resultType,
-				entityType);
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedSort = queryContext.getMappedSort(entity);
@@ -933,8 +925,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
 		T saved = doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options,
-				projection);
+				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, projection);
 
 		if (saved != null) {
 			maybeEmitEvent(new AfterSaveEvent<>(saved, mappedReplacement, collectionName));
@@ -1017,7 +1008,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 
-		ensureNotIterable(objectToSave);
+		ensureNotCollectionLike(objectToSave);
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
@@ -1028,19 +1019,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
-		ensureNotIterable(objectToSave);
+		ensureNotCollectionLike(objectToSave);
 		return (T) doInsert(collectionName, objectToSave, this.mongoConverter);
-	}
-
-	/**
-	 * Ensure the given {@literal source} is not an {@link java.lang.reflect.Array}, {@link Collection} or
-	 * {@link Iterator}.
-	 *
-	 * @param source can be {@literal null}.
-	 * @deprecated since 3.2. Call {@link #ensureNotCollectionLike(Object)} instead.
-	 */
-	protected void ensureNotIterable(@Nullable Object source) {
-		ensureNotCollectionLike(source);
 	}
 
 	/**
@@ -1646,8 +1626,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
 			Class<T> entityClass) {
-		return mapReduce(new Query(), inputCollectionName, mapFunction, reduceFunction,
-				new MapReduceOptions().outputTypeInline(), entityClass);
+		return mapReduce(new Query(), inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions(),
+				entityClass);
 	}
 
 	@Override
@@ -1659,8 +1639,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
 			String reduceFunction, Class<T> entityClass) {
-		return mapReduce(query, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(),
-				entityClass);
+		return mapReduce(query, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions(), entityClass);
 	}
 
 	@Override
@@ -1772,66 +1751,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return mappedResults;
-	}
-
-	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
-		return group(null, inputCollectionName, groupBy, entityClass);
-	}
-
-	public <T> GroupByResults<T> group(@Nullable Criteria criteria, String inputCollectionName, GroupBy groupBy,
-			Class<T> entityClass) {
-
-		Document document = groupBy.getGroupByObject();
-		document.put("ns", inputCollectionName);
-
-		if (criteria == null) {
-			document.put("cond", null);
-		} else {
-			document.put("cond", queryMapper.getMappedObject(criteria.getCriteriaObject(), Optional.empty()));
-		}
-		// If initial document was a JavaScript string, potentially loaded by Spring's Resource abstraction, load it and
-		// convert to Document
-
-		if (document.containsKey("initial")) {
-			Object initialObj = document.get("initial");
-			if (initialObj instanceof String) {
-				String initialAsString = replaceWithResourceIfNecessary((String) initialObj);
-				document.put("initial", Document.parse(initialAsString));
-			}
-		}
-
-		if (document.containsKey("$reduce")) {
-			document.put("$reduce", replaceWithResourceIfNecessary(ObjectUtils.nullSafeToString(document.get("$reduce"))));
-		}
-		if (document.containsKey("$keyf")) {
-			document.put("$keyf", replaceWithResourceIfNecessary(ObjectUtils.nullSafeToString(document.get("$keyf"))));
-		}
-		if (document.containsKey("finalize")) {
-			document.put("finalize", replaceWithResourceIfNecessary(ObjectUtils.nullSafeToString(document.get("finalize"))));
-		}
-
-		Document commandObject = new Document("group", document);
-
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing Group with Document [%s]", serializeToJsonSafely(commandObject)));
-		}
-
-		Document commandResult = executeCommand(commandObject, this.readPreference);
-
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Group command result = [%s]", commandResult));
-		}
-
-		@SuppressWarnings("unchecked")
-		Iterable<Document> resultSet = (Iterable<Document>) commandResult.get("retval");
-		List<T> mappedResults = new ArrayList<>();
-		DocumentCallback<T> callback = new ReadDocumentCallback<>(mongoConverter, entityClass, inputCollectionName);
-
-		for (Document resultDocument : resultSet) {
-			mappedResults.add(callback.doWith(resultDocument));
-		}
-
-		return new GroupByResults<>(mappedResults, commandResult);
 	}
 
 	@Override
@@ -2022,8 +1941,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName,
-			Class<O> outputType, @Nullable AggregationOperationContext context) {
+	protected <O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType,
+			@Nullable AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
@@ -2295,8 +2214,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2348,8 +2266,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2371,8 +2288,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
-				sourceClass);
+		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2387,13 +2303,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
 	}
 
-
 	/**
 	 * Convert given {@link CollectionOptions} to a document and take the domain type information into account when
 	 * creating a mapped schema for validation. <br />
-	 * This method calls {@link #convertToDocument(CollectionOptions)} for backwards compatibility and potentially
-	 * overwrites the validator with the mapped validator document. In the long run
-	 * {@link #convertToDocument(CollectionOptions)} will be removed so that this one becomes the only source of truth.
 	 *
 	 * @param collectionOptions can be {@literal null}.
 	 * @param targetType must not be {@literal null}. Use {@link Object} type instead.
@@ -2402,56 +2314,36 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions, Class<?> targetType) {
 
-		Document doc = convertToDocument(collectionOptions);
-
-		if (collectionOptions != null) {
-
-			collectionOptions.getValidationOptions().ifPresent(it -> it.getValidator() //
-					.ifPresent(val -> doc.put("validator", getMappedValidator(val, targetType))));
-
-			collectionOptions.getTimeSeriesOptions().map(operations.forType(targetType)::mapTimeSeriesOptions)
-					.ifPresent(it -> {
-
-						Document timeseries = new Document("timeField", it.getTimeField());
-						if (StringUtils.hasText(it.getMetaField())) {
-							timeseries.append("metaField", it.getMetaField());
-						}
-						if (!Granularity.DEFAULT.equals(it.getGranularity())) {
-							timeseries.append("granularity", it.getGranularity().name().toLowerCase());
-						}
-						doc.put("timeseries", timeseries);
-					});
+		if (collectionOptions == null) {
+			return new Document();
 		}
+
+		Document doc = new Document();
+		collectionOptions.getCapped().ifPresent(val -> doc.put("capped", val));
+		collectionOptions.getSize().ifPresent(val -> doc.put("size", val));
+		collectionOptions.getMaxDocuments().ifPresent(val -> doc.put("max", val));
+		collectionOptions.getCollation().ifPresent(val -> doc.append("collation", val.toDocument()));
+
+		collectionOptions.getValidationOptions().ifPresent(it -> {
+
+			it.getValidationLevel().ifPresent(val -> doc.append("validationLevel", val.getValue()));
+			it.getValidationAction().ifPresent(val -> doc.append("validationAction", val.getValue()));
+			it.getValidator().ifPresent(val -> doc.append("validator", getMappedValidator(val, targetType)));
+		});
+
+		collectionOptions.getTimeSeriesOptions().map(operations.forType(targetType)::mapTimeSeriesOptions).ifPresent(it -> {
+
+			Document timeseries = new Document("timeField", it.getTimeField());
+			if (StringUtils.hasText(it.getMetaField())) {
+				timeseries.append("metaField", it.getMetaField());
+			}
+			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
+				timeseries.append("granularity", it.getGranularity().name().toLowerCase());
+			}
+			doc.put("timeseries", timeseries);
+		});
 
 		return doc;
-	}
-
-	/**
-	 * @param collectionOptions can be {@literal null}.
-	 * @return never {@literal null}.
-	 * @deprecated since 2.1 in favor of {@link #convertToDocument(CollectionOptions, Class)}.
-	 */
-	@Deprecated
-	protected Document convertToDocument(@Nullable CollectionOptions collectionOptions) {
-
-		Document document = new Document();
-
-		if (collectionOptions != null) {
-
-			collectionOptions.getCapped().ifPresent(val -> document.put("capped", val));
-			collectionOptions.getSize().ifPresent(val -> document.put("size", val));
-			collectionOptions.getMaxDocuments().ifPresent(val -> document.put("max", val));
-			collectionOptions.getCollation().ifPresent(val -> document.append("collation", val.toDocument()));
-
-			collectionOptions.getValidationOptions().ifPresent(it -> {
-
-				it.getValidationLevel().ifPresent(val -> document.append("validationLevel", val.getValue()));
-				it.getValidationAction().ifPresent(val -> document.append("validationAction", val.getValue()));
-				it.getValidator().ifPresent(val -> document.append("validator", getMappedValidator(val, Object.class)));
-			});
-		}
-
-		return document;
 	}
 
 	Document getMappedValidator(Validator validator, Class<?> domainType) {
@@ -2467,8 +2359,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
-	 * The first document that matches the query is returned and also removed from the collection in the database.
-	 * <br />
+	 * The first document that matches the query is returned and also removed from the collection in the database. <br />
 	 * The query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -2546,8 +2437,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
 			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
-		EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
-				entityType);
+		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
 				options, projection);
@@ -2575,10 +2465,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format(
-					"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s " + "in collection: %s",
-					serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields), serializeToJsonSafely(mappedSort),
-					entityType, serializeToJsonSafely(replacement), collectionName));
+			LOGGER
+					.debug(String.format(
+							"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
+									+ "in collection: %s",
+							serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields),
+							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
 
 		return executeFindOneInternal(
@@ -2771,8 +2663,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (LOGGER.isDebugEnabled()) {
 
 				LOGGER.debug(String.format("findOne using query: %s fields: %s in db.collection: %s",
-						serializeToJsonSafely(query),
-						serializeToJsonSafely(fields.orElseGet(Document::new)),
+						serializeToJsonSafely(query), serializeToJsonSafely(fields.orElseGet(Document::new)),
 						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a"));
 			}
 
@@ -3034,8 +2925,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(MongoConverter mongoConverter, EntityProjection<T, S> projection,
-				String collectionName) {
+		ProjectingReadCallback(MongoConverter mongoConverter, EntityProjection<T, S> projection, String collectionName) {
 
 			this.mongoConverter = mongoConverter;
 			this.projection = projection;
@@ -3139,7 +3029,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 								cursorToUse = cursorToUse.partial(true);
 								break;
 							case SECONDARY_READS:
-							case SLAVE_OK:
 								break;
 							default:
 								throw new IllegalArgumentException(String.format("%s is no supported flag.", option));
@@ -3156,8 +3045,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		@Override
 		public ReadPreference getReadPreference() {
-			return (query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS)
-					|| query.getMeta().getFlags().contains(CursorOption.SLAVE_OK)) ? ReadPreference.primaryPreferred() : null;
+			return query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS) ? ReadPreference.primaryPreferred()
+					: null;
 		}
 	}
 
@@ -3202,15 +3091,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			return new GeoResult<>(doWith, new Distance(distance, metric));
 		}
-	}
-
-	/**
-	 * @deprecated since 3.1.4. Use {@link #getMongoDatabaseFactory()} instead.
-	 * @return the {@link MongoDatabaseFactory} in use.
-	 */
-	@Deprecated
-	public MongoDatabaseFactory getMongoDbFactory() {
-		return getMongoDatabaseFactory();
 	}
 
 	/**
@@ -3306,8 +3186,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
-	 * server through the driver API.
-	 * <br />
+	 * server through the driver API. <br />
 	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
 	 * target method matching the actual arguments plus a {@link ClientSession}.
 	 *
@@ -3325,7 +3204,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 */
 		SessionBoundMongoTemplate(ClientSession session, MongoTemplate that) {
 
-			super(that.getMongoDbFactory().withSession(session), that);
+			super(that.getMongoDatabaseFactory().withSession(session), that);
 
 			this.delegate = that;
 			this.session = session;

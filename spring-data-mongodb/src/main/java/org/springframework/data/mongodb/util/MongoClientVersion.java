@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,33 +35,6 @@ public class MongoClientVersion {
 
 	private static final boolean REACTIVE_CLIENT_PRESENT = ClassUtils
 			.isPresent("com.mongodb.reactivestreams.client.MongoClient", MongoClientVersion.class.getClassLoader());
-
-	/**
-	 * @return {@literal true} if MongoDB Java driver version 3.0 or later is on classpath.
-	 * @deprecated since 2.1, which requires MongoDB Java driver 3.8. Returns {@literal true} by default.
-	 */
-	@Deprecated
-	public static boolean isMongo3Driver() {
-		return true;
-	}
-
-	/**
-	 * @return {@literal true} if MongoDB Java driver version 3.4 or later is on classpath.
-	 * @since 1.10
-	 * @deprecated since 2.1, which requires MongoDB Java driver 3.8. Returns {@literal true} by default.
-	 */
-	@Deprecated
-	public static boolean isMongo34Driver() {
-		return true;
-	}
-
-	/**
-	 * @return {@literal true} if MongoDB Java driver version 3.8 or later is on classpath.
-	 * @since 2.1
-	 */
-	public static boolean isMongo38Driver() {
-		return true;
-	}
 
 	/**
 	 * @return {@literal true} if the async MongoDB Java driver is on classpath.

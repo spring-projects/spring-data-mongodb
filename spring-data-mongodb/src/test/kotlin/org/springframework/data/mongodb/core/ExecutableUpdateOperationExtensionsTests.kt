@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,6 @@ import org.junit.Test
 class ExecutableUpdateOperationExtensionsTests {
 
 	val operation = mockk<ExecutableUpdateOperation>(relaxed = true)
-
-	@Test // DATAMONGO-1719
-	@Suppress("DEPRECATION")
-	fun `update(KClass) extension should call its Java counterpart`() {
-
-		operation.update(First::class)
-		verify { operation.update(First::class.java) }
-	}
 
 	@Test // DATAMONGO-1719
 	fun `update() with reified type parameter extension should call its Java counterpart`() {

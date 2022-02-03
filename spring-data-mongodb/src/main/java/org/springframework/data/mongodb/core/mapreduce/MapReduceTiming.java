@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+/**
+ * @deprecated since MongoDB server version 5.0
+ *
+ */
+@Deprecated
 public class MapReduceTiming {
 
 	private long mapTime, emitLoopTime, totalTime;

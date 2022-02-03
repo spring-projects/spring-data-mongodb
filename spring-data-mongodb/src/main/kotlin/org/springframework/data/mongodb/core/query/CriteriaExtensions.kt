@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query
 
+import org.springframework.data.mapping.toDotPath
 import kotlin.reflect.KProperty
 
 /**
@@ -47,7 +48,7 @@ fun Criteria.inValues(vararg o: Any?): Criteria = `in`(*o)
  * @author Tjeu Kayim
  * @since 2.2
  */
-fun where(key: KProperty<*>): Criteria = Criteria.where(asString(key))
+fun where(key: KProperty<*>): Criteria = Criteria.where(key.toDotPath())
 
 /**
  * Add new key to the criteria chain using a KProperty.
@@ -55,4 +56,4 @@ fun where(key: KProperty<*>): Criteria = Criteria.where(asString(key))
  * @author Tjeu Kayim
  * @since 2.2
  */
-infix fun Criteria.and(key: KProperty<*>): Criteria = and(asString(key))
+infix fun Criteria.and(key: KProperty<*>): Criteria = and(key.toDotPath())

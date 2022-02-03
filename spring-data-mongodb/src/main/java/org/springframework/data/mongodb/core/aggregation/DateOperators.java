@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,8 +91,7 @@ public class DateOperators {
 	}
 
 	/**
-	 * Take the given value as date.
-	 * <br />
+	 * Take the given value as date. <br />
 	 * This can be one of:
 	 * <ul>
 	 * <li>{@link java.util.Date}</li>
@@ -190,7 +189,7 @@ public class DateOperators {
 		 * representing an Olson Timezone Identifier or UTC Offset.
 		 *
 		 * @param value the plain timezone {@link String}, a {@link Field} holding the timezone or an
-		 * {@link AggregationExpression} resulting in the timezone.
+		 *          {@link AggregationExpression} resulting in the timezone.
 		 * @return new instance of {@link Timezone}.
 		 */
 		public static Timezone valueOf(Object value) {
@@ -333,8 +332,7 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link DateOperatorFactory} for given {@code value} that resolves to a Date.
-		 * <br />
+		 * Creates new {@link DateOperatorFactory} for given {@code value} that resolves to a Date. <br />
 		 * <ul>
 		 * <li>{@link java.util.Date}</li>
 		 * <li>{@link java.util.Calendar}</li>
@@ -2095,20 +2093,6 @@ public class DateOperators {
 		 * @param millisecond must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal millisecond} is {@literal null}
-		 * @deprecated since 3.2, use {@link #millisecond(Object)} instead.
-		 */
-		@Deprecated
-		default T milliseconds(Object millisecond) {
-			return millisecond(millisecond);
-		}
-
-		/**
-		 * Set the {@literal millisecond} to the given value which must resolve to a value in range {@code 0 - 999}. Can be
-		 * a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
-		 *
-		 * @param millisecond must not be {@literal null}.
-		 * @return new instance.
-		 * @throws IllegalArgumentException if given {@literal millisecond} is {@literal null}
 		 * @since 3.2
 		 */
 		T millisecond(Object millisecond);
@@ -2119,36 +2103,10 @@ public class DateOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
-		 * @deprecated since 3.2,use {@link #millisecondOf(String)} instead.
-		 */
-		@Deprecated
-		default T millisecondsOf(String fieldReference) {
-			return millisecondOf(fieldReference);
-		}
-
-		/**
-		 * Set the {@literal millisecond} to the value resolved by following the given {@link Field field reference}.
-		 *
-		 * @param fieldReference must not be {@literal null}.
-		 * @return new instance.
-		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 * @since 3.2
 		 */
 		default T millisecondOf(String fieldReference) {
-			return milliseconds(Fields.field(fieldReference));
-		}
-
-		/**
-		 * Set the {@literal millisecond} to the result of the given {@link AggregationExpression expression}.
-		 *
-		 * @param expression must not be {@literal null}.
-		 * @return new instance.
-		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
-		 * @deprecated since 3.2, use {@link #millisecondOf(AggregationExpression)} instead.
-		 */
-		@Deprecated
-		default T millisecondsOf(AggregationExpression expression) {
-			return millisecondOf(expression);
+			return millisecond(Fields.field(fieldReference));
 		}
 
 		/**
@@ -2160,7 +2118,7 @@ public class DateOperators {
 		 * @since 3.2
 		 */
 		default T millisecondOf(AggregationExpression expression) {
-			return milliseconds(expression);
+			return millisecond(expression);
 		}
 	}
 
@@ -2171,7 +2129,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
 	 * @since 2.1
 	 */
 	public static class DateFromParts extends TimezonedDateAggregationExpression implements DateParts<DateFromParts> {
@@ -2346,7 +2304,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
 	 * @since 2.1
 	 */
 	public static class IsoDateFromParts extends TimezonedDateAggregationExpression
@@ -2522,7 +2480,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/</a>
 	 * @since 2.1
 	 */
 	public static class DateToParts extends TimezonedDateAggregationExpression {
@@ -2603,7 +2561,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/</a>
 	 * @since 2.1
 	 */
 	public static class DateFromString extends TimezonedDateAggregationExpression {

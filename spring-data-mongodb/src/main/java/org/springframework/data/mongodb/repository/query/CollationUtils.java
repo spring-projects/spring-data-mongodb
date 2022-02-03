@@ -71,7 +71,7 @@ abstract class CollationUtils {
 			return null;
 		}
 
-		if (StringUtils.trimLeadingWhitespace(collationExpression).startsWith("{")) {
+		if (collationExpression.stripLeading().startsWith("{")) {
 
 			ParameterBindingContext bindingContext = ParameterBindingContext.forExpressions(accessor::getBindableValue,
 					expressionParser, dependencies -> evaluationContextProvider.getEvaluationContext(parameters,

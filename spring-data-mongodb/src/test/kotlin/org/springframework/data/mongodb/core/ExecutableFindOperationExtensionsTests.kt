@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,14 +38,6 @@ class ExecutableFindOperationExtensionsTests {
 	val executableFind = mockk<ExecutableFindOperation.ExecutableFind<KotlinUser>>(relaxed = true)
 
 	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `ExecutableFindOperation#query(KClass) extension should call its Java counterpart`() {
-
-		operation.query(First::class)
-		verify { operation.query(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1689
 	fun `ExecutableFindOperation#query() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.query<First>()
@@ -53,26 +45,10 @@ class ExecutableFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1689, DATAMONGO-2086
-	@Suppress("DEPRECATION")
-	fun `ExecutableFindOperation#FindOperationWithProjection#asType(KClass) extension should call its Java counterpart`() {
-
-		operationWithProjection.asType(User::class)
-		verify { operationWithProjection.`as`(User::class.java) }
-	}
-
-	@Test // DATAMONGO-1689, DATAMONGO-2086
 	fun `ExecutableFindOperation#FindOperationWithProjection#asType() with reified type parameter extension should call its Java counterpart`() {
 
 		operationWithProjection.asType<User>()
 		verify { operationWithProjection.`as`(User::class.java) }
-	}
-
-	@Test // DATAMONGO-1761, DATAMONGO-2086
-	@Suppress("DEPRECATION")
-	fun `ExecutableFindOperation#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
-
-		distinctWithProjection.asType(User::class)
-		verify { distinctWithProjection.`as`(User::class.java) }
 	}
 
 	@Test // DATAMONGO-2086

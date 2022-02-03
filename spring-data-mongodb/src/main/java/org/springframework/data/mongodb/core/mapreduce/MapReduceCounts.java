@@ -20,7 +20,9 @@ package org.springframework.data.mongodb.core.mapreduce;
  *
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @deprecated since MongoDB server version 5.0
  */
+@Deprecated
 public class MapReduceCounts {
 
 	public static final MapReduceCounts NONE = new MapReduceCounts(-1, -1, -1);

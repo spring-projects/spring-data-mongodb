@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +27,6 @@ import org.junit.Test
 class ExecutableRemoveOperationExtensionsTests {
 
 	val operation = mockk<ExecutableRemoveOperation>(relaxed = true)
-
-	@Test // DATAMONGO-1689
-	@Suppress("DEPRECATION")
-	fun `remove(KClass) extension should call its Java counterpart`() {
-
-		operation.remove(First::class)
-		verify { operation.remove(First::class.java) }
-	}
 
 	@Test // DATAMONGO-1689
 	fun `remove() with reified type parameter extension should call its Java counterpart`() {

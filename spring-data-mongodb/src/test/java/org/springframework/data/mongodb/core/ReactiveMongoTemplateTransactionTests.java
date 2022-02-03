@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.transaction.ReactiveTransaction;
+import org.springframework.transaction.reactive.TransactionCallback;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
@@ -123,8 +128,7 @@ public class ReactiveMongoTemplateTransactionTests {
 	@Test // DATAMONGO-1970
 	public void reactiveTransactionsCommitOnComplete() {
 
-		template.inTransaction().execute(action -> action.remove(ID_QUERY, Document.class, COLLECTION_NAME)) //
-				.as(StepVerifier::create) //
+		initTx().transactional(template.remove(ID_QUERY, Document.class, COLLECTION_NAME)).as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
@@ -137,11 +141,10 @@ public class ReactiveMongoTemplateTransactionTests {
 	@Test // DATAMONGO-1970
 	public void reactiveTransactionsAbortOnError() {
 
-		template.inTransaction().execute(action -> {
-			return action.remove(ID_QUERY, Document.class, COLLECTION_NAME).flatMap(result -> Mono.fromSupplier(() -> {
-				throw new RuntimeException("¯\\_(ツ)_/¯");
-			}));
-		}).as(StepVerifier::create) //
+		initTx().transactional(
+				template.remove(ID_QUERY, Document.class, COLLECTION_NAME).flatMap(result -> Mono.fromSupplier(() -> {
+					throw new RuntimeException("¯\\_(ツ)_/¯");
+				}))).as(StepVerifier::create) //
 				.expectError() //
 				.verify();
 
@@ -167,31 +170,18 @@ public class ReactiveMongoTemplateTransactionTests {
 	}
 
 	@Test // DATAMONGO-1970
-	public void inTransactionCommitsProvidedTransactionalSession() {
-
-		ClientSession session = Mono.from(client.startSession()).block();
-
-		session.startTransaction();
-
-		template.inTransaction(Mono.just(session)).execute(action -> {
-			return action.remove(ID_QUERY, Document.class, COLLECTION_NAME);
-		}) //
-				.as(StepVerifier::create) //
-				.expectNextCount(1) //
-				.verifyComplete();
-
-		assertThat(session.hasActiveTransaction()).isFalse();
-	}
-
-	@Test // DATAMONGO-1970
 	public void changesNotVisibleOutsideTransaction() {
 
-		template.inTransaction().execute(action -> {
-			return action.remove(ID_QUERY, Document.class, COLLECTION_NAME).flatMapMany(val -> {
+		initTx().execute(new TransactionCallback<>() {
+			@Override
+			public Publisher<Object> doInTransaction(ReactiveTransaction status) {
+				return template.remove(ID_QUERY, Document.class, COLLECTION_NAME).flatMapMany(val -> {
 
-				// once we use the collection directly we're no longer participating in the tx
-				return template.getCollection(COLLECTION_NAME).flatMapMany(it -> it.find(ID_QUERY.getQueryObject()));
-			});
+					// once we use the collection directly we're no longer participating in the tx
+					return client.getDatabase(DATABASE_NAME).getCollection(COLLECTION_NAME).find(ID_QUERY.getQueryObject())
+							.first();
+				});
+			}
 		}).as(StepVerifier::create).expectNext(DOCUMENT).verifyComplete();
 
 		template.exists(ID_QUERY, COLLECTION_NAME) //
@@ -203,7 +193,7 @@ public class ReactiveMongoTemplateTransactionTests {
 	@Test // DATAMONGO-1970
 	public void executeCreatesNewTransaction() {
 
-		ReactiveSessionScoped sessionScoped = template.inTransaction();
+		ReactiveSessionScoped sessionScoped = template.withSession(client.startSession());
 
 		sessionScoped.execute(action -> {
 			return action.remove(ID_QUERY, Document.class, COLLECTION_NAME);
@@ -233,10 +223,9 @@ public class ReactiveMongoTemplateTransactionTests {
 	@Test // DATAMONGO-1970
 	public void takeDoesNotAbortTransaction() {
 
-		template.inTransaction().execute(action -> {
-			return action.find(query(where("age").exists(true)).with(Sort.by("age")), Person.class).take(3)
-					.flatMap(action::remove);
-		}) //
+		initTx()
+				.transactional(template.find(query(where("age").exists(true)).with(Sort.by("age")), Person.class).take(3)
+						.flatMap(template::remove)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
@@ -250,19 +239,23 @@ public class ReactiveMongoTemplateTransactionTests {
 	@Test // DATAMONGO-1970
 	public void errorInFlowOutsideTransactionDoesNotAbortIt() {
 
-		template.inTransaction().execute(action -> {
+		initTx().execute(new TransactionCallback<>() {
+			@Override
+			public Publisher<Object> doInTransaction(ReactiveTransaction status) {
+				return template.find(query(where("age").is(22)).with(Sort.by("age")), Person.class).buffer(2)
+						.flatMap(values -> {
 
-			return action.find(query(where("age").is(22)).with(Sort.by("age")), Person.class).buffer(2).flatMap(values -> {
-
-				return action.remove(query(where("id").in(values.stream().map(Person::getId).collect(Collectors.toList()))),
-						Person.class).then(Mono.just(values));
-			});
-		}).flatMap(deleted -> {
-			throw new RuntimeException("error outside the transaction does not influence it.");
-		}) //
-				.as(StepVerifier::create) //
-				.expectError() //
-				.verify();
+							return template
+									.remove(query(where("id").in(values.stream().map(Person::getId).collect(Collectors.toList()))),
+											Person.class)
+									.then(Mono.just(values));
+						});
+			}
+		}).collectList() // completes the above computation
+				.flatMap(deleted -> {
+					throw new RuntimeException("error outside the transaction does not influence it.");
+				}).as(StepVerifier::create) //
+				.verifyError();
 
 		template.count(query(where("age").exists(true)), Person.class) //
 				.as(StepVerifier::create) //
@@ -278,7 +271,7 @@ public class ReactiveMongoTemplateTransactionTests {
 
 		PersonWithVersionPropertyOfTypeInteger saved = template.insert(rojer).block();
 
-		template.inTransaction().execute(action -> action.remove(saved)) //
+		initTx().transactional(template.remove(saved)) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(result -> assertThat(result.getDeletedCount()).isOne()) //
 				.verifyComplete();
@@ -293,7 +286,7 @@ public class ReactiveMongoTemplateTransactionTests {
 		PersonWithVersionPropertyOfTypeInteger saved = template.insert(rojer).block();
 		saved.version = 5;
 
-		template.inTransaction().execute(action -> action.remove(saved)) //
+		initTx().transactional(template.remove(saved)) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 
@@ -310,9 +303,15 @@ public class ReactiveMongoTemplateTransactionTests {
 		rojer.firstName = "rojer";
 		rojer.version = 5;
 
-		template.inTransaction().execute(action -> action.remove(rojer)) //
+		initTx().transactional(template.remove(rojer)) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(result -> assertThat(result.getDeletedCount()).isZero()) //
 				.verifyComplete();
+	}
+
+	TransactionalOperator initTx() {
+
+		ReactiveMongoTransactionManager txmgr = new ReactiveMongoTransactionManager(template.getMongoDatabaseFactory());
+		return TransactionalOperator.create(txmgr, new DefaultTransactionDefinition());
 	}
 }

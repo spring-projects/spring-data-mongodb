@@ -30,7 +30,9 @@ import com.mongodb.client.model.MapReduceAction;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @deprecated since MongoDB server version 5.0
  */
+@Deprecated
 public class MapReduceOptions {
 
 	private @Nullable String outputCollection;
@@ -100,19 +102,6 @@ public class MapReduceOptions {
 	 * results of the map-reduce will be returned within the result object. Note that this option is possible only when
 	 * the result set fits within the 16MB limit of a single document.
 	 *
-	 * @return MapReduceOptions so that methods can be chained in a fluent API style
-	 * @deprecated since 3.0 - Use {@link #actionInline()} instead.
-	 */
-	@Deprecated
-	public MapReduceOptions outputTypeInline() {
-		return actionInline();
-	}
-
-	/**
-	 * With this option, no collection will be created, and the whole map-reduce operation will happen in RAM. Also, the
-	 * results of the map-reduce will be returned within the result object. Note that this option is possible only when
-	 * the result set fits within the 16MB limit of a single document.
-	 *
 	 * @return this.
 	 * @since 3.0
 	 */
@@ -122,17 +111,6 @@ public class MapReduceOptions {
 		return this;
 	}
 
-	/**
-	 * This option will merge new data into the old output collection. In other words, if the same key exists in both the
-	 * result set and the old collection, the new key will overwrite the old one.
-	 *
-	 * @return MapReduceOptions so that methods can be chained in a fluent API style
-	 * @deprecated since 3.0 - use {@link #actionMerge()} instead.
-	 */
-	@Deprecated
-	public MapReduceOptions outputTypeMerge() {
-		return actionMerge();
-	}
 
 	/**
 	 * This option will merge new data into the old output collection. In other words, if the same key exists in both the
@@ -153,37 +131,12 @@ public class MapReduceOptions {
 	 * collection. If a finalize function was provided, this will be run after the reduce as well.
 	 *
 	 * @return this.
-	 * @deprecated since 3.0 - use {@link #actionReduce()} instead.
-	 */
-	@Deprecated
-	public MapReduceOptions outputTypeReduce() {
-		return actionReduce();
-	}
-
-	/**
-	 * If documents exists for a given key in the result set and in the old collection, then a reduce operation (using the
-	 * specified reduce function) will be performed on the two values and the result will be written to the output
-	 * collection. If a finalize function was provided, this will be run after the reduce as well.
-	 *
-	 * @return this.
 	 * @since 3.0
 	 */
 	public MapReduceOptions actionReduce() {
 
 		this.mapReduceAction = MapReduceAction.REDUCE;
 		return this;
-	}
-
-	/**
-	 * The output will be inserted into a collection which will atomically replace any existing collection with the same
-	 * name. Note, the default is {@link MapReduceAction#REPLACE}.
-	 *
-	 * @return MapReduceOptions so that methods can be chained in a fluent API style
-	 * @deprecated since 3.0 - Use {@link #actionReplace()} instead.
-	 */
-	@Deprecated
-	public MapReduceOptions outputTypeReplace() {
-		return this.actionReplace();
 	}
 
 	/**
@@ -262,23 +215,6 @@ public class MapReduceOptions {
 	}
 
 	/**
-	 * Add additional extra options that may not have a method on this class. This method will help if you use a version
-	 * of this client library with a server version that has added additional map-reduce options that do not yet have an
-	 * method for use in setting them. options
-	 *
-	 * @param key The key option
-	 * @param value The value of the option
-	 * @return MapReduceOptions so that methods can be chained in a fluent API style
-	 * @deprecated since 1.7.
-	 */
-	@Deprecated
-	public MapReduceOptions extraOption(String key, Object value) {
-
-		extraOptions.put(key, value);
-		return this;
-	}
-
-	/**
 	 * Define the Collation specifying language-specific rules for string comparison.
 	 *
 	 * @param collation can be {@literal null}.
@@ -289,15 +225,6 @@ public class MapReduceOptions {
 
 		this.collation = Optional.ofNullable(collation);
 		return this;
-	}
-
-	/**
-	 * @return
-	 * @deprecated since 1.7
-	 */
-	@Deprecated
-	public Map<String, Object> getExtraOptions() {
-		return extraOptions;
 	}
 
 	public Optional<String> getFinalizeFunction() {

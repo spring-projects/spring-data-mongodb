@@ -337,6 +337,11 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	}
 
 	private String getOrDefault(Object value, String defaultValue) {
-		return !StringUtils.isEmpty(value) ? value.toString() : defaultValue;
+
+		if(value == null) {
+			return defaultValue;
+		}
+		String sValue = value.toString();
+		return StringUtils.hasText(sValue) ? sValue : defaultValue;
 	}
 }

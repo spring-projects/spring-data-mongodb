@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -141,7 +141,6 @@ public class MongoTemplateTests {
 		cfg.configureMappingContext(it -> {
 			it.autocreateIndex(false);
 			it.initialEntitySet(AuditablePerson.class);
-
 		});
 
 		cfg.configureApplicationContext(it -> {
@@ -178,7 +177,7 @@ public class MongoTemplateTests {
 		});
 	});
 
-	MongoDatabaseFactory factory = template.getMongoDbFactory();
+	MongoDatabaseFactory factory = template.getMongoDatabaseFactory();
 
 	@AfterEach
 	public void cleanUp() {
@@ -2591,30 +2590,6 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class)).isNull();
 	}
 
-	@Test // DATAMONGO-354, DATAMONGO-1824
-	@MongoVersion(until = "3.6")
-	@SuppressWarnings("deprecation")
-	public void testUpdateShouldAllowMultiplePushAll() {
-
-		DocumentWithMultipleCollections doc = new DocumentWithMultipleCollections();
-		doc.id = "1234";
-		doc.string1 = Arrays.asList("spring");
-		doc.string2 = Arrays.asList("one");
-
-		template.save(doc);
-
-		Update update = new Update().pushAll("string1", new Object[] { "data", "mongodb" });
-		update.pushAll("string2", new String[] { "two", "three" });
-
-		Query findQuery = new Query(Criteria.where("id").is(doc.id));
-		template.updateFirst(findQuery, update, DocumentWithMultipleCollections.class);
-
-		DocumentWithMultipleCollections result = template.findOne(findQuery, DocumentWithMultipleCollections.class);
-		assertThat(result.string1).contains("spring", "data", "mongodb");
-		assertThat(result.string2).contains("one", "two", "three");
-
-	}
-
 	@Test // DATAMONGO-404
 	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollection() {
 
@@ -4029,9 +4004,7 @@ public class MongoTemplateTests {
 		INSTANCE;
 
 		public Date convert(LocalDateTime source) {
-			return source == null ? null : java.util.Date
-					.from(source.atZone(ZoneId.systemDefault())
-							.toInstant());
+			return source == null ? null : java.util.Date.from(source.atZone(ZoneId.systemDefault()).toInstant());
 		}
 	}
 
@@ -4040,8 +4013,7 @@ public class MongoTemplateTests {
 		INSTANCE;
 
 		public LocalDateTime convert(Date source) {
-			return source == null ? null : LocalDateTime.ofInstant(
-					source.toInstant(), ZoneId.systemDefault());
+			return source == null ? null : LocalDateTime.ofInstant(source.toInstant(), ZoneId.systemDefault());
 		}
 	}
 

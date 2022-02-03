@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +35,6 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -60,7 +58,8 @@ public class AbstractMongoConfigurationUnitTests {
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		AbstractMongoClientConfiguration configuration = new SampleMongoConfiguration();
-		assertThat(configuration.getMappingBasePackage()).isEqualTo(SampleMongoConfiguration.class.getPackage().getName());
+		assertThat(configuration.getMappingBasePackages())
+				.containsExactly(SampleMongoConfiguration.class.getPackage().getName());
 		assertThat(configuration.getInitialEntitySet()).hasSize(2);
 		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
 	}

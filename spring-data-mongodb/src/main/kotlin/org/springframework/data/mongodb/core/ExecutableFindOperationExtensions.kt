@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,9 @@
  */
 package org.springframework.data.mongodb.core
 
-import org.springframework.data.mongodb.core.query.asString
-import kotlin.reflect.KClass
+import org.springframework.data.mapping.toDotPath
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
-
-/**
- * Extension for [ExecutableFindOperation.query] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @author Mark Paluch
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("query<T>()"))
-fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableFindOperation.ExecutableFind<T> =
-		query(entityClass.java)
 
 /**
  * Extension for [ExecutableFindOperation.query] leveraging reified type parameters.
@@ -51,17 +39,6 @@ inline fun <reified T : Any> ExecutableFindOperation.distinct(field : KProperty1
 		query(T::class.java).distinct(field.name)
 
 /**
- * Extension for [ExecutableFindOperation.FindWithProjection.as] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @author Mark Paluch
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
-fun <T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(resultType: KClass<T>): ExecutableFindOperation.FindWithQuery<T> =
-		`as`(resultType.java)
-
-/**
  * Extension for [ExecutableFindOperation.FindWithProjection.as] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -70,16 +47,6 @@ fun <T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(resultType: K
  */
 inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(): ExecutableFindOperation.FindWithQuery<T> =
 		`as`(T::class.java)
-
-/**
- * Extension for [ExecutableFindOperation.DistinctWithProjection.as] providing a [KClass] based variant.
- *
- * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
-fun <T : Any> ExecutableFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ExecutableFindOperation.TerminatingDistinct<T> =
-		`as`(resultType.java);
 
 /**
  * Extension for [ExecutableFindOperation.DistinctWithProjection.as] leveraging reified type parameters.
@@ -98,4 +65,4 @@ inline fun <reified T : Any> ExecutableFindOperation.DistinctWithProjection.asTy
  * @since 3.0
  */
 fun ExecutableFindOperation.FindDistinct.distinct(key: KProperty<*>): ExecutableFindOperation.TerminatingDistinct<Any> =
-		distinct(asString(key))
+		distinct(key.toDotPath())

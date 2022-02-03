@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,18 +85,6 @@ public class Meta {
 	 */
 	public void setMaxTimeMsec(long maxTimeMsec) {
 		setMaxTime(Duration.ofMillis(maxTimeMsec));
-	}
-
-	/**
-	 * Set the maximum time limit for processing operations.
-	 *
-	 * @param timeout
-	 * @param timeUnit
-	 * @deprecated since 2.1. Use {@link #setMaxTime(Duration)} instead.
-	 */
-	@Deprecated
-	public void setMaxTime(long timeout, @Nullable TimeUnit timeUnit) {
-		setValue(MetaKey.MAX_TIME_MS.key, (timeUnit != null ? timeUnit : TimeUnit.MILLISECONDS).toMillis(timeout));
 	}
 
 	/**
@@ -289,14 +277,6 @@ public class Meta {
 		 * Sets the cursor to return all data returned by the query at once rather than splitting the results into batches.
 		 */
 		EXHAUST,
-
-		/**
-		 * Allows querying of a replica.
-		 *
-		 * @deprecated since 3.0.2, use {@link #SECONDARY_READS} instead.
-		 */
-		@Deprecated
-		SLAVE_OK,
 
 		/**
 		 * Allows querying of a replica.

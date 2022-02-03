@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,20 +46,6 @@ public class CollectionOptions {
 	private @Nullable Collation collation;
 	private ValidationOptions validationOptions;
 	private @Nullable TimeSeriesOptions timeSeriesOptions;
-
-	/**
-	 * Constructs a new <code>CollectionOptions</code> instance.
-	 *
-	 * @param size the collection size in bytes, this data space is preallocated. Can be {@literal null}.
-	 * @param maxDocuments the maximum number of documents in the collection. Can be {@literal null}.
-	 * @param capped true to created a "capped" collection (fixed size with auto-FIFO behavior based on insertion order),
-	 *          false otherwise. Can be {@literal null}.
-	 * @deprecated since 2.0 please use {@link CollectionOptions#empty()} as entry point.
-	 */
-	@Deprecated
-	public CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped) {
-		this(size, maxDocuments, capped, null, ValidationOptions.none(), null);
-	}
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
 			@Nullable Collation collation, ValidationOptions validationOptions,

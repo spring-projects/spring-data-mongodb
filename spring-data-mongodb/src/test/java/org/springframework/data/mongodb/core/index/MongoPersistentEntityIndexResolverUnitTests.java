@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
@@ -306,8 +305,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document("WithOptionsOnIndexedProperty")
 		class WithOptionsOnIndexedProperty {
 
-			@Indexed(background = true, direction = IndexDirection.DESCENDING, dropDups = true, expireAfterSeconds = 10,
-					sparse = true, unique = true) //
+			@Indexed(background = true, direction = IndexDirection.DESCENDING, expireAfterSeconds = 10, sparse = true,
+					unique = true) //
 			String indexedProperty;
 		}
 
@@ -319,8 +318,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		class IndexOnLevelZeroWithExplicityNamedField {
 
-			@Indexed
-			@Field("customFieldName") String namedProperty;
+			@Indexed @Field("customFieldName") String namedProperty;
 		}
 
 		@Document
@@ -428,8 +426,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	@Document
 	class IndexOnMetaAnnotatedField {
-		@Field("_name")
-		@IndexedFieldAnnotation String lastname;
+		@Field("_name") @IndexedFieldAnnotation String lastname;
 	}
 
 	/**
@@ -1492,8 +1489,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class SimilarityHolingBean {
 
-			@Indexed
-			@Field("norm") String normalProperty;
+			@Indexed @Field("norm") String normalProperty;
 			@Field("similarityL") private List<SimilaritySibling> listOfSimilarilyNamedEntities = null;
 		}
 
@@ -1656,8 +1652,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithHashedIndexOnId {
 
-			@HashIndexed
-			@Id String id;
+			@HashIndexed @Id String id;
 		}
 
 		@Document

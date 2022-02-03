@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core
-
-import kotlin.reflect.KClass
-
-/**
- * Extension for [ExecutableInsertOperation.insert] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @author Mark Paluch
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("insert<T>()"))
-fun <T : Any> ExecutableInsertOperation.insert(entityClass: KClass<T>): ExecutableInsertOperation.ExecutableInsert<T> =
-        insert(entityClass.java)
 
 /**
  * Extension for [ExecutableInsertOperation.insert] leveraging reified type parameters.

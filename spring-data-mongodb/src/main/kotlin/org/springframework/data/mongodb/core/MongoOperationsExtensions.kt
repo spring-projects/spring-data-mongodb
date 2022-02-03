@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,22 +26,10 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults
 import org.springframework.data.mongodb.core.index.IndexOperations
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults
-import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 import java.util.stream.Stream
-import kotlin.reflect.KClass
-
-/**
- * Extension for [MongoOperations.getCollectionName] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("getCollectionName<T>()"))
-fun <T : Any> MongoOperations.getCollectionName(entityClass: KClass<T>): String =
-		getCollectionName(entityClass.java)
 
 /**
  * Extension for [MongoOperations.getCollectionName] leveraging reified type parameters.
@@ -84,17 +72,6 @@ inline fun <reified T : Any> MongoOperations.stream(
 	else stream(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.createCollection] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("createCollection<T>(collectionOptions)"))
-fun <T : Any> MongoOperations.createCollection(entityClass: KClass<T>, collectionOptions: CollectionOptions? = null): MongoCollection<Document> =
-		if (collectionOptions != null) createCollection(entityClass.java, collectionOptions)
-		else createCollection(entityClass.java)
-
-/**
  * Extension for [MongoOperations.createCollection] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -106,16 +83,6 @@ inline fun <reified T : Any> MongoOperations.createCollection(
 		else createCollection(T::class.java)
 
 /**
- * Extension for [MongoOperations.collectionExists] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("collectionExists<T>()"))
-fun <T : Any> MongoOperations.collectionExists(entityClass: KClass<T>): Boolean =
-		collectionExists(entityClass.java)
-
-/**
  * Extension for [MongoOperations.collectionExists] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -123,17 +90,6 @@ fun <T : Any> MongoOperations.collectionExists(entityClass: KClass<T>): Boolean 
  */
 inline fun <reified T : Any> MongoOperations.collectionExists(): Boolean =
 		collectionExists(T::class.java)
-
-/**
- * Extension for [MongoOperations.dropCollection] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("dropCollection<T>()"))
-fun <T : Any> MongoOperations.dropCollection(entityClass: KClass<T>) {
-	dropCollection(entityClass.java)
-}
 
 /**
  * Extension for [MongoOperations.dropCollection] leveraging reified type parameters.
@@ -146,16 +102,6 @@ inline fun <reified T : Any> MongoOperations.dropCollection() {
 }
 
 /**
- * Extension for [MongoOperations.indexOps] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("indexOps<T>()"))
-fun <T : Any> MongoOperations.indexOps(entityClass: KClass<T>): IndexOperations =
-		indexOps(entityClass.java)
-
-/**
  * Extension for [MongoOperations.indexOps] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -163,17 +109,6 @@ fun <T : Any> MongoOperations.indexOps(entityClass: KClass<T>): IndexOperations 
  */
 inline fun <reified T : Any> MongoOperations.indexOps(): IndexOperations =
 		indexOps(T::class.java)
-
-/**
- * Extension for [MongoOperations.bulkOps] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("bulkOps<T>(bulkMode, collectionName)"))
-fun <T : Any> MongoOperations.bulkOps(bulkMode: BulkMode, entityClass: KClass<T>, collectionName: String? = null): BulkOperations =
-		if (collectionName != null) bulkOps(bulkMode, entityClass.java, collectionName)
-		else bulkOps(bulkMode, entityClass.java)
 
 /**
  * Extension for [MongoOperations.bulkOps] leveraging reified type parameters.
@@ -196,44 +131,6 @@ inline fun <reified T : Any> MongoOperations.findAll(collectionName: String? = n
 		if (collectionName != null) findAll(T::class.java, collectionName) else findAll(T::class.java)
 
 /**
- * Extension for [MongoOperations.group] leveraging reified type parameters.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Suppress("DEPRECATION")
-@Deprecated("since 2.2, the `group` command has been removed in MongoDB Server 4.2.0.", replaceWith = ReplaceWith("aggregate<T>()"))
-inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, groupBy: org.springframework.data.mongodb.core.mapreduce.GroupBy): org.springframework.data.mongodb.core.mapreduce.GroupByResults<T> =
-		group(inputCollectionName, groupBy, T::class.java)
-
-/**
- * Extension for [MongoOperations.group] leveraging reified type parameters.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Suppress("DEPRECATION")
-@Deprecated("since 2.2, the `group` command has been removed in MongoDB Server 4.2.0.", replaceWith = ReplaceWith("aggregate<T>()"))
-inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputCollectionName: String, groupBy: org.springframework.data.mongodb.core.mapreduce.GroupBy): org.springframework.data.mongodb.core.mapreduce.GroupByResults<T> =
-		group(criteria, inputCollectionName, groupBy, T::class.java)
-
-/**
- * Extension for [MongoOperations.aggregate] leveraging reified type parameters.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated(
-	"Since 2.2, use the reified variant",
-	replaceWith = ReplaceWith("aggregate<I, O>(aggregation)")
-)
-inline fun <reified O : Any> MongoOperations.aggregate(
-	aggregation: Aggregation,
-	inputType: KClass<*>
-): AggregationResults<O> =
-	aggregate(aggregation, inputType.java, O::class.java)
-
-/**
  * Extension for [MongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Mark Paluch
@@ -253,22 +150,6 @@ inline fun <reified O : Any> MongoOperations.aggregate(
 	collectionName: String
 ): AggregationResults<O> =
 	aggregate(aggregation, collectionName, O::class.java)
-
-/**
- * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated(
-	"Since 2.2, use the reified variant",
-	replaceWith = ReplaceWith("aggregateStream<I, O>(aggregation)")
-)
-inline fun <reified O : Any> MongoOperations.aggregateStream(
-	aggregation: Aggregation,
-	inputType: KClass<*>
-): Stream<O> =
-	aggregateStream(aggregation, inputType.java, O::class.java)
 
 /**
  * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
@@ -333,17 +214,6 @@ inline fun <reified T : Any> MongoOperations.findOne(query: Query, collectionNam
 		if (collectionName != null) findOne(query, T::class.java, collectionName) else findOne(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.exists] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("exists<T>(query, collectionName)"))
-fun <T : Any> MongoOperations.exists(query: Query, entityClass: KClass<T>, collectionName: String? = null): Boolean =
-		if (collectionName != null) exists(query, entityClass.java, collectionName)
-		else exists(query, entityClass.java)
-
-/**
  * Extension for [MongoOperations.exists] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -378,36 +248,6 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
  * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
  *
  * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(field)"))
-inline fun <reified T : Any> MongoOperations.findDistinct(field: String, entityClass: KClass<*>): List<T> =
-		findDistinct(field, entityClass.java, T::class.java)
-
-/**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
- *
- * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(query, field)"))
-inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, entityClass: KClass<*>): List<T> =
-		findDistinct(query, field, entityClass.java, T::class.java)
-
-/**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
- *
- * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(query, field, collectionName)"))
-inline fun <reified T : Any> MongoOperations.findDistinct(query: Query, field: String, collectionName: String, entityClass: KClass<*>): List<T> =
-		findDistinct(query, field, collectionName, entityClass.java, T::class.java)
-
-/**
- * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.
- *
- * @author Christoph Strobl
  * @author Mark Paluch
  * @since 2.1
  */
@@ -436,17 +276,6 @@ inline fun <reified T : Any> MongoOperations.findAndRemove(query: Query, collect
 		else findAndRemove(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.count] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("count<T>(query, collectionName)"))
-fun <T : Any> MongoOperations.count(query: Query = Query(), entityClass: KClass<T>, collectionName: String? = null): Long =
-		if (collectionName != null) count(query, entityClass.java, collectionName)
-		else count(query, entityClass.java)
-
-/**
  * Extension for [MongoOperations.count] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -457,17 +286,6 @@ inline fun <reified T : Any> MongoOperations.count(query: Query = Query(), colle
 		if (collectionName != null) count(query, T::class.java, collectionName) else count(query, T::class.java)
 
 /**
- * Extension for [MongoOperations.insert] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("insert<T>(batchToSave)"))
-fun <T : Any> MongoOperations.insert(batchToSave: Collection<T>, entityClass: KClass<T>) {
-	insert(batchToSave, entityClass.java)
-}
-
-/**
  * Extension for [MongoOperations.insert] leveraging reified type parameters.
  *
  * @author Mark Paluch
@@ -475,17 +293,6 @@ fun <T : Any> MongoOperations.insert(batchToSave: Collection<T>, entityClass: KC
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 inline fun <reified T : Any> MongoOperations.insert(batchToSave: Collection<T>): Collection<T> = insert(batchToSave, T::class.java)
-
-/**
- * Extension for [MongoOperations.upsert] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("upsert<T>(query, update, collectionName)"))
-fun <T : Any> MongoOperations.upsert(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
-		if (collectionName != null) upsert(query, update, entityClass.java, collectionName)
-		else upsert(query, update, entityClass.java)
 
 /**
  * Extension for [MongoOperations.upsert] leveraging reified type parameters.
@@ -499,17 +306,6 @@ inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update
 		else upsert(query, update, T::class.java)
 
 /**
- * Extension for [MongoOperations.updateFirst] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("updateFirst<T>(query, update, collectionName)"))
-fun <T : Any> MongoOperations.updateFirst(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
-		if (collectionName != null) updateFirst(query, update, entityClass.java, collectionName)
-		else updateFirst(query, update, entityClass.java)
-
-/**
  * Extension for [MongoOperations.updateFirst] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -521,17 +317,6 @@ inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: U
 		else updateFirst(query, update, T::class.java)
 
 /**
- * Extension for [MongoOperations.updateMulti] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("updateMulti<T>(query, update, collectionName)"))
-fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityClass: KClass<T>, collectionName: String? = null): UpdateResult =
-		if (collectionName != null) updateMulti(query, update, entityClass.java, collectionName)
-		else updateMulti(query, update, entityClass.java)
-
-/**
  * Extension for [MongoOperations.updateMulti] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
@@ -541,17 +326,6 @@ fun <T : Any> MongoOperations.updateMulti(query: Query, update: Update, entityCl
 inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: Update, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateMulti(query, update, T::class.java, collectionName)
 		else updateMulti(query, update, T::class.java)
-
-/**
- * Extension for [MongoOperations.remove] providing a [KClass] based variant.
- *
- * @author Sebastien Deleuze
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("remove<T>(query, collectionName)"))
-fun <T : Any> MongoOperations.remove(query: Query, entityClass: KClass<T>, collectionName: String? = null): DeleteResult =
-		if (collectionName != null) remove(query, entityClass.java, collectionName)
-		else remove(query, entityClass.java)
 
 /**
  * Extension for [MongoOperations.remove] leveraging reified type parameters.

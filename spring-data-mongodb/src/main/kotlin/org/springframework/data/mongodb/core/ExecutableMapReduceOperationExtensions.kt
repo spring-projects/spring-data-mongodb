@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,6 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlin.reflect.KClass
-
-/**
- * Extension for [ExecutableMapReduceOperation.mapReduce] providing a [KClass] based variant.
- *
- * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("mapReduce<T>()"))
-fun <T : Any> ExecutableMapReduceOperation.mapReduce(entityClass: KClass<T>): ExecutableMapReduceOperation.MapReduceWithMapFunction<T> =
-		mapReduce(entityClass.java)
-
 /**
  * Extension for [ExecutableMapReduceOperation.mapReduce] leveraging reified type parameters.
  *
@@ -35,16 +23,6 @@ fun <T : Any> ExecutableMapReduceOperation.mapReduce(entityClass: KClass<T>): Ex
  */
 inline fun <reified T : Any> ExecutableMapReduceOperation.mapReduce(): ExecutableMapReduceOperation.MapReduceWithMapFunction<T> =
 		mapReduce(T::class.java)
-
-/**
- * Extension for [ExecutableMapReduceOperation.MapReduceWithProjection.as] providing a [KClass] based variant.
- *
- * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
-fun <T : Any> ExecutableMapReduceOperation.MapReduceWithProjection<*>.asType(resultType: KClass<T>): ExecutableMapReduceOperation.MapReduceWithQuery<T> =
-		`as`(resultType.java)
 
 /**
  * Extension for [ExecutableMapReduceOperation.MapReduceWithProjection.as] leveraging reified type parameters.

@@ -76,7 +76,7 @@ public class MapReduceTests {
 		template.dropCollection("jmr1_out");
 		template.dropCollection("jmr1");
 		template.dropCollection("jmrWithGeo");
-		template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").drop();
+		template.getMongoDatabaseFactory().getMongoDatabase("jmr1-out-db").drop();
 	}
 
 	@Test // DATAMONGO-260
@@ -155,7 +155,7 @@ public class MapReduceTests {
 				options().outputDatabase("jmr1-out-db").outputCollection("jmr1-out"), ValueObject.class);
 
 		assertThat(
-				template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").listCollectionNames().into(new ArrayList<>()))
+				template.getMongoDatabaseFactory().getMongoDatabase("jmr1-out-db").listCollectionNames().into(new ArrayList<>()))
 						.contains("jmr1-out");
 	}
 
@@ -175,7 +175,7 @@ public class MapReduceTests {
 		String mapWithExcludeFunction = "function(){ for ( var i=0; i<this.x.length; i++ ){ if(this.x[i] != exclude) emit( this.x[i] , 1 ); } }";
 
 		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce("jmr1", mapWithExcludeFunction, REDUCE_FUNCTION,
-				new MapReduceOptions().scopeVariables(scopeVariables).outputTypeInline(), ValueObject.class);
+				new MapReduceOptions().scopeVariables(scopeVariables), ValueObject.class);
 
 		assertThat(copyToMap(results)) //
 				.hasSize(3) //

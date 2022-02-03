@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -197,25 +197,6 @@ public class Update implements UpdateDefinition {
 			pushCommandBuilders.put(key, new PushOperatorBuilder(key));
 		}
 		return pushCommandBuilders.get(key);
-	}
-
-	/**
-	 * Update using the {@code $pushAll} update modifier. <br>
-	 * <b>Note</b>: In MongoDB 2.4 the usage of {@code $pushAll} has been deprecated in favor of {@code $push $each}.
-	 * <b>Important:</b> As of MongoDB 3.6 {@code $pushAll} is not longer supported. Use {@code $push $each} instead.
-	 * {@link #push(String)}) returns a builder that can be used to populate the {@code $each} object.
-	 *
-	 * @param key the field name.
-	 * @param values must not be {@literal null}.
-	 * @return this.
-	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator:
-	 *      $pushAll</a>
-	 * @deprecated as of MongoDB 2.4. Removed in MongoDB 3.6. Use {@link #push(String) $push $each} instead.
-	 */
-	@Deprecated
-	public Update pushAll(String key, Object[] values) {
-		addMultiFieldOperation("$pushAll", key, Arrays.asList(values));
-		return this;
 	}
 
 	/**
@@ -455,23 +436,6 @@ public class Update implements UpdateDefinition {
 	@Override
 	public boolean hasArrayFilters() {
 		return !this.arrayFilters.isEmpty();
-	}
-
-	/**
-	 * This method is not called anymore rather override {@link #addMultiFieldOperation(String, String, Object)}.
-	 *
-	 * @param operator
-	 * @param key
-	 * @param value
-	 * @deprectaed Use {@link #addMultiFieldOperation(String, String, Object)} instead.
-	 */
-	@Deprecated
-	protected void addFieldOperation(String operator, String key, Object value) {
-
-		Assert.hasText(key, "Key/Path for update must not be null or blank.");
-
-		modifierOps.put(operator, new Document(key, value));
-		this.keysToUpdate.add(key);
 	}
 
 	protected void addMultiFieldOperation(String operator, String key, @Nullable Object value) {

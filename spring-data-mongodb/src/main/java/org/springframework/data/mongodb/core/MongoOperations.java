@@ -23,7 +23,6 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -34,8 +33,6 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.IndexOperations;
-import org.springframework.data.mongodb.core.mapreduce.GroupBy;
-import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -432,43 +429,6 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> findAll(Class<T> entityClass, String collectionName);
 
 	/**
-	 * Execute a group operation over the entire collection. The group operation entity class should match the 'shape' of
-	 * the returned object that takes int account the initial document structure as well as any finalize functions.
-	 *
-	 * @param inputCollectionName the collection where the group operation will read from
-	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
-	 *          reduce function.
-	 * @param entityClass The parametrized type of the returned list
-	 * @return The results of the group operation
-	 * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0. <br />
-	 *             Please use {@link #aggregate(TypedAggregation, String, Class) } with a
-	 *             {@link org.springframework.data.mongodb.core.aggregation.GroupOperation} instead.
-	 */
-	@Deprecated
-	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
-
-	/**
-	 * Execute a group operation restricting the rows to those which match the provided Criteria. The group operation
-	 * entity class should match the 'shape' of the returned object that takes int account the initial document structure
-	 * as well as any finalize functions.
-	 *
-	 * @param criteria The criteria that restricts the row that are considered for grouping. If not specified all rows are
-	 *          considered.
-	 * @param inputCollectionName the collection where the group operation will read from
-	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
-	 *          reduce function.
-	 * @param entityClass The parametrized type of the returned list
-	 * @return The results of the group operation
-	 * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0. <br />
-	 *             Please use {@link #aggregate(TypedAggregation, String, Class) } with a
-	 *             {@link org.springframework.data.mongodb.core.aggregation.GroupOperation} and
-	 *             {@link org.springframework.data.mongodb.core.aggregation.MatchOperation} instead.
-	 */
-	@Deprecated
-	<T> GroupByResults<T> group(@Nullable Criteria criteria, String inputCollectionName, GroupBy groupBy,
-			Class<T> entityClass);
-
-	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
 	 * inputCollection is derived from the inputType of the aggregation.
 	 *
@@ -606,7 +566,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since MongoDB server version 5.0
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
 			Class<T> entityClass);
 
@@ -619,7 +581,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior.
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since MongoDB server version 5.0
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
 			@Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
@@ -633,7 +597,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since MongoDB server version 5.0
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
 			Class<T> entityClass);
 
@@ -647,7 +613,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since MongoDB server version 5.0
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
 			@Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass);
 

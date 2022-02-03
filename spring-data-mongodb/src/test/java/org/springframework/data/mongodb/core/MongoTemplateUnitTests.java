@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -92,7 +91,6 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -958,7 +956,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2027
 	void mapReduceShouldNotUseOutputCollectionForInline() {
 
-		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection").outputTypeInline(),
+		template.mapReduce("", "", "", MapReduceOptions.options().actionInline().outputCollection("out-collection"),
 				AutogenerateableId.class);
 
 		verify(mapReduceIterable, never()).collectionName(any());
@@ -967,7 +965,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2027
 	void mapReduceShouldUseOutputActionWhenPresent() {
 
-		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection").outputTypeMerge(),
+		template.mapReduce("", "", "", MapReduceOptions.options().actionMerge().outputCollection("out-collection"),
 				AutogenerateableId.class);
 
 		verify(mapReduceIterable).action(eq(MapReduceAction.MERGE));
@@ -977,7 +975,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void mapReduceShouldUseOutputDatabaseWhenPresent() {
 
 		template.mapReduce("", "", "",
-				MapReduceOptions.options().outputDatabase("out-database").outputCollection("out-collection").outputTypeMerge(),
+				MapReduceOptions.options().outputDatabase("out-database").outputCollection("out-collection"),
 				AutogenerateableId.class);
 
 		verify(mapReduceIterable).databaseName(eq("out-database"));
@@ -986,8 +984,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2027
 	void mapReduceShouldNotUseOutputDatabaseForInline() {
 
-		template.mapReduce("", "", "", MapReduceOptions.options().outputDatabase("out-database").outputTypeInline(),
-				AutogenerateableId.class);
+		template.mapReduce("", "", "", MapReduceOptions.options().outputDatabase("out-database"), AutogenerateableId.class);
 
 		verify(mapReduceIterable, never()).databaseName(any());
 	}
@@ -999,20 +996,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.geoNear(query, AutogenerateableId.class);
 
 		verify(aggregateIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
-	}
-
-	@Test // DATAMONGO-1518
-	void groupShouldUseCollationWhenPresent() {
-
-		commandResultDocument.append("retval", Collections.emptySet());
-		template.group("collection-1", GroupBy.key("id").reduceFunction("bar").collation(Collation.of("fr")),
-				AutogenerateableId.class);
-
-		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), any(Class.class));
-
-		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class))
-				.isEqualTo(new Document("locale", "fr"));
 	}
 
 	@Test // DATAMONGO-1880

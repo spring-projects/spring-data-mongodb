@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.List;
 
 import org.junit.Test;
-
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
@@ -63,7 +62,7 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 	@Test // DATAMONGO-1110
 	public void geoNearWithMinDistance() {
 
-		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).minDistance(1);
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).limit(10).minDistance(1);
 
 		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
 

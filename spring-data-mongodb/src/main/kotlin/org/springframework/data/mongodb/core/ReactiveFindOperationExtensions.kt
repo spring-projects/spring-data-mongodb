@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,9 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.data.geo.GeoResult
-import org.springframework.data.mongodb.core.query.asString
-import kotlin.reflect.KClass
+import org.springframework.data.mapping.toDotPath
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
-
-/**
- * Extension for [ReactiveFindOperation.query] providing a [KClass] based variant.
- *
- * @author Mark Paluch
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("query<T>()"))
-fun <T : Any> ReactiveFindOperation.query(entityClass: KClass<T>): ReactiveFindOperation.ReactiveFind<T> =
-		query(entityClass.java)
 
 /**
  * Extension for [ReactiveFindOperation.query] leveraging reified type parameters.
@@ -54,16 +43,6 @@ inline fun <reified T : Any> ReactiveFindOperation.distinct(field : KProperty1<T
 		query(T::class.java).distinct(field.name)
 
 /**
- * Extension for [ReactiveFindOperation.FindWithProjection.as] providing a [KClass] based variant.
- *
- * @author Mark Paluch
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
-fun <T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(resultType: KClass<T>): ReactiveFindOperation.FindWithQuery<T> =
-		`as`(resultType.java)
-
-/**
  * Extension for [ReactiveFindOperation.FindWithProjection.as] leveraging reified type parameters.
  *
  * @author Mark Paluch
@@ -71,16 +50,6 @@ fun <T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(resultType: KCl
  */
 inline fun <reified T : Any> ReactiveFindOperation.FindWithProjection<*>.asType(): ReactiveFindOperation.FindWithQuery<T> =
 		`as`(T::class.java)
-
-/**
- * Extension for [ExecutableFindOperation.DistinctWithProjection.as] providing a [KClass] based variant.
- *
- * @author Christoph Strobl
- * @since 2.1
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("asType<T>()"))
-fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KClass<T>): ReactiveFindOperation.TerminatingDistinct<T> =
-		`as`(resultType.java);
 
 /**
  * Extension for [ReactiveFindOperation.DistinctWithProjection.as] leveraging reified type parameters.
@@ -98,7 +67,7 @@ inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType
  * @since 3.0
  */
 fun ReactiveFindOperation.FindDistinct.distinct(key: KProperty<*>): ReactiveFindOperation.TerminatingDistinct<Any> =
-		distinct(asString(key))
+		distinct(key.toDotPath())
 
 /**
  * Non-nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].

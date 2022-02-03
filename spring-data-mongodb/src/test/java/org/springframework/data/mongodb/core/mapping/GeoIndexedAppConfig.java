@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -42,8 +43,8 @@ public class GeoIndexedAppConfig extends AbstractMongoClientConfiguration {
 	}
 
 	@Override
-	public String getMappingBasePackage() {
-		return "org.springframework.data.mongodb.core.core.mapping";
+	protected Collection<String> getMappingBasePackages() {
+		return Collections.singleton("org.springframework.data.mongodb.core.core.mapping");
 	}
 
 	@Bean

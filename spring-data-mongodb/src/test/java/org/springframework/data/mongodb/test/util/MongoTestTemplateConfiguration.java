@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,17 @@
 package org.springframework.data.mongodb.test.util;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -33,9 +35,8 @@ import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.lang.Nullable;
 
@@ -69,19 +70,40 @@ public class MongoTestTemplateConfiguration {
 			if (mongoConverterConfigurer.customConversions != null) {
 				converter.setCustomConversions(mongoConverterConfigurer.customConversions);
 			}
+			if (auditingConfigurer.hasAuditingHandler()) {
+				converter.setEntityCallbacks(getEntityCallbacks());
+			}
 			converter.afterPropertiesSet();
 		}
 
 		return converter;
 	}
 
-	List<ApplicationListener<?>> getApplicationEventListener() {
+	EntityCallbacks getEntityCallbacks() {
 
-		ArrayList<ApplicationListener<?>> listeners = new ArrayList<>(applicationContextConfigurer.listeners);
-		if (auditingConfigurer.hasAuditingHandler()) {
-			listeners.add(new AuditingEventListener(() -> auditingConfigurer.auditingHandlers(mappingContext())));
+		EntityCallbacks callbacks = null;
+		if (getApplicationContext() != null) {
+			callbacks = EntityCallbacks.create(getApplicationContext());
 		}
-		return listeners;
+		if (!auditingConfigurer.hasAuditingHandler()) {
+			return callbacks;
+		}
+		if (callbacks == null) {
+			callbacks = EntityCallbacks.create();
+		}
+
+		callbacks.addEntityCallback(new AuditingEntityCallback(new ObjectFactory<IsNewAwareAuditingHandler>() {
+			@Override
+			public IsNewAwareAuditingHandler getObject() throws BeansException {
+				return auditingConfigurer.auditingHandlerFunction.apply(converter.getMappingContext());
+			}
+		}));
+		return callbacks;
+
+	}
+
+	List<ApplicationListener<?>> getApplicationEventListener() {
+		return new ArrayList<>(applicationContextConfigurer.listeners);
 	}
 
 	@Nullable
@@ -110,7 +132,8 @@ public class MongoTestTemplateConfiguration {
 	MongoMappingContext mappingContext() {
 
 		if (mappingContext == null) {
-			mappingContext = new MongoTestMappingContext(mappingContextConfigurer).customConversions(mongoConverterConfigurer).init();
+			mappingContext = new MongoTestMappingContext(mappingContextConfigurer).customConversions(mongoConverterConfigurer)
+					.init();
 		}
 
 		return mappingContext;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -226,8 +226,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}.
-	 * <br />
+	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}. <br />
 	 * Starting in version 4.2, MongoDB adds a new aggregation pipeline stage {@link AggregationUpdate#set $set} that is
 	 * an alias for {@code $addFields}.
 	 *
@@ -433,18 +432,6 @@ public class Aggregation {
 	 */
 	public static SortByCountOperation sortByCount(AggregationExpression groupAndSortExpression) {
 		return new SortByCountOperation(groupAndSortExpression);
-	}
-
-	/**
-	 * Creates a new {@link SkipOperation} skipping the given number of elements.
-	 *
-	 * @param elementsToSkip must not be less than zero.
-	 * @return new instance of {@link SkipOperation}.
-	 * @deprecated prepare to get this one removed in favor of {@link #skip(long)}.
-	 */
-	@Deprecated
-	public static SkipOperation skip(int elementsToSkip) {
-		return new SkipOperation(elementsToSkip);
 	}
 
 	/**
@@ -725,8 +712,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Converts this {@link Aggregation} specification to a {@link Document}.
-	 * <br />
+	 * Converts this {@link Aggregation} specification to a {@link Document}. <br />
 	 * MongoDB requires as of 3.6 cursor-based aggregation. Use {@link #toPipeline(AggregationOperationContext)} to render
 	 * an aggregation pipeline.
 	 *

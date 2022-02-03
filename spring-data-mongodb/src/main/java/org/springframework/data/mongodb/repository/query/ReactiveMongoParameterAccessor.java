@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,7 @@ import org.springframework.data.repository.util.ReactiveWrappers;
  */
 class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 
-	private final List<MonoProcessor<?>> subscriptions;
+	private final List<Mono<?>> subscriptions;
 
 	public ReactiveMongoParameterAccessor(MongoQueryMethod method, Object[] values) {
 
@@ -53,9 +52,9 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 			}
 
 			if (ReactiveWrappers.isSingleValueType(value.getClass())) {
-				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class).toProcessor());
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Mono.class).share());
 			} else {
-				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().toProcessor());
+				subscriptions.add(ReactiveWrapperConverters.toWrapper(value, Flux.class).collectList().share());
 			}
 		}
 	}

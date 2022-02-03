@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -48,6 +47,8 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -436,7 +437,7 @@ class UpdateMapperUnitTests {
 				new NestedEntity("mongodb"));
 		NestedEntity[] array = new NestedEntity[someValues.size()];
 
-		Update update = new Update().pushAll("collectionOfNestedEntities", someValues.toArray(array));
+		Update update = new Update().push("collectionOfNestedEntities").each(someValues.toArray(array));
 		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DomainEntity.class));
 
 		verify(writingConverterSpy, times(3)).convert(Mockito.any(NestedEntity.class));

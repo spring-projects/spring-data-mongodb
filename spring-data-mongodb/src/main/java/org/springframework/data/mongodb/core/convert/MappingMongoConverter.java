@@ -1439,20 +1439,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Reads the given {@link Document} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
-	 *
-	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link Document}.
-	 * @param bson must not be {@literal null}
-	 * @param path must not be {@literal null}
-	 * @return
-	 * @deprecated since 3.2. Use {@link #readMap(ConversionContext, Bson, TypeInformation)} instead.
-	 */
-	@Deprecated
-	protected Map<Object, Object> readMap(TypeInformation<?> type, Bson bson, ObjectPath path) {
-		return readMap(getConversionContext(path), bson, type);
-	}
-
-	/**
 	 * Reads the given {@link Document} into a {@link Map}. will recursively resolve nested {@link Map}s as well. Can be
 	 * overridden by subclasses.
 	 *

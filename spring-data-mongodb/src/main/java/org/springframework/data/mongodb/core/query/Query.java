@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -352,21 +350,6 @@ public class Query {
 	}
 
 	/**
-	 * @param timeout
-	 * @param timeUnit must not be {@literal null}.
-	 * @return this.
-	 * @see Meta#setMaxTime(long, TimeUnit)
-	 * @since 1.6
-	 * @deprecated since 2.1. Use {@link #maxTime(Duration)} instead.
-	 */
-	@Deprecated
-	public Query maxTime(long timeout, TimeUnit timeUnit) {
-
-		meta.setMaxTime(timeout, timeUnit);
-		return this;
-	}
-
-	/**
 	 * @param timeout must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setMaxTime(Duration)
@@ -445,21 +428,6 @@ public class Query {
 	public Query exhaust() {
 
 		meta.addFlag(Meta.CursorOption.EXHAUST);
-		return this;
-	}
-
-	/**
-	 * Allows querying of a replica.
-	 *
-	 * @return this.
-	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SLAVE_OK
-	 * @since 1.10
-	 * @deprecated since 3.0.2, use {@link #allowSecondaryReads()}.
-	 */
-	@Deprecated
-	public Query slaveOk() {
-
-		meta.addFlag(Meta.CursorOption.SLAVE_OK);
 		return this;
 	}
 

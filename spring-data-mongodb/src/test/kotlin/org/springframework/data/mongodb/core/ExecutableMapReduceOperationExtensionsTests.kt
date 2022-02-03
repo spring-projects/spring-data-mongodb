@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,26 +31,10 @@ class ExecutableMapReduceOperationExtensionsTests {
 	val operationWithProjection = mockk<ExecutableMapReduceOperation.MapReduceWithProjection<First>>(relaxed = true)
 
 	@Test // DATAMONGO-1929
-	@Suppress("DEPRECATION")
-	fun `ExecutableMapReduceOperation#mapReduce(KClass) extension should call its Java counterpart`() {
-
-		operation.mapReduce(First::class)
-		verify { operation.mapReduce(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1929
 	fun `ExecutableMapReduceOperation#mapReduce() with reified type parameter extension should call its Java counterpart`() {
 
 		operation.mapReduce<First>()
 		verify { operation.mapReduce(First::class.java) }
-	}
-
-	@Test // DATAMONGO-1929, DATAMONGO-2086
-	@Suppress("DEPRECATION")
-	fun `ExecutableMapReduceOperation#MapReduceWithProjection#asType(KClass) extension should call its Java counterpart`() {
-
-		operationWithProjection.asType(User::class)
-		verify { operationWithProjection.`as`(User::class.java) }
 	}
 
 	@Test // DATAMONGO-1929, DATAMONGO-2086

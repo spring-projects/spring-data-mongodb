@@ -30,7 +30,9 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @param <T> The class in which the results are mapped onto, accessible via an iterator.
+ * @deprecated since MongoDB server version 5.0
  */
+@Deprecated
 public class MapReduceResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;

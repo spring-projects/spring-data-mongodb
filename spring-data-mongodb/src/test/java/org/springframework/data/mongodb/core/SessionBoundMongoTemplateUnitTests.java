@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -268,17 +267,6 @@ public class SessionBoundMongoTemplateUnitTests {
 		template.geoNear(NearQuery.near(new Point(0, 0), Metrics.NEUTRAL), Person.class);
 
 		verify(collection).aggregate(eq(clientSession), anyList(), eq(Document.class));
-	}
-
-	@Test // DATAMONGO-1880
-	public void groupShouldUseProxiedDatabase() {
-
-		when(database.runCommand(any(ClientSession.class), any(), eq(Document.class)))
-				.thenReturn(new Document("retval", Collections.emptyList()));
-
-		template.group(COLLECTION_NAME, GroupBy.key("firstName"), Person.class);
-
-		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
 	}
 
 	@Test // DATAMONGO-1880

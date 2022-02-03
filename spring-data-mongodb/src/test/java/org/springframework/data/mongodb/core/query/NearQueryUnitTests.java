@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -140,7 +139,7 @@ public class NearQueryUnitTests {
 
 		long num = 100;
 		NearQuery query = NearQuery.near(new Point(1, 2));
-		query.num(num);
+		query.limit(num);
 		query.query(Query.query(Criteria.where("foo").is("bar")));
 
 		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Long.class)).isEqualTo(num);

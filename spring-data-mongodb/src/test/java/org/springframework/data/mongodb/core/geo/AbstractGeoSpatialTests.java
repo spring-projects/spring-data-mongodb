@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.geo.Box;
@@ -112,15 +111,14 @@ public abstract class AbstractGeoSpatialTests {
 
 	protected void addVenues() {
 
-
 		template.bulkOps(BulkMode.UNORDERED, Venue.class).insert(TestEntities.geolocation().newYork()).execute();
-//		template.insertAll(TestEntities.geolocation().newYork());
+		// template.insertAll(TestEntities.geolocation().newYork());
 	}
 
 	@Test
 	public void geoNear() {
 
-		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).limit(10).maxDistance(150);
 
 		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
 

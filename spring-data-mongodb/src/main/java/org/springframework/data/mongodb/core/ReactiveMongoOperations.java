@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -58,8 +57,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * <p>
  * Implemented by {@link ReactiveMongoTemplate}. Not often used but a useful option for extensibility and testability
  * (as it can be easily mocked, stubbed, or be the target of a JDK proxy). Command execution using
- * {@link ReactiveMongoOperations} is deferred until subscriber subscribes to the {@link Publisher}.
- * <br />
+ * {@link ReactiveMongoOperations} is deferred until subscriber subscribes to the {@link Publisher}. <br />
  * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
  * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
  * Document Transactions</a>.
@@ -120,8 +118,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<Document> executeCommand(Document command, @Nullable ReadPreference readPreference);
 
 	/**
-	 * Executes a {@link ReactiveDatabaseCallback} translating any exceptions as necessary.
-	 * <br />
+	 * Executes a {@link ReactiveDatabaseCallback} translating any exceptions as necessary. <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param action callback object that specifies the MongoDB actions to perform on the passed in DB instance. Must not
@@ -132,8 +129,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> execute(ReactiveDatabaseCallback<T> action);
 
 	/**
-	 * Executes the given {@link ReactiveCollectionCallback} on the entity collection of the specified class.
-	 * <br />
+	 * Executes the given {@link ReactiveCollectionCallback} on the entity collection of the specified class. <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
@@ -144,8 +140,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> execute(Class<?> entityClass, ReactiveCollectionCallback<T> action);
 
 	/**
-	 * Executes the given {@link ReactiveCollectionCallback} on the collection of the given name.
-	 * <br />
+	 * Executes the given {@link ReactiveCollectionCallback} on the collection of the given name. <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param collectionName the name of the collection that specifies which {@link MongoCollection} instance will be
@@ -158,8 +153,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
-	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
-	 * <br />
+	 * provided by the given {@link Supplier} to each and every command issued against MongoDB. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
 	 * {@link ReactiveSessionScoped#execute(ReactiveSessionCallback, Consumer)} to provide a hook for processing the
 	 * {@link ClientSession} when done.
@@ -177,8 +171,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding a new {@link ClientSession}
-	 * with given {@literal sessionOptions} to each and every command issued against MongoDB.
-	 * <br />
+	 * with given {@literal sessionOptions} to each and every command issued against MongoDB. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use
 	 * {@link ReactiveSessionScoped#execute(ReactiveSessionCallback, Consumer)} to provide a hook for processing the
 	 * {@link ClientSession} when done.
@@ -204,8 +197,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	ReactiveSessionScoped withSession(Publisher<ClientSession> sessionProvider);
 
 	/**
-	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
-	 * <br />
+	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoOperations}. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
 	 * @param session must not be {@literal null}.
@@ -213,38 +205,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @since 2.1
 	 */
 	ReactiveMongoOperations withSession(ClientSession session);
-
-	/**
-	 * Initiate a new {@link ClientSession} and obtain a {@link ClientSession session} bound instance of
-	 * {@link ReactiveSessionScoped}. Starts the transaction and adds the {@link ClientSession} to each and every command
-	 * issued against MongoDB.
-	 * <br />
-	 * Each {@link ReactiveSessionScoped#execute(ReactiveSessionCallback) execution} initiates a new managed transaction
-	 * that is {@link ClientSession#commitTransaction() committed} on success. Transactions are
-	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
-	 *
-	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
-	 * @deprecated since 2.2. Use {@code @Transactional} or {@link TransactionalOperator}.
-	 */
-	@Deprecated
-	ReactiveSessionScoped inTransaction();
-
-	/**
-	 * Obtain a {@link ClientSession session} bound instance of {@link ReactiveSessionScoped}, start the transaction and
-	 * bind the {@link ClientSession} provided by the given {@link Publisher} to each and every command issued against
-	 * MongoDB.
-	 * <br />
-	 * Each {@link ReactiveSessionScoped#execute(ReactiveSessionCallback) execution} initiates a new managed transaction
-	 * that is {@link ClientSession#commitTransaction() committed} on success. Transactions are
-	 * {@link ClientSession#abortTransaction() rolled back} upon errors.
-	 *
-	 * @param sessionProvider must not be {@literal null}.
-	 * @return new instance of {@link ReactiveSessionScoped}. Never {@literal null}.
-	 * @since 2.1
-	 * @deprecated since 2.2. Use {@code @Transactional} or {@link TransactionalOperator}.
-	 */
-	@Deprecated
-	ReactiveSessionScoped inTransaction(Publisher<ClientSession> sessionProvider);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
@@ -292,8 +252,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Get a {@link MongoCollection} by name. The returned collection may not exists yet (except in local memory) and is
 	 * created on first interaction with the server. Collections can be explicitly created via
 	 * {@link #createCollection(Class)}. Please make sure to check if the collection {@link #collectionExists(Class)
-	 * exists} first.
-	 * <br />
+	 * exists} first. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection.
@@ -302,8 +261,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<MongoCollection<Document>> getCollection(String collectionName);
 
 	/**
-	 * Check to see if a collection with a name indicated by the entity class exists.
-	 * <br />
+	 * Check to see if a collection with a name indicated by the entity class exists. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param entityClass class that determines the name of the collection. Must not be {@literal null}.
@@ -312,8 +270,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Mono<Boolean> collectionExists(Class<T> entityClass);
 
 	/**
-	 * Check to see if a collection with a given name exists.
-	 * <br />
+	 * Check to see if a collection with a given name exists. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
@@ -322,8 +279,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<Boolean> collectionExists(String collectionName);
 
 	/**
-	 * Drop the collection with the name indicated by the entity class.
-	 * <br />
+	 * Drop the collection with the name indicated by the entity class. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param entityClass class that determines the collection to drop/delete. Must not be {@literal null}.
@@ -331,8 +287,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Mono<Void> dropCollection(Class<T> entityClass);
 
 	/**
-	 * Drop the collection with the given name.
-	 * <br />
+	 * Drop the collection with the given name. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection to drop/delete.
@@ -340,11 +295,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<Void> dropCollection(String collectionName);
 
 	/**
-	 * Query for a {@link Flux} of objects of type T from the collection used by the entity class.
-	 * <br />
+	 * Query for a {@link Flux} of objects of type T from the collection used by the entity class. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
@@ -354,11 +307,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> findAll(Class<T> entityClass);
 
 	/**
-	 * Query for a {@link Flux} of objects of type T from the specified collection.
-	 * <br />
+	 * Query for a {@link Flux} of objects of type T from the specified collection. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
@@ -370,11 +321,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object of the
-	 * specified type.
-	 * <br />
+	 * specified type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -387,11 +336,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
-	 * type.
-	 * <br />
+	 * type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -437,8 +384,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Map the results of an ad-hoc query on the collection for the entity class to a {@link Flux} of the specified type.
 	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -450,11 +396,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> find(Query query, Class<T> entityClass);
 
 	/**
-	 * Map the results of an ad-hoc query on the specified collection to a {@link Flux} of the specified type.
-	 * <br />
+	 * Map the results of an ad-hoc query on the specified collection to a {@link Flux} of the specified type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -565,11 +509,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<O> Flux<O> aggregate(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation.
-	 * <br />
+	 * Execute an aggregation operation. <br />
 	 * The raw results will be mapped to the given entity class and are returned as stream. The name of the
-	 * inputCollection is derived from the {@link TypedAggregation#getInputType() aggregation input type}.
-	 * <br />
+	 * inputCollection is derived from the {@link TypedAggregation#getInputType() aggregation input type}. <br />
 	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
 	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
 	 * {@link IllegalArgumentException}.
@@ -583,11 +525,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<O> Flux<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation.
-	 * <br />
+	 * Execute an aggregation operation. <br />
 	 * The raw results will be mapped to the given {@code ouputType}. The name of the inputCollection is derived from the
-	 * {@code inputType}.
-	 * <br />
+	 * {@code inputType}. <br />
 	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
 	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
 	 * {@link IllegalArgumentException}.
@@ -603,10 +543,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<O> Flux<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation.
-	 * <br />
-	 * The raw results will be mapped to the given entity class.
-	 * <br />
+	 * Execute an aggregation operation. <br />
+	 * The raw results will be mapped to the given entity class. <br />
 	 * Aggregation streaming cannot be used with {@link AggregationOptions#isExplain() aggregation explain} nor with
 	 * {@link AggregationOptions#getCursorBatchSize()}. Enabling explanation mode or setting batch size cause
 	 * {@link IllegalArgumentException}.
@@ -901,10 +839,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
 	 * specified type. The first document that matches the query is returned and also removed from the collection in the
-	 * database.
-	 * <br />
-	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <br />
+	 * database. <br />
+	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -920,8 +856,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * type. The first document that matches the query is returned and also removed from the collection in the database.
 	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -939,8 +874,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -961,8 +895,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -982,8 +915,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1000,8 +932,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
-	 * based on collection statistics.
-	 * <br />
+	 * based on collection statistics. <br />
 	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
 	 * transactions.
 	 *
@@ -1016,8 +947,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	}
 
 	/**
-	 * Estimate the number of documents in the given collection based on collection statistics.
-	 * <br />
+	 * Estimate the number of documents in the given collection based on collection statistics. <br />
 	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
 	 * transactions.
 	 *
@@ -1028,16 +958,13 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<Long> estimatedCount(String collectionName);
 
 	/**
-	 * Insert the object into the collection for the entity type of the object to save.
-	 * <br />
-	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <br />
+	 * Insert the object into the collection for the entity type of the object to save. <br />
+	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details.
-	 * <br />
+	 * Type Conversion"</a> for more details. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
@@ -1049,11 +976,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Mono<T> insert(T objectToSave);
 
 	/**
-	 * Insert the object into the specified collection.
-	 * <br />
+	 * Insert the object into the specified collection. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
@@ -1093,16 +1018,13 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> insertAll(Collection<? extends T> objectsToSave);
 
 	/**
-	 * Insert the object into the collection for the entity type of the object to save.
-	 * <br />
-	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <br />
+	 * Insert the object into the collection for the entity type of the object to save. <br />
+	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details.
-	 * <br />
+	 * Type Conversion"</a> for more details. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1139,17 +1061,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
-	 * object is not already present, that is an 'upsert'.
-	 * <br />
+	 * object is not already present, that is an 'upsert'. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details.
-	 * <br />
+	 * Type Conversion"</a> for more details. <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1160,15 +1079,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Save the object to the specified collection. This will perform an insert if the object is not already present, that
-	 * is an 'upsert'.
-	 * <br />
+	 * is an 'upsert'. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API.
-	 * See <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type Conversion</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -1179,15 +1097,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
-	 * object is not already present, that is an 'upsert'.
-	 * <br />
+	 * object is not already present, that is an 'upsert'. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API.
-	 * See <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation"> Spring's Type Conversion</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation"> Spring's Type
+	 * Conversion</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -1196,15 +1113,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Save the object to the specified collection. This will perform an insert if the object is not already present, that
-	 * is an 'upsert'.
-	 * <br />
+	 * is an 'upsert'. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API.
-	 * See <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type Conversion</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collReactiveMongoOperationsection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -1477,11 +1393,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Map the results of an ad-hoc query on the collection for the entity class to a stream of objects of the specified
 	 * type. The stream uses a {@link com.mongodb.CursorType#TailableAwait tailable} cursor that may be an infinite
 	 * stream. The stream will not be completed unless the {@link org.reactivestreams.Subscription} is
-	 * {@link Subscription#cancel() canceled}.
-	 * <br />
+	 * {@link Subscription#cancel() canceled}. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1496,11 +1410,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Map the results of an ad-hoc query on the collection for the entity class to a stream of objects of the specified
 	 * type. The stream uses a {@link com.mongodb.CursorType#TailableAwait tailable} cursor that may be an infinite
 	 * stream. The stream will not be completed unless the {@link org.reactivestreams.Subscription} is
-	 * {@link Subscription#cancel() canceled}.
-	 * <br />
+	 * {@link Subscription#cancel() canceled}. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1516,11 +1428,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Subscribe to a MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Stream</a> for all events in
 	 * the configured default database via the reactive infrastructure. Use the optional provided {@link Aggregation} to
 	 * filter events. The stream will not be completed unless the {@link org.reactivestreams.Subscription} is
-	 * {@link Subscription#cancel() canceled}.
-	 * <br />
+	 * {@link Subscription#cancel() canceled}. <br />
 	 * The {@link ChangeStreamEvent#getBody()} is mapped to the {@literal resultType} while the
-	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload.
-	 * <br />
+	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload. <br />
 	 * Use {@link ChangeStreamOptions} to set arguments like {@link ChangeStreamOptions#getResumeToken() the resumseToken}
 	 * for resuming change streams.
 	 *
@@ -1540,11 +1450,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Subscribe to a MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Stream</a> for all events in
 	 * the given collection via the reactive infrastructure. Use the optional provided {@link Aggregation} to filter
 	 * events. The stream will not be completed unless the {@link org.reactivestreams.Subscription} is
-	 * {@link Subscription#cancel() canceled}.
-	 * <br />
+	 * {@link Subscription#cancel() canceled}. <br />
 	 * The {@link ChangeStreamEvent#getBody()} is mapped to the {@literal resultType} while the
-	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload.
-	 * <br />
+	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload. <br />
 	 * Use {@link ChangeStreamOptions} to set arguments like {@link ChangeStreamOptions#getResumeToken() the resumseToken}
 	 * for resuming change streams.
 	 *
@@ -1565,11 +1473,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Subscribe to a MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Stream</a> via the reactive
 	 * infrastructure. Use the optional provided {@link Aggregation} to filter events. The stream will not be completed
-	 * unless the {@link org.reactivestreams.Subscription} is {@link Subscription#cancel() canceled}.
-	 * <br />
+	 * unless the {@link org.reactivestreams.Subscription} is {@link Subscription#cancel() canceled}. <br />
 	 * The {@link ChangeStreamEvent#getBody()} is mapped to the {@literal resultType} while the
-	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload.
-	 * <br />
+	 * {@link ChangeStreamEvent#getRaw()} contains the unmodified payload. <br />
 	 * Use {@link ChangeStreamOptions} to set arguments like {@link ChangeStreamOptions#getResumeToken() the resumseToken}
 	 * for resuming change streams.
 	 *
@@ -1599,7 +1505,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param options additional options like output collection. Must not be {@literal null}.
 	 * @return a {@link Flux} emitting the result document sequence. Never {@literal null}.
 	 * @since 2.1
+	 * @deprecated since MongoDB server version 5.0
 	 */
+	@Deprecated
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, Class<T> resultType, String mapFunction,
 			String reduceFunction, MapReduceOptions options);
 
@@ -1617,7 +1525,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param options additional options like output collection. Must not be {@literal null}.
 	 * @return a {@link Flux} emitting the result document sequence. Never {@literal null}.
 	 * @since 2.1
+	 * @deprecated since MongoDB server version 5.0
 	 */
+	@Deprecated
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options);
 

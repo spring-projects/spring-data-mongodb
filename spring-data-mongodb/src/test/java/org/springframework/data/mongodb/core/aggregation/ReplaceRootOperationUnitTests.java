@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperation;
 
 /**
@@ -55,7 +54,7 @@ class ReplaceRootOperationUnitTests {
 		ReplaceRootOperation operation = new ReplaceRootOperation(VariableOperators //
 				.mapItemsOf("array") //
 				.as("element") //
-				.andApply(AggregationFunctionExpressions.MULTIPLY.of("$$element", 10)));
+				.andApply(ArithmeticOperators.valueOf("$$element").multiplyBy(10)));
 
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -68,7 +67,7 @@ class ReplaceRootOperationUnitTests {
 
 		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().withDocument() //
 				.andValue("value").as("key") //
-				.and(AggregationFunctionExpressions.MULTIPLY.of("$$element", 10)).as("multiply");
+				.and(ArithmeticOperators.valueOf("$$element").multiplyBy(10)).as("multiply");
 
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 

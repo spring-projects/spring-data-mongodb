@@ -119,7 +119,9 @@ public @interface GeoSpatialIndexed {
 	 *
 	 * @since 1.4
 	 * @return {@literal 1.0} by default.
+	 * @deprecated since MongoDB server version 4.4
 	 */
+	@Deprecated
 	double bucketSize() default 1.0;
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the original author or authors.
+ * Copyright 2017-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,6 @@ package org.springframework.data.mongodb.core
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
-import kotlin.reflect.KClass
-
-/**
- * Extension for [ExecutableAggregationOperation.aggregateAndReturn] providing a [KClass] based variant.
- *
- * @author Mark Paluch
- * @since 2.0
- */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregateAndReturn<T>()"))
-fun <T : Any> ReactiveAggregationOperation.aggregateAndReturn(entityClass: KClass<T>): ReactiveAggregationOperation.ReactiveAggregation<T> =
-        aggregateAndReturn(entityClass.java)
 
 /**
  * Extension for [ExecutableAggregationOperation.aggregateAndReturn] leveraging reified type parameters.
