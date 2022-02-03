@@ -24,10 +24,12 @@ import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import io.micrometer.api.instrument.Tag;
 import io.micrometer.api.instrument.Tags;
-import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.observation.Observation;
+import io.micrometer.api.instrument.observation.TimerObservationHandler;
 import io.micrometer.api.instrument.simple.SimpleMeterRegistry;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.micrometer.core.tck.MeterRegistryAssert.assertThat;
@@ -37,6 +39,11 @@ class MicrometerMongoCommandListenerTests {
 	SimpleMeterRegistry registry = new SimpleMeterRegistry();
 
 	MicrometerMongoCommandListener listener = new MicrometerMongoCommandListener(registry);
+
+	@BeforeEach
+	void setup() {
+		registry.observationConfig().observationHandler(new TimerObservationHandler(this.registry));
+	}
 
 	@Test void commandStartedShouldNotInstrumentWhenAdminDatabase() {
 		listener.commandStarted(new CommandStartedEvent(null, 0, null, "admin", "", null));
@@ -57,8 +64,8 @@ class MicrometerMongoCommandListenerTests {
 	}
 
 	@Test void successfullyCompletedCommandShouldCreateTimerWhenParentSampleInRequestContext() {
-		Timer.Sample parent = Timer.start(registry);
-		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
+		Observation parent = Observation.start("name", registry);
+		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
 
 		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
 				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
@@ -70,8 +77,8 @@ class MicrometerMongoCommandListenerTests {
 
 	@Test
 	void successfullyCompletedCommandWithCollectionHavingCommandNameShouldCreateTimerWhenParentSampleInRequestContext() {
-		Timer.Sample parent = Timer.start(registry);
-		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
+		Observation parent = Observation.start("name", registry);
+		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
 
 		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
 				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
@@ -82,8 +89,8 @@ class MicrometerMongoCommandListenerTests {
 	}
 
 	@Test void successfullyCompletedCommandWithoutClusterInformationShouldCreateTimerWhenParentSampleInRequestContext() {
-		Timer.Sample parent = Timer.start(registry);
-		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
+		Observation parent = Observation.start("name", registry);
+		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
 
 		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, null, "database", "insert",
 				new BsonDocument("collection", new BsonString("user"))));
@@ -93,8 +100,8 @@ class MicrometerMongoCommandListenerTests {
 	}
 
 	@Test void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
-		Timer.Sample parent = Timer.start(registry);
-		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
+		Observation parent = Observation.start("name", registry);
+		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
 
 		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
 				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),

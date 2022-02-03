@@ -16,14 +16,14 @@
 
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 
 /**
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-enum MongoSample implements DocumentedSample {
+enum MongoObservation implements DocumentedObservation {
 
 	/**
 	 * Timer created around a MongoDB command execution.

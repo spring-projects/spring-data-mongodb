@@ -22,7 +22,8 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.observation.Observation;
+import io.micrometer.api.instrument.observation.ObservationRegistry;
 import io.micrometer.api.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.test.simple.SimpleTracer;
@@ -36,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 class MicrometerMongoCommandListenerForTracingTests {
 
-	SimpleMeterRegistry registry = new SimpleMeterRegistry();
+	ObservationRegistry registry = new SimpleMeterRegistry();
 
 	MicrometerMongoCommandListener listener = new MicrometerMongoCommandListener(registry);
 
@@ -45,11 +46,11 @@ class MicrometerMongoCommandListenerForTracingTests {
 	MongoTracingRecordingHandler handler = new MongoTracingRecordingHandler(simpleTracer);
 
 	@BeforeEach void setup() {
-		registry.config().timerRecordingHandler(handler);
+		registry.observationConfig().observationHandler(handler);
 	}
 
 	@Test void successfullyCompletedCommandShouldCreateSpanWhenParentSampleInRequestContext() {
-		TestRequestContext testRequestContext = testRequestContextWithParentSample();
+		TestRequestContext testRequestContext = testRequestContextWithParentObservation();
 
 		commandStartedAndSucceeded(testRequestContext);
 
@@ -59,7 +60,7 @@ class MicrometerMongoCommandListenerForTracingTests {
 	@Test
 	void successfullyCompletedCommandShouldCreateSpanWithAddressInfoWhenParentSampleInRequestContextAndHandlerAddressInfoEnabled() {
 		handler.setSetRemoteIpAndPortEnabled(true);
-		TestRequestContext testRequestContext = testRequestContextWithParentSample();
+		TestRequestContext testRequestContext = testRequestContextWithParentObservation();
 
 		commandStartedAndSucceeded(testRequestContext);
 
@@ -67,7 +68,7 @@ class MicrometerMongoCommandListenerForTracingTests {
 	}
 
 	@Test void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
-		TestRequestContext testRequestContext = testRequestContextWithParentSample();
+		TestRequestContext testRequestContext = testRequestContextWithParentObservation();
 
 		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
 				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
@@ -77,8 +78,8 @@ class MicrometerMongoCommandListenerForTracingTests {
 		assertThatMongoSpanIsClientWithTags().assertThatThrowable().isInstanceOf(IllegalAccessException.class);
 	}
 
-	@NotNull private TestRequestContext testRequestContextWithParentSample() {
-		Timer.Sample parent = Timer.start(registry); return TestRequestContext.withSample(parent);
+	@NotNull private TestRequestContext testRequestContextWithParentObservation() {
+		Observation parent = Observation.start("name", registry); return TestRequestContext.withObservation(parent);
 	}
 
 	private void commandStartedAndSucceeded(TestRequestContext testRequestContext) {

@@ -16,26 +16,24 @@
 
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.api.instrument.docs.DocumentedObservation;
-import io.micrometer.tracing.docs.DocumentedSpan;
+import io.micrometer.api.instrument.observation.Observation;
+import io.micrometer.api.instrument.observation.ObservationHandler;
 
 /**
- * Represents all spans created for MongoDB instrumentation.
+ * A {@link ObservationHandler} that handles {@link MongoHandlerContext}.
  *
  * @author Marcin Grzejszczak
  * @since 4.0.0
  */
-enum MongoSpan implements DocumentedSpan {
-	/**
-	 * Span wrapping a MongoDB command.
-	 */
-	MONGODB_COMMAND_SPAN {
-		@Override public String getName() {
-			return "%s";
-		}
+public class MongoObservabilityHandler implements ObservationHandler<MongoHandlerContext> {
 
-		@Override public DocumentedObservation overridesDefaultSpanFrom() {
-			return MongoObservation.MONGODB_COMMAND;
-		}
+	@Override public void onStop(MongoHandlerContext context) {
+		context.getRequestContext().delete(Observation.class);
+		context.getRequestContext().delete(MongoHandlerContext.class);
 	}
+
+	@Override public boolean supportsContext(Observation.Context context) {
+		return context instanceof MongoHandlerContext;
+	}
+
 }

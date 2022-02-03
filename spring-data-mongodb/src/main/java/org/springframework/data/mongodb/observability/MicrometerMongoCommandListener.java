@@ -27,10 +27,9 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-import io.micrometer.api.instrument.MeterRegistry;
 import io.micrometer.api.instrument.Tag;
-import io.micrometer.api.instrument.Tags;
-import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.observation.Observation;
+import io.micrometer.api.instrument.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonDocument;
@@ -54,22 +53,22 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 					"insert", "update", "collMod", "compact", "convertToCapped", "create", "createIndexes", "drop", "dropIndexes",
 					"killCursors", "listIndexes", "reIndex"));
 	private static final Log log = LogFactory.getLog(MicrometerMongoCommandListener.class);
-	private final MeterRegistry registry;
+	private final ObservationRegistry registry;
 
-	public MicrometerMongoCommandListener(MeterRegistry registry) {
+	public MicrometerMongoCommandListener(ObservationRegistry registry) {
 		this.registry = registry;
 	}
 
-	private static Timer.Sample sampleFromContext(RequestContext context) {
-		Timer.Sample sample = context.getOrDefault(Timer.Sample.class, null);
-		if (sample != null) {
+	private static Observation observationFromContext(RequestContext context) {
+		Observation observation = context.getOrDefault(Observation.class, null);
+		if (observation != null) {
 			if (log.isDebugEnabled()) {
-				log.debug("Found a sample in mongo context [" + sample + "]");
+				log.debug("Found a observation in mongo context [" + observation + "]");
 			}
-			return sample;
+			return observation;
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("No sample was found - will not create any child spans");
+			log.debug("No observation was found - will not create any child spans");
 		}
 		return null;
 	}
@@ -105,9 +104,9 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		if (requestContext == null) {
 			return;
 		}
-		Timer.Sample parent = sampleFromContext(requestContext);
+		Observation parent = observationFromContext(requestContext);
 		if (log.isDebugEnabled()) {
-			log.debug("Found the following sample passed from the mongo context [" + parent + "]");
+			log.debug("Found the following observation passed from the mongo context [" + parent + "]");
 		}
 		if (parent == null) {
 			return;
@@ -119,34 +118,21 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		String commandName = event.getCommandName();
 		BsonDocument command = event.getCommand();
 		String collectionName = getCollectionName(command, commandName);
-		Timer.Builder timerBuilder = MongoSample.MONGODB_COMMAND.toBuilder();
-		MongoHandlerContext mongoHandlerContext = new MongoHandlerContext(event) {
-			@Override public String getContextualName() {
-				return getMetricName(commandName, collectionName);
-			}
-
-			@Override public Tags getLowCardinalityTags() {
-				Tags tags = Tags.empty();
-				if (collectionName != null) {
-					tags = tags.and(MongoSample.LowCardinalityCommandTags.MONGODB_COLLECTION.of(collectionName));
-				}
-				Tag tag = connectionTag(event);
-				if (tag == null) {
-					return tags;
-				}
-				return tags.and(tag);
-			}
-
-			@Override public Tags getHighCardinalityTags() {
-				return Tags.of(MongoSample.HighCardinalityCommandTags.MONGODB_COMMAND.of(commandName));
-			}
-		};
-		Timer.Sample child = Timer.start(this.registry, mongoHandlerContext);
-		requestContext.put(Timer.Sample.class, child);
+		MongoHandlerContext mongoHandlerContext = new MongoHandlerContext(event, requestContext);
+		Observation observation = MongoObservation.MONGODB_COMMAND.observation(this.registry, mongoHandlerContext)
+				.contextualName(getMetricName(commandName, collectionName));
+		if (collectionName != null) {
+			observation.lowCardinalityTag(MongoObservation.LowCardinalityCommandTags.MONGODB_COLLECTION.of(collectionName));
+		}
+		Tag tag = connectionTag(event);
+		if (tag != null) {
+			observation.lowCardinalityTag(tag);
+		}
+		observation.highCardinalityTag(MongoObservation.HighCardinalityCommandTags.MONGODB_COMMAND.of(commandName));
+		requestContext.put(Observation.class, observation.start());
 		requestContext.put(MongoHandlerContext.class, mongoHandlerContext);
-		requestContext.put(Timer.Builder.class, timerBuilder);
 		if (log.isDebugEnabled()) {
-			log.debug("Created a child sample  [" + child + "] for mongo instrumentation and put it in mongo context");
+			log.debug("Created a child observation  [" + observation + "] for mongo instrumentation and put it in mongo context");
 		}
 	}
 
@@ -155,7 +141,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		if (connectionDescription != null) {
 			ConnectionId connectionId = connectionDescription.getConnectionId();
 			if (connectionId != null) {
-				return MongoSample.LowCardinalityCommandTags.MONGODB_CLUSTER_ID.of(connectionId.getServerId().getClusterId().getValue());
+				return MongoObservation.LowCardinalityCommandTags.MONGODB_CLUSTER_ID.of(connectionId.getServerId().getClusterId().getValue());
 			}
 		}
 		return null;
@@ -166,19 +152,16 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		if (requestContext == null) {
 			return;
 		}
-		Timer.Sample sample = requestContext.getOrDefault(Timer.Sample.class, null);
-		if (sample == null) {
+		Observation observation = requestContext.getOrDefault(Observation.class, null);
+		if (observation == null) {
 			return;
 		}
 		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
 		context.setCommandSucceededEvent(event);
 		if (log.isDebugEnabled()) {
-			log.debug("Command succeeded - will stop sample [" + sample + "]");
+			log.debug("Command succeeded - will stop observation [" + observation + "]");
 		}
-		Timer.Builder builder = requestContext.get(Timer.Builder.class);
-		sample.stop(builder);
-		requestContext.delete(Timer.Sample.class);
-		requestContext.delete(MongoHandlerContext.class);
+		observation.stop();
 	}
 
 	@Override public void commandFailed(CommandFailedEvent event) {
@@ -186,20 +169,17 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		if (requestContext == null) {
 			return;
 		}
-		Timer.Sample sample = requestContext.getOrDefault(Timer.Sample.class, null);
-		if (sample == null) {
+		Observation observation = requestContext.getOrDefault(Observation.class, null);
+		if (observation == null) {
 			return;
 		}
 		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
 		context.setCommandFailedEvent(event);
 		if (log.isDebugEnabled()) {
-			log.debug("Command failed - will stop sample [" + sample + "]");
+			log.debug("Command failed - will stop observation [" + observation + "]");
 		}
-		sample.error(event.getThrowable());
-		Timer.Builder builder = requestContext.get(Timer.Builder.class);
-		sample.stop(builder);
-		requestContext.delete(Timer.Sample.class);
-		requestContext.delete(MongoHandlerContext.class);
+		observation.error(event.getThrowable());
+		observation.stop();
 	}
 
 	@Nullable private String getCollectionName(BsonDocument command, String commandName) {

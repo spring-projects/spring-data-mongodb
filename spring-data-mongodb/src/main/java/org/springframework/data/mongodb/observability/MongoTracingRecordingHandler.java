@@ -17,12 +17,11 @@
 package org.springframework.data.mongodb.observability;
 
 import java.net.InetSocketAddress;
-import java.time.Duration;
 
 import com.mongodb.MongoSocketException;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
-import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.observation.Observation;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.handler.TracingRecordingHandler;
@@ -52,7 +51,7 @@ public class MongoTracingRecordingHandler implements TracingRecordingHandler<Mon
 		return this.tracer;
 	}
 
-	@Override public void onStart(Timer.Sample sample, MongoHandlerContext context) {
+	@Override public void onStart(MongoHandlerContext context) {
 		CommandStartedEvent event = context.getCommandStartedEvent();
 		String databaseName = event.getDatabaseName();
 		Span.Builder builder = this.tracer.spanBuilder().kind(Span.Kind.CLIENT)
@@ -77,19 +76,19 @@ public class MongoTracingRecordingHandler implements TracingRecordingHandler<Mon
 		}
 	}
 
-	@Override public void onError(Timer.Sample sample, MongoHandlerContext context, Throwable throwable) {
-		getTracingContext(context).getSpan().error(throwable);
+	@Override public void onError(MongoHandlerContext context) {
+		context.getError().ifPresent(throwable -> getTracingContext(context).getSpan().error(throwable));
 	}
 
-	@Override public void onStop(Timer.Sample sample, MongoHandlerContext context, Timer timer, Duration duration) {
+	@Override public void onStop(MongoHandlerContext context) {
 		TracingContext tracingContext = getTracingContext(context);
 		Span span = tracingContext.getSpan();
 		span.name(MongoSpan.MONGODB_COMMAND_SPAN.getName(context.getContextualName()));
-		tagSpan(context, timer.getId(), span);
+		tagSpan(context, span);
 		span.end();
 	}
 
-	@Override public boolean supportsContext(Timer.HandlerContext context) {
+	@Override public boolean supportsContext(Observation.Context context) {
 		return context instanceof MongoHandlerContext;
 	}
 

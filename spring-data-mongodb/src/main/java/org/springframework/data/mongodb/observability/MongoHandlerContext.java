@@ -16,27 +16,31 @@
 
 package org.springframework.data.mongodb.observability;
 
+import com.mongodb.RequestContext;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.observation.Observation;
 
 /**
- * A {@link Timer.HandlerContext} that contains Mongo events.
+ * A {@link Observation.Context} that contains Mongo events.
  *
  * @author Marcin Grzejszczak
  * @since 4.0.0
  */
-public class MongoHandlerContext extends Timer.HandlerContext {
+public class MongoHandlerContext extends Observation.Context {
 
 	private final CommandStartedEvent commandStartedEvent;
+
+	private final RequestContext requestContext;
 
 	private CommandSucceededEvent commandSucceededEvent;
 
 	private CommandFailedEvent commandFailedEvent;
 
-	public MongoHandlerContext(CommandStartedEvent commandStartedEvent) {
+	public MongoHandlerContext(CommandStartedEvent commandStartedEvent, RequestContext requestContext) {
 		this.commandStartedEvent = commandStartedEvent;
+		this.requestContext = requestContext;
 	}
 
 	public CommandStartedEvent getCommandStartedEvent() {
@@ -57,5 +61,9 @@ public class MongoHandlerContext extends Timer.HandlerContext {
 
 	public void setCommandFailedEvent(CommandFailedEvent commandFailedEvent) {
 		this.commandFailedEvent = commandFailedEvent;
+	}
+
+	public RequestContext getRequestContext() {
+		return requestContext;
 	}
 }

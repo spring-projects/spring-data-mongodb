@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import com.mongodb.RequestContext;
-import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.observation.Observation;
 
 class TestRequestContext implements RequestContext {
 
@@ -55,8 +55,8 @@ class TestRequestContext implements RequestContext {
 		return map.entrySet().stream();
 	}
 
-	static TestRequestContext withSample(Timer.Sample value) {
-		TestRequestContext testRequestContext = new TestRequestContext(); testRequestContext.put(Timer.Sample.class, value);
+	static TestRequestContext withObservation(Observation value) {
+		TestRequestContext testRequestContext = new TestRequestContext(); testRequestContext.put(Observation.class, value);
 		return testRequestContext;
 	}
 }
