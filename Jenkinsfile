@@ -1,7 +1,7 @@
 def p = [:]
 node {
-    checkout scm
-    p = readProperties interpolate: true, file: 'ci/pipeline.properties'
+	checkout scm
+	p = readProperties interpolate: true, file: 'ci/pipeline.properties'
 }
 
 pipeline {
@@ -22,10 +22,10 @@ pipeline {
 			parallel {
 				stage('Publish JDK (main) + MongoDB 4.0') {
 					when {
-					    anyOf {
-                            changeset "ci/openjdk8-mongodb-4.0/**"
-                            changeset "ci/pipeline.properties"
-                        }
+						anyOf {
+							changeset "ci/openjdk8-mongodb-4.0/**"
+							changeset "ci/pipeline.properties"
+						}
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
@@ -33,7 +33,7 @@ pipeline {
 					steps {
 						script {
 							def image = docker.build("springci/spring-data-with-mongodb-4.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.4.0.version']} ci/openjdk8-mongodb-4.0/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
 						}
@@ -41,10 +41,10 @@ pipeline {
 				}
 				stage('Publish JDK (main) + MongoDB 4.4') {
 					when {
-					    anyOf {
-                            changeset "ci/openjdk8-mongodb-4.4/**"
-                            changeset "ci/pipeline.properties"
-                        }
+						anyOf {
+							changeset "ci/openjdk8-mongodb-4.4/**"
+							changeset "ci/pipeline.properties"
+						}
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
@@ -52,7 +52,7 @@ pipeline {
 					steps {
 						script {
 							def image = docker.build("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.4.4.version']} ci/openjdk8-mongodb-4.4/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
 						}
@@ -69,7 +69,7 @@ pipeline {
 					steps {
 						script {
 							def image = docker.build("springci/spring-data-with-mongodb-4.4:${p['java.15.tag']}", "--build-arg BASE=${p['docker.java.15.image']} --build-arg MONGODB=${p['docker.mongodb.4.4.version']} ci/openjdk15-mongodb-4.4/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
 						}
@@ -94,7 +94,7 @@ pipeline {
 			}
 			steps {
 				script {
-					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 						docker.image("springci/spring-data-with-mongodb-4.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
 							sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 							sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
@@ -126,7 +126,7 @@ pipeline {
 					}
 					steps {
 						script {
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								docker.image("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
@@ -150,9 +150,8 @@ pipeline {
 					}
 					steps {
 						script {
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								docker.image("springci/spring-data-with-mongodb-4.4:${p['java.15.tag']}").inside(p['docker.java.inside.basic']) {
-        						    alwaysPull true
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'
@@ -185,7 +184,7 @@ pipeline {
 
 			steps {
 				script {
-					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,artifactory ' +
 									'-Dartifactory.server=https://repo.spring.io ' +
@@ -216,8 +215,8 @@ pipeline {
 
 			steps {
 				script {
-					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,distribute ' +
 									'-Dartifactory.server=https://repo.spring.io ' +
 									"-Dartifactory.username=${ARTIFACTORY_USR} " +
