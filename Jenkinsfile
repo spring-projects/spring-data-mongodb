@@ -20,26 +20,7 @@ pipeline {
 	stages {
 		stage("Docker images") {
 			parallel {
-				stage('Publish JDK (main) + MongoDB 5.0') {
-					when {
-						anyOf {
-							changeset "ci/openjdk17-mongodb-5.0/**"
-							changeset "ci/pipeline.properties"
-						}
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.5.0.version']} ci/openjdk17-mongodb-5.0/")
-							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK (main) + MongoDB 4.4') {
+				stage('Publish JDK (Java 17) + MongoDB 4.4') {
 					when {
 						anyOf {
 							changeset "ci/openjdk17-mongodb-4.4/**"
@@ -58,10 +39,29 @@ pipeline {
 						}
 					}
 				}
+				stage('Publish JDK (Java 17) + MongoDB 5.0') {
+					when {
+						anyOf {
+							changeset "ci/openjdk17-mongodb-5.0/**"
+							changeset "ci/pipeline.properties"
+						}
+					}
+					agent { label 'data' }
+					options { timeout(time: 30, unit: 'MINUTES') }
+
+					steps {
+						script {
+							def image = docker.build("springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.5.0.version']} ci/openjdk17-mongodb-5.0/")
+							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
+								image.push()
+							}
+						}
+					}
+				}
 			}
 		}
 
-		stage("test: baseline (main)") {
+		stage("test: baseline (Java 17)") {
 			when {
 				beforeAgent(true)
 				anyOf {
@@ -79,7 +79,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-						docker.image("springci/spring-data-with-mongodb-4.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+						docker.image("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
 							sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 							sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 							sh 'sleep 10'
@@ -101,31 +101,8 @@ pipeline {
 				}
 			}
 			parallel {
-				stage("test: mongodb 4.4 (main)") {
-					agent {
-						label 'data'
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					environment {
-						ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
-					}
-					steps {
-						script {
-							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
-									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-									sh 'sleep 10'
-									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-									sh 'sleep 15'
-									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
-								}
-							}
-						}
-					}
-				}
 
-				stage("test: mongodb 5.0 (main)") {
+				stage("test: mongodb 5.0 (Java 17)") {
 					agent {
 						label 'data'
 					}
@@ -143,30 +120,6 @@ pipeline {
 									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 									sh 'sleep 15'
 									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
-								}
-							}
-						}
-					}
-				}
-
-				stage("test: baseline (LTS)") {
-					agent {
-						label 'data'
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					environment {
-						ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
-					}
-					steps {
-						script {
-							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-4.4:${p['java.lts.tag']}").inside(p['docker.java.inside.basic']) {
-									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-									sh 'sleep 10'
-									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-									sh 'sleep 15'
-									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pjava11 clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
 								}
 							}
 						}
