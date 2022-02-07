@@ -79,7 +79,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-						docker.image("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+						docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
 							sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 							sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 							sh 'sleep 10'
@@ -113,7 +113,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+								docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'
