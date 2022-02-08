@@ -36,8 +36,8 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 	/**
 	 * Creates {@link GeoJsonPoint} for given coordinates.
 	 *
-	 * @param x
-	 * @param y
+	 * @param x : longitude
+	 * @param y : latitude
 	 */
 	public GeoJsonPoint(double x, double y) {
 		super(x, y);
