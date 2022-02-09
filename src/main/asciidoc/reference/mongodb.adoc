@@ -1537,6 +1537,12 @@ public class Store {
 ----
 ====
 
+[TIP]
+====
+If the `coordinates` of a GeoJSON object represent _latitude_ and _longitude_ pairs, the _longitude_ goes first followed by _latitude_. +
+`GeoJsonPoint` therefore treats `getX()` as _longitude_ and `getY()` as _latitude_.
+====
+
 [[mongo.geo-json.query-methods]]
 ==== GeoJSON Types in Repository Query Methods
 
