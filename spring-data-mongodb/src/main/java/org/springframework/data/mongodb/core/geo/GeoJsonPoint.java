@@ -21,7 +21,8 @@ import java.util.List;
 import org.springframework.data.geo.Point;
 
 /**
- * {@link GeoJson} representation of {@link Point}.
+ * {@link GeoJson} representation of {@link Point}. Uses {@link Point#getX()} as {@literal longitude} and
+ * {@link Point#getY()} as {@literal latitude}.
  *
  * @author Christoph Strobl
  * @since 1.7
@@ -36,8 +37,8 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 	/**
 	 * Creates {@link GeoJsonPoint} for given coordinates.
 	 *
-	 * @param x : longitude
-	 * @param y : latitude
+	 * @param x longitude between {@literal -180} and {@literal 180} (inclusive).
+	 * @param y latitude between {@literal -90} and {@literal 90} (inclusive).
 	 */
 	public GeoJsonPoint(double x, double y) {
 		super(x, y);
@@ -45,6 +46,8 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 
 	/**
 	 * Creates {@link GeoJsonPoint} for given {@link Point}.
+	 * <p>
+	 * {@link Point#getX()} translates to {@literal longitude}, {@link Point#getY()} to {@literal latitude}.
 	 *
 	 * @param point must not be {@literal null}.
 	 */
@@ -61,9 +64,10 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 		return TYPE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getCoordinates()
+	/**
+	 * Obtain the coordinates (x/longitude, y/latitude) array.
+	 * 
+	 * @return the coordinates putting {@link #getX() x/longitude} first, and {@link #getY() y/latitude} second.
 	 */
 	@Override
 	public List<Double> getCoordinates() {
