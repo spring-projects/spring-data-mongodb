@@ -1852,7 +1852,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Document mappedSort = getMappedSortObject(query, domainType);
 		if (mappedSort != null && !mappedSort.isEmpty()) {
-			mapReduce = mapReduce.sort(getMappedSortObject(query, domainType));
+			mapReduce = mapReduce.sort(mappedSort);
 		}
 
 		mapReduce = mapReduce
