@@ -566,7 +566,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
-	 * @deprecated since MongoDB server version 5.0
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
 	@Deprecated
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -581,7 +581,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior.
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
-	 * @deprecated since MongoDB server version 5.0
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
 	@Deprecated
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -597,7 +597,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
-	 * @deprecated since MongoDB server version 5.0
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
 	@Deprecated
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
@@ -613,7 +613,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
-	 * @deprecated since MongoDB server version 5.0
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
 	@Deprecated
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,

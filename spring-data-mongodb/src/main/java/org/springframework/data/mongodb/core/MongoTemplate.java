@@ -1661,7 +1661,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param resultType
 	 * @return
 	 * @since 2.1
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	public <T> List<T> mapReduce(Query query, Class<?> domainType, String inputCollectionName, String mapFunction,
 			String reduceFunction, @Nullable MapReduceOptions mapReduceOptions, Class<T> resultType) {
 
