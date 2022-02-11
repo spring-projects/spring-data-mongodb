@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.*;
-import org.bson.internal.Base64;
 import org.bson.json.JsonParseException;
 import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
@@ -41,6 +40,7 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -931,7 +931,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 		verifyToken(JsonTokenType.RIGHT_PAREN);
 
-		byte[] bytes = Base64.decode(bytesToken.getValue(String.class));
+		byte[] bytes = Base64Utils.decodeFromString(bytesToken.getValue(String.class));
 		return new BsonBinary(subTypeToken.getValue(Integer.class).byteValue(), bytes);
 	}
 
@@ -1197,7 +1197,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				byte type;
 				if (firstNestedKey.equals("base64")) {
 					verifyToken(JsonTokenType.COLON);
-					data = Base64.decode(readStringFromExtendedJson());
+					data = Base64Utils.decodeFromString(readStringFromExtendedJson());
 					verifyToken(JsonTokenType.COMMA);
 					verifyString("subType");
 					verifyToken(JsonTokenType.COLON);
@@ -1208,7 +1208,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					verifyToken(JsonTokenType.COMMA);
 					verifyString("base64");
 					verifyToken(JsonTokenType.COLON);
-					data = Base64.decode(readStringFromExtendedJson());
+					data = Base64Utils.decodeFromString(readStringFromExtendedJson());
 				} else {
 					throw new JsonParseException("Unexpected key for $binary: " + firstNestedKey);
 				}
@@ -1236,7 +1236,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			byte type;
 
 			if (firstKey.equals("$binary")) {
-				data = Base64.decode(readStringFromExtendedJson());
+				data = Base64Utils.decodeFromString(readStringFromExtendedJson());
 				verifyToken(JsonTokenType.COMMA);
 				verifyString("$type");
 				verifyToken(JsonTokenType.COLON);
@@ -1246,7 +1246,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				verifyToken(JsonTokenType.COMMA);
 				verifyString("$binary");
 				verifyToken(JsonTokenType.COLON);
-				data = Base64.decode(readStringFromExtendedJson());
+				data = Base64Utils.decodeFromString(readStringFromExtendedJson());
 			}
 			verifyToken(JsonTokenType.END_OBJECT);
 
