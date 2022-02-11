@@ -1599,7 +1599,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param options additional options like output collection. Must not be {@literal null}.
 	 * @return a {@link Flux} emitting the result document sequence. Never {@literal null}.
 	 * @since 2.1
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, Class<T> resultType, String mapFunction,
 			String reduceFunction, MapReduceOptions options);
 
@@ -1617,7 +1619,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param options additional options like output collection. Must not be {@literal null}.
 	 * @return a {@link Flux} emitting the result document sequence. Never {@literal null}.
 	 * @since 2.1
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options);
 

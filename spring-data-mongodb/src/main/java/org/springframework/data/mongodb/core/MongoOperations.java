@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -601,7 +601,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
 			Class<T> entityClass);
 
@@ -614,7 +616,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior.
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
 			@Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
@@ -628,7 +632,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
 			Class<T> entityClass);
 
@@ -642,7 +648,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parametrized type of the returned list. Must not be {@literal null}.
 	 * @return The results of the map reduce operation
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
 			@Nullable MapReduceOptions mapReduceOptions, Class<T> entityClass);
 

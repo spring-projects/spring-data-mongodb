@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1826,7 +1826,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param resultType
 	 * @return
 	 * @since 2.1
+	 * @deprecated since 3.4 in favor of {@link #aggregate(TypedAggregation, Class)}.
 	 */
+	@Deprecated
 	public <T> List<T> mapReduce(Query query, Class<?> domainType, String inputCollectionName, String mapFunction,
 			String reduceFunction, @Nullable MapReduceOptions mapReduceOptions, Class<T> resultType) {
 
