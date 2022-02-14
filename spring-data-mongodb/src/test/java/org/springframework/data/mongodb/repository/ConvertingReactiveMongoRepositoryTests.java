@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.repository.reactive.RxJava3CrudRepository;
 import org.springframework.data.repository.reactive.RxJava3SortingRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -222,12 +225,14 @@ public class ConvertingReactiveMongoRepositoryTests {
 //		assertThat(people).contains(carter, dave);
 //	}
 
-	interface ReactivePersonRepostitory extends ReactiveSortingRepository<ReactivePerson, String> {
+interface ReactivePersonRepostitory
+		extends ReactiveCrudRepository<ReactivePerson, String>, ReactiveSortingRepository<ReactivePerson, String> {
 
 		Publisher<ReactivePerson> findByLastname(String lastname);
 	}
 
-	interface RxJava3PersonRepostitory extends RxJava3SortingRepository<ReactivePerson, String> {
+	interface RxJava3PersonRepostitory
+			extends RxJava3CrudRepository<ReactivePerson, String>, RxJava3SortingRepository<ReactivePerson, String> {
 
 		io.reactivex.rxjava3.core.Flowable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
 

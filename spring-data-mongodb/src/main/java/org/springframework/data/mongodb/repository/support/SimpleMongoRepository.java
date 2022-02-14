@@ -135,7 +135,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	}
 
 	@Override
-	public Iterable<T> findAllById(Iterable<ID> ids) {
+	public List<T> findAllById(Iterable<ID> ids) {
 
 		Assert.notNull(ids, "The given Ids of entities not be null!");
 
