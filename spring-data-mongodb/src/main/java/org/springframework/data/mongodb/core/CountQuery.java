@@ -176,16 +176,20 @@ class CountQuery {
 		Document $geoWithinMin = new Document("$geoWithin",
 				new Document(spheric ? "$centerSphere" : "$center", $centerMin));
 
-		List<Document> criteria = new ArrayList<>();
+		List<Document> criteria;
 
 		if ($and != null) {
 			if ($and instanceof Collection) {
-				criteria.addAll((Collection) $and);
+				Collection andElements = (Collection) $and;
+				criteria = new ArrayList<>(andElements.size() + 2);
+				criteria.addAll(andElements);
 			} else {
 				throw new IllegalArgumentException(
 						"Cannot rewrite query as it contains an '$and' element that is not a Collection!: Offending element: "
 								+ $and);
 			}
+		} else {
+			criteria = new ArrayList<>(2);
 		}
 
 		criteria.add(new Document("$nor", Collections.singletonList(new Document(key, $geoWithinMin))));

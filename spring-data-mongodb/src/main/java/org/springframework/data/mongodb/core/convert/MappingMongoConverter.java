@@ -886,14 +886,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}).collect(Collectors.toList());
 
 				return writeCollectionInternal(targetCollection, ClassTypeInformation.from(DocumentPointer.class),
-						new ArrayList<>());
+						new ArrayList<>(targetCollection.size()));
 			}
 
 			if (property.hasExplicitWriteTarget()) {
-				return writeCollectionInternal(collection, new FieldTypeInformation<>(property), new ArrayList<>());
+				return writeCollectionInternal(collection, new FieldTypeInformation<>(property), new ArrayList<>(collection.size()));
 			}
 
-			return writeCollectionInternal(collection, property.getTypeInformation(), new ArrayList<>());
+			return writeCollectionInternal(collection, property.getTypeInformation(), new ArrayList<>(collection.size()));
 		}
 
 		List<Object> dbList = new ArrayList<>(collection.size());
@@ -978,7 +978,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				collection.add(getPotentiallyConvertedSimpleWrite(element,
 						componentType != null ? componentType.getType() : Object.class));
 			} else if (element instanceof Collection || elementType.isArray()) {
-				collection.add(writeCollectionInternal(BsonUtils.asCollection(element), componentType, new ArrayList<>()));
+
+				Collection<?> objects = BsonUtils.asCollection(element);
+				collection.add(writeCollectionInternal(objects, componentType, new ArrayList<>(objects.size())));
 			} else {
 				Document document = new Document();
 				writeInternal(element, document, componentType);
