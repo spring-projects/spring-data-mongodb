@@ -17,14 +17,17 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
+
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.mongodb.core.mapping.Account;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Person;
+
+import com.mongodb.BasicDBObject;
 
 /**
  * Unit tests for {@link AbstractMongoEventListener}.
@@ -152,6 +155,14 @@ public class AbstractMongoEventListenerUnitTests {
 		listener.onApplicationEvent(event);
 
 		assertThat(listener.invokedOnBeforeDelete).isFalse();
+	}
+
+	@Test // GH-3968
+	public void debugLogShouldNotFailMongoDBCodecError() {
+
+		MongoMappingEvent<BasicDBObject> event = new BeforeConvertEvent<>(new BasicDBObject("date", Instant.now()), "collection-1");
+		UntypedEventListener listener = new UntypedEventListener();
+		listener.onApplicationEvent(event);
 	}
 
 	class SamplePersonEventListener extends AbstractMongoEventListener<Person> {
