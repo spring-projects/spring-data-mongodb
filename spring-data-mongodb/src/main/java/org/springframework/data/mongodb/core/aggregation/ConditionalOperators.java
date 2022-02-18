@@ -649,10 +649,7 @@ public class ConditionalOperators {
 			if (value instanceof CriteriaDefinition) {
 
 				Document mappedObject = context.getMappedObject(((CriteriaDefinition) value).getCriteriaObject());
-				List<Object> clauses = new ArrayList<Object>();
-
-				clauses.addAll(getClauses(context, mappedObject));
-
+				List<Object> clauses = getClauses(context, mappedObject);
 				return clauses.size() == 1 ? clauses.get(0) : clauses;
 			}
 
@@ -679,7 +676,9 @@ public class ConditionalOperators {
 
 			if (predicate instanceof List) {
 
-				List<Object> args = new ArrayList<Object>();
+				List<?> predicates = (List<?>) predicate;
+				List<Object> args = new ArrayList<Object>(predicates.size());
+
 				for (Object clause : (List<?>) predicate) {
 					if (clause instanceof Document) {
 						args.addAll(getClauses(context, (Document) clause));
@@ -697,14 +696,14 @@ public class ConditionalOperators {
 						continue;
 					}
 
-					List<Object> args = new ArrayList<Object>();
+					List<Object> args = new ArrayList<Object>(2);
 					args.add("$" + key);
 					args.add(nested.get(s));
 					clauses.add(new Document(s, args));
 				}
 			} else if (!isKeyword(key)) {
 
-				List<Object> args = new ArrayList<Object>();
+				List<Object> args = new ArrayList<Object>(2);
 				args.add("$" + key);
 				args.add(predicate);
 				clauses.add(new Document("$eq", args));

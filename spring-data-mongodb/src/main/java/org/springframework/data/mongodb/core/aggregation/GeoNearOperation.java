@@ -114,7 +114,7 @@ public class GeoNearOperation implements AggregationOperation {
 		Document command = toDocument(context);
 		Number limit = (Number) command.get("$geoNear", Document.class).remove("num");
 
-		List<Document> stages = new ArrayList<>();
+		List<Document> stages = new ArrayList<>(3);
 		stages.add(command);
 
 		if (nearQuery.getSkip() != null && nearQuery.getSkip() > 0) {

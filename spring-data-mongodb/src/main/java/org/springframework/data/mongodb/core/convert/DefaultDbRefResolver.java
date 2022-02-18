@@ -126,7 +126,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 
 		List<Document> result = mongoCollection //
 				.find(new Document(BasicMongoPersistentProperty.ID_FIELD_NAME, new Document("$in", ids))) //
-				.into(new ArrayList<>());
+				.into(new ArrayList<>(ids.size()));
 
 		return ids.stream() //
 				.flatMap(id -> documentWithId(id, result)) //

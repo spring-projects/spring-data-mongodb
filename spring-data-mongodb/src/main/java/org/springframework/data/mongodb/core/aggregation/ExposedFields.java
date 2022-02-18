@@ -110,7 +110,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	private static ExposedFields createFields(Fields fields, boolean synthetic) {
 
 		Assert.notNull(fields, "Fields must not be null");
-		List<ExposedField> result = new ArrayList<ExposedField>();
+		List<ExposedField> result = new ArrayList<ExposedField>(fields.size());
 
 		for (Field field : fields) {
 			result.add(new ExposedField(field, synthetic));

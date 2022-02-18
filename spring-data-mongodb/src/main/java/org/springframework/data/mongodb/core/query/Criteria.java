@@ -337,7 +337,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/mod/">MongoDB Query operator: $mod</a>
 	 */
 	public Criteria mod(Number value, Number remainder) {
-		List<Object> l = new ArrayList<Object>();
+		List<Object> l = new ArrayList<Object>(2);
 		l.add(value);
 		l.add(remainder);
 		criteria.put("$mod", l);

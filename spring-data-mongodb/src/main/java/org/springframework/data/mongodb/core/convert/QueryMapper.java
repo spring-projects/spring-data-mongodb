@@ -373,7 +373,7 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List<Object> newConditions = new ArrayList<>();
+			List<Object> newConditions = conditions instanceof Collection ? new ArrayList<>(((Collection<?>) conditions).size()) : new ArrayList<>();
 
 			for (Object condition : conditions) {
 				newConditions.add(isDocument(condition) ? getMappedObject((Document) condition, entity)
