@@ -188,7 +188,8 @@ public class DefaultIndexOperations implements IndexOperations {
 
 			private List<IndexInfo> getIndexData(MongoCursor<Document> cursor) {
 
-				List<IndexInfo> indexInfoList = new ArrayList<>();
+				int available = cursor.available();
+				List<IndexInfo> indexInfoList = available > 0 ? new ArrayList<>(available) : new ArrayList<>();
 
 				while (cursor.hasNext()) {
 

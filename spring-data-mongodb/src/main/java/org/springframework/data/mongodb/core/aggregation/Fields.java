@@ -167,6 +167,10 @@ public final class Fields implements Iterable<Field> {
 		return result;
 	}
 
+	public int size() {
+		return fields.size();
+	}
+
 	@Nullable
 	public Field getField(String name) {
 

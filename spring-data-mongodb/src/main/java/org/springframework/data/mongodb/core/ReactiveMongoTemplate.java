@@ -1712,7 +1712,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			LOGGER.debug(String.format("Inserting list of Documents containing %d items", dbDocList.size()));
 		}
 
-		List<Document> documents = new ArrayList<>();
+		List<Document> documents = new ArrayList<>(dbDocList.size());
 
 		return execute(collectionName, collection -> {
 

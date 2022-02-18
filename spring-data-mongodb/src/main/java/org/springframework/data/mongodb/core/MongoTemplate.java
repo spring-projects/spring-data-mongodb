@@ -1022,7 +1022,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
 
-		List<GeoResult<T>> result = new ArrayList<>();
+		List<GeoResult<T>> result = new ArrayList<>(results.getMappedResults().size());
 
 		BigDecimal aggregate = BigDecimal.ZERO;
 		for (Document element : results) {
@@ -1411,7 +1411,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(writer, "MongoWriter must not be null!");
 
-		List<Document> documentList = new ArrayList<>();
+		List<Document> documentList = new ArrayList<>(batchToSave.size());
 		List<T> initializedBatchToSave = new ArrayList<>(batchToSave.size());
 		for (T uninitialized : batchToSave) {
 
@@ -2965,7 +2965,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
 					.iterator()) {
 
-				List<T> result = new ArrayList<>();
+				int available = cursor.available();
+				List<T> result = available > 0 ? new ArrayList<>(available) : new ArrayList<>();
 
 				while (cursor.hasNext()) {
 					Document object = cursor.next();

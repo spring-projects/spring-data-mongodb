@@ -229,8 +229,10 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 			if (property.isAssociation()) {
 				if (next.getClass().isArray() || next instanceof Iterable) {
 
-					List<DBRef> dbRefs = new ArrayList<DBRef>();
-					for (Object element : asCollection(next)) {
+					Collection<?> values = asCollection(next);
+
+					List<DBRef> dbRefs = new ArrayList<DBRef>(values.size());
+					for (Object element : values) {
 						dbRefs.add(writer.toDBRef(element, property));
 					}
 
@@ -264,11 +266,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 		if (source instanceof Iterable) {
 
-			List<Object> result = new ArrayList<Object>();
+			if(source instanceof Collection) {
+				return new ArrayList<>((Collection<?>) source);
+			}
+
+			List<Object> result = new ArrayList<>();
 			for (Object element : (Iterable<?>) source) {
 				result.add(element);
 			}
-
 			return result;
 		}
 

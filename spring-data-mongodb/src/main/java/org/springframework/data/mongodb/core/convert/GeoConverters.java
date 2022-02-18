@@ -462,7 +462,7 @@ abstract class GeoConverters {
 				return null;
 			}
 
-			List<Object> argument = new ArrayList<>();
+			List<Object> argument = new ArrayList<>(2);
 
 			Shape shape = source.getShape();
 
@@ -482,7 +482,9 @@ abstract class GeoConverters {
 
 			} else if (shape instanceof Polygon) {
 
-				for (Point point : ((Polygon) shape).getPoints()) {
+				List<Point> points = ((Polygon) shape).getPoints();
+				argument = new ArrayList(points.size());
+				for (Point point : points) {
 					argument.add(toList(point));
 				}
 
