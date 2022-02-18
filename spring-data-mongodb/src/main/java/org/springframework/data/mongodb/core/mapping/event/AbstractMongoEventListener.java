@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
@@ -103,7 +104,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeConvert(BeforeConvertEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeConvert({})", event.getSource());
+			LOG.debug("onBeforeConvert({})", SerializationUtils.serializeToJsonSafely(event.getSource()));
 		}
 	}
 
@@ -116,7 +117,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeSave(BeforeSaveEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeSave({}, {})", event.getSource(), event.getDocument());
+			LOG.debug("onBeforeSave({}, {})", SerializationUtils.serializeToJsonSafely(event.getSource()), SerializationUtils.serializeToJsonSafely(event.getDocument()));
 		}
 	}
 
@@ -129,7 +130,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterSave(AfterSaveEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterSave({}, {})", event.getSource(), event.getDocument());
+			LOG.debug("onAfterSave({}, {})", SerializationUtils.serializeToJsonSafely(event.getSource()), SerializationUtils.serializeToJsonSafely(event.getDocument()));
 		}
 	}
 
@@ -142,7 +143,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterLoad(AfterLoadEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterLoad({})", event.getDocument());
+			LOG.debug("onAfterLoad({})", SerializationUtils.serializeToJsonSafely(event.getDocument()));
 		}
 	}
 
@@ -155,7 +156,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterConvert(AfterConvertEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterConvert({}, {})", event.getDocument(), event.getSource());
+			LOG.debug("onAfterConvert({}, {})", SerializationUtils.serializeToJsonSafely(event.getDocument()), SerializationUtils.serializeToJsonSafely(event.getSource()));
 		}
 	}
 
@@ -168,7 +169,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterDelete(AfterDeleteEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterDelete({})", event.getDocument());
+			LOG.debug("onAfterDelete({})", SerializationUtils.serializeToJsonSafely(event.getDocument()));
 		}
 	}
 
@@ -181,7 +182,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeDelete(BeforeDeleteEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeDelete({})", event.getDocument());
+			LOG.debug("onBeforeDelete({})", SerializationUtils.serializeToJsonSafely(event.getDocument()));
 		}
 	}
 }
