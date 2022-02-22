@@ -58,9 +58,9 @@ pipeline {
 						}
 					}
 				}
-				stage('Publish JDK 15 + MongoDB 4.4') {
+				stage('Publish JDK LTS + MongoDB 4.4') {
 					when {
-						changeset "ci/openjdk15-mongodb-4.4/**"
+						changeset "ci/openjdk17-mongodb-4.4/**"
 						changeset "ci/pipeline.properties"
 					}
 					agent { label 'data' }
@@ -68,7 +68,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-with-mongodb-4.4:${p['java.15.tag']}", "--build-arg BASE=${p['docker.java.15.image']} --build-arg MONGODB=${p['docker.mongodb.4.4.version']} ci/openjdk15-mongodb-4.4/")
+							def image = docker.build("springci/spring-data-with-mongodb-4.4:${p['java.lts.tag']}", "--build-arg BASE=${p['docker.java.lts.image']} --build-arg MONGODB=${p['docker.mongodb.4.4.version']} ci/openjdk17-mongodb-4.4/")
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
@@ -140,7 +140,7 @@ pipeline {
 					}
 				}
 
-				stage("test: baseline (jdk15)") {
+				stage("test: baseline (LTS)") {
 					agent {
 						label 'data'
 					}
@@ -151,13 +151,13 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-4.4:${p['java.15.tag']}").inside(p['docker.java.inside.basic']) {
+								docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-4.4:${p['java.lts.tag']}").inside(p['docker.java.inside.basic']) {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'
 									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 									sh 'sleep 15'
-									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pjava11 clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
 								}
 							}
 						}
@@ -185,7 +185,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
+						docker.image(p['docker.java.lts.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,artifactory ' +
 									'-Dartifactory.server=https://repo.spring.io ' +
 									"-Dartifactory.username=${ARTIFACTORY_USR} " +
@@ -193,35 +193,6 @@ pipeline {
 									"-Dartifactory.staging-repository=libs-snapshot-local " +
 									"-Dartifactory.build-name=spring-data-mongodb " +
 									"-Dartifactory.build-number=${BUILD_NUMBER} " +
-									'-Dmaven.test.skip=true clean deploy -U -B'
-						}
-					}
-				}
-			}
-		}
-
-		stage('Publish documentation') {
-			when {
-				branch '3.2.x'
-			}
-			agent {
-				label 'data'
-			}
-			options { timeout(time: 20, unit: 'MINUTES') }
-
-			environment {
-				ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
-			}
-
-			steps {
-				script {
-					docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
-							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,distribute ' +
-									'-Dartifactory.server=https://repo.spring.io ' +
-									"-Dartifactory.username=${ARTIFACTORY_USR} " +
-									"-Dartifactory.password=${ARTIFACTORY_PSW} " +
-									"-Dartifactory.distribution-repository=temp-private-local " +
 									'-Dmaven.test.skip=true clean deploy -U -B'
 						}
 					}
