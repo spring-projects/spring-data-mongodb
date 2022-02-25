@@ -58,9 +58,9 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.convert.PropertyConverter;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.convert.PropertyValueConverter;
-import org.springframework.data.convert.PropertyValueConverter.ValueConversionContext;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -3517,16 +3517,16 @@ class MappingMongoConverterUnitTests {
 		converter.setCustomConversions(MongoCustomConversions.create(it -> {
 
 			it.registerConverter(WithValueConverters.class, "viaRegisteredConverter",
-					new PropertyValueConverter<String, org.bson.Document, ValueConversionContext>() {
+					new PropertyValueConverter<String, org.bson.Document, MongoConversionContext>() {
 						@Nullable
 						@Override
-						public String nativeToDomain(@Nullable org.bson.Document nativeValue, ValueConversionContext context) {
+						public String read(@Nullable org.bson.Document nativeValue, MongoConversionContext context) {
 							return nativeValue.getString("bar");
 						}
 
 						@Nullable
 						@Override
-						public org.bson.Document domainToNative(@Nullable String domainValue, ValueConversionContext context) {
+						public org.bson.Document write(@Nullable String domainValue, MongoConversionContext context) {
 							return new org.bson.Document("bar", domainValue);
 						}
 					});
@@ -3546,11 +3546,11 @@ class MappingMongoConverterUnitTests {
 
 	static class WithValueConverters {
 
-		@PropertyConverter(Converter1.class) String converterWithDefaultCtor;
+		@ValueConverter(Converter1.class) String converterWithDefaultCtor;
 
-		@PropertyConverter(Converter2.class) String converterEnum;
+		@ValueConverter(Converter2.class) String converterEnum;
 
-		@PropertyConverter(Converter3.class) String converterBean;
+		@ValueConverter(Converter3.class) String converterBean;
 
 		String viaRegisteredConverter;
 	}
@@ -3564,12 +3564,12 @@ class MappingMongoConverterUnitTests {
 		}
 
 		@Override
-		public Object nativeToDomain(org.bson.Document value, MongoConversionContext context) {
+		public Object read(org.bson.Document value, MongoConversionContext context) {
 			return value.get("ooo");
 		}
 
 		@Override
-		public org.bson.Document domainToNative(Object value, MongoConversionContext context) {
+		public org.bson.Document write(Object value, MongoConversionContext context) {
 			return new org.bson.Document("ooo", value + " - " + someDependency.toString());
 		}
 	}
@@ -3584,13 +3584,13 @@ class MappingMongoConverterUnitTests {
 
 		@Nullable
 		@Override
-		public String nativeToDomain(@Nullable org.bson.Document value, MongoConversionContext context) {
+		public String read(@Nullable org.bson.Document value, MongoConversionContext context) {
 			return value.getString("bar");
 		}
 
 		@Nullable
 		@Override
-		public org.bson.Document domainToNative(@Nullable String value, MongoConversionContext context) {
+		public org.bson.Document write(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("bar", value);
 		}
 	}
@@ -3599,13 +3599,13 @@ class MappingMongoConverterUnitTests {
 
 		@Nullable
 		@Override
-		public String nativeToDomain(@Nullable org.bson.Document value, MongoConversionContext context) {
+		public String read(@Nullable org.bson.Document value, MongoConversionContext context) {
 			return value.getString("foo");
 		}
 
 		@Nullable
 		@Override
-		public org.bson.Document domainToNative(@Nullable String value, MongoConversionContext context) {
+		public org.bson.Document write(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("foo", value);
 		}
 	}

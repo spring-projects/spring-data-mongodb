@@ -38,12 +38,13 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.PropertyValueConverter;
-import org.springframework.data.convert.PropertyValueConverter.ValueConversionContext;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.PropertyValueConverterRegistrar;
 import org.springframework.data.convert.SimplePropertyValueConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -165,7 +166,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private @Nullable PropertyValueConverterFactory propertyValueConverterFactory;
-		private PropertyValueConverterRegistrar propertyValueConverterRegistrar;
+		private PropertyValueConverterRegistrar<MongoPersistentProperty> propertyValueConverterRegistrar;
 
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
@@ -238,14 +239,24 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return this;
 		}
 
-		public MongoConverterConfigurationAdapter registerConverter(Class<?> type, String path, PropertyValueConverter<?,?, ValueConversionContext> converter) {
+		public MongoConverterConfigurationAdapter registerConverter(Class<?> type, String path, PropertyValueConverter<?,?, MongoConversionContext> converter) {
 
 			if(propertyValueConverterRegistrar == null) {
 				propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
 			}
 
-			propertyValueConverterRegistrar.register(type, path, converter);
+			propertyValueConverterRegistrar.registerConverter(type, path, converter);
 			//TODO: create a property path for it
+			return this;
+		}
+
+		public MongoConverterConfigurationAdapter propertyConversions(Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> config) {
+
+			if(propertyValueConverterRegistrar == null) {
+				propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
+			}
+
+			config.accept(propertyValueConverterRegistrar);
 			return this;
 		}
 
@@ -287,7 +298,9 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 			SimplePropertyValueConversions pvc = new SimplePropertyValueConversions();
 			pvc.setConverterFactory(propertyValueConverterFactory);
-			pvc.setConverterRegistrar(propertyValueConverterRegistrar);
+			if(propertyValueConverterRegistrar != null) {
+				pvc.setValueConverterRegistry(propertyValueConverterRegistrar.buildRegistry());
+			}
 			pvc.init();
 
 			if (!useNativeDriverJavaTimeCodecs) {

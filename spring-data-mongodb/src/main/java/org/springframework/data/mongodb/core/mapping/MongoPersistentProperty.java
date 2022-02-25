@@ -19,8 +19,6 @@ import java.util.Collection;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.convert.PropertyConverter;
-import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.lang.Nullable;

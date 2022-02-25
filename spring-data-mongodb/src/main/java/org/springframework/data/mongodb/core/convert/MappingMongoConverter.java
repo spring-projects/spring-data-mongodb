@@ -958,7 +958,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> type = prop.getTypeInformation();
 
 		if(conversions.hasPropertyValueConverter(prop)) {
-			accessor.put(prop, conversions.getPropertyValueConverter(prop).domainToNative(obj, new MongoConversionContext() {
+			accessor.put(prop, conversions.getPropertyValueConverter(prop).write(obj, new MongoConversionContext() {
 				@Override
 				public MongoPersistentProperty getProperty() {
 					return prop;
@@ -1298,7 +1298,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
 		if(conversions.hasPropertyValueConverter(property)) {
-			accessor.put(property, conversions.getPropertyValueConverter(property).domainToNative(value, new MongoConversionContext() {
+			accessor.put(property, conversions.getPropertyValueConverter(property).write(value, new MongoConversionContext() {
 				@Override
 				public MongoPersistentProperty getProperty() {
 					return property;
@@ -1972,7 +1972,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if(context.conversions.hasPropertyValueConverter(property)) {
 
-				return (T) context.conversions.getPropertyValueConverter(property).nativeToDomain(value, new MongoConversionContext() {
+				return (T) context.conversions.getPropertyValueConverter(property).read(value, new MongoConversionContext() {
 					@Override
 					public MongoPersistentProperty getProperty() {
 						return property;

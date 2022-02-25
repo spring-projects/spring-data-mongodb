@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.PropertyValueConverter;
-import org.springframework.data.convert.PropertyValueConverter.ValueConversionContext;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.Foo;
 import org.springframework.lang.Nullable;
 
@@ -60,17 +59,17 @@ class MongoCustomConversionsUnitTests {
 
 		MongoCustomConversions.create(config -> {
 
-			config.registerConverter(Foo.class, "name", new PropertyValueConverter<Object, Object, ValueConversionContext>() {
+			config.registerConverter(Foo.class, "name", new MongoValueConverter<Object, Object>() {
 
 				@Nullable
 				@Override
-				public Object nativeToDomain(@Nullable Object nativeValue, ValueConversionContext context) {
+				public Object read(@Nullable Object nativeValue, MongoConversionContext context) {
 					return null;
 				}
 
 				@Nullable
 				@Override
-				public Object domainToNative(@Nullable Object domainValue, ValueConversionContext context) {
+				public Object write(@Nullable Object domainValue, MongoConversionContext context) {
 					return null;
 				}
 			});
