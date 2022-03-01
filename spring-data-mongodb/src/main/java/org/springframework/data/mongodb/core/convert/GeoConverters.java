@@ -482,11 +482,6 @@ abstract class GeoConverters {
 				argument.add(toList(((Circle) shape).getCenter()));
 				argument.add(((Circle) shape).getRadius().getNormalizedValue());
 
-			} else if (shape instanceof Circle) {
-
-				argument.add(toList(((Circle) shape).getCenter()));
-				argument.add(((Circle) shape).getRadius());
-
 			} else if (shape instanceof Polygon) {
 
 				for (Point point : ((Polygon) shape).getPoints()) {
