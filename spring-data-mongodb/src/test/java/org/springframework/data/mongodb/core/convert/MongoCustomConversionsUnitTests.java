@@ -16,17 +16,18 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Date;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.Foo;
-import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link MongoCustomConversions}.
@@ -45,54 +46,29 @@ class MongoCustomConversionsUnitTests {
 		assertThat(conversions.hasCustomWriteTarget(Date.class)).isFalse();
 	}
 
+	@Test // GH-3596
+	void propertyValueConverterRegistrationWorksAsExpected() {
+
+		PersistentProperty<?> persistentProperty = mock(PersistentProperty.class);
+		PersistentEntity owner = mock(PersistentEntity.class);
+		when(persistentProperty.getName()).thenReturn("name");
+		when(persistentProperty.getOwner()).thenReturn(owner);
+		when(owner.getType()).thenReturn(Foo.class);
+
+		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+
+			config.configurePropertyConversions(
+					registry -> registry.registerConverter(Foo.class, "name", mock(PropertyValueConverter.class)));
+		});
+
+		assertThat(conversions.hasPropertyValueConverter(persistentProperty)).isTrue();
+	}
+
 	static class DateToZonedDateTimeConverter implements Converter<Date, ZonedDateTime> {
 
 		@Override
 		public ZonedDateTime convert(Date source) {
 			return ZonedDateTime.now();
 		}
-	}
-
-	@Test
-	void howToConfigure() {
-
-
-		MongoCustomConversions.create(config -> {
-
-			config.registerConverter(Foo.class, "name", new MongoValueConverter<Object, Object>() {
-
-				@Nullable
-				@Override
-				public Object read(@Nullable Object nativeValue, MongoConversionContext context) {
-					return null;
-				}
-
-				@Nullable
-				@Override
-				public Object write(@Nullable Object domainValue, MongoConversionContext context) {
-					return null;
-				}
-			});
-
-
-			// lambda variant - generics
-
-			// SD-Rest - LookupInformation/Lookup - Invocation Recorder -> BiFunction mit target type
-
-//			config.registerConverter(Foo.class, Foo::getName, (in, ctx) -> {}, (out, ctx) -> {}); .as() {
-
-//				@Nullable
-//				@Override
-//				public Object nativeToDomain(@Nullable Object nativeValue, ValueConversionContext context) {
-//					return null;
-//				}
-//
-//				@Nullable
-//				@Override
-//				public Object domainToNative(@Nullable Object domainValue, ValueConversionContext context) {
-//					return null;
-//				}
-//			});
-		});
 	}
 }

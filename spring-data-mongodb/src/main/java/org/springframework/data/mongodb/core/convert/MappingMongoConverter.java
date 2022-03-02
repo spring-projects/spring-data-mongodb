@@ -176,7 +176,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(path, "ObjectPath must not be null");
 
-		return new ConversionContext(conversions, path, this::readDocument, this::readCollectionOrArray, this::readMap,
+		return new ConversionContext(this, conversions, path, this::readDocument, this::readCollectionOrArray, this::readMap,
 				this::readDBRef, this::getPotentiallyConvertedSimpleRead);
 	}
 
@@ -306,7 +306,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (R) read(typeToRead, bson);
 		}
 
-		ProjectingConversionContext context = new ProjectingConversionContext(conversions, ObjectPath.ROOT,
+		ProjectingConversionContext context = new ProjectingConversionContext(this, conversions, ObjectPath.ROOT,
 				this::readCollectionOrArray, this::readMap, this::readDBRef, this::getPotentiallyConvertedSimpleRead,
 				projection);
 
@@ -390,11 +390,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		private final EntityProjection<?, ?> returnedTypeDescriptor;
 
-		ProjectingConversionContext(CustomConversions customConversions, ObjectPath path,
+		ProjectingConversionContext(MongoConverter sourceConverter, CustomConversions customConversions, ObjectPath path,
 				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
 				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
 				EntityProjection<?, ?> projection) {
-			super(customConversions, path,
+			super(sourceConverter, customConversions, path,
 					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, projection),
 
 					collectionConverter, mapConverter, dbRefConverter, elementConverter);
@@ -409,13 +409,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return super.forProperty(name);
 			}
 
-			return new ProjectingConversionContext(conversions, path, collectionConverter, mapConverter, dbRefConverter,
+			return new ProjectingConversionContext(sourceConverter, conversions, path, collectionConverter, mapConverter, dbRefConverter,
 					elementConverter, property);
 		}
 
 		@Override
 		public ConversionContext withPath(ObjectPath currentPath) {
-			return new ProjectingConversionContext(conversions, currentPath, collectionConverter, mapConverter,
+			return new ProjectingConversionContext(sourceConverter, conversions, currentPath, collectionConverter, mapConverter,
 					dbRefConverter, elementConverter, returnedTypeDescriptor);
 		}
 	}
@@ -958,12 +958,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> type = prop.getTypeInformation();
 
 		if(conversions.hasPropertyValueConverter(prop)) {
-			accessor.put(prop, conversions.getPropertyValueConverter(prop).write(obj, new MongoConversionContext() {
-				@Override
-				public MongoPersistentProperty getProperty() {
-					return prop;
-				}
-			}));
+			accessor.put(prop, conversions.getPropertyValueConverter(prop).write(obj, new MongoConversionContext(prop, this)));
 			return;
 		}
 
@@ -1298,12 +1293,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
 		if(conversions.hasPropertyValueConverter(property)) {
-			accessor.put(property, conversions.getPropertyValueConverter(property).write(value, new MongoConversionContext() {
-				@Override
-				public MongoPersistentProperty getProperty() {
-					return property;
-				}
-			}));
+			accessor.put(property, conversions.getPropertyValueConverter(property).write(value, new MongoConversionContext(property, this)));
 			return;
 		}
 
@@ -1972,12 +1962,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if(context.conversions.hasPropertyValueConverter(property)) {
 
-				return (T) context.conversions.getPropertyValueConverter(property).read(value, new MongoConversionContext() {
-					@Override
-					public MongoPersistentProperty getProperty() {
-						return property;
-					}
-				});
+				return (T) context.conversions.getPropertyValueConverter(property).read(value, new MongoConversionContext(property, context.sourceConverter));
 			}
 
 			return (T) context.convert(value, property.getTypeInformation());
@@ -2209,6 +2194,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	protected static class ConversionContext {
 
+		final MongoConverter sourceConverter;
 		final org.springframework.data.convert.CustomConversions conversions;
 		final ObjectPath path;
 		final ContainerValueConverter<Bson> documentConverter;
@@ -2217,11 +2203,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		final ContainerValueConverter<DBRef> dbRefConverter;
 		final ValueConverter<Object> elementConverter;
 
-		ConversionContext(org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
+		ConversionContext(MongoConverter sourceConverter, org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
 				ContainerValueConverter<Bson> documentConverter, ContainerValueConverter<Collection<?>> collectionConverter,
 				ContainerValueConverter<Bson> mapConverter, ContainerValueConverter<DBRef> dbRefConverter,
 				ValueConverter<Object> elementConverter) {
 
+			this.sourceConverter = sourceConverter;
 			this.conversions = customConversions;
 			this.path = path;
 			this.documentConverter = documentConverter;
@@ -2303,7 +2290,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Assert.notNull(currentPath, "ObjectPath must not be null");
 
-			return new ConversionContext(conversions, currentPath, documentConverter, collectionConverter, mapConverter,
+			return new ConversionContext(sourceConverter, conversions, currentPath, documentConverter, collectionConverter, mapConverter,
 					dbRefConverter, elementConverter);
 		}
 

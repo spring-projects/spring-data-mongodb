@@ -97,9 +97,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	 */
 	@Override
 	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-		BasicMongoPersistentEntity entity = new BasicMongoPersistentEntity<>(typeInformation);
-		entity.beanFactory = applicationContext;
-		return entity;
+		return new BasicMongoPersistentEntity<>(typeInformation);
 	}
 
 	/*

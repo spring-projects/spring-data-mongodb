@@ -42,6 +42,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -1341,6 +1342,15 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo("{ $set: { 'testInnerData.testMap.1.nonExistingProperty.2.someValue': '4' }}");
 	}
 
+	@Test // GH-3596
+	void updateConsidersValueConverterWhenPresent() {
+
+		Update update = new Update().set("text", "value");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedUpdate).isEqualTo("{ $set : { 'text' : 'eulav' } }");
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1751,5 +1761,11 @@ class UpdateMapperUnitTests {
 	@Data
 	private static class TestValue {
 		private int intValue;
+	}
+
+	static class WithPropertyValueConverter {
+
+		@ValueConverter(ReversingValueConverter.class)
+		String text;
 	}
 }

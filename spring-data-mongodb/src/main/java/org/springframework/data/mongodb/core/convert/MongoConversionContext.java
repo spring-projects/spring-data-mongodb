@@ -15,17 +15,46 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.bson.conversions.Bson;
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 
 /**
+ * {@link ValueConversionContext} that allows to delegate read/write to an underlying {@link MongoConverter}.
+ *
  * @author Christoph Strobl
- * @since 2022/01
+ * @since 3.4
  */
-class MongoConversionContext implements ValueConversionContext<MongoPersistentProperty> {
+public class MongoConversionContext implements ValueConversionContext<MongoPersistentProperty> {
+
+	private final MongoPersistentProperty persistentProperty;
+	private final MongoConverter mongoConverter;
+
+	public MongoConversionContext(MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
+
+		this.persistentProperty = persistentProperty;
+		this.mongoConverter = mongoConverter;
+	}
 
 	@Override
 	public MongoPersistentProperty getProperty() {
-		return null;
+		return persistentProperty;
+	}
+
+	@Override
+	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
+		return (T) mongoConverter.convertToMongoType(value, target);
+	}
+
+	@Override
+	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
+
+		if (!(value instanceof Bson)) {
+			return ValueConversionContext.super.read(value, target);
+		}
+
+		return mongoConverter.read(target.getType(), (Bson) value);
 	}
 }

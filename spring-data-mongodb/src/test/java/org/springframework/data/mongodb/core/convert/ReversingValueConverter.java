@@ -15,14 +15,31 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.lang.Nullable;
 
 /**
- * Pre typed {@link PropertyValueConverter} specific for the Data MongoDB module.
- * 
  * @author Christoph Strobl
- * @since 3.4
  */
-public interface MongoValueConverter<S, T> extends PropertyValueConverter<S, T, MongoConversionContext> {
+class ReversingValueConverter implements MongoValueConverter<String, String> {
 
+	@Nullable
+	@Override
+	public String read(@Nullable String value, MongoConversionContext context) {
+		return reverse(value);
+	}
+
+	@Nullable
+	@Override
+	public String write(@Nullable String value, MongoConversionContext context) {
+		return reverse(value);
+	}
+
+	private String reverse(String source) {
+
+		if (source == null) {
+			return null;
+		}
+
+		return new StringBuilder(source).reverse().toString();
+	}
 }
