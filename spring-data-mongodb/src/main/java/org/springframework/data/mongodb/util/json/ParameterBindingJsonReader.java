@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -289,10 +290,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				} else if ("DBPointer".equals(value)) {
 					setCurrentBsonType(BsonType.DB_POINTER);
 					currentValue = visitDBPointerConstructor();
-				} else if ("UUID".equals(value) || "GUID".equals(value) || "CSUUID".equals(value) || "CSGUID".equals(value)
-						|| "JUUID".equals(value) || "JGUID".equals(value) || "PYUUID".equals(value) || "PYGUID".equals(value)) {
+				} else if ("UUID".equals(value)) {
 					setCurrentBsonType(BsonType.BINARY);
-					currentValue = visitUUIDConstructor(value);
+					currentValue = visitUUIDConstructor();
 				} else if ("new".equals(value)) {
 					visitNew();
 				} else {
@@ -840,9 +840,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		} else if ("DBPointer".equals(value)) {
 			currentValue = visitDBPointerConstructor();
 			setCurrentBsonType(BsonType.DB_POINTER);
-		} else if ("UUID".equals(value) || "GUID".equals(value) || "CSUUID".equals(value) || "CSGUID".equals(value)
-				|| "JUUID".equals(value) || "JGUID".equals(value) || "PYUUID".equals(value) || "PYGUID".equals(value)) {
-			currentValue = visitUUIDConstructor(value);
+		} else if ("UUID".equals(value)) {
+			currentValue = visitUUIDConstructor();
 			setCurrentBsonType(BsonType.BINARY);
 		} else {
 			throw new JsonParseException("JSON reader expected a type name but found '%s'.", value);
@@ -862,7 +861,13 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					setCurrentBsonType(BsonType.BINARY);
 					return;
 				}
-			} else if ("$regex".equals(value) || "$options".equals(value)) {
+			}
+			if ("$uuid".equals(value)) {
+				currentValue = visitUuidExtendedJson();
+				setCurrentBsonType(BsonType.BINARY);
+				return;
+			}
+			else if ("$regex".equals(value) || "$options".equals(value)) {
 				currentValue = visitRegularExpressionExtendedJson(value);
 				if (currentValue != null) {
 					setCurrentBsonType(BsonType.REGULAR_EXPRESSION);
@@ -956,16 +961,12 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return new BsonBinary(subTypeToken.getValue(Integer.class).byteValue(), bytes);
 	}
 
-	private BsonBinary visitUUIDConstructor(final String uuidConstructorName) {
-		verifyToken(JsonTokenType.LEFT_PAREN);
-		String hexString = readStringFromExtendedJson().replaceAll("\\{", "").replaceAll("}", "").replaceAll("-", "");
-		verifyToken(JsonTokenType.RIGHT_PAREN);
-		byte[] bytes = decodeHex(hexString);
-		BsonBinarySubType subType = BsonBinarySubType.UUID_STANDARD;
-		if (!"UUID".equals(uuidConstructorName) || !"GUID".equals(uuidConstructorName)) {
-			subType = BsonBinarySubType.UUID_LEGACY;
-		}
-		return new BsonBinary(subType, bytes);
+	private BsonBinary visitUUIDConstructor() {
+		this.verifyToken(JsonTokenType.LEFT_PAREN);
+		String hexString = this.readStringFromExtendedJson().replace("-", "");
+
+		this.verifyToken(JsonTokenType.RIGHT_PAREN);
+		return new BsonBinary(BsonBinarySubType.UUID_STANDARD, decodeHex(hexString));
 	}
 
 	private BsonRegularExpression visitRegularExpressionConstructor() {
@@ -1482,6 +1483,17 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			throw new JsonParseException("JSON reader expected an integer but found '%s'.", nextToken.getValue());
 		}
 		return value;
+	}
+
+	private BsonBinary visitUuidExtendedJson() {
+		verifyToken(JsonTokenType.COLON);
+		String hexString = this.readStringFromExtendedJson().replace("-", "");
+		verifyToken(JsonTokenType.END_OBJECT);
+		try {
+			return new BsonBinary(BsonBinarySubType.UUID_STANDARD, decodeHex(hexString));
+		} catch (IllegalArgumentException e) {
+			throw new JsonParseException(e);
+		}
 	}
 
 	private void visitJavaScriptExtendedJson() {

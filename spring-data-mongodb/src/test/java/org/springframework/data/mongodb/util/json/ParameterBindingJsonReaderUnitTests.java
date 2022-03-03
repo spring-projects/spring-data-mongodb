@@ -27,6 +27,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
@@ -545,6 +547,23 @@ class ParameterBindingJsonReaderUnitTests {
 		String source = "\\\" + new java.lang.Object() + \\\"";
 		Document target = parse("{ arg0 : :#{?0} }", source);
 		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-3750
+	void shouldParseUUIDasStandardRepresentation() {
+
+		String json = "{ 'value' : UUID(\"b5f21e0c-2a0d-42d6-ad03-d827008d8ab6\") }";
+
+		BsonBinary value = parse(json).get("value", BsonBinary.class);
+		assertThat(value.getType()).isEqualTo(BsonBinarySubType.UUID_STANDARD.getValue());
+	}
+
+	@Test // GH-3750
+	public void shouldParse$uuidAsStandardRepresentation() {
+
+		String json = "{ 'value' : { '$uuid' : \"73ff-d26444b-34c6-990e8e-7d1dfc035d4\" } } }";
+		BsonBinary value = parse(json).get("value", BsonBinary.class);
+		assertThat(value.getType()).isEqualTo(BsonBinarySubType.UUID_STANDARD.getValue());
 	}
 
 	private static Document parse(String json, Object... args) {
