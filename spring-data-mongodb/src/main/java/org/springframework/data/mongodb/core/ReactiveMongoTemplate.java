@@ -191,7 +191,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
-	private CountExecution countExecution = this::doPreciseCount;
+	private CountExecution countExecution = this::doExactCount;
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -384,14 +384,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * En-/Disable usage of estimated count based on the given {@link BiPredicate estimationFilter}.
+	 * En-/Disable usage of estimated count based on the given {@link BiFunction estimationFilter}.
 	 *
 	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} will we used for {@link Document
-	 *          filter queries} that pass the given {@link BiPredicate estimationFilter}.
-	 * @param estimationFilter the {@link BiPredicate filter}.
+	 *          filter queries} that pass the given {@link BiFunction estimationFilter}.
+	 * @param estimationFilter the {@link BiFunction filter}.
 	 * @since 3.4
 	 */
-	public void useEstimatedCount(boolean enabled, BiFunction<Document, CountOptions, Mono<Boolean>> estimationFilter) {
+	private void useEstimatedCount(boolean enabled, BiFunction<Document, CountOptions, Mono<Boolean>> estimationFilter) {
 
 		if (enabled) {
 
@@ -399,7 +399,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 				return estimationFilter.apply(filter, options).flatMap(canEstimate -> {
 					if (!canEstimate) {
-						return doPreciseCount(collectionName, filter, options);
+						return doExactCount(collectionName, filter, options);
 					}
 
 					EstimatedDocumentCountOptions estimatedDocumentCountOptions = new EstimatedDocumentCountOptions();
@@ -411,7 +411,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				});
 			};
 		} else {
-			this.countExecution = this::doPreciseCount;
+			this.countExecution = this::doExactCount;
 		}
 	}
 
@@ -1236,14 +1236,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public Mono<Long> preciseCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+	public Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		CountContext countContext = queryOperations.countQueryContext(query);
 
 		CountOptions options = countContext.getCountOptions(entityClass);
 		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
-		return doPreciseCount(collectionName, mappedQuery, options);
+		return doExactCount(collectionName, mappedQuery, options);
 	}
 
 	/*
@@ -1317,7 +1317,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return countExecution.countDocuments(collectionName, filter, options);
 	}
 
-	protected Mono<Long> doPreciseCount(String collectionName, Document filter, CountOptions options) {
+	protected Mono<Long> doExactCount(String collectionName, Document filter, CountOptions options) {
 
 		return createMono(collectionName,
 				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));

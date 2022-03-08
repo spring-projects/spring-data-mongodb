@@ -188,7 +188,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
-	private CountExecution countExecution = this::doPreciseCount;
+	private CountExecution countExecution = this::doExactCount;
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -366,14 +366,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param estimationFilter the {@link BiPredicate filter}.
 	 * @since 3.4
 	 */
-	public void useEstimatedCount(boolean enabled, BiPredicate<Document, CountOptions> estimationFilter) {
+	private void useEstimatedCount(boolean enabled, BiPredicate<Document, CountOptions> estimationFilter) {
 
 		if (enabled) {
 
 			this.countExecution = (collectionName, filter, options) -> {
 
 				if (!estimationFilter.test(filter, options)) {
-					return doPreciseCount(collectionName, filter, options);
+					return doExactCount(collectionName, filter, options);
 				}
 
 				EstimatedDocumentCountOptions estimatedDocumentCountOptions = new EstimatedDocumentCountOptions();
@@ -384,7 +384,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return doEstimatedCount(collectionName, estimatedDocumentCountOptions);
 			};
 		} else {
-			this.countExecution = this::doPreciseCount;
+			this.countExecution = this::doExactCount;
 		}
 	}
 
@@ -1150,14 +1150,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public long preciseCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+	public long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		CountContext countContext = queryOperations.countQueryContext(query);
 
 		CountOptions options = countContext.getCountOptions(entityClass);
 		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
-		return doPreciseCount(collectionName, mappedQuery, options);
+		return doExactCount(collectionName, mappedQuery, options);
 	}
 
 	/*
@@ -1188,7 +1188,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return countExecution.countDocuments(collectionName, filter, options);
 	}
 
-	protected long doPreciseCount(String collectionName, Document filter, CountOptions options) {
+	protected long doExactCount(String collectionName, Document filter, CountOptions options) {
 		return execute(collectionName,
 				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}

@@ -229,7 +229,7 @@ public class SessionBoundMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1880, GH-3522
-	public void countShouldDelegateToPreciseCountNoMatterWhat() {
+	public void countShouldDelegateToExactCountNoMatterWhat() {
 
 		template.useEstimatedCount(true);
 		template.count(new Query(), Person.class);

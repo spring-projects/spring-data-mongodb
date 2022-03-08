@@ -1181,8 +1181,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the count of matching documents.
 	 * @since 3.4
 	 */
-	default long preciseCount(Query query, Class<?> entityClass) {
-		return preciseCount(query, entityClass, getCollectionName(entityClass));
+	default long exactCount(Query query, Class<?> entityClass) {
+		return exactCount(query, entityClass, getCollectionName(entityClass));
 	}
 
 	/**
@@ -1206,8 +1206,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see #count(Query, Class, String)
 	 * @since 3.4
 	 */
-	default long preciseCount(Query query, String collectionName) {
-		return preciseCount(query, null, collectionName);
+	default long exactCount(Query query, String collectionName) {
+		return exactCount(query, null, collectionName);
 	}
 
 	/**
@@ -1231,7 +1231,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the count of matching documents.
 	 * @since 3.4
 	 */
-	long preciseCount(Query query, @Nullable Class<?> entityClass, String collectionName);
+	long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
 	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
