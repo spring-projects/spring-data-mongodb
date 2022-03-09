@@ -408,4 +408,13 @@ class QuerydslCriteriaExtensionsTests {
 
         assertThat(typed).isEqualTo(expected)
     }
+
+    @Test
+    fun `isEqualTo() should equal expected criteria when nested properties`() {
+        val book = QBook.book
+        val typed = book.author.name isEqualTo "Example"
+        val expected = Criteria("author.name").isEqualTo("Example")
+
+        assertThat(typed).isEqualTo(expected)
+    }
 }

@@ -10,4 +10,5 @@ public class Book {
     public Integer price;
     public Boolean available;
     public List<String> categories;
+    public Author author;
 }

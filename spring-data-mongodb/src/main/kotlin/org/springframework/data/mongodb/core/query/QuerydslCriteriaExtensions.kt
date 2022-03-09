@@ -363,5 +363,13 @@ infix fun Path<*>.bits(bitwiseCriteria: Criteria.BitwiseCriteriaOperators.() -> 
     Criteria(this.asName()).bits().let(bitwiseCriteria)
 
 private fun Path<*>.asName(): String {
-    return this.metadata.name
+    val rootName = this.root.toString()
+    val name = this.toString()
+
+    if (rootName == name) {
+        return name
+    }
+
+    // The reason add 1 is that exists "."
+    return name.substring(rootName.length + 1)
 }
