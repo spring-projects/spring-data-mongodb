@@ -587,7 +587,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param value must not be {@literal null}.
 		 * @return must not be {@literal null}.
 		 */
-		NumericJsonSchemaObject multipleOf(Number value) {
+		public NumericJsonSchemaObject multipleOf(Number value) {
 
 			Assert.notNull(value, "Value must not be null!");
 			NumericJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -665,7 +665,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @return new instance of {@link NumericJsonSchemaObject}.
 		 */
 		@SuppressWarnings("unchecked")
-		NumericJsonSchemaObject lte(Number max) {
+		public NumericJsonSchemaObject lte(Number max) {
 
 			Assert.notNull(max, "Max must not be null!");
 
