@@ -676,7 +676,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			@Nullable CollectionOptions collectionOptions) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
-		return doCreateCollection(collectionName, convertToDocument(collectionOptions));
+		return doCreateCollection(collectionName, convertToDocument(collectionOptions, Object.class));
 	}
 
 	/*
