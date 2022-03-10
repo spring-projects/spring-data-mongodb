@@ -2300,6 +2300,18 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).countDocuments(any(Document.class), any());
 	}
 
+	@Test // GH-3984
+	void templatePassesOnTimeSeriesOptionsWhenNoTypeGiven() {
+
+		template.createCollection("time-series-collection", CollectionOptions.timeSeries("time_stamp"));
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getTimeSeriesOptions().toString())
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").toString());
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
