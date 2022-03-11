@@ -900,3 +900,4 @@ Declaring these beans in your Spring ApplicationContext causes them to be invoke
 include::unwrapping-entities.adoc[]
 
 include::mongo-custom-conversions.adoc[]
+include::mongo-property-converters.adoc[]
