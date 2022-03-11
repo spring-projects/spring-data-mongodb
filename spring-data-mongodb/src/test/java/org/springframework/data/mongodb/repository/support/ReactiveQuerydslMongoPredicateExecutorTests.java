@@ -173,7 +173,6 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		PageImpl<Person> personPage = new PageImpl<>(Arrays.asList(carter, dave, oliver), pageable, 3);
 		repository.findAll(person.lastname.isNotNull(), pageable) //
 				.as(StepVerifier::create) //
-				//.expectNext(carter, dave, oliver)
 				.expectNext(personPage)
 				.verifyComplete();
 	}
