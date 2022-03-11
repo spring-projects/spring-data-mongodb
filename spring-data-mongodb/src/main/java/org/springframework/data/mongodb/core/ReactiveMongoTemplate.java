@@ -46,6 +46,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -85,11 +86,9 @@ import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggrega
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -111,8 +110,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
-import org.springframework.data.mongodb.core.timeseries.Granularity;
-import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
@@ -130,7 +127,16 @@ import com.mongodb.CursorType;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.EstimatedDocumentCountOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -175,7 +181,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
-	private final JsonSchemaMapper schemaMapper;
 	private final ApplicationListener<MappingContextEvent<?, ?>> indexCreatorListener;
 	private final EntityOperations operations;
 	private final PropertyOperations propertyOperations;
@@ -243,12 +248,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
-		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.indexCreatorListener = new IndexCreatorEventListener(subscriptionExceptionHandler);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		this.mappingContext = this.mongoConverter.getMappingContext();
-		this.operations = new EntityOperations(this.mongoConverter);
+		this.operations = new EntityOperations(this.mongoConverter, this.queryMapper);
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDatabaseFactory);
@@ -276,7 +280,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.mongoConverter = that.mongoConverter;
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
-		this.schemaMapper = that.schemaMapper;
 		this.indexCreator = that.indexCreator;
 		this.indexCreatorListener = that.indexCreatorListener;
 		this.mappingContext = that.mappingContext;
@@ -2201,56 +2204,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions,
 			Class<?> entityType) {
-
-		CreateCollectionOptions result = new CreateCollectionOptions();
-
-		if (collectionOptions == null) {
-			return result;
-		}
-
-		collectionOptions.getCapped().ifPresent(result::capped);
-		collectionOptions.getSize().ifPresent(result::sizeInBytes);
-		collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
-		collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
-
-		collectionOptions.getValidationOptions().ifPresent(it -> {
-
-			ValidationOptions validationOptions = new ValidationOptions();
-
-			it.getValidationAction().ifPresent(validationOptions::validationAction);
-			it.getValidationLevel().ifPresent(validationOptions::validationLevel);
-
-			it.getValidator().ifPresent(val -> validationOptions.validator(getMappedValidator(val, entityType)));
-
-			result.validationOptions(validationOptions);
-		});
-
-		collectionOptions.getTimeSeriesOptions().map(operations.forType(entityType)::mapTimeSeriesOptions).ifPresent(it -> {
-
-			TimeSeriesOptions options = new TimeSeriesOptions(it.getTimeField());
-
-			if (StringUtils.hasText(it.getMetaField())) {
-				options.metaField(it.getMetaField());
-			}
-			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
-				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
-			}
-
-			result.timeSeriesOptions(options);
-		});
-
-		return result;
-	}
-
-	private Document getMappedValidator(Validator validator, Class<?> domainType) {
-
-		Document validationRules = validator.toDocument();
-
-		if (validationRules.containsKey("$jsonSchema")) {
-			return schemaMapper.mapSchema(validationRules, domainType);
-		}
-
-		return queryMapper.getMappedObject(validationRules, mappingContext.getPersistentEntity(domainType));
+		return operations.convertToCreateCollectionOptions(collectionOptions, entityType);
 	}
 
 	/**

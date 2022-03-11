@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
@@ -32,7 +33,9 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -41,9 +44,11 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -51,6 +56,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.TimeSeriesGranularity;
+import com.mongodb.client.model.ValidationOptions;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -67,20 +76,31 @@ class EntityOperations {
 	private static final String ID_FIELD = "_id";
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
+	private final QueryMapper queryMapper;
 
 	private final EntityProjectionIntrospector introspector;
 
+	private final MongoJsonSchemaMapper schemaMapper;
+
 	EntityOperations(MongoConverter converter) {
-		this(converter.getMappingContext(), converter.getCustomConversions(), converter.getProjectionFactory());
+		this(converter, new QueryMapper(converter));
 	}
 
-	EntityOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-			CustomConversions conversions, ProjectionFactory projectionFactory) {
+	EntityOperations(MongoConverter converter, QueryMapper queryMapper) {
+		this(converter, converter.getMappingContext(), converter.getCustomConversions(), converter.getProjectionFactory(),
+				queryMapper);
+	}
+
+	EntityOperations(MongoConverter converter,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
+			CustomConversions conversions, ProjectionFactory projectionFactory, QueryMapper queryMapper) {
 		this.context = context;
+		this.queryMapper = queryMapper;
 		this.introspector = EntityProjectionIntrospector.create(projectionFactory,
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and(((target, underlyingType) -> !conversions.isSimpleType(target))),
 				context);
+		this.schemaMapper = new MongoJsonSchemaMapper(converter);
 	}
 
 	/**
@@ -257,6 +277,75 @@ class EntityOperations {
 	 */
 	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType, Class<D> entityType) {
 		return introspector.introspect(resultType, entityType);
+	}
+
+	/**
+	 * Convert {@link CollectionOptions} to {@link CreateCollectionOptions} using {@link Class entityType} to obtain
+	 * mapping metadata.
+	 *
+	 * @param collectionOptions
+	 * @param entityType
+	 * @return
+	 * @since 3.4
+	 */
+	public CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions,
+			Class<?> entityType) {
+
+		Optional<Collation> collation = Optionals.firstNonEmpty(
+				() -> Optional.ofNullable(collectionOptions).flatMap(CollectionOptions::getCollation),
+				() -> forType(entityType).getCollation());//
+
+		CreateCollectionOptions result = new CreateCollectionOptions();
+		collation.map(Collation::toMongoCollation).ifPresent(result::collation);
+
+		if (collectionOptions == null) {
+			return result;
+		}
+
+		collectionOptions.getCapped().ifPresent(result::capped);
+		collectionOptions.getSize().ifPresent(result::sizeInBytes);
+		collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
+		collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
+
+		collectionOptions.getValidationOptions().ifPresent(it -> {
+
+			ValidationOptions validationOptions = new ValidationOptions();
+
+			it.getValidationAction().ifPresent(validationOptions::validationAction);
+			it.getValidationLevel().ifPresent(validationOptions::validationLevel);
+
+			it.getValidator().ifPresent(val -> validationOptions.validator(getMappedValidator(val, entityType)));
+
+			result.validationOptions(validationOptions);
+		});
+
+		collectionOptions.getTimeSeriesOptions().map(forType(entityType)::mapTimeSeriesOptions).ifPresent(it -> {
+
+			com.mongodb.client.model.TimeSeriesOptions options = new com.mongodb.client.model.TimeSeriesOptions(
+					it.getTimeField());
+
+			if (StringUtils.hasText(it.getMetaField())) {
+				options.metaField(it.getMetaField());
+			}
+			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
+				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
+			}
+
+			result.timeSeriesOptions(options);
+		});
+
+		return result;
+	}
+
+	private Document getMappedValidator(Validator validator, Class<?> domainType) {
+
+		Document validationRules = validator.toDocument();
+
+		if (validationRules.containsKey("$jsonSchema")) {
+			return schemaMapper.mapSchema(validationRules, domainType);
+		}
+
+		return queryMapper.getMappedObject(validationRules, context.getPersistentEntity(domainType));
 	}
 
 	/**
