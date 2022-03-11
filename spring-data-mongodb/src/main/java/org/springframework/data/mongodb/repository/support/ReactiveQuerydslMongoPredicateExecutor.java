@@ -46,6 +46,7 @@ import com.querydsl.core.types.Predicate;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Sangyong Choi
  * @since 2.2
  */
 public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutorSupport<T>
@@ -118,6 +119,14 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		Assert.notNull(orders, "Order specifiers must not be null!");
 
 		return createQueryFor(predicate).orderBy(orders).fetch();
+	}
+
+	public Mono<Page<T>> findAll(Predicate predicate, Pageable pageable) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(pageable, "Pageable must not be null!");
+
+		return createQueryFor(predicate).fetchPage(pageable);
 	}
 
 	/*

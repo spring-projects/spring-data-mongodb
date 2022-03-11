@@ -17,14 +17,13 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -66,6 +65,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Rocco Lagrotteria
+ * @author Sangyong Choi
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration
@@ -164,6 +164,17 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		repository.findAll(person.lastname.isNotNull(), Sort.by(Direction.ASC, "firstname")) //
 				.as(StepVerifier::create) //
 				.expectNext(carter, dave, oliver) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2182
+	public void shouldSupportFindAllWithPredicateAndPageable() {
+		Pageable pageable = PageRequest.of(0, 20, Sort.by(Direction.ASC, "firstname"));
+		PageImpl<Person> personPage = new PageImpl<>(Arrays.asList(carter, dave, oliver), pageable, 3);
+		repository.findAll(person.lastname.isNotNull(), pageable) //
+				.as(StepVerifier::create) //
+				//.expectNext(carter, dave, oliver)
+				.expectNext(personPage)
 				.verifyComplete();
 	}
 
