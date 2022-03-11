@@ -112,7 +112,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
-import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
@@ -131,7 +130,16 @@ import com.mongodb.CursorType;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.EstimatedDocumentCountOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -718,13 +726,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 
-		CollectionOptions options = collectionOptions != null ? collectionOptions : CollectionOptions.empty();
-		options = Optionals
-				.firstNonEmpty(() -> Optional.ofNullable(collectionOptions).flatMap(CollectionOptions::getCollation),
-						() -> operations.forType(entityClass).getCollation()) //
-				.map(options::collation).orElse(options);
-
-		return doCreateCollection(getCollectionName(entityClass), convertToCreateCollectionOptions(options, entityClass));
+		return doCreateCollection(getCollectionName(entityClass),
+				operations.convertToCreateCollectionOptions(collectionOptions, entityClass));
 	}
 
 	/*
@@ -2542,45 +2545,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions,
 			Class<?> entityType) {
-
-		CreateCollectionOptions result = new CreateCollectionOptions();
-
-		if (collectionOptions == null) {
-			return result;
-		}
-
-		collectionOptions.getCapped().ifPresent(result::capped);
-		collectionOptions.getSize().ifPresent(result::sizeInBytes);
-		collectionOptions.getMaxDocuments().ifPresent(result::maxDocuments);
-		collectionOptions.getCollation().map(Collation::toMongoCollation).ifPresent(result::collation);
-
-		collectionOptions.getValidationOptions().ifPresent(it -> {
-
-			ValidationOptions validationOptions = new ValidationOptions();
-
-			it.getValidationAction().ifPresent(validationOptions::validationAction);
-			it.getValidationLevel().ifPresent(validationOptions::validationLevel);
-
-			it.getValidator().ifPresent(val -> validationOptions.validator(getMappedValidator(val, entityType)));
-
-			result.validationOptions(validationOptions);
-		});
-
-		collectionOptions.getTimeSeriesOptions().map(operations.forType(entityType)::mapTimeSeriesOptions).ifPresent(it -> {
-
-			TimeSeriesOptions options = new TimeSeriesOptions(it.getTimeField());
-
-			if (StringUtils.hasText(it.getMetaField())) {
-				options.metaField(it.getMetaField());
-			}
-			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
-				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
-			}
-
-			result.timeSeriesOptions(options);
-		});
-
-		return result;
+		return operations.convertToCreateCollectionOptions(collectionOptions, entityType);
 	}
 
 	private Document getMappedValidator(Validator validator, Class<?> domainType) {

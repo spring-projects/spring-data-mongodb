@@ -648,13 +648,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 
-		CollectionOptions options = collectionOptions != null ? collectionOptions : CollectionOptions.empty();
-		options = Optionals
-				.firstNonEmpty(() -> Optional.ofNullable(collectionOptions).flatMap(CollectionOptions::getCollation),
-						() -> operations.forType(entityClass).getCollation()) //
-				.map(options::collation).orElse(options);
-
-		return doCreateCollection(getCollectionName(entityClass), convertToDocument(options, entityClass));
+		return doCreateCollection(getCollectionName(entityClass),
+				operations.convertToCreateCollectionOptions(collectionOptions, entityClass));
 	}
 
 	/*
@@ -676,7 +671,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			@Nullable CollectionOptions collectionOptions) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
-		return doCreateCollection(collectionName, convertToDocument(collectionOptions, Object.class));
+		return doCreateCollection(collectionName,
+				operations.convertToCreateCollectionOptions(collectionOptions, Object.class));
 	}
 
 	/*
@@ -2475,56 +2471,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param collectionOptions
 	 * @return the collection that was created
 	 */
-	@SuppressWarnings("ConstantConditions")
 	protected MongoCollection<Document> doCreateCollection(String collectionName, Document collectionOptions) {
+		return doCreateCollection(collectionName, getCreateCollectionOptions(collectionOptions));
+	}
+
+	/**
+	 * Create the specified collection using the provided options
+	 *
+	 * @param collectionName
+	 * @param collectionOptions
+	 * @return the collection that was created
+	 * @since 3.3.3
+	 */
+	@SuppressWarnings("ConstantConditions")
+	protected MongoCollection<Document> doCreateCollection(String collectionName,
+			CreateCollectionOptions collectionOptions) {
 		return execute(db -> {
-
-			CreateCollectionOptions co = new CreateCollectionOptions();
-
-			if (collectionOptions.containsKey("capped")) {
-				co.capped((Boolean) collectionOptions.get("capped"));
-			}
-			if (collectionOptions.containsKey("size")) {
-				co.sizeInBytes(((Number) collectionOptions.get("size")).longValue());
-			}
-			if (collectionOptions.containsKey("max")) {
-				co.maxDocuments(((Number) collectionOptions.get("max")).longValue());
-			}
-
-			if (collectionOptions.containsKey("collation")) {
-				co.collation(IndexConverters.fromDocument(collectionOptions.get("collation", Document.class)));
-			}
-
-			if (collectionOptions.containsKey("validator")) {
-
-				com.mongodb.client.model.ValidationOptions options = new com.mongodb.client.model.ValidationOptions();
-
-				if (collectionOptions.containsKey("validationLevel")) {
-					options.validationLevel(ValidationLevel.fromString(collectionOptions.getString("validationLevel")));
-				}
-				if (collectionOptions.containsKey("validationAction")) {
-					options.validationAction(ValidationAction.fromString(collectionOptions.getString("validationAction")));
-				}
-
-				options.validator(collectionOptions.get("validator", Document.class));
-				co.validationOptions(options);
-			}
-
-			if (collectionOptions.containsKey("timeseries")) {
-
-				Document timeSeries = collectionOptions.get("timeseries", Document.class);
-				com.mongodb.client.model.TimeSeriesOptions options = new com.mongodb.client.model.TimeSeriesOptions(
-						timeSeries.getString("timeField"));
-				if (timeSeries.containsKey("metaField")) {
-					options.metaField(timeSeries.getString("metaField"));
-				}
-				if (timeSeries.containsKey("granularity")) {
-					options.granularity(TimeSeriesGranularity.valueOf(timeSeries.getString("granularity").toUpperCase()));
-				}
-				co.timeSeriesOptions(options);
-			}
-
-			db.createCollection(collectionName, co);
+			db.createCollection(collectionName, collectionOptions);
 
 			MongoCollection<Document> coll = db.getCollection(collectionName, Document.class);
 
@@ -2535,6 +2498,54 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 			return coll;
 		});
+	}
+
+	private CreateCollectionOptions getCreateCollectionOptions(Document collectionOptions) {
+
+		CreateCollectionOptions co = new CreateCollectionOptions();
+
+		if (collectionOptions.containsKey("capped")) {
+			co.capped((Boolean) collectionOptions.get("capped"));
+		}
+		if (collectionOptions.containsKey("size")) {
+			co.sizeInBytes(((Number) collectionOptions.get("size")).longValue());
+		}
+		if (collectionOptions.containsKey("max")) {
+			co.maxDocuments(((Number) collectionOptions.get("max")).longValue());
+		}
+
+		if (collectionOptions.containsKey("collation")) {
+			co.collation(IndexConverters.fromDocument(collectionOptions.get("collation", Document.class)));
+		}
+
+		if (collectionOptions.containsKey("validator")) {
+
+			ValidationOptions options = new ValidationOptions();
+
+			if (collectionOptions.containsKey("validationLevel")) {
+				options.validationLevel(ValidationLevel.fromString(collectionOptions.getString("validationLevel")));
+			}
+			if (collectionOptions.containsKey("validationAction")) {
+				options.validationAction(ValidationAction.fromString(collectionOptions.getString("validationAction")));
+			}
+
+			options.validator(collectionOptions.get("validator", Document.class));
+			co.validationOptions(options);
+		}
+
+		if (collectionOptions.containsKey("timeseries")) {
+
+			Document timeSeries = collectionOptions.get("timeseries", Document.class);
+			TimeSeriesOptions options = new TimeSeriesOptions(timeSeries.getString("timeField"));
+			if (timeSeries.containsKey("metaField")) {
+				options.metaField(timeSeries.getString("metaField"));
+			}
+			if (timeSeries.containsKey("granularity")) {
+				options.granularity(TimeSeriesGranularity.valueOf(timeSeries.getString("granularity").toUpperCase()));
+			}
+			co.timeSeriesOptions(options);
+		}
+		return co;
 	}
 
 	/**

@@ -21,6 +21,9 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -33,6 +36,8 @@ import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
  * @author Mark Paluch
  */
 class EntityOperationsUnitTests {
+
+	ConversionService conversionService = new DefaultConversionService();
 
 	EntityOperations operations = new EntityOperations(
 			new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, MongoTestMappingContext.newTestContext()));
@@ -49,6 +54,21 @@ class EntityOperationsUnitTests {
 		assertThatExceptionOfType(MappingException.class)
 				.isThrownBy(() -> operations.forType(InvalidMetaField.class).getCollectionOptions())
 				.withMessageContaining("Meta field 'foo' does not exist");
+	}
+
+	@Test // DATAMONGO-2293
+	void populateIdShouldReturnTargetBeanWhenIdIsNull() {
+		assertThat(initAdaptibleEntity(new DomainTypeWithIdProperty()).populateIdIfNecessary(null)).isNotNull();
+	}
+
+	<T> EntityOperations.AdaptibleEntity<T> initAdaptibleEntity(T source) {
+		return operations.forEntity(source, conversionService);
+	}
+
+	private static class DomainTypeWithIdProperty {
+
+		@Id String id;
+		String value;
 	}
 
 	@TimeSeries(timeField = "foo")
