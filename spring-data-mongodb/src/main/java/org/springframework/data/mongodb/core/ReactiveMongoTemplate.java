@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.projection.EntityProjection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -34,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -115,6 +115,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -358,8 +359,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
 	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the
-	 * {@link ReactiveBeforeSaveCallback}.
-	 * <br />
+	 * {@link ReactiveBeforeSaveCallback}. <br />
 	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
@@ -373,10 +373,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * En-/Disable usage of estimated count.
+	 * Configure whether to use estimated count. Defaults to exact counting.
 	 *
-	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} ()} will we used for unpaged,
-	 *          empty {@link Query queries}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
 	 * @since 3.4
 	 */
 	public void useEstimatedCount(boolean enabled) {
@@ -384,11 +384,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * En-/Disable usage of estimated count based on the given {@link BiFunction estimationFilter}.
+	 * Configure whether to use estimated count based on the given {@link BiPredicate estimationFilter}.
 	 *
-	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} will we used for {@link Document
-	 *          filter queries} that pass the given {@link BiFunction estimationFilter}.
-	 * @param estimationFilter the {@link BiFunction filter}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
+	 * @param estimationFilter the {@link BiPredicate filter}.
 	 * @since 3.4
 	 */
 	private void useEstimatedCount(boolean enabled, BiFunction<Document, CountOptions, Mono<Boolean>> estimationFilter) {
@@ -1098,8 +1098,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		String collection = StringUtils.hasText(collectionName) ? collectionName : getCollectionName(entityClass);
 		String distanceField = operations.nearQueryDistanceFieldName(entityClass);
-		EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
-				entityClass);
+		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, entityClass);
 
 		GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
@@ -1181,8 +1180,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
-		EntityProjection<T, S> projection = operations.introspectProjection(resultType,
-				entityType);
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -1205,8 +1203,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}).flatMap(it -> {
 
 				Mono<T> afterFindAndReplace = doFindAndReplace(it.getCollection(), mappedQuery, mappedFields, mappedSort,
-						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options,
-						projection);
+						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options, projection);
 				return afterFindAndReplace.flatMap(saved -> {
 					maybeEmitEvent(new AfterSaveEvent<>(saved, it.getTarget(), it.getCollection()));
 					return maybeCallAfterSave(saved, it.getTarget(), it.getCollection());
@@ -1233,17 +1230,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), operations.forType(entityClass).getCollation(query).orElse(null),
 				entityClass);
-	}
-
-	@Override
-	public Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
-
-		CountContext countContext = queryOperations.countQueryContext(query);
-
-		CountOptions options = countContext.getCountOptions(entityClass);
-		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
-
-		return doExactCount(collectionName, mappedQuery, options);
 	}
 
 	/*
@@ -1290,15 +1276,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#estimatedCount(java.lang.String)
-	 */
-	@Override
-	public Mono<Long> estimatedCount(String collectionName) {
-		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
-	}
-
 	/**
 	 * Run the actual count operation against the collection with given name.
 	 *
@@ -1317,19 +1294,39 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return countExecution.countDocuments(collectionName, filter, options);
 	}
 
-	protected Mono<Long> doExactCount(String collectionName, Document filter, CountOptions options) {
-
-		return createMono(collectionName,
-				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#estimatedCount(java.lang.String)
+	 */
+	@Override
+	public Mono<Long> estimatedCount(String collectionName) {
+		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
 	}
 
 	protected Mono<Long> doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
 		return createMono(collectionName, collection -> collection.estimatedDocumentCount(options));
 	}
 
+	@Override
+	public Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+		CountContext countContext = queryOperations.countQueryContext(query);
+
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
+
+		return doExactCount(collectionName, mappedQuery, options);
+	}
+
+	protected Mono<Long> doExactCount(String collectionName, Document filter, CountOptions options) {
+
+		return createMono(collectionName,
+				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
+	}
+
 	protected Mono<Boolean> countCanBeEstimated(Document filter, CountOptions options) {
 
-		if(!filter.isEmpty() || !isEmptyOptions(options)) {
+		if (!filter.isEmpty() || !isEmptyOptions(options)) {
 			return Mono.just(false);
 		}
 		return ReactiveMongoDatabaseUtils.isTransactionActive(getMongoDatabaseFactory()).map(it -> !it);
@@ -2450,8 +2447,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		QueryContext queryContext = queryOperations
 				.createQueryContext(new BasicQuery(query, fields != null ? fields : new Document()));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2503,8 +2499,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2526,8 +2521,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Class<T> targetClass, FindPublisherPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
-				sourceClass);
+		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2602,8 +2596,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
-	 * The first document that matches the query is returned and also removed from the collection in the database.
-	 * <br />
+	 * The first document that matches the query is returned and also removed from the collection in the database. <br />
 	 * The query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -2674,8 +2667,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
 			FindAndReplaceOptions options, Class<T> resultType) {
 
-		EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
-					entityType);
+		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
 				options, projection);
@@ -3298,8 +3290,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(MongoConverter reader, EntityProjection<T, S> projection,
-				String collectionName) {
+		ProjectingReadCallback(MongoConverter reader, EntityProjection<T, S> projection, String collectionName) {
 			this.reader = reader;
 			this.projection = projection;
 			this.collectionName = collectionName;
@@ -3476,8 +3467,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
-	 * server through the driver API.
-	 * <br />
+	 * server through the driver API. <br />
 	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
 	 * target method matching the actual arguments plus a {@link ClientSession}.
 	 *

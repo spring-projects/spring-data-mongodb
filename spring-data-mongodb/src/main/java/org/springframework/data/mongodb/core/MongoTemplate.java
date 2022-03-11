@@ -348,10 +348,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * En-/Disable usage of estimated count.
+	 * Configure whether to use estimated count. Defaults to exact counting.
 	 *
-	 * @param enabled if {@literal true} {@link MongoCollection#estimatedDocumentCount()} ()} will we used for unpaged,
-	 *          empty {@link Query queries}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
 	 * @since 3.4
 	 */
 	public void useEstimatedCount(boolean enabled) {
@@ -359,10 +359,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * En-/Disable usage of estimated count based on the given {@link BiPredicate estimationFilter}.
+	 * Configure whether to use estimated count based on the given {@link BiPredicate estimationFilter}.
 	 *
-	 * @param enabled if {@literal true} {@link MongoCollection#estimatedDocumentCount()} will we used for {@link Document
-	 *          filter queries} that pass the given {@link BiPredicate estimationFilter}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
 	 * @param estimationFilter the {@link BiPredicate filter}.
 	 * @since 3.4
 	 */
@@ -453,8 +453,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
 			QueryContext queryContext = queryOperations.createQueryContext(query);
-			EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
-					entityType);
+			EntityProjection<T, ?> projection = operations.introspectProjection(returnType, entityType);
 
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
 			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
@@ -1003,8 +1002,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
 		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
-		EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
-				domainType);
+		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, domainType);
 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
@@ -1091,8 +1089,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
-		EntityProjection<T, S> projection = operations.introspectProjection(resultType,
-				entityType);
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedSort = queryContext.getMappedSort(entity);
@@ -1104,8 +1101,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
 		T saved = doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options,
-				projection);
+				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, projection);
 
 		if (saved != null) {
 			maybeEmitEvent(new AfterSaveEvent<>(saved, mappedReplacement, collectionName));
@@ -1149,17 +1145,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return count(query, null, collectionName);
 	}
 
-	@Override
-	public long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
-
-		CountContext countContext = queryOperations.countQueryContext(query);
-
-		CountOptions options = countContext.getCountOptions(entityClass);
-		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
-
-		return doExactCount(collectionName, mappedQuery, options);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
@@ -1177,7 +1162,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCount(collectionName, mappedQuery, options);
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	protected long doCount(String collectionName, Document filter, CountOptions options) {
 
 		if (LOGGER.isDebugEnabled()) {
@@ -1186,6 +1170,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return countExecution.countDocuments(collectionName, filter, options);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
+	 */
+	@Override
+	public long estimatedCount(String collectionName) {
+		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
+	}
+
+	protected long doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
+		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
+	}
+
+	@Override
+	public long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+		CountContext countContext = queryOperations.countQueryContext(query);
+
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
+
+		return doExactCount(collectionName, mappedQuery, options);
 	}
 
 	protected long doExactCount(String collectionName, Document filter, CountOptions options) {
@@ -1206,19 +1214,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private boolean isEmptyOptions(CountOptions options) {
 		return options.getLimit() <= 0 && options.getSkip() <= 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
-	 */
-	@Override
-	public long estimatedCount(String collectionName) {
-		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
-	}
-
-	protected long doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
-		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
 	}
 
 	/*
@@ -2575,8 +2570,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2628,8 +2622,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjection.nonProjecting(entityClass));
+		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2651,8 +2644,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
-				sourceClass);
+		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2666,7 +2658,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer,
 				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
 	}
-
 
 	/**
 	 * Convert given {@link CollectionOptions} to a document and take the domain type information into account when
@@ -2747,8 +2738,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
-	 * The first document that matches the query is returned and also removed from the collection in the database.
-	 * <br />
+	 * The first document that matches the query is returned and also removed from the collection in the database. <br />
 	 * The query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -2826,8 +2816,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
 			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
-		EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
-				entityType);
+		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
 				options, projection);
@@ -2855,10 +2844,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format(
-					"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s " + "in collection: %s",
-					serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields), serializeToJsonSafely(mappedSort),
-					entityType, serializeToJsonSafely(replacement), collectionName));
+			LOGGER
+					.debug(String.format(
+							"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
+									+ "in collection: %s",
+							serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields),
+							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
 
 		return executeFindOneInternal(
@@ -3051,8 +3042,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (LOGGER.isDebugEnabled()) {
 
 				LOGGER.debug(String.format("findOne using query: %s fields: %s in db.collection: %s",
-						serializeToJsonSafely(query),
-						serializeToJsonSafely(fields.orElseGet(Document::new)),
+						serializeToJsonSafely(query), serializeToJsonSafely(fields.orElseGet(Document::new)),
 						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a"));
 			}
 
@@ -3318,8 +3308,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(MongoConverter mongoConverter, EntityProjection<T, S> projection,
-				String collectionName) {
+		ProjectingReadCallback(MongoConverter mongoConverter, EntityProjection<T, S> projection, String collectionName) {
 
 			this.mongoConverter = mongoConverter;
 			this.projection = projection;
@@ -3598,8 +3587,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
-	 * server through the driver API.
-	 * <br />
+	 * server through the driver API. <br />
 	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
 	 * target method matching the actual arguments plus a {@link ClientSession}.
 	 *
