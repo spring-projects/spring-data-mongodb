@@ -308,6 +308,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.readPreference = readPreference;
 	}
 
+	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		prepareIndexCreator(applicationContext);
@@ -411,6 +412,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @return
 	 */
+	@Override
 	public MongoConverter getConverter() {
 		return this.mongoConverter;
 	}
@@ -521,6 +523,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				preparer != null ? preparer : CursorPreparer.NO_OP_PREPARER, documentCallbackHandler, collectionName);
 	}
 
+	@Override
 	public <T> T execute(DbCallback<T> action) {
 
 		Assert.notNull(action, "DbCallback must not be null!");
@@ -533,12 +536,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
+	@Override
 	public <T> T execute(Class<?> entityClass, CollectionCallback<T> callback) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 		return execute(getCollectionName(entityClass), callback);
 	}
 
+	@Override
 	public <T> T execute(String collectionName, CollectionCallback<T> callback) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -579,10 +584,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.sessionSynchronization = sessionSynchronization;
 	}
 
+	@Override
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass) {
 		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
 	}
 
+	@Override
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
 
@@ -597,6 +604,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateCollection(getCollectionName(entityClass), convertToDocument(options, entityClass));
 	}
 
+	@Override
 	public MongoCollection<Document> createCollection(String collectionName) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -604,6 +612,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateCollection(collectionName, new Document());
 	}
 
+	@Override
 	public MongoCollection<Document> createCollection(String collectionName,
 			@Nullable CollectionOptions collectionOptions) {
 
@@ -611,6 +620,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateCollection(collectionName, convertToDocument(collectionOptions, Object.class));
 	}
 
+	@Override
 	@SuppressWarnings("ConstantConditions")
 	public MongoCollection<Document> getCollection(String collectionName) {
 
@@ -619,10 +629,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(db -> db.getCollection(collectionName, Document.class));
 	}
 
+	@Override
 	public <T> boolean collectionExists(Class<T> entityClass) {
 		return collectionExists(getCollectionName(entityClass));
 	}
 
+	@Override
 	@SuppressWarnings("ConstantConditions")
 	public boolean collectionExists(String collectionName) {
 
@@ -639,10 +651,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
+	@Override
 	public <T> void dropCollection(Class<T> entityClass) {
 		dropCollection(getCollectionName(entityClass));
 	}
 
+	@Override
 	public void dropCollection(String collectionName) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -662,22 +676,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return indexOps(collectionName, null);
 	}
 
+	@Override
 	public IndexOperations indexOps(String collectionName, @Nullable Class<?> type) {
 		return new DefaultIndexOperations(this, collectionName, type);
 	}
 
+	@Override
 	public IndexOperations indexOps(Class<?> entityClass) {
 		return indexOps(getCollectionName(entityClass), entityClass);
 	}
 
+	@Override
 	public BulkOperations bulkOps(BulkMode bulkMode, String collectionName) {
 		return bulkOps(bulkMode, null, collectionName);
 	}
 
+	@Override
 	public BulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass) {
 		return bulkOps(bulkMode, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public BulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName) {
 
 		Assert.notNull(mode, "BulkMode must not be null!");
@@ -1017,6 +1036,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
+	@Override
 	public long count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -2127,6 +2147,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return func;
 	}
 
+	@Override
 	@SuppressWarnings("ConstantConditions")
 	public Set<String> getCollectionNames() {
 		return execute(db -> {
@@ -2782,6 +2803,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collation = collation;
 		}
 
+		@Override
 		public FindIterable<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
@@ -2841,6 +2863,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collation = Optional.ofNullable(collation);
 		}
 
+		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
 			FindOneAndDeleteOptions opts = new FindOneAndDeleteOptions().sort(sort).projection(fields);
@@ -2870,6 +2893,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.options = options;
 		}
 
+		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
 			FindOneAndUpdateOptions opts = new FindOneAndUpdateOptions();
@@ -2978,6 +3002,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collectionName = collectionName;
 		}
 
+		@Override
 		public T doWith(Document document) {
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
@@ -3015,6 +3040,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collectionName = collectionName;
 		}
 
+		@Override
 		@SuppressWarnings("unchecked")
 		public T doWith(Document document) {
 
@@ -3046,6 +3072,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.type = type;
 		}
 
+		@Override
 		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
 			FindIterable<Document> cursorToUse = iterable;
@@ -3163,6 +3190,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.metric = metric;
 		}
 
+		@Override
 		public GeoResult<T> doWith(Document object) {
 
 			double distance = Double.NaN;

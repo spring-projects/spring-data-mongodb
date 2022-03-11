@@ -336,6 +336,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.readPreference = readPreference;
 	}
 
+	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		prepareIndexCreator(applicationContext);
@@ -441,22 +442,27 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @return
 	 */
+	@Override
 	public MongoConverter getConverter() {
 		return this.mongoConverter;
 	}
 
+	@Override
 	public ReactiveIndexOperations indexOps(String collectionName) {
 		return new DefaultReactiveIndexOperations(this, collectionName, this.queryMapper);
 	}
 
+	@Override
 	public ReactiveIndexOperations indexOps(Class<?> entityClass) {
 		return new DefaultReactiveIndexOperations(this, getCollectionName(entityClass), this.queryMapper, entityClass);
 	}
 
+	@Override
 	public String getCollectionName(Class<?> entityClass) {
 		return operations.determineCollectionName(entityClass);
 	}
 
+	@Override
 	public Mono<Document> executeCommand(String jsonCommand) {
 
 		Assert.notNull(jsonCommand, "Command must not be empty!");
@@ -464,10 +470,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return executeCommand(Document.parse(jsonCommand));
 	}
 
+	@Override
 	public Mono<Document> executeCommand(Document command) {
 		return executeCommand(command, null);
 	}
 
+	@Override
 	public Mono<Document> executeCommand(Document command, @Nullable ReadPreference readPreference) {
 
 		Assert.notNull(command, "Command must not be null!");
@@ -486,6 +494,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createFlux(action);
 	}
 
+	@Override
 	public <T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> callback) {
 
 		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
@@ -534,6 +543,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.contextWrite(ctx -> ReactiveMongoContext.setSession(ctx, Mono.just(session)));
 	}
 
+	@Override
 	public ReactiveMongoOperations withSession(ClientSession session) {
 		return new ReactiveSessionBoundMongoTemplate(session, ReactiveMongoTemplate.this);
 	}
@@ -611,10 +621,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.onErrorMap(translateException());
 	}
 
+	@Override
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass) {
 		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
 	}
 
+	@Override
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
 
@@ -629,15 +641,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doCreateCollection(getCollectionName(entityClass), convertToCreateCollectionOptions(options, entityClass));
 	}
 
+	@Override
 	public Mono<MongoCollection<Document>> createCollection(String collectionName) {
 		return doCreateCollection(collectionName, new CreateCollectionOptions());
 	}
 
+	@Override
 	public Mono<MongoCollection<Document>> createCollection(String collectionName,
 			@Nullable CollectionOptions collectionOptions) {
 		return doCreateCollection(collectionName, convertToCreateCollectionOptions(collectionOptions));
 	}
 
+	@Override
 	public Mono<MongoCollection<Document>> getCollection(String collectionName) {
 
 		Assert.notNull(collectionName, "Collection name must not be null!");
@@ -645,10 +660,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createMono(db -> Mono.just(db.getCollection(collectionName)));
 	}
 
+	@Override
 	public <T> Mono<Boolean> collectionExists(Class<T> entityClass) {
 		return collectionExists(getCollectionName(entityClass));
 	}
 
+	@Override
 	public Mono<Boolean> collectionExists(String collectionName) {
 		return createMono(db -> Flux.from(db.listCollectionNames()) //
 				.filter(s -> s.equals(collectionName)) //
@@ -656,10 +673,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.single(false));
 	}
 
+	@Override
 	public <T> Mono<Void> dropCollection(Class<T> entityClass) {
 		return dropCollection(getCollectionName(entityClass));
 	}
 
+	@Override
 	public Mono<Void> dropCollection(String collectionName) {
 
 		return createMono(collectionName, MongoCollection::drop).doOnSuccess(success -> {
@@ -669,6 +688,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}).then();
 	}
 
+	@Override
 	public Flux<String> getCollectionNames() {
 		return createFlux(MongoDatabase::listCollectionNames);
 	}
@@ -681,10 +701,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return ReactiveMongoDatabaseUtils.getDatabase(mongoDatabaseFactory, sessionSynchronization);
 	}
 
+	@Override
 	public <T> Mono<T> findOne(Query query, Class<T> entityClass) {
 		return findOne(query, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Mono<T> findOne(Query query, Class<T> entityClass, String collectionName) {
 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
@@ -696,14 +718,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return find(query, entityClass, collectionName).next();
 	}
 
+	@Override
 	public Mono<Boolean> exists(Query query, Class<?> entityClass) {
 		return exists(query, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public Mono<Boolean> exists(Query query, String collectionName) {
 		return exists(query, null, collectionName);
 	}
 
+	@Override
 	public Mono<Boolean> exists(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		if (query == null) {
@@ -728,10 +753,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}).hasElements();
 	}
 
+	@Override
 	public <T> Flux<T> find(Query query, Class<T> entityClass) {
 		return find(query, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Flux<T> find(@Nullable Query query, Class<T> entityClass, String collectionName) {
 
 		if (query == null) {
@@ -742,10 +769,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new QueryFindPublisherPreparer(query, entityClass));
 	}
 
+	@Override
 	public <T> Mono<T> findById(Object id, Class<T> entityClass) {
 		return findById(id, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Mono<T> findById(Object id, Class<T> entityClass, String collectionName) {
 
 		String idKey = operations.getIdPropertyName(entityClass);
@@ -753,10 +782,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doFindOne(collectionName, new Document(idKey, id), null, entityClass, (Collation) null);
 	}
 
+	@Override
 	public <T> Flux<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass) {
 		return findDistinct(query, field, getCollectionName(entityClass), entityClass, resultClass);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Flux<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
 			Class<T> resultClass) {
@@ -912,19 +943,23 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.concatMap(callback::doWith);
 	}
 
+	@Override
 	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, collectionName);
 	}
 
+	@Override
 	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 			Class<T> entityClass) {
 		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 			Class<T> entityClass, String collectionName) {
 
@@ -994,10 +1029,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 	}
 
+	@Override
 	public <T> Mono<T> findAndRemove(Query query, Class<T> entityClass) {
 		return findAndRemove(query, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Mono<T> findAndRemove(Query query, Class<T> entityClass, String collectionName) {
 
 		operations.forType(entityClass).getCollation(query);
@@ -1010,6 +1047,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
 	 */
+	@Override
 	public Mono<Long> count(Query query, Class<?> entityClass) {
 
 		Assert.notNull(entityClass, "Entity class must not be null!");
@@ -1017,10 +1055,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return count(query, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public Mono<Long> count(Query query, String collectionName) {
 		return count(query, null, collectionName);
 	}
 
+	@Override
 	public Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -1127,6 +1167,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
 	}
 
+	@Override
 	public <T> Mono<T> insert(T objectToSave) {
 
 		Assert.notNull(objectToSave, "Object to insert must not be null!");
@@ -1135,6 +1176,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
+	@Override
 	public <T> Mono<T> insert(T objectToSave, String collectionName) {
 
 		Assert.notNull(objectToSave, "Object to insert must not be null!");
@@ -1173,14 +1215,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				});
 	}
 
+	@Override
 	public <T> Flux<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass) {
 		return doInsertBatch(getCollectionName(entityClass), batchToSave, this.mongoConverter);
 	}
 
+	@Override
 	public <T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName) {
 		return doInsertBatch(collectionName, batchToSave, this.mongoConverter);
 	}
 
+	@Override
 	public <T> Flux<T> insertAll(Collection<? extends T> objectsToSave) {
 		return doInsertAll(objectsToSave, this.mongoConverter);
 	}
@@ -1265,12 +1310,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return objectToSave.flatMap(o -> save(o, collectionName));
 	}
 
+	@Override
 	public <T> Mono<T> save(T objectToSave) {
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
 		return save(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
+	@Override
 	public <T> Mono<T> save(T objectToSave, String collectionName) {
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
@@ -1462,14 +1509,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	}
 
+	@Override
 	public Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, true, false);
 	}
 
+	@Override
 	public Mono<UpdateResult> upsert(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, true, false);
 	}
 
+	@Override
 	public Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
@@ -1478,27 +1528,33 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc))
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class)
 	 */
+	@Override
 	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, false);
 	}
 
+	@Override
 	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
 
+	@Override
 	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass,
 			String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, false);
 	}
 
+	@Override
 	public Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, true);
 	}
 
+	@Override
 	public Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 
+	@Override
 	public Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass,
 			String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, true);
@@ -1620,6 +1676,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return objectToRemove.flatMap(it -> remove(it, collectionName));
 	}
 
+	@Override
 	public Mono<DeleteResult> remove(Object object) {
 
 		Assert.notNull(object, "Object must not be null!");
@@ -1627,6 +1684,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return remove(operations.forEntity(object).getRemoveByQuery(), object.getClass());
 	}
 
+	@Override
 	public Mono<DeleteResult> remove(Object object, String collectionName) {
 
 		Assert.notNull(object, "Object must not be null!");
@@ -1656,14 +1714,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
+	@Override
 	public Mono<DeleteResult> remove(Query query, String collectionName) {
 		return remove(query, null, collectionName);
 	}
 
+	@Override
 	public Mono<DeleteResult> remove(Query query, Class<?> entityClass) {
 		return remove(query, entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public Mono<DeleteResult> remove(Query query, @Nullable Class<?> entityClass, String collectionName) {
 		return doRemove(collectionName, query, entityClass);
 	}
@@ -1718,10 +1779,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.next();
 	}
 
+	@Override
 	public <T> Flux<T> findAll(Class<T> entityClass) {
 		return findAll(entityClass, getCollectionName(entityClass));
 	}
 
+	@Override
 	public <T> Flux<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(new FindCallback(null), FindPublisherPreparer.NO_OP_PREPARER,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
@@ -1817,6 +1880,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 	}
 
+	@Override
 	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, Class<T> resultType, String mapFunction,
 			String reduceFunction, MapReduceOptions options) {
 
@@ -1824,6 +1888,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				options);
 	}
 
+	@Override
 	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options) {
 
@@ -2812,6 +2877,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	interface ReactiveCollectionQueryCallback<T> extends ReactiveCollectionCallback<T> {
 
+		@Override
 		FindPublisher<T> doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;
 	}
 
@@ -2838,6 +2904,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			this.collectionName = collectionName;
 		}
 
+		@Override
 		public Mono<T> doWith(Document document) {
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
@@ -2875,6 +2942,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			this.collectionName = collectionName;
 		}
 
+		@Override
 		@SuppressWarnings("unchecked")
 		public Mono<T> doWith(Document document) {
 
@@ -2924,6 +2992,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			this.metric = metric;
 		}
 
+		@Override
 		public Mono<GeoResult<T>> doWith(Document object) {
 
 			double distance = getDistance(object);
@@ -2955,6 +3024,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			this.type = type;
 		}
 
+		@Override
 		public FindPublisher<Document> prepare(FindPublisher<Document> findPublisher) {
 
 			FindPublisher<Document> findPublisherToUse = operations.forType(type) //
