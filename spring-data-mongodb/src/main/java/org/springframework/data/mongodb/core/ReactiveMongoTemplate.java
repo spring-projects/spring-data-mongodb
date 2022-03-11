@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -367,10 +368,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * En-/Disable usage of estimated count.
+	 * Configure whether to use estimated count. Defaults to exact counting.
 	 *
-	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} ()} will we used for unpaged,
-	 *          empty {@link Query queries}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
 	 * @since 3.4
 	 */
 	public void useEstimatedCount(boolean enabled) {
@@ -378,11 +379,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	/**
-	 * En-/Disable usage of estimated count based on the given {@link BiFunction estimationFilter}.
+	 * Configure whether to use estimated count based on the given {@link BiPredicate estimationFilter}.
 	 *
-	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} will we used for {@link Document
-	 *          filter queries} that pass the given {@link BiFunction estimationFilter}.
-	 * @param estimationFilter the {@link BiFunction filter}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
+	 * @param estimationFilter the {@link BiPredicate filter}.
 	 * @since 3.4
 	 */
 	private void useEstimatedCount(boolean enabled, BiFunction<Document, CountOptions, Mono<Boolean>> estimationFilter) {
@@ -1005,17 +1006,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				entityClass);
 	}
 
-	@Override
-	public Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
-
-		CountContext countContext = queryOperations.countQueryContext(query);
-
-		CountOptions options = countContext.getCountOptions(entityClass);
-		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
-
-		return doExactCount(collectionName, mappedQuery, options);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
@@ -1052,11 +1042,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 	}
 
-	@Override
-	public Mono<Long> estimatedCount(String collectionName) {
-		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
-	}
-
 	/**
 	 * Run the actual count operation against the collection with given name.
 	 *
@@ -1075,19 +1060,39 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return countExecution.countDocuments(collectionName, filter, options);
 	}
 
-	protected Mono<Long> doExactCount(String collectionName, Document filter, CountOptions options) {
-
-		return createMono(collectionName,
-				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#estimatedCount(java.lang.String)
+	 */
+	@Override
+	public Mono<Long> estimatedCount(String collectionName) {
+		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
 	}
 
 	protected Mono<Long> doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
 		return createMono(collectionName, collection -> collection.estimatedDocumentCount(options));
 	}
 
+	@Override
+	public Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+		CountContext countContext = queryOperations.countQueryContext(query);
+
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
+
+		return doExactCount(collectionName, mappedQuery, options);
+	}
+
+	protected Mono<Long> doExactCount(String collectionName, Document filter, CountOptions options) {
+
+		return createMono(collectionName,
+				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
+	}
+
 	protected Mono<Boolean> countCanBeEstimated(Document filter, CountOptions options) {
 
-		if(!filter.isEmpty() || !isEmptyOptions(options)) {
+		if (!filter.isEmpty() || !isEmptyOptions(options)) {
 			return Mono.just(false);
 		}
 		return ReactiveMongoDatabaseUtils.isTransactionActive(getMongoDatabaseFactory()).map(it -> !it);

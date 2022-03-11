@@ -342,10 +342,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * En-/Disable usage of estimated count.
+	 * Configure whether to use estimated count. Defaults to exact counting.
 	 *
-	 * @param enabled if {@literal true} {@link MongoCollection#estimatedDocumentCount()} ()} will we used for unpaged,
-	 *          empty {@link Query queries}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
 	 * @since 3.4
 	 */
 	public void useEstimatedCount(boolean enabled) {
@@ -353,10 +353,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * En-/Disable usage of estimated count based on the given {@link BiPredicate estimationFilter}.
+	 * Configure whether to use estimated count based on the given {@link BiPredicate estimationFilter}.
 	 *
-	 * @param enabled if {@literal true} {@link MongoCollection#estimatedDocumentCount()} will we used for {@link Document
-	 *          filter queries} that pass the given {@link BiPredicate estimationFilter}.
+	 * @param enabled use {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} for unpaged and empty
+	 *          {@link Query queries} if {@code true}.
 	 * @param estimationFilter the {@link BiPredicate filter}.
 	 * @since 3.4
 	 */
@@ -1013,17 +1013,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return count(query, null, collectionName);
 	}
 
-	@Override
-	public long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
-
-		CountContext countContext = queryOperations.countQueryContext(query);
-
-		CountOptions options = countContext.getCountOptions(entityClass);
-		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
-
-		return doExactCount(collectionName, mappedQuery, options);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
@@ -1041,7 +1030,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCount(collectionName, mappedQuery, options);
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	protected long doCount(String collectionName, Document filter, CountOptions options) {
 
 		if (LOGGER.isDebugEnabled()) {
@@ -1050,6 +1038,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return countExecution.countDocuments(collectionName, filter, options);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
+	 */
+	@Override
+	public long estimatedCount(String collectionName) {
+		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
+	}
+
+	protected long doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
+		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
+	}
+
+	@Override
+	public long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+		CountContext countContext = queryOperations.countQueryContext(query);
+
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
+
+		return doExactCount(collectionName, mappedQuery, options);
 	}
 
 	protected long doExactCount(String collectionName, Document filter, CountOptions options) {
@@ -1070,19 +1082,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private boolean isEmptyOptions(CountOptions options) {
 		return options.getLimit() <= 0 && options.getSkip() <= 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
-	 */
-	@Override
-	public long estimatedCount(String collectionName) {
-		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
-	}
-
-	protected long doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
-		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
 	}
 
 	@Override

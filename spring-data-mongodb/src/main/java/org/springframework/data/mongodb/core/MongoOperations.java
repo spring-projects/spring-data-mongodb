@@ -55,8 +55,7 @@ import com.mongodb.client.result.UpdateResult;
 /**
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
  * a useful option for extensibility and testability (as it can be easily mocked, stubbed, or be the target of a JDK
- * proxy).
- * <br />
+ * proxy). <br />
  * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
  * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
  * Document Transactions</a>.
@@ -82,7 +81,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	String getCollectionName(Class<?> entityClass);
 
 	/**
-	 * Execute the a MongoDB command expressed as a JSON string. Parsing is delegated to {@link Document#parse(String)} to
+	 * Execute a MongoDB command expressed as a JSON string. Parsing is delegated to {@link Document#parse(String)} to
 	 * obtain the {@link Document} holding the actual command. Any errors that result from executing this command will be
 	 * converted into Spring's DAO exception hierarchy.
 	 *
@@ -122,8 +121,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch);
 
 	/**
-	 * Executes a {@link DbCallback} translating any exceptions as necessary.
-	 * <br />
+	 * Executes a {@link DbCallback} translating any exceptions as necessary. <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param action callback object that specifies the MongoDB actions to perform on the passed in DB instance. Must not
@@ -135,8 +133,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T execute(DbCallback<T> action);
 
 	/**
-	 * Executes the given {@link CollectionCallback} on the entity collection of the specified class.
-	 * <br />
+	 * Executes the given {@link CollectionCallback} on the entity collection of the specified class. <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
@@ -148,8 +145,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T execute(Class<?> entityClass, CollectionCallback<T> action);
 
 	/**
-	 * Executes the given {@link CollectionCallback} on the collection of the given name.
-	 * <br />
+	 * Executes the given {@link CollectionCallback} on the collection of the given name. <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param collectionName the name of the collection that specifies which {@link MongoCollection} instance will be
@@ -173,8 +169,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
-	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
-	 * <br />
+	 * provided by the given {@link Supplier} to each and every command issued against MongoDB. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
 	 * {@link SessionScoped#execute(SessionCallback, Consumer)} hook to potentially close the {@link ClientSession}.
 	 *
@@ -209,8 +204,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Obtain a {@link ClientSession} bound instance of {@link MongoOperations}.
-	 * <br />
+	 * Obtain a {@link ClientSession} bound instance of {@link MongoOperations}. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
 	 * @param session must not be {@literal null}.
@@ -297,8 +291,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Get a {@link MongoCollection} by its name. The returned collection may not exists yet (except in local memory) and
 	 * is created on first interaction with the server. Collections can be explicitly created via
 	 * {@link #createCollection(Class)}. Please make sure to check if the collection {@link #collectionExists(Class)
-	 * exists} first.
-	 * <br />
+	 * exists} first. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
@@ -307,8 +300,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	MongoCollection<Document> getCollection(String collectionName);
 
 	/**
-	 * Check to see if a collection with a name indicated by the entity class exists.
-	 * <br />
+	 * Check to see if a collection with a name indicated by the entity class exists. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param entityClass class that determines the name of the collection. Must not be {@literal null}.
@@ -317,8 +309,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> boolean collectionExists(Class<T> entityClass);
 
 	/**
-	 * Check to see if a collection with a given name exists.
-	 * <br />
+	 * Check to see if a collection with a given name exists. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
@@ -327,8 +318,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	boolean collectionExists(String collectionName);
 
 	/**
-	 * Drop the collection with the name indicated by the entity class.
-	 * <br />
+	 * Drop the collection with the name indicated by the entity class. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param entityClass class that determines the collection to drop/delete. Must not be {@literal null}.
@@ -336,8 +326,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> void dropCollection(Class<T> entityClass);
 
 	/**
-	 * Drop the collection with the given name.
-	 * <br />
+	 * Drop the collection with the given name. <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection to drop/delete.
@@ -400,11 +389,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	BulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName);
 
 	/**
-	 * Query for a list of objects of type T from the collection used by the entity class.
-	 * <br />
+	 * Query for a list of objects of type T from the collection used by the entity class. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
@@ -414,11 +401,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> findAll(Class<T> entityClass);
 
 	/**
-	 * Query for a list of objects of type T from the specified collection.
-	 * <br />
+	 * Query for a list of objects of type T from the specified collection. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
@@ -674,11 +659,9 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object of the
-	 * specified type.
-	 * <br />
+	 * specified type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -692,11 +675,9 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
-	 * type.
-	 * <br />
+	 * type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -740,11 +721,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	boolean exists(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
-	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
-	 * <br />
+	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -756,11 +735,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> find(Query query, Class<T> entityClass);
 
 	/**
-	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
-	 * <br />
+	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type. <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1092,10 +1069,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
 	 * specified type. The first document that matches the query is returned and also removed from the collection in the
-	 * database.
-	 * <br />
-	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <br />
+	 * database. <br />
+	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1112,8 +1087,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * type. The first document that matches the query is returned and also removed from the collection in the database.
 	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1132,8 +1106,96 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
+	 * count all matches. <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
+	 *          {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @return the count of matching documents.
+	 * @see #exactCount(Query, Class)
+	 * @see #estimatedCount(Class)
+	 */
+	long count(Query query, Class<?> entityClass);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
+	 * must solely consist of document field references as we lack type information to map potential property references
+	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches. <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return the count of matching documents.
+	 * @see #count(Query, Class, String)
+	 * @see #exactCount(Query, String)
+	 * @see #estimatedCount(String)
+	 */
+	long count(Query query, String collectionName);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
+	 * class to map the given {@link Query}. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches. <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
+	 *          {@literal null}.
+	 * @param entityClass the parametrized type. Can be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return the count of matching documents.
+	 * @see #count(Query, Class, String)
+	 * @see #estimatedCount(String)
+	 */
+	long count(Query query, @Nullable Class<?> entityClass, String collectionName);
+
+	/**
+	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
+	 * based on collection statistics. <br />
+	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
+	 * transactions.
+	 *
+	 * @param entityClass must not be {@literal null}.
+	 * @return the estimated number of documents.
+	 * @since 3.1
+	 */
+	default long estimatedCount(Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+		return estimatedCount(getCollectionName(entityClass));
+	}
+
+	/**
+	 * Estimate the number of documents in the given collection based on collection statistics. <br />
+	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
+	 * transactions.
+	 *
+	 * @param collectionName must not be {@literal null}.
+	 * @return the estimated number of documents.
+	 * @since 3.1
+	 */
+	long estimatedCount(String collectionName);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
 	 * <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1157,8 +1219,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1181,8 +1242,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1199,104 +1259,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
-	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
-	 * <br />
-	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
-	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
-	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
-	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
-	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} which may have an impact on performance.
-	 *
-	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
-	 *          {@literal null}.
-	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
-	 * @return the count of matching documents.
-	 */
-	long count(Query query, Class<?> entityClass);
-
-	/**
-	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
-	 * must solely consist of document field references as we lack type information to map potential property references
-	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support. <br />
-	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
-	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
-	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
-	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
-	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} which may have an impact on performance.
-	 *
-	 * @param query the {@link Query} class that specifies the criteria used to find documents.
-	 * @param collectionName must not be {@literal null} or empty.
-	 * @return the count of matching documents.
-	 * @see #count(Query, Class, String)
-	 */
-	long count(Query query, String collectionName);
-
-	/**
-	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
-	 * based on collection statistics.
-	 * <br />
-	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
-	 * transactions.
-	 *
-	 * @param entityClass must not be {@literal null}.
-	 * @return the estimated number of documents.
-	 * @since 3.1
-	 */
-	default long estimatedCount(Class<?> entityClass) {
-
-		Assert.notNull(entityClass, "Entity class must not be null!");
-		return estimatedCount(getCollectionName(entityClass));
-	}
-
-	/**
-	 * Estimate the number of documents in the given collection based on collection statistics.
-	 * <br />
-	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
-	 * transactions.
-	 *
-	 * @param collectionName must not be {@literal null}.
-	 * @return the estimated number of documents.
-	 * @since 3.1
-	 */
-	long estimatedCount(String collectionName);
-
-	/**
-	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
-	 * class to map the given {@link Query}. <br />
-	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
-	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
-	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
-	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
-	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} which may have an impact on performance.
-	 *
-	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
-	 *          {@literal null}.
-	 * @param entityClass the parametrized type. Can be {@literal null}.
-	 * @param collectionName must not be {@literal null} or empty.
-	 * @return the count of matching documents.
-	 */
-	long count(Query query, @Nullable Class<?> entityClass, String collectionName);
-
-	/**
-	 * Insert the object into the collection for the entity type of the object to save.
-	 * <br />
-	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <br />
+	 * Insert the object into the collection for the entity type of the object to save. <br />
+	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details.
-	 * <br />
+	 * Type Conversion"</a> for more details. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
@@ -1308,11 +1277,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T insert(T objectToSave);
 
 	/**
-	 * Insert the object into the specified collection.
-	 * <br />
+	 * Insert the object into the specified collection. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
@@ -1353,17 +1320,14 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
-	 * object is not already present, that is an 'upsert'.
-	 * <br />
+	 * object is not already present, that is an 'upsert'. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details.
-	 * <br />
+	 * Type Conversion"</a> for more details. <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1374,16 +1338,14 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Save the object to the specified collection. This will perform an insert if the object is not already present, that
-	 * is an 'upsert'.
-	 * <br />
+	 * is an 'upsert'. <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <br />
+	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API.
-	 * See <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type Conversion</a> for more details.
-	 * <br />
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
+	 * Conversion</a> for more details. <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.

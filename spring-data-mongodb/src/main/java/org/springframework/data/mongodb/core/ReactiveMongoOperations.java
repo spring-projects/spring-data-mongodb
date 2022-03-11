@@ -89,7 +89,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	ReactiveIndexOperations indexOps(Class<?> entityClass);
 
 	/**
-	 * Execute the a MongoDB command expressed as a JSON string. This will call the method JSON.parse that is part of the
+	 * Execute a MongoDB command expressed as a JSON string. This will call the method JSON.parse that is part of the
 	 * MongoDB driver to convert the JSON string to a Document. Any errors that result from executing this command will be
 	 * converted into Spring's DAO exception hierarchy.
 	 *
@@ -200,7 +200,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoOperations}. <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
-	 * @param session must not be {@literal null}.
 	 * @return {@link ClientSession} bound instance of {@link ReactiveMongoOperations}.
 	 * @since 2.1
 	 */
@@ -875,6 +874,95 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches. <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
+	 *          {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @return the count of matching documents.
+	 * @see #exactCount(Query, Class)
+	 * @see #estimatedCount(Class)
+	 */
+	Mono<Long> count(Query query, Class<?> entityClass);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
+	 * must solely consist of document field references as we lack type information to map potential property references
+	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches. <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return the count of matching documents.
+	 * @see #count(Query, Class, String)
+	 * @see #estimatedCount(String)
+	 * @see #exactCount(Query, String)
+	 */
+	Mono<Long> count(Query query, String collectionName);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
+	 * class to map the given {@link Query}. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches. <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
+	 *          {@literal null}.
+	 * @param entityClass the parametrized type. Can be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return the count of matching documents.
+	 * @see #estimatedCount(String)
+	 * @see #exactCount(Query, Class, String)
+	 */
+	Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName);
+
+	/**
+	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
+	 * based on collection statistics. <br />
+	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
+	 * transactions.
+	 *
+	 * @param entityClass must not be {@literal null}.
+	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @since 3.1
+	 */
+	default Mono<Long> estimatedCount(Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+		return estimatedCount(getCollectionName(entityClass));
+	}
+
+	/**
+	 * Estimate the number of documents in the given collection based on collection statistics. <br />
+	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
+	 * transactions.
+	 *
+	 * @param collectionName must not be {@literal null}.
+	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @since 3.1
+	 */
+	Mono<Long> estimatedCount(String collectionName);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
+	 * <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches. <br />
 	 * This method uses an
 	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -936,92 +1024,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @since 3.4
 	 */
 	Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName);
-
-	/**
-	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
-	 * <br />
-	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
-	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
-	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
-	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
-	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} which may have an impact on performance.
-	 *
-	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
-	 *          {@literal null}.
-	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
-	 * @return the count of matching documents.
-	 */
-	Mono<Long> count(Query query, Class<?> entityClass);
-
-	/**
-	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
-	 * must solely consist of document field references as we lack type information to map potential property references
-	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support. <br />
-	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
-	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
-	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
-	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
-	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} which may have an impact on performance.
-	 *
-	 * @param query the {@link Query} class that specifies the criteria used to find documents.
-	 * @param collectionName must not be {@literal null} or empty.
-	 * @return the count of matching documents.
-	 * @see #count(Query, Class, String)
-	 */
-	Mono<Long> count(Query query, String collectionName);
-
-	/**
-	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
-	 * class to map the given {@link Query}. <br />
-	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
-	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
-	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
-	 * count all matches.
-	 * <br />
-	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
-	 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} which may have an impact on performance.
-	 *
-	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
-	 *          {@literal null}.
-	 * @param entityClass the parametrized type. Can be {@literal null}.
-	 * @param collectionName must not be {@literal null} or empty.
-	 * @return the count of matching documents.
-	 */
-	Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName);
-
-	/**
-	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
-	 * based on collection statistics. <br />
-	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
-	 * transactions.
-	 *
-	 * @param entityClass must not be {@literal null}.
-	 * @return a {@link Mono} emitting the estimated number of documents.
-	 * @since 3.1
-	 */
-	default Mono<Long> estimatedCount(Class<?> entityClass) {
-
-		Assert.notNull(entityClass, "Entity class must not be null!");
-		return estimatedCount(getCollectionName(entityClass));
-	}
-
-	/**
-	 * Estimate the number of documents in the given collection based on collection statistics. <br />
-	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
-	 * transactions.
-	 *
-	 * @param collectionName must not be {@literal null}.
-	 * @return a {@link Mono} emitting the estimated number of documents.
-	 * @since 3.1
-	 */
-	Mono<Long> estimatedCount(String collectionName);
 
 	/**
 	 * Insert the object into the collection for the entity type of the object to save. <br />
