@@ -249,10 +249,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `withinSphere() should equal expected criteria`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val value = Circle(Point(928.76, 28.345), 65.243)
-        val typed = location withinSphere value
+        val typed = building.location withinSphere value
         val expected = Criteria("location").withinSphere(value)
 
         assertThat(typed).isEqualTo(expected)
@@ -261,10 +260,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `within() should equal expected criteria`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val value = Circle(Point(5.43421, 12.456), 52.67)
-        val typed = location within value
+        val typed = building.location within value
         val expected = Criteria("location").within(value)
 
         assertThat(typed).isEqualTo(expected)
@@ -273,10 +271,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `near() should equal expected criteria`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val value = Point(57.431, 71.345)
-        val typed = location near value
+        val typed = building.location near value
         val expected = Criteria("location").near(value)
 
         assertThat(typed).isEqualTo(expected)
@@ -285,10 +282,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `nearSphere() should equal expected criteria`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val value = Point(5.4321, 12.345)
-        val typed = location nearSphere value
+        val typed = building.location nearSphere value
         val expected = Criteria("location").nearSphere(value)
 
         assertThat(typed).isEqualTo(expected)
@@ -297,10 +293,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `intersects() should equal expected criteria`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val value = GeoJsonPoint(5.481573, 51.451726)
-        val typed = location intersects value
+        val typed = building.location intersects value
         val expected = Criteria("location").intersects(value)
         assertThat(typed).isEqualTo(expected)
     }
@@ -308,10 +303,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `maxDistance() should equal expected criteria with nearSphere`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val point = Point(0.0, 0.0)
-        val typed = location nearSphere point maxDistance 3.0
+        val typed = building.location nearSphere point maxDistance 3.0
         val expected = Criteria("location")
             .nearSphere(point)
             .maxDistance(3.0)
@@ -322,10 +316,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `minDistance() should equal expected criteria with nearSphere`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val point = Point(0.0, 0.0)
-        val typed = location nearSphere point minDistance 3.0
+        val typed = building.location nearSphere point minDistance 3.0
         val expected = Criteria("location")
             .nearSphere(point)
             .minDistance(3.0)
@@ -336,10 +329,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `maxDistance() should equal expected criteria with near`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val point = Point(0.0, 0.0)
-        val typed = location near point maxDistance 3.0
+        val typed = building.location near point maxDistance 3.0
         val expected = Criteria("location")
             .near(point)
             .maxDistance(3.0)
@@ -350,10 +342,9 @@ class QuerydslCriteriaExtensionsTests {
     @Test
     fun `minDistance() should equal expected criteria with near`() {
         val building = QBuilding.building
-        val location = building.location as Path<GeoJson<*>>
 
         val point = Point(0.0, 0.0)
-        val typed = location near point minDistance 3.0
+        val typed = building.location near point minDistance 3.0
         val expected = Criteria("location")
             .near(point)
             .minDistance(3.0)

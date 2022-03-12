@@ -285,7 +285,7 @@ infix fun Path<String?>.regex(re: BsonRegularExpression): Criteria =
  * @since 4.0
  * @see Criteria.withinSphere
  */
-infix fun Path<GeoJson<*>>.withinSphere(circle: Circle): Criteria =
+infix fun Path<out GeoJson<*>>.withinSphere(circle: Circle): Criteria =
     Criteria(this.asName()).withinSphere(circle)
 
 /**
@@ -297,7 +297,7 @@ infix fun Path<GeoJson<*>>.withinSphere(circle: Circle): Criteria =
  * @since 4.0
  * @see Criteria.within
  */
-infix fun Path<GeoJson<*>>.within(shape: Shape): Criteria =
+infix fun Path<out GeoJson<*>>.within(shape: Shape): Criteria =
     Criteria(this.asName()).within(shape)
 
 /**
@@ -308,7 +308,7 @@ infix fun Path<GeoJson<*>>.within(shape: Shape): Criteria =
  * @since 4.0
  * @see Criteria.near
  */
-infix fun Path<GeoJson<*>>.near(point: Point): Criteria =
+infix fun Path<out GeoJson<*>>.near(point: Point): Criteria =
     Criteria(this.asName()).near(point)
 
 /**
@@ -321,7 +321,7 @@ infix fun Path<GeoJson<*>>.near(point: Point): Criteria =
  * @since 4.0
  * @see Criteria.nearSphere
  */
-infix fun Path<GeoJson<*>>.nearSphere(point: Point): Criteria =
+infix fun Path<out GeoJson<*>>.nearSphere(point: Point): Criteria =
     Criteria(this.asName()).nearSphere(point)
 
 /**
@@ -331,7 +331,7 @@ infix fun Path<GeoJson<*>>.nearSphere(point: Point): Criteria =
  * @since 4.0
  * @see Criteria.intersects
  */
-infix fun Path<GeoJson<*>>.intersects(geoJson: GeoJson<*>): Criteria =
+infix fun Path<out GeoJson<*>>.intersects(geoJson: GeoJson<*>): Criteria =
     Criteria(this.asName()).intersects(geoJson)
 
 /**
