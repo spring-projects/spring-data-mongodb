@@ -39,7 +39,16 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.TypeMapper;
-import org.springframework.data.mapping.*;
+import org.springframework.data.mapping.AccessOptions;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.Parameter;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.mapping.PersistentPropertyPathAccessor;
+import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -385,7 +394,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
 			if (property == null) {
-				return super.forProperty(name);
+				return new ConversionContext(conversions, path, MappingMongoConverter.this::readDocument, collectionConverter,
+						mapConverter, dbRefConverter, elementConverter);
 			}
 
 			return new ProjectingConversionContext(conversions, path, collectionConverter, mapConverter, dbRefConverter,
@@ -1902,12 +1912,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		public MongoDbPropertyValueProvider withContext(ConversionContext context) {
-			if (context == this.context) {
-				return this;
-			}
 
-			return new MongoDbPropertyValueProvider(context, accessor, evaluator);
-
+			return context == this.context ? this : new MongoDbPropertyValueProvider(context, accessor, evaluator);
 		}
 	}
 
