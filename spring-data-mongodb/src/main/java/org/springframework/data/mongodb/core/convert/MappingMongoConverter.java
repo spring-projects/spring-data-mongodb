@@ -302,8 +302,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	@SuppressWarnings("unchecked")
-	private <R> R doReadProjection(ConversionContext context, Bson bson,
-			EntityProjection<R, ?> projection) {
+	private <R> R doReadProjection(ConversionContext context, Bson bson, EntityProjection<R, ?> projection) {
 
 		MongoPersistentEntity<?> entity = getMappingContext().getRequiredPersistentEntity(projection.getActualDomainType());
 		TypeInformation<?> mappedType = projection.getActualMappedType();
@@ -631,8 +630,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				readAssociation(prop.getRequiredAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback,
-						propertyContext,
-						evaluator);
+						propertyContext, evaluator);
 				continue;
 			}
 
@@ -654,8 +652,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				readAssociation(prop.getRequiredAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback,
-						propertyContext,
-						evaluator);
+						propertyContext, evaluator);
 				continue;
 			}
 

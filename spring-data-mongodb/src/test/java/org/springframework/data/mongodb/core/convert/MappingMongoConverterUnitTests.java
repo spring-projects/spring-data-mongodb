@@ -2411,7 +2411,6 @@ class MappingMongoConverterUnitTests {
 		verify(subTypeOfGenericTypeConverter).convert(eq(source));
 	}
 
-
 	@Test // GH-3660
 	void usesCustomConverterForMapTypesOnWrite() {
 
@@ -2455,9 +2454,8 @@ class MappingMongoConverterUnitTests {
 		}));
 		converter.afterPropertiesSet();
 
-		org.bson.Document source = new org.bson.Document("1st", "one")
-				.append("2nd", 2)
-				.append("_class", TypeImplementingMap.class.getName());
+		org.bson.Document source = new org.bson.Document("1st", "one").append("2nd", 2).append("_class",
+				TypeImplementingMap.class.getName());
 
 		TypeImplementingMap target = converter.read(TypeImplementingMap.class, source);
 
@@ -2492,9 +2490,8 @@ class MappingMongoConverterUnitTests {
 		converter.afterPropertiesSet();
 
 		org.bson.Document source = new org.bson.Document("typeImplementingMap",
-		new org.bson.Document("1st", "one")
-				.append("2nd", 2))
-				.append("_class", TypeWrappingTypeImplementingMap.class.getName());
+				new org.bson.Document("1st", "one").append("2nd", 2)).append("_class",
+						TypeWrappingTypeImplementingMap.class.getName());
 
 		TypeWrappingTypeImplementingMap target = converter.read(TypeWrappingTypeImplementingMap.class, source);
 
@@ -2516,13 +2513,12 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3686
 	void readsCollectionContainingNullValue() {
 
-		org.bson.Document source = new org.bson.Document("items", Arrays.asList(new org.bson.Document("itemKey", "i1"), null, new org.bson.Document("itemKey", "i3")));
+		org.bson.Document source = new org.bson.Document("items",
+				Arrays.asList(new org.bson.Document("itemKey", "i1"), null, new org.bson.Document("itemKey", "i3")));
 
 		Order target = converter.read(Order.class, source);
 
-		assertThat(target.items)
-				.map(it -> it != null ? it.itemKey : null)
-				.containsExactly("i1", null, "i3");
+		assertThat(target.items).map(it -> it != null ? it.itemKey : null).containsExactly("i1", null, "i3");
 	}
 
 	@Test // GH-3686
@@ -2538,14 +2534,13 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3686
 	void readsMapContainingNullValue() {
 
-		org.bson.Document source = new org.bson.Document("mapOfObjects", new org.bson.Document("item1", "i1").append("item2", null).append("item3", "i3"));
+		org.bson.Document source = new org.bson.Document("mapOfObjects",
+				new org.bson.Document("item1", "i1").append("item2", null).append("item3", "i3"));
 
 		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
 
-		assertThat(target.mapOfObjects)
-				.containsEntry("item1", "i1")
-				.containsEntry("item2", null)
-				.containsEntry("item3", "i3");
+		assertThat(target.mapOfObjects).containsEntry("item1", "i1").containsEntry("item2", null).containsEntry("item3",
+				"i3");
 	}
 
 	@Test // GH-3670
@@ -2557,7 +2552,7 @@ class MappingMongoConverterUnitTests {
 		}));
 		converter.afterPropertiesSet();
 
-		org.bson.Document source = new org.bson.Document("content", new Binary(new byte[] {0x00, 0x42}));
+		org.bson.Document source = new org.bson.Document("content", new Binary(new byte[] { 0x00, 0x42 }));
 
 		GenericType<Object> target = converter.read(GenericType.class, source);
 		assertThat(target.content).isInstanceOf(byte[].class);
@@ -2566,17 +2561,20 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3702
 	void readsRawDocument() {
 
-		org.bson.Document source = new org.bson.Document("_id", "id-1").append("raw", new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("raw",
+				new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
 
 		WithRawDocumentProperties target = converter.read(WithRawDocumentProperties.class, source);
 
-		assertThat(target.raw).isInstanceOf(org.bson.Document.class).isEqualTo( new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+		assertThat(target.raw).isInstanceOf(org.bson.Document.class)
+				.isEqualTo(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
 	}
 
 	@Test // GH-3702
 	void readsListOfRawDocument() {
 
-		org.bson.Document source = new org.bson.Document("_id", "id-1").append("listOfRaw", Arrays.asList(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1))));
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("listOfRaw",
+				Arrays.asList(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1))));
 
 		WithRawDocumentProperties target = converter.read(WithRawDocumentProperties.class, source);
 
@@ -2587,11 +2585,12 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3692
 	void readsMapThatDoesNotComeAsDocument() {
 
-		org.bson.Document source = new org.bson.Document("_id", "id-1").append("mapOfObjects", Collections.singletonMap("simple", 1));
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("mapOfObjects",
+				Collections.singletonMap("simple", 1));
 
 		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
 
-		assertThat(target.mapOfObjects).containsEntry("simple",1);
+		assertThat(target.mapOfObjects).containsEntry("simple", 1);
 	}
 
 	@Test // GH-3851
@@ -2611,23 +2610,22 @@ class MappingMongoConverterUnitTests {
 
 		converter.writePropertyInternal(sourceValue, accessor, persistentProperty);
 
-		assertThat(accessor.getDocument()).isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
+		assertThat(accessor.getDocument())
+				.isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
 	}
 
 	@Test // GH-2860
 	void projectShouldReadSimpleInterfaceProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo",
-				"Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
 
 		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<PersonProjection, Person> projection = discoverer
-				.introspect(PersonProjection.class, Person.class);
+		EntityProjection<PersonProjection, Person> projection = discoverer.introspect(PersonProjection.class, Person.class);
 		PersonProjection person = converter.project(projection, source);
 
 		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(1999, 12, 1));
@@ -2638,16 +2636,14 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleDtoProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo",
-				"Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
 
 		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<PersonDto, Person> projection = introspector
-				.introspect(PersonDto.class, Person.class);
+		EntityProjection<PersonDto, Person> projection = introspector.introspect(PersonDto.class, Person.class);
 		PersonDto person = converter.project(projection, source);
 
 		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(1999, 12, 1));
@@ -2738,8 +2734,7 @@ class MappingMongoConverterUnitTests {
 	@EqualsAndHashCode
 	@Getter
 	static class Address implements InterfaceType {
-		@Field("s")
-		String street;
+		@Field("s") String street;
 		String city;
 	}
 
@@ -3340,7 +3335,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@EqualsAndHashCode
-	static class TypeImplementingMap implements Map<String,String> {
+	static class TypeImplementingMap implements Map<String, String> {
 
 		String val1;
 		int val2;
@@ -3455,15 +3450,9 @@ class MappingMongoConverterUnitTests {
 
 		Author author = new Author();
 
-		public Book() {}
-
-		public Book(String id, String name, Author author) {
-			this.id = id;
-			this.name = name;
-			this.author = author;
-		}
 	}
 
+	@Data
 	static class Author {
 
 		@Id String id;
@@ -3471,14 +3460,6 @@ class MappingMongoConverterUnitTests {
 		String firstName;
 
 		String lastName;
-
-		public Author() {}
-
-		public Author(String id, String firstName, String lastName) {
-			this.id = id;
-			this.firstName = firstName;
-			this.lastName = lastName;
-		}
 
 	}
 
