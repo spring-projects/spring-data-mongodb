@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -2689,8 +2690,8 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<WithNestedProjection, Person> projection = introspector
-				.introspect(WithNestedProjection.class, Person.class);
+		EntityProjection<WithNestedProjection, Person> projection = introspector.introspect(WithNestedProjection.class,
+				Person.class);
 		WithNestedProjection person = converter.project(projection, source);
 
 		assertThat(person.getAddresses()).extracting(AddressProjection::getStreet).hasSize(1).containsOnly("hwy");
@@ -2712,6 +2713,22 @@ class MappingMongoConverterUnitTests {
 		ProjectionWithNestedEntity person = converter.project(projection, source);
 
 		assertThat(person.getAddresses()).extracting(Address::getStreet).hasSize(1).containsOnly("hwy");
+	}
+
+	@Test // GH-3998
+	void shouldReadOpenProjection() {
+
+		org.bson.Document author = new org.bson.Document("firstName", "Walter").append("lastName", "White");
+		org.bson.Document book = new org.bson.Document("_id", "foo").append("name", "my-book").append("author", author);
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		BookProjection projection = converter.project(introspector.introspect(BookProjection.class, Book.class), book);
+
+		assertThat(projection.getName()).isEqualTo("my-book by Walter White");
 	}
 
 	static class GenericType<T> {
@@ -3438,11 +3455,56 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
 	}
+
+	interface BookProjection {
+
+		@Value("#{target.name + ' by ' + target.author.firstName + ' ' + target.author.lastName}")
+		String getName();
+	}
+
+	@Data
+	static class Book {
+
+		@Id String id;
+
+		String name;
+
+		Author author = new Author();
+
+		public Book() {}
+
+		public Book(String id, String name, Author author) {
+			this.id = id;
+			this.name = name;
+			this.author = author;
+		}
+	}
+
+	static class Author {
+
+		@Id String id;
+
+		String firstName;
+
+		String lastName;
+
+		public Author() {}
+
+		public Author(String id, String firstName, String lastName) {
+			this.id = id;
+			this.firstName = firstName;
+			this.lastName = lastName;
+		}
+
+	}
+
 }
