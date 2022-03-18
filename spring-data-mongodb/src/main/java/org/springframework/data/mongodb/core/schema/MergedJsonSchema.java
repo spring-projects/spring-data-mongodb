@@ -24,21 +24,22 @@ import java.util.function.BiFunction;
 import org.bson.Document;
 
 /**
- * {@link MongoJsonSchema} implementation that is capable of combining properties of different schemas into one.
+ * {@link MongoJsonSchema} implementation that is capable of merging properties from different schemas into a single
+ * one.
  *
  * @author Christoph Strobl
  * @since 3.4
  */
-class CombinedJsonSchema implements MongoJsonSchema {
+class MergedJsonSchema implements MongoJsonSchema {
 
 	private final List<MongoJsonSchema> schemaList;
 	private final BiFunction<Map<String, Object>, Map<String, Object>, Document> mergeFunction;
 
-	CombinedJsonSchema(List<MongoJsonSchema> schemaList, ConflictResolutionFunction conflictResolutionFunction) {
+	MergedJsonSchema(List<MongoJsonSchema> schemaList, ConflictResolutionFunction conflictResolutionFunction) {
 		this(schemaList, new TypeUnifyingMergeFunction(conflictResolutionFunction));
 	}
 
-	CombinedJsonSchema(List<MongoJsonSchema> schemaList,
+	MergedJsonSchema(List<MongoJsonSchema> schemaList,
 			BiFunction<Map<String, Object>, Map<String, Object>, Document> mergeFunction) {
 
 		this.schemaList = new ArrayList<>(schemaList);
@@ -46,7 +47,7 @@ class CombinedJsonSchema implements MongoJsonSchema {
 	}
 
 	@Override
-	public MongoJsonSchema combineWith(Collection<MongoJsonSchema> sources) {
+	public MongoJsonSchema mergeWith(Collection<MongoJsonSchema> sources) {
 
 		schemaList.addAll(sources);
 		return this;

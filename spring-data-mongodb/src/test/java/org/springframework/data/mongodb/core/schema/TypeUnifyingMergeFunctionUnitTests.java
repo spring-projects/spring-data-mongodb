@@ -33,6 +33,8 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictReso
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Resolution;
 
 /**
+ * Unit tests for {@link TypeUnifyingMergeFunction}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
@@ -101,17 +103,7 @@ public class TypeUnifyingMergeFunctionUnitTests {
 		ArgumentCaptor<Object> aValueCaptor = ArgumentCaptor.forClass(Object.class);
 		ArgumentCaptor<Object> bValueCaptor = ArgumentCaptor.forClass(Object.class);
 
-		when(crf.resolveConflict(any(), aValueCaptor.capture(), bValueCaptor.capture())).thenReturn(new Resolution() {
-			@Override
-			public String getKey() {
-				return "nested";
-			}
-
-			@Override
-			public Object getValue() {
-				return "from-function";
-			}
-		});
+		when(crf.resolveConflict(any(), aValueCaptor.capture(), bValueCaptor.capture())).thenReturn(Resolution.ofValue("nested", "from-function"));
 
 		Map<String, Object> a = new LinkedHashMap<>();
 		a.put("nested", Collections.singletonMap("a", "a-value"));

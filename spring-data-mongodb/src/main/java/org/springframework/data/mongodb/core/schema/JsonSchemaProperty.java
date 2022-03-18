@@ -236,14 +236,14 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	}
 
 	/**
-	 * Combines multiple {@link JsonSchemaProperty} with potentially different attributes into one.
+	 * Merges multiple {@link JsonSchemaProperty} with potentially different attributes into one.
 	 *
 	 * @param properties must not be {@literal null}.
 	 * @return new instance of {@link JsonSchemaProperty}.
 	 * @since 3.4
 	 */
-	static JsonSchemaProperty combined(Collection<JsonSchemaProperty> properties) {
-		return new CombinedJsonSchemaProperty(properties);
+	static JsonSchemaProperty merged(Collection<JsonSchemaProperty> properties) {
+		return new MergedJsonSchemaProperty(properties);
 	}
 
 	/**

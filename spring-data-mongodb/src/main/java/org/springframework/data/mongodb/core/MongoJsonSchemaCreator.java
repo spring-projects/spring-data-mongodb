@@ -79,17 +79,17 @@ public interface MongoJsonSchemaCreator {
 	MongoJsonSchema createSchemaFor(Class<?> type);
 
 	/**
-	 * Create a combined {@link MongoJsonSchema} out of the individual schemas of the given types by combining their
+	 * Create a merged {@link MongoJsonSchema} out of the individual schemas of the given types by merging their
 	 * properties into one large {@link MongoJsonSchema schema}.
-	 * 
+	 *
 	 * @param types must not be {@literal null} nor contain {@literal null}.
 	 * @return new instance of {@link MongoJsonSchema}.
 	 * @since 3.4
 	 */
-	default MongoJsonSchema combineSchemaFor(Class<?>... types) {
+	default MongoJsonSchema mergedSchemaFor(Class<?>... types) {
 
 		MongoJsonSchema[] schemas = Arrays.stream(types).map(this::createSchemaFor).toArray(MongoJsonSchema[]::new);
-		return MongoJsonSchema.combined(schemas);
+		return MongoJsonSchema.merge(schemas);
 	}
 
 	/**
@@ -108,32 +108,32 @@ public interface MongoJsonSchemaCreator {
 	 * @return new instance of {@link PropertySpecifier}.
 	 * @since 3.4
 	 */
-	PropertySpecifier specify(String path);
+	PropertySpecifier property(String path);
 
 	/**
 	 * The context in which a specific {@link #getProperty()} is encountered during schema creation.
-	 * 
+	 *
 	 * @since 3.3
 	 */
 	interface JsonSchemaPropertyContext {
 
 		/**
 		 * The path to a given field/property in dot notation.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		String getPath();
 
 		/**
 		 * The current property.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		MongoPersistentProperty getProperty();
 
 		/**
 		 * Obtain the {@link MongoPersistentEntity} for a given property.
-		 * 
+		 *
 		 * @param property must not be {@literal null}.
 		 * @param <T>
 		 * @return {@literal null} if the property is not an entity. It is nevertheless recommend to check
@@ -234,7 +234,6 @@ public interface MongoJsonSchemaCreator {
 	}
 
 	/**
-	 * @since 3.4
 	 * @author Christoph Strobl
 	 * @since 3.4
 	 */
@@ -246,6 +245,6 @@ public interface MongoJsonSchemaCreator {
 		 * @param types must not be {@literal null}.
 		 * @return the source
 		 */
-		MongoJsonSchemaCreator types(Class<?>... types);
+		MongoJsonSchemaCreator withTypes(Class<?>... types);
 	}
 }

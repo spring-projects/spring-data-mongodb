@@ -30,24 +30,24 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictReso
  * @author Christoph Strobl
  * @since 3.4
  */
-class CombinedJsonSchemaProperty implements JsonSchemaProperty {
+class MergedJsonSchemaProperty implements JsonSchemaProperty {
 
 	private final Iterable<JsonSchemaProperty> properties;
 	private final BiFunction<Map<String, Object>, Map<String, Object>, Document> mergeFunction;
 
-	CombinedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties) {
+	MergedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties) {
 		this(properties, (k, a, b) -> {
 			throw new IllegalStateException(
-					String.format("Error resolving conflict for %s. No conflict resolution function defined.", k));
+					String.format("Error resolving conflict for '%s'. No conflict resolution function defined.", k));
 		});
 	}
 
-	CombinedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties,
+	MergedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties,
 			ConflictResolutionFunction conflictResolutionFunction) {
 		this(properties, new TypeUnifyingMergeFunction(conflictResolutionFunction));
 	}
 
-	CombinedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties,
+	MergedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties,
 			BiFunction<Map<String, Object>, Map<String, Object>, Document> mergeFunction) {
 
 		this.properties = properties;
