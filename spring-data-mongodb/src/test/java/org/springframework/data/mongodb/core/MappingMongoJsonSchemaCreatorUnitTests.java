@@ -41,7 +41,6 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Resolution;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.spel.spi.Function;
@@ -52,14 +51,14 @@ import org.springframework.data.spel.spi.Function;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class MappingMongoJsonSchemaCreatorUnitTests {
+class MappingMongoJsonSchemaCreatorUnitTests {
 
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
-	MappingMongoJsonSchemaCreator schemaCreator;
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
+	private MappingMongoJsonSchemaCreator schemaCreator;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		mappingContext = new MongoMappingContext();
 		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
@@ -67,7 +66,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void simpleTypes() {
+	void simpleTypes() {
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(VariousFieldTypes.class);
 
@@ -75,21 +74,21 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void withRemappedIdType() {
+	void withRemappedIdType() {
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(WithExplicitMongoIdTypeMapping.class);
 		assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(WITH_EXPLICIT_MONGO_ID_TYPE_MAPPING);
 	}
 
 	@Test // DATAMONGO-1849
-	public void cyclic() {
+	void cyclic() {
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(Cyclic.class);
 		assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(CYCLIC);
 	}
 
 	@Test // DATAMONGO-1849
-	public void converterRegistered() {
+	void converterRegistered() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		MongoCustomConversions mcc = new MongoCustomConversions(
@@ -105,7 +104,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // GH-3800
-	public void csfle/*encryptedFieldsOnly*/() {
+	void csfle/*encryptedFieldsOnly*/() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
@@ -116,7 +115,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // GH-3800
-	public void csfleCyclic/*encryptedFieldsOnly*/() {
+	void csfleCyclic/*encryptedFieldsOnly*/() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
@@ -127,7 +126,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // GH-3800
-	public void csfleWithKeyFromProperties() {
+	void csfleWithKeyFromProperties() {
 
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
 		applicationContext.registerBean("encryptionExtension", EncryptionExtension.class, () -> new EncryptionExtension());
@@ -145,7 +144,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // GH-3800
-	public void csfleWithKeyFromMethod() {
+	void csfleWithKeyFromMethod() {
 
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
 		applicationContext.registerBean("encryptionExtension", EncryptionExtension.class, () -> new EncryptionExtension());
@@ -168,8 +167,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	void shouldAllowToSpecifyPolymorphicTypesForProperty() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
-				.specify("objectValue").types(A.class, B.class)
-				.createSchemaFor(SomeTestObject.class);
+				.property("objectValue").withTypes(A.class, B.class).createSchemaFor(SomeTestObject.class);
 
 		Document targetSchema = schema.schemaDocument();
 		assertThat(targetSchema) //
@@ -182,13 +180,12 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	void shouldAllowToSpecifyNestedPolymorphicTypesForProperty() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
-				.specify("value.objectValue").types(A.class, B.class) //
+				.property("value.objectValue").withTypes(A.class, B.class) //
 				.createSchemaFor(WrapperAroundA.class);
 
-		Document targetSchema = schema.schemaDocument();
-
 		assertThat(schema.schemaDocument()) //
-				.containsEntry("properties.value.properties.objectValue.properties.aNonEncrypted", new Document("type", "string")) //
+				.containsEntry("properties.value.properties.objectValue.properties.aNonEncrypted",
+						new Document("type", "string")) //
 				.containsEntry("properties.value.properties.objectValue.properties.aEncrypted", ENCRYPTED_BSON_STRING) //
 				.containsEntry("properties.value.properties.objectValue.properties.bEncrypted", ENCRYPTED_BSON_STRING);
 
@@ -198,8 +195,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	void shouldAllowToSpecifyGenericTypesForProperty() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
-				.specify("genericValue").types(A.class, B.class)
-				.createSchemaFor(SomeTestObject.class);
+				.property("genericValue").withTypes(A.class, B.class).createSchemaFor(SomeTestObject.class);
 
 		assertThat(schema.schemaDocument()) //
 				.containsEntry("properties.genericValue.properties.aNonEncrypted", new Document("type", "string")) //
@@ -211,7 +207,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	void encryptionFilterShouldCaptureSpecifiedPolymorphicTypesForProperty() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
-				.specify("objectValue").types(A.class, B.class) //
+				.property("objectValue").withTypes(A.class, B.class) //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
 				.createSchemaFor(SomeTestObject.class);
 
@@ -224,8 +220,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	@Test // GH-3870
 	void allowsToCreateCombinedSchemaWhenPropertiesDoNotOverlap() {
 
-		MongoJsonSchema schema = MongoJsonSchemaCreator.create()
-				.combineSchemaFor(A.class, B.class, C.class);
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create().mergedSchemaFor(A.class, B.class, C.class);
 
 		assertThat(schema.schemaDocument()) //
 				.containsEntry("properties.aNonEncrypted", new Document("type", "string")) //
@@ -242,9 +237,9 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		MongoJsonSchema schemaAButDifferent = MongoJsonSchemaCreator.create() //
 				.createSchemaFor(PropertyClashWithA.class);
 
-		MongoJsonSchema targetSchema = schemaA.combineWith(schemaAButDifferent);
+		MongoJsonSchema targetSchema = schemaA.mergeWith(schemaAButDifferent);
 
-		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> targetSchema.schemaDocument());
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(targetSchema::schemaDocument);
 	}
 
 	@Test // GH-3870
@@ -255,18 +250,8 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		MongoJsonSchema schemaAButDifferent = MongoJsonSchemaCreator.create() //
 				.createSchemaFor(PropertyClashWithA.class);
 
-		MongoJsonSchema schema = schemaA.combineWith(Collections.singleton(schemaAButDifferent), (path, a, b) -> new Resolution() {
-
-			@Override
-			public String getKey() {
-				return path.currentElement();
-			}
-
-			@Override
-			public Object getValue() {
-				return "object";
-			}
-		});
+		MongoJsonSchema schema = schemaA.mergeWith(Collections.singleton(schemaAButDifferent),
+				(path, a, b) -> Resolution.ofValue(path, "object"));
 
 		assertThat(schema.schemaDocument()) //
 				.containsEntry("properties.aNonEncrypted", new Document("type", "object"));
@@ -276,13 +261,11 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	void bsonTypeVsJustTypeValueResolutionIsDoneByDefault() {
 
 		MongoJsonSchema schemaUsingType = MongoJsonSchema.builder()
-				.property(JsonSchemaProperty.named("value").ofType(Type.jsonTypeOf("string")))
-				.build();
+				.property(JsonSchemaProperty.named("value").ofType(Type.jsonTypeOf("string"))).build();
 		MongoJsonSchema schemaUsingBsonType = MongoJsonSchema.builder()
-				.property(JsonSchemaProperty.named("value").ofType(Type.bsonTypeOf("string")))
-				.build();
+				.property(JsonSchemaProperty.named("value").ofType(Type.bsonTypeOf("string"))).build();
 
-		MongoJsonSchema targetSchema = MongoJsonSchema.combined(schemaUsingType, schemaUsingBsonType);
+		MongoJsonSchema targetSchema = MongoJsonSchema.merge(schemaUsingType, schemaUsingBsonType);
 
 		assertThat(targetSchema.schemaDocument()) //
 				.containsEntry("properties.value", new Document("type", "string"));
@@ -292,7 +275,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 	// --> ENUM
 
-	static final String JUST_SOME_ENUM = "{ 'type' : 'string', 'enum' : ['ONE', 'TWO'] }";
+	private static final String JUST_SOME_ENUM = "{ 'type' : 'string', 'enum' : ['ONE', 'TWO'] }";
 
 	enum JustSomeEnum {
 		ONE, TWO
@@ -649,14 +632,15 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		}
 	}
 
-	static final Document ENCRYPTED_BSON_STRING = Document.parse("{'encrypt': { 'bsonType': 'string','algorithm': 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'} }");
+	private static final Document ENCRYPTED_BSON_STRING = Document
+			.parse("{'encrypt': { 'bsonType': 'string','algorithm': 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'} }");
 
 	static class SomeTestObject<T> {
 		T genericValue;
 		Object objectValue;
 	}
 
-	static class RootWithGenerics<S,T> {
+	static class RootWithGenerics<S, T> {
 		S sValue;
 		T tValue;
 	}
@@ -678,18 +662,15 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 		String aNonEncrypted;
 
-		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
-		String aEncrypted;
+		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic") String aEncrypted;
 	}
 
 	static class B {
-		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
-		String bEncrypted;
+		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic") String bEncrypted;
 	}
 
 	static class C extends A {
-		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
-		String cEncrypted;
+		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic") String cEncrypted;
 	}
 
 	static class PropertyClashWithA {

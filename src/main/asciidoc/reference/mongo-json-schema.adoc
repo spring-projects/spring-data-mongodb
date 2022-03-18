@@ -192,25 +192,25 @@ unless there is more specific information available via the `@MongoId` annotatio
 
 The above example demonstrated how to derive the schema from a very precise typed source.
 Using polymorphic elements within the domain model can lead to inaccurate schema representation for `Object` and generic `<T>` types, which are likely to represented as `{ type : 'object' }` without further specification.
-`MongoJsonSchemaCreator.specify(...)` allows to define additional types that should be considered when rendering the schema.
+`MongoJsonSchemaCreator.property(…)` allows defining additional details such as nested document types that should be considered when rendering the schema.
 
 .Specify additional types for properties
 ====
 [source,java]
 ----
-public class Root {
+class Root {
 	Object value;
 }
 
-public class A {
+class A {
 	String aValue;
 }
 
-public class B {
+class B {
 	String bValue;
 }
 MongoJsonSchemaCreator.create()
-    .specify("value").types(A.class, B.class) <1>
+    .property("value").withTypes(A.class, B.class) <1>
 ----
 
 [source,json]
@@ -220,7 +220,7 @@ MongoJsonSchemaCreator.create()
     'properties' : {
         'value' : {
             'type' : 'object',
-            'properties' : { <1>
+            'properties' : {                       <1>
                 'aValue' : { 'type' : 'string' },
                 'bValue' : { 'type' : 'string' }
             }
@@ -228,30 +228,30 @@ MongoJsonSchemaCreator.create()
     }
 }
 ----
-<1> Properties of the given types are combined into one element.
+<1> Properties of the given types are merged into one element.
 ====
 
-MongoDBs schema free approach allows to store documents of different structure in one collection.
+MongoDBs schema-free approach allows storing documents of different structure in one collection.
 Those may be modeled having a common base class.
-Regardless of the chosen approach `MongoJsonSchemaCreator.combine(...)` is can help circumvent the need of combining multiple schema into one.
+Regardless of the chosen approach, `MongoJsonSchemaCreator.merge(…)`  can help circumvent the need of merging multiple schema into one.
 
-.Combining multiple Schemas
+.Merging multiple Schemas into a single Schema definition
 ====
 [source,java]
 ----
-public abstract class Root {
+abstract class Root {
 	String rootValue;
 }
 
-public class A extends Root {
+class A extends Root {
 	String aValue;
 }
 
-public class B extends Root {
+class B extends Root {
 	String bValue;
 }
 
-MongoJsonSchemaCreator.combined(A.class, B.class) <1>
+MongoJsonSchemaCreator.mergedSchemaFor(A.class, B.class) <1>
 ----
 
 [source,json]
@@ -271,17 +271,17 @@ MongoJsonSchemaCreator.combined(A.class, B.class) <1>
 
 [NOTE]
 ====
-Equally named properties need to refer to the same json schema in order to be combined.
-The following example shows a definition that cannot be combined automatically because of a data type mismatch.
-In this case a `ConflictResolutionFunction` has to be provided to `MongoJsonSchemaCreator`.
+Properties with the same name need to refer to the same JSON schema in order to be combined.
+The following example shows a definition that cannot be merged automatically because of a data type mismatch.
+In this case a `ConflictResolutionFunction` must be provided to `MongoJsonSchemaCreator`.
 
 [source,java]
 ----
-public class A extends Root {
+class A extends Root {
 	String value;
 }
 
-public class B extends Root {
+class B extends Root {
 	Integer value;
 }
 ----

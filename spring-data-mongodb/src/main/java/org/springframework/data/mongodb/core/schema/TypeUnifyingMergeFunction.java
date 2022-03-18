@@ -25,11 +25,14 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Path;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Resolution;
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * Merge function considering BSON type hints. Conflicts are resolved through a {@link ConflictResolutionFunction}.
+ *
  * @author Christoph Strobl
  * @since 3.4
  */
@@ -42,15 +45,16 @@ class TypeUnifyingMergeFunction implements BiFunction<Map<String, Object>, Map<S
 	}
 
 	@Override
-	public Document apply(Map<String, Object> a, Map<String, Object> b) {
-		return merge(SimplePath.root(), a, b);
+	public Document apply(Map<String, Object> left, Map<String, Object> right) {
+		return merge(SimplePath.root(), left, right);
 	}
 
-	Document merge(SimplePath path, Map<String, Object> a, Map<String, Object> b) {
+	@SuppressWarnings("unchecked")
+	Document merge(SimplePath path, Map<String, Object> left, Map<String, Object> right) {
 
-		Document target = new Document(a);
+		Document target = new Document(left);
 
-		for (String key : b.keySet()) {
+		for (String key : right.keySet()) {
 
 			SimplePath currentPath = path.append(key);
 			if (isTypeKey(key)) {
@@ -58,39 +62,39 @@ class TypeUnifyingMergeFunction implements BiFunction<Map<String, Object>, Map<S
 				Object unifiedExistingType = getUnifiedExistingType(key, target);
 
 				if (unifiedExistingType != null) {
-					if (!ObjectUtils.nullSafeEquals(unifiedExistingType, b.get(key))) {
-						resolveConflict(currentPath, a, b, target);
+					if (!ObjectUtils.nullSafeEquals(unifiedExistingType, right.get(key))) {
+						resolveConflict(currentPath, left, right, target);
 					}
 					continue;
 				}
 			}
 
 			if (!target.containsKey(key)) {
-				target.put(key, b.get(key));
+				target.put(key, right.get(key));
 				continue;
 			}
 
 			Object existingEntry = target.get(key);
-			Object newEntry = b.get(key);
+			Object newEntry = right.get(key);
 			if (existingEntry instanceof Map && newEntry instanceof Map) {
-				target.put(key, merge(currentPath, (Map) existingEntry, (Map) newEntry));
+				target.put(key, merge(currentPath, (Map<String, Object>) existingEntry, (Map<String, Object>) newEntry));
 			} else if (!ObjectUtils.nullSafeEquals(existingEntry, newEntry)) {
-				resolveConflict(currentPath, a, b, target);
+				resolveConflict(currentPath, left, right, target);
 			}
 		}
 
 		return target;
 	}
 
-	private void resolveConflict(Path path, Map<String, Object> a, Map<String, Object> b, Document target) {
-		applyConflictResolution(path, target, conflictResolutionFunction.resolveConflict(path, a, b));
+	private void resolveConflict(Path path, Map<String, Object> left, Map<String, Object> right, Document target) {
+		applyConflictResolution(path, target, conflictResolutionFunction.resolveConflict(path, left, right));
 	}
 
 	private void applyConflictResolution(Path path, Document target, Resolution resolution) {
 
 		if (Resolution.SKIP.equals(resolution) || resolution.getValue() == null) {
 			target.remove(path.currentElement());
-			return ;
+			return;
 		}
 
 		if (isTypeKey(resolution.getKey())) {
@@ -115,19 +119,20 @@ class TypeUnifyingMergeFunction implements BiFunction<Map<String, Object>, Map<S
 		return key;
 	}
 
+	@Nullable
 	private static Object getUnifiedExistingType(String key, Document source) {
 		return source.get(getTypeKeyToUse(key, source));
 	}
 
 	/**
 	 * Trivial {@link List} based {@link Path} implementation.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 3.4
 	 */
 	static class SimplePath implements Path {
 
-		private List<String> path;
+		private final List<String> path;
 
 		SimplePath(List<String> path) {
 			this.path = path;
@@ -135,10 +140,6 @@ class TypeUnifyingMergeFunction implements BiFunction<Map<String, Object>, Map<S
 
 		static SimplePath root() {
 			return new SimplePath(Collections.emptyList());
-		}
-
-		static SimplePath of(List<String> path) {
-			return new SimplePath(new ArrayList<>(path));
 		}
 
 		static SimplePath of(List<String> path, String next) {

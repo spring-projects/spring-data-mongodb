@@ -25,6 +25,7 @@ import java.util.Set;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Interface defining MongoDB-specific JSON schema object. New objects can be built with {@link #builder()}, for
@@ -79,7 +80,7 @@ public interface MongoJsonSchema {
 
 	/**
 	 * Create the {@link Document} defining the schema. <br />
-	 * Property and field names need to be mapped to the domain type ones by running the {@link Document} through a
+	 * Property and field names need to be mapped to the domain type property by running the {@link Document} through a
 	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
 	 *
 	 * @return never {@literal null}.
@@ -108,69 +109,69 @@ public interface MongoJsonSchema {
 	}
 
 	/**
-	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 * Create a new {@link MongoJsonSchema} merging properties from the given sources.
 	 *
 	 * @param sources must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchema}.
 	 * @since 3.4
 	 */
-	static MongoJsonSchema combined(MongoJsonSchema... sources) {
-		return combined((path, a, b) -> {
-			throw new IllegalStateException(
-					String.format("Failure combining schema for path %s holding values a) %s and b) %s.", path.dotPath(), a, b));
+	static MongoJsonSchema merge(MongoJsonSchema... sources) {
+		return merge((path, left, right) -> {
+			throw new IllegalStateException(String.format("Cannot merge schema for path '%s' holding values '%s' and '%s'.",
+					path.dotPath(), left, right));
 		}, sources);
 	}
 
 	/**
-	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 * Create a new {@link MongoJsonSchema} merging properties from the given sources.
 	 *
 	 * @param sources must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchema}.
 	 * @since 3.4
 	 */
-	static MongoJsonSchema combined(ConflictResolutionFunction mergeFunction, MongoJsonSchema... sources) {
-		return new CombinedJsonSchema(Arrays.asList(sources), mergeFunction);
+	static MongoJsonSchema merge(ConflictResolutionFunction mergeFunction, MongoJsonSchema... sources) {
+		return new MergedJsonSchema(Arrays.asList(sources), mergeFunction);
 	}
 
 	/**
-	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 * Create a new {@link MongoJsonSchema} merging properties from the given sources.
 	 *
 	 * @param sources must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchema}.
 	 * @since 3.4
 	 */
-	default MongoJsonSchema combineWith(MongoJsonSchema... sources) {
-		return combineWith(Arrays.asList(sources));
+	default MongoJsonSchema mergeWith(MongoJsonSchema... sources) {
+		return mergeWith(Arrays.asList(sources));
 	}
 
 	/**
-	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 * Create a new {@link MongoJsonSchema} merging properties from the given sources.
 	 *
 	 * @param sources must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchema}.
 	 * @since 3.4
 	 */
-	default MongoJsonSchema combineWith(Collection<MongoJsonSchema> sources) {
-		return combineWith(sources, (path, a, b) -> {
-			throw new IllegalStateException(
-					String.format("Failure combining schema for path %s holding values a) %s and b) %s.", path.dotPath(), a, b));
+	default MongoJsonSchema mergeWith(Collection<MongoJsonSchema> sources) {
+		return mergeWith(sources, (path, left, right) -> {
+			throw new IllegalStateException(String.format("Cannot merge schema for path '%s' holding values '%s' and '%s'.",
+					path.dotPath(), left, right));
 		});
 	}
 
 	/**
-	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 * Create a new {@link MongoJsonSchema} merging properties from the given sources.
 	 *
 	 * @param sources must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchema}.
 	 * @since 3.4
 	 */
-	default MongoJsonSchema combineWith(Collection<MongoJsonSchema> sources,
+	default MongoJsonSchema mergeWith(Collection<MongoJsonSchema> sources,
 			ConflictResolutionFunction conflictResolutionFunction) {
 
 		List<MongoJsonSchema> schemaList = new ArrayList<>(sources.size() + 1);
 		schemaList.add(this);
 		schemaList.addAll(new ArrayList<>(sources));
-		return new CombinedJsonSchema(schemaList, conflictResolutionFunction);
+		return new MergedJsonSchema(schemaList, conflictResolutionFunction);
 	}
 
 	/**
@@ -183,8 +184,8 @@ public interface MongoJsonSchema {
 	}
 
 	/**
-	 * A resolution function that may be called on conflicting paths. Eg. when trying to merge properties with different
-	 * values into one.
+	 * A resolution function that is called on conflicting paths when trying to merge properties with different values
+	 * into a single value.
 	 *
 	 * @author Christoph Strobl
 	 * @since 3.4
@@ -193,12 +194,14 @@ public interface MongoJsonSchema {
 	interface ConflictResolutionFunction {
 
 		/**
+		 * Resolve the conflict for two values under the same {@code path}.
+		 *
 		 * @param path the {@link Path} leading to the conflict.
-		 * @param a can be {@literal null}.
-		 * @param b can be {@literal null}.
+		 * @param left can be {@literal null}.
+		 * @param right can be {@literal null}.
 		 * @return never {@literal null}.
 		 */
-		Resolution resolveConflict(Path path, @Nullable Object a, @Nullable Object b);
+		Resolution resolveConflict(Path path, @Nullable Object left, @Nullable Object right);
 
 		/**
 		 * @author Christoph Strobl
@@ -218,7 +221,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * The result after processing a conflict when combining schemas. May indicate to {@link #SKIP skip} the entry
+		 * The result after processing a conflict when merging schemas. May indicate to {@link #SKIP skip} the entry
 		 * entirely.
 		 *
 		 * @author Christoph Strobl
@@ -259,6 +262,42 @@ public interface MongoJsonSchema {
 			 */
 			static Resolution skip() {
 				return SKIP;
+			}
+
+			/**
+			 * Construct a resolution for a {@link Path} using the given {@code value}.
+			 *
+			 * @param path the conflicting path.
+			 * @param value the value to apply.
+			 * @return
+			 */
+			static Resolution ofValue(Path path, Object value) {
+
+				Assert.notNull(path, "Path must not be null");
+
+				return ofValue(path.currentElement(), value);
+			}
+
+			/**
+			 * Construct a resolution from a {@code key} and {@code value}.
+			 *
+			 * @param key name of the path segment, typically {@link Path#currentElement()}
+			 * @param value the value to apply.
+			 * @return
+			 */
+			static Resolution ofValue(String key, Object value) {
+
+				return new Resolution() {
+					@Override
+					public String getKey() {
+						return key;
+					}
+
+					@Override
+					public Object getValue() {
+						return value;
+					}
+				};
 			}
 		}
 	}

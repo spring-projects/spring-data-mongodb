@@ -94,13 +94,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	@Override
-	public PropertySpecifier specify(String path) {
-		return new PropertySpecifier() {
-			@Override
-			public MongoJsonSchemaCreator types(Class<?>... types) {
-				return specifyTypesFor(path, types);
-			}
-		};
+	public PropertySpecifier property(String path) {
+		return types -> withTypesFor(path, types);
 	}
 
 	/**
@@ -111,7 +106,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	 * @return new instance of {@link MongoJsonSchemaCreator}.
 	 * @since 3.4
 	 */
-	public MongoJsonSchemaCreator specifyTypesFor(String path, Class<?>... types) {
+	public MongoJsonSchemaCreator withTypesFor(String path, Class<?>... types) {
 
 		LinkedMultiValueMap<String, Class<?>> clone = mergeProperties.clone();
 		for (Class<?> type : types) {
@@ -209,7 +204,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 					}
 				}
 				return targetProperties.size() == 1 ? targetProperties.iterator().next()
-						: JsonSchemaProperty.combined(targetProperties);
+						: JsonSchemaProperty.merged(targetProperties);
 			}
 		}
 
