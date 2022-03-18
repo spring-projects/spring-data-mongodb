@@ -134,6 +134,7 @@ public class Query {
 
 	/**
 	 * Limit the number of returned documents to {@code limit}.
+	 * If limit chosen is 0 it returns all documents
 	 *
 	 * @param limit
 	 * @return this.
