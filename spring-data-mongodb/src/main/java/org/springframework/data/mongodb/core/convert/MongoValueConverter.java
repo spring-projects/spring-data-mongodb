@@ -18,11 +18,9 @@ package org.springframework.data.mongodb.core.convert;
 import org.springframework.data.convert.PropertyValueConverter;
 
 /**
- * Pre typed {@link PropertyValueConverter} specific for the Data MongoDB module.
- * 
+ * MongoDB-specific {@link PropertyValueConverter} extension.
+ *
  * @author Christoph Strobl
  * @since 3.4
  */
-public interface MongoValueConverter<S, T> extends PropertyValueConverter<S, T, MongoConversionContext> {
-
-}
+public interface MongoValueConverter<S, T> extends PropertyValueConverter<S, T, MongoConversionContext> {}
