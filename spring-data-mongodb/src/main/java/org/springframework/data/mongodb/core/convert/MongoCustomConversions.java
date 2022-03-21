@@ -36,6 +36,7 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.PropertyValueConversions;
 import org.springframework.data.convert.PropertyValueConverter;
@@ -273,7 +274,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		}
 
 		/**
-		 * Add {@link Converter converters}, {@link ConverterFactory factories}, ...
+		 * Add {@link Converter converters}, {@link ConverterFactory factories}, {@link ConverterBuilder.ConverterAware
+		 * converter-aware objects}, and {@link GenericConverter generic converters}.
 		 *
 		 * @param converters must not be {@literal null} nor contain {@literal null} values.
 		 * @return this.
@@ -317,6 +319,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 */
 		public MongoConverterConfigurationAdapter setPropertyValueConversions(PropertyValueConversions valueConversions) {
 
+			Assert.notNull(valueConversions, "PropertyValueConversions must not be null");
 			this.propertyValueConversions = valueConversions;
 			return this;
 		}

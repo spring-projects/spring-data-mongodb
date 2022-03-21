@@ -5,7 +5,7 @@
 == What's New in Spring Data MongoDB 3.4
 
 * Find and update ``Document``s via <<mongodb.repositories.queries.update,Repository method>>.
-* Property specific <<mongo.property-converters, value converters>>.
+* Property-specific <<mongo.property-converters, value converters>>.
 
 [[new-features.3.3]]
 == What's New in Spring Data MongoDB 3.3
