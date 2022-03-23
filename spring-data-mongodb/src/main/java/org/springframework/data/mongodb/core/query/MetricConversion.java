@@ -17,6 +17,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 
 import org.springframework.data.geo.Distance;
@@ -27,6 +28,7 @@ import org.springframework.data.geo.Metrics;
  * {@link Metric} and {@link Distance} conversions using the metric system.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 public class MetricConversion {
@@ -59,6 +61,28 @@ public class MetricConversion {
 	public static double getDistanceInMeters(Distance distance) {
 		return new BigDecimal(distance.getValue()).multiply(getMetricToMetersMultiplier(distance.getMetric()))
 				.doubleValue();
+	}
+
+	/**
+	 * Return {@code distance} in radians (on an earth like sphere).
+	 *
+	 * @param distance must not be {@literal null}.
+	 * @return distance in rads.
+	 * @since 3.4
+	 */
+	public static double toRadians(Distance distance) {
+		return metersToRadians(getDistanceInMeters(distance));
+	}
+
+	/**
+	 * Return {@code distance} in radians (on an earth like sphere).
+	 *
+	 * @param meters
+	 * @return distance in rads.
+	 * @since 3.4
+	 */
+	public static double metersToRadians(double meters) {
+		return BigDecimal.valueOf(meters).divide(METERS_MULTIPLIER, MathContext.DECIMAL64).doubleValue();
 	}
 
 	/**
