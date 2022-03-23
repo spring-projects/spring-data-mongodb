@@ -15,17 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
