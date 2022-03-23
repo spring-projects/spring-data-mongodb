@@ -624,9 +624,13 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geo-spatial criterion using a {@literal $maxDistance} operation, for use with $near
+	 * Creates a geo-spatial criterion using a {@literal $maxDistance} operation, for use with {@literal $near} or
+	 * {@literal $nearSphere}.
+	 * <p>
+	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation
+	 * (legacy vs. geoJson) as well as the target operation.
 	 *
-	 * @param maxDistance
+	 * @param maxDistance radians or meters
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/maxDistance/">MongoDB Query operator:
 	 *      $maxDistance</a>
@@ -645,8 +649,11 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a {@literal $minDistance} operation, for use with {@literal $near} or
 	 * {@literal $nearSphere}.
+	 * <p>
+	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation
+	 * (legacy vs. geoJson) as well as the target operation.
 	 *
-	 * @param minDistance
+	 * @param minDistance radians or meters
 	 * @return this.
 	 * @since 1.7
 	 */
