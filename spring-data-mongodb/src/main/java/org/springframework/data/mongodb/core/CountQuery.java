@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -162,7 +164,8 @@ class CountQuery {
 		boolean spheric = source.containsKey("$nearSphere");
 		Object $near = spheric ? source.get("$nearSphere") : source.get("$near");
 
-		Number maxDistance = source.containsKey("$maxDistance") ? (Number) source.get("$maxDistance") : Double.MAX_VALUE;
+		Number maxDistance = getMaxDistance(source, $near, spheric);
+
 		List<Object> $centerMax = Arrays.asList(toCenterCoordinates($near), maxDistance);
 		Document $geoWithinMax = new Document("$geoWithin",
 				new Document(spheric ? "$centerSphere" : "$center", $centerMax));
@@ -193,6 +196,24 @@ class CountQuery {
 		return new Document("$and", criteria);
 	}
 
+	private static Number getMaxDistance(Document source, Object $near, boolean spheric) {
+
+		Number maxDistance = Double.MAX_VALUE;
+		if(source.containsKey("$maxDistance")) { // legacy coordinate pair
+			maxDistance = (Number) source.get("$maxDistance");
+		} else if ($near instanceof Document) {
+			Document nearDoc = (Document)$near;
+			if(nearDoc.containsKey("$maxDistance")) {
+				maxDistance = (Number) nearDoc.get("$maxDistance");
+				// geojson is in Meters but we need radians x/(6378.1*1000)
+				if(spheric && nearDoc.containsKey("$geometry")) {
+					maxDistance = BigDecimal.valueOf(maxDistance.doubleValue()).divide(BigDecimal.valueOf(6378100d), MathContext.DECIMAL64).doubleValue();
+				}
+			}
+		}
+		return maxDistance;
+	}
+
 	private static boolean containsNear(Document source) {
 		return source.containsKey("$near") || source.containsKey("$nearSphere");
 	}
@@ -216,10 +237,16 @@ class CountQuery {
 			return Arrays.asList(((Point) value).getX(), ((Point) value).getY());
 		}
 
-		if (value instanceof Document && ((Document) value).containsKey("x")) {
-
-			Document point = (Document) value;
-			return Arrays.asList(point.get("x"), point.get("y"));
+		if (value instanceof Document ) {
+			Document document = (Document) value;
+			if(document.containsKey("x")) {
+				Document point = document;
+				return Arrays.asList(point.get("x"), point.get("y"));
+			}
+			else if (document.containsKey("$geometry")) {
+				Document geoJsonPoint = document.get("$geometry", Document.class);
+				return geoJsonPoint.get("coordinates");
+			}
 		}
 
 		return value;
