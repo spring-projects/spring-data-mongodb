@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
-
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.MetricConversion;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
@@ -207,7 +205,7 @@ class CountQuery {
 				maxDistance = (Number) nearDoc.get("$maxDistance");
 				// geojson is in Meters but we need radians x/(6378.1*1000)
 				if(spheric && nearDoc.containsKey("$geometry")) {
-					maxDistance = BigDecimal.valueOf(maxDistance.doubleValue()).divide(BigDecimal.valueOf(6378100d), MathContext.DECIMAL64).doubleValue();
+					maxDistance = MetricConversion.metersToRadians(maxDistance.doubleValue());
 				}
 			}
 		}

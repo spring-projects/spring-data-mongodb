@@ -182,7 +182,7 @@ class CountQueryUnitTests {
 
 		org.bson.Document target = postProcessQueryForCount(source);
 		assertThat(target).isEqualTo(org.bson.Document.parse(
-				"{\"$or\" : [ { \"name\": \"food\" }, {\"location\": {\"$geoWithin\": {\"$centerSphere\": [[-73.99171, 40.738868], 1.567865038177514E-6]}}} ]}"));
+				"{\"$or\" : [ { \"name\": \"food\" }, {\"location\": {\"$geoWithin\": {\"$centerSphere\": [[-73.99171, 40.738868], 1.567855942887398E-6]}}} ]}"));
 	}
 
 	private org.bson.Document postProcessQueryForCount(Query source) {

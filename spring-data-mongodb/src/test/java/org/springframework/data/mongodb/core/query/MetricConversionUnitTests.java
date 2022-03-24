@@ -65,4 +65,18 @@ public class MetricConversionUnitTests {
 		assertThat(multiplier).isCloseTo(0.00062137, offset(0.000000001));
 	}
 
+	@Test // GH-4004
+	void shouldConvertMetersToRadians/* on an earth like sphere with r=6378.137km */() {
+		assertThat(MetricConversion.metersToRadians(1000)).isCloseTo(0.000156785594d, offset(0.000000001));
+	}
+
+	@Test // GH-4004
+	void shouldConvertKilometersToRadians/* on an earth like sphere with r=6378.137km */() {
+		assertThat(MetricConversion.toRadians(new Distance(1, Metrics.KILOMETERS))).isCloseTo(0.000156785594d, offset(0.000000001));
+	}
+
+	@Test // GH-4004
+	void shouldConvertMilesToRadians/* on an earth like sphere with r=6378.137km */() {
+		assertThat(MetricConversion.toRadians(new Distance(1, Metrics.MILES))).isCloseTo(0.000252321328d, offset(0.000000001));
+	}
 }
