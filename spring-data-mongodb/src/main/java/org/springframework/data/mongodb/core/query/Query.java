@@ -182,7 +182,9 @@ public class Query {
 	public Query with(Pageable pageable) {
 
 		if (pageable.isUnpaged()) {
-			return this;
+			this.limit = 0; // default value
+			this.skip = 0; // default value
+			return with(pageable.getSort());
 		}
 
 		this.limit = pageable.getPageSize();
@@ -202,6 +204,7 @@ public class Query {
 		Assert.notNull(sort, "Sort must not be null!");
 
 		if (sort.isUnsorted()) {
+			this.sort = sort; // Sort.unsorted()
 			return this;
 		}
 
