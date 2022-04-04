@@ -44,6 +44,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
@@ -2188,6 +2189,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@Override
 		public org.springframework.data.util.TypeInformation<? extends S> specialize(ClassTypeInformation type) {
 			return delegate.specialize(type);
+		}
+
+		@Override
+		public TypeDescriptor toTypeDescriptor() {
+			return delegate.toTypeDescriptor();
 		}
 	}
 
