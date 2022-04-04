@@ -166,7 +166,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private final List<Object> customConverters = new ArrayList<>();
 
-		private PropertyValueConversions propertyValueConversions = new SimplePropertyValueConversions();
+		private PropertyValueConversions propertyValueConversions = PropertyValueConversions.simple(it -> {});
+		private PropertyValueConversions internallyCreatedValueConversion = propertyValueConversions;
 
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
@@ -327,13 +328,17 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		PropertyValueConversions valueConversions() {
 
 			if (this.propertyValueConversions == null) {
-				this.propertyValueConversions = new SimplePropertyValueConversions();
+				this.propertyValueConversions = PropertyValueConversions.simple(it -> {});
 			}
 
 			return this.propertyValueConversions;
 		}
 
 		ConverterConfiguration createConverterConfiguration() {
+
+			if(isLocallyCreatedPropertyValueConversion() && propertyValueConversions instanceof SimplePropertyValueConversions svc) {
+				svc.init();
+			}
 
 			if (!useNativeDriverJavaTimeCodecs) {
 				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true,
@@ -390,6 +395,10 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			public LocalDate convert(Date source) {
 				return DateToUtcLocalDateTimeConverter.INSTANCE.convert(source).toLocalDate();
 			}
+		}
+
+		private boolean isLocallyCreatedPropertyValueConversion() {
+			return propertyValueConversions == internallyCreatedValueConversion;
 		}
 	}
 }
