@@ -166,8 +166,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private final List<Object> customConverters = new ArrayList<>();
 
-		private PropertyValueConversions propertyValueConversions = PropertyValueConversions.simple(it -> {});
-		private PropertyValueConversions internallyCreatedValueConversion = propertyValueConversions;
+		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
+		private PropertyValueConversions propertyValueConversions = internalValueConversion;
 
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
@@ -188,7 +188,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		}
 
 		/**
-		 * Set whether or not to use the native MongoDB Java Driver {@link org.bson.codecs.Codec codes} for
+		 * Set whether to or not to use the native MongoDB Java Driver {@link org.bson.codecs.Codec codes} for
 		 * {@link org.bson.codecs.jsr310.LocalDateCodec LocalDate}, {@link org.bson.codecs.jsr310.LocalTimeCodec LocalTime}
 		 * and {@link org.bson.codecs.jsr310.LocalDateTimeCodec LocalDateTime} using a {@link ZoneOffset#UTC}.
 		 *
@@ -328,7 +328,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		PropertyValueConversions valueConversions() {
 
 			if (this.propertyValueConversions == null) {
-				this.propertyValueConversions = PropertyValueConversions.simple(it -> {});
+				this.propertyValueConversions = internalValueConversion;
 			}
 
 			return this.propertyValueConversions;
@@ -336,8 +336,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		ConverterConfiguration createConverterConfiguration() {
 
-			if(isLocallyCreatedPropertyValueConversion() && propertyValueConversions instanceof SimplePropertyValueConversions svc) {
-				svc.init();
+			if (hasDefaultPropertyValueConversions() && propertyValueConversions instanceof SimplePropertyValueConversions) {
+				((SimplePropertyValueConversions) propertyValueConversions).init();
 			}
 
 			if (!useNativeDriverJavaTimeCodecs) {
@@ -397,8 +397,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}
 		}
 
-		private boolean isLocallyCreatedPropertyValueConversion() {
-			return propertyValueConversions == internallyCreatedValueConversion;
+		private boolean hasDefaultPropertyValueConversions() {
+			return propertyValueConversions == internalValueConversion;
 		}
 	}
 }
