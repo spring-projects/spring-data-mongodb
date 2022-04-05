@@ -101,7 +101,6 @@
       <groupId>org.mongodb</groupId>
       <artifactId>mongodb-driver-sync</artifactId>
       <version>${mongo}</version>
-      <optional>true</optional>
     </dependency>
 
     <dependency>
