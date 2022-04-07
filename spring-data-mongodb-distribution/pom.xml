@@ -24,15 +24,9 @@
 		<dist.key>SDMONGO</dist.key>
 
 		<!-- Observability -->
-		<micrometer-docs-generator.version>1.0.0-SNAPSHOT
-		</micrometer-docs-generator.version>
-		<micrometer-docs-generator.inputPath>
-			${maven.multiModuleProjectDirectory}/spring-data-mongodb/
-		</micrometer-docs-generator.inputPath>
-		<micrometer-docs-generator.inclusionPattern>.*
-		</micrometer-docs-generator.inclusionPattern>
-		<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/
-		</micrometer-docs-generator.outputPath>
+		<micrometer-docs-generator.inputPath>${maven.multiModuleProjectDirectory}/spring-data-mongodb/</micrometer-docs-generator.inputPath>
+		<micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
+		<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/</micrometer-docs-generator.outputPath>
 	</properties>
 
 	<build>
@@ -72,13 +66,13 @@
 					<dependency>
 						<groupId>io.micrometer</groupId>
 						<artifactId>micrometer-docs-generator-spans</artifactId>
-						<version>${micrometer-docs-generator.version}</version>
+						<version>${micrometer-docs-generator}</version>
 						<type>jar</type>
 					</dependency>
 					<dependency>
 						<groupId>io.micrometer</groupId>
 						<artifactId>micrometer-docs-generator-metrics</artifactId>
-						<version>${micrometer-docs-generator.version}</version>
+						<version>${micrometer-docs-generator}</version>
 						<type>jar</type>
 					</dependency>
 				</dependencies>
@@ -105,49 +99,5 @@
 		</plugins>
 
 	</build>
-
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url> <!-- For Snapshots -->
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>  <!-- For Milestones -->
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url> <!-- For Snapshots -->
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-		<pluginRepository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>  <!-- For Milestones -->
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>
