@@ -27,9 +27,11 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.domain.ManagedTypes;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
+import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -79,16 +81,26 @@ public abstract class MongoConfigurationSupport {
 	 * @throws ClassNotFoundException
 	 */
 	@Bean
-	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions)
+	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions, ManagedTypes managedTypes)
 			throws ClassNotFoundException {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(getInitialEntitySet());
+		mappingContext.setManagedTypes(managedTypes);
 		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setAutoIndexCreation(autoIndexCreation());
 
 		return mappingContext;
+	}
+
+	/**
+	 * @return new instance of {@link MongoManagedTypes}.
+	 * @throws ClassNotFoundException
+	 * @since 4.0
+	 */
+	@Bean
+	public MongoManagedTypes managedTypes() throws ClassNotFoundException {
+		return MongoManagedTypes.of(getInitialEntitySet());
 	}
 
 	/**

@@ -105,9 +105,7 @@ public class MappingMongoConverterParserIntegrationTests {
 
 	@Test // DATAMONGO-892
 	void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
-
 		assertThatExceptionOfType(BeanDefinitionParsingException.class).isThrownBy(this::loadNestedBeanConfiguration);
-
 	}
 
 	@Test // DATAMONGO-925, DATAMONGO-928

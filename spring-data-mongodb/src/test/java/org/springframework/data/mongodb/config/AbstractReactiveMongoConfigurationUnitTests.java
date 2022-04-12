@@ -32,6 +32,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -92,7 +93,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 	public void returnsUninitializedMappingContext() throws Exception {
 
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
-		MongoMappingContext context = configuration.mongoMappingContext(configuration.customConversions());
+		MongoMappingContext context = configuration.mongoMappingContext(configuration.customConversions(), MongoManagedTypes.of(Collections.singleton(Entity.class)));
 
 		assertThat(context.getPersistentEntities()).isEmpty();
 		context.initialize();
