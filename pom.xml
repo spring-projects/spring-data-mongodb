@@ -31,6 +31,7 @@
 		<mongo>4.6.1</mongo>
 		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
+		<spring>6.0.0-SNAPSHOT</spring>
 	</properties>
 
 	<developers>

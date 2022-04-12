@@ -23,6 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ImportRuntimeHints;
+import org.springframework.data.aot.hint.AuditingHints;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.domain.AuditorAware;
 
@@ -37,6 +39,7 @@ import org.springframework.data.domain.AuditorAware;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Import(MongoAuditingRegistrar.class)
+@ImportRuntimeHints(AuditingHints.AuditingRuntimeHints.class)
 public @interface EnableMongoAuditing {
 
 	/**

@@ -27,12 +27,12 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.core.NativeDetector;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
@@ -70,6 +70,16 @@ class LazyLoadingProxyFactory {
 		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, callback, source, exceptionTranslator);
 
 		if (!propertyType.isInterface()) {
+
+			if (NativeDetector.inNativeImage()) {
+
+				ProxyFactory factory = new ProxyFactory();
+				factory.addAdvice(interceptor);
+				factory.addInterface(LazyLoadingProxy.class);
+				factory.setTargetClass(propertyType);
+				factory.setProxyTargetClass(true);
+				return factory.getProxy(propertyType.getClassLoader());
+			}
 
 			Factory factory = (Factory) objenesis.newInstance(getEnhancedTypeFor(propertyType));
 			factory.setCallbacks(new Callback[] { interceptor });

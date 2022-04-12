@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.bson.Document;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -104,11 +105,11 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-892
+	@Disabled("Change in FW 6")
 	public void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
 
 		assertThatExceptionOfType(BeanDefinitionParsingException.class).isThrownBy(this::loadNestedBeanConfiguration)
 				.withMessageContaining("Mongo Converter must not be defined as nested bean.");
-
 	}
 
 	@Test // DATAMONGO-925, DATAMONGO-928

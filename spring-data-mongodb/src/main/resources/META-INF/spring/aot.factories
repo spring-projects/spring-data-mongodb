@@ -1,0 +1,4 @@
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+	org.springframework.data.mongodb.aot.DataMongoRuntimeHints
+org.springframework.beans.factory.aot.BeanRegistrationAotProcessor=\
+	org.springframework.data.mongodb.aot.MongoManagedTypesBeanRegistrationAotProcessor

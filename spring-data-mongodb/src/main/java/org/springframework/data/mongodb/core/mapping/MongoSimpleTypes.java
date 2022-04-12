@@ -75,6 +75,15 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(UUID.class);
 		simpleTypes.add(Instant.class);
 
+		simpleTypes.add(BsonValue.class);
+		simpleTypes.add(BsonNumber.class);
+		simpleTypes.add(BsonType.class);
+		simpleTypes.add(BsonArray.class);
+		simpleTypes.add(BsonSymbol.class);
+		simpleTypes.add(BsonUndefined.class);
+		simpleTypes.add(BsonMinKey.class);
+		simpleTypes.add(BsonMaxKey.class);
+		simpleTypes.add(BsonNull.class);
 		simpleTypes.add(BsonBinary.class);
 		simpleTypes.add(BsonBoolean.class);
 		simpleTypes.add(BsonDateTime.class);

@@ -18,18 +18,18 @@ package org.springframework.data.mongodb.config;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.RuntimeBeanReference;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.Ordered;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
 import org.springframework.util.Assert;
 
@@ -40,7 +40,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
+class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport implements Ordered {
 
 	@Override
 	protected Class<? extends Annotation> getAnnotation() {
@@ -52,11 +52,33 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		return "mongoAuditingHandler";
 	}
 
+	String persistentEntitiesBeanName;
+
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
 
 		Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null");
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+
+		if(persistentEntitiesBeanName == null) {
+			if (registry instanceof DefaultListableBeanFactory beanFactory) {
+				for (String bn : beanFactory.getBeanNamesForType(PersistentEntities.class)) {
+					if (bn.startsWith("mongo")) {
+						persistentEntitiesBeanName = bn;
+					}
+				}
+			}
+			if(persistentEntitiesBeanName == null) {
+
+				persistentEntitiesBeanName = BeanDefinitionReaderUtils.uniqueBeanName("mongo.persistent-entities", registry);
+
+				BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(PersistentEntities.class)
+						.setFactoryMethod("of")
+						//.addConstructorArgValue(new RuntimeBeanReference(MongoMappingContext.class))
+						.addConstructorArgReference("mongoMappingContext");
+				registry.registerBeanDefinition(persistentEntitiesBeanName, definition.getBeanDefinition());
+			}
+		}
 
 		super.registerBeanDefinitions(annotationMetadata, registry);
 	}
@@ -67,11 +89,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(configuration, "AuditingConfiguration must not be null");
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
-
-		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(org.springframework.data.repository.config.PersistentEntitiesFactoryBean.class);
-		definition.addConstructorArgValue(new RuntimeBeanReference(MappingContext.class));
-
-		builder.addConstructorArgValue(definition.getBeanDefinition());
+		builder.addConstructorArgReference(persistentEntitiesBeanName);
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
 	}
 
@@ -91,4 +109,9 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 				AuditingEntityCallback.class.getName(), registry);
 	}
 
+
+	@Override
+	public int getOrder() {
+		return Ordered.LOWEST_PRECEDENCE;
+	}
 }
