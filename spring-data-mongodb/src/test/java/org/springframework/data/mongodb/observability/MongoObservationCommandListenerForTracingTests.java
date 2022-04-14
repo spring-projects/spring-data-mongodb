@@ -30,8 +30,8 @@ import org.bson.BsonString;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandTags;
-import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandTags;
+import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
+import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
@@ -163,8 +163,8 @@ class MongoObservationCommandListenerForTracingTests {
 				.hasNameEqualTo("insert user") //
 				.hasKindEqualTo(Span.Kind.CLIENT) //
 				.hasRemoteServiceNameEqualTo("mongodb-database") //
-				.hasTag(HighCardinalityCommandTags.MONGODB_COMMAND.getKey(), "insert") //
-				.hasTag(LowCardinalityCommandTags.MONGODB_COLLECTION.getKey(), "user") //
-				.hasTagWithKey(LowCardinalityCommandTags.MONGODB_CLUSTER_ID.getKey());
+				.hasTag(HighCardinalityCommandKeyNames.MONGODB_COMMAND.getKeyName(), "insert") //
+				.hasTag(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.getKeyName(), "user") //
+				.hasTagWithKey(LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.getKeyName());
 	}
 }

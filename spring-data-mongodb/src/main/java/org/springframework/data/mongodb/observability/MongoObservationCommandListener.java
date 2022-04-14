@@ -37,18 +37,18 @@ import com.mongodb.event.CommandSucceededEvent;
  * @since 4.0.0
  */
 public final class MongoObservationCommandListener
-		implements CommandListener, Observation.TagsProviderAware<MongoHandlerTagsProvider> {
+		implements CommandListener, Observation.KeyValuesProviderAware<MongoHandlerKeyValuesProvider> {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
 	private final ObservationRegistry observationRegistry;
 
-	private MongoHandlerTagsProvider tagsProvider;
+	private MongoHandlerKeyValuesProvider keyValuesProvider;
 
 	public MongoObservationCommandListener(ObservationRegistry observationRegistry) {
 
 		this.observationRegistry = observationRegistry;
-		this.tagsProvider = new DefaultMongoHandlerTagsProvider();
+		this.keyValuesProvider = new DefaultMongoHandlerKeyValuesProvider();
 	}
 
 	@Override
@@ -160,7 +160,7 @@ public final class MongoObservationCommandListener
 		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
 				.observation(this.observationRegistry, observationContext) //
 				.contextualName(observationContext.getContextualName()) //
-				.tagsProvider(this.tagsProvider) //
+				.keyValuesProvider(this.keyValuesProvider) //
 				.start();
 
 		requestContext.put(Observation.class, observation);
@@ -173,7 +173,7 @@ public final class MongoObservationCommandListener
 	}
 
 	@Override
-	public void setTagsProvider(MongoHandlerTagsProvider mongoHandlerTagsProvider) {
-		this.tagsProvider = mongoHandlerTagsProvider;
+	public void setKeyValuesProvider(MongoHandlerKeyValuesProvider mongoHandlerKeyValuesProvider) {
+		this.keyValuesProvider = mongoHandlerKeyValuesProvider;
 	}
 }

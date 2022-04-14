@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 /**
@@ -23,7 +23,7 @@ import io.micrometer.observation.docs.DocumentedObservation;
  *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
- * @since 1.0.0
+ * @since 4.0.0
  */
 enum MongoObservation implements DocumentedObservation {
 
@@ -38,13 +38,13 @@ enum MongoObservation implements DocumentedObservation {
 		}
 
 		@Override
-		public TagKey[] getLowCardinalityTagKeys() {
-			return LowCardinalityCommandTags.values();
+		public KeyName[] getLowCardinalityKeyNames() {
+			return LowCardinalityCommandKeyNames.values();
 		}
 
 		@Override
-		public TagKey[] getHighCardinalityTagKeys() {
-			return HighCardinalityCommandTags.values();
+		public KeyName[] getHighCardinalityKeyNames() {
+			return HighCardinalityCommandKeyNames.values();
 		}
 
 		@Override
@@ -54,16 +54,16 @@ enum MongoObservation implements DocumentedObservation {
 	};
 
 	/**
-	 * Enums related to low cardinality tags for MongoDB commands.
+	 * Enums related to low cardinality key names for MongoDB commands.
 	 */
-	enum LowCardinalityCommandTags implements TagKey {
+	enum LowCardinalityCommandKeyNames implements KeyName {
 
 		/**
 		 * MongoDB collection name.
 		 */
 		MONGODB_COLLECTION {
 			@Override
-			public String getKey() {
+			public String getKeyName() {
 				return "spring.data.mongodb.collection";
 			}
 		},
@@ -73,23 +73,23 @@ enum MongoObservation implements DocumentedObservation {
 		 */
 		MONGODB_CLUSTER_ID {
 			@Override
-			public String getKey() {
+			public String getKeyName() {
 				return "spring.data.mongodb.cluster_id";
 			}
 		}
 	}
 
 	/**
-	 * Enums related to high cardinality tags for MongoDB commands.
+	 * Enums related to high cardinality key names for MongoDB commands.
 	 */
-	enum HighCardinalityCommandTags implements TagKey {
+	enum HighCardinalityCommandKeyNames implements KeyName {
 
 		/**
 		 * MongoDB command value.
 		 */
 		MONGODB_COMMAND {
 			@Override
-			public String getKey() {
+			public String getKeyName() {
 				return "spring.data.mongodb.command";
 			}
 		}
