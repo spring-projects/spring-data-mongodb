@@ -61,7 +61,7 @@ class MongoCustomConversionsUnitTests {
 					registry -> registry.registerConverter(Foo.class, "name", mock(PropertyValueConverter.class)));
 		});
 
-		assertThat(conversions.hasPropertyValueConverter(persistentProperty)).isTrue();
+		assertThat(conversions.getPropertyValueConversions().hasValueConverter(persistentProperty)).isTrue();
 	}
 
 	static class DateToZonedDateTimeConverter implements Converter<Date, ZonedDateTime> {
