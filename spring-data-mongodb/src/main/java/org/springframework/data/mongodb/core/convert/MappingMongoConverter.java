@@ -936,9 +936,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
 
-		if (conversions.hasPropertyValueConverter(prop)) {
+		if (conversions.hasValueConverter(prop)) {
 			accessor.put(prop,
-					conversions.getPropertyValueConverter(prop).write(obj, new MongoConversionContext(prop, this)));
+					conversions.getPropertyValueConversions().getValueConverter(prop)
+							.write(obj, new MongoConversionContext(prop, this)));
 			return;
 		}
 
@@ -1272,9 +1273,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property) {
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
-		if (conversions.hasPropertyValueConverter(property)) {
+		if (conversions.hasValueConverter(property)) {
 			accessor.put(property,
-					conversions.getPropertyValueConverter(property).write(value, new MongoConversionContext(property, this)));
+					conversions.getPropertyValueConversions().getValueConverter(property)
+							.write(value, new MongoConversionContext(property, this)));
 			return;
 		}
 
@@ -1919,8 +1921,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			if (context.conversions.hasPropertyValueConverter(property)) {
-				return (T) context.conversions.getPropertyValueConverter(property).read(value,
+			if (context.conversions.hasValueConverter(property)) {
+				return (T) context.conversions.getPropertyValueConversions().getValueConverter(property).read(value,
 						new MongoConversionContext(property, context.sourceConverter));
 			}
 
