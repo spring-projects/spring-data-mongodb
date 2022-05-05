@@ -162,7 +162,7 @@ calling `get()` before the actual conversion
 
 | `URL`
 | converter
-| `{"website" : "https://projects.spring.io/spring-data-mongodb/" }`
+| `{"website" : "https://spring.io/projects/spring-data-mongodb/" }`
 
 | `Locale`
 | converter
