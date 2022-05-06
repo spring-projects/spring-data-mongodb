@@ -437,6 +437,31 @@ public class QueryMapperUnitTests {
 		assertThat(mappedQuery).containsEntry("sample", "s1");
 	}
 
+	@Test // GH-4033
+	void convertsNestedPathToIdPropertyOfDocumentReferenceCorrectly() {
+
+		Query query = query(where("sample.foo").is("s1"));
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedQuery).containsEntry("sample", "s1");
+	}
+
+	@Test // GH-4033
+	void convertsNestedPathToIdPropertyOfDocumentReferenceCorrectlyWhenItShouldBeConvertedToObjectId() {
+
+		ObjectId id = new ObjectId();
+		Query query = query(where("sample.foo").is(id.toHexString()));
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedQuery.get("sample")).satisfies(it -> {
+
+			assertThat(it).isInstanceOf(ObjectId.class);
+			assertThat(((ObjectId) it).toHexString()).isEqualTo(id.toHexString());
+		});
+	}
+
 	@Test // GH-3853
 	void convertsListDocumentReferenceOnIdPropertyCorrectly() {
 

@@ -373,7 +373,9 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List<Object> newConditions = conditions instanceof Collection ? new ArrayList<>(((Collection<?>) conditions).size()) : new ArrayList<>();
+			List<Object> newConditions = conditions instanceof Collection
+					? new ArrayList<>(((Collection<?>) conditions).size())
+					: new ArrayList<>();
 
 			for (Object condition : conditions) {
 				newConditions.add(isDocument(condition) ? getMappedObject((Document) condition, entity)
@@ -431,8 +433,10 @@ public class QueryMapper {
 
 		Object value = applyFieldTargetTypeHintToValue(documentField, sourceValue);
 
-		if(documentField.getProperty() != null && converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
-			return converter.getCustomConversions().getPropertyValueConversions().getValueConverter(documentField.getProperty())
+		if (documentField.getProperty() != null
+				&& converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
+			return converter.getCustomConversions().getPropertyValueConversions()
+					.getValueConverter(documentField.getProperty())
 					.write(value, new MongoConversionContext(documentField.getProperty(), converter));
 		}
 
@@ -616,7 +620,11 @@ public class QueryMapper {
 	}
 
 	protected Object convertAssociation(Object source, Field field) {
-		return convertAssociation(source, field.getProperty());
+		Object value = convertAssociation(source, field.getProperty());
+		if (value != null && field.isIdField() && field.getFieldType() != value.getClass()) {
+			return convertId(value, field.getFieldType());
+		}
+		return value;
 	}
 
 	/**
@@ -1042,6 +1050,9 @@ public class QueryMapper {
 			return TypeInformation.OBJECT;
 		}
 
+		public Class<?> getFieldType() {
+			return Object.class;
+		}
 	}
 
 	/**
@@ -1168,6 +1179,11 @@ public class QueryMapper {
 			}
 
 			return null;
+		}
+
+		@Override
+		public Class<?> getFieldType() {
+			return property.getFieldType();
 		}
 
 		@Override
