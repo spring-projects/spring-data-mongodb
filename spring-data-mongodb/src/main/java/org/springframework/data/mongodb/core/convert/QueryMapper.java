@@ -617,7 +617,11 @@ public class QueryMapper {
 	}
 
 	protected Object convertAssociation(Object source, Field field) {
-		return convertAssociation(source, field.getProperty());
+		Object value = convertAssociation(source, field.getProperty());
+		if(value != null && field.isIdField() && field.getFieldType() != value.getClass()) {
+			return convertId(value, field.getFieldType());
+		}
+		return value;
 	}
 
 	/**
@@ -1043,6 +1047,9 @@ public class QueryMapper {
 			return ClassTypeInformation.OBJECT;
 		}
 
+		public Class<?> getFieldType() {
+			return Object.class;
+		}
 	}
 
 	/**
@@ -1169,6 +1176,11 @@ public class QueryMapper {
 			}
 
 			return null;
+		}
+
+		@Override
+		public Class<?> getFieldType() {
+			return property.getFieldType();
 		}
 
 		@Override
