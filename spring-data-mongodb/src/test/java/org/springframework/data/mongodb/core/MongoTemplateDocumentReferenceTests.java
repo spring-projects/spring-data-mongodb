@@ -903,6 +903,29 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target).containsEntry("toB", "b");
 	}
 
+	@Test // GH-4041
+	void updateReferenceWithPushToCollection() {
+
+		WithListOfRefs a = new WithListOfRefs();
+		a.id = "a";
+		template.save(a);
+
+		WithListOfRefs b = new WithListOfRefs();
+		b.id = "b";
+		template.save(b);
+
+		template.update(WithListOfRefs.class).matching(where("id").is(a.id))
+				.apply(new Update().push("refs").each(new Object[] { b })).first();
+
+		String collection = template.getCollectionName(WithListOfRefs.class);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(collection).find(Filters.eq("_id", "a")).first();
+		});
+
+		assertThat(target).containsEntry("refs", Collections.singletonList("b"));
+	}
+
 	@Test // GH-3782
 	void updateReferenceHavingCustomizedIdTargetType() {
 
@@ -1583,5 +1606,12 @@ public class MongoTemplateDocumentReferenceTests {
 		public Publisher getPublisher() {
 			return publisher;
 		}
+	}
+
+	@Data
+	public static class WithListOfRefs {
+		@Id private String id;
+
+		@DocumentReference private List<WithListOfRefs> refs;
 	}
 }

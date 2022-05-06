@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.bson.Document;
@@ -33,6 +35,7 @@ import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
@@ -128,7 +131,7 @@ public class UpdateMapper extends QueryMapper {
 	@Override
 	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
-		if(entity != null && entity.isUnwrapped()) {
+		if (entity != null && entity.isUnwrapped()) {
 			return converter.convertToMongoType(source, entity);
 		}
 
@@ -208,8 +211,18 @@ public class UpdateMapper extends QueryMapper {
 					: getMappedSort(sortObject, field.getPropertyEntity());
 		}
 
-		TypeInformation<?> typeHint = field == null ? TypeInformation.OBJECT : field.getTypeHint();
+		if (isAssociationConversionNecessary(field, value)) {
+			if (ObjectUtils.isArray(value) || value instanceof Collection) {
+				List<Object> targetPointers = new ArrayList<>();
+				for (Object val : converter.getConversionService().convert(value, List.class)) {
+					targetPointers.add(getMappedValue(field, val));
+				}
+				return targetPointers;
+			}
+			return super.getMappedValue(field, value);
+		}
 
+		TypeInformation<?> typeHint = field == null ? TypeInformation.OBJECT : field.getTypeHint();
 		return converter.convertToMongoType(value, typeHint);
 	}
 
