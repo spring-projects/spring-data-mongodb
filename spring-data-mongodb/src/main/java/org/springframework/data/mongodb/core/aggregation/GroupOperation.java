@@ -40,6 +40,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Sergey Shcherbakov
+ * @author Sangyong Choi
  * @since 1.3
  * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/group/">MongoDB Aggregation Framework: $group</a>
  */
@@ -132,6 +133,16 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		 */
 		public GroupOperation as(String alias) {
 			return this.groupOperation.and(operation.withAlias(alias));
+		}
+
+		/**
+		 * Allows to specify an alias for the new-operation operation.
+		 *
+		 * @param alias
+		 * @return
+		 */
+		public GroupOperation alias(String alias) {
+			return this.as(alias);
 		}
 	}
 
