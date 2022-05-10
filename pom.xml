@@ -113,6 +113,17 @@
 		</developer>
 	</developers>
 
+	<scm>
+		<connection>scm:git:https://github.com/spring-projects/spring-data-mongodb.git</connection>
+		<developerConnection>scm:git:git@github.com:spring-projects/spring-data-mongodb.git</developerConnection>
+		<url>https://github.com/spring-projects/spring-data-mongodb</url>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/spring-projects/spring-data-mongodb/issues</url>
+	</issueManagement>
+
 	<profiles>
 		<profile>
 			<id>benchmarks</id>
