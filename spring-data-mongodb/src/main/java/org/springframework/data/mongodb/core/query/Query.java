@@ -124,9 +124,10 @@ public class Query {
 	}
 
 	/**
-	 * Set number of documents to skip before returning results.
+	 * Set number of documents to skip before returning results. Use {@literal zero} or a {@literal negative} value to
+	 * avoid skipping.
 	 *
-	 * @param skip
+	 * @param skip number of documents to skip. Use {@literal zero} or a {@literal negative} value to avoid skipping.
 	 * @return this.
 	 */
 	public Query skip(long skip) {
@@ -135,10 +136,10 @@ public class Query {
 	}
 
 	/**
-	 * Limit the number of returned documents to {@code limit}.
-	 * If limit chosen is 0 it returns all documents
+	 * Limit the number of returned documents to {@code limit}. A {@literal zero} or {@literal negative} value is
+	 * considered as unlimited.
 	 *
-	 * @param limit
+	 * @param limit number of documents to return. Use {@literal zero} or {@literal negative} for unlimited.
 	 * @return this.
 	 */
 	public Query limit(int limit) {
@@ -315,7 +316,7 @@ public class Query {
 	}
 
 	/**
-	 * Get the number of documents to skip.
+	 * Get the number of documents to skip. {@literal Zero} or a {@literal negative} value indicates no skip.
 	 *
 	 * @return number of documents to skip
 	 */
@@ -324,7 +325,8 @@ public class Query {
 	}
 
 	/**
-	 * Get the maximum number of documents to be return.
+	 * Get the maximum number of documents to be return. {@literal Zero} or a {@literal negative} value indicates no
+	 * limit.
 	 *
 	 * @return number of documents to return.
 	 */
