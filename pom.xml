@@ -1,488 +1,178 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    	
-  
-  <modelVersion>4.0.0</modelVersion>
-    	
-  
-  <groupId>org.springframework.data</groupId>
-    	
-  
-  <artifactId>spring-data-mongodb-parent</artifactId>
-    	
-  
-  <version>4.0.0-SNAPSHOT</version>
-    	
-  
-  <packaging>pom</packaging>
-    	
-  
-  <name>Spring Data MongoDB</name>
-    	
-  
-  <description>MongoDB support for Spring Data</description>
-    	
-  
-  <url>https://spring.io/projects/spring-data-mongodb</url>
-    	
-  
-  <parent>
-        		
-    
-    <groupId>org.springframework.data.build</groupId>
-        		
-    
-    <artifactId>spring-data-parent</artifactId>
-        		
-    
-    <version>3.0.0-SNAPSHOT</version>
-        	
-  
-  </parent>
-    	
-  
-  <modules>
-        		
-    
-    <module>spring-data-mongodb</module>
-        		
-    
-    <module>spring-data-mongodb-distribution</module>
-        	
-  
-  </modules>
-    	
-  
-  <properties>
-        		
-    
-    <source.level>16</source.level>
-        		
-    
-    <project.type>multi</project.type>
-        		
-    
-    <dist.id>spring-data-mongodb</dist.id>
-        		
-    
-    <springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
-        		
-    
-    <mongo>4.6.0</mongo>
-        		
-    
-    <mongo.reactivestreams>${mongo}</mongo.reactivestreams>
-        		
-    
-    <jmh.version>1.19</jmh.version>
-        	
-  
-  </properties>
-    	
-  
-  <developers>
-        		
-    
-    <developer>
-            			
-      
-      <id>ogierke</id>
-            			
-      
-      <name>Oliver Gierke</name>
-            			
-      
-      <email>ogierke at gopivotal.com</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Project Lead</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>+1</timezone>
-            		
-    
-    </developer>
-        		
-    
-    <developer>
-            			
-      
-      <id>trisberg</id>
-            			
-      
-      <name>Thomas Risberg</name>
-            			
-      
-      <email>trisberg at vmware.com</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Developer</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>-5</timezone>
-            		
-    
-    </developer>
-        		
-    
-    <developer>
-            			
-      
-      <id>mpollack</id>
-            			
-      
-      <name>Mark Pollack</name>
-            			
-      
-      <email>mpollack at gopivotal.com</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Developer</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>-5</timezone>
-            		
-    
-    </developer>
-        		
-    
-    <developer>
-            			
-      
-      <id>jbrisbin</id>
-            			
-      
-      <name>Jon Brisbin</name>
-            			
-      
-      <email>jbrisbin at gopivotal.com</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Developer</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>-6</timezone>
-            		
-    
-    </developer>
-        		
-    
-    <developer>
-            			
-      
-      <id>tdarimont</id>
-            			
-      
-      <name>Thomas Darimont</name>
-            			
-      
-      <email>tdarimont at gopivotal.com</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Developer</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>+1</timezone>
-            		
-    
-    </developer>
-        		
-    
-    <developer>
-            			
-      
-      <id>cstrobl</id>
-            			
-      
-      <name>Christoph Strobl</name>
-            			
-      
-      <email>cstrobl at gopivotal.com</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Developer</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>+1</timezone>
-            		
-    
-    </developer>
-        		
-    
-    <developer>
-            			
-      
-      <id>mpaluch</id>
-            			
-      
-      <name>Mark Paluch</name>
-            			
-      
-      <email>mpaluch at pivotal.io</email>
-            			
-      
-      <organization>Pivotal</organization>
-            			
-      
-      <organizationUrl>https://www.pivotal.io</organizationUrl>
-            			
-      
-      <roles>
-                				
-        
-        <role>Developer</role>
-                			
-      
-      </roles>
-            			
-      
-      <timezone>+1</timezone>
-            		
-    
-    </developer>
-        	
-  
-  </developers>
-    	
-  
-  <scm>
-        		
-    
-    <connection>scm:git:https://github.com/spring-projects/spring-data-mongodb.git</connection>
-        		
-    
-    <developerConnection>scm:git:git@github.com:spring-projects/spring-data-mongodb.git</developerConnection>
-        		
-    
-    <url>https://github.com/spring-projects/spring-data-mongodb</url>
-        	
-  
-  </scm>
-    	
-  
-  <issueManagement>
-        		
-    
-    <system>GitHub</system>
-        		
-    
-    <url>https://github.com/spring-projects/spring-data-mongodb/issues</url>
-        	
-  
-  </issueManagement>
-    	
-  
-  <profiles>
-        		
-    
-    <profile>
-            			
-      
-      <id>benchmarks</id>
-            			
-      
-      <modules>
-                				
-        
-        <module>spring-data-mongodb</module>
-                				
-        
-        <module>spring-data-mongodb-distribution</module>
-                				
-        
-        <module>spring-data-mongodb-benchmarks</module>
-                			
-      
-      </modules>
-            		
-    
-    </profile>
-        	
-  
-  </profiles>
-    	
-  
-  <dependencies>
-        		
-    
-    <!-- MongoDB -->
-        		
-    
-    <dependency>
-            			
-      
-      <groupId>org.mongodb</groupId>
-            			
-      
-      <artifactId>mongodb-driver-core</artifactId>
-            			
-      
-      <version>${mongo}</version>
-            		
-    
-    </dependency>
-        	
-  
-  </dependencies>
-    	
-  
-  <repositories>
-        		
-    
-    <repository>
-            			
-      
-      <id>spring-libs-snapshot</id>
-            			
-      
-      <url>https://repo.spring.io/libs-snapshot</url>
-            			
-      
-      <snapshots>
-                				
-        
-        <enabled>true</enabled>
-                			
-      
-      </snapshots>
-            		
-    
-    </repository>
-        		
-    
-    <repository>
-            			
-      
-      <id>sonatype-libs-snapshot</id>
-            			
-      
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            			
-      
-      <releases>
-                				
-        
-        <enabled>false</enabled>
-                			
-      
-      </releases>
-            			
-      
-      <snapshots>
-                				
-        
-        <enabled>true</enabled>
-                			
-      
-      </snapshots>
-            		
-    
-    </repository>
-        	
-  
-  </repositories>
-    	
-  
-  <pluginRepositories>
-        		
-    
-    <pluginRepository>
-            			
-      
-      <id>spring-plugins-release</id>
-            			
-      
-      <url>https://repo.spring.io/plugins-release</url>
-            		
-    
-    </pluginRepository>
-        		
-    
-    <pluginRepository>
-            			
-      
-      <id>spring-libs-milestone</id>
-            			
-      
-      <url>https://repo.spring.io/libs-milestone</url>
-            		
-    
-    </pluginRepository>
-        	
-  
-  </pluginRepositories>
-    
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-mongodb-parent</artifactId>
+	<version>4.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>Spring Data MongoDB</name>
+	<description>MongoDB support for Spring Data</description>
+	<url>https://spring.io/projects/spring-data-mongodb</url>
+
+	<parent>
+		<groupId>org.springframework.data.build</groupId>
+		<artifactId>spring-data-parent</artifactId>
+		<version>3.0.0-SNAPSHOT</version>
+	</parent>
+
+	<modules>
+		<module>spring-data-mongodb</module>
+		<module>spring-data-mongodb-distribution</module>
+	</modules>
+
+	<properties>
+		<source.level>16</source.level>
+		<project.type>multi</project.type>
+		<dist.id>spring-data-mongodb</dist.id>
+		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
+		<mongo>4.6.0</mongo>
+		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
+		<jmh.version>1.19</jmh.version>
+	</properties>
+
+	<developers>
+		<developer>
+			<id>ogierke</id>
+			<name>Oliver Gierke</name>
+			<email>ogierke at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://pivotal.io</organizationUrl>
+			<roles>
+				<role>Project Lead</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>trisberg</id>
+			<name>Thomas Risberg</name>
+			<email>trisberg at vmware.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-5</timezone>
+		</developer>
+		<developer>
+			<id>mpollack</id>
+			<name>Mark Pollack</name>
+			<email>mpollack at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-5</timezone>
+		</developer>
+		<developer>
+			<id>jbrisbin</id>
+			<name>Jon Brisbin</name>
+			<email>jbrisbin at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
+		<developer>
+			<id>tdarimont</id>
+			<name>Thomas Darimont</name>
+			<email>tdarimont at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>cstrobl</id>
+			<name>Christoph Strobl</name>
+			<email>cstrobl at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>mpaluch</id>
+			<name>Mark Paluch</name>
+			<email>mpaluch at pivotal.io</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://www.pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:https://github.com/spring-projects/spring-data-mongodb.git</connection>
+		<developerConnection>scm:git:git@github.com:spring-projects/spring-data-mongodb.git</developerConnection>
+		<url>https://github.com/spring-projects/spring-data-mongodb</url>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/spring-projects/spring-data-mongodb/issues</url>
+	</issueManagement>
+
+	<profiles>
+		<profile>
+			<id>benchmarks</id>
+			<modules>
+				<module>spring-data-mongodb</module>
+				<module>spring-data-mongodb-distribution</module>
+				<module>spring-data-mongodb-benchmarks</module>
+			</modules>
+		</profile>
+	</profiles>
+
+	<dependencies>
+		<!-- MongoDB -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-core</artifactId>
+			<version>${mongo}</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>spring-libs-snapshot</id>
+			<url>https://repo.spring.io/libs-snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sonatype-libs-snapshot</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-plugins-release</id>
+			<url>https://repo.spring.io/plugins-release</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>spring-libs-milestone</id>
+			<url>https://repo.spring.io/libs-milestone</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 </project>
