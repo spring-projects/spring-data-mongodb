@@ -432,8 +432,9 @@ public class QueryMapper {
 
 		Object value = applyFieldTargetTypeHintToValue(documentField, sourceValue);
 
-		if(documentField.getProperty() != null && converter.getCustomConversions().hasPropertyValueConverter(documentField.getProperty())) {
-			return converter.getCustomConversions().getPropertyValueConverter(documentField.getProperty()).write(value, new MongoConversionContext(documentField.getProperty(), converter));
+		if(documentField.getProperty() != null && converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
+			return converter.getCustomConversions().getPropertyValueConversions().getValueConverter(documentField.getProperty())
+					.write(value, new MongoConversionContext(documentField.getProperty(), converter));
 		}
 
 		if (documentField.isIdField() && !documentField.isAssociation()) {

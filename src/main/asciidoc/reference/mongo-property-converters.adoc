@@ -1,11 +1,11 @@
 [[mongo.property-converters]]
 == Property Converters - Mapping specific fields
 
-While <<mongo.custom-converters, type-based conversion>> already offers ways to influence the conversion and representation of certain types within the target store it has its limitations when only certain values or properties of a particular type should be considered for conversion.
-Property-based converters allow configuring conversion rules on a per-property basis, either declarative, via `@ValueConverter`, or programmatic by registering a `PropertyValueConverter` for a specific property.
+While <<mongo.custom-converters, type-based conversion>> already offers ways to influence the conversion and representation of certain types within the target store, it has limitations when only certain values or properties of a particular type should be considered for conversion.
+Property-based converters allow configuring conversion rules on a per-property basis, either declaratively (via `@ValueConverter`) or programmatically (by registering a `PropertyValueConverter` for a specific property).
 
-A `PropertyValueConverter` can transform a given value into its store representation (**write**) and back (**read**) as shown in the snippet below.
-The additional `ValueConversionContext` provides additional information, such as mapping metadata and direct `read`/`write` methods.
+A `PropertyValueConverter` can transform a given value into its store representation (write) and back (read) as the following listing shows.
+The additional `ValueConversionContext` provides additional information, such as mapping metadata and direct `read` and `write` methods.
 
 .A simple PropertyValueConverter
 ====
@@ -26,18 +26,18 @@ class ReversingValueConverter implements PropertyValueConverter<String, String, 
 ----
 ====
 
-`PropertyValueConverter` instances can be obtained via `CustomConversions#getPropertyValueConverter(…)` delegating to `PropertyValueConversions`, typically using a `PropertyValueConverterFactory` providing the actual converter.
-Depending on the applications needs, multiple instances of `PropertyValueConverterFactory` can be chained or decorated, for example to apply caching.
-By default, a caching implementation is used that is capable of serving types with a default constructor or enum values.
-A set of predefined factories is available through `PropertyValueConverterFactory` factory methods.
-Use `PropertyValueConverterFactory.beanFactoryAware(…)` to obtain a `PropertyValueConverter` instances from an `ApplicationContext`.
+You can obtain `PropertyValueConverter` instances from `CustomConversions#getPropertyValueConverter(…)` by delegating to `PropertyValueConversions`, typically by using a `PropertyValueConverterFactory` to provide the actual converter.
+Depending on your application's needs, you can chain or decorate multiple instances of `PropertyValueConverterFactory` -- for example, to apply caching.
+By default, Spring Data MongoDB uses a caching implementation that can serve types with a default constructor or enum values.
+A set of predefined factories is available through the factory methods in `PropertyValueConverterFactory`.
+You can use `PropertyValueConverterFactory.beanFactoryAware(…)` to obtain a `PropertyValueConverter` instance from an `ApplicationContext`.
 
 You can change the default behavior through `ConverterConfiguration`.
 
 [[mongo.property-converters.declarative]]
 === Declarative Value Converter
 
-The most straight forward usage of a `PropertyValueConverter` is by annotating properties with the `@ValueConverter` annotation that defines the converter type.
+The most straight forward usage of a `PropertyValueConverter` is by annotating properties with the `@ValueConverter` annotation that defines the converter type:
 
 .Declarative PropertyValueConverter
 ====
@@ -54,8 +54,8 @@ class Person {
 [[mongo.property-converters.programmatic]]
 === Programmatic Value Converter Registration
 
-Programmatic registration registers `PropertyValueConverter` instances for properties within an entity model using a `PropertyValueConverterRegistrar` as shown below.
-The difference to declarative registration is that programmatic registration happens entirely outside of the entity model.
+Programmatic registration registers `PropertyValueConverter` instances for properties within an entity model by using a `PropertyValueConverterRegistrar`, as the following example shows.
+The difference between declarative registration and programmatic registration is that programmatic registration happens entirely outside of the entity model.
 Such an approach is useful if you cannot or do not want to annotate the entity model.
 
 .Programmatic PropertyValueConverter registration
@@ -76,25 +76,22 @@ registrar.registerConverter(Person.class, Person::getSsn())                     
 <2> Type safe variant that allows to register a converter and its conversion functions.
 ====
 
-[WARNING]
-====
-Dot-notation (such as `registerConverter(Person.class, "address.street", …)`) nagivating across properties into subdocuments is *not* supported when registering converters.
-====
+WARNING: Dot notation (such as `registerConverter(Person.class, "address.street", …)`) for nagivating across properties into subdocuments is *not* supported when registering converters.
 
 [[mongo.property-converters.value-conversions]]
 === MongoDB property value conversions
 
-The above sections outlined the purpose an overall structure of `PropertyValueConverters`.
-This section will focus on MongoDB specific aspects.
+The preceding sections outlined the purpose an overall structure of `PropertyValueConverters`.
+This section focuses on MongoDB specific aspects.
 
 ==== MongoValueConverter and MongoConversionContext
 
-`MongoValueConverter` offers a pre typed `PropertyValueConverter` interface leveraging the `MongoConversionContext`.
+`MongoValueConverter` offers a pre-typed `PropertyValueConverter` interface that uses `MongoConversionContext`.
 
 ==== MongoCustomConversions configuration
 
-`MongoCustomConversions` are by default capable of handling declarative value converters depending on the configured `PropertyValueConverterFactory`.
-`MongoConverterConfigurationAdapter` is there to help set up programmatic value conversions or define the `PropertyValueConverterFactory` to be used.
+By default, `MongoCustomConversions` can handle declarative value converters, depending on the configured `PropertyValueConverterFactory`.
+`MongoConverterConfigurationAdapter` helps to set up programmatic value conversions or define the `PropertyValueConverterFactory` to be used.
 
 .Configuration Sample
 ====

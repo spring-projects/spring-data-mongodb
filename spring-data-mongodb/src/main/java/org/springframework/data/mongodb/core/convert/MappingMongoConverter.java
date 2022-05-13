@@ -35,6 +35,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
@@ -935,9 +936,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
 
-		if (conversions.hasPropertyValueConverter(prop)) {
+		if (conversions.hasValueConverter(prop)) {
 			accessor.put(prop,
-					conversions.getPropertyValueConverter(prop).write(obj, new MongoConversionContext(prop, this)));
+					conversions.getPropertyValueConversions().getValueConverter(prop)
+							.write(obj, new MongoConversionContext(prop, this)));
 			return;
 		}
 
@@ -1271,9 +1273,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property) {
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
-		if (conversions.hasPropertyValueConverter(property)) {
+		if (conversions.hasValueConverter(property)) {
 			accessor.put(property,
-					conversions.getPropertyValueConverter(property).write(value, new MongoConversionContext(property, this)));
+					conversions.getPropertyValueConversions().getValueConverter(property)
+							.write(value, new MongoConversionContext(property, this)));
 			return;
 		}
 
@@ -1918,8 +1921,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			if (context.conversions.hasPropertyValueConverter(property)) {
-				return (T) context.conversions.getPropertyValueConverter(property).read(value,
+			if (context.conversions.hasValueConverter(property)) {
+				return (T) context.conversions.getPropertyValueConversions().getValueConverter(property).read(value,
 						new MongoConversionContext(property, context.sourceConverter));
 			}
 
@@ -2130,6 +2133,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@Override
 		public org.springframework.data.util.TypeInformation<? extends S> specialize(ClassTypeInformation type) {
 			return delegate.specialize(type);
+		}
+
+		@Override
+		public TypeDescriptor toTypeDescriptor() {
+			return delegate.toTypeDescriptor();
 		}
 	}
 

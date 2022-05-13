@@ -10,7 +10,7 @@
 
 	<name>Spring Data MongoDB</name>
 	<description>MongoDB support for Spring Data</description>
-	<url>https://projects.spring.io/spring-data-mongodb</url>
+	<url>https://spring.io/projects/spring-data-mongodb</url>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -28,7 +28,7 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
-		<mongo>4.5.0</mongo>
+		<mongo>4.6.0</mongo>
 		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
@@ -113,6 +113,17 @@
 		</developer>
 	</developers>
 
+	<scm>
+		<connection>scm:git:https://github.com/spring-projects/spring-data-mongodb.git</connection>
+		<developerConnection>scm:git:git@github.com:spring-projects/spring-data-mongodb.git</developerConnection>
+		<url>https://github.com/spring-projects/spring-data-mongodb</url>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/spring-projects/spring-data-mongodb/issues</url>
+	</issueManagement>
+
 	<profiles>
 		<profile>
 			<id>benchmarks</id>
@@ -137,6 +148,9 @@
 		<repository>
 			<id>spring-libs-snapshot</id>
 			<url>https://repo.spring.io/libs-snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</repository>
 		<repository>
 			<id>sonatype-libs-snapshot</id>
