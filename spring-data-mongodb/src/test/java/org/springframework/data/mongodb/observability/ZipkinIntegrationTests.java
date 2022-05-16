@@ -90,11 +90,10 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 	}
 
 	@Override
-	public BiConsumer<BuildingBlocks, Deque<ObservationHandler>> customizeObservationHandlers() {
+	public BiConsumer<BuildingBlocks, Deque<ObservationHandler<? extends Observation.Context>>> customizeObservationHandlers() {
 
-		return (buildingBlocks, observationHandlers) -> {
-			observationHandlers.addLast(new MongoTracingObservationHandler(buildingBlocks.getTracer()));
-		};
+		return (buildingBlocks, observationHandlers) -> observationHandlers
+				.addLast(new MongoTracingObservationHandler(buildingBlocks.getTracer()));
 	}
 
 	@Override
