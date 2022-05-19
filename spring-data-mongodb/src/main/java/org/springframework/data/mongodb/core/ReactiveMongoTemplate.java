@@ -1448,7 +1448,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					.format("Inserting Document containing fields: " + dbDoc.keySet() + " in collection: " + collectionName));
 		}
 
-		Document document = new Document(dbDoc);
+		MappedDocument document = MappedDocument.of(dbDoc);
+		queryOperations.createInsertContext(document).prepareId(entityClass);
 
 		Flux<InsertOneResult> execute = execute(collectionName, collection -> {
 
@@ -1458,10 +1459,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
 
-			return collectionToUse.insertOne(document);
+			return collectionToUse.insertOne(document.getDocument());
 		});
 
-		return Flux.from(execute).last().map(success -> MappedDocument.of(document).getId());
+		return Flux.from(execute).last().map(success -> document.getId());
 	}
 
 	protected Flux<ObjectId> insertDocumentList(String collectionName, List<Document> dbDocList) {
@@ -1525,7 +1526,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			Publisher<?> publisher;
 			if (!mapped.hasId()) {
-				publisher = collectionToUse.insertOne(document);
+				publisher = collectionToUse.insertOne(queryOperations.createInsertContext(mapped).prepareId(entityClass).getDocument());
 			} else {
 
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);

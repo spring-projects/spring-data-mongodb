@@ -1443,18 +1443,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					collectionName));
 		}
 
+		MappedDocument mappedDocument = queryOperations.createInsertContext(MappedDocument.of(document))
+				.prepareId(entityClass);
+
 		return execute(collectionName, collection -> {
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName, entityClass,
-					document, null);
+					mappedDocument.getDocument(), null);
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			if (writeConcernToUse == null) {
-				collection.insertOne(document);
+				collection.insertOne(mappedDocument.getDocument());
 			} else {
-				collection.withWriteConcern(writeConcernToUse).insertOne(document);
+				collection.withWriteConcern(writeConcernToUse).insertOne(mappedDocument.getDocument());
 			}
 
-			return operations.forEntity(document).getId();
+			return operations.forEntity(mappedDocument.getDocument()).getId();
 		});
 	}
 
@@ -1505,7 +1508,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					: collection.withWriteConcern(writeConcernToUse);
 
 			if (!mapped.hasId()) {
-				collectionToUse.insertOne(dbDoc);
+
+				mapped = queryOperations.createInsertContext(mapped).prepareId(mappingContext.getPersistentEntity(entityClass));
+				collectionToUse.insertOne(mapped.getDocument());
 			} else {
 
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);

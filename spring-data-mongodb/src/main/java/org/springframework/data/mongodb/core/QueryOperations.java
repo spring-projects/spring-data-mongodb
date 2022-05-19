@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
-
+import org.bson.types.ObjectId;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.ShardKey;
@@ -105,6 +106,14 @@ class QueryOperations {
 		this.codecRegistryProvider = codecRegistryProvider;
 		this.mappingContext = queryMapper.getMappingContext();
 		this.aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
+	}
+
+	InsertContext createInsertContext(Document source) {
+		return createInsertContext(MappedDocument.of(source));
+	}
+
+	InsertContext createInsertContext(MappedDocument mappedDocument) {
+		return new InsertContext(mappedDocument);
 	}
 
 	/**
@@ -228,6 +237,57 @@ class QueryOperations {
 	}
 
 	/**
+	 * {@link InsertContext} encapsulates common tasks required to interact with {@link Document} to be inserted.
+	 *
+	 * @since 3.4.3
+	 */
+	class InsertContext {
+
+		private final MappedDocument source;
+
+		private InsertContext(MappedDocument source) {
+			this.source = source;
+		}
+
+		/**
+		 * Prepare the {@literal _id} field. May generate a new {@literal id} value and convert it to the id properties
+		 * {@link MongoPersistentProperty#getFieldType() target type}.
+		 *
+		 * @param type must not be {@literal null}.
+		 * @param <T>
+		 * @return the {@link MappedDocument} containing the changes.
+		 * @see #prepareId(MongoPersistentEntity)
+		 */
+		<T> MappedDocument prepareId(Class<T> type) {
+			return prepareId(mappingContext.getPersistentEntity(type));
+		}
+
+		/**
+		 * Prepare the {@literal _id} field. May generate a new {@literal id} value and convert it to the id properties
+		 * {@link MongoPersistentProperty#getFieldType() target type}.
+		 *
+		 * @param entity can be {@literal null}.
+		 * @param <T>
+		 * @return the {@link MappedDocument} containing the changes.
+		 */
+		<T> MappedDocument prepareId(@Nullable MongoPersistentEntity<T> entity) {
+
+			if (entity == null) {
+				return source;
+			}
+
+			MongoPersistentProperty idProperty = entity.getIdProperty();
+			if (idProperty != null
+					&& (idProperty.hasExplicitWriteTarget() || idProperty.isAnnotationPresent(MongoId.class))) {
+				if (!ClassUtils.isAssignable(ObjectId.class, idProperty.getFieldType())) {
+					source.updateId(queryMapper.convertId(new ObjectId(), idProperty.getFieldType()));
+				}
+			}
+			return source;
+		}
+	}
+
+	/**
 	 * {@link QueryContext} encapsulates common tasks required to convert a {@link Query} into its MongoDB document
 	 * representation, mapping field names, as well as determining and applying {@link Collation collations}.
 	 *
@@ -288,8 +348,7 @@ class QueryOperations {
 			return queryMapper.getMappedObject(getQueryObject(), entity);
 		}
 
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
-				EntityProjection<?, ?> projection) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, EntityProjection<?, ?> projection) {
 
 			Document fields = evaluateFields(entity);
 
@@ -402,8 +461,7 @@ class QueryOperations {
 		}
 
 		@Override
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
-				EntityProjection<?, ?> projection) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, EntityProjection<?, ?> projection) {
 			return getMappedFields(entity);
 		}
 
