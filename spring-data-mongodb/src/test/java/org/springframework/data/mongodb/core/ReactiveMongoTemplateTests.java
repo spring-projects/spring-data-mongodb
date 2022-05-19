@@ -72,6 +72,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -118,7 +119,8 @@ public class ReactiveMongoTemplateTests {
 	void setUp() {
 
 		template
-				.flush(Person.class, MyPerson.class, Sample.class, Venue.class, PersonWithVersionPropertyOfTypeInteger.class) //
+				.flush(Person.class, MyPerson.class, Sample.class, Venue.class, PersonWithVersionPropertyOfTypeInteger.class,
+						RawStringId.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -179,6 +181,42 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 
 		assertThat(person.getId()).isNotNull();
+	}
+
+	@Test // GH-4026
+	void saveShouldGenerateNewIdOfTypeIfExplicitlyDefined() {
+
+		RawStringId source = new RawStringId();
+		source.value = "new value";
+
+		template.save(source).then().as(StepVerifier::create).verifyComplete();
+
+		template.execute(RawStringId.class, collection -> {
+			return collection.find(new org.bson.Document()).first();
+		}) //
+				.map(it -> it.get("_id")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(id -> {
+					assertThat(id).isInstanceOf(String.class);
+				}).verifyComplete();
+	}
+
+	@Test // GH-4026
+	void insertShouldGenerateNewIdOfTypeIfExplicitlyDefined() {
+
+		RawStringId source = new RawStringId();
+		source.value = "new value";
+
+		template.insert(source).then().as(StepVerifier::create).verifyComplete();
+
+		template.execute(RawStringId.class, collection -> {
+					return collection.find(new org.bson.Document()).first();
+				}) //
+				.map(it -> it.get("_id")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(id -> {
+					assertThat(id).isInstanceOf(String.class);
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
@@ -1821,4 +1859,12 @@ public class ReactiveMongoTemplateTests {
 	interface MyPersonProjection {
 		String getName();
 	}
+
+	@Data
+	static class RawStringId {
+
+		@MongoId String id;
+		String value;
+	}
+
 }

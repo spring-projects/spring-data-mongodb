@@ -98,6 +98,16 @@ public class MappedDocument {
 	}
 
 	/**
+	 * Updates the documents {@link #ID_FIELD}.
+	 *
+	 * @param value the {@literal _id} value to set.
+	 * @since 3.4.3
+	 */
+	public void updateId(Object value) {
+		document.put(ID_FIELD, value);
+	}
+
+	/**
 	 * An {@link UpdateDefinition} that indicates that the {@link #getUpdateObject() update object} has already been
 	 * mapped to the specific domain type.
 	 *

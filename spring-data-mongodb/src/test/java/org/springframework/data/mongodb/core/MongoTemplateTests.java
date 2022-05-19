@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.AfterEach;
@@ -3656,6 +3657,38 @@ public class MongoTemplateTests {
 
 		RawStringId target = template.findOne(query(where("id").is(source.id)), RawStringId.class);
 		assertThat(target).isEqualTo(source);
+	}
+
+	@Test // GH-4026
+	void saveShouldGenerateNewIdOfTypeIfExplicitlyDefined() {
+
+		RawStringId source = new RawStringId();
+		source.value = "new value";
+
+		template.save(source);
+
+		template.execute(RawStringId.class, collection -> {
+
+			org.bson.Document first = collection.find(new org.bson.Document()).first();
+			assertThat(first.get("_id")).isInstanceOf(String.class);
+			return null;
+		});
+	}
+
+	@Test // GH-4026
+	void insertShouldGenerateNewIdOfTypeIfExplicitlyDefined() {
+
+		RawStringId source = new RawStringId();
+		source.value = "new value";
+
+		template.insert(source);
+
+		template.execute(RawStringId.class, collection -> {
+
+			org.bson.Document first = collection.find(new org.bson.Document()).first();
+			assertThat(first.get("_id")).isInstanceOf(String.class);
+			return null;
+		});
 	}
 
 	@Test // DATAMONGO-2193
