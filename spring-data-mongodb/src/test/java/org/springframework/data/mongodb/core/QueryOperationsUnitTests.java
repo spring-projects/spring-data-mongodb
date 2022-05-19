@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +34,10 @@ import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggrega
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * Unit tests for {@link QueryOperations}.
@@ -109,7 +114,99 @@ class QueryOperationsUnitTests {
 		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(TypeBasedAggregationOperationContext.class);
 	}
 
+	@Test // GH-4026
+	void insertContextDoesNotAddIdIfNoPersistentEntityCanBeFound() {
+
+		assertThat(queryOperations.createInsertContext(new Document("value", "one")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("value", "one"));
+				});
+	}
+
+	@Test // GH-4026
+	void insertContextDoesNotAddIdIfNoIdPropertyCanBeFound() {
+
+		MongoPersistentEntity<Person> entity = mock(MongoPersistentEntity.class);
+		when(entity.getIdProperty()).thenReturn(null);
+		when(mappingContext.getPersistentEntity(eq(Person.class))).thenReturn((MongoPersistentEntity) entity);
+
+		assertThat(queryOperations.createInsertContext(new Document("value", "one")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("value", "one"));
+				});
+	}
+
+	@Test // GH-4026
+	void insertContextDoesNotAddConvertedIdForNonExplicitFieldTypes() {
+
+		MongoPersistentEntity<Person> entity = mock(MongoPersistentEntity.class);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(entity.getIdProperty()).thenReturn(property);
+		when(property.hasExplicitWriteTarget()).thenReturn(false);
+		doReturn(entity).when(mappingContext).getPersistentEntity(eq(Person.class));
+
+		assertThat(queryOperations.createInsertContext(new Document("value", "one")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("value", "one"));
+				});
+	}
+
+	@Test // GH-4026
+	void insertContextAddsConvertedIdForExplicitFieldTypes() {
+
+		MongoPersistentEntity<Person> entity = mock(MongoPersistentEntity.class);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(entity.getIdProperty()).thenReturn(property);
+		when(property.hasExplicitWriteTarget()).thenReturn(true);
+		doReturn(String.class).when(property).getFieldType();
+		doReturn(entity).when(mappingContext).getPersistentEntity(eq(Person.class));
+
+		when(queryMapper.convertId(any(), eq(String.class))).thenReturn("&#9774;");
+
+		assertThat(queryOperations.createInsertContext(new Document("value", "one")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("value", "one").append("_id", "&#9774;"));
+				});
+	}
+
+	@Test // GH-4026
+	void insertContextAddsConvertedIdForMongoIdTypes() {
+
+		MongoPersistentEntity<Person> entity = mock(MongoPersistentEntity.class);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(entity.getIdProperty()).thenReturn(property);
+		when(property.hasExplicitWriteTarget()).thenReturn(false);
+		when(property.isAnnotationPresent(eq(MongoId.class))).thenReturn(true);
+		doReturn(String.class).when(property).getFieldType();
+		doReturn(entity).when(mappingContext).getPersistentEntity(eq(Person.class));
+
+		when(queryMapper.convertId(any(), eq(String.class))).thenReturn("&#9774;");
+
+		assertThat(queryOperations.createInsertContext(new Document("value", "one")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("value", "one").append("_id", "&#9774;"));
+				});
+	}
+
+	@Test // GH-4026
+	void insertContextDoesNotAddConvertedIdForMongoIdTypesTargetingObjectId() {
+
+		MongoPersistentEntity<Person> entity = mock(MongoPersistentEntity.class);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		when(entity.getIdProperty()).thenReturn(property);
+		when(property.hasExplicitWriteTarget()).thenReturn(false);
+		when(property.isAnnotationPresent(eq(MongoId.class))).thenReturn(true);
+		doReturn(ObjectId.class).when(property).getFieldType();
+		doReturn(entity).when(mappingContext).getPersistentEntity(eq(Person.class));
+
+		assertThat(queryOperations.createInsertContext(new Document("value", "one")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("value", "one"));
+				});
+	}
+
 	static class Person {
 
 	}
+
 }

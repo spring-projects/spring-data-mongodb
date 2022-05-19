@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -83,6 +84,7 @@ import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -1392,18 +1394,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					collectionName));
 		}
 
+		MappedDocument mappedDocument = queryOperations.createInsertContext(MappedDocument.of(document)).prepareId(entityClass);
+
 		return execute(collectionName, collection -> {
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName, entityClass,
-					document, null);
+					mappedDocument.getDocument(), null);
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			if (writeConcernToUse == null) {
-				collection.insertOne(document);
+				collection.insertOne(mappedDocument.getDocument());
 			} else {
-				collection.withWriteConcern(writeConcernToUse).insertOne(document);
+				collection.withWriteConcern(writeConcernToUse).insertOne(mappedDocument.getDocument());
 			}
 
-			return operations.forEntity(document).getId();
+			return operations.forEntity(mappedDocument.getDocument()).getId();
 		});
 	}
 
@@ -1454,7 +1458,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					: collection.withWriteConcern(writeConcernToUse);
 
 			if (!mapped.hasId()) {
-				collectionToUse.insertOne(dbDoc);
+
+				mapped = queryOperations.createInsertContext(mapped).prepareId(mappingContext.getPersistentEntity(entityClass));
+				collectionToUse.insertOne(mapped.getDocument());
 			} else {
 
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
