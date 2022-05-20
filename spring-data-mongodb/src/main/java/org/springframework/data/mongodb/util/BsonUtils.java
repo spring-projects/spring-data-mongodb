@@ -35,6 +35,7 @@ import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
 import org.bson.types.ObjectId;
@@ -81,18 +82,36 @@ public class BsonUtils {
 	 * @return
 	 */
 	public static Map<String, Object> asMap(Bson bson) {
+		return asMap(bson, MongoClientSettings.getDefaultCodecRegistry());
+	}
 
-		if (bson instanceof Document) {
-			return (Document) bson;
-		}
-		if (bson instanceof BasicDBObject) {
-			return ((BasicDBObject) bson);
-		}
-		if (bson instanceof DBObject) {
-			return ((DBObject) bson).toMap();
+	/**
+	 * Return the {@link Bson} object as {@link Map}. Depending on the input type, the return value can be either a casted
+	 * version of {@code bson} or a converted (detached from the original value) using the given {@link CodecRegistry} to
+	 * obtain {@link org.bson.codecs.Codec codecs} that might be required for conversion.
+	 * 
+	 * @param bson can be {@literal null}.
+	 * @param codecRegistry must not be {@literal null}.
+	 * @return never {@literal null}. Returns an empty {@link Map} if input {@link Bson} is {@literal null}.
+	 * @since 4.0
+	 */
+	public static Map<String, Object> asMap(@Nullable Bson bson, CodecRegistry codecRegistry) {
+
+		if (bson == null) {
+			return Collections.emptyMap();
 		}
 
-		return (Map) bson.toBsonDocument(Document.class, MongoClientSettings.getDefaultCodecRegistry());
+		if (bson instanceof Document document) {
+			return document;
+		}
+		if (bson instanceof BasicDBObject dbo) {
+			return dbo;
+		}
+		if (bson instanceof DBObject dbo) {
+			return dbo.toMap();
+		}
+
+		return new Document((Map) bson.toBsonDocument(Document.class, codecRegistry));
 	}
 
 	/**
@@ -104,12 +123,26 @@ public class BsonUtils {
 	 * @since 3.2.5
 	 */
 	public static Document asDocument(Bson bson) {
+		return asDocument(bson, MongoClientSettings.getDefaultCodecRegistry());
+	}
 
-		if (bson instanceof Document) {
-			return (Document) bson;
+	/**
+	 * Return the {@link Bson} object as {@link Document}. Depending on the input type, the return value can be either a
+	 * casted version of {@code bson} or a converted (detached from the original value) using the given
+	 * {@link CodecRegistry} to obtain {@link org.bson.codecs.Codec codecs} that might be required for conversion.
+	 *
+	 * @param bson
+	 * @param codecRegistry must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.0
+	 */
+	public static Document asDocument(Bson bson, CodecRegistry codecRegistry) {
+
+		if (bson instanceof Document document) {
+			return document;
 		}
 
-		Map<String, Object> map = asMap(bson);
+		Map<String, Object> map = asMap(bson, codecRegistry);
 
 		if (map instanceof Document) {
 			return (Document) map;
@@ -413,7 +446,7 @@ public class BsonUtils {
 	 */
 	public static boolean isJsonDocument(@Nullable String value) {
 
-		if(!StringUtils.hasText(value)) {
+		if (!StringUtils.hasText(value)) {
 			return false;
 		}
 

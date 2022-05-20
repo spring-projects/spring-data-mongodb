@@ -19,6 +19,7 @@ import java.util.Collection;
 
 import org.bson.Document;
 
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExpressionFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
@@ -91,5 +92,10 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	@Override
 	public Fields getFields(Class<?> type) {
 		return delegate.getFields(type);
+	}
+
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return delegate.getCodecRegistry();
 	}
 }

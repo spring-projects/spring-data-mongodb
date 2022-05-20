@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.util.aggregation;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -71,5 +72,10 @@ public class TestAggregationContext implements AggregationOperationContext {
 	@Override
 	public FieldReference getReference(String name) {
 		return delegate.getReference(name);
+	}
+
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return delegate.getCodecRegistry();
 	}
 }

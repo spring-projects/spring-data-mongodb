@@ -20,11 +20,15 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
+
+import com.mongodb.MongoClientSettings;
 
 /**
  * The context for an {@link AggregationOperation}.
@@ -33,7 +37,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Christoph Strobl
  * @since 1.3
  */
-public interface AggregationOperationContext {
+public interface AggregationOperationContext extends CodecRegistryProvider {
 
 	/**
 	 * Returns the mapped {@link Document}, potentially converting the source considering mapping metadata etc.
@@ -113,5 +117,10 @@ public interface AggregationOperationContext {
 	 */
 	default AggregationOperationContext continueOnMissingFieldReference() {
 		return this;
+	}
+
+	@Override
+	default CodecRegistry getCodecRegistry() {
+		return MongoClientSettings.getDefaultCodecRegistry();
 	}
 }

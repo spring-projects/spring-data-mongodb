@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -140,5 +141,10 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 */
 	AggregationOperationContext getRootContext() {
 		return rootContext;
+	}
+
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return getRootContext().getCodecRegistry();
 	}
 }

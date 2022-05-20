@@ -126,6 +126,26 @@ At the time of this writing, we provide support for the following Aggregation Op
 
 Note that the aggregation operations not listed here are currently not supported by Spring Data MongoDB. Comparison aggregation operators are expressed as `Criteria` expressions.
 
+[TIP]
+====
+Unsupported aggregation operations/operators can be provided by implementing either `AggregationOperation` or `AggregationExpression`.
+`Aggregation.stage` is a shortcut for registering a pipeline stage by providing its JSON or `Bson` representation.
+
+[source,java]
+----
+Aggregation.stage("""
+    { $search : {
+        "near": {
+          "path": "released",
+          "origin": { "$date": { "$numberLong": "..." } } ,
+          "pivot": 7
+        }
+      }
+    }
+""");
+----
+====
+
 [[mongo.aggregation.projection]]
 === Projection Expressions
 

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder;
@@ -236,6 +237,40 @@ public class Aggregation {
 	 */
 	public static AddFieldsOperationBuilder addFields() {
 		return AddFieldsOperation.builder();
+	}
+
+	/**
+	 * Creates a new {@link AggregationOperation} taking the given {@link Bson bson value} as is. <br />
+	 *
+	 * <pre class="code">
+	 * Aggregation.stage(Aggregates.search(exists(fieldPath("..."))));
+	 * </pre>
+	 *
+	 * Field mapping against a potential domain type or previous aggregation stages will not happen.
+	 *
+	 * @param aggregationOperation the must not be {@literal null}.
+	 * @return new instance of {@link AggregationOperation}.
+	 * @since 4.0
+	 */
+	public static AggregationOperation stage(Bson aggregationOperation) {
+		return new BasicAggregationOperation(aggregationOperation);
+	}
+
+	/**
+	 * Creates a new {@link AggregationOperation} taking the given {@link String json value} as is. <br />
+	 *
+	 * <pre class="code">
+	 * Aggregation.stage("{ $search : { near : { path : 'released' , origin : ... } } }");
+	 * </pre>
+	 *
+	 * Field mapping against a potential domain type or previous aggregation stages will not happen.
+	 *
+	 * @param json the JSON representation of the pipeline stage. Must not be {@literal null}.
+	 * @return new instance of {@link AggregationOperation}.
+	 * @since 4.0
+	 */
+	public static AggregationOperation stage(String json) {
+		return new BasicAggregationOperation(json);
 	}
 
 	/**
