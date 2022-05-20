@@ -1486,4 +1486,8 @@ public class QueryMapper {
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
+
+	public MongoConverter getConverter() {
+		return converter;
+	}
 }

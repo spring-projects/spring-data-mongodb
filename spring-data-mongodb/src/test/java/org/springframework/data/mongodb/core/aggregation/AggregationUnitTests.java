@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,9 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
+
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Projections;
 
 /**
  * Unit tests for {@link Aggregation}.
@@ -599,31 +603,51 @@ public class AggregationUnitTests {
 		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : \"$_id\" }"));
 	}
 
-
 	@Test // GH-3898
 	void shouldNotConvertIncludeExcludeValuesForProjectOperation() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(WithRetypedIdField.class, mappingContext,
+		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
+				WithRetypedIdField.class, mappingContext,
 				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
 		Document document = project(WithRetypedIdField.class).toDocument(context);
 		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1)));
 	}
 
+	@Test // GH-4038
+	void createsBasicAggregationOperationFromJsonString() {
+
+		AggregationOperation stage = stage("{ $project : { name : 1} }");
+		Document target = newAggregation(stage).toDocument("col-1", DEFAULT_CONTEXT);
+		assertThat(extractPipelineElement(target, 0, "$project")).containsEntry("name", 1);
+	}
+
+	@Test // GH-4038
+	void createsBasicAggregationOperationFromBson() {
+
+		AggregationOperation stage = stage(Aggregates.project(Projections.fields(Projections.include("name"))));
+		Document target = newAggregation(stage).toDocument("col-1", DEFAULT_CONTEXT);
+		assertThat(extractPipelineElement(target, 0, "$project")).containsKey("name");
+	}
+
 	private Document extractPipelineElement(Document agg, int index, String operation) {
 
 		List<Document> pipeline = (List<Document>) agg.get("pipeline");
-		return (Document) pipeline.get(index).get(operation);
+		Object value = pipeline.get(index).get(operation);
+		if (value instanceof Document document) {
+			return document;
+		}
+		if (value instanceof Map map) {
+			return new Document(map);
+		}
+		throw new IllegalArgumentException();
 	}
 
 	public class WithRetypedIdField {
 
-		@Id
-		@org.springframework.data.mongodb.core.mapping.Field
-		private String id;
+		@Id @org.springframework.data.mongodb.core.mapping.Field private String id;
 
-		@org.springframework.data.mongodb.core.mapping.Field("renamed-field")
-		private String foo;
+		@org.springframework.data.mongodb.core.mapping.Field("renamed-field") private String foo;
 
 	}
 }

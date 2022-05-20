@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.lang.Nullable;
 
@@ -78,6 +79,11 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 	@Override
 	public Fields getFields(Class<?> type) {
 		return delegate.getFields(type);
+	}
+
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return delegate.getCodecRegistry();
 	}
 
 	@SuppressWarnings("unchecked")

@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.bson.Document;
 
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -146,5 +147,10 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	public Class<?> getType() {
 		return type;
+	}
+
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return this.mapper.getConverter().getCodecRegistry();
 	}
 }

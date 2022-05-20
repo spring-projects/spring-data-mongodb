@@ -15,16 +15,18 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import com.mongodb.MongoClientSettings;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
+import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -48,7 +50,7 @@ import com.mongodb.DBRef;
  */
 public interface MongoConverter
 		extends EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, Bson>, MongoWriter<Object>,
-		EntityReader<Object, Bson> {
+		EntityReader<Object, Bson>, CodecRegistryProvider {
 
 	/**
 	 * Returns the {@link TypeMapper} being used to write type information into {@link Document}s created with that
@@ -186,6 +188,11 @@ public interface MongoConverter
 		} catch (ConversionException o_O) {
 			return convertToMongoType(id,(TypeInformation<?>)  null);
 		}
+	}
+
+	@Override
+	default CodecRegistry getCodecRegistry() {
+		return MongoClientSettings.getDefaultCodecRegistry();
 	}
 
 }

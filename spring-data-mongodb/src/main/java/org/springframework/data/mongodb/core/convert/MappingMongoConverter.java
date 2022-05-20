@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
@@ -1791,6 +1792,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public Class<?> getWriteTarget(Class<?> source) {
 		return conversions.getCustomWriteTarget(source).orElse(source);
+	}
+
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return codecRegistryProvider != null ? codecRegistryProvider.getCodecRegistry() : super.getCodecRegistry();
 	}
 
 	/**
