@@ -174,7 +174,11 @@ class EntityOperations {
 					"No class parameter provided, entity collection can't be determined!");
 		}
 
-		return context.getRequiredPersistentEntity(entityClass).getCollection();
+		MongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(entityClass);
+		if(persistentEntity == null) {
+			throw new MappingException(String.format("Collection name cannot be derived for type %s. Is it a store native type?", entityClass));
+		}
+		return persistentEntity.getCollection();
 	}
 
 	public Query getByIdInQuery(Collection<?> entities) {

@@ -79,6 +79,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param entityClass must not be {@literal null}.
 	 * @return never {@literal null}.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be derived from the type.
 	 */
 	String getCollectionName(Class<?> entityClass);
 
@@ -947,6 +948,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@literal null}, if not found.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
 	@Nullable
@@ -988,6 +991,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
 	 *         as it is after the update.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
 	@Nullable
@@ -1061,6 +1066,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
 	 *         as it is after the update.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
 	@Nullable
@@ -1144,6 +1151,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the count of matching documents.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 * 	  {@link #getCollectionName(Class) derived} from the given type.
 	 * @see #exactCount(Query, Class)
 	 * @see #estimatedCount(Class)
 	 */
@@ -1199,6 +1208,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param entityClass must not be {@literal null}.
 	 * @return the estimated number of documents.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 3.1
 	 */
 	default long estimatedCount(Class<?> entityClass) {
@@ -1235,6 +1246,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the count of matching documents.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 3.4
 	 */
 	default long exactCount(Query query, Class<?> entityClass) {
@@ -1302,6 +1315,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the inserted object.
 	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	<T> T insert(T objectToSave);
 
@@ -1326,6 +1341,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param batchToSave the batch of objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the inserted objects that.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 */
 	<T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass);
 
@@ -1344,6 +1361,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
 	 * @return the inserted objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} for the given objects.
 	 */
 	<T> Collection<T> insertAll(Collection<? extends T> objectsToSave);
 
@@ -1362,6 +1381,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
 	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	<T> T save(T objectToSave);
 
@@ -1396,9 +1417,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
+	 * @since 3.0
 	 */
 	UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass);
 
@@ -1450,9 +1473,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
+	 * @since 3.0
 	 */
 	UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass);
 
@@ -1504,9 +1529,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 3.0
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @see Update
 	 * @see AggregationUpdate
+	 * @since 3.0
 	 */
 	UpdateResult updateMulti(Query query, UpdateDefinition update, Class<?> entityClass);
 
@@ -1554,6 +1581,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param object must not be {@literal null}.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	DeleteResult remove(Object object);
 
@@ -1577,6 +1606,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
 	 * @throws IllegalArgumentException when {@literal query} or {@literal entityClass} is {@literal null}.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 */
 	DeleteResult remove(Query query, Class<?> entityClass);
 
@@ -1624,6 +1655,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to find and remove documents.
 	 * @param entityClass class of the pojo to be operated on.
 	 * @return the {@link List} converted objects deleted by this operation.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 1.5
 	 */
 	<T> List<T> findAllAndRemove(Query query, Class<T> entityClass);
