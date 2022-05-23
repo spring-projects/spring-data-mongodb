@@ -693,6 +693,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
 	default <T> Mono<T> findAndReplace(Query query, T replacement) {
@@ -732,6 +734,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
 	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
 	 *         as it is after the update.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
 	default <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
@@ -802,6 +806,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
 	 *         {@link FindAndReplaceOptions#isReturnNew()} this will either be the object as it was before the update or
 	 *         as it is after the update.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
 	default <S, T> Mono<T> findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
@@ -882,6 +888,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the count of matching documents.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @see #exactCount(Query, Class)
 	 * @see #estimatedCount(Class)
 	 */
@@ -937,6 +945,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param entityClass must not be {@literal null}.
 	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 3.1
 	 */
 	default Mono<Long> estimatedCount(Class<?> entityClass) {
@@ -973,6 +983,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the count of matching documents.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 3.4
 	 */
 	default Mono<Long> exactCount(Query query, Class<?> entityClass) {
@@ -1040,6 +1052,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the inserted object.
 	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	<T> Mono<T> insert(T objectToSave);
 
@@ -1063,7 +1077,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param batchToSave the batch of objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
-	 * @return the inserted objects .
+	 * @return the inserted objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 */
 	<T> Flux<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass);
 
@@ -1082,6 +1098,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
 	 * @return the saved objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} for the given objects.
 	 */
 	<T> Flux<T> insertAll(Collection<? extends T> objectsToSave);
 
@@ -1106,6 +1124,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the inserted objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} for the type.
 	 */
 	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass);
 
@@ -1142,6 +1162,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
 	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	<T> Mono<T> save(T objectToSave);
 
@@ -1176,6 +1198,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	<T> Mono<T> save(Mono<? extends T> objectToSave);
 
@@ -1208,6 +1232,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
@@ -1262,6 +1288,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
@@ -1317,6 +1345,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
 	 * @since 3.0
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1363,6 +1393,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param object must not be {@literal null}.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	Mono<DeleteResult> remove(Object object);
 
@@ -1380,6 +1412,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param objectToRemove must not be {@literal null}.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given object type.
 	 */
 	Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove);
 
@@ -1399,6 +1433,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 */
 	Mono<DeleteResult> remove(Query query, Class<?> entityClass);
 
@@ -1442,6 +1478,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param query the query document that specifies the criteria used to find and remove documents.
 	 * @param entityClass class of the pojo to be operated on.
 	 * @return the {@link Flux} converted objects deleted by this operation.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 */
 	<T> Flux<T> findAllAndRemove(Query query, Class<T> entityClass);
 
@@ -1471,6 +1509,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          specification.
 	 * @param entityClass the parametrized type of the returned {@link Flux}.
 	 * @return the {@link Flux} of converted objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 */
 	<T> Flux<T> tail(Query query, Class<T> entityClass);
 
@@ -1611,6 +1651,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param entityClass must not be {@literal null}.
 	 * @return never {@literal null}.
+	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be derived from the type.
 	 * @since 2.1
 	 */
 	String getCollectionName(Class<?> entityClass);
