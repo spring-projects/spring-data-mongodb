@@ -50,6 +50,7 @@ import com.querydsl.core.types.dsl.BooleanOperation;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.core.types.dsl.StringPath;
+import org.springframework.data.mongodb.repository.User;
 
 /**
  * Unit tests for {@link SpringDataMongodbSerializer}.
@@ -223,6 +224,26 @@ public class SpringDataMongodbSerializerUnitTests {
 		PredicateOperation testExpression = predicate(Ops.AND, predicate1, predicate2, predicate3);
 
 		assertThat(serializer.handle(testExpression)).isEqualTo(expected);
+	}
+
+	@Test // GH-4037
+	void parsesDocumentReference() {
+
+		User user = new User();
+		user.setId("007");
+		Predicate predicate = QPerson.person.spiritAnimal.eq(user);
+
+		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal' : '007' }"));
+	}
+
+	@Test // GH-4037
+	void parsesDocumentReferenceOnId() {
+
+		User user = new User();
+		user.setId("007");
+		Predicate predicate = QPerson.person.spiritAnimal.id.eq("007");
+
+		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal' : '007' }"));
 	}
 
 	class Address {
