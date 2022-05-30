@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -158,8 +157,20 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		return property.isIdProperty() ? asReference(constant.getConstant(), path.getMetadata().getParent())
-				: asReference(constant.getConstant(), path);
+		if (property.isDocumentReference()) {
+			return converter.toDocumentPointer(constant.getConstant(), property).getPointer();
+		}
+
+		if (property.isIdProperty()) {
+
+			MongoPersistentProperty propertyForPotentialDbRef = getPropertyForPotentialDbRef(path);
+			if (propertyForPotentialDbRef != null && propertyForPotentialDbRef.isDocumentReference()) {
+				return converter.toDocumentPointer(constant.getConstant(), propertyForPotentialDbRef).getPointer();
+			}
+			return asReference(constant.getConstant(), path.getMetadata().getParent());
+		}
+
+		return asReference(constant.getConstant(), path);
 	}
 
 	@Nullable
