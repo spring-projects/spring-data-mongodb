@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
 
 /**
  * @author Christoph Strobl
+ * @author Tudor Marc
  * @since 2.2
  */
 class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperation {
@@ -178,6 +179,8 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 			} else {
 				options.getResumeTimestamp().ifPresent(builder::resumeAt);
 				options.getResumeBsonTimestamp().ifPresent(builder::resumeAt);
+				options.getStartAtOperationTime().ifPresent(builder::startAtOperationTime);
+				options.getStartAtOperationTimeBson().ifPresent(builder::startAtOperationTime);
 			}
 
 			return builder;

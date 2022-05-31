@@ -232,6 +232,7 @@ public class ChangeStreamRequest<T>
 	 * Builder for creating {@link ChangeStreamRequest}.
 	 *
 	 * @author Christoph Strobl
+	 * @author Tudor Marc
 	 * @since 2.1
 	 * @see ChangeStreamOptions
 	 */
@@ -405,6 +406,22 @@ public class ChangeStreamRequest<T>
 
 			Assert.notNull(resumeToken, "ResumeToken must not be null!");
 			this.delegate.startAfter(resumeToken);
+
+			return this;
+		}
+
+		/**
+		 * Set the cluster startAtOperationTime to open the cursor at a particular point in time.
+		 *
+		 * @param clusterTime must not be {@literal null}.
+		 * @return this.
+		 * @see ChangeStreamOptions#getStartAtOperationTime() ()
+		 * @see ChangeStreamOptionsBuilder#startAtOperationTime(java.time.Instant)
+		 */
+		public ChangeStreamRequestBuilder<T> startAtOperationTime(Instant clusterTime) {
+
+			Assert.notNull(clusterTime, "clusterTime must not be null!");
+			this.delegate.startAtOperationTime(clusterTime);
 
 			return this;
 		}

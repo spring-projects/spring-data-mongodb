@@ -18,12 +18,14 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import org.bson.BsonDocument;
+import org.bson.BsonTimestamp;
 import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link ChangeStreamOptions}.
  *
  * @author Mark Paluch
+ * @author Tudor Marc
  */
 public class ChangeStreamOptionsUnitTests {
 
@@ -52,5 +54,13 @@ public class ChangeStreamOptionsUnitTests {
 
 		assertThat(options.isResumeAfter()).isFalse();
 		assertThat(options.isStartAfter()).isFalse();
+	}
+
+	@Test // DATAMONGO-2607
+	public void shouldReportStartAtOperationTime() {
+
+		ChangeStreamOptions options = ChangeStreamOptions.builder().startAtOperationTime(new BsonTimestamp()).build();
+
+		assertThat(options.getStartAtOperationTime()).isNotNull();
 	}
 }

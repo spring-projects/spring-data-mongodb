@@ -40,6 +40,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Tudor Marc
  * @since 2.1
  */
 public class ChangeStreamOptions {
@@ -49,6 +50,7 @@ public class ChangeStreamOptions {
 	private @Nullable FullDocument fullDocumentLookup;
 	private @Nullable Collation collation;
 	private @Nullable Object resumeTimestamp;
+	private @Nullable Object startAtOperationTime;
 	private Resume resume = Resume.UNDEFINED;
 
 	protected ChangeStreamOptions() {}
@@ -94,6 +96,20 @@ public class ChangeStreamOptions {
 	 */
 	public Optional<BsonTimestamp> getResumeBsonTimestamp() {
 		return Optional.ofNullable(resumeTimestamp).map(timestamp -> asTimestampOfType(timestamp, BsonTimestamp.class));
+	}
+
+	/**
+	 * @return {@link Optional#empty()} if not set.
+	 */
+	public Optional<Instant> getStartAtOperationTime() {
+		return Optional.ofNullable(startAtOperationTime).map(timestamp -> asTimestampOfType(timestamp, Instant.class));
+	}
+
+	/**
+	 * @return {@link Optional#empty()} if not set.
+	 */
+	public Optional<BsonTimestamp> getStartAtOperationTimeBson() {
+		return Optional.ofNullable(startAtOperationTime).map(timestamp -> asTimestampOfType(timestamp, BsonTimestamp.class));
 	}
 
 	/**
@@ -176,6 +192,9 @@ public class ChangeStreamOptions {
 		if (!ObjectUtils.nullSafeEquals(this.resumeTimestamp, that.resumeTimestamp)) {
 			return false;
 		}
+		if (!ObjectUtils.nullSafeEquals(this.startAtOperationTime, that.startAtOperationTime)) {
+			return false;
+		}
 		return resume == that.resume;
 	}
 
@@ -186,6 +205,7 @@ public class ChangeStreamOptions {
 		result = 31 * result + ObjectUtils.nullSafeHashCode(fullDocumentLookup);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(collation);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resumeTimestamp);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(startAtOperationTime);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resume);
 		return result;
 	}
@@ -213,6 +233,7 @@ public class ChangeStreamOptions {
 	 * Builder for creating {@link ChangeStreamOptions}.
 	 *
 	 * @author Christoph Strobl
+	 * @author Tudor Marc
 	 * @since 2.1
 	 */
 	public static class ChangeStreamOptionsBuilder {
@@ -222,6 +243,7 @@ public class ChangeStreamOptions {
 		private @Nullable FullDocument fullDocumentLookup;
 		private @Nullable Collation collation;
 		private @Nullable Object resumeTimestamp;
+		private @Nullable Object startAtOperationTime;
 		private Resume resume = Resume.UNDEFINED;
 
 		private ChangeStreamOptionsBuilder() {}
@@ -352,6 +374,34 @@ public class ChangeStreamOptions {
 		}
 
 		/**
+		 * Set the cluster startAtOperationTime to open the cursor at a particular point in time.
+		 *
+		 * @param startAtOperationTime must not be {@literal null}.
+		 * @return this.
+		 */
+		public ChangeStreamOptionsBuilder startAtOperationTime(Instant startAtOperationTime) {
+
+			Assert.notNull(startAtOperationTime, "startAtOperationTime must not be null!");
+
+			this.startAtOperationTime = startAtOperationTime;
+			return this;
+		}
+
+		/**
+		 * Set the cluster startAtOperationTime to open the cursor at a particular point in time.
+		 *
+		 * @param startAtOperationTime must not be {@literal null}.
+		 * @return this.
+		 */
+		public ChangeStreamOptionsBuilder startAtOperationTime(BsonTimestamp startAtOperationTime) {
+
+			Assert.notNull(startAtOperationTime, "startAtOperationTime must not be null!");
+
+			this.startAtOperationTime = startAtOperationTime;
+			return this;
+		}
+
+		/**
 		 * Set the resume token after which to continue emitting notifications.
 		 *
 		 * @param resumeToken must not be {@literal null}.
@@ -393,6 +443,7 @@ public class ChangeStreamOptions {
 			options.fullDocumentLookup = this.fullDocumentLookup;
 			options.collation = this.collation;
 			options.resumeTimestamp = this.resumeTimestamp;
+			options.startAtOperationTime = this.startAtOperationTime;
 			options.resume = this.resume;
 
 			return options;
