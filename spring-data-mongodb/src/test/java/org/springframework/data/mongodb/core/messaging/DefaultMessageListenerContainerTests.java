@@ -122,7 +122,7 @@ public class DefaultMessageListenerContainerTests {
 
 			try {
 				if (thrownException.compareAndSet(false, true)) {
-					throw new IllegalStateException("Boom!");
+					throw new IllegalStateException("Boom");
 				}
 			} finally {
 				messageListener.onMessage(message);

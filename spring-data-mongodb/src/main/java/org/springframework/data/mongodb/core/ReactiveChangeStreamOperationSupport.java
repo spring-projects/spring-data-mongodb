@@ -49,7 +49,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 	@Override
 	public <T> ReactiveChangeStream<T> changeStream(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 		return new ReactiveChangeStreamSupport<>(template, domainType, domainType, null, null);
 	}
 
@@ -75,7 +75,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		@Override
 		public ChangeStreamWithFilterAndProjection<T> watchCollection(String collection) {
 
-			Assert.hasText(collection, "Collection name must not be null nor empty!");
+			Assert.hasText(collection, "Collection name must not be null nor empty");
 
 			return new ReactiveChangeStreamSupport<>(template, domainType, returnType, collection, options);
 		}
@@ -83,7 +83,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		@Override
 		public ChangeStreamWithFilterAndProjection<T> watchCollection(Class<?> entityClass) {
 
-			Assert.notNull(entityClass, "Collection type not be null!");
+			Assert.notNull(entityClass, "Collection type not be null");
 
 			return watchCollection(template.getCollectionName(entityClass));
 		}
@@ -129,7 +129,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		@Override
 		public <R> ChangeStreamWithFilterAndProjection<R> as(Class<R> resultType) {
 
-			Assert.notNull(resultType, "ResultType must not be null!");
+			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new ReactiveChangeStreamSupport<>(template, domainType, resultType, collection, options);
 		}

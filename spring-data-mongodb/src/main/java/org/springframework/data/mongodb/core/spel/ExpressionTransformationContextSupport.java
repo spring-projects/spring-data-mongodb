@@ -46,7 +46,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	public ExpressionTransformationContextSupport(T currentNode, @Nullable ExpressionNode parentNode,
 			@Nullable Document previousOperationObject) {
 
-		Assert.notNull(currentNode, "currentNode must not be null!");
+		Assert.notNull(currentNode, "currentNode must not be null");
 
 		this.currentNode = currentNode;
 		this.parentNode = parentNode;
@@ -112,7 +112,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 */
 	public Document addToPreviousOperation(Object value) {
 
-		Assert.state(previousOperationObject != null, "No previous operation available!");
+		Assert.state(previousOperationObject != null, "No previous operation available");
 
 		extractArgumentListFrom(previousOperationObject).add(value);
 		return previousOperationObject;

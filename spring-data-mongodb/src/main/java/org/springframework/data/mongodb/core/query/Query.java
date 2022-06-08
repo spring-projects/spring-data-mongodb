@@ -96,7 +96,7 @@ public class Query {
 	 */
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
 
-		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
+		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
 
 		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
@@ -105,8 +105,8 @@ public class Query {
 			this.criteria.put(key, criteriaDefinition);
 		} else {
 			throw new InvalidMongoDbApiUsageException(
-					String.format("Due to limitations of the com.mongodb.BasicDocument, you can't add a second '%s' criteria. "
-							+ "Query already contains '%s'", key, serializeToJsonSafely(existing.getCriteriaObject())));
+					String.format("Due to limitations of the com.mongodb.BasicDocument, you can't add a second '%s' criteria;"
+							+ " Query already contains '%s'", key, serializeToJsonSafely(existing.getCriteriaObject())));
 		}
 
 		return this;
@@ -155,7 +155,7 @@ public class Query {
 	 */
 	public Query withHint(String hint) {
 
-		Assert.hasText(hint, "Hint must not be empty or null!");
+		Assert.hasText(hint, "Hint must not be empty or null");
 		this.hint = hint;
 		return this;
 	}
@@ -169,7 +169,7 @@ public class Query {
 	 */
 	public Query withHint(Document hint) {
 
-		Assert.notNull(hint, "Hint must not be null!");
+		Assert.notNull(hint, "Hint must not be null");
 		this.hint = hint.toJson();
 		return this;
 	}
@@ -201,7 +201,7 @@ public class Query {
 	 */
 	public Query with(Sort sort) {
 
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(sort, "Sort must not be null");
 
 		if (sort.isUnsorted()) {
 			return this;
@@ -209,8 +209,8 @@ public class Query {
 
 		sort.stream().filter(Order::isIgnoreCase).findFirst().ifPresent(it -> {
 
-			throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
-					+ "MongoDB does not support sorting ignoring case currently!", it.getProperty()));
+			throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case;"
+					+ " MongoDB does not support sorting ignoring case currently", it.getProperty()));
 		});
 
 		this.sort = this.sort.and(sort);
@@ -234,7 +234,7 @@ public class Query {
 	 */
 	public Query restrict(Class<?> type, Class<?>... additionalTypes) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 		Assert.notNull(additionalTypes, "AdditionalTypes must not be null");
 
 		if (restrictedTypes == Collections.EMPTY_SET) {
@@ -472,7 +472,7 @@ public class Query {
 	 */
 	public void setMeta(Meta meta) {
 
-		Assert.notNull(meta, "Query meta might be empty but must not be null.");
+		Assert.notNull(meta, "Query meta might be empty but must not be null");
 		this.meta = meta;
 	}
 
@@ -514,7 +514,7 @@ public class Query {
 	 */
 	public static Query of(Query source) {
 
-		Assert.notNull(source, "Source must not be null!");
+		Assert.notNull(source, "Source must not be null");
 
 		Document sourceFields = source.getFieldsObject();
 		Document sourceSort = source.getSortObject();

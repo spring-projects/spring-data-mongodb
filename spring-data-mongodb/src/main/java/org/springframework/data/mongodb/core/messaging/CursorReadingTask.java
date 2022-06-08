@@ -190,8 +190,8 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public boolean awaitStart(Duration timeout) throws InterruptedException {
 
-		Assert.notNull(timeout, "Timeout must not be null!");
-		Assert.isTrue(!timeout.isNegative(), "Timeout must not be negative!");
+		Assert.notNull(timeout, "Timeout must not be null");
+		Assert.isTrue(!timeout.isNegative(), "Timeout must not be negative");
 
 		return awaitStart.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
 	}
@@ -226,7 +226,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 			}
 		}
 
-		throw new IllegalStateException(String.format("Cursor %s is not longer open.", cursor));
+		throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
 	}
 
 	private static boolean isValidCursor(@Nullable MongoCursor<?> cursor) {

@@ -39,7 +39,7 @@ public class LimitOperation implements AggregationOperation {
 	 */
 	public LimitOperation(long maxElements) {
 
-		Assert.isTrue(maxElements >= 0, "Maximum number of elements must be greater or equal to zero!");
+		Assert.isTrue(maxElements >= 0, "Maximum number of elements must be greater or equal to zero");
 		this.maxElements = maxElements;
 	}
 

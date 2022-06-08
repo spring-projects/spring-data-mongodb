@@ -138,7 +138,7 @@ public class Aggregation {
 	 */
 	public Aggregation withOptions(AggregationOptions options) {
 
-		Assert.notNull(options, "AggregationOptions must not be null.");
+		Assert.notNull(options, "AggregationOptions must not be null");
 		return new Aggregation(this.pipeline.getOperations(), options);
 	}
 
@@ -177,7 +177,7 @@ public class Aggregation {
 	 */
 	protected static List<AggregationOperation> asAggregationList(AggregationOperation... aggregationOperations) {
 
-		Assert.notEmpty(aggregationOperations, "AggregationOperations must not be null or empty!");
+		Assert.notEmpty(aggregationOperations, "AggregationOperations must not be null or empty");
 
 		return Arrays.asList(aggregationOperations);
 	}
@@ -199,8 +199,8 @@ public class Aggregation {
 	 */
 	protected Aggregation(List<AggregationOperation> aggregationOperations, AggregationOptions options) {
 
-		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
-		Assert.notNull(options, "AggregationOptions must not be null!");
+		Assert.notNull(aggregationOperations, "AggregationOperations must not be null");
+		Assert.notNull(options, "AggregationOptions must not be null");
 
 		this.pipeline = new AggregationPipeline(aggregationOperations);
 		this.options = options;
@@ -267,7 +267,7 @@ public class Aggregation {
 	 */
 	public static ProjectionOperation project(Class<?> type) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 		return new ProjectionOperation(type);
 	}
 

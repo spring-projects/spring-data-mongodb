@@ -49,8 +49,8 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 */
 	public MapReduceResults(List<T> mappedResults, Document rawResults) {
 
-		Assert.notNull(mappedResults, "List of mapped results must not be null!");
-		Assert.notNull(rawResults, "Raw results must not be null!");
+		Assert.notNull(mappedResults, "List of mapped results must not be null");
+		Assert.notNull(rawResults, "Raw results must not be null");
 
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;

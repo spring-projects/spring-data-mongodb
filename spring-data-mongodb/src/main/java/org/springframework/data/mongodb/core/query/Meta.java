@@ -95,7 +95,7 @@ public class Meta {
 	 */
 	public void setMaxTime(Duration timeout) {
 
-		Assert.notNull(timeout, "Timeout must not be null!");
+		Assert.notNull(timeout, "Timeout must not be null");
 		setValue(MetaKey.MAX_TIME_MS.key, timeout.toMillis());
 	}
 
@@ -146,7 +146,7 @@ public class Meta {
 	 */
 	public boolean addFlag(CursorOption option) {
 
-		Assert.notNull(option, "CursorOption must not be null!");
+		Assert.notNull(option, "CursorOption must not be null");
 
 		if (this.flags == Collections.EMPTY_SET) {
 			this.flags = new LinkedHashSet<>(2);
@@ -212,7 +212,7 @@ public class Meta {
 	 */
 	void setValue(String key, @Nullable Object value) {
 
-		Assert.hasText(key, "Meta key must not be 'null' or blank.");
+		Assert.hasText(key, "Meta key must not be 'null' or blank");
 
 		if (values == Collections.EMPTY_MAP) {
 			values = new LinkedHashMap<>(2);

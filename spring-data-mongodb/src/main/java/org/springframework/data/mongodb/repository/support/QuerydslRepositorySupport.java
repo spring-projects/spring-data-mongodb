@@ -40,7 +40,7 @@ public abstract class QuerydslRepositorySupport {
 	 */
 	public QuerydslRepositorySupport(MongoOperations operations) {
 
-		Assert.notNull(operations, "MongoOperations must not be null!");
+		Assert.notNull(operations, "MongoOperations must not be null");
 
 		this.template = operations;
 		this.context = operations.getConverter().getMappingContext();
@@ -55,7 +55,7 @@ public abstract class QuerydslRepositorySupport {
 	 */
 	protected <T> SpringDataMongodbQuery<T> from(final EntityPath<T> path) {
 
-		Assert.notNull(path, "EntityPath must not be null!");
+		Assert.notNull(path, "EntityPath must not be null");
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(path.getType());
 		return from(path, entity.getCollection());
 	}
@@ -69,8 +69,8 @@ public abstract class QuerydslRepositorySupport {
 	 */
 	protected <T> SpringDataMongodbQuery<T> from(final EntityPath<T> path, String collection) {
 
-		Assert.notNull(path, "EntityPath must not be null!");
-		Assert.hasText(collection, "Collection name must not be null or empty!");
+		Assert.notNull(path, "EntityPath must not be null");
+		Assert.hasText(collection, "Collection name must not be null or empty");
 
 		return new SpringDataMongodbQuery<T>(template, path.getType(), collection);
 	}

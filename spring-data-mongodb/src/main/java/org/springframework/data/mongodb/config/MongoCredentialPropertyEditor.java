@@ -117,7 +117,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 								userNameAndPassword[1].toCharArray()));
 					} else {
 						throw new IllegalArgumentException(
-								String.format("Cannot create MongoCredentials for unknown auth mechanism '%s'!", authMechanism));
+								String.format("Cannot create MongoCredentials for unknown auth mechanism '%s'", authMechanism));
 					}
 				}
 			} else {
@@ -194,7 +194,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 			String[] optionArgs = option.split("=");
 
 			if (optionArgs.length == 1) {
-				throw new IllegalArgumentException(String.format("Query parameter '%s' has no value!", optionArgs[0]));
+				throw new IllegalArgumentException(String.format("Query parameter '%s' has no value", optionArgs[0]));
 			}
 
 			properties.put(optionArgs[0], optionArgs[1]);
@@ -209,21 +209,21 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 		if (source.length != 2) {
 			throw new IllegalArgumentException(
-					"Credentials need to specify username and password like in 'username:password@database'!");
+					"Credentials need to specify username and password like in 'username:password@database'");
 		}
 	}
 
 	private static void verifyDatabasePresent(String source) {
 
 		if (!StringUtils.hasText(source)) {
-			throw new IllegalArgumentException("Credentials need to specify database like in 'username:password@database'!");
+			throw new IllegalArgumentException("Credentials need to specify database like in 'username:password@database'");
 		}
 	}
 
 	private static void verifyUserNamePresent(String[] source) {
 
 		if (source.length == 0 || !StringUtils.hasText(source[0])) {
-			throw new IllegalArgumentException("Credentials need to specify username!");
+			throw new IllegalArgumentException("Credentials need to specify username");
 		}
 	}
 
@@ -231,7 +231,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		try {
 			return URLDecoder.decode(it, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			throw new IllegalArgumentException("o_O UTF-8 not supported!", e);
+			throw new IllegalArgumentException("o_O UTF-8 not supported", e);
 		}
 	}
 }

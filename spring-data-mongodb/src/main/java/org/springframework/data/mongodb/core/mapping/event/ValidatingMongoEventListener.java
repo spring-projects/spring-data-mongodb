@@ -46,7 +46,7 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	 */
 	public ValidatingMongoEventListener(Validator validator) {
 
-		Assert.notNull(validator, "Validator must not be null!");
+		Assert.notNull(validator, "Validator must not be null");
 		this.validator = validator;
 	}
 

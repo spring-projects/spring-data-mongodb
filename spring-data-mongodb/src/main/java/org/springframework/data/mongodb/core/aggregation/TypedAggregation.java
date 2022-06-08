@@ -61,7 +61,7 @@ public class TypedAggregation<I> extends Aggregation {
 
 		super(operations, options);
 
-		Assert.notNull(inputType, "Input type must not be null!");
+		Assert.notNull(inputType, "Input type must not be null");
 		this.inputType = inputType;
 	}
 
@@ -76,7 +76,7 @@ public class TypedAggregation<I> extends Aggregation {
 
 	public TypedAggregation<I> withOptions(AggregationOptions options) {
 
-		Assert.notNull(options, "AggregationOptions must not be null.");
+		Assert.notNull(options, "AggregationOptions must not be null");
 		return new TypedAggregation<I>(inputType, pipeline.getOperations(), options);
 	}
 }

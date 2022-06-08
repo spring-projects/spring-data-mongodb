@@ -133,7 +133,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected Map<String, Object> append(String key, Object value) {
 
-		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
 		Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
 		clone.put(key, value);
@@ -144,7 +144,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected Map<String, Object> remove(String key) {
 
-		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
 		Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
 		clone.remove(key);
@@ -163,7 +163,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings({ "unchecked" })
 	protected Map<String, Object> appendAt(int index, String key, Object value) {
 
-		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
 		Map<String, Object> clone = new LinkedHashMap<>();
 
@@ -223,7 +223,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings("unchecked")
 	protected <T> T get(Object key) {
 
-		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
 		return (T) ((Map<String, Object>) this.value).get(key);
 	}
@@ -237,7 +237,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings("unchecked")
 	protected Map<String, Object> argumentMap() {
 
-		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
 		return Collections.unmodifiableMap((java.util.Map<String, Object>) value);
 	}

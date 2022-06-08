@@ -316,7 +316,7 @@ class JsonSchemaObjectUnitTests {
 	void booleanShouldRenderCorrectly() {
 
 		assertThat(bool().generatedDescription().toDocument())
-				.isEqualTo(new Document("type", "boolean").append("description", "Must be a boolean."));
+				.isEqualTo(new Document("type", "boolean").append("description", "Must be a boolean"));
 	}
 
 	// -----------------
@@ -327,7 +327,7 @@ class JsonSchemaObjectUnitTests {
 	void nullShouldRenderCorrectly() {
 
 		assertThat(nil().generatedDescription().toDocument())
-				.isEqualTo(new Document("type", "null").append("description", "Must be null."));
+				.isEqualTo(new Document("type", "null").append("description", "Must be null"));
 	}
 
 	// -----------------
@@ -338,7 +338,7 @@ class JsonSchemaObjectUnitTests {
 	void dateShouldRenderCorrectly() {
 
 		assertThat(date().generatedDescription().toDocument())
-				.isEqualTo(new Document("bsonType", "date").append("description", "Must be a date."));
+				.isEqualTo(new Document("bsonType", "date").append("description", "Must be a date"));
 	}
 
 	// -----------------
@@ -349,7 +349,7 @@ class JsonSchemaObjectUnitTests {
 	void timestampShouldRenderCorrectly() {
 
 		assertThat(timestamp().generatedDescription().toDocument())
-				.isEqualTo(new Document("bsonType", "timestamp").append("description", "Must be a timestamp."));
+				.isEqualTo(new Document("bsonType", "timestamp").append("description", "Must be a timestamp"));
 	}
 
 	// -----------------

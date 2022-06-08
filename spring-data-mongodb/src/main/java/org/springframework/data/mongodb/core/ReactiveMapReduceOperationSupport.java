@@ -46,7 +46,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 	@Override
 	public <T> ReactiveMapReduceSupport<T> mapReduce(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ReactiveMapReduceSupport<>(template, domainType, domainType, null, ALL_QUERY, null, null, null);
 	}
@@ -100,7 +100,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public MapReduceWithProjection<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection name must not be null nor empty!");
+			Assert.hasText(collection, "Collection name must not be null nor empty");
 
 			return new ReactiveMapReduceSupport<>(template, domainType, returnType, collection, query, mapFunction,
 					reduceFunction, options);
@@ -113,7 +113,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public TerminatingMapReduce<T> matching(Query query) {
 
-			Assert.notNull(query, "Query must not be null!");
+			Assert.notNull(query, "Query must not be null");
 
 			return new ReactiveMapReduceSupport<>(template, domainType, returnType, collection, query, mapFunction,
 					reduceFunction, options);
@@ -126,7 +126,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public <R> MapReduceWithQuery<R> as(Class<R> resultType) {
 
-			Assert.notNull(resultType, "ResultType must not be null!");
+			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new ReactiveMapReduceSupport<>(template, domainType, resultType, collection, query, mapFunction,
 					reduceFunction, options);
@@ -139,7 +139,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public ReactiveMapReduce<T> with(MapReduceOptions options) {
 
-			Assert.notNull(options, "Options must not be null! Please consider empty MapReduceOptions#options() instead.");
+			Assert.notNull(options, "Options must not be null Please consider empty MapReduceOptions#options() instead");
 
 			return new ReactiveMapReduceSupport<>(template, domainType, returnType, collection, query, mapFunction,
 					reduceFunction, options);
@@ -152,7 +152,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public MapReduceWithReduceFunction<T> map(String mapFunction) {
 
-			Assert.hasText(mapFunction, "MapFunction name must not be null nor empty!");
+			Assert.hasText(mapFunction, "MapFunction name must not be null nor empty");
 
 			return new ReactiveMapReduceSupport<>(template, domainType, returnType, collection, query, mapFunction,
 					reduceFunction, options);
@@ -165,7 +165,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public ReactiveMapReduce<T> reduce(String reduceFunction) {
 
-			Assert.hasText(reduceFunction, "ReduceFunction name must not be null nor empty!");
+			Assert.hasText(reduceFunction, "ReduceFunction name must not be null nor empty");
 
 			return new ReactiveMapReduceSupport<>(template, domainType, returnType, collection, query, mapFunction,
 					reduceFunction, options);

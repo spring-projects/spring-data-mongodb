@@ -57,8 +57,8 @@ class GenericMappingTests {
 	void writesGenericTypeCorrectly() {
 
 		StringWrapper wrapper = new StringWrapper();
-		wrapper.container = new Container<String>();
-		wrapper.container.content = "Foo!";
+		wrapper.container = new Container<>();
+		wrapper.container.content = "Foo";
 
 		Document document = new Document();
 		converter.write(wrapper, document);
@@ -69,18 +69,18 @@ class GenericMappingTests {
 
 		Object content = ((Document) container).get("content");
 		assertThat(content instanceof String).isTrue();
-		assertThat((String) content).isEqualTo("Foo!");
+		assertThat((String) content).isEqualTo("Foo");
 	}
 
 	@Test
 	void readsGenericTypeCorrectly() {
 
-		Document content = new Document("content", "Foo!");
+		Document content = new Document("content", "Foo");
 		Document container = new Document("container", content);
 
 		StringWrapper result = converter.read(StringWrapper.class, container);
 		assertThat(result.container).isNotNull();
-		assertThat(result.container.content).isEqualTo("Foo!");
+		assertThat(result.container.content).isEqualTo("Foo");
 	}
 
 	private static class StringWrapper extends Wrapper<String> {

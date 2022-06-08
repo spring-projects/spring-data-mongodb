@@ -81,7 +81,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			Predicate<JsonSchemaPropertyContext> filter, LinkedMultiValueMap<String, Class<?>> mergeProperties) {
 
-		Assert.notNull(converter, "Converter must not be null!");
+		Assert.notNull(converter, "Converter must not be null");
 		this.converter = converter;
 		this.mappingContext = mappingContext;
 		this.filter = filter;

@@ -47,7 +47,7 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 	 */
 	DefaultMongoJsonSchema(JsonSchemaObject root, @Nullable Document encryptionMetadata) {
 
-		Assert.notNull(root, "Root schema object must not be null!");
+		Assert.notNull(root, "Root schema object must not be null");
 
 		this.root = root;
 		this.encryptionMetadata = encryptionMetadata;

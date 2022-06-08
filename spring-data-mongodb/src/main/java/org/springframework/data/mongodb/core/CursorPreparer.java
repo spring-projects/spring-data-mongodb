@@ -61,8 +61,8 @@ public interface CursorPreparer extends ReadPreferenceAware {
 	default FindIterable<Document> initiateFind(MongoCollection<Document> collection,
 			Function<MongoCollection<Document>, FindIterable<Document>> find) {
 
-		Assert.notNull(collection, "Collection must not be null!");
-		Assert.notNull(find, "Find function must not be null!");
+		Assert.notNull(collection, "Collection must not be null");
+		Assert.notNull(find, "Find function must not be null");
 
 		if (hasReadPreference()) {
 			collection = collection.withReadPreference(getReadPreference());

@@ -50,7 +50,7 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 	@Override
 	public FluentQuery.FetchableFluentQuery<T> sortBy(Sort sort) {
 
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(sort, "Sort must not be null");
 
 		return create(predicate, sort, resultType, fieldsToInclude);
 	}
@@ -62,7 +62,7 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 	@Override
 	public <R> FluentQuery.FetchableFluentQuery<R> as(Class<R> projection) {
 
-		Assert.notNull(projection, "Projection target type must not be null!");
+		Assert.notNull(projection, "Projection target type must not be null");
 
 		return create(predicate, sort, projection, fieldsToInclude);
 	}
@@ -74,7 +74,7 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 	@Override
 	public FluentQuery.FetchableFluentQuery<T> project(Collection<String> properties) {
 
-		Assert.notNull(properties, "Projection properties must not be null!");
+		Assert.notNull(properties, "Projection properties must not be null");
 
 		return create(predicate, sort, resultType, new ArrayList<>(properties));
 	}

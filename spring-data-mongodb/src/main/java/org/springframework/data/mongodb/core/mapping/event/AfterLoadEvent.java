@@ -44,7 +44,7 @@ public class AfterLoadEvent<T> extends MongoMappingEvent<Document> {
 
 		super(document, document, collectionName);
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 		this.type = type;
 	}
 

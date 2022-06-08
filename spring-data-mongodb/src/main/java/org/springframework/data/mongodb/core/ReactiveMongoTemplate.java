@@ -241,7 +241,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory,
 			@Nullable MongoConverter mongoConverter, Consumer<Throwable> subscriptionExceptionHandler) {
 
-		Assert.notNull(mongoDatabaseFactory, "ReactiveMongoDatabaseFactory must not be null!");
+		Assert.notNull(mongoDatabaseFactory, "ReactiveMongoDatabaseFactory must not be null");
 
 		this.mongoDatabaseFactory = mongoDatabaseFactory;
 		this.exceptionTranslator = mongoDatabaseFactory.getExceptionTranslator();
@@ -367,7 +367,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public void setEntityCallbacks(ReactiveEntityCallbacks entityCallbacks) {
 
-		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null");
 		this.entityCallbacks = entityCallbacks;
 	}
 
@@ -468,7 +468,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<Document> executeCommand(String jsonCommand) {
 
-		Assert.notNull(jsonCommand, "Command must not be empty!");
+		Assert.notNull(jsonCommand, "Command must not be empty");
 
 		return executeCommand(Document.parse(jsonCommand));
 	}
@@ -481,7 +481,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<Document> executeCommand(Document command, @Nullable ReadPreference readPreference) {
 
-		Assert.notNull(command, "Command must not be null!");
+		Assert.notNull(command, "Command must not be null");
 
 		return createFlux(db -> readPreference != null ? db.runCommand(command, readPreference, Document.class)
 				: db.runCommand(command, Document.class)).next();
@@ -500,7 +500,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Flux<T> execute(String collectionName, ReactiveCollectionCallback<T> callback) {
 
-		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
+		Assert.notNull(callback, "ReactiveCollectionCallback must not be null");
 
 		return createFlux(collectionName, callback);
 	}
@@ -565,7 +565,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Flux<T> createFlux(ReactiveDatabaseCallback<T> callback) {
 
-		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
+		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null");
 
 		return Mono.defer(this::doGetDatabase).flatMapMany(database -> callback.doInDB(prepareDatabase(database)))
 				.onErrorMap(translateException());
@@ -580,7 +580,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> createMono(ReactiveDatabaseCallback<T> callback) {
 
-		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
+		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null");
 
 		return Mono.defer(this::doGetDatabase).flatMap(database -> Mono.from(callback.doInDB(prepareDatabase(database))))
 				.onErrorMap(translateException());
@@ -595,8 +595,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Flux<T> createFlux(String collectionName, ReactiveCollectionCallback<T> callback) {
 
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
+		Assert.notNull(callback, "ReactiveDatabaseCallback must not be null");
 
 		Mono<MongoCollection<Document>> collectionPublisher = doGetDatabase()
 				.map(database -> getAndPrepareCollection(database, collectionName));
@@ -614,8 +614,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> createMono(String collectionName, ReactiveCollectionCallback<T> callback) {
 
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		Assert.notNull(callback, "ReactiveCollectionCallback must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
+		Assert.notNull(callback, "ReactiveCollectionCallback must not be null");
 
 		Mono<MongoCollection<Document>> collectionPublisher = doGetDatabase()
 				.map(database -> getAndPrepareCollection(database, collectionName));
@@ -633,7 +633,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
 
-		Assert.notNull(entityClass, "EntityClass must not be null!");
+		Assert.notNull(entityClass, "EntityClass must not be null");
 
 		CollectionOptions options = collectionOptions != null ? collectionOptions : CollectionOptions.empty();
 		options = Optionals
@@ -658,7 +658,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<MongoCollection<Document>> getCollection(String collectionName) {
 
-		Assert.notNull(collectionName, "Collection name must not be null!");
+		Assert.notNull(collectionName, "Collection name must not be null");
 
 		return createMono(db -> Mono.just(db.getCollection(collectionName)));
 	}
@@ -795,11 +795,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
 			Class<T> resultClass) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(field, "Field must not be null!");
-		Assert.notNull(collectionName, "CollectionName must not be null!");
-		Assert.notNull(entityClass, "EntityClass must not be null!");
-		Assert.notNull(resultClass, "ResultClass must not be null!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(field, "Field must not be null");
+		Assert.notNull(collectionName, "CollectionName must not be null");
+		Assert.notNull(entityClass, "EntityClass must not be null");
+		Assert.notNull(resultClass, "ResultClass must not be null");
 
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
 		DistinctQueryContext distinctQueryContext = queryOperations.distinctQueryContext(query, field);
@@ -839,7 +839,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <O> Flux<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName, Class<O> outputType) {
 
-		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 
 		return doAggregate(aggregation, inputCollectionName, aggregation.getInputType(), outputType);
 	}
@@ -862,12 +862,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, @Nullable Class<?> inputType,
 			Class<O> outputType) {
 
-		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		Assert.notNull(outputType, "Output type must not be null!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
+		Assert.notNull(outputType, "Output type must not be null");
 
 		AggregationOptions options = aggregation.getOptions();
-		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming!");
+		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming");
 
 		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, inputType);
 
@@ -925,11 +925,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Class<T> returnType) {
 
 		if (near == null) {
-			throw new InvalidDataAccessApiUsageException("NearQuery must not be null!");
+			throw new InvalidDataAccessApiUsageException("NearQuery must not be null");
 		}
 
 		if (entityClass == null) {
-			throw new InvalidDataAccessApiUsageException("Entity class must not be null!");
+			throw new InvalidDataAccessApiUsageException("Entity class must not be null");
 		}
 
 		String collection = StringUtils.hasText(collectionName) ? collectionName : getCollectionName(entityClass);
@@ -966,14 +966,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 			Class<T> entityClass, String collectionName) {
 
-		Assert.notNull(options, "Options must not be null! ");
-		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(options, "Options must not be null ");
+		Assert.notNull(entityClass, "Entity class must not be null");
 
 		FindAndModifyOptions optionsToUse = FindAndModifyOptions.of(options);
 
 		Optionals.ifAllPresent(query.getCollation(), optionsToUse.getCollation(), (l, r) -> {
 			throw new IllegalArgumentException(
-					"Both Query and FindAndModifyOptions define a collation. Please provide the collation only via one of the two.");
+					"Both Query and FindAndModifyOptions define a collation; Please provide the collation only via one of the two");
 		});
 
 		if (!optionsToUse.getCollation().isPresent()) {
@@ -988,15 +988,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <S, T> Mono<T> findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
 			String collectionName, Class<T> resultType) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(replacement, "Replacement must not be null!");
-		Assert.notNull(options, "Options must not be null! Use FindAndReplaceOptions#empty() instead.");
-		Assert.notNull(entityType, "Entity class must not be null!");
-		Assert.notNull(collectionName, "CollectionName must not be null!");
-		Assert.notNull(resultType, "ResultType must not be null! Use Object.class instead.");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(replacement, "Replacement must not be null");
+		Assert.notNull(options, "Options must not be null Use FindAndReplaceOptions#empty() instead");
+		Assert.notNull(entityType, "Entity class must not be null");
+		Assert.notNull(collectionName, "CollectionName must not be null");
+		Assert.notNull(resultType, "ResultType must not be null Use Object.class instead");
 
-		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none!");
-		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip.");
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
+		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
@@ -1053,7 +1053,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<Long> count(Query query, Class<?> entityClass) {
 
-		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(entityClass, "Entity class must not be null");
 
 		return count(query, entityClass, getCollectionName(entityClass));
 	}
@@ -1066,8 +1066,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
 		return createMono(collectionName, collection -> {
 
@@ -1152,7 +1152,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Mono<T> insert(Mono<? extends T> objectToSave) {
 
-		Assert.notNull(objectToSave, "Mono to insert must not be null!");
+		Assert.notNull(objectToSave, "Mono to insert must not be null");
 
 		return objectToSave.flatMap(this::insert);
 	}
@@ -1165,7 +1165,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName) {
 
-		Assert.notNull(batchToSave, "Batch to insert must not be null!");
+		Assert.notNull(batchToSave, "Batch to insert must not be null");
 
 		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
 	}
@@ -1173,7 +1173,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Mono<T> insert(T objectToSave) {
 
-		Assert.notNull(objectToSave, "Object to insert must not be null!");
+		Assert.notNull(objectToSave, "Object to insert must not be null");
 
 		ensureNotCollectionLike(objectToSave);
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
@@ -1182,7 +1182,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Mono<T> insert(T objectToSave, String collectionName) {
 
-		Assert.notNull(objectToSave, "Object to insert must not be null!");
+		Assert.notNull(objectToSave, "Object to insert must not be null");
 
 		ensureNotCollectionLike(objectToSave);
 		return doInsert(collectionName, objectToSave, this.mongoConverter);
@@ -1257,7 +1257,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Flux<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
 			MongoWriter<Object> writer) {
 
-		Assert.notNull(writer, "MongoWriter must not be null!");
+		Assert.notNull(writer, "MongoWriter must not be null");
 
 		Mono<List<Tuple2<AdaptibleEntity<T>, Document>>> prepareDocuments = Flux.fromIterable(batchToSave)
 				.flatMap(uninitialized -> {
@@ -1300,7 +1300,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Mono<T> save(Mono<? extends T> objectToSave) {
 
-		Assert.notNull(objectToSave, "Mono to save must not be null!");
+		Assert.notNull(objectToSave, "Mono to save must not be null");
 
 		return objectToSave.flatMap(this::save);
 	}
@@ -1308,7 +1308,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Mono<T> save(Mono<? extends T> objectToSave, String collectionName) {
 
-		Assert.notNull(objectToSave, "Mono to save must not be null!");
+		Assert.notNull(objectToSave, "Mono to save must not be null");
 
 		return objectToSave.flatMap(o -> save(o, collectionName));
 	}
@@ -1316,15 +1316,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public <T> Mono<T> save(T objectToSave) {
 
-		Assert.notNull(objectToSave, "Object to save must not be null!");
+		Assert.notNull(objectToSave, "Object to save must not be null");
 		return save(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
 	@Override
 	public <T> Mono<T> save(T objectToSave, String collectionName) {
 
-		Assert.notNull(objectToSave, "Object to save must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(objectToSave, "Object to save must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
 		AdaptibleEntity<T> source = operations.forEntity(objectToSave, mongoConverter.getConversionService());
 
@@ -1568,7 +1568,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (query.isSorted() && LOGGER.isWarnEnabled()) {
 
-			LOGGER.warn(String.format("%s does not support sort ('%s'). Please use findAndModify() instead.",
+			LOGGER.warn(String.format("%s does not support sort ('%s'); Please use findAndModify() instead",
 					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject())));
 		}
 
@@ -1682,7 +1682,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<DeleteResult> remove(Object object) {
 
-		Assert.notNull(object, "Object must not be null!");
+		Assert.notNull(object, "Object must not be null");
 
 		return remove(operations.forEntity(object).getRemoveByQuery(), object.getClass());
 	}
@@ -1690,8 +1690,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public Mono<DeleteResult> remove(Object object, String collectionName) {
 
-		Assert.notNull(object, "Object must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(object, "Object must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
 		return doRemove(collectionName, operations.forEntity(object).getRemoveByQuery(), object.getClass());
 	}
@@ -1711,7 +1711,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			if (!MongoSimpleTypes.AUTOGENERATED_ID_TYPES.contains(property.getType())) {
 				throw new InvalidDataAccessApiUsageException(
-						String.format("Cannot autogenerate id of type %s for entity of type %s!", property.getType().getName(),
+						String.format("Cannot autogenerate id of type %s for entity of type %s", property.getType().getName(),
 								value.getClass().getName()));
 			}
 		}
@@ -1735,10 +1735,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Mono<DeleteResult> doRemove(String collectionName, Query query, @Nullable Class<T> entityClass) {
 
 		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
+			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
 		}
 
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
 
@@ -1895,13 +1895,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options) {
 
-		Assert.notNull(filterQuery, "Filter query must not be null!");
-		Assert.notNull(domainType, "Domain type must not be null!");
-		Assert.hasText(inputCollectionName, "Input collection name must not be null or empty!");
-		Assert.notNull(resultType, "Result type must not be null!");
-		Assert.notNull(mapFunction, "Map function must not be null!");
-		Assert.notNull(reduceFunction, "Reduce function must not be null!");
-		Assert.notNull(options, "MapReduceOptions must not be null!");
+		Assert.notNull(filterQuery, "Filter query must not be null");
+		Assert.notNull(domainType, "Domain type must not be null");
+		Assert.hasText(inputCollectionName, "Input collection name must not be null or empty");
+		Assert.notNull(resultType, "Result type must not be null");
+		Assert.notNull(mapFunction, "Map function must not be null");
+		Assert.notNull(reduceFunction, "Reduce function must not be null");
+		Assert.notNull(options, "MapReduceOptions must not be null");
 
 		assertLocalFunctionNames(mapFunction, reduceFunction);
 
@@ -1927,7 +1927,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 				if (filterQuery.getLimit() > 0 && (options.getLimit() != null)) {
 					throw new IllegalArgumentException(
-							"Both Query and MapReduceOptions define a limit. Please provide the limit only via one of the two.");
+							"Both Query and MapReduceOptions define a limit; Please provide the limit only via one of the two.");
 				}
 
 				if (filterQuery.getLimit() > 0) {
@@ -1943,7 +1943,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			Optionals.ifAllPresent(filterQuery.getCollation(), options.getCollation(), (l, r) -> {
 				throw new IllegalArgumentException(
-						"Both Query and MapReduceOptions define a collation. Please provide the collation only via one of the two.");
+						"Both Query and MapReduceOptions define a collation; Please provide the collation only via one of the two.");
 			});
 
 			if (options.getCollation().isPresent()) {
@@ -1992,7 +1992,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (ResourceUtils.isUrl(function)) {
 
 				throw new IllegalArgumentException(String.format(
-						"Blocking accessing to resource %s is not allowed using reactive infrastructure. You may load the resource at startup and cache its value.",
+						"Blocking accessing to resource %s is not allowed using reactive infrastructure; You may load the resource at startup and cache its value.",
 						function));
 			}
 		}
@@ -2850,8 +2850,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
 
-			Assert.notNull(reader, "EntityReader must not be null!");
-			Assert.notNull(type, "Entity type must not be null!");
+			Assert.notNull(reader, "EntityReader must not be null");
+			Assert.notNull(type, "Entity type must not be null");
 
 			this.reader = reader;
 			this.type = type;
@@ -2939,7 +2939,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 */
 		GeoNearResultDocumentCallback(String distanceField, DocumentCallback<T> delegate, Metric metric) {
 
-			Assert.notNull(delegate, "DocumentCallback must not be null!");
+			Assert.notNull(delegate, "DocumentCallback must not be null");
 
 			this.distanceField = distanceField;
 			this.delegate = delegate;

@@ -44,8 +44,8 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 
 		super(message);
 
-		Assert.notNull(writeResult, "WriteResult must not be null!");
-		Assert.notNull(actionOperation, "MongoActionOperation must not be null!");
+		Assert.notNull(writeResult, "WriteResult must not be null");
+		Assert.notNull(actionOperation, "MongoActionOperation must not be null");
 
 		this.writeResult = writeResult;
 		this.actionOperation = actionOperation;

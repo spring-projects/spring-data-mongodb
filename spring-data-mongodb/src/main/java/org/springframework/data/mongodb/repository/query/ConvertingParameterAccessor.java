@@ -61,8 +61,8 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	public ConvertingParameterAccessor(MongoWriter<?> writer, MongoParameterAccessor delegate) {
 
-		Assert.notNull(writer, "MongoWriter must not be null!");
-		Assert.notNull(delegate, "MongoParameterAccessor must not be null!");
+		Assert.notNull(writer, "MongoWriter must not be null");
+		Assert.notNull(delegate, "MongoParameterAccessor must not be null");
 
 		this.writer = writer;
 		this.delegate = delegate;

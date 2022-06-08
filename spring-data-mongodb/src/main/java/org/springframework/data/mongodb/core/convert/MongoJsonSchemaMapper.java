@@ -54,7 +54,7 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 	 */
 	public MongoJsonSchemaMapper(MongoConverter converter) {
 
-		Assert.notNull(converter, "Converter must not be null!");
+		Assert.notNull(converter, "Converter must not be null");
 
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
@@ -62,10 +62,10 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 
 	public Document mapSchema(Document jsonSchema, Class<?> type) {
 
-		Assert.notNull(jsonSchema, "Schema must not be null!");
-		Assert.notNull(type, "Type must not be null! Please consider Object.class.");
+		Assert.notNull(jsonSchema, "Schema must not be null");
+		Assert.notNull(type, "Type must not be null Please consider Object.class");
 		Assert.isTrue(jsonSchema.containsKey($JSON_SCHEMA),
-				() -> String.format("Document does not contain $jsonSchema field. Found %s.", jsonSchema));
+				() -> String.format("Document does not contain $jsonSchema field; Found: %s", jsonSchema));
 
 		if (Object.class.equals(type)) {
 			return new Document(jsonSchema);

@@ -71,8 +71,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
 
-		Assert.notNull(metadata, "MongoEntityInformation must not be null!");
-		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+		Assert.notNull(metadata, "MongoEntityInformation must not be null");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
@@ -85,7 +85,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> S save(S entity) {
 
-		Assert.notNull(entity, "Entity must not be null!");
+		Assert.notNull(entity, "Entity must not be null");
 
 		if (entityInformation.isNew(entity)) {
 			return mongoOperations.insert(entity, entityInformation.getCollectionName());
@@ -97,7 +97,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> List<S> saveAll(Iterable<S> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities not be null!");
+		Assert.notNull(entities, "The given Iterable of entities not be null");
 
 		Streamable<S> source = Streamable.of(entities);
 		boolean allNew = source.stream().allMatch(entityInformation::isNew);
@@ -114,7 +114,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public Optional<T> findById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+		Assert.notNull(id, "The given id must not be null");
 
 		return Optional.ofNullable(
 				mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
@@ -123,7 +123,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public boolean existsById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+		Assert.notNull(id, "The given id must not be null");
 
 		return mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
 				entityInformation.getCollectionName());
@@ -137,7 +137,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public List<T> findAllById(Iterable<ID> ids) {
 
-		Assert.notNull(ids, "The given Ids of entities not be null!");
+		Assert.notNull(ids, "The given Ids of entities not be null");
 
 		return findAll(getIdQuery(ids));
 	}
@@ -150,7 +150,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public void deleteById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+		Assert.notNull(id, "The given id must not be null");
 
 		mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -158,13 +158,13 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public void delete(T entity) {
 
-		Assert.notNull(entity, "The given entity must not be null!");
+		Assert.notNull(entity, "The given entity must not be null");
 
 		DeleteResult deleteResult = mongoOperations.remove(entity, entityInformation.getCollectionName());
 
 		if (entityInformation.isVersioned() && deleteResult.wasAcknowledged() && deleteResult.getDeletedCount() == 0) {
 			throw new OptimisticLockingFailureException(String.format(
-					"The entity with id %s with version %s in %s cannot be deleted! Was it modified or deleted in the meantime?",
+					"The entity with id %s with version %s in %s cannot be deleted; Was it modified or deleted in the meantime",
 					entityInformation.getId(entity), entityInformation.getVersion(entity),
 					entityInformation.getCollectionName()));
 		}
@@ -173,7 +173,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public void deleteAllById(Iterable<? extends ID> ids) {
 
-		Assert.notNull(ids, "The given Iterable of ids must not be null!");
+		Assert.notNull(ids, "The given Iterable of ids must not be null");
 
 		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -181,7 +181,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public void deleteAll(Iterable<? extends T> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities must not be null!");
+		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
 		entities.forEach(this::delete);
 	}
@@ -198,7 +198,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
-		Assert.notNull(pageable, "Pageable must not be null!");
+		Assert.notNull(pageable, "Pageable must not be null");
 
 		long count = count();
 		List<T> list = findAll(new Query().with(pageable));
@@ -209,7 +209,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public List<T> findAll(Sort sort) {
 
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(sort, "Sort must not be null");
 
 		return findAll(new Query().with(sort));
 	}
@@ -221,7 +221,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> S insert(S entity) {
 
-		Assert.notNull(entity, "Entity must not be null!");
+		Assert.notNull(entity, "Entity must not be null");
 
 		return mongoOperations.insert(entity, entityInformation.getCollectionName());
 	}
@@ -229,7 +229,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> List<S> insert(Iterable<S> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities not be null!");
+		Assert.notNull(entities, "The given Iterable of entities not be null");
 
 		Collection<S> list = toCollection(entities);
 
@@ -247,7 +247,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> Optional<S> findOne(Example<S> example) {
 
-		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(example, "Sample must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
@@ -264,8 +264,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> List<S> findAll(Example<S> example, Sort sort) {
 
-		Assert.notNull(example, "Sample must not be null!");
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(example, "Sample must not be null");
+		Assert.notNull(sort, "Sort must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
@@ -277,8 +277,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
 
-		Assert.notNull(example, "Sample must not be null!");
-		Assert.notNull(pageable, "Pageable must not be null!");
+		Assert.notNull(example, "Sample must not be null");
+		Assert.notNull(pageable, "Pageable must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()).with(pageable); //
@@ -292,7 +292,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> long count(Example<S> example) {
 
-		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(example, "Sample must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
@@ -303,7 +303,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public <S extends T> boolean exists(Example<S> example) {
 
-		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(example, "Sample must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
@@ -315,8 +315,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	public <S extends T, R> R findBy(Example<S> example,
 			Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
 
-		Assert.notNull(example, "Sample must not be null!");
-		Assert.notNull(queryFunction, "Query function must not be null!");
+		Assert.notNull(example, "Sample must not be null");
+		Assert.notNull(queryFunction, "Query function must not be null");
 
 		return queryFunction.apply(new FluentQueryByExample<>(example, example.getProbeType()));
 	}
@@ -392,7 +392,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		@Override
 		public Page<T> page(Pageable pageable) {
 
-			Assert.notNull(pageable, "Pageable must not be null!");
+			Assert.notNull(pageable, "Pageable must not be null");
 
 			List<T> list = createQuery(q -> q.with(pageable)).all();
 

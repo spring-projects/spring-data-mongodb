@@ -70,7 +70,7 @@ public class StringOperators {
 		 */
 		public StringOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -82,7 +82,7 @@ public class StringOperators {
 		 */
 		public StringOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -96,7 +96,7 @@ public class StringOperators {
 		 */
 		public Concat concatValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createConcat().concatValueOf(fieldReference);
 		}
 
@@ -109,7 +109,7 @@ public class StringOperators {
 		 */
 		public Concat concatValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createConcat().concatValueOf(expression);
 		}
 
@@ -122,7 +122,7 @@ public class StringOperators {
 		 */
 		public Concat concat(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createConcat().concat(value);
 		}
 
@@ -184,7 +184,7 @@ public class StringOperators {
 		 */
 		public StrCaseCmp strCaseCmp(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createStrCaseCmp().strcasecmp(value);
 		}
 
@@ -197,7 +197,7 @@ public class StringOperators {
 		 */
 		public StrCaseCmp strCaseCmpValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createStrCaseCmp().strcasecmpValueOf(fieldReference);
 		}
 
@@ -210,7 +210,7 @@ public class StringOperators {
 		 */
 		public StrCaseCmp strCaseCmpValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createStrCaseCmp().strcasecmpValueOf(expression);
 		}
 
@@ -228,7 +228,7 @@ public class StringOperators {
 		 */
 		public IndexOfBytes indexOf(String substring) {
 
-			Assert.notNull(substring, "Substring must not be null!");
+			Assert.notNull(substring, "Substring must not be null");
 			return createIndexOfBytesSubstringBuilder().indexOf(substring);
 		}
 
@@ -242,7 +242,7 @@ public class StringOperators {
 		 */
 		public IndexOfBytes indexOf(Field fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createIndexOfBytesSubstringBuilder().indexOf(fieldReference);
 		}
 
@@ -256,7 +256,7 @@ public class StringOperators {
 		 */
 		public IndexOfBytes indexOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createIndexOfBytesSubstringBuilder().indexOf(expression);
 		}
 
@@ -274,7 +274,7 @@ public class StringOperators {
 		 */
 		public IndexOfCP indexOfCP(String substring) {
 
-			Assert.notNull(substring, "Substring must not be null!");
+			Assert.notNull(substring, "Substring must not be null");
 			return createIndexOfCPSubstringBuilder().indexOf(substring);
 		}
 
@@ -288,7 +288,7 @@ public class StringOperators {
 		 */
 		public IndexOfCP indexOfCP(Field fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createIndexOfCPSubstringBuilder().indexOf(fieldReference);
 		}
 
@@ -302,7 +302,7 @@ public class StringOperators {
 		 */
 		public IndexOfCP indexOfCP(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createIndexOfCPSubstringBuilder().indexOf(expression);
 		}
 
@@ -776,7 +776,7 @@ public class StringOperators {
 		 */
 		public static Concat valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Concat(asFields(fieldReference));
 		}
 
@@ -788,7 +788,7 @@ public class StringOperators {
 		 */
 		public static Concat valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Concat(Collections.singletonList(expression));
 		}
 
@@ -800,7 +800,7 @@ public class StringOperators {
 		 */
 		public static Concat stringValue(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Concat(Collections.singletonList(value));
 		}
 
@@ -812,7 +812,7 @@ public class StringOperators {
 		 */
 		public Concat concatValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Concat(append(Fields.field(fieldReference)));
 		}
 
@@ -824,7 +824,7 @@ public class StringOperators {
 		 */
 		public Concat concatValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Concat(append(expression));
 		}
 
@@ -863,7 +863,7 @@ public class StringOperators {
 		 */
 		public static Substr valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Substr(asFields(fieldReference));
 		}
 
@@ -875,7 +875,7 @@ public class StringOperators {
 		 */
 		public static Substr valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Substr(Collections.singletonList(expression));
 		}
 
@@ -921,7 +921,7 @@ public class StringOperators {
 		 */
 		public static ToLower lowerValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ToLower(Fields.field(fieldReference));
 		}
 
@@ -933,7 +933,7 @@ public class StringOperators {
 		 */
 		public static ToLower lowerValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ToLower(Collections.singletonList(expression));
 		}
 
@@ -945,7 +945,7 @@ public class StringOperators {
 		 */
 		public static ToLower lower(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new ToLower(value);
 		}
 	}
@@ -974,7 +974,7 @@ public class StringOperators {
 		 */
 		public static ToUpper upperValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ToUpper(Fields.field(fieldReference));
 		}
 
@@ -986,7 +986,7 @@ public class StringOperators {
 		 */
 		public static ToUpper upperValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ToUpper(Collections.singletonList(expression));
 		}
 
@@ -998,7 +998,7 @@ public class StringOperators {
 		 */
 		public static ToUpper upper(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new ToUpper(value);
 		}
 	}
@@ -1027,7 +1027,7 @@ public class StringOperators {
 		 */
 		public static StrCaseCmp valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StrCaseCmp(asFields(fieldReference));
 		}
 
@@ -1039,7 +1039,7 @@ public class StringOperators {
 		 */
 		public static StrCaseCmp valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StrCaseCmp(Collections.singletonList(expression));
 		}
 
@@ -1051,7 +1051,7 @@ public class StringOperators {
 		 */
 		public static StrCaseCmp stringValue(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new StrCaseCmp(Collections.singletonList(value));
 		}
 
@@ -1061,13 +1061,13 @@ public class StringOperators {
 
 		public StrCaseCmp strcasecmpValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StrCaseCmp(append(Fields.field(fieldReference)));
 		}
 
 		public StrCaseCmp strcasecmpValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StrCaseCmp(append(expression));
 		}
 	}
@@ -1096,7 +1096,7 @@ public class StringOperators {
 		 */
 		public static SubstringBuilder valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new SubstringBuilder(Fields.field(fieldReference));
 		}
 
@@ -1108,7 +1108,7 @@ public class StringOperators {
 		 */
 		public static SubstringBuilder valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SubstringBuilder(expression);
 		}
 
@@ -1186,7 +1186,7 @@ public class StringOperators {
 		 */
 		public static SubstringBuilder valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new SubstringBuilder(Fields.field(fieldReference));
 		}
 
@@ -1198,7 +1198,7 @@ public class StringOperators {
 		 */
 		public static SubstringBuilder valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SubstringBuilder(expression);
 		}
 
@@ -1276,7 +1276,7 @@ public class StringOperators {
 		 */
 		public static Split valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Split(asFields(fieldReference));
 		}
 
@@ -1288,7 +1288,7 @@ public class StringOperators {
 		 */
 		public static Split valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Split(Collections.singletonList(expression));
 		}
 
@@ -1300,7 +1300,7 @@ public class StringOperators {
 		 */
 		public Split split(String delimiter) {
 
-			Assert.notNull(delimiter, "Delimiter must not be null!");
+			Assert.notNull(delimiter, "Delimiter must not be null");
 			return new Split(append(delimiter));
 		}
 
@@ -1312,7 +1312,7 @@ public class StringOperators {
 		 */
 		public Split split(Field fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Split(append(fieldReference));
 		}
 
@@ -1324,7 +1324,7 @@ public class StringOperators {
 		 */
 		public Split split(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Split(append(expression));
 		}
 	}
@@ -1363,7 +1363,7 @@ public class StringOperators {
 		 */
 		public static StrLenBytes stringLengthOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StrLenBytes(expression);
 		}
 	}
@@ -1402,7 +1402,7 @@ public class StringOperators {
 		 */
 		public static StrLenCP stringLengthOfCP(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StrLenCP(expression);
 		}
 	}
@@ -1431,7 +1431,7 @@ public class StringOperators {
 		 */
 		public static SubstrCP valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new SubstrCP(asFields(fieldReference));
 		}
 
@@ -1443,7 +1443,7 @@ public class StringOperators {
 		 */
 		public static SubstrCP valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SubstrCP(Collections.singletonList(expression));
 		}
 
@@ -1478,7 +1478,7 @@ public class StringOperators {
 		 */
 		public static Trim valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Trim(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
@@ -1491,7 +1491,7 @@ public class StringOperators {
 		 */
 		public static Trim valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Trim(Collections.singletonMap("input", expression));
 		}
 
@@ -1503,7 +1503,7 @@ public class StringOperators {
 		 */
 		public Trim chars(String chars) {
 
-			Assert.notNull(chars, "Chars must not be null!");
+			Assert.notNull(chars, "Chars must not be null");
 			return new Trim(append("chars", chars));
 		}
 
@@ -1575,7 +1575,7 @@ public class StringOperators {
 		 */
 		public static LTrim valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new LTrim(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
@@ -1588,7 +1588,7 @@ public class StringOperators {
 		 */
 		public static LTrim valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new LTrim(Collections.singletonMap("input", expression));
 		}
 
@@ -1600,7 +1600,7 @@ public class StringOperators {
 		 */
 		public LTrim chars(String chars) {
 
-			Assert.notNull(chars, "Chars must not be null!");
+			Assert.notNull(chars, "Chars must not be null");
 			return new LTrim(append("chars", chars));
 		}
 
@@ -1654,7 +1654,7 @@ public class StringOperators {
 		 */
 		public static RTrim valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new RTrim(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
@@ -1667,7 +1667,7 @@ public class StringOperators {
 		 */
 		public static RTrim valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new RTrim(Collections.singletonMap("input", expression));
 		}
 
@@ -1679,7 +1679,7 @@ public class StringOperators {
 		 */
 		public RTrim chars(String chars) {
 
-			Assert.notNull(chars, "Chars must not be null!");
+			Assert.notNull(chars, "Chars must not be null");
 			return new RTrim(append("chars", chars));
 		}
 
@@ -1732,7 +1732,7 @@ public class StringOperators {
 		 */
 		public static RegexFind valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new RegexFind(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
@@ -1746,7 +1746,7 @@ public class StringOperators {
 		 */
 		public static RegexFind valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexFind(Collections.singletonMap("input", expression));
 		}
@@ -1759,7 +1759,7 @@ public class StringOperators {
 		 */
 		public RegexFind options(String options) {
 
-			Assert.notNull(options, "Options must not be null!");
+			Assert.notNull(options, "Options must not be null");
 
 			return new RegexFind(append("options", options));
 		}
@@ -1773,7 +1773,7 @@ public class StringOperators {
 		 */
 		public RegexFind optionsOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new RegexFind(append("options", Fields.field(fieldReference)));
 		}
@@ -1787,7 +1787,7 @@ public class StringOperators {
 		 */
 		public RegexFind optionsOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexFind(append("options", expression));
 		}
@@ -1800,7 +1800,7 @@ public class StringOperators {
 		 */
 		public RegexFind regex(String regex) {
 
-			Assert.notNull(regex, "Regex must not be null!");
+			Assert.notNull(regex, "Regex must not be null");
 
 			return new RegexFind(append("regex", regex));
 		}
@@ -1813,7 +1813,7 @@ public class StringOperators {
 		 */
 		public RegexFind pattern(Pattern pattern) {
 
-			Assert.notNull(pattern, "Pattern must not be null!");
+			Assert.notNull(pattern, "Pattern must not be null");
 
 			Map<String, Object> regex = append("regex", pattern.pattern());
 			regex.put("options", RegexFlags.toRegexOptions(pattern.flags()));
@@ -1829,7 +1829,7 @@ public class StringOperators {
 		 */
 		public RegexFind regexOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			Assert.notNull(fieldReference, "fieldReference must not be null");
 
 			return new RegexFind(append("regex", Fields.field(fieldReference)));
 		}
@@ -1842,7 +1842,7 @@ public class StringOperators {
 		 */
 		public RegexFind regexOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexFind(append("regex", expression));
 		}
@@ -1875,7 +1875,7 @@ public class StringOperators {
 		 * @return new instance of {@link RegexFindAll}.
 		 */
 		public static RegexFindAll valueOf(String fieldReference) {
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new RegexFindAll(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
@@ -1888,7 +1888,7 @@ public class StringOperators {
 		 */
 		public static RegexFindAll valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexFindAll(Collections.singletonMap("input", expression));
 		}
@@ -1901,7 +1901,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll options(String options) {
 
-			Assert.notNull(options, "Options must not be null!");
+			Assert.notNull(options, "Options must not be null");
 
 			return new RegexFindAll(append("options", options));
 		}
@@ -1915,7 +1915,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll optionsOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			Assert.notNull(fieldReference, "fieldReference must not be null");
 
 			return new RegexFindAll(append("options", Fields.field(fieldReference)));
 		}
@@ -1929,7 +1929,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll optionsOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexFindAll(append("options", expression));
 		}
@@ -1942,7 +1942,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll pattern(Pattern pattern) {
 
-			Assert.notNull(pattern, "Pattern must not be null!");
+			Assert.notNull(pattern, "Pattern must not be null");
 
 			Map<String, Object> regex = append("regex", pattern.pattern());
 			regex.put("options", RegexFlags.toRegexOptions(pattern.flags()));
@@ -1958,7 +1958,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll regex(String regex) {
 
-			Assert.notNull(regex, "Regex must not be null!");
+			Assert.notNull(regex, "Regex must not be null");
 
 			return new RegexFindAll(append("regex", regex));
 		}
@@ -1971,7 +1971,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll regexOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			Assert.notNull(fieldReference, "fieldReference must not be null");
 
 			return new RegexFindAll(append("regex", Fields.field(fieldReference)));
 		}
@@ -1984,7 +1984,7 @@ public class StringOperators {
 		 */
 		public RegexFindAll regexOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexFindAll(append("regex", expression));
 		}
@@ -2018,7 +2018,7 @@ public class StringOperators {
 		 */
 		public static RegexMatch valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new RegexMatch(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
@@ -2032,7 +2032,7 @@ public class StringOperators {
 		 */
 		public static RegexMatch valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexMatch(Collections.singletonMap("input", expression));
 		}
@@ -2045,7 +2045,7 @@ public class StringOperators {
 		 */
 		public RegexMatch options(String options) {
 
-			Assert.notNull(options, "Options must not be null!");
+			Assert.notNull(options, "Options must not be null");
 
 			return new RegexMatch(append("options", options));
 		}
@@ -2059,7 +2059,7 @@ public class StringOperators {
 		 */
 		public RegexMatch optionsOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new RegexMatch(append("options", Fields.field(fieldReference)));
 		}
@@ -2073,7 +2073,7 @@ public class StringOperators {
 		 */
 		public RegexMatch optionsOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexMatch(append("options", expression));
 		}
@@ -2086,7 +2086,7 @@ public class StringOperators {
 		 */
 		public RegexMatch pattern(Pattern pattern) {
 
-			Assert.notNull(pattern, "Pattern must not be null!");
+			Assert.notNull(pattern, "Pattern must not be null");
 
 			Map<String, Object> regex = append("regex", pattern.pattern());
 			regex.put("options", RegexFlags.toRegexOptions(pattern.flags()));
@@ -2102,7 +2102,7 @@ public class StringOperators {
 		 */
 		public RegexMatch regex(String regex) {
 
-			Assert.notNull(regex, "Regex must not be null!");
+			Assert.notNull(regex, "Regex must not be null");
 
 			return new RegexMatch(append("regex", regex));
 		}
@@ -2115,7 +2115,7 @@ public class StringOperators {
 		 */
 		public RegexMatch regexOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new RegexMatch(append("regex", Fields.field(fieldReference)));
 		}
@@ -2128,7 +2128,7 @@ public class StringOperators {
 		 */
 		public RegexMatch regexOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new RegexMatch(append("regex", expression));
 		}
@@ -2162,7 +2162,7 @@ public class StringOperators {
 		 */
 		public static ReplaceOne value(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 
 			return new ReplaceOne(Collections.singletonMap("input", value));
 		}
@@ -2176,7 +2176,7 @@ public class StringOperators {
 		 */
 		public static ReplaceOne valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new ReplaceOne(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
@@ -2190,7 +2190,7 @@ public class StringOperators {
 		 */
 		public static ReplaceOne valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new ReplaceOne(Collections.singletonMap("input", expression));
 		}
@@ -2203,7 +2203,7 @@ public class StringOperators {
 		 */
 		public ReplaceOne replacement(String replacement) {
 
-			Assert.notNull(replacement, "Replacement must not be null!");
+			Assert.notNull(replacement, "Replacement must not be null");
 
 			return new ReplaceOne(append("replacement", replacement));
 		}
@@ -2217,7 +2217,7 @@ public class StringOperators {
 		 */
 		public ReplaceOne replacementOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new ReplaceOne(append("replacement", Fields.field(fieldReference)));
 		}
@@ -2231,7 +2231,7 @@ public class StringOperators {
 		 */
 		public ReplaceOne replacementOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new ReplaceOne(append("replacement", expression));
 		}
@@ -2244,7 +2244,7 @@ public class StringOperators {
 		 */
 		public ReplaceOne find(String value) {
 
-			Assert.notNull(value, "Search string must not be null!");
+			Assert.notNull(value, "Search string must not be null");
 
 			return new ReplaceOne(append("find", value));
 		}
@@ -2257,7 +2257,7 @@ public class StringOperators {
 		 */
 		public ReplaceOne findValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			Assert.notNull(fieldReference, "fieldReference must not be null");
 
 			return new ReplaceOne(append("find", fieldReference));
 		}
@@ -2271,7 +2271,7 @@ public class StringOperators {
 		 */
 		public ReplaceOne findValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new ReplaceOne(append("find", expression));
 		}
@@ -2305,7 +2305,7 @@ public class StringOperators {
 		 */
 		public static ReplaceAll value(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 
 			return new ReplaceAll(Collections.singletonMap("input", value));
 		}
@@ -2319,7 +2319,7 @@ public class StringOperators {
 		 */
 		public static ReplaceAll valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new ReplaceAll(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
@@ -2333,7 +2333,7 @@ public class StringOperators {
 		 */
 		public static ReplaceAll valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new ReplaceAll(Collections.singletonMap("input", expression));
 		}
@@ -2346,7 +2346,7 @@ public class StringOperators {
 		 */
 		public ReplaceAll replacement(String replacement) {
 
-			Assert.notNull(replacement, "Replacement must not be null!");
+			Assert.notNull(replacement, "Replacement must not be null");
 
 			return new ReplaceAll(append("replacement", replacement));
 		}
@@ -2360,7 +2360,7 @@ public class StringOperators {
 		 */
 		public ReplaceAll replacementValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new ReplaceAll(append("replacement", Fields.field(fieldReference)));
 		}
@@ -2374,7 +2374,7 @@ public class StringOperators {
 		 */
 		public ReplaceAll replacementValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new ReplaceAll(append("replacement", expression));
 		}
@@ -2387,7 +2387,7 @@ public class StringOperators {
 		 */
 		public ReplaceAll find(String value) {
 
-			Assert.notNull(value, "Search string must not be null!");
+			Assert.notNull(value, "Search string must not be null");
 
 			return new ReplaceAll(append("find", value));
 		}
@@ -2400,7 +2400,7 @@ public class StringOperators {
 		 */
 		public ReplaceAll findValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			Assert.notNull(fieldReference, "fieldReference must not be null");
 
 			return new ReplaceAll(append("find", fieldReference));
 		}
@@ -2413,7 +2413,7 @@ public class StringOperators {
 		 */
 		public ReplaceAll findValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return new ReplaceAll(append("find", expression));
 		}

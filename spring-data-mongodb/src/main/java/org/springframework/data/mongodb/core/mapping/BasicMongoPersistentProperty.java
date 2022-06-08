@@ -95,7 +95,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			if (!ID_FIELD_NAME.equals(annotatedName)) {
 				if(LOG.isWarnEnabled()) {
 					LOG.warn(String.format(
-							"Customizing field name for id property '%s.%s' is not allowed! Custom name ('%s') will not be considered!",
+							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
 							owner.getName(), getName(), annotatedName));
 				}
 			}
@@ -150,7 +150,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		String fieldName = fieldNamingStrategy.getFieldName(this);
 
 		if (!StringUtils.hasText(fieldName)) {
-			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s!",
+			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s",
 					this, fieldNamingStrategy.getClass()));
 		}
 

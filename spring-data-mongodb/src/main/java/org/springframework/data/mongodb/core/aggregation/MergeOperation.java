@@ -62,8 +62,8 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	public MergeOperation(MergeOperationTarget into, UniqueMergeId on, @Nullable Let let,
 			@Nullable WhenDocumentsMatch whenMatched, @Nullable WhenDocumentsDontMatch whenNotMatched) {
 
-		Assert.notNull(into, "Into must not be null! Please provide a target collection.");
-		Assert.notNull(on, "On must not be null! Use UniqueMergeId.id() instead.");
+		Assert.notNull(into, "Into must not be null Please provide a target collection");
+		Assert.notNull(on, "On must not be null Use UniqueMergeId.id() instead");
 
 		this.into = into;
 		this.on = on;
@@ -167,7 +167,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		public static UniqueMergeId ofIdFields(String... fields) {
 
-			Assert.noNullElements(fields, "Fields must not contain null values!");
+			Assert.noNullElements(fields, "Fields must not contain null values");
 
 			if (ObjectUtils.isEmpty(fields)) {
 				return id();
@@ -225,7 +225,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		private MergeOperationTarget(@Nullable String database, String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty!");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			this.database = database;
 			this.collection = collection;
@@ -360,7 +360,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		private WhenDocumentsDontMatch(String value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 
 			this.value = value;
 		}
@@ -432,7 +432,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 */
 		public MergeOperationBuilder intoCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty!");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			this.collection = collection;
 			return this;

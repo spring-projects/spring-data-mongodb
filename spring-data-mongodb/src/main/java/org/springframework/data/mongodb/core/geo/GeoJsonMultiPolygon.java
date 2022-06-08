@@ -41,7 +41,7 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 	 */
 	public GeoJsonMultiPolygon(List<GeoJsonPolygon> polygons) {
 
-		Assert.notNull(polygons, "Polygons for MultiPolygon must not be null!");
+		Assert.notNull(polygons, "Polygons for MultiPolygon must not be null");
 
 		this.coordinates.addAll(polygons);
 	}

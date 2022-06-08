@@ -291,10 +291,10 @@ class LazyLoadingProxyFactory {
 				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
 
 				if (translatedException instanceof ClientSessionException) {
-					throw new LazyLoadingException("Unable to lazily resolve DBRef! Invalid session state.", ex);
+					throw new LazyLoadingException("Unable to lazily resolve DBRef; Invalid session state", ex);
 				}
 
-				throw new LazyLoadingException("Unable to lazily resolve DBRef!",
+				throw new LazyLoadingException("Unable to lazily resolve DBRef",
 						translatedException != null ? translatedException : ex);
 			}
 		}

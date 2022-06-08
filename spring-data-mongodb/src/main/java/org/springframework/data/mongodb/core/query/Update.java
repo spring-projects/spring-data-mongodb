@@ -320,7 +320,7 @@ public class Update implements UpdateDefinition {
 	 */
 	public Update multiply(String key, Number multiplier) {
 
-		Assert.notNull(multiplier, "Multiplier must not be null.");
+		Assert.notNull(multiplier, "Multiplier must not be null");
 		addMultiFieldOperation("$mul", key, multiplier.doubleValue());
 		return this;
 	}
@@ -337,7 +337,7 @@ public class Update implements UpdateDefinition {
 	 */
 	public Update max(String key, Object value) {
 
-		Assert.notNull(value, "Value for max operation must not be null.");
+		Assert.notNull(value, "Value for max operation must not be null");
 		addMultiFieldOperation("$max", key, value);
 		return this;
 	}
@@ -354,7 +354,7 @@ public class Update implements UpdateDefinition {
 	 */
 	public Update min(String key, Object value) {
 
-		Assert.notNull(value, "Value for min operation must not be null.");
+		Assert.notNull(value, "Value for min operation must not be null");
 		addMultiFieldOperation("$min", key, value);
 		return this;
 	}
@@ -440,7 +440,7 @@ public class Update implements UpdateDefinition {
 
 	protected void addMultiFieldOperation(String operator, String key, @Nullable Object value) {
 
-		Assert.hasText(key, "Key/Path for update must not be null or blank.");
+		Assert.hasText(key, "Key/Path for update must not be null or blank");
 		Object existingValue = this.modifierOps.get(operator);
 		Document keyValueMap;
 
@@ -742,7 +742,7 @@ public class Update implements UpdateDefinition {
 		 */
 		SortModifier(Direction direction) {
 
-			Assert.notNull(direction, "Direction must not be null!");
+			Assert.notNull(direction, "Direction must not be null");
 			this.sort = direction.isAscending() ? 1 : -1;
 		}
 
@@ -753,13 +753,13 @@ public class Update implements UpdateDefinition {
 		 */
 		SortModifier(Sort sort) {
 
-			Assert.notNull(sort, "Sort must not be null!");
+			Assert.notNull(sort, "Sort must not be null");
 
 			for (Order order : sort) {
 
 				if (order.isIgnoreCase()) {
-					throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
-							+ "MongoDB does not support sorting ignoring case currently!", order.getProperty()));
+					throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case;"
+							+ " MongoDB does not support sorting ignoring case currently", order.getProperty()));
 				}
 			}
 
@@ -833,7 +833,7 @@ public class Update implements UpdateDefinition {
 		 */
 		public PushOperatorBuilder sort(Direction direction) {
 
-			Assert.notNull(direction, "Direction must not be null.");
+			Assert.notNull(direction, "Direction must not be null");
 			this.modifiers.addModifier(new SortModifier(direction));
 			return this;
 		}
@@ -848,7 +848,7 @@ public class Update implements UpdateDefinition {
 		 */
 		public PushOperatorBuilder sort(Sort sort) {
 
-			Assert.notNull(sort, "Sort must not be null.");
+			Assert.notNull(sort, "Sort must not be null");
 			this.modifiers.addModifier(new SortModifier(sort));
 			return this;
 		}
@@ -993,8 +993,8 @@ public class Update implements UpdateDefinition {
 		 */
 		protected BitwiseOperatorBuilder(Update reference, String key) {
 
-			Assert.notNull(reference, "Reference must not be null!");
-			Assert.notNull(key, "Key must not be null!");
+			Assert.notNull(reference, "Reference must not be null");
+			Assert.notNull(key, "Key must not be null");
 
 			this.reference = reference;
 			this.key = key;

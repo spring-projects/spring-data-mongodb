@@ -42,7 +42,7 @@ public class MongoAdmin implements MongoAdminOperations {
 	 */
 	public MongoAdmin(MongoClient client) {
 
-		Assert.notNull(client, "Client must not be null!");
+		Assert.notNull(client, "Client must not be null");
 		this.mongoClient = client;
 	}
 

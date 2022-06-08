@@ -61,9 +61,9 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	public TypeBasedAggregationOperationContext(Class<?> type,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper) {
 
-		Assert.notNull(type, "Type must not be null!");
-		Assert.notNull(mappingContext, "MappingContext must not be null!");
-		Assert.notNull(mapper, "QueryMapper must not be null!");
+		Assert.notNull(type, "Type must not be null");
+		Assert.notNull(mappingContext, "MappingContext must not be null");
+		Assert.notNull(mapper, "QueryMapper must not be null");
 
 		this.type = type;
 		this.mappingContext = mappingContext;
@@ -94,7 +94,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	@Override
 	public Fields getFields(Class<?> type) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
 

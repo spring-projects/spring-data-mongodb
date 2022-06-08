@@ -164,7 +164,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 */
 	default ReactiveSessionScoped withSession(Supplier<ClientSession> sessionProvider) {
 
-		Assert.notNull(sessionProvider, "SessionProvider must not be null!");
+		Assert.notNull(sessionProvider, "SessionProvider must not be null");
 
 		return withSession(Mono.fromSupplier(sessionProvider));
 	}
@@ -756,7 +756,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 */
 	default <T> Mono<T> findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
 
-		Assert.notNull(replacement, "Replacement must not be null!");
+		Assert.notNull(replacement, "Replacement must not be null");
 		return findAndReplace(query, replacement, options, (Class<T>) ClassUtils.getUserClass(replacement), collectionName);
 	}
 
@@ -941,7 +941,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 */
 	default Mono<Long> estimatedCount(Class<?> entityClass) {
 
-		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(entityClass, "Entity class must not be null");
 		return estimatedCount(getCollectionName(entityClass));
 	}
 

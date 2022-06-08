@@ -1954,7 +1954,7 @@ public class ProjectionOperationUnitTests {
 				"     branches: [\n" + //
 				"       {\n" + //
 				"         case: { $gte : [ { $avg : \"$scores\" }, 90 ] },\n" + //
-				"         then: \"Doing great!\"\n" + //
+				"         then: \"Doing great\"\n" + //
 				"       },\n" + //
 				"       {\n" + //
 				"         case: { $and : [ { $gte : [ { $avg : \"$scores\" }, 80 ] },\n" + //
@@ -1972,7 +1972,7 @@ public class ProjectionOperationUnitTests {
 
 		CaseOperator cond1 = CaseOperator
 				.when(ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(90))
-				.then("Doing great!");
+				.then("Doing great");
 		CaseOperator cond2 = CaseOperator
 				.when(BooleanOperators.And.and(
 						ComparisonOperators.Gte.valueOf(AccumulatorOperators.Avg.avgOf("scores")).greaterThanEqualToValue(80),

@@ -60,7 +60,7 @@ public class DataTypeOperators {
 		 */
 		public static Type typeOf(String field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			return new Type(Fields.field(field));
 		}
 	}

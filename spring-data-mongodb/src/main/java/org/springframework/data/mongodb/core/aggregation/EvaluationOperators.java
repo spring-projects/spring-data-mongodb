@@ -60,7 +60,7 @@ public class EvaluationOperators {
 		 */
 		public EvaluationOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -72,7 +72,7 @@ public class EvaluationOperators {
 		 */
 		public EvaluationOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -108,7 +108,7 @@ public class EvaluationOperators {
 			 */
 			public static Expr valueOf(String fieldReference) {
 
-				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				Assert.notNull(fieldReference, "FieldReference must not be null");
 				return new Expr(Fields.field(fieldReference));
 			}
 
@@ -120,7 +120,7 @@ public class EvaluationOperators {
 			 */
 			public static Expr valueOf(AggregationExpression expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				return new Expr(expression);
 			}
 

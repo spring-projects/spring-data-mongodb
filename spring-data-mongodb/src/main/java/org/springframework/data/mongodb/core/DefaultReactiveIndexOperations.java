@@ -76,9 +76,9 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
 			QueryMapper queryMapper, Optional<Class<?>> type) {
 
-		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null!");
-		Assert.notNull(collectionName, "Collection must not be null!");
-		Assert.notNull(queryMapper, "QueryMapper must not be null!");
+		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null");
+		Assert.notNull(collectionName, "Collection must not be null");
+		Assert.notNull(queryMapper, "QueryMapper must not be null");
 
 		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;

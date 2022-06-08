@@ -84,7 +84,7 @@ public class MongoExampleMapper {
 	 */
 	public Document getMappedExample(Example<?> example) {
 
-		Assert.notNull(example, "Example must not be null!");
+		Assert.notNull(example, "Example must not be null");
 
 		return getMappedExample(example, mappingContext.getRequiredPersistentEntity(example.getProbeType()));
 	}
@@ -99,8 +99,8 @@ public class MongoExampleMapper {
 	 */
 	public Document getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
 
-		Assert.notNull(example, "Example must not be null!");
-		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
+		Assert.notNull(example, "Example must not be null");
+		Assert.notNull(entity, "MongoPersistentEntity must not be null");
 
 		Document reference = (Document) converter.convertToMongoType(example.getProbe());
 

@@ -101,7 +101,7 @@ public class WildcardIndex extends Index {
 	 */
 	@Override
 	public Index unique() {
-		throw new UnsupportedOperationException("Wildcard Index does not support 'unique'.");
+		throw new UnsupportedOperationException("Wildcard Index does not support 'unique'");
 	}
 
 	/**
@@ -111,7 +111,7 @@ public class WildcardIndex extends Index {
 	 */
 	@Override
 	public Index expire(long seconds) {
-		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'.");
+		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}
 
 	/**
@@ -121,7 +121,7 @@ public class WildcardIndex extends Index {
 	 */
 	@Override
 	public Index expire(long value, TimeUnit timeUnit) {
-		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'.");
+		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}
 
 	/**
@@ -131,7 +131,7 @@ public class WildcardIndex extends Index {
 	 */
 	@Override
 	public Index expire(Duration duration) {
-		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'.");
+		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}
 
 	/**

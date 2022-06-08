@@ -37,8 +37,8 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	 */
 	public SimpleMongoEntityMetadata(Class<T> type, MongoPersistentEntity<?> collectionEntity) {
 
-		Assert.notNull(type, "Type must not be null!");
-		Assert.notNull(collectionEntity, "Collection entity must not be null or empty!");
+		Assert.notNull(type, "Type must not be null");
+		Assert.notNull(collectionEntity, "Collection entity must not be null or empty");
 
 		this.type = type;
 		this.collectionEntity = collectionEntity;

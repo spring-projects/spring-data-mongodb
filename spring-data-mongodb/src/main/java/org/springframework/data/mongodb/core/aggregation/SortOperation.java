@@ -47,7 +47,7 @@ public class SortOperation implements AggregationOperation {
 	 */
 	public SortOperation(Sort sort) {
 
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(sort, "Sort must not be null");
 		this.sort = sort;
 	}
 

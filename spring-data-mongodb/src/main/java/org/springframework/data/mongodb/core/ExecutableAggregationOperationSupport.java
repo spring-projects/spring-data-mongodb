@@ -41,7 +41,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	@Override
 	public <T> ExecutableAggregation<T> aggregateAndReturn(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ExecutableAggregationSupport<>(template, domainType, null, null);
 	}
@@ -69,7 +69,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		@Override
 		public AggregationWithAggregation<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty!");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
 		}
@@ -77,7 +77,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		@Override
 		public TerminatingAggregation<T> by(Aggregation aggregation) {
 
-			Assert.notNull(aggregation, "Aggregation must not be null!");
+			Assert.notNull(aggregation, "Aggregation must not be null");
 
 			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
 		}

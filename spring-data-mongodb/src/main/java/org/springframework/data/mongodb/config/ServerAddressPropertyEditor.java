@@ -43,7 +43,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 * A port is a number without a leading 0 at the end of the address that is proceeded by just a single :.
 	 */
 	private static final String HOST_PORT_SPLIT_PATTERN = "(?<!:):(?=[123456789]\\d*$)";
-	private static final String COULD_NOT_PARSE_ADDRESS_MESSAGE = "Could not parse address %s '%s'. Check your replica set configuration!";
+	private static final String COULD_NOT_PARSE_ADDRESS_MESSAGE = "Could not parse address %s '%s'; Check your replica set configuration";
 	private static final Log LOG = LogFactory.getLog(ServerAddressPropertyEditor.class);
 
 	@Override
@@ -68,7 +68,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 		if (serverAddresses.isEmpty()) {
 			throw new IllegalArgumentException(
-					"Could not resolve at least one server of the replica set configuration! Validate your config!");
+					"Could not resolve at least one server of the replica set configuration; Validate your config");
 		}
 
 		setValue(serverAddresses.toArray(new ServerAddress[serverAddresses.size()]));
@@ -125,7 +125,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 */
 	private String[] extractHostAddressAndPort(String addressAndPortSource) {
 
-		Assert.notNull(addressAndPortSource, "Address and port source must not be null!");
+		Assert.notNull(addressAndPortSource, "Address and port source must not be null");
 
 		String[] hostAndPort = addressAndPortSource.split(HOST_PORT_SPLIT_PATTERN);
 		String hostAddress = hostAndPort[0];

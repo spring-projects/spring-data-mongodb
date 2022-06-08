@@ -99,7 +99,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 */
 	public GeoJsonPolygon withInnerRing(GeoJsonLineString lineString) {
 
-		Assert.notNull(lineString, "LineString must not be null!");
+		Assert.notNull(lineString, "LineString must not be null");
 
 		Iterator<GeoJsonLineString> it = this.coordinates.iterator();
 		GeoJsonPolygon polygon = new GeoJsonPolygon(it.next().getCoordinates());

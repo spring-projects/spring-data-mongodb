@@ -39,7 +39,7 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 	 */
 	public CountOperation(String fieldName) {
 
-		Assert.hasText(fieldName, "Field name must not be null or empty!");
+		Assert.hasText(fieldName, "Field name must not be null or empty");
 		this.fieldName = fieldName;
 	}
 

@@ -58,7 +58,7 @@ public class Collation {
 
 	private Collation(CollationLocale locale) {
 
-		Assert.notNull(locale, "ICULocale must not be null!");
+		Assert.notNull(locale, "ICULocale must not be null");
 		this.locale = locale;
 	}
 
@@ -80,7 +80,7 @@ public class Collation {
 	 */
 	public static Collation of(Locale locale) {
 
-		Assert.notNull(locale, "Locale must not be null!");
+		Assert.notNull(locale, "Locale must not be null");
 
 		String format;
 
@@ -124,7 +124,7 @@ public class Collation {
 	 */
 	public static Collation parse(String collation) {
 
-		Assert.notNull(collation, "Collation must not be null!");
+		Assert.notNull(collation, "Collation must not be null");
 
 		return collation.stripLeading().startsWith("{") ? from(Document.parse(collation))
 				: of(collation);
@@ -140,7 +140,7 @@ public class Collation {
 	 */
 	public static Collation from(Document source) {
 
-		Assert.notNull(source, "Source must not be null!");
+		Assert.notNull(source, "Source must not be null");
 
 		Collation collation = Collation.of(source.getString("locale"));
 		if (source.containsKey("strength")) {
@@ -653,7 +653,7 @@ public class Collation {
 		 */
 		public ComparisonLevel caseFirst(CaseFirst caseFirst) {
 
-			Assert.notNull(caseFirst, "CaseFirst must not be null!");
+			Assert.notNull(caseFirst, "CaseFirst must not be null");
 			return new TertiaryICUComparisonLevel(caseFirst);
 		}
 	}
@@ -798,7 +798,7 @@ public class Collation {
 		 */
 		public static CollationLocale of(String language) {
 
-			Assert.notNull(language, "Code must not be null!");
+			Assert.notNull(language, "Code must not be null");
 			return new CollationLocale(language, Optional.empty());
 		}
 
@@ -810,7 +810,7 @@ public class Collation {
 		 */
 		public CollationLocale variant(String variant) {
 
-			Assert.notNull(variant, "Variant must not be null!");
+			Assert.notNull(variant, "Variant must not be null");
 			return new CollationLocale(language, Optional.of(variant));
 		}
 

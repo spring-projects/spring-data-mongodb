@@ -133,7 +133,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public AggregationUpdate set(SetOperation setOperation) {
 
-		Assert.notNull(setOperation, "SetOperation must not be null!");
+		Assert.notNull(setOperation, "SetOperation must not be null");
 
 		setOperation.getFields().forEach(it -> {
 			keysTouched.add(it.getName());
@@ -152,7 +152,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public AggregationUpdate unset(UnsetOperation unsetOperation) {
 
-		Assert.notNull(unsetOperation, "UnsetOperation must not be null!");
+		Assert.notNull(unsetOperation, "UnsetOperation must not be null");
 
 		pipeline.add(unsetOperation);
 		keysTouched.addAll(unsetOperation.removedFieldNames());
@@ -170,7 +170,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public AggregationUpdate replaceWith(ReplaceWithOperation replaceWithOperation) {
 
-		Assert.notNull(replaceWithOperation, "ReplaceWithOperation must not be null!");
+		Assert.notNull(replaceWithOperation, "ReplaceWithOperation must not be null");
 		pipeline.add(replaceWithOperation);
 		return this;
 	}
@@ -183,7 +183,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public AggregationUpdate replaceWith(Object value) {
 
-		Assert.notNull(value, "Value must not be null!");
+		Assert.notNull(value, "Value must not be null");
 		return replaceWith(ReplaceWithOperation.replaceWithValue(value));
 	}
 
@@ -197,7 +197,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public SetValueAppender set(String key) {
 
-		Assert.notNull(key, "Key must not be null!");
+		Assert.notNull(key, "Key must not be null");
 
 		return new SetValueAppender() {
 
@@ -209,7 +209,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 			@Override
 			public AggregationUpdate toValueOf(Object value) {
 
-				Assert.notNull(value, "Value must not be null!");
+				Assert.notNull(value, "Value must not be null");
 				return set(SetOperation.builder().set(key).toValueOf(value));
 			}
 		};
@@ -223,8 +223,8 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public AggregationUpdate unset(String... keys) {
 
-		Assert.notNull(keys, "Keys must not be null!");
-		Assert.noNullElements(keys, "Keys must not contain null elements.");
+		Assert.notNull(keys, "Keys must not be null");
+		Assert.noNullElements(keys, "Keys must not contain null elements");
 
 		return unset(new UnsetOperation(Arrays.stream(keys).map(Fields::field).collect(Collectors.toList())));
 	}

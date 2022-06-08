@@ -225,7 +225,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		@Override
 		public StartWithBuilder from(String collectionName) {
 
-			Assert.hasText(collectionName, "CollectionName must not be null or empty!");
+			Assert.hasText(collectionName, "CollectionName must not be null or empty");
 
 			this.from = collectionName;
 			return this;
@@ -234,8 +234,8 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		@Override
 		public ConnectFromBuilder startWith(String... fieldReferences) {
 
-			Assert.notNull(fieldReferences, "FieldReferences must not be null!");
-			Assert.noNullElements(fieldReferences, "FieldReferences must not contain null elements!");
+			Assert.notNull(fieldReferences, "FieldReferences must not be null");
+			Assert.noNullElements(fieldReferences, "FieldReferences must not contain null elements");
 
 			List<Object> fields = new ArrayList<Object>(fieldReferences.length);
 
@@ -250,8 +250,8 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		@Override
 		public ConnectFromBuilder startWith(AggregationExpression... expressions) {
 
-			Assert.notNull(expressions, "AggregationExpressions must not be null!");
-			Assert.noNullElements(expressions, "AggregationExpressions must not contain null elements!");
+			Assert.notNull(expressions, "AggregationExpressions must not be null");
+			Assert.noNullElements(expressions, "AggregationExpressions must not contain null elements");
 
 			this.startWith = Arrays.asList(expressions);
 			return this;
@@ -260,8 +260,8 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		@Override
 		public ConnectFromBuilder startWith(Object... expressions) {
 
-			Assert.notNull(expressions, "Expressions must not be null!");
-			Assert.noNullElements(expressions, "Expressions must not contain null elements!");
+			Assert.notNull(expressions, "Expressions must not be null");
+			Assert.noNullElements(expressions, "Expressions must not contain null elements");
 
 			this.startWith = verifyAndPotentiallyTransformStartsWithTypes(expressions);
 			return this;
@@ -301,7 +301,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		@Override
 		public ConnectToBuilder connectFrom(String fieldName) {
 
-			Assert.hasText(fieldName, "ConnectFrom must not be null or empty!");
+			Assert.hasText(fieldName, "ConnectFrom must not be null or empty");
 
 			this.connectFrom = fieldName;
 			return this;
@@ -310,7 +310,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		@Override
 		public GraphLookupOperationBuilder connectTo(String fieldName) {
 
-			Assert.hasText(fieldName, "ConnectTo must not be null or empty!");
+			Assert.hasText(fieldName, "ConnectTo must not be null or empty");
 
 			return new GraphLookupOperationBuilder(from, startWith, connectFrom, fieldName);
 		}
@@ -346,7 +346,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 */
 		public GraphLookupOperationBuilder maxDepth(long numberOfRecursions) {
 
-			Assert.isTrue(numberOfRecursions >= 0, "Max depth must be >= 0!");
+			Assert.isTrue(numberOfRecursions >= 0, "Max depth must be >= 0");
 
 			this.maxDepth = numberOfRecursions;
 			return this;
@@ -360,7 +360,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 */
 		public GraphLookupOperationBuilder depthField(String fieldName) {
 
-			Assert.hasText(fieldName, "Depth field name must not be null or empty!");
+			Assert.hasText(fieldName, "Depth field name must not be null or empty");
 
 			this.depthField = Fields.field(fieldName);
 			return this;
@@ -374,7 +374,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 */
 		public GraphLookupOperationBuilder restrict(CriteriaDefinition criteriaDefinition) {
 
-			Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
+			Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
 
 			this.restrictSearchWithMatch = criteriaDefinition;
 			return this;
@@ -389,7 +389,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 */
 		public GraphLookupOperation as(String fieldName) {
 
-			Assert.hasText(fieldName, "As field name must not be null or empty!");
+			Assert.hasText(fieldName, "As field name must not be null or empty");
 
 			return new GraphLookupOperation(from, startWith, connectFrom, connectTo, Fields.field(fieldName), maxDepth,
 					depthField, restrictSearchWithMatch);

@@ -35,7 +35,7 @@ class TaskFactory {
 	 */
 	TaskFactory(MongoTemplate template) {
 
-		Assert.notNull(template, "Template must not be null!");
+		Assert.notNull(template, "Template must not be null");
 
 		this.tempate = template;
 	}
@@ -52,8 +52,8 @@ class TaskFactory {
 	<S, T> Task forRequest(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request, Class<T> targetType,
 			ErrorHandler errorHandler) {
 
-		Assert.notNull(request, "Request must not be null!");
-		Assert.notNull(targetType, "TargetType must not be null!");
+		Assert.notNull(request, "Request must not be null");
+		Assert.notNull(targetType, "TargetType must not be null");
 
 		if (request instanceof ChangeStreamRequest) {
 			return new ChangeStreamTask(tempate, (ChangeStreamRequest) request, targetType, errorHandler);
@@ -62,6 +62,6 @@ class TaskFactory {
 		}
 
 		throw new IllegalArgumentException(
-				"oh wow - seems you're using some fancy new feature we do not support. Please be so kind and leave us a note in the issue tracker so we can get this fixed.\nThank you!");
+				"oh wow - seems you're using some fancy new feature we do not support; Please be so kind and leave us a note in the issue tracker so we can get this fixed\nThank you");
 	}
 }

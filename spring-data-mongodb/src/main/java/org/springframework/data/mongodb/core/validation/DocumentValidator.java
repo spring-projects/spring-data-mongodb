@@ -45,7 +45,7 @@ class DocumentValidator implements Validator {
 	 */
 	static DocumentValidator of(Document validatorObject) {
 
-		Assert.notNull(validatorObject, "ValidatorObject must not be null!");
+		Assert.notNull(validatorObject, "ValidatorObject must not be null");
 
 		return new DocumentValidator(new Document(validatorObject));
 	}

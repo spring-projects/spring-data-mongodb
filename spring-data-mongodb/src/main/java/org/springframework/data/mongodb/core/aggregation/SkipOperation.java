@@ -42,7 +42,7 @@ public class SkipOperation implements AggregationOperation {
 	 */
 	public SkipOperation(long skipCount) {
 
-		Assert.isTrue(skipCount >= 0, "Skip count must not be negative!");
+		Assert.isTrue(skipCount >= 0, "Skip count must not be negative");
 		this.skipCount = skipCount;
 	}
 

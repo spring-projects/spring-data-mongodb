@@ -65,7 +65,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	 */
 	public DefaultScriptOperations(MongoOperations mongoOperations) {
 
-		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
 		this.mongoOperations = mongoOperations;
 	}
@@ -78,7 +78,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	@Override
 	public NamedMongoScript register(NamedMongoScript script) {
 
-		Assert.notNull(script, "Script must not be null!");
+		Assert.notNull(script, "Script must not be null");
 
 		mongoOperations.save(script, SCRIPT_COLLECTION_NAME);
 		return script;
@@ -87,7 +87,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	@Override
 	public Object execute(final ExecutableMongoScript script, final Object... args) {
 
-		Assert.notNull(script, "Script must not be null!");
+		Assert.notNull(script, "Script must not be null");
 
 		return mongoOperations.execute(new DbCallback<Object>() {
 
@@ -106,7 +106,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	@Override
 	public Object call(final String scriptName, final Object... args) {
 
-		Assert.hasText(scriptName, "ScriptName must not be null or empty!");
+		Assert.hasText(scriptName, "ScriptName must not be null or empty");
 
 		return mongoOperations.execute(new DbCallback<Object>() {
 
@@ -122,7 +122,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	@Override
 	public boolean exists(String scriptName) {
 
-		Assert.hasText(scriptName, "ScriptName must not be null or empty!");
+		Assert.hasText(scriptName, "ScriptName must not be null or empty");
 
 		return mongoOperations.exists(query(where("_id").is(scriptName)), NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
 	}

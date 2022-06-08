@@ -99,7 +99,7 @@ public class ScriptOperators {
 		 */
 		public static Function function(String body) {
 
-			Assert.notNull(body, "Function body must not be null!");
+			Assert.notNull(body, "Function body must not be null");
 
 			Map<String, Object> function = new LinkedHashMap<>(2);
 			function.put(Fields.BODY.toString(), body);
@@ -127,7 +127,7 @@ public class ScriptOperators {
 		 */
 		public Function args(List<Object> args) {
 
-			Assert.notNull(args, "Args must not be null! Use an empty list instead.");
+			Assert.notNull(args, "Args must not be null Use an empty list instead");
 
 			return new Function(appendAt(1, Fields.ARGS.toString(), args));
 		}
@@ -140,7 +140,7 @@ public class ScriptOperators {
 		 */
 		public Function lang(String lang) {
 
-			Assert.hasText(lang, "Lang must not be null nor empty! The default would be 'js'.");
+			Assert.hasText(lang, "Lang must not be null nor empty; The default would be 'js'");
 
 			return new Function(appendAt(2, Fields.LANG.toString(), lang));
 		}
@@ -528,7 +528,7 @@ public class ScriptOperators {
 			 */
 			public AccumulatorBuilder lang(String lang) {
 
-				Assert.hasText(lang, "Lang must not be null nor empty! The default would be 'js'.");
+				Assert.hasText(lang, "Lang must not be null nor empty; The default would be 'js'");
 
 				this.lang = lang;
 				return this;

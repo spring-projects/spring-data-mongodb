@@ -51,7 +51,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	 */
 	protected BucketOperationSupport(Field groupByField) {
 
-		Assert.notNull(groupByField, "Group by field must not be null!");
+		Assert.notNull(groupByField, "Group by field must not be null");
 
 		this.groupByField = groupByField;
 		this.groupByExpression = null;
@@ -65,7 +65,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	 */
 	protected BucketOperationSupport(AggregationExpression groupByExpression) {
 
-		Assert.notNull(groupByExpression, "Group by AggregationExpression must not be null!");
+		Assert.notNull(groupByExpression, "Group by AggregationExpression must not be null");
 
 		this.groupByExpression = groupByExpression;
 		this.groupByField = null;
@@ -89,8 +89,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	 */
 	protected BucketOperationSupport(BucketOperationSupport<?, ?> operationSupport, Outputs outputs) {
 
-		Assert.notNull(operationSupport, "BucketOperationSupport must not be null!");
-		Assert.notNull(outputs, "Outputs must not be null!");
+		Assert.notNull(operationSupport, "BucketOperationSupport must not be null");
+		Assert.notNull(outputs, "Outputs must not be null");
 
 		this.groupByField = operationSupport.groupByField;
 		this.groupByExpression = operationSupport.groupByExpression;
@@ -213,8 +213,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		protected OutputBuilder(Object value, T operation) {
 
-			Assert.notNull(value, "Value must not be null or empty!");
-			Assert.notNull(operation, "ProjectionOperation must not be null!");
+			Assert.notNull(value, "Value must not be null or empty");
+			Assert.notNull(operation, "ProjectionOperation must not be null");
 
 			this.value = value;
 			this.operation = operation;
@@ -321,8 +321,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		public B apply(String operation, Object... values) {
 
-			Assert.hasText(operation, "Operation must not be empty or null!");
-			Assert.notNull(value, "Values must not be null!");
+			Assert.hasText(operation, "Operation must not be empty or null");
+			Assert.notNull(value, "Values must not be null");
 
 			List<Object> objects = new ArrayList<Object>(values.length + 1);
 			objects.add(value);
@@ -355,7 +355,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			}
 
 			if (value instanceof Field) {
-				throw new IllegalStateException("Cannot add a field as top-level output. Use accumulator expressions.");
+				throw new IllegalStateException("Cannot add a field as top-level output; Use accumulator expressions");
 			}
 
 			return this.operation
@@ -437,7 +437,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		protected Outputs and(Output output) {
 
-			Assert.notNull(output, "BucketOutput must not be null!");
+			Assert.notNull(output, "BucketOutput must not be null");
 			return new Outputs(this.outputs, output);
 		}
 
@@ -480,7 +480,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		protected Output(Field field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			this.field = new ExposedField(field, true);
 		}
 
@@ -516,8 +516,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 			super(Fields.field(operation));
 
-			Assert.hasText(operation, "Operation must not be null or empty!");
-			Assert.notNull(values, "Values must not be null!");
+			Assert.hasText(operation, "Operation must not be null or empty");
+			Assert.notNull(values, "Values must not be null");
 
 			this.operation = operation;
 			this.values = new ArrayList<Object>(values);
@@ -616,8 +616,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 			super(Fields.field(expression));
 
-			Assert.hasText(expression, "Expression must not be null!");
-			Assert.notNull(parameters, "Parameters must not be null!");
+			Assert.hasText(expression, "Expression must not be null");
+			Assert.notNull(parameters, "Parameters must not be null");
 
 			this.expression = expression;
 			this.params = parameters.clone();

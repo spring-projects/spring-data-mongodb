@@ -52,8 +52,8 @@ public class NamedMongoScript {
 	 */
 	public NamedMongoScript(String name, ExecutableMongoScript script) {
 
-		Assert.hasText(name, "Name must not be null or empty!");
-		Assert.notNull(script, "ExecutableMongoScript must not be null!");
+		Assert.hasText(name, "Name must not be null or empty");
+		Assert.notNull(script, "ExecutableMongoScript must not be null");
 
 		this.name = name;
 		this.script = script;

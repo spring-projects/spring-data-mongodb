@@ -38,7 +38,7 @@ class MergedJsonSchemaProperty implements JsonSchemaProperty {
 	MergedJsonSchemaProperty(Iterable<JsonSchemaProperty> properties) {
 		this(properties, (k, a, b) -> {
 			throw new IllegalStateException(
-					String.format("Error resolving conflict for '%s'. No conflict resolution function defined.", k));
+					String.format("Error resolving conflict for '%s'; No conflict resolution function defined", k));
 		});
 	}
 

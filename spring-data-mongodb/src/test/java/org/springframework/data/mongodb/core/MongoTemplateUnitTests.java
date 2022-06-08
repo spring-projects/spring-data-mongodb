@@ -2459,7 +2459,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
 		MongoTemplate template = spy(this.template);
-		lenient().when(template.getDb()).thenThrow(new MongoException("Error!"));
+		lenient().when(template.getDb()).thenThrow(new MongoException("Error"));
 		return template;
 	}
 

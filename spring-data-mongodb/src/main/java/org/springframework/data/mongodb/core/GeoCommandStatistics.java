@@ -39,7 +39,7 @@ class GeoCommandStatistics {
 	 */
 	private GeoCommandStatistics(Document source) {
 
-		Assert.notNull(source, "Source document must not be null!");
+		Assert.notNull(source, "Source document must not be null");
 		this.source = source;
 	}
 
@@ -51,7 +51,7 @@ class GeoCommandStatistics {
 	 */
 	public static GeoCommandStatistics from(Document commandResult) {
 
-		Assert.notNull(commandResult, "Command result must not be null!");
+		Assert.notNull(commandResult, "Command result must not be null");
 
 		Object stats = commandResult.get("stats");
 		return stats == null ? NONE : new GeoCommandStatistics((Document) stats);

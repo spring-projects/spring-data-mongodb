@@ -37,7 +37,7 @@ public class ExecutableMongoScript {
 	 */
 	public ExecutableMongoScript(String code) {
 
-		Assert.hasText(code, "Code must not be null or empty!");
+		Assert.hasText(code, "Code must not be null or empty");
 		this.code = code;
 	}
 

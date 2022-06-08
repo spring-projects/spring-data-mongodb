@@ -60,7 +60,7 @@ public class ComparisonOperators {
 		 */
 		public ComparisonOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -72,7 +72,7 @@ public class ComparisonOperators {
 		 */
 		public ComparisonOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -362,7 +362,7 @@ public class ComparisonOperators {
 		 */
 		public static Cmp valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Cmp(asFields(fieldReference));
 		}
 
@@ -374,7 +374,7 @@ public class ComparisonOperators {
 		 */
 		public static Cmp valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Cmp(Collections.singletonList(expression));
 		}
 
@@ -386,7 +386,7 @@ public class ComparisonOperators {
 		 */
 		public Cmp compareTo(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Cmp(append(Fields.field(fieldReference)));
 		}
 
@@ -398,7 +398,7 @@ public class ComparisonOperators {
 		 */
 		public Cmp compareTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Cmp(append(expression));
 		}
 
@@ -410,7 +410,7 @@ public class ComparisonOperators {
 		 */
 		public Cmp compareToValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Cmp(append(value, Expand.KEEP_SOURCE));
 		}
 	}
@@ -439,7 +439,7 @@ public class ComparisonOperators {
 		 */
 		public static Eq valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Eq(asFields(fieldReference));
 		}
 
@@ -451,7 +451,7 @@ public class ComparisonOperators {
 		 */
 		public static Eq valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Eq(Collections.singletonList(expression));
 		}
 
@@ -463,7 +463,7 @@ public class ComparisonOperators {
 		 */
 		public Eq equalTo(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Eq(append(Fields.field(fieldReference)));
 		}
 
@@ -475,7 +475,7 @@ public class ComparisonOperators {
 		 */
 		public Eq equalTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Eq(append(expression));
 		}
 
@@ -487,7 +487,7 @@ public class ComparisonOperators {
 		 */
 		public Eq equalToValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Eq(append(value, Expand.KEEP_SOURCE));
 		}
 	}
@@ -516,7 +516,7 @@ public class ComparisonOperators {
 		 */
 		public static Gt valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Gt(asFields(fieldReference));
 		}
 
@@ -528,7 +528,7 @@ public class ComparisonOperators {
 		 */
 		public static Gt valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Gt(Collections.singletonList(expression));
 		}
 
@@ -540,7 +540,7 @@ public class ComparisonOperators {
 		 */
 		public Gt greaterThan(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Gt(append(Fields.field(fieldReference)));
 		}
 
@@ -552,7 +552,7 @@ public class ComparisonOperators {
 		 */
 		public Gt greaterThan(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Gt(append(expression));
 		}
 
@@ -564,7 +564,7 @@ public class ComparisonOperators {
 		 */
 		public Gt greaterThanValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Gt(append(value));
 		}
 	}
@@ -593,7 +593,7 @@ public class ComparisonOperators {
 		 */
 		public static Lt valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Lt(asFields(fieldReference));
 		}
 
@@ -605,7 +605,7 @@ public class ComparisonOperators {
 		 */
 		public static Lt valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Lt(Collections.singletonList(expression));
 		}
 
@@ -617,7 +617,7 @@ public class ComparisonOperators {
 		 */
 		public Lt lessThan(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Lt(append(Fields.field(fieldReference)));
 		}
 
@@ -629,7 +629,7 @@ public class ComparisonOperators {
 		 */
 		public Lt lessThan(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Lt(append(expression));
 		}
 
@@ -641,7 +641,7 @@ public class ComparisonOperators {
 		 */
 		public Lt lessThanValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Lt(append(value));
 		}
 	}
@@ -670,7 +670,7 @@ public class ComparisonOperators {
 		 */
 		public static Gte valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Gte(asFields(fieldReference));
 		}
 
@@ -682,7 +682,7 @@ public class ComparisonOperators {
 		 */
 		public static Gte valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Gte(Collections.singletonList(expression));
 		}
 
@@ -694,7 +694,7 @@ public class ComparisonOperators {
 		 */
 		public Gte greaterThanEqualTo(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Gte(append(Fields.field(fieldReference)));
 		}
 
@@ -706,7 +706,7 @@ public class ComparisonOperators {
 		 */
 		public Gte greaterThanEqualTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Gte(append(expression));
 		}
 
@@ -718,7 +718,7 @@ public class ComparisonOperators {
 		 */
 		public Gte greaterThanEqualToValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Gte(append(value));
 		}
 	}
@@ -747,7 +747,7 @@ public class ComparisonOperators {
 		 */
 		public static Lte valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Lte(asFields(fieldReference));
 		}
 
@@ -759,7 +759,7 @@ public class ComparisonOperators {
 		 */
 		public static Lte valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Lte(Collections.singletonList(expression));
 		}
 
@@ -771,7 +771,7 @@ public class ComparisonOperators {
 		 */
 		public Lte lessThanEqualTo(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Lte(append(Fields.field(fieldReference)));
 		}
 
@@ -783,7 +783,7 @@ public class ComparisonOperators {
 		 */
 		public Lte lessThanEqualTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Lte(append(expression));
 		}
 
@@ -795,7 +795,7 @@ public class ComparisonOperators {
 		 */
 		public Lte lessThanEqualToValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Lte(append(value));
 		}
 	}
@@ -824,7 +824,7 @@ public class ComparisonOperators {
 		 */
 		public static Ne valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Ne(asFields(fieldReference));
 		}
 
@@ -836,7 +836,7 @@ public class ComparisonOperators {
 		 */
 		public static Ne valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Ne(Collections.singletonList(expression));
 		}
 
@@ -848,7 +848,7 @@ public class ComparisonOperators {
 		 */
 		public Ne notEqualTo(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Ne(append(Fields.field(fieldReference)));
 		}
 
@@ -860,7 +860,7 @@ public class ComparisonOperators {
 		 */
 		public Ne notEqualTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Ne(append(expression));
 		}
 
@@ -872,7 +872,7 @@ public class ComparisonOperators {
 		 */
 		public Ne notEqualToValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Ne(append(value, Expand.KEEP_SOURCE));
 		}
 	}

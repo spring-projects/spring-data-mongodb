@@ -65,7 +65,7 @@ public class AccumulatorOperators {
 		 */
 		public AccumulatorOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -77,7 +77,7 @@ public class AccumulatorOperators {
 		 */
 		public AccumulatorOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -278,7 +278,7 @@ public class AccumulatorOperators {
 		 */
 		public static Sum sumOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Sum(asFields(fieldReference));
 		}
 
@@ -290,7 +290,7 @@ public class AccumulatorOperators {
 		 */
 		public static Sum sumOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Sum(Collections.singletonList(expression));
 		}
 
@@ -303,7 +303,7 @@ public class AccumulatorOperators {
 		 */
 		public Sum and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Sum(append(Fields.field(fieldReference)));
 		}
 
@@ -316,7 +316,7 @@ public class AccumulatorOperators {
 		 */
 		public Sum and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Sum(append(expression));
 		}
 
@@ -330,7 +330,7 @@ public class AccumulatorOperators {
 		 */
 		public Sum and(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Sum(append(value));
 		}
 
@@ -372,7 +372,7 @@ public class AccumulatorOperators {
 		 */
 		public static Avg avgOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Avg(asFields(fieldReference));
 		}
 
@@ -384,7 +384,7 @@ public class AccumulatorOperators {
 		 */
 		public static Avg avgOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Avg(Collections.singletonList(expression));
 		}
 
@@ -397,7 +397,7 @@ public class AccumulatorOperators {
 		 */
 		public Avg and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Avg(append(Fields.field(fieldReference)));
 		}
 
@@ -410,7 +410,7 @@ public class AccumulatorOperators {
 		 */
 		public Avg and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Avg(append(expression));
 		}
 
@@ -452,7 +452,7 @@ public class AccumulatorOperators {
 		 */
 		public static Max maxOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Max(asFields(fieldReference));
 		}
 
@@ -464,7 +464,7 @@ public class AccumulatorOperators {
 		 */
 		public static Max maxOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Max(Collections.singletonList(expression));
 		}
 
@@ -477,7 +477,7 @@ public class AccumulatorOperators {
 		 */
 		public Max and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Max(append(Fields.field(fieldReference)));
 		}
 
@@ -490,7 +490,7 @@ public class AccumulatorOperators {
 		 */
 		public Max and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Max(append(expression));
 		}
 
@@ -532,7 +532,7 @@ public class AccumulatorOperators {
 		 */
 		public static Min minOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Min(asFields(fieldReference));
 		}
 
@@ -544,7 +544,7 @@ public class AccumulatorOperators {
 		 */
 		public static Min minOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Min(Collections.singletonList(expression));
 		}
 
@@ -557,7 +557,7 @@ public class AccumulatorOperators {
 		 */
 		public Min and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Min(append(Fields.field(fieldReference)));
 		}
 
@@ -570,7 +570,7 @@ public class AccumulatorOperators {
 		 */
 		public Min and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Min(append(expression));
 		}
 
@@ -612,7 +612,7 @@ public class AccumulatorOperators {
 		 */
 		public static StdDevPop stdDevPopOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StdDevPop(asFields(fieldReference));
 		}
 
@@ -624,7 +624,7 @@ public class AccumulatorOperators {
 		 */
 		public static StdDevPop stdDevPopOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StdDevPop(Collections.singletonList(expression));
 		}
 
@@ -637,7 +637,7 @@ public class AccumulatorOperators {
 		 */
 		public StdDevPop and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StdDevPop(append(Fields.field(fieldReference)));
 		}
 
@@ -650,7 +650,7 @@ public class AccumulatorOperators {
 		 */
 		public StdDevPop and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StdDevPop(append(expression));
 		}
 
@@ -692,7 +692,7 @@ public class AccumulatorOperators {
 		 */
 		public static StdDevSamp stdDevSampOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StdDevSamp(asFields(fieldReference));
 		}
 
@@ -704,7 +704,7 @@ public class AccumulatorOperators {
 		 */
 		public static StdDevSamp stdDevSampOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StdDevSamp(Collections.singletonList(expression));
 		}
 
@@ -717,7 +717,7 @@ public class AccumulatorOperators {
 		 */
 		public StdDevSamp and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StdDevSamp(append(Fields.field(fieldReference)));
 		}
 
@@ -730,7 +730,7 @@ public class AccumulatorOperators {
 		 */
 		public StdDevSamp and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new StdDevSamp(append(expression));
 		}
 
@@ -768,7 +768,7 @@ public class AccumulatorOperators {
 		 */
 		public static CovariancePop covariancePopOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new CovariancePop(asFields(fieldReference));
 		}
 
@@ -828,7 +828,7 @@ public class AccumulatorOperators {
 		 */
 		public static CovarianceSamp covarianceSampOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new CovarianceSamp(asFields(fieldReference));
 		}
 

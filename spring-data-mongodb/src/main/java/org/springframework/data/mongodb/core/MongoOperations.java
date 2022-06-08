@@ -178,7 +178,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	default SessionScoped withSession(Supplier<ClientSession> sessionProvider) {
 
-		Assert.notNull(sessionProvider, "SessionProvider must not be null!");
+		Assert.notNull(sessionProvider, "SessionProvider must not be null");
 
 		return new SessionScoped() {
 
@@ -985,7 +985,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	@Nullable
 	default <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
 
-		Assert.notNull(replacement, "Replacement must not be null!");
+		Assert.notNull(replacement, "Replacement must not be null");
 		return findAndReplace(query, replacement, options, (Class<T>) ClassUtils.getUserClass(replacement), collectionName);
 	}
 
@@ -1174,7 +1174,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 */
 	default long estimatedCount(Class<?> entityClass) {
 
-		Assert.notNull(entityClass, "Entity class must not be null!");
+		Assert.notNull(entityClass, "Entity class must not be null");
 		return estimatedCount(getCollectionName(entityClass));
 	}
 

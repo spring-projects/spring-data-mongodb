@@ -50,10 +50,10 @@ class DocumentAccessor {
 	 */
 	public DocumentAccessor(Bson document) {
 
-		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(document, "Document must not be null");
 
 		if (!(document instanceof Document) && !(document instanceof DBObject)) {
-			Assert.isInstanceOf(Document.class, document, "Given Bson must be a Document or DBObject!");
+			Assert.isInstanceOf(Document.class, document, "Given Bson must be a Document or DBObject");
 		}
 
 		this.document = document;
@@ -90,7 +90,7 @@ class DocumentAccessor {
 	 */
 	public void put(MongoPersistentProperty prop, @Nullable Object value) {
 
-		Assert.notNull(prop, "MongoPersistentProperty must not be null!");
+		Assert.notNull(prop, "MongoPersistentProperty must not be null");
 		String fieldName = getFieldName(prop);
 
 		if (!fieldName.contains(".")) {
@@ -148,7 +148,7 @@ class DocumentAccessor {
 	@SuppressWarnings("unchecked")
 	public boolean hasValue(MongoPersistentProperty property) {
 
-		Assert.notNull(property, "Property must not be null!");
+		Assert.notNull(property, "Property must not be null");
 
 		return BsonUtils.hasValue(document, getFieldName(property));
 	}

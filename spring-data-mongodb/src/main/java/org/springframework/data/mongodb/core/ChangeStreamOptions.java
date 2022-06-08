@@ -148,7 +148,7 @@ public class ChangeStreamOptions {
 		}
 
 		throw new IllegalArgumentException(
-				"o_O that should actually not happen. The timestamp should be an Instant or a BsonTimestamp but was "
+				"o_O that should actually not happen; The timestamp should be an Instant or a BsonTimestamp but was "
 						+ ObjectUtils.nullSafeClassName(timestamp));
 	}
 
@@ -234,7 +234,7 @@ public class ChangeStreamOptions {
 		 */
 		public ChangeStreamOptionsBuilder collation(Collation collation) {
 
-			Assert.notNull(collation, "Collation must not be null nor empty!");
+			Assert.notNull(collation, "Collation must not be null nor empty");
 
 			this.collation = collation;
 			return this;
@@ -258,7 +258,7 @@ public class ChangeStreamOptions {
 		 */
 		public ChangeStreamOptionsBuilder filter(Aggregation filter) {
 
-			Assert.notNull(filter, "Filter must not be null!");
+			Assert.notNull(filter, "Filter must not be null");
 
 			this.filter = filter;
 			return this;
@@ -287,7 +287,7 @@ public class ChangeStreamOptions {
 		 */
 		public ChangeStreamOptionsBuilder resumeToken(BsonValue resumeToken) {
 
-			Assert.notNull(resumeToken, "ResumeToken must not be null!");
+			Assert.notNull(resumeToken, "ResumeToken must not be null");
 
 			this.resumeToken = resumeToken;
 
@@ -316,7 +316,7 @@ public class ChangeStreamOptions {
 		 */
 		public ChangeStreamOptionsBuilder fullDocumentLookup(FullDocument lookup) {
 
-			Assert.notNull(lookup, "Lookup must not be null!");
+			Assert.notNull(lookup, "Lookup must not be null");
 
 			this.fullDocumentLookup = lookup;
 			return this;
@@ -330,7 +330,7 @@ public class ChangeStreamOptions {
 		 */
 		public ChangeStreamOptionsBuilder resumeAt(Instant resumeTimestamp) {
 
-			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null!");
+			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null");
 
 			this.resumeTimestamp = resumeTimestamp;
 			return this;
@@ -345,7 +345,7 @@ public class ChangeStreamOptions {
 		 */
 		public ChangeStreamOptionsBuilder resumeAt(BsonTimestamp resumeTimestamp) {
 
-			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null!");
+			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null");
 
 			this.resumeTimestamp = resumeTimestamp;
 			return this;

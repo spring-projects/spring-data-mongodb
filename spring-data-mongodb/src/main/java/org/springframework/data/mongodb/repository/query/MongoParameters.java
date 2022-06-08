@@ -106,7 +106,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 			if (nearIndex == parameterTypes.lastIndexOf(reference)) {
 				return nearIndex;
 			} else {
-				throw new IllegalStateException("Multiple Point parameters found but none annotated with @Near!");
+				throw new IllegalStateException("Multiple Point parameters found but none annotated with @Near");
 			}
 		}
 
@@ -124,7 +124,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 					index = param.getIndex();
 				} else {
 					throw new IllegalStateException(
-							String.format("Found multiple @Near annotations ond method %s! Only one allowed!", method.toString()));
+							String.format("Found multiple @Near annotations ond method %s; Only one allowed", method.toString()));
 				}
 
 			}
@@ -249,7 +249,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 			this.parameter = parameter;
 
 			if (!isPoint() && hasNearAnnotation()) {
-				throw new IllegalArgumentException("Near annotation is only allowed at Point parameter!");
+				throw new IllegalArgumentException("Near annotation is only allowed at Point parameter");
 			}
 		}
 

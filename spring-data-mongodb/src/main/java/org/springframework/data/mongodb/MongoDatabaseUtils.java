@@ -102,7 +102,7 @@ public class MongoDatabaseUtils {
 	private static MongoDatabase doGetMongoDatabase(@Nullable String dbName, MongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 
-		Assert.notNull(factory, "Factory must not be null!");
+		Assert.notNull(factory, "Factory must not be null");
 
 		if (sessionSynchronization == SessionSynchronization.NEVER
 				|| !TransactionSynchronizationManager.isSynchronizationActive()) {

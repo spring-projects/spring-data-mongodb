@@ -32,7 +32,7 @@ public class PartialIndexFilter implements IndexFilter {
 
 	private PartialIndexFilter(Object filterExpression) {
 
-		Assert.notNull(filterExpression, "FilterExpression must not be null!");
+		Assert.notNull(filterExpression, "FilterExpression must not be null");
 
 		this.filterExpression = filterExpression;
 	}
@@ -68,6 +68,6 @@ public class PartialIndexFilter implements IndexFilter {
 		}
 
 		throw new IllegalArgumentException(
-				String.format("Unknown type %s used as filter expression.", filterExpression.getClass()));
+				String.format("Unknown type %s used as filter expression", filterExpression.getClass()));
 	}
 }

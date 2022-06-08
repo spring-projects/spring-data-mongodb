@@ -115,7 +115,7 @@ class JsonScanner {
 				} else {
 					int position = buffer.getPosition();
 					buffer.unread(c);
-					throw new JsonParseException("Invalid JSON input. Position: %d. Character: '%c'.", position, c);
+					throw new JsonParseException("Invalid JSON input; Position: %d; Character: '%c'.", position, c);
 				}
 		}
 	}
@@ -199,7 +199,7 @@ class JsonScanner {
 							buffer.substring(options, end));
 					return new JsonToken(JsonTokenType.REGULAR_EXPRESSION, regex);
 				case INVALID:
-					throw new JsonParseException("Invalid JSON regular expression. Position: %d.", buffer.getPosition());
+					throw new JsonParseException("Invalid JSON regular expression; Position: %d.", buffer.getPosition());
 				default:
 			}
 		}

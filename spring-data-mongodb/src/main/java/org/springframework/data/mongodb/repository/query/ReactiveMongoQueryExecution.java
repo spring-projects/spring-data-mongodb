@@ -189,8 +189,8 @@ interface ReactiveMongoQueryExecution {
 
 		public ResultProcessingExecution(ReactiveMongoQueryExecution delegate, Converter<Object, Object> converter) {
 
-			Assert.notNull(delegate, "Delegate must not be null!");
-			Assert.notNull(converter, "Converter must not be null!");
+			Assert.notNull(delegate, "Delegate must not be null");
+			Assert.notNull(converter, "Converter must not be null");
 
 			this.delegate = delegate;
 			this.converter = converter;
@@ -216,9 +216,9 @@ interface ReactiveMongoQueryExecution {
 		public ResultProcessingConverter(ResultProcessor processor, ReactiveMongoOperations operations,
 				EntityInstantiators instantiators) {
 
-			Assert.notNull(processor, "Processor must not be null!");
-			Assert.notNull(operations, "Operations must not be null!");
-			Assert.notNull(instantiators, "Instantiators must not be null!");
+			Assert.notNull(processor, "Processor must not be null");
+			Assert.notNull(operations, "Operations must not be null");
+			Assert.notNull(instantiators, "Instantiators must not be null");
 
 			this.processor = processor;
 			this.operations = operations;

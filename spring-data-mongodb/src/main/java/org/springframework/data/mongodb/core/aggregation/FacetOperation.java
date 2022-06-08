@@ -72,8 +72,8 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	 */
 	public FacetOperationBuilder and(AggregationOperation... operations) {
 
-		Assert.notNull(operations, "AggregationOperations must not be null!");
-		Assert.notEmpty(operations, "AggregationOperations must not be empty!");
+		Assert.notNull(operations, "AggregationOperations must not be null");
+		Assert.notEmpty(operations, "AggregationOperations must not be empty");
 
 		return new FacetOperationBuilder(facets, Arrays.asList(operations));
 	}
@@ -118,7 +118,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		 */
 		public FacetOperation as(String fieldName) {
 
-			Assert.hasText(fieldName, "FieldName must not be null or empty!");
+			Assert.hasText(fieldName, "FieldName must not be null or empty");
 
 			return new FacetOperation(current.and(fieldName, operations));
 		}
@@ -178,8 +178,8 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		 */
 		Facets and(String fieldName, List<AggregationOperation> operations) {
 
-			Assert.hasText(fieldName, "FieldName must not be null or empty!");
-			Assert.notNull(operations, "AggregationOperations must not be null!");
+			Assert.hasText(fieldName, "FieldName must not be null or empty");
+			Assert.notNull(operations, "AggregationOperations must not be null");
 
 			List<Facet> facets = new ArrayList<Facet>(this.facets.size() + 1);
 			facets.addAll(this.facets);
@@ -207,8 +207,8 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		 */
 		Facet(ExposedField exposedField, List<AggregationOperation> operations) {
 
-			Assert.notNull(exposedField, "ExposedField must not be null!");
-			Assert.notNull(operations, "AggregationOperations must not be null!");
+			Assert.notNull(exposedField, "ExposedField must not be null");
+			Assert.notNull(operations, "AggregationOperations must not be null");
 
 			this.exposedField = exposedField;
 			this.operations = operations;

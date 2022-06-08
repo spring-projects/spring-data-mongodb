@@ -100,7 +100,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 */
 	public MongoTransactionManager(MongoDatabaseFactory dbFactory, @Nullable TransactionOptions options) {
 
-		Assert.notNull(dbFactory, "DbFactory must not be null!");
+		Assert.notNull(dbFactory, "DbFactory must not be null");
 
 		this.dbFactory = dbFactory;
 		this.options = options;
@@ -266,7 +266,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 */
 	public void setDbFactory(MongoDatabaseFactory dbFactory) {
 
-		Assert.notNull(dbFactory, "DbFactory must not be null!");
+		Assert.notNull(dbFactory, "DbFactory must not be null");
 		this.dbFactory = dbFactory;
 	}
 
@@ -315,7 +315,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	private MongoDatabaseFactory getRequiredDbFactory() {
 
 		Assert.state(dbFactory != null,
-				"MongoTransactionManager operates upon a MongoDbFactory. Did you forget to provide one? It's required.");
+				"MongoTransactionManager operates upon a MongoDbFactory; Did you forget to provide one; It's required");
 
 		return dbFactory;
 	}
@@ -450,14 +450,14 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 
 		private MongoResourceHolder getRequiredResourceHolder() {
 
-			Assert.state(resourceHolder != null, "MongoResourceHolder is required but not present. o_O");
+			Assert.state(resourceHolder != null, "MongoResourceHolder is required but not present; o_O");
 			return resourceHolder;
 		}
 
 		private ClientSession getRequiredSession() {
 
 			ClientSession session = getSession();
-			Assert.state(session != null, "A Session is required but it turned out to be null.");
+			Assert.state(session != null, "A Session is required but it turned out to be null");
 			return session;
 		}
 

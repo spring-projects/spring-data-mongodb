@@ -125,7 +125,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 			return result;
 		} catch (JsonParseException o_O) {
-			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod()),
+			throw new IllegalStateException(String.format("Invalid query or field specification in %s", getQueryMethod()),
 					o_O);
 		}
 	}

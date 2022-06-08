@@ -65,7 +65,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 */
 	public void setCustomConversions(CustomConversions conversions) {
 
-		Assert.notNull(conversions, "Conversions must not be null!");
+		Assert.notNull(conversions, "Conversions must not be null");
 		this.conversions = conversions;
 	}
 

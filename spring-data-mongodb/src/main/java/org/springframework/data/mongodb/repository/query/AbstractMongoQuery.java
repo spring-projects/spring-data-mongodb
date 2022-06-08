@@ -86,10 +86,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
-		Assert.notNull(operations, "MongoOperations must not be null!");
-		Assert.notNull(method, "MongoQueryMethod must not be null!");
-		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
-		Assert.notNull(evaluationContextProvider, "QueryMethodEvaluationContextProvider must not be null!");
+		Assert.notNull(operations, "MongoOperations must not be null");
+		Assert.notNull(method, "MongoQueryMethod must not be null");
+		Assert.notNull(expressionParser, "SpelExpressionParser must not be null");
+		Assert.notNull(evaluationContextProvider, "QueryMethodEvaluationContextProvider must not be null");
 
 		this.method = method;
 		this.operations = operations;
@@ -153,7 +153,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		if (method.isModifyingQuery()) {
 			if (isLimiting()) {
 				throw new IllegalStateException(
-						String.format("Update method must not be limiting. Offending method: %s", method));
+						String.format("Update method must not be limiting; Offending method: %s", method));
 			}
 			return new UpdateExecution(executableUpdate, method, () -> createUpdate(accessor), accessor);
 		}

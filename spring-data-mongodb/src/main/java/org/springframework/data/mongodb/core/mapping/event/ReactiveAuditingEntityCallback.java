@@ -43,7 +43,7 @@ public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCall
 	 */
 	public ReactiveAuditingEntityCallback(ObjectFactory<ReactiveIsNewAwareAuditingHandler> auditingHandlerFactory) {
 
-		Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
+		Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null");
 		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 

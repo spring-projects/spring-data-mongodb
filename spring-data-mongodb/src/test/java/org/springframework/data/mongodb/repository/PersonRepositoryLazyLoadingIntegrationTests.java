@@ -75,7 +75,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 	}
 
 	@Test // DATAMONGO-348
-	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg. ArrayList require to open java.util.")
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg; ArrayList require to open java.util.")
 	public void shouldLoadAssociationWithDbRefOnConcreteCollectionAndLazyLoadingEnabled() {
 
 		User thomas = new User();

@@ -62,7 +62,7 @@ public interface CodecRegistryProvider {
 	 */
 	default <T> Optional<Codec<T>> getCodecFor(Class<T> type) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 
 		try {
 			return Optional.of(getCodecRegistry().get(type));

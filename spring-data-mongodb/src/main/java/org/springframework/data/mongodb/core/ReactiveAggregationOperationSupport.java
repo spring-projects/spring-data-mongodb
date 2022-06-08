@@ -41,7 +41,7 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 	 */
 	ReactiveAggregationOperationSupport(ReactiveMongoTemplate template) {
 
-		Assert.notNull(template, "Template must not be null!");
+		Assert.notNull(template, "Template must not be null");
 
 		this.template = template;
 	}
@@ -49,7 +49,7 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 	@Override
 	public <T> ReactiveAggregation<T> aggregateAndReturn(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ReactiveAggregationSupport<>(template, domainType, null, null);
 	}
@@ -74,7 +74,7 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 		@Override
 		public AggregationOperationWithAggregation<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty!");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
 		}
@@ -82,7 +82,7 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 		@Override
 		public TerminatingAggregationOperation<T> by(Aggregation aggregation) {
 
-			Assert.notNull(aggregation, "Aggregation must not be null!");
+			Assert.notNull(aggregation, "Aggregation must not be null");
 
 			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
 		}

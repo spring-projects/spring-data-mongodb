@@ -53,8 +53,8 @@ import org.springframework.util.Assert;
 public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	private static final List<Projection> NONE = Collections.emptyList();
-	private static final String EXCLUSION_ERROR = "Exclusion of field %s not allowed. Projections by the mongodb "
-			+ "aggregation framework only support the exclusion of the %s field!";
+	private static final String EXCLUSION_ERROR = "Exclusion of field %s not allowed; Projections by the mongodb"
+			+ " aggregation framework only support the exclusion of the %s field";
 
 	private final List<Projection> projections;
 
@@ -93,8 +93,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	private ProjectionOperation(List<? extends Projection> current, List<? extends Projection> projections) {
 
-		Assert.notNull(current, "Current projections must not be null!");
-		Assert.notNull(projections, "Projections must not be null!");
+		Assert.notNull(current, "Current projections must not be null");
+		Assert.notNull(projections, "Projections must not be null");
 
 		this.projections = new ArrayList<ProjectionOperation.Projection>(current.size() + projections.size());
 		this.projections.addAll(current);
@@ -275,8 +275,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public AbstractProjectionOperationBuilder(Object value, ProjectionOperation operation) {
 
-			Assert.notNull(value, "value must not be null or empty!");
-			Assert.notNull(operation, "ProjectionOperation must not be null!");
+			Assert.notNull(value, "value must not be null or empty");
+			Assert.notNull(operation, "ProjectionOperation must not be null");
 
 			this.value = value;
 			this.operation = operation;
@@ -390,8 +390,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 				super(field);
 
-				Assert.hasText(expression, "Expression must not be null!");
-				Assert.notNull(parameters, "Parameters must not be null!");
+				Assert.hasText(expression, "Expression must not be null");
+				Assert.notNull(parameters, "Parameters must not be null");
 
 				this.expression = expression;
 				this.params = parameters.clone();
@@ -418,8 +418,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public static class ProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
 
-		private static final String NUMBER_NOT_NULL = "Number must not be null!";
-		private static final String FIELD_REFERENCE_NOT_NULL = "Field reference must not be null!";
+		private static final String NUMBER_NOT_NULL = "Number must not be null";
+		private static final String FIELD_REFERENCE_NOT_NULL = "Field reference must not be null";
 
 		private final @Nullable String name;
 		private final @Nullable OperationProjection previousProjection;
@@ -502,14 +502,14 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		@Override
 		public ProjectionOperation applyCondition(Cond cond) {
 
-			Assert.notNull(cond, "ConditionalOperator must not be null!");
+			Assert.notNull(cond, "ConditionalOperator must not be null");
 			return this.operation.and(new ExpressionProjection(Fields.field(getRequiredName()), cond));
 		}
 
 		@Override
 		public ProjectionOperation applyCondition(IfNull ifNull) {
 
-			Assert.notNull(ifNull, "IfNullOperator must not be null!");
+			Assert.notNull(ifNull, "IfNullOperator must not be null");
 			return this.operation.and(new ExpressionProjection(Fields.field(getRequiredName()), ifNull));
 		}
 
@@ -533,7 +533,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder plus(String fieldReference) {
 
-			Assert.notNull(fieldReference, "Field reference must not be null!");
+			Assert.notNull(fieldReference, "Field reference must not be null");
 			return project("add", Fields.field(fieldReference));
 		}
 
@@ -545,7 +545,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder minus(Number number) {
 
-			Assert.notNull(number, "Number must not be null!");
+			Assert.notNull(number, "Number must not be null");
 			return project("subtract", number);
 		}
 
@@ -572,7 +572,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder minus(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return project("subtract", expression);
 		}
 
@@ -611,7 +611,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder multiply(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return project("multiply", expression);
 		}
 
@@ -624,7 +624,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder divide(Number number) {
 
 			Assert.notNull(number, FIELD_REFERENCE_NOT_NULL);
-			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero!");
+			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero");
 			return project("divide", number);
 		}
 
@@ -651,7 +651,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder divide(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return project("divide", expression);
 		}
 
@@ -665,7 +665,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder mod(Number number) {
 
 			Assert.notNull(number, NUMBER_NOT_NULL);
-			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero!");
+			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero");
 			return project("mod", number);
 		}
 
@@ -692,7 +692,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder mod(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return project("mod", expression);
 		}
 
@@ -835,7 +835,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder equalsArrays(String... arrays) {
 
-			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			Assert.notEmpty(arrays, "Arrays must not be null or empty");
 			return project("setEquals", Fields.fields(arrays));
 		}
 
@@ -849,7 +849,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder intersectsArrays(String... arrays) {
 
-			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			Assert.notEmpty(arrays, "Arrays must not be null or empty");
 			return project("setIntersection", Fields.fields(arrays));
 		}
 
@@ -863,7 +863,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder unionArrays(String... arrays) {
 
-			Assert.notEmpty(arrays, "Arrays must not be null or empty!");
+			Assert.notEmpty(arrays, "Arrays must not be null or empty");
 			return project("setUnion", Fields.fields(arrays));
 		}
 
@@ -877,7 +877,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder differenceToArray(String array) {
 
-			Assert.hasText(array, "Array must not be null or empty!");
+			Assert.hasText(array, "Array must not be null or empty");
 			return project("setDifference", Fields.fields(array));
 		}
 
@@ -891,7 +891,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder subsetOfArray(String array) {
 
-			Assert.hasText(array, "Array must not be null or empty!");
+			Assert.hasText(array, "Array must not be null or empty");
 			return project("setIsSubset", Fields.fields(array));
 		}
 
@@ -1270,7 +1270,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		private String getRequiredName() {
 
-			Assert.state(name != null, "Projection field name must not be null!");
+			Assert.state(name != null, "Projection field name must not be null");
 
 			return name;
 		}
@@ -1368,7 +1368,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 */
 			public static List<FieldProjection> from(Fields fields, @Nullable Object value) {
 
-				Assert.notNull(fields, "Fields must not be null!");
+				Assert.notNull(fields, "Fields must not be null");
 				List<FieldProjection> projections = new ArrayList<FieldProjection>();
 
 				for (Field field : fields) {
@@ -1437,8 +1437,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 				super(field);
 
-				Assert.hasText(operation, "Operation must not be null or empty!");
-				Assert.notNull(values, "Values must not be null!");
+				Assert.hasText(operation, "Operation must not be null or empty");
+				Assert.notNull(values, "Values must not be null");
 
 				this.field = field;
 				this.operation = operation;
@@ -1655,7 +1655,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public Projection(Field field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			this.field = new ExposedField(field, true);
 		}
 
@@ -1759,7 +1759,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ArrayProjectionOperationBuilder and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "AggregationExpression must not be null!");
+			Assert.notNull(expression, "AggregationExpression must not be null");
 
 			this.projections.add(expression);
 			return this;
@@ -1773,7 +1773,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ArrayProjectionOperationBuilder and(Field field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 
 			this.projections.add(field);
 			return this;

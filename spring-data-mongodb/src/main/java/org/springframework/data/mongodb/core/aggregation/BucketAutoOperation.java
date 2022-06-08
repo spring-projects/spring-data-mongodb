@@ -50,7 +50,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		super(groupByField);
 
-		Assert.isTrue(buckets > 0, "Number of buckets must be greater 0!");
+		Assert.isTrue(buckets > 0, "Number of buckets must be greater 0");
 
 		this.buckets = buckets;
 		this.granularity = null;
@@ -66,7 +66,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		super(groupByExpression);
 
-		Assert.isTrue(buckets > 0, "Number of buckets must be greater 0!");
+		Assert.isTrue(buckets > 0, "Number of buckets must be greater 0");
 
 		this.buckets = buckets;
 		this.granularity = null;
@@ -117,7 +117,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	 */
 	public BucketAutoOperation withBuckets(int buckets) {
 
-		Assert.isTrue(buckets > 0, "Number of buckets must be greater 0!");
+		Assert.isTrue(buckets > 0, "Number of buckets must be greater 0");
 		return new BucketAutoOperation(this, buckets, granularity);
 	}
 
@@ -132,7 +132,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	 */
 	public BucketAutoOperation withGranularity(Granularity granularity) {
 
-		Assert.notNull(granularity, "Granularity must not be null!");
+		Assert.notNull(granularity, "Granularity must not be null");
 
 		return new BucketAutoOperation(this, buckets, granularity.getMongoRepresentation());
 	}

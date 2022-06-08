@@ -61,8 +61,8 @@ public interface FindPublisherPreparer extends ReadPreferenceAware {
 	default FindPublisher<Document> initiateFind(MongoCollection<Document> collection,
 			Function<MongoCollection<Document>, FindPublisher<Document>> find) {
 
-		Assert.notNull(collection, "Collection must not be null!");
-		Assert.notNull(find, "Find function must not be null!");
+		Assert.notNull(collection, "Collection must not be null");
+		Assert.notNull(find, "Find function must not be null");
 
 		if (hasReadPreference()) {
 			collection = collection.withReadPreference(getReadPreference());

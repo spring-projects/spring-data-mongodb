@@ -65,7 +65,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 
 		super(new MongoDatabaseFactoryReferenceLoader(mongoDbFactory), mongoDbFactory.getExceptionTranslator());
 
-		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
+		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null");
 
 		this.mongoDbFactory = mongoDbFactory;
 	}
@@ -74,9 +74,9 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler handler) {
 
-		Assert.notNull(property, "Property must not be null!");
-		Assert.notNull(callback, "Callback must not be null!");
-		Assert.notNull(handler, "Handler must not be null!");
+		Assert.notNull(property, "Property must not be null");
+		Assert.notNull(callback, "Callback must not be null");
+		Assert.notNull(handler, "Handler must not be null");
 
 		if (isLazyDbRef(property)) {
 			return createLazyLoadingProxy(property, dbref, callback, handler);
@@ -94,8 +94,8 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	@Override
 	public List<Document> bulkFetch(List<DBRef> refs) {
 
-		Assert.notNull(mongoDbFactory, "Factory must not be null!");
-		Assert.notNull(refs, "DBRef to fetch must not be null!");
+		Assert.notNull(mongoDbFactory, "Factory must not be null");
+		Assert.notNull(refs, "DBRef to fetch must not be null");
 
 		if (refs.isEmpty()) {
 			return Collections.emptyList();
@@ -108,7 +108,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 
 			if (!collection.equals(ref.getCollectionName())) {
 				throw new InvalidDataAccessApiUsageException(
-						"DBRefs must all target the same collection for bulk fetch operation.");
+						"DBRefs must all target the same collection for bulk fetch operation");
 			}
 
 			ids.add(ref.getId());
@@ -118,7 +118,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 		MongoCollection<Document> mongoCollection = getCollection(databaseSource);
 
 		if (LOGGER.isTraceEnabled()) {
-			LOGGER.trace(String.format("Bulk fetching DBRefs %s from %s.%s.", ids,
+			LOGGER.trace(String.format("Bulk fetching DBRefs %s from %s.%s", ids,
 					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
 							: mongoCollection.getNamespace().getDatabaseName(),
 					databaseSource.getCollectionName()));

@@ -53,7 +53,7 @@ public interface IndexResolver {
 	static IndexResolver create(
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
+		Assert.notNull(mappingContext, "MongoMappingContext must not be null");
 
 		return new MongoPersistentEntityIndexResolver(mappingContext);
 	}

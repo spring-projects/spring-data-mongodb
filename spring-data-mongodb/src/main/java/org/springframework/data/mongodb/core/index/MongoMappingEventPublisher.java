@@ -49,7 +49,7 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 	 */
 	public MongoMappingEventPublisher(ApplicationListener<MappingContextEvent<?, ?>> indexCreator) {
 
-		Assert.notNull(indexCreator, "ApplicationListener must not be null!");
+		Assert.notNull(indexCreator, "ApplicationListener must not be null");
 
 		this.indexCreator = indexCreator;
 	}
@@ -61,7 +61,7 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 	 */
 	public MongoMappingEventPublisher(MongoPersistentEntityIndexCreator indexCreator) {
 
-		Assert.notNull(indexCreator, "MongoPersistentEntityIndexCreator must not be null!");
+		Assert.notNull(indexCreator, "MongoPersistentEntityIndexCreator must not be null");
 
 		this.indexCreator = indexCreator;
 	}

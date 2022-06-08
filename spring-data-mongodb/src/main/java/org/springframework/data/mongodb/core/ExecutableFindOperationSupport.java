@@ -53,7 +53,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	@Override
 	public <T> ExecutableFind<T> query(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ExecutableFindSupport<>(template, domainType, domainType, null, ALL_QUERY);
 	}
@@ -84,7 +84,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public FindWithProjection<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection name must not be null nor empty!");
+			Assert.hasText(collection, "Collection name must not be null nor empty");
 
 			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
@@ -92,7 +92,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public <T1> FindWithQuery<T1> as(Class<T1> returnType) {
 
-			Assert.notNull(returnType, "ReturnType must not be null!");
+			Assert.notNull(returnType, "ReturnType must not be null");
 
 			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
@@ -100,7 +100,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public TerminatingFind<T> matching(Query query) {
 
-			Assert.notNull(query, "Query must not be null!");
+			Assert.notNull(query, "Query must not be null");
 
 			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
@@ -115,7 +115,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			}
 
 			if (result.size() > 1) {
-				throw new IncorrectResultSizeDataAccessException("Query " + asString() + " returned non unique result.", 1);
+				throw new IncorrectResultSizeDataAccessException("Query " + asString() + " returned non unique result", 1);
 			}
 
 			return result.iterator().next();
@@ -158,7 +158,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public TerminatingDistinct<Object> distinct(String field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 
 			return new DistinctOperationSupport(this, field);
 		}
@@ -246,7 +246,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@SuppressWarnings("unchecked")
 		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
 
-			Assert.notNull(resultType, "ResultType must not be null!");
+			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new DistinctOperationSupport<>((ExecutableFindSupport) delegate.as(resultType), field);
 		}
@@ -254,7 +254,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public TerminatingDistinct<T> matching(Query query) {
 
-			Assert.notNull(query, "Query must not be null!");
+			Assert.notNull(query, "Query must not be null");
 
 			return new DistinctOperationSupport<>((ExecutableFindSupport<T>) delegate.matching(query), field);
 		}

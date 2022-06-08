@@ -71,8 +71,8 @@ interface MongoQueryExecution {
 
 		public SlicedExecution(ExecutableFindOperation.FindWithQuery<?> find, Pageable pageable) {
 
-			Assert.notNull(find, "Find must not be null!");
-			Assert.notNull(pageable, "Pageable must not be null!");
+			Assert.notNull(find, "Find must not be null");
+			Assert.notNull(pageable, "Pageable must not be null");
 
 			this.find = find;
 			this.pageable = pageable;
@@ -108,8 +108,8 @@ interface MongoQueryExecution {
 
 		public PagedExecution(ExecutableFindOperation.FindWithQuery<?> operation, Pageable pageable) {
 
-			Assert.notNull(operation, "Operation must not be null!");
-			Assert.notNull(pageable, "Pageable must not be null!");
+			Assert.notNull(operation, "Operation must not be null");
+			Assert.notNull(pageable, "Pageable must not be null");
 
 			this.operation = operation;
 			this.pageable = pageable;
@@ -152,9 +152,9 @@ interface MongoQueryExecution {
 		public GeoNearExecution(ExecutableFindOperation.FindWithQuery<?> operation, MongoQueryMethod method,
 				MongoParameterAccessor accessor) {
 
-			Assert.notNull(operation, "Operation must not be null!");
-			Assert.notNull(method, "Method must not be null!");
-			Assert.notNull(accessor, "Accessor must not be null!");
+			Assert.notNull(operation, "Operation must not be null");
+			Assert.notNull(method, "Method must not be null");
+			Assert.notNull(accessor, "Accessor must not be null");
 
 			this.operation = operation;
 			this.method = method;
@@ -256,8 +256,8 @@ interface MongoQueryExecution {
 
 		public DeleteExecution(MongoOperations operations, MongoQueryMethod method) {
 
-			Assert.notNull(operations, "Operations must not be null!");
-			Assert.notNull(method, "Method must not be null!");
+			Assert.notNull(operations, "Operations must not be null");
+			Assert.notNull(method, "Method must not be null");
 
 			this.operations = operations;
 			this.method = method;

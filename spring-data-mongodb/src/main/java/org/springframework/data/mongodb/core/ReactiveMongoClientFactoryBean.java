@@ -115,7 +115,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 		}
 
 		throw new IllegalStateException(
-				"Cannot create MongoClients. One of the following is required: mongoClientSettings, connectionString or host/port");
+				"Cannot create MongoClients; One of the following is required: mongoClientSettings, connectionString or host/port");
 	}
 
 	@Override

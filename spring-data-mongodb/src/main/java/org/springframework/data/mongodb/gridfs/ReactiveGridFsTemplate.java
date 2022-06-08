@@ -103,8 +103,8 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		super(converter);
 
-		Assert.notNull(dataBufferFactory, "DataBufferFactory must not be null!");
-		Assert.notNull(dbFactory, "ReactiveMongoDatabaseFactory must not be null!");
+		Assert.notNull(dataBufferFactory, "DataBufferFactory must not be null");
+		Assert.notNull(dbFactory, "ReactiveMongoDatabaseFactory must not be null");
 
 		this.dataBufferFactory = dataBufferFactory;
 		this.dbFactory = dbFactory;
@@ -186,7 +186,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	@Override
 	public Mono<ReactiveGridFsResource> getResource(String location) {
 
-		Assert.notNull(location, "Filename must not be null!");
+		Assert.notNull(location, "Filename must not be null");
 
 		return findOne(query(whereFilename().is(location))).flatMap(this::getResource)
 				.defaultIfEmpty(ReactiveGridFsResource.absent(location));
@@ -195,7 +195,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	@Override
 	public Mono<ReactiveGridFsResource> getResource(GridFSFile file) {
 
-		Assert.notNull(file, "GridFSFile must not be null!");
+		Assert.notNull(file, "GridFSFile must not be null");
 
 		return doGetBucket()
 				.map(it -> new ReactiveGridFsResource(file, it.downloadToPublisher(file.getId()), dataBufferFactory));
@@ -228,7 +228,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 */
 	public <T> Mono<T> createMono(ReactiveBucketCallback<T> callback) {
 
-		Assert.notNull(callback, "ReactiveBucketCallback must not be null!");
+		Assert.notNull(callback, "ReactiveBucketCallback must not be null");
 
 		return doGetBucket().flatMap(bucket -> Mono.from(callback.doInBucket(bucket)));
 	}
@@ -242,7 +242,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 */
 	public <T> Flux<T> createFlux(ReactiveBucketCallback<T> callback) {
 
-		Assert.notNull(callback, "ReactiveBucketCallback must not be null!");
+		Assert.notNull(callback, "ReactiveBucketCallback must not be null");
 
 		return doGetBucket().flatMapMany(callback::doInBucket);
 	}

@@ -56,7 +56,7 @@ public final class IndexField {
 		Assert.hasText(key, "Key must not be null or empty");
 
 		if (Type.GEO.equals(type) || Type.TEXT.equals(type)) {
-			Assert.isNull(direction, "Geo/Text indexes must not have a direction!");
+			Assert.isNull(direction, "Geo/Text indexes must not have a direction");
 		} else {
 			if (!(Type.HASH.equals(type) || Type.WILDCARD.equals(type))) {
 				Assert.notNull(direction, "Default indexes require a direction");
@@ -71,7 +71,7 @@ public final class IndexField {
 
 	public static IndexField create(String key, Direction order) {
 
-		Assert.notNull(order, "Direction must not be null!");
+		Assert.notNull(order, "Direction must not be null");
 
 		return new IndexField(key, order, Type.DEFAULT);
 	}

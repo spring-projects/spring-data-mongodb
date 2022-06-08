@@ -38,7 +38,7 @@ public class SampleOperation implements AggregationOperation {
 	 */
 	public SampleOperation(long sampleSize) {
 
-		Assert.isTrue(sampleSize > 0, "Sample size must be greater than zero!");
+		Assert.isTrue(sampleSize > 0, "Sample size must be greater than zero");
 		this.sampleSize = sampleSize;
 	}
 

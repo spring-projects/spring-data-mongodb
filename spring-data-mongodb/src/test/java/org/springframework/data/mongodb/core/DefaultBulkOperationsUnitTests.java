@@ -295,7 +295,7 @@ class DefaultBulkOperationsUnitTests {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoWriteException(
-				new WriteError(89, "NetworkTimeout", new BsonDocument("hi", new BsonString("there!"))), null));
+				new WriteError(89, "NetworkTimeout", new BsonDocument("hi", new BsonString("there"))), null));
 
 		ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),

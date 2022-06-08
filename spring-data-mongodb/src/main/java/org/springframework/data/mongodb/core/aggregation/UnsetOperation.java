@@ -45,8 +45,8 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 	 */
 	public UnsetOperation(Collection<Object> fields) {
 
-		Assert.notNull(fields, "Fields must not be null!");
-		Assert.noNullElements(fields, "Fields must not contain null values.");
+		Assert.notNull(fields, "Fields must not be null");
+		Assert.noNullElements(fields, "Fields must not contain null values");
 
 		this.fields = fields;
 	}

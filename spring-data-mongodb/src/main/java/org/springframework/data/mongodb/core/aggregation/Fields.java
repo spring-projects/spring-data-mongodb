@@ -37,8 +37,8 @@ import org.springframework.util.StringUtils;
  */
 public final class Fields implements Iterable<Field> {
 
-	private static final String AMBIGUOUS_EXCEPTION = "Found two fields both using '%s' as name: %s and %s! Please "
-			+ "customize your field definitions to get to unique field names!";
+	private static final String AMBIGUOUS_EXCEPTION = "Found two fields both using '%s' as name: %s and %s; Please "
+			+ "customize your field definitions to get to unique field names";
 
 	public static final String UNDERSCORE_ID = "_id";
 	public static final String UNDERSCORE_ID_REF = "$_id";
@@ -53,7 +53,7 @@ public final class Fields implements Iterable<Field> {
 	 */
 	public static Fields from(Field... fields) {
 
-		Assert.notNull(fields, "Fields must not be null!");
+		Assert.notNull(fields, "Fields must not be null");
 		return new Fields(Arrays.asList(fields));
 	}
 
@@ -65,7 +65,7 @@ public final class Fields implements Iterable<Field> {
 	 */
 	public static Fields fields(String... names) {
 
-		Assert.notNull(names, "Field names must not be null!");
+		Assert.notNull(names, "Field names must not be null");
 
 		List<Field> fields = new ArrayList<Field>();
 
@@ -96,7 +96,7 @@ public final class Fields implements Iterable<Field> {
 	 * @return
 	 */
 	public static Field field(String name, String target) {
-		Assert.hasText(target, "Target must not be null or empty!");
+		Assert.hasText(target, "Target must not be null or empty");
 		return new AggregationField(name, target);
 	}
 
@@ -107,7 +107,7 @@ public final class Fields implements Iterable<Field> {
 	 */
 	private Fields(List<Field> fields) {
 
-		Assert.notNull(fields, "Fields must not be null!");
+		Assert.notNull(fields, "Fields must not be null");
 
 		this.fields = verify(fields);
 	}
@@ -228,7 +228,7 @@ public final class Fields implements Iterable<Field> {
 			String nameToSet = name != null ? cleanUp(name) : null;
 			String targetToSet = target != null ? cleanUp(target) : null;
 
-			Assert.hasText(nameToSet, "AggregationField name must not be null or empty!");
+			Assert.hasText(nameToSet, "AggregationField name must not be null or empty");
 
 			if (target == null && name.contains(".")) {
 				this.name = nameToSet.substring(nameToSet.indexOf('.') + 1);

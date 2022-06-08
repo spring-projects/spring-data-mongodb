@@ -78,9 +78,9 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 	public ReactiveMongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,
 			ReactiveIndexOperationsProvider operationsProvider, IndexResolver indexResolver) {
 
-		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
-		Assert.notNull(operationsProvider, "ReactiveIndexOperations must not be null!");
-		Assert.notNull(indexResolver, "IndexResolver must not be null!");
+		Assert.notNull(mappingContext, "MongoMappingContext must not be null");
+		Assert.notNull(operationsProvider, "ReactiveIndexOperations must not be null");
+		Assert.notNull(indexResolver, "IndexResolver must not be null");
 
 		this.mappingContext = mappingContext;
 		this.operationsProvider = operationsProvider;
@@ -111,7 +111,7 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 			if (this.classesSeen.put(type, Boolean.TRUE) == null) {
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Analyzing class " + type + " for index information.");
+					LOGGER.debug("Analyzing class " + type + " for index information");
 				}
 
 				return checkForAndCreateIndexes(entity);
@@ -154,14 +154,14 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 		Mono<IndexInfo> existingIndex = fetchIndexInformation(indexDefinition);
 
 		Mono<String> defaultError = Mono.error(new DataIntegrityViolationException(
-				String.format("Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'.",
+				String.format("Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'",
 						indexDefinition.getPath(), indexDefinition.getCollection(), indexDefinition.getIndexKeys(),
 						indexDefinition.getIndexOptions()),
 				e.getCause()));
 
 		return existingIndex.flatMap(it -> {
 			return Mono.<String> error(new DataIntegrityViolationException(
-					String.format("Index already defined as '%s'.", indexDefinition.getPath()), e.getCause()));
+					String.format("Index already defined as '%s'", indexDefinition.getPath()), e.getCause()));
 		}).switchIfEmpty(defaultError);
 	}
 
@@ -177,7 +177,7 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 				.doOnError(e -> {
 					if(LOGGER.isDebugEnabled()) {
 						LOGGER.debug(
-								String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()),
+								String.format("Failed to load index information for collection '%s'", indexDefinition.getCollection()),
 								e);
 					}
 				});

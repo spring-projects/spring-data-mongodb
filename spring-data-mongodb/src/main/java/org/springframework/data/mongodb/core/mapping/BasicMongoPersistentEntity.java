@@ -60,7 +60,7 @@ import org.springframework.util.StringUtils;
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty>
 		implements MongoPersistentEntity<T> {
 
-	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
+	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected; Both %s and %s map to the same field name %s; Disambiguate using @Field annotation";
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private final String collection;
@@ -247,7 +247,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	protected MongoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(MongoPersistentProperty property) {
 
-		Assert.notNull(property, "MongoPersistentProperty must not be null!");
+		Assert.notNull(property, "MongoPersistentProperty must not be null");
 
 		if (!property.isIdProperty()) {
 			return null;
@@ -271,7 +271,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
 			throw new MappingException(
 					String.format("Attempt to add explicit id property %s but already have an property %s registered "
-							+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+							+ "as explicit id; Check your mapping configuration", property.getField(), currentIdPropertyField));
 
 		} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
 			// explicit id property takes precedence over implicit id property
@@ -283,7 +283,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		} else {
 			throw new MappingException(
 					String.format("Attempt to add id property %s but already have an property %s registered "
-							+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+							+ "as id; Check your mapping configuration", property.getField(), currentIdPropertyField));
 		}
 
 		return null;
@@ -399,7 +399,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			if (persistentProperty.isDbReference() && persistentProperty.getDBRef().lazy()) {
 				if (persistentProperty.isArray() || Modifier.isFinal(persistentProperty.getActualType().getModifiers())) {
 					throw new MappingException(String.format(
-							"Invalid lazy DBRef property for %s. Found %s which must not be an array nor a final class.",
+							"Invalid lazy DBRef property for %s; Found %s which must not be an array nor a final class",
 							persistentProperty.getField(), persistentProperty.getActualType()));
 				}
 			}
@@ -414,7 +414,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			}
 
 			throw new MappingException(
-					String.format("Missmatching types for %s. Found %s expected one of %s.", persistentProperty.getField(),
+					String.format("Missmatching types for %s; Found %s expected one of %s", persistentProperty.getField(),
 							persistentProperty.getActualType(), StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}

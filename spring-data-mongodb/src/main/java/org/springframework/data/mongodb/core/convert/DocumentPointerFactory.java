@@ -205,7 +205,7 @@ class DocumentPointerFactory {
 
 				if (entry.getKey().startsWith("$")) {
 					throw new InvalidDataAccessApiUsageException(String.format(
-							"Cannot derive document pointer from lookup '%s' using query operator (%s). Please consider registering a custom converter.",
+							"Cannot derive document pointer from lookup '%s' using query operator (%s); Please consider registering a custom converter",
 							lookup, entry.getKey()));
 				}
 

@@ -157,7 +157,7 @@ public class AggregationTests {
 						if (scanner != null) {
 							scanner.close();
 						}
-						throw new RuntimeException("Could not load mongodb sample dataset!", e);
+						throw new RuntimeException("Could not load mongodb sample dataset", e);
 					}
 
 					collection.bulkWrite(docs);

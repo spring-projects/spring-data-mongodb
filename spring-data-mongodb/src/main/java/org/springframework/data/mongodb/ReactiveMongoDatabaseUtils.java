@@ -136,7 +136,7 @@ public class ReactiveMongoDatabaseUtils {
 	private static Mono<MongoDatabase> doGetMongoDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 
-		Assert.notNull(factory, "DatabaseFactory must not be null!");
+		Assert.notNull(factory, "DatabaseFactory must not be null");
 
 		if (sessionSynchronization == SessionSynchronization.NEVER) {
 			return getMongoDatabaseOrDefault(dbName, factory);

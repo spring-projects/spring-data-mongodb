@@ -173,7 +173,7 @@ public class IndexInfo {
 	 */
 	public boolean isIndexForFields(Collection<String> keys) {
 
-		Assert.notNull(keys, "Collection of keys must not be null!");
+		Assert.notNull(keys, "Collection of keys must not be null");
 
 		List<String> indexKeys = new ArrayList<String>(indexFields.size());
 

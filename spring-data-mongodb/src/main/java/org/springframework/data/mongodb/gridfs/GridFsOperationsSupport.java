@@ -43,7 +43,7 @@ class GridFsOperationsSupport {
 	 */
 	GridFsOperationsSupport(MongoConverter converter) {
 
-		Assert.notNull(converter, "MongoConverter must not be null!");
+		Assert.notNull(converter, "MongoConverter must not be null");
 
 		this.converter = converter;
 		this.queryMapper = new QueryMapper(converter);

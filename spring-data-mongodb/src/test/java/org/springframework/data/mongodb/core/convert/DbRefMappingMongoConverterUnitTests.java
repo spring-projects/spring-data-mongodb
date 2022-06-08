@@ -183,7 +183,7 @@ class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg. ArrayList require to open java.util.")
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg; ArrayList require to open java.util.")
 	void lazyLoadingProxyForLazyDbRefOnConcreteCollection() {
 
 		String id = "42";
@@ -511,7 +511,7 @@ class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1076
-	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg. ArrayList require to open java.util.")
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg; ArrayList require to open java.util.")
 	void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
 
 		MongoPersistentEntity<?> entity = mappingContext
@@ -530,7 +530,7 @@ class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg. ArrayList require to open java.util.")
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg; ArrayList require to open java.util.")
 	void shouldBulkFetchListOfReferences() {
 
 		String id1 = "1";
@@ -581,7 +581,7 @@ class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg. ArrayList require to open java.util.")
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg; ArrayList require to open java.util.")
 	void shouldFallbackToOneByOneFetchingWhenElementsInListOfReferencesPointToDifferentCollections() {
 
 		String id1 = "1";

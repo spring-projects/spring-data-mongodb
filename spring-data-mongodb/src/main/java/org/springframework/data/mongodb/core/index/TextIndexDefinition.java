@@ -161,7 +161,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 */
 		public TextIndexedFieldSpec(String fieldname, @Nullable Float weight) {
 
-			Assert.hasText(fieldname, "Text index field cannot be blank.");
+			Assert.hasText(fieldname, "Text index field cannot be blank");
 			this.fieldname = fieldname;
 			this.weight = weight != null ? weight : 1.0F;
 		}
@@ -251,7 +251,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		public TextIndexDefinitionBuilder onAllFields() {
 
 			if (!instance.fieldSpecs.isEmpty()) {
-				throw new InvalidDataAccessApiUsageException("Cannot add wildcard fieldspect to non empty.");
+				throw new InvalidDataAccessApiUsageException("Cannot add wildcard fieldspect to non empty");
 			}
 
 			this.instance.fieldSpecs.add(ALL_FIELDS);
@@ -292,7 +292,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 			if (this.instance.fieldSpecs.contains(ALL_FIELDS)) {
 				throw new InvalidDataAccessApiUsageException(
-						String.format("Cannot add %s to field spec for all fields.", fieldname));
+						String.format("Cannot add %s to field spec for all fields", fieldname));
 			}
 
 			this.instance.fieldSpecs.add(new TextIndexedFieldSpec(fieldname, weight));
@@ -323,7 +323,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 			if (StringUtils.hasText(this.instance.languageOverride)) {
 				throw new InvalidDataAccessApiUsageException(
-						String.format("Cannot set language override on %s as it is already defined on %s.", fieldname,
+						String.format("Cannot set language override on %s as it is already defined on %s", fieldname,
 								this.instance.languageOverride));
 			}
 

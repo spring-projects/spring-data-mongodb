@@ -225,7 +225,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 */
 		public MongoConverterConfigurationAdapter registerConverter(Converter<?, ?> converter) {
 
-			Assert.notNull(converter, "Converter must not be null!");
+			Assert.notNull(converter, "Converter must not be null");
 			customConverters.add(converter);
 			return this;
 		}
@@ -241,7 +241,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> configurationAdapter) {
 
 			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
-					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry.");
+					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry");
 
 			PropertyValueConverterRegistrar propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
 			configurationAdapter.accept(propertyValueConverterRegistrar);
@@ -259,7 +259,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 */
 		public MongoConverterConfigurationAdapter registerConverterFactory(ConverterFactory<?, ?> converterFactory) {
 
-			Assert.notNull(converterFactory, "ConverterFactory must not be null!");
+			Assert.notNull(converterFactory, "ConverterFactory must not be null");
 			customConverters.add(converterFactory);
 			return this;
 		}
@@ -274,7 +274,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		public MongoConverterConfigurationAdapter registerConverters(Collection<?> converters) {
 
 			Assert.notNull(converters, "Converters must not be null");
-			Assert.noNullElements(converters, "Converters must not be null nor contain null values!");
+			Assert.noNullElements(converters, "Converters must not be null nor contain null values");
 
 			customConverters.addAll(converters);
 			return this;
@@ -292,7 +292,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				PropertyValueConverterFactory converterFactory) {
 
 			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
-					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry.");
+					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry");
 
 			((SimplePropertyValueConversions) valueConversions()).setConverterFactory(converterFactory);
 			return this;

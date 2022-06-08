@@ -38,7 +38,7 @@ public class FindAndReplaceOptions {
 
 	private static final FindAndReplaceOptions NONE = new FindAndReplaceOptions() {
 
-		private static final String ERROR_MSG = "FindAndReplaceOptions.none() cannot be changed. Please use FindAndReplaceOptions.options() instead.";
+		private static final String ERROR_MSG = "FindAndReplaceOptions.none() cannot be changed; Please use FindAndReplaceOptions.options() instead";
 
 		@Override
 		public FindAndReplaceOptions returnNew() {

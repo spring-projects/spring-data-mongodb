@@ -72,7 +72,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 */
 	public ReactiveMongoRepositoryFactory(ReactiveMongoOperations mongoOperations) {
 
-		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null!");
+		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null");
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();

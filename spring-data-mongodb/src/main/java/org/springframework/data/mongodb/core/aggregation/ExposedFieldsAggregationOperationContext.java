@@ -47,8 +47,8 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields,
 			AggregationOperationContext rootContext) {
 
-		Assert.notNull(exposedFields, "ExposedFields must not be null!");
-		Assert.notNull(rootContext, "RootContext must not be null!");
+		Assert.notNull(exposedFields, "ExposedFields must not be null");
+		Assert.notNull(rootContext, "RootContext must not be null");
 
 		this.exposedFields = exposedFields;
 		this.rootContext = rootContext;
@@ -88,14 +88,14 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 */
 	private FieldReference getReference(@Nullable Field field, String name) {
 
-		Assert.notNull(name, "Name must not be null!");
+		Assert.notNull(name, "Name must not be null");
 
 		FieldReference exposedField = resolveExposedField(field, name);
 		if (exposedField != null) {
 			return exposedField;
 		}
 
-		throw new IllegalArgumentException(String.format("Invalid reference '%s'!", name));
+		throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));
 	}
 
 	/**

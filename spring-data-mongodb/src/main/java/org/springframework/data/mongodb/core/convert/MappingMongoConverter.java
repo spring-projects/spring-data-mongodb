@@ -110,8 +110,8 @@ import com.mongodb.DBRef;
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
-	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions. Parent object was: %4$s";
-	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
+	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s; Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions; Parent object was: %4$s";
+	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter";
 
 	public static final ClassTypeInformation<Bson> BSON = ClassTypeInformation.from(Bson.class);
 
@@ -145,8 +145,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		super(new DefaultConversionService());
 
-		Assert.notNull(dbRefResolver, "DbRefResolver must not be null!");
-		Assert.notNull(mappingContext, "MappingContext must not be null!");
+		Assert.notNull(dbRefResolver, "DbRefResolver must not be null");
+		Assert.notNull(mappingContext, "MappingContext must not be null");
 
 		this.dbRefResolver = dbRefResolver;
 
@@ -281,7 +281,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public void setEntityCallbacks(EntityCallbacks entityCallbacks) {
 
-		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null");
 		this.entityCallbacks = entityCallbacks;
 	}
 
@@ -731,7 +731,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (referringProperty != null) {
 			annotation = referringProperty.getDBRef();
-			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef!");
+			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef");
 		}
 
 		// DATAMONGO-913
@@ -749,7 +749,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return () -> ((LazyLoadingProxy) source).getSource();
 		}
 
-		Assert.notNull(referringProperty, "Cannot create DocumentReference. The referringProperty must not be null!");
+		Assert.notNull(referringProperty, "Cannot create DocumentReference; The referringProperty must not be null");
 
 		if (referringProperty.isDbReference()) {
 			return () -> toDBRef(source, referringProperty);
@@ -1070,8 +1070,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	protected Bson createMap(Map<Object, Object> map, MongoPersistentProperty property) {
 
-		Assert.notNull(map, "Given map must not be null!");
-		Assert.notNull(property, "PersistentProperty must not be null!");
+		Assert.notNull(map, "Given map must not be null");
+		Assert.notNull(property, "PersistentProperty must not be null");
 
 		if (!property.isAssociation()) {
 			return writeMapInternal(map, new Document(), property.getTypeInformation());
@@ -1095,7 +1095,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 			} else {
-				throw new MappingException("Cannot use a complex object as a key value.");
+				throw new MappingException("Cannot use a complex object as a key value");
 			}
 		}
 
@@ -1170,7 +1170,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					BsonUtils.addToMap(bson, simpleKey, document);
 				}
 			} else {
-				throw new MappingException("Cannot use a complex object as a key value.");
+				throw new MappingException("Cannot use a complex object as a key value");
 			}
 		}
 
@@ -1185,7 +1185,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	private String prepareMapKey(Object key) {
 
-		Assert.notNull(key, "Map key must not be null!");
+		Assert.notNull(key, "Map key must not be null");
 
 		String convertedKey = potentiallyConvertMapKey(key);
 		return potentiallyEscapeMapKey(convertedKey);
@@ -1206,8 +1206,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (mapKeyDotReplacement == null) {
 			throw new MappingException(String.format(
-					"Map key %s contains dots but no replacement was configured! Make "
-							+ "sure map keys don't contain dots in the first place or configure an appropriate replacement!",
+					"Map key %s contains dots but no replacement was configured; Make"
+							+ " sure map keys don't contain dots in the first place or configure an appropriate replacement",
 					source));
 		}
 
@@ -1357,7 +1357,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	protected DBRef createDBRef(Object target, @Nullable MongoPersistentProperty property) {
 
-		Assert.notNull(target, "Target object must not be null!");
+		Assert.notNull(target, "Target object must not be null");
 
 		if (target instanceof DBRef) {
 			return (DBRef) target;
@@ -1380,7 +1380,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					: entity.getPropertyAccessor(target).getProperty(idProperty);
 
 			if (null == id) {
-				throw new MappingException("Cannot create a reference to an object with a NULL id.");
+				throw new MappingException("Cannot create a reference to an object with a NULL id");
 			}
 
 			return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity,
@@ -1410,7 +1410,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected Object readCollectionOrArray(ConversionContext context, Collection<?> source,
 			TypeInformation<?> targetType) {
 
-		Assert.notNull(targetType, "Target type must not be null!");
+		Assert.notNull(targetType, "Target type must not be null");
 
 		Class<?> collectionType = targetType.isSubTypeOf(Collection.class) //
 				? targetType.getType() //
@@ -1454,8 +1454,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	protected Map<Object, Object> readMap(ConversionContext context, Bson bson, TypeInformation<?> targetType) {
 
-		Assert.notNull(bson, "Document must not be null!");
-		Assert.notNull(targetType, "TypeInformation must not be null!");
+		Assert.notNull(bson, "Document must not be null");
+		Assert.notNull(targetType, "TypeInformation must not be null");
 
 		Class<?> mapType = getTypeMapper().readType(bson, targetType).getType();
 
@@ -1836,7 +1836,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	private static boolean isCollectionOfDbRefWhereBulkFetchIsPossible(Iterable<?> source) {
 
-		Assert.notNull(source, "Iterable of DBRefs must not be null!");
+		Assert.notNull(source, "Iterable of DBRefs must not be null");
 
 		Set<String> collectionsFound = new HashSet<>();
 
@@ -1901,9 +1901,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoDbPropertyValueProvider(ConversionContext context, DocumentAccessor accessor,
 				SpELExpressionEvaluator evaluator) {
 
-			Assert.notNull(context, "ConversionContext must no be null!");
-			Assert.notNull(accessor, "DocumentAccessor must no be null!");
-			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null!");
+			Assert.notNull(context, "ConversionContext must no be null");
+			Assert.notNull(accessor, "DocumentAccessor must no be null");
+			Assert.notNull(evaluator, "SpELExpressionEvaluator must not be null");
 
 			this.context = context;
 			this.accessor = accessor;
@@ -2011,7 +2011,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			super(evaluator, conversionService, delegate);
 
-			Assert.notNull(context, "ConversionContext must no be null!");
+			Assert.notNull(context, "ConversionContext must no be null");
 
 			this.context = context;
 		}

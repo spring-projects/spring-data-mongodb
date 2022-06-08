@@ -158,7 +158,7 @@ public class BsonUtils {
 		}
 
 		throw new IllegalArgumentException(String.format(
-				"Cannot add key/value pair to %s. as map. Given Bson must be a Document or BSONObject!", bson.getClass()));
+				"Cannot add key/value pair to %s; as map given Bson must be a Document or BSONObject", bson.getClass()));
 	}
 
 	/**
@@ -183,7 +183,7 @@ public class BsonUtils {
 		}
 
 		throw new IllegalArgumentException(
-				String.format("Cannot add all to %s. Given Bson must be a Document or BSONObject.", target.getClass()));
+				String.format("Cannot add all to %s; Given Bson must be a Document or BSONObject.", target.getClass()));
 	}
 
 	/**
@@ -250,7 +250,7 @@ public class BsonUtils {
 		}
 
 		throw new IllegalArgumentException(
-				String.format("Cannot remove from %s. Given Bson must be a Document or BSONObject.", bson.getClass()));
+				String.format("Cannot remove from %s given Bson must be a Document or BSONObject.", bson.getClass()));
 	}
 
 	/**
@@ -444,7 +444,7 @@ public class BsonUtils {
 	 */
 	public static Document parse(String json, @Nullable CodecRegistryProvider codecRegistryProvider) {
 
-		Assert.notNull(json, "Json must not be null!");
+		Assert.notNull(json, "Json must not be null");
 
 		if (codecRegistryProvider == null) {
 			return Document.parse(json);

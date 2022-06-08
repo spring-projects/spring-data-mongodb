@@ -175,7 +175,7 @@ public class UpdateMapper extends QueryMapper {
 
 			value = modificationOperations;
 		} else {
-			throw new IllegalArgumentException(String.format("Unable to map value of type '%s'!", rawValue.getClass()));
+			throw new IllegalArgumentException(String.format("Unable to map value of type '%s'", rawValue.getClass()));
 		}
 
 		return createMapEntry(field, value);

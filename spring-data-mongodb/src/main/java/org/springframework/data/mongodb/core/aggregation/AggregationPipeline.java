@@ -48,7 +48,7 @@ public class AggregationPipeline {
 	 */
 	public AggregationPipeline(List<AggregationOperation> aggregationOperations) {
 
-		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
+		Assert.notNull(aggregationOperations, "AggregationOperations must not be null");
 		pipeline = new ArrayList<>(aggregationOperations);
 	}
 
@@ -60,7 +60,7 @@ public class AggregationPipeline {
 	 */
 	public AggregationPipeline add(AggregationOperation aggregationOperation) {
 
-		Assert.notNull(aggregationOperation, "AggregationOperation must not be null!");
+		Assert.notNull(aggregationOperation, "AggregationOperation must not be null");
 
 		pipeline.add(aggregationOperation);
 		return this;
@@ -100,11 +100,11 @@ public class AggregationPipeline {
 		for (AggregationOperation operation : pipeline) {
 
 			if (isOut(operation) && !isLast(operation)) {
-				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
+				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline");
 			}
 
 			if (isMerge(operation) && !isLast(operation)) {
-				throw new IllegalArgumentException("The $merge operator must be the last stage in the pipeline.");
+				throw new IllegalArgumentException("The $merge operator must be the last stage in the pipeline");
 			}
 		}
 	}

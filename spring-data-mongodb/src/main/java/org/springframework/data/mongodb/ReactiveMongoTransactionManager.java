@@ -104,7 +104,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
 			@Nullable TransactionOptions options) {
 
-		Assert.notNull(databaseFactory, "DatabaseFactory must not be null!");
+		Assert.notNull(databaseFactory, "DatabaseFactory must not be null");
 
 		this.databaseFactory = databaseFactory;
 		this.options = options;
@@ -281,7 +281,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 */
 	public void setDatabaseFactory(ReactiveMongoDatabaseFactory databaseFactory) {
 
-		Assert.notNull(databaseFactory, "DatabaseFactory must not be null!");
+		Assert.notNull(databaseFactory, "DatabaseFactory must not be null");
 		this.databaseFactory = databaseFactory;
 	}
 
@@ -323,7 +323,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	private ReactiveMongoDatabaseFactory getRequiredDatabaseFactory() {
 
 		Assert.state(databaseFactory != null,
-				"ReactiveMongoTransactionManager operates upon a ReactiveMongoDatabaseFactory. Did you forget to provide one? It's required.");
+				"ReactiveMongoTransactionManager operates upon a ReactiveMongoDatabaseFactory; Did you forget to provide one; It's required");
 
 		return databaseFactory;
 	}
@@ -458,14 +458,14 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 		private ReactiveMongoResourceHolder getRequiredResourceHolder() {
 
-			Assert.state(resourceHolder != null, "ReactiveMongoResourceHolder is required but not present. o_O");
+			Assert.state(resourceHolder != null, "ReactiveMongoResourceHolder is required but not present; o_O");
 			return resourceHolder;
 		}
 
 		private ClientSession getRequiredSession() {
 
 			ClientSession session = getSession();
-			Assert.state(session != null, "A Session is required but it turned out to be null.");
+			Assert.state(session != null, "A Session is required but it turned out to be null");
 			return session;
 		}
 

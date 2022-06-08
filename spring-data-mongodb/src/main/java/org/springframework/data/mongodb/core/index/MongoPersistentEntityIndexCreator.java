@@ -84,9 +84,9 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,
 			IndexOperationsProvider indexOperationsProvider, IndexResolver indexResolver) {
 
-		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
-		Assert.notNull(indexOperationsProvider, "IndexOperationsProvider must not be null!");
-		Assert.notNull(indexResolver, "IndexResolver must not be null!");
+		Assert.notNull(mappingContext, "MongoMappingContext must not be null");
+		Assert.notNull(indexOperationsProvider, "IndexOperationsProvider must not be null");
+		Assert.notNull(indexResolver, "IndexResolver must not be null");
 
 		this.indexOperationsProvider = indexOperationsProvider;
 		this.mappingContext = mappingContext;
@@ -121,7 +121,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 			this.classesSeen.put(type, Boolean.TRUE);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Analyzing class " + type + " for index information.");
+				LOGGER.debug("Analyzing class " + type + " for index information");
 			}
 
 			checkForAndCreateIndexes(entity);
@@ -158,10 +158,10 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 					&& MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) ex.getCause()).getCode())) {
 
 				IndexInfo existingIndex = fetchIndexInformation(indexDefinition);
-				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'.";
+				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'";
 
 				if (existingIndex != null) {
-					message += " Index already defined as '%s'.";
+					message += " Index already defined as '%s'";
 				}
 
 				throw new DataIntegrityViolationException(
@@ -206,7 +206,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		} catch (Exception e) {
 			if(LOGGER.isDebugEnabled()) {
 				LOGGER.debug(
-						String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()), e);
+						String.format("Failed to load index information for collection '%s'", indexDefinition.getCollection()), e);
 			}
 		}
 

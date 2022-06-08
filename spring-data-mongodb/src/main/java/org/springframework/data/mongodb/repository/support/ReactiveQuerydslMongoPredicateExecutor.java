@@ -86,7 +86,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Mono<T> findOne(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetchOne();
 	}
@@ -94,7 +94,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Flux<T> findAll(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetch();
 	}
@@ -102,8 +102,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Flux<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(orders, "Order specifiers must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(orders, "Order specifiers must not be null");
 
 		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
@@ -111,8 +111,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Flux<T> findAll(Predicate predicate, Sort sort) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(sort, "Sort must not be null");
 
 		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
@@ -120,7 +120,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Flux<T> findAll(OrderSpecifier<?>... orders) {
 
-		Assert.notNull(orders, "Order specifiers must not be null!");
+		Assert.notNull(orders, "Order specifiers must not be null");
 
 		return createQuery().orderBy(orders).fetch();
 	}
@@ -128,7 +128,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Mono<Long> count(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetchCount();
 	}
@@ -136,7 +136,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	@Override
 	public Mono<Boolean> exists(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetchCount().map(it -> it != 0);
 	}
@@ -145,8 +145,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	public <S extends T, R, P extends Publisher<R>> P findBy(Predicate predicate,
 			Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(queryFunction, "Query function must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(queryFunction, "Query function must not be null");
 
 		return queryFunction.apply(new ReactiveFluentQuerydsl<S>(predicate, (Class<S>) typeInformation().getJavaType()));
 	}
@@ -226,7 +226,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		@Override
 		public Mono<Page<T>> page(Pageable pageable) {
 
-			Assert.notNull(pageable, "Pageable must not be null!");
+			Assert.notNull(pageable, "Pageable must not be null");
 
 			return createQuery().fetchPage(pageable);
 		}

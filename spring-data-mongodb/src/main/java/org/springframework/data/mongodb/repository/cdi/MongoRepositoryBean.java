@@ -54,7 +54,7 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 		super(qualifiers, repositoryType, beanManager, detector);
 
-		Assert.notNull(operations, "MongoOperations bean must not be null!");
+		Assert.notNull(operations, "MongoOperations bean must not be null");
 		this.operations = operations;
 	}
 

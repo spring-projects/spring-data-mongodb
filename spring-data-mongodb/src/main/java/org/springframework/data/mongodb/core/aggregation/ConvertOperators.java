@@ -64,7 +64,7 @@ public class ConvertOperators {
 		 */
 		public ConvertOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			this.fieldReference = fieldReference;
 			this.expression = null;
@@ -77,7 +77,7 @@ public class ConvertOperators {
 		 */
 		public ConvertOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			this.fieldReference = null;
 			this.expression = expression;

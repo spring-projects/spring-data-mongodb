@@ -117,7 +117,7 @@ public interface MongoJsonSchema {
 	 */
 	static MongoJsonSchema merge(MongoJsonSchema... sources) {
 		return merge((path, left, right) -> {
-			throw new IllegalStateException(String.format("Cannot merge schema for path '%s' holding values '%s' and '%s'.",
+			throw new IllegalStateException(String.format("Cannot merge schema for path '%s' holding values '%s' and '%s'",
 					path.dotPath(), left, right));
 		}, sources);
 	}
@@ -153,7 +153,7 @@ public interface MongoJsonSchema {
 	 */
 	default MongoJsonSchema mergeWith(Collection<MongoJsonSchema> sources) {
 		return mergeWith(sources, (path, left, right) -> {
-			throw new IllegalStateException(String.format("Cannot merge schema for path '%s' holding values '%s' and '%s'.",
+			throw new IllegalStateException(String.format("Cannot merge schema for path '%s' holding values '%s' and '%s'",
 					path.dotPath(), left, right));
 		});
 	}
@@ -231,7 +231,7 @@ public interface MongoJsonSchema {
 
 			@Override
 			default Object setValue(Object value) {
-				throw new IllegalStateException("Cannot set value result. Maybe you missed to override the method.");
+				throw new IllegalStateException("Cannot set value result; Maybe you missed to override the method");
 			}
 
 			/**
@@ -241,17 +241,17 @@ public interface MongoJsonSchema {
 
 				@Override
 				public String getKey() {
-					throw new IllegalStateException("No key for skipped result.");
+					throw new IllegalStateException("No key for skipped result");
 				}
 
 				@Override
 				public Object getValue() {
-					throw new IllegalStateException("No value for skipped result.");
+					throw new IllegalStateException("No value for skipped result");
 				}
 
 				@Override
 				public Object setValue(Object value) {
-					throw new IllegalStateException("Cannot set value on skipped result.");
+					throw new IllegalStateException("Cannot set value on skipped result");
 				}
 			};
 

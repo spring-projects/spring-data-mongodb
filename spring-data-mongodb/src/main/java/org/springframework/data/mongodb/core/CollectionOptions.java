@@ -68,7 +68,7 @@ public class CollectionOptions {
 	 */
 	public static CollectionOptions just(Collation collation) {
 
-		Assert.notNull(collation, "Collation must not be null!");
+		Assert.notNull(collation, "Collation must not be null");
 
 		return new CollectionOptions(null, null, null, collation, ValidationOptions.none(), null);
 	}
@@ -230,7 +230,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions schemaValidationLevel(ValidationLevel validationLevel) {
 
-		Assert.notNull(validationLevel, "ValidationLevel must not be null!");
+		Assert.notNull(validationLevel, "ValidationLevel must not be null");
 		return validation(validationOptions.validationLevel(validationLevel));
 	}
 
@@ -244,7 +244,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions schemaValidationAction(ValidationAction validationAction) {
 
-		Assert.notNull(validationAction, "ValidationAction must not be null!");
+		Assert.notNull(validationAction, "ValidationAction must not be null");
 		return validation(validationOptions.validationAction(validationAction));
 	}
 
@@ -257,7 +257,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions validation(ValidationOptions validationOptions) {
 
-		Assert.notNull(validationOptions, "ValidationOptions must not be null!");
+		Assert.notNull(validationOptions, "ValidationOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
 	}
 
@@ -270,7 +270,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions timeSeries(TimeSeriesOptions timeSeriesOptions) {
 
-		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null!");
+		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
 	}
 
@@ -446,7 +446,7 @@ public class CollectionOptions {
 
 		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity) {
 
-			Assert.hasText(timeField, "Time field must not be empty or null!");
+			Assert.hasText(timeField, "Time field must not be empty or null");
 
 			this.timeField = timeField;
 			this.metaField = metaField;

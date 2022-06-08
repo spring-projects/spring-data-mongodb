@@ -152,7 +152,7 @@ public interface Message<S, T> {
 			 */
 			public MessagePropertiesBuilder databaseName(String dbName) {
 
-				Assert.notNull(dbName, "Database name must not be null!");
+				Assert.notNull(dbName, "Database name must not be null");
 
 				this.databaseName = dbName;
 				return this;
@@ -164,7 +164,7 @@ public interface Message<S, T> {
 			 */
 			public MessagePropertiesBuilder collectionName(String collectionName) {
 
-				Assert.notNull(collectionName, "Collection name must not be null!");
+				Assert.notNull(collectionName, "Collection name must not be null");
 
 				this.collectionName = collectionName;
 				return this;

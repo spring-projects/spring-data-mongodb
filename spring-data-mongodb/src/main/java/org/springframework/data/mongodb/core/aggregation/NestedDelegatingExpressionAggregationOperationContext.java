@@ -45,7 +45,7 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	NestedDelegatingExpressionAggregationOperationContext(AggregationOperationContext referenceContext,
 			Collection<Field> inners) {
 
-		Assert.notNull(referenceContext, "Reference context must not be null!");
+		Assert.notNull(referenceContext, "Reference context must not be null");
 		this.delegate = referenceContext;
 		this.inners = inners;
 	}

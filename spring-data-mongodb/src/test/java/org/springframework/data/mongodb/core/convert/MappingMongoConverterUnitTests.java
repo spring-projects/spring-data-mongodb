@@ -1099,7 +1099,7 @@ class MappingMongoConverterUnitTests {
 			}
 		}
 
-		fail(String.format("Didn't find synthetic field on %s!", target));
+		fail(String.format("Didn't find synthetic field on %s", target));
 	}
 
 	@Test // DATAMGONGO-508

@@ -80,8 +80,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 */
 	private GroupOperation(GroupOperation groupOperation, List<Operation> nextOperations) {
 
-		Assert.notNull(groupOperation, "GroupOperation must not be null!");
-		Assert.notNull(nextOperations, "NextOperations must not be null!");
+		Assert.notNull(groupOperation, "GroupOperation must not be null");
+		Assert.notNull(nextOperations, "NextOperations must not be null");
 
 		this.idFields = groupOperation.idFields;
 		this.operations = new ArrayList<Operation>(nextOperations.size() + 1);
@@ -117,8 +117,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		 */
 		private GroupOperationBuilder(GroupOperation groupOperation, Operation operation) {
 
-			Assert.notNull(groupOperation, "GroupOperation must not be null!");
-			Assert.notNull(operation, "Operation must not be null!");
+			Assert.notNull(groupOperation, "GroupOperation must not be null");
+			Assert.notNull(operation, "Operation must not be null");
 
 			this.groupOperation = groupOperation;
 			this.operation = operation;
@@ -168,7 +168,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 */
 	public GroupOperationBuilder sum(AggregationExpression expr) {
 
-		Assert.notNull(expr, "Expr must not be null!");
+		Assert.notNull(expr, "Expr must not be null");
 		return newBuilder(GroupOps.SUM, null, expr);
 	}
 

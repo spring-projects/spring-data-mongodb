@@ -49,8 +49,8 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	protected ExpressionNode(SpelNode node, ExpressionState state) {
 
-		Assert.notNull(node, "SpelNode must not be null!");
-		Assert.notNull(state, "ExpressionState must not be null!");
+		Assert.notNull(node, "SpelNode must not be null");
+		Assert.notNull(state, "ExpressionState must not be null");
 
 		this.node = node;
 		this.state = state;
@@ -103,7 +103,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	public boolean isOfType(Class<?> type) {
 
-		Assert.notNull(type, "Type must not be empty!");
+		Assert.notNull(type, "Type must not be empty");
 		return type.isAssignableFrom(node.getClass());
 	}
 
@@ -172,7 +172,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	public ExpressionNode getChild(int index) {
 
-		Assert.isTrue(index >= 0, "Index must be greater or equal to zero!");
+		Assert.isTrue(index >= 0, "Index must be greater or equal to zero");
 		return from(node.getChild(index), state);
 	}
 
@@ -184,7 +184,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	public boolean hasfirstChildNotOfType(Class<?> type) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 		return hasChildren() && !node.getChild(0).getClass().equals(type);
 	}
 

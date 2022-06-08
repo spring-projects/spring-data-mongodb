@@ -45,7 +45,7 @@ public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 	 */
 	public MongoDatabaseFactoryReferenceLoader(MongoDatabaseFactory mongoDbFactory) {
 
-		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
+		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null");
 
 		this.mongoDbFactory = mongoDbFactory;
 	}
@@ -56,7 +56,7 @@ public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 		MongoCollection<Document> collection = getCollection(context);
 
 		if (LOGGER.isTraceEnabled()) {
-			LOGGER.trace(String.format("Bulk fetching %s from %s.%s.", referenceQuery,
+			LOGGER.trace(String.format("Bulk fetching %s from %s.%s", referenceQuery,
 					StringUtils.hasText(context.getDatabase()) ? context.getDatabase()
 							: collection.getNamespace().getDatabaseName(),
 					context.getCollection()));

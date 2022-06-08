@@ -87,7 +87,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		if (value instanceof double[]) {
 			double[] typedValue = (double[]) value;
 			if (typedValue.length != 2) {
-				throw new IllegalArgumentException("The given double[] must have exactly 2 elements!");
+				throw new IllegalArgumentException("The given double[] must have exactly 2 elements");
 			} else {
 				return new Point(typedValue[0], typedValue[1]);
 			}

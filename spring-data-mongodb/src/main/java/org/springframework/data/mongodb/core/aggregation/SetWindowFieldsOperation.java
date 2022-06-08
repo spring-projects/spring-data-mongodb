@@ -125,7 +125,7 @@ public class SetWindowFieldsOperation
 		 */
 		public WindowOutput(ComputedField outputField) {
 
-			Assert.notNull(outputField, "OutputField must not be null!");
+			Assert.notNull(outputField, "OutputField must not be null");
 
 			this.fields = new ArrayList<>();
 			this.fields.add(outputField);
@@ -139,7 +139,7 @@ public class SetWindowFieldsOperation
 		 */
 		public WindowOutput append(ComputedField field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 
 			fields.add(field);
 			return this;

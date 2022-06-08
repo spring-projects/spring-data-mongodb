@@ -260,15 +260,15 @@ abstract class GeoConverters {
 			Document center = (Document) source.get("center");
 			Number radius = (Number) source.get("radius");
 
-			Assert.notNull(center, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
+			Assert.notNull(center, "Center must not be null");
+			Assert.notNull(radius, "Radius must not be null");
 
 			Distance distance = new Distance(toPrimitiveDoubleValue(radius));
 
 			if (source.containsKey("metric")) {
 
 				String metricString = (String) source.get("metric");
-				Assert.notNull(metricString, "Metric must not be null!");
+				Assert.notNull(metricString, "Metric must not be null");
 
 				distance = distance.in(Metrics.valueOf(metricString));
 			}
@@ -323,15 +323,15 @@ abstract class GeoConverters {
 			Document center = (Document) source.get("center");
 			Number radius = (Number) source.get("radius");
 
-			Assert.notNull(center, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
+			Assert.notNull(center, "Center must not be null");
+			Assert.notNull(radius, "Radius must not be null");
 
 			Distance distance = new Distance(toPrimitiveDoubleValue(radius));
 
 			if (source.containsKey("metric")) {
 
 				String metricString = (String) source.get("metric");
-				Assert.notNull(metricString, "Metric must not be null!");
+				Assert.notNull(metricString, "Metric must not be null");
 
 				distance = distance.in(Metrics.valueOf(metricString));
 			}
@@ -394,7 +394,7 @@ abstract class GeoConverters {
 
 			for (Document element : points) {
 
-				Assert.notNull(element, "Point elements of polygon must not be null!");
+				Assert.notNull(element, "Point elements of polygon must not be null");
 				newPoints.add(DocumentToPointConverter.INSTANCE.convert(element));
 			}
 
@@ -559,7 +559,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "Point"),
-					String.format("Cannot convert type '%s' to Point.", source.get("type")));
+					String.format("Cannot convert type '%s' to Point", source.get("type")));
 
 			List<Number> dbl = (List<Number>) source.get("coordinates");
 			return new GeoJsonPoint(toPrimitiveDoubleValue(dbl.get(0)), toPrimitiveDoubleValue(dbl.get(1)));
@@ -582,7 +582,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "Polygon"),
-					String.format("Cannot convert type '%s' to Polygon.", source.get("type")));
+					String.format("Cannot convert type '%s' to Polygon", source.get("type")));
 
 			return toGeoJsonPolygon((List) source.get("coordinates"));
 		}
@@ -604,7 +604,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiPolygon"),
-					String.format("Cannot convert type '%s' to MultiPolygon.", source.get("type")));
+					String.format("Cannot convert type '%s' to MultiPolygon", source.get("type")));
 
 			List dbl = (List) source.get("coordinates");
 			List<GeoJsonPolygon> polygones = new ArrayList<>();
@@ -633,7 +633,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "LineString"),
-					String.format("Cannot convert type '%s' to LineString.", source.get("type")));
+					String.format("Cannot convert type '%s' to LineString", source.get("type")));
 
 			List cords = (List) source.get("coordinates");
 
@@ -657,7 +657,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiPoint"),
-					String.format("Cannot convert type '%s' to MultiPoint.", source.get("type")));
+					String.format("Cannot convert type '%s' to MultiPoint", source.get("type")));
 
 			List cords = (List) source.get("coordinates");
 
@@ -681,7 +681,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiLineString"),
-					String.format("Cannot convert type '%s' to MultiLineString.", source.get("type")));
+					String.format("Cannot convert type '%s' to MultiLineString", source.get("type")));
 
 			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>();
 			List cords = (List) source.get("coordinates");
@@ -710,7 +710,7 @@ abstract class GeoConverters {
 			}
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "GeometryCollection"),
-					String.format("Cannot convert type '%s' to GeometryCollection.", source.get("type")));
+					String.format("Cannot convert type '%s' to GeometryCollection", source.get("type")));
 
 			List<GeoJson<?>> geometries = new ArrayList<>();
 			for (Object o : (List) source.get("geometries")) {
@@ -793,12 +793,12 @@ abstract class GeoConverters {
 		}
 
 		throw new IllegalArgumentException(
-				String.format("No converter found capable of converting GeoJson type %s.", type));
+				String.format("No converter found capable of converting GeoJson type %s", type));
 	}
 
 	private static double toPrimitiveDoubleValue(Object value) {
 
-		Assert.isInstanceOf(Number.class, value, "Argument must be a Number.");
+		Assert.isInstanceOf(Number.class, value, "Argument must be a Number");
 		return NumberUtils.convertNumberToTargetClass((Number) value, Double.class).doubleValue();
 	}
 }

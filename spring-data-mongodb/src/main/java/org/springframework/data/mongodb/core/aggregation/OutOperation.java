@@ -57,7 +57,7 @@ public class OutOperation implements AggregationOperation {
 	private OutOperation(@Nullable String databaseName, String collectionName, @Nullable Document uniqueKey,
 			@Nullable OutMode mode) {
 
-		Assert.notNull(collectionName, "Collection name must not be null!");
+		Assert.notNull(collectionName, "Collection name must not be null");
 
 		this.databaseName = databaseName;
 		this.collectionName = collectionName;
@@ -128,7 +128,7 @@ public class OutOperation implements AggregationOperation {
 	 */
 	public OutOperation uniqueKeyOf(Iterable<String> fields) {
 
-		Assert.notNull(fields, "Fields must not be null!");
+		Assert.notNull(fields, "Fields must not be null");
 
 		Document uniqueKey = new Document();
 		fields.forEach(it -> uniqueKey.append(it, 1));
@@ -146,7 +146,7 @@ public class OutOperation implements AggregationOperation {
 	 */
 	public OutOperation mode(OutMode mode) {
 
-		Assert.notNull(mode, "Mode must not be null!");
+		Assert.notNull(mode, "Mode must not be null");
 		return new OutOperation(databaseName, collectionName, uniqueKey, mode);
 	}
 
@@ -193,7 +193,7 @@ public class OutOperation implements AggregationOperation {
 			return new Document("$out", collectionName);
 		}
 
-		Assert.state(mode != null, "Mode must not be null!");
+		Assert.state(mode != null, "Mode must not be null");
 
 		Document $out = new Document("to", collectionName) //
 				.append("mode", mode.getMongoMode());

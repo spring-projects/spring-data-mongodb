@@ -81,7 +81,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 		super(converter);
 
-		Assert.notNull(dbFactory, "MongoDbFactory must not be null!");
+		Assert.notNull(dbFactory, "MongoDbFactory must not be null");
 
 		this.dbFactory = dbFactory;
 		this.bucket = bucket;
@@ -112,7 +112,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	public GridFSFindIterable find(Query query) {
 
-		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(query, "Query must not be null");
 
 		Document queryObject = getMappedQuery(query.getQueryObject());
 		Document sortObject = getMappedQuery(query.getSortObject());
@@ -154,7 +154,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	public GridFsResource getResource(GridFSFile file) {
 
-		Assert.notNull(file, "GridFSFile must not be null!");
+		Assert.notNull(file, "GridFSFile must not be null");
 
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}

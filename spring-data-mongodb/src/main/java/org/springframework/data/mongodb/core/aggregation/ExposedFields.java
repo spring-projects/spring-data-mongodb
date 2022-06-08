@@ -109,7 +109,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 */
 	private static ExposedFields createFields(Fields fields, boolean synthetic) {
 
-		Assert.notNull(fields, "Fields must not be null!");
+		Assert.notNull(fields, "Fields must not be null");
 		List<ExposedField> result = new ArrayList<ExposedField>();
 
 		for (Field field : fields) {
@@ -139,7 +139,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 */
 	public ExposedFields and(ExposedField field) {
 
-		Assert.notNull(field, "Exposed field must not be null!");
+		Assert.notNull(field, "Exposed field must not be null");
 
 		ArrayList<ExposedField> result = new ArrayList<ExposedField>();
 		result.addAll(field.synthetic ? syntheticFields : originalFields);
@@ -361,7 +361,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		 */
 		public DirectFieldReference(ExposedField field) {
 
-			Assert.notNull(field, "ExposedField must not be null!");
+			Assert.notNull(field, "ExposedField must not be null");
 
 			this.field = field;
 		}

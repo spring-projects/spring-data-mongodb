@@ -71,7 +71,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	public MongoRepositoryFactory(MongoOperations mongoOperations) {
 
-		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();

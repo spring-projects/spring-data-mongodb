@@ -61,7 +61,7 @@ public class ReplaceWithOperation extends ReplaceRootOperation {
 	 */
 	public static ReplaceWithOperation replaceWithValueOf(Object value) {
 
-		Assert.notNull(value, "Value must not be null!");
+		Assert.notNull(value, "Value must not be null");
 		return new ReplaceWithOperation((ctx) -> {
 
 			Object target = value instanceof String ? Fields.field((String) value) : value;

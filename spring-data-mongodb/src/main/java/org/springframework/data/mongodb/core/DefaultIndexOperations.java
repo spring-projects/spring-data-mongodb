@@ -83,9 +83,9 @@ public class DefaultIndexOperations implements IndexOperations {
 	public DefaultIndexOperations(MongoDatabaseFactory mongoDbFactory, String collectionName, QueryMapper queryMapper,
 			@Nullable Class<?> type) {
 
-		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");
-		Assert.notNull(collectionName, "Collection name can not be null!");
-		Assert.notNull(queryMapper, "QueryMapper must not be null!");
+		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null");
+		Assert.notNull(collectionName, "Collection name can not be null");
+		Assert.notNull(queryMapper, "QueryMapper must not be null");
 
 		this.collectionName = collectionName;
 		this.mapper = queryMapper;
@@ -103,8 +103,8 @@ public class DefaultIndexOperations implements IndexOperations {
 	 */
 	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
 
-		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
 
 		this.mongoOperations = mongoOperations;
 		this.mapper = new QueryMapper(mongoOperations.getConverter());
@@ -189,7 +189,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	@Nullable
 	public <T> T execute(CollectionCallback<T> callback) {
 
-		Assert.notNull(callback, "CollectionCallback must not be null!");
+		Assert.notNull(callback, "CollectionCallback must not be null");
 
 		if (type != null) {
 			return mongoOperations.execute(type, callback);

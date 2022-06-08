@@ -74,7 +74,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	 */
 	public SpringDataMongodbSerializer(MongoConverter converter) {
 
-		Assert.notNull(converter, "MongoConverter must not be null!");
+		Assert.notNull(converter, "MongoConverter must not be null");
 
 		this.mappingContext = converter.getMappingContext();
 		this.converter = converter;

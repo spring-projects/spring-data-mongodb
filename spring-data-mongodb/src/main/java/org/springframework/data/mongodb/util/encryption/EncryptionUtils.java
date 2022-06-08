@@ -51,7 +51,7 @@ public final class EncryptionUtils {
 	@Nullable
 	public static Object resolveKeyId(String value, Supplier<EvaluationContext> evaluationContext) {
 
-		Assert.notNull(value, "Value must not be null!");
+		Assert.notNull(value, "Value must not be null");
 
 		Object potentialKeyId = value;
 		Expression expression = ExpressionUtils.detectExpression(value);

@@ -69,7 +69,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 		if (method.isPageQuery()) {
 			throw new InvalidMongoDbApiUsageException(String.format(
-					"Repository aggregation method '%s' does not support '%s' return type. Please use 'Slice' or 'List' instead.",
+					"Repository aggregation method '%s' does not support '%s' return type; Please use 'Slice' or 'List' instead",
 					method.getName(), method.getReturnType().getType().getSimpleName()));
 		}
 

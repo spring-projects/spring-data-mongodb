@@ -65,7 +65,7 @@ public interface ReferenceResolver {
 		 */
 		public ReferenceCollection(@Nullable String database, String collection) {
 
-			Assert.hasText(collection, "Collection must not be empty or null!");
+			Assert.hasText(collection, "Collection must not be empty or null");
 
 			this.database = database;
 			this.collection = collection;

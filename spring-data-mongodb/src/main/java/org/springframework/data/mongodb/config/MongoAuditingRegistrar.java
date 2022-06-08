@@ -55,8 +55,8 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
 
-		Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
-		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
+		Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null");
+		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 
 		super.registerBeanDefinitions(annotationMetadata, registry);
 	}
@@ -64,7 +64,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 	@Override
 	protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AuditingConfiguration configuration) {
 
-		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
+		Assert.notNull(configuration, "AuditingConfiguration must not be null");
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
 
@@ -79,8 +79,8 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 	protected void registerAuditListenerBeanDefinition(BeanDefinition auditingHandlerDefinition,
 			BeanDefinitionRegistry registry) {
 
-		Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
-		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
+		Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null");
+		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 
 		BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
 				.rootBeanDefinition(AuditingEntityCallback.class);

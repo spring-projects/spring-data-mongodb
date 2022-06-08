@@ -146,7 +146,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	protected MongoClientSettings computeClientSetting() {
 
 		if (connectionString != null && (StringUtils.hasText(host) || port != null)) {
-			throw new IllegalStateException("ConnectionString and host/port configuration exclude one another!");
+			throw new IllegalStateException("ConnectionString and host/port configuration exclude one another");
 		}
 
 		ConnectionString connectionString = this.connectionString != null ? this.connectionString

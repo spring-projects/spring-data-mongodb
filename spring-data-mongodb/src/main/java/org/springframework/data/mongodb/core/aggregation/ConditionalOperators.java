@@ -80,7 +80,7 @@ public class ConditionalOperators {
 	 */
 	public static IfNull.ThenBuilder ifNull(String fieldReference) {
 
-		Assert.notNull(fieldReference, "FieldReference must not be null!");
+		Assert.notNull(fieldReference, "FieldReference must not be null");
 		return IfNull.ifNull(fieldReference);
 	}
 
@@ -94,7 +94,7 @@ public class ConditionalOperators {
 	 */
 	public static IfNull.ThenBuilder ifNull(AggregationExpression expression) {
 
-		Assert.notNull(expression, "Expression must not be null!");
+		Assert.notNull(expression, "Expression must not be null");
 		return IfNull.ifNull(expression);
 	}
 
@@ -137,7 +137,7 @@ public class ConditionalOperators {
 		 */
 		public ConditionalOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			this.fieldReference = fieldReference;
 			this.expression = null;
@@ -151,7 +151,7 @@ public class ConditionalOperators {
 		 */
 		public ConditionalOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			this.fieldReference = null;
 			this.expression = expression;
@@ -165,7 +165,7 @@ public class ConditionalOperators {
 		 */
 		public ConditionalOperatorFactory(CriteriaDefinition criteriaDefinition) {
 
-			Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
+			Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
 
 			this.fieldReference = null;
 			this.expression = null;
@@ -181,7 +181,7 @@ public class ConditionalOperators {
 		 */
 		public OtherwiseBuilder then(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createThenBuilder().then(value);
 		}
 
@@ -194,7 +194,7 @@ public class ConditionalOperators {
 		 */
 		public OtherwiseBuilder thenValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createThenBuilder().then(expression);
 		}
 
@@ -207,7 +207,7 @@ public class ConditionalOperators {
 		 */
 		public OtherwiseBuilder thenValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createThenBuilder().thenValueOf(fieldReference);
 		}
 
@@ -258,7 +258,7 @@ public class ConditionalOperators {
 		 */
 		public static ThenBuilder ifNull(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new IfNullOperatorBuilder().ifNull(fieldReference);
 		}
 
@@ -271,7 +271,7 @@ public class ConditionalOperators {
 		 */
 		public static ThenBuilder ifNull(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new IfNullOperatorBuilder().ifNull(expression);
 		}
 
@@ -406,7 +406,7 @@ public class ConditionalOperators {
 
 			public ThenBuilder ifNull(String fieldReference) {
 
-				Assert.hasText(fieldReference, "FieldReference name must not be null or empty!");
+				Assert.hasText(fieldReference, "FieldReference name must not be null or empty");
 				this.conditions.add(Fields.field(fieldReference));
 				return this;
 			}
@@ -414,7 +414,7 @@ public class ConditionalOperators {
 			@Override
 			public ThenBuilder ifNull(AggregationExpression expression) {
 
-				Assert.notNull(expression, "AggregationExpression name must not be null or empty!");
+				Assert.notNull(expression, "AggregationExpression name must not be null or empty");
 				this.conditions.add(expression);
 				return this;
 			}
@@ -435,13 +435,13 @@ public class ConditionalOperators {
 
 			public IfNull thenValueOf(String fieldReference) {
 
-				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				Assert.notNull(fieldReference, "FieldReference must not be null");
 				return new IfNull(conditions, Fields.field(fieldReference));
 			}
 
 			public IfNull thenValueOf(AggregationExpression expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				return new IfNull(conditions, expression);
 			}
 		}
@@ -470,7 +470,7 @@ public class ConditionalOperators {
 		 */
 		public static Switch switchCases(CaseOperator... conditions) {
 
-			Assert.notNull(conditions, "Conditions must not be null!");
+			Assert.notNull(conditions, "Conditions must not be null");
 			return switchCases(Arrays.asList(conditions));
 		}
 
@@ -481,7 +481,7 @@ public class ConditionalOperators {
 		 */
 		public static Switch switchCases(List<CaseOperator> conditions) {
 
-			Assert.notNull(conditions, "Conditions must not be null!");
+			Assert.notNull(conditions, "Conditions must not be null");
 			return new Switch(Collections.<String, Object> singletonMap("branches", new ArrayList<CaseOperator>(conditions)));
 		}
 
@@ -511,14 +511,14 @@ public class ConditionalOperators {
 
 			public static ThenBuilder when(final AggregationExpression condition) {
 
-				Assert.notNull(condition, "Condition must not be null!");
+				Assert.notNull(condition, "Condition must not be null");
 
 				return new ThenBuilder() {
 
 					@Override
 					public CaseOperator then(Object value) {
 
-						Assert.notNull(value, "Value must not be null!");
+						Assert.notNull(value, "Value must not be null");
 						return new CaseOperator(condition, value);
 					}
 				};
@@ -598,9 +598,9 @@ public class ConditionalOperators {
 
 		private Cond(Object condition, Object thenValue, Object otherwiseValue) {
 
-			Assert.notNull(condition, "Condition must not be null!");
-			Assert.notNull(thenValue, "Then value must not be null!");
-			Assert.notNull(otherwiseValue, "Otherwise value must not be null!");
+			Assert.notNull(condition, "Condition must not be null");
+			Assert.notNull(thenValue, "Then value must not be null");
+			Assert.notNull(otherwiseValue, "Otherwise value must not be null");
 
 			assertNotBuilder(condition, "Condition");
 			assertNotBuilder(thenValue, "Then value");
@@ -657,7 +657,7 @@ public class ConditionalOperators {
 			}
 
 			throw new InvalidDataAccessApiUsageException(
-					String.format("Invalid value in condition. Supported: Document, Field references, Criteria, got: %s", value));
+					String.format("Invalid value in condition; Supported: Document, Field references, Criteria, got: %s", value));
 		}
 
 		private List<Object> getClauses(AggregationOperationContext context, Document mappedObject) {
@@ -892,7 +892,7 @@ public class ConditionalOperators {
 			@Override
 			public ConditionalExpressionBuilder when(Document booleanExpression) {
 
-				Assert.notNull(booleanExpression, "'Boolean expression' must not be null!");
+				Assert.notNull(booleanExpression, "'Boolean expression' must not be null");
 
 				this.condition = booleanExpression;
 				return this;
@@ -901,7 +901,7 @@ public class ConditionalOperators {
 			@Override
 			public ThenBuilder when(CriteriaDefinition criteria) {
 
-				Assert.notNull(criteria, "Criteria must not be null!");
+				Assert.notNull(criteria, "Criteria must not be null");
 				this.condition = criteria;
 				return this;
 			}
@@ -909,7 +909,7 @@ public class ConditionalOperators {
 			@Override
 			public ThenBuilder when(AggregationExpression expression) {
 
-				Assert.notNull(expression, "AggregationExpression field must not be null!");
+				Assert.notNull(expression, "AggregationExpression field must not be null");
 				this.condition = expression;
 				return this;
 			}
@@ -917,7 +917,7 @@ public class ConditionalOperators {
 			@Override
 			public ThenBuilder when(String booleanField) {
 
-				Assert.hasText(booleanField, "Boolean field name must not be null or empty!");
+				Assert.hasText(booleanField, "Boolean field name must not be null or empty");
 				this.condition = Fields.field(booleanField);
 				return this;
 			}
@@ -925,7 +925,7 @@ public class ConditionalOperators {
 			@Override
 			public OtherwiseBuilder then(Object thenValue) {
 
-				Assert.notNull(thenValue, "Then-value must not be null!");
+				Assert.notNull(thenValue, "Then-value must not be null");
 				this.thenValue = thenValue;
 				return this;
 			}
@@ -933,7 +933,7 @@ public class ConditionalOperators {
 			@Override
 			public OtherwiseBuilder thenValueOf(String fieldReference) {
 
-				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				Assert.notNull(fieldReference, "FieldReference must not be null");
 				this.thenValue = Fields.field(fieldReference);
 				return this;
 			}
@@ -941,7 +941,7 @@ public class ConditionalOperators {
 			@Override
 			public OtherwiseBuilder thenValueOf(AggregationExpression expression) {
 
-				Assert.notNull(expression, "AggregationExpression must not be null!");
+				Assert.notNull(expression, "AggregationExpression must not be null");
 				this.thenValue = expression;
 				return this;
 			}
@@ -949,21 +949,21 @@ public class ConditionalOperators {
 			@Override
 			public Cond otherwise(Object otherwiseValue) {
 
-				Assert.notNull(otherwiseValue, "Value must not be null!");
+				Assert.notNull(otherwiseValue, "Value must not be null");
 				return new Cond(condition, thenValue, otherwiseValue);
 			}
 
 			@Override
 			public Cond otherwiseValueOf(String fieldReference) {
 
-				Assert.notNull(fieldReference, "FieldReference must not be null!");
+				Assert.notNull(fieldReference, "FieldReference must not be null");
 				return new Cond(condition, thenValue, Fields.field(fieldReference));
 			}
 
 			@Override
 			public Cond otherwiseValueOf(AggregationExpression expression) {
 
-				Assert.notNull(expression, "AggregationExpression must not be null!");
+				Assert.notNull(expression, "AggregationExpression must not be null");
 				return new Cond(condition, thenValue, expression);
 			}
 		}

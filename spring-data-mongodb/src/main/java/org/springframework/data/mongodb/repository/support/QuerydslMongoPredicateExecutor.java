@@ -88,7 +88,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public Optional<T> findOne(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		try {
 			return Optional.ofNullable(createQueryFor(predicate).fetchOne());
@@ -100,7 +100,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public List<T> findAll(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetch();
 	}
@@ -108,8 +108,8 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(orders, "Order specifiers must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(orders, "Order specifiers must not be null");
 
 		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
@@ -117,8 +117,8 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(sort, "Sort must not be null");
 
 		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
@@ -126,7 +126,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
 
-		Assert.notNull(orders, "Order specifiers must not be null!");
+		Assert.notNull(orders, "Order specifiers must not be null");
 
 		return createQuery().orderBy(orders).fetch();
 	}
@@ -134,8 +134,8 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(pageable, "Pageable must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(pageable, "Pageable must not be null");
 
 		SpringDataMongodbQuery<T> query = createQueryFor(predicate);
 
@@ -145,7 +145,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public long count(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetchCount();
 	}
@@ -153,7 +153,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	@Override
 	public boolean exists(Predicate predicate) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
 
 		return createQueryFor(predicate).fetchCount() > 0;
 	}
@@ -163,8 +163,8 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	public <S extends T, R> R findBy(Predicate predicate,
 			Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
 
-		Assert.notNull(predicate, "Predicate must not be null!");
-		Assert.notNull(queryFunction, "Query function must not be null!");
+		Assert.notNull(predicate, "Predicate must not be null");
+		Assert.notNull(queryFunction, "Query function must not be null");
 
 		return queryFunction.apply(new FluentQuerydsl<>(predicate, (Class<S>) typeInformation().getJavaType()));
 	}
@@ -259,7 +259,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		@Override
 		public Page<T> page(Pageable pageable) {
 
-			Assert.notNull(pageable, "Pageable must not be null!");
+			Assert.notNull(pageable, "Pageable must not be null");
 
 			return createQuery().fetchPage(pageable);
 		}

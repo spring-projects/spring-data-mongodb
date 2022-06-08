@@ -60,7 +60,7 @@ public class AggregationSpELExpression implements AggregationExpression {
 	 */
 	public static AggregationSpELExpression expressionOf(String expressionString, Object... parameters) {
 
-		Assert.notNull(expressionString, "ExpressionString must not be null!");
+		Assert.notNull(expressionString, "ExpressionString must not be null");
 		return new AggregationSpELExpression(expressionString, parameters);
 	}
 

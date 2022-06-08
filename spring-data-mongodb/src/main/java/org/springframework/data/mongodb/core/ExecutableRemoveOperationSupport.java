@@ -44,7 +44,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	@Override
 	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ExecutableRemoveSupport<>(tempate, domainType, ALL_QUERY, null);
 	}
@@ -70,7 +70,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		@Override
 		public RemoveWithQuery<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty!");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
@@ -78,7 +78,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		@Override
 		public TerminatingRemove<T> matching(Query query) {
 
-			Assert.notNull(query, "Query must not be null!");
+			Assert.notNull(query, "Query must not be null");
 
 			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}

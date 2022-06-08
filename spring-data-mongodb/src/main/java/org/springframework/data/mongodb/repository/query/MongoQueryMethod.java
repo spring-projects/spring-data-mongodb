@@ -82,7 +82,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 		super(method, metadata, projectionFactory);
 
-		Assert.notNull(mappingContext, "MappingContext must not be null!");
+		Assert.notNull(mappingContext, "MappingContext must not be null");
 
 		this.method = method;
 		this.mappingContext = mappingContext;
@@ -310,7 +310,7 @@ public class MongoQueryMethod extends QueryMethod {
 	public String getAnnotatedSort() {
 
 		return lookupQueryAnnotation().map(Query::sort).orElseThrow(() -> new IllegalStateException(
-				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedSort() before."));
+				"Expected to find @Query annotation but did not; Make sure to check hasAnnotatedSort() before."));
 	}
 
 	/**
@@ -344,7 +344,7 @@ public class MongoQueryMethod extends QueryMethod {
 		return lookupQueryAnnotation().map(Query::collation)
 				.orElseGet(() -> lookupAggregationAnnotation().map(Aggregation::collation) //
 						.orElseThrow(() -> new IllegalStateException(
-								"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedCollation() before.")));
+								"Expected to find @Query annotation but did not; Make sure to check hasAnnotatedCollation() before.")));
 	}
 
 	/**
@@ -367,7 +367,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	public String[] getAnnotatedAggregation() {
 		return findAnnotatedAggregation().orElseThrow(() -> new IllegalStateException(
-				"Expected to find @Aggregation annotation but did not. Make sure to check hasAnnotatedAggregation() before."));
+				"Expected to find @Aggregation annotation but did not; Make sure to check hasAnnotatedAggregation() before."));
 	}
 
 	private Optional<String[]> findAnnotatedAggregation() {
@@ -437,8 +437,8 @@ public class MongoQueryMethod extends QueryMethod {
 			if (hasAnnotatedUpdate()) { // must define either an update or an update pipeline
 				if (!StringUtils.hasText(getUpdateSource().update()) && ObjectUtils.isEmpty(getUpdateSource().pipeline())) {
 					throw new IllegalStateException(
-							String.format("Update method must define either 'Update#update' or 'Update#pipeline' attribute. "
-									+ "Offending method: %s", method));
+							String.format("Update method must define either 'Update#update' or 'Update#pipeline' attribute;"
+									+ " Offending method: %s", method));
 				}
 			}
 		}

@@ -70,7 +70,7 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 	@Override
 	public DocumentAssert containsEntry(String key, Object value) {
 
-		Assert.hasText(key, "The key to look for must not be empty!");
+		Assert.hasText(key, "The key to look for must not be empty");
 
 		Lookup<?> lookup = lookup(key);
 
@@ -106,7 +106,7 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 	@Override
 	public DocumentAssert doesNotContainEntry(String key, Object value) {
 
-		Assert.hasText(key, "The key to look for must not be empty!");
+		Assert.hasText(key, "The key to look for must not be empty");
 
 		Lookup<?> lookup = lookup(key);
 

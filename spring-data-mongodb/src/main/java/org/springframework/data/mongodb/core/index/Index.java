@@ -119,7 +119,7 @@ public class Index implements IndexDefinition {
 	 */
 	public Index expire(Duration timeout) {
 
-		Assert.notNull(timeout, "Timeout must not be null!");
+		Assert.notNull(timeout, "Timeout must not be null");
 		return expire(timeout.getSeconds());
 	}
 
@@ -133,7 +133,7 @@ public class Index implements IndexDefinition {
 	 */
 	public Index expire(long value, TimeUnit unit) {
 
-		Assert.notNull(unit, "TimeUnit for expiration must not be null.");
+		Assert.notNull(unit, "TimeUnit for expiration must not be null");
 		this.expire = unit.toSeconds(value);
 		return this;
 	}

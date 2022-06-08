@@ -66,7 +66,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	 */
 	public ReplaceRootOperation(Replacement replacement) {
 
-		Assert.notNull(replacement, "Replacement must not be null!");
+		Assert.notNull(replacement, "Replacement must not be null");
 		this.replacement = replacement;
 	}
 
@@ -152,7 +152,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 */
 		public ReplaceRootOperation withDocument(Document document) {
 
-			Assert.notNull(document, "Document must not be null!");
+			Assert.notNull(document, "Document must not be null");
 
 			return new ReplaceRootDocumentOperation().andValuesOf(document);
 		}
@@ -240,8 +240,8 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 
 		protected ReplaceRootDocumentOperationBuilder(ReplaceRootDocumentOperation currentOperation, Object value) {
 
-			Assert.notNull(currentOperation, "Current ReplaceRootDocumentOperation must not be null!");
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(currentOperation, "Current ReplaceRootDocumentOperation must not be null");
+			Assert.notNull(value, "Value must not be null");
 
 			this.currentOperation = currentOperation;
 			this.value = value;
@@ -287,7 +287,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 
 		protected AggregationExpressionReplacement(AggregationExpression aggregationExpression) {
 
-			Assert.notNull(aggregationExpression, "AggregationExpression must not be null!");
+			Assert.notNull(aggregationExpression, "AggregationExpression must not be null");
 			this.aggregationExpression = aggregationExpression;
 		}
 
@@ -311,7 +311,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 */
 		protected FieldReplacement(Field field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			this.field = field;
 		}
 
@@ -344,7 +344,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 */
 		protected ReplacementDocument(ReplacementContributor contributor) {
 
-			Assert.notNull(contributor, "ReplacementContributor must not be null!");
+			Assert.notNull(contributor, "ReplacementContributor must not be null");
 			replacements = Collections.singleton(contributor);
 		}
 
@@ -452,7 +452,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 */
 		public DocumentContributor(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			this.value = value;
 		}
 
@@ -482,7 +482,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 */
 		public FieldContributorSupport(Field field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			this.field = new ExposedField(field, true);
 		}
 
@@ -514,7 +514,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 
 			super(field);
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 
 			this.value = value;
 		}
@@ -547,7 +547,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 
 			super(field);
 
-			Assert.notNull(aggregationExpression, "AggregationExpression must not be null!");
+			Assert.notNull(aggregationExpression, "AggregationExpression must not be null");
 
 			this.aggregationExpression = aggregationExpression;
 		}

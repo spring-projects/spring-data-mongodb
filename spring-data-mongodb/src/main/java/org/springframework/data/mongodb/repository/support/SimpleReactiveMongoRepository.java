@@ -67,8 +67,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	public SimpleReactiveMongoRepository(MongoEntityInformation<T, ID> entityInformation,
 			ReactiveMongoOperations mongoOperations) {
 
-		Assert.notNull(entityInformation, "EntityInformation must not be null!");
-		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+		Assert.notNull(entityInformation, "EntityInformation must not be null");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
 		this.entityInformation = entityInformation;
 		this.mongoOperations = mongoOperations;
@@ -81,7 +81,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Mono<S> save(S entity) {
 
-		Assert.notNull(entity, "Entity must not be null!");
+		Assert.notNull(entity, "Entity must not be null");
 
 		if (entityInformation.isNew(entity)) {
 			return mongoOperations.insert(entity, entityInformation.getCollectionName());
@@ -93,7 +93,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Flux<S> saveAll(Iterable<S> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities must not be null!");
+		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
 		Streamable<S> source = Streamable.of(entities);
 
@@ -105,7 +105,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Flux<S> saveAll(Publisher<S> entityStream) {
 
-		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
+		Assert.notNull(entityStream, "The given Publisher of entities must not be null");
 
 		return Flux.from(entityStream).flatMap(entity -> entityInformation.isNew(entity) ? //
 				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
@@ -115,7 +115,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<T> findById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+		Assert.notNull(id, "The given id must not be null");
 
 		return mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -123,7 +123,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<T> findById(Publisher<ID> publisher) {
 
-		Assert.notNull(publisher, "The given id must not be null!");
+		Assert.notNull(publisher, "The given id must not be null");
 
 		return Mono.from(publisher).flatMap(
 				id -> mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
@@ -132,7 +132,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Boolean> existsById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+		Assert.notNull(id, "The given id must not be null");
 
 		return mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
 				entityInformation.getCollectionName());
@@ -141,7 +141,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Boolean> existsById(Publisher<ID> publisher) {
 
-		Assert.notNull(publisher, "The given id must not be null!");
+		Assert.notNull(publisher, "The given id must not be null");
 
 		return Mono.from(publisher).flatMap(id -> mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
 				entityInformation.getCollectionName()));
@@ -155,7 +155,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Flux<T> findAllById(Iterable<ID> ids) {
 
-		Assert.notNull(ids, "The given Iterable of Id's must not be null!");
+		Assert.notNull(ids, "The given Iterable of Id's must not be null");
 
 		return findAll(getIdQuery(ids));
 	}
@@ -163,7 +163,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Flux<T> findAllById(Publisher<ID> ids) {
 
-		Assert.notNull(ids, "The given Publisher of Id's must not be null!");
+		Assert.notNull(ids, "The given Publisher of Id's must not be null");
 
 		return Flux.from(ids).buffer().flatMap(this::findAllById);
 	}
@@ -176,7 +176,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> deleteById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+		Assert.notNull(id, "The given id must not be null");
 
 		return mongoOperations
 				.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
@@ -185,7 +185,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> deleteById(Publisher<ID> publisher) {
 
-		Assert.notNull(publisher, "Id must not be null!");
+		Assert.notNull(publisher, "Id must not be null");
 
 		return Mono.from(publisher).flatMap(id -> mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType(),
 				entityInformation.getCollectionName())).then();
@@ -194,7 +194,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> delete(T entity) {
 
-		Assert.notNull(entity, "The given entity must not be null!");
+		Assert.notNull(entity, "The given entity must not be null");
 
 		Mono<DeleteResult> remove = mongoOperations.remove(entity, entityInformation.getCollectionName());
 
@@ -204,7 +204,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 				if (deleteResult.wasAcknowledged() && deleteResult.getDeletedCount() == 0) {
 					sink.error(new OptimisticLockingFailureException(String.format(
-							"The entity with id %s with version %s in %s cannot be deleted! Was it modified or deleted in the meantime?",
+							"The entity with id %s with version %s in %s cannot be deleted; Was it modified or deleted in the meantime",
 							entityInformation.getId(entity), entityInformation.getVersion(entity),
 							entityInformation.getCollectionName())));
 				} else {
@@ -219,7 +219,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
 
-		Assert.notNull(ids, "The given Iterable of Id's must not be null!");
+		Assert.notNull(ids, "The given Iterable of Id's must not be null");
 
 		return mongoOperations
 				.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
@@ -228,7 +228,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> deleteAll(Iterable<? extends T> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities must not be null!");
+		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
 		Collection<?> idCollection = StreamUtils.createStreamFromIterator(entities.iterator()).map(entityInformation::getId)
 				.collect(Collectors.toList());
@@ -243,7 +243,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Mono<Void> deleteAll(Publisher<? extends T> entityStream) {
 
-		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
+		Assert.notNull(entityStream, "The given Publisher of entities must not be null");
 
 		return Flux.from(entityStream)//
 				.map(entityInformation::getRequiredId)//
@@ -263,7 +263,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public Flux<T> findAll(Sort sort) {
 
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(sort, "Sort must not be null");
 
 		return findAll(new Query().with(sort));
 	}
@@ -275,7 +275,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Mono<S> insert(S entity) {
 
-		Assert.notNull(entity, "Entity must not be null!");
+		Assert.notNull(entity, "Entity must not be null");
 
 		return mongoOperations.insert(entity, entityInformation.getCollectionName());
 	}
@@ -283,7 +283,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Flux<S> insert(Iterable<S> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities must not be null!");
+		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
 		Collection<S> source = toCollection(entities);
 
@@ -293,7 +293,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Flux<S> insert(Publisher<S> entities) {
 
-		Assert.notNull(entities, "The given Publisher of entities must not be null!");
+		Assert.notNull(entities, "The given Publisher of entities must not be null");
 
 		return Flux.from(entities).flatMap(entity -> mongoOperations.insert(entity, entityInformation.getCollectionName()));
 	}
@@ -305,7 +305,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Mono<S> findOne(Example<S> example) {
 
-		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(example, "Sample must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
@@ -324,7 +324,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example) {
 
-		Assert.notNull(example, "Example must not be null!");
+		Assert.notNull(example, "Example must not be null");
 
 		return findAll(example, Sort.unsorted());
 	}
@@ -332,8 +332,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example, Sort sort) {
 
-		Assert.notNull(example, "Sample must not be null!");
-		Assert.notNull(sort, "Sort must not be null!");
+		Assert.notNull(example, "Sample must not be null");
+		Assert.notNull(sort, "Sort must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
@@ -345,7 +345,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Mono<Long> count(Example<S> example) {
 
-		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(example, "Sample must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
@@ -356,7 +356,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	@Override
 	public <S extends T> Mono<Boolean> exists(Example<S> example) {
 
-		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(example, "Sample must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
@@ -368,8 +368,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	public <S extends T, R, P extends Publisher<R>> P findBy(Example<S> example,
 			Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction) {
 
-		Assert.notNull(example, "Sample must not be null!");
-		Assert.notNull(queryFunction, "Query function must not be null!");
+		Assert.notNull(example, "Sample must not be null");
+		Assert.notNull(queryFunction, "Query function must not be null");
 
 		return queryFunction.apply(new ReactiveFluentQueryByExample<>(example, example.getProbeType()));
 	}
@@ -435,7 +435,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		@Override
 		public Mono<Page<T>> page(Pageable pageable) {
 
-			Assert.notNull(pageable, "Pageable must not be null!");
+			Assert.notNull(pageable, "Pageable must not be null");
 
 			Mono<List<T>> items = createQuery(q -> q.with(pageable)).all().collectList();
 

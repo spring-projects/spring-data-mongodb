@@ -59,7 +59,7 @@ public class UnwindOperation
 	 * @since 1.10
 	 */
 	public UnwindOperation(Field field, boolean preserveNullAndEmptyArrays) {
-		Assert.notNull(field, "Field must not be null!");
+		Assert.notNull(field, "Field must not be null");
 
 		this.field = new ExposedField(field, true);
 		this.arrayIndex = null;
@@ -77,8 +77,8 @@ public class UnwindOperation
 	 */
 	public UnwindOperation(Field field, Field arrayIndex, boolean preserveNullAndEmptyArrays) {
 
-		Assert.notNull(field, "Field must not be null!");
-		Assert.notNull(arrayIndex, "ArrayIndex must not be null!");
+		Assert.notNull(field, "Field must not be null");
+		Assert.notNull(arrayIndex, "ArrayIndex must not be null");
 
 		this.field = new ExposedField(field, true);
 		this.arrayIndex = new ExposedField(arrayIndex, true);
@@ -221,7 +221,7 @@ public class UnwindOperation
 		@Override
 		public EmptyArraysBuilder arrayIndex(String field) {
 
-			Assert.hasText(field, "'ArrayIndex' must not be null or empty!");
+			Assert.hasText(field, "'ArrayIndex' must not be null or empty");
 			arrayIndex = Fields.field(field);
 			return this;
 		}
@@ -236,7 +236,7 @@ public class UnwindOperation
 		@Override
 		public UnwindOperationBuilder path(String path) {
 
-			Assert.hasText(path, "'Path' must not be null or empty!");
+			Assert.hasText(path, "'Path' must not be null or empty");
 			field = Fields.field(path);
 			return this;
 		}

@@ -113,7 +113,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 */
 	public BucketOperation withDefaultBucket(Object literal) {
 
-		Assert.notNull(literal, "Default bucket literal must not be null!");
+		Assert.notNull(literal, "Default bucket literal must not be null");
 		return new BucketOperation(this, boundaries, literal);
 	}
 
@@ -126,8 +126,8 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 */
 	public BucketOperation withBoundaries(Object... boundaries) {
 
-		Assert.notNull(boundaries, "Boundaries must not be null!");
-		Assert.noNullElements(boundaries, "Boundaries must not contain null values!");
+		Assert.notNull(boundaries, "Boundaries must not be null");
+		Assert.noNullElements(boundaries, "Boundaries must not contain null values");
 
 		List<Object> newBoundaries = new ArrayList<Object>(this.boundaries.size() + boundaries.length);
 		newBoundaries.addAll(this.boundaries);

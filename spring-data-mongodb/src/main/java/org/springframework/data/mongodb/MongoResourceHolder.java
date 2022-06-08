@@ -68,7 +68,7 @@ class MongoResourceHolder extends ResourceHolderSupport {
 		ClientSession session = getSession();
 
 		if (session == null) {
-			throw new IllegalStateException("No session available!");
+			throw new IllegalStateException("No session available");
 		}
 
 		return session;

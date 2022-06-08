@@ -91,7 +91,7 @@ public class ArithmeticOperators {
 		 */
 		public ArithmeticOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -103,7 +103,7 @@ public class ArithmeticOperators {
 		 */
 		public ArithmeticOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -126,7 +126,7 @@ public class ArithmeticOperators {
 		 */
 		public Add add(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createAdd().add(fieldReference);
 		}
 
@@ -139,7 +139,7 @@ public class ArithmeticOperators {
 		 */
 		public Add add(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createAdd().add(expression);
 		}
 
@@ -151,7 +151,7 @@ public class ArithmeticOperators {
 		 */
 		public Add add(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createAdd().add(value);
 		}
 
@@ -218,7 +218,7 @@ public class ArithmeticOperators {
 		 */
 		public Divide divideBy(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createDivide().divideBy(fieldReference);
 		}
 
@@ -231,7 +231,7 @@ public class ArithmeticOperators {
 		 */
 		public Divide divideBy(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createDivide().divideBy(expression);
 		}
 
@@ -243,7 +243,7 @@ public class ArithmeticOperators {
 		 */
 		public Divide divideBy(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createDivide().divideBy(value);
 		}
 
@@ -304,7 +304,7 @@ public class ArithmeticOperators {
 		 */
 		public Integral integral(String unit) {
 
-			Assert.hasText(unit, "Unit must not be empty!");
+			Assert.hasText(unit, "Unit must not be empty");
 
 			return integral().unit(unit);
 		}
@@ -328,7 +328,7 @@ public class ArithmeticOperators {
 		 */
 		public Log log(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createLog().log(fieldReference);
 		}
 
@@ -341,7 +341,7 @@ public class ArithmeticOperators {
 		 */
 		public Log log(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createLog().log(fieldReference);
 		}
 
@@ -354,7 +354,7 @@ public class ArithmeticOperators {
 		 */
 		public Log log(Number base) {
 
-			Assert.notNull(base, "Base must not be null!");
+			Assert.notNull(base, "Base must not be null");
 			return createLog().log(base);
 		}
 
@@ -380,7 +380,7 @@ public class ArithmeticOperators {
 		 */
 		public Mod mod(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createMod().mod(fieldReference);
 		}
 
@@ -393,7 +393,7 @@ public class ArithmeticOperators {
 		 */
 		public Mod mod(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createMod().mod(expression);
 		}
 
@@ -406,7 +406,7 @@ public class ArithmeticOperators {
 		 */
 		public Mod mod(Number value) {
 
-			Assert.notNull(value, "Base must not be null!");
+			Assert.notNull(value, "Base must not be null");
 			return createMod().mod(value);
 		}
 
@@ -422,7 +422,7 @@ public class ArithmeticOperators {
 		 */
 		public Multiply multiplyBy(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createMultiply().multiplyBy(fieldReference);
 		}
 
@@ -434,7 +434,7 @@ public class ArithmeticOperators {
 		 */
 		public Multiply multiplyBy(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createMultiply().multiplyBy(expression);
 		}
 
@@ -446,7 +446,7 @@ public class ArithmeticOperators {
 		 */
 		public Multiply multiplyBy(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createMultiply().multiplyBy(value);
 		}
 
@@ -462,7 +462,7 @@ public class ArithmeticOperators {
 		 */
 		public Pow pow(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createPow().pow(fieldReference);
 		}
 
@@ -474,7 +474,7 @@ public class ArithmeticOperators {
 		 */
 		public Pow pow(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createPow().pow(expression);
 		}
 
@@ -486,7 +486,7 @@ public class ArithmeticOperators {
 		 */
 		public Pow pow(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createPow().pow(value);
 		}
 
@@ -511,7 +511,7 @@ public class ArithmeticOperators {
 		 */
 		public Subtract subtract(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createSubtract().subtract(fieldReference);
 		}
 
@@ -523,7 +523,7 @@ public class ArithmeticOperators {
 		 */
 		public Subtract subtract(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createSubtract().subtract(expression);
 		}
 
@@ -535,7 +535,7 @@ public class ArithmeticOperators {
 		 */
 		public Subtract subtract(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createSubtract().subtract(value);
 		}
 
@@ -851,7 +851,7 @@ public class ArithmeticOperators {
 		 */
 		public ATan2 atan2(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return createATan2().atan2of(value);
 		}
 
@@ -865,7 +865,7 @@ public class ArithmeticOperators {
 		 */
 		public ATan2 atan2(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createATan2().atan2of(fieldReference);
 		}
 
@@ -879,7 +879,7 @@ public class ArithmeticOperators {
 		 */
 		public ATan2 atan2(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createATan2().atan2of(expression);
 		}
 
@@ -961,7 +961,7 @@ public class ArithmeticOperators {
 		 */
 		public static Abs absoluteValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Abs(Fields.field(fieldReference));
 		}
 
@@ -973,7 +973,7 @@ public class ArithmeticOperators {
 		 */
 		public static Abs absoluteValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Abs(expression);
 		}
 
@@ -985,7 +985,7 @@ public class ArithmeticOperators {
 		 */
 		public static Abs absoluteValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Abs(value);
 		}
 	}
@@ -1014,7 +1014,7 @@ public class ArithmeticOperators {
 		 */
 		public static Add valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Add(asFields(fieldReference));
 		}
 
@@ -1026,7 +1026,7 @@ public class ArithmeticOperators {
 		 */
 		public static Add valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Add(Collections.singletonList(expression));
 		}
 
@@ -1038,7 +1038,7 @@ public class ArithmeticOperators {
 		 */
 		public static Add valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Add(Collections.singletonList(value));
 		}
 
@@ -1050,7 +1050,7 @@ public class ArithmeticOperators {
 		 */
 		public Add add(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Add(append(Fields.field(fieldReference)));
 		}
 
@@ -1062,7 +1062,7 @@ public class ArithmeticOperators {
 		 */
 		public Add add(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Add(append(expression));
 		}
 
@@ -1101,7 +1101,7 @@ public class ArithmeticOperators {
 		 */
 		public static Ceil ceilValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Ceil(Fields.field(fieldReference));
 		}
 
@@ -1113,7 +1113,7 @@ public class ArithmeticOperators {
 		 */
 		public static Ceil ceilValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Ceil(expression);
 		}
 
@@ -1125,7 +1125,7 @@ public class ArithmeticOperators {
 		 */
 		public static Ceil ceilValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Ceil(value);
 		}
 	}
@@ -1154,7 +1154,7 @@ public class ArithmeticOperators {
 		 */
 		public static Divide valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Divide(asFields(fieldReference));
 		}
 
@@ -1166,7 +1166,7 @@ public class ArithmeticOperators {
 		 */
 		public static Divide valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Divide(Collections.singletonList(expression));
 		}
 
@@ -1178,7 +1178,7 @@ public class ArithmeticOperators {
 		 */
 		public static Divide valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Divide(Collections.singletonList(value));
 		}
 
@@ -1190,7 +1190,7 @@ public class ArithmeticOperators {
 		 */
 		public Divide divideBy(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Divide(append(Fields.field(fieldReference)));
 		}
 
@@ -1202,7 +1202,7 @@ public class ArithmeticOperators {
 		 */
 		public Divide divideBy(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Divide(append(expression));
 		}
 
@@ -1241,7 +1241,7 @@ public class ArithmeticOperators {
 		 */
 		public static Exp expValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Exp(Fields.field(fieldReference));
 		}
 
@@ -1253,7 +1253,7 @@ public class ArithmeticOperators {
 		 */
 		public static Exp expValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Exp(expression);
 		}
 
@@ -1265,7 +1265,7 @@ public class ArithmeticOperators {
 		 */
 		public static Exp expValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Exp(value);
 		}
 	}
@@ -1294,7 +1294,7 @@ public class ArithmeticOperators {
 		 */
 		public static Floor floorValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Floor(Fields.field(fieldReference));
 		}
 
@@ -1306,7 +1306,7 @@ public class ArithmeticOperators {
 		 */
 		public static Floor floorValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Floor(expression);
 		}
 
@@ -1318,7 +1318,7 @@ public class ArithmeticOperators {
 		 */
 		public static Floor floorValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Floor(value);
 		}
 	}
@@ -1347,7 +1347,7 @@ public class ArithmeticOperators {
 		 */
 		public static Ln lnValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Ln(Fields.field(fieldReference));
 		}
 
@@ -1359,7 +1359,7 @@ public class ArithmeticOperators {
 		 */
 		public static Ln lnValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Ln(expression);
 		}
 
@@ -1371,7 +1371,7 @@ public class ArithmeticOperators {
 		 */
 		public static Ln lnValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Ln(value);
 		}
 	}
@@ -1400,7 +1400,7 @@ public class ArithmeticOperators {
 		 */
 		public static Log valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Log(asFields(fieldReference));
 		}
 
@@ -1412,7 +1412,7 @@ public class ArithmeticOperators {
 		 */
 		public static Log valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Log(Collections.singletonList(expression));
 		}
 
@@ -1424,7 +1424,7 @@ public class ArithmeticOperators {
 		 */
 		public static Log valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Log(Collections.singletonList(value));
 		}
 
@@ -1436,7 +1436,7 @@ public class ArithmeticOperators {
 		 */
 		public Log log(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Log(append(Fields.field(fieldReference)));
 		}
 
@@ -1448,7 +1448,7 @@ public class ArithmeticOperators {
 		 */
 		public Log log(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Log(append(expression));
 		}
 
@@ -1487,7 +1487,7 @@ public class ArithmeticOperators {
 		 */
 		public static Log10 log10ValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Log10(Fields.field(fieldReference));
 		}
 
@@ -1499,7 +1499,7 @@ public class ArithmeticOperators {
 		 */
 		public static Log10 log10ValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Log10(expression);
 		}
 
@@ -1511,7 +1511,7 @@ public class ArithmeticOperators {
 		 */
 		public static Log10 log10ValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Log10(value);
 		}
 	}
@@ -1540,7 +1540,7 @@ public class ArithmeticOperators {
 		 */
 		public static Mod valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Mod(asFields(fieldReference));
 		}
 
@@ -1552,7 +1552,7 @@ public class ArithmeticOperators {
 		 */
 		public static Mod valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Mod(Collections.singletonList(expression));
 		}
 
@@ -1564,7 +1564,7 @@ public class ArithmeticOperators {
 		 */
 		public static Mod valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Mod(Collections.singletonList(value));
 		}
 
@@ -1576,7 +1576,7 @@ public class ArithmeticOperators {
 		 */
 		public Mod mod(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Mod(append(Fields.field(fieldReference)));
 		}
 
@@ -1588,7 +1588,7 @@ public class ArithmeticOperators {
 		 */
 		public Mod mod(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Mod(append(expression));
 		}
 
@@ -1627,7 +1627,7 @@ public class ArithmeticOperators {
 		 */
 		public static Multiply valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Multiply(asFields(fieldReference));
 		}
 
@@ -1639,7 +1639,7 @@ public class ArithmeticOperators {
 		 */
 		public static Multiply valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Multiply(Collections.singletonList(expression));
 		}
 
@@ -1651,7 +1651,7 @@ public class ArithmeticOperators {
 		 */
 		public static Multiply valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Multiply(Collections.singletonList(value));
 		}
 
@@ -1663,7 +1663,7 @@ public class ArithmeticOperators {
 		 */
 		public Multiply multiplyBy(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Multiply(append(Fields.field(fieldReference)));
 		}
 
@@ -1675,7 +1675,7 @@ public class ArithmeticOperators {
 		 */
 		public Multiply multiplyBy(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Multiply(append(expression));
 		}
 
@@ -1714,7 +1714,7 @@ public class ArithmeticOperators {
 		 */
 		public static Pow valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Pow(asFields(fieldReference));
 		}
 
@@ -1726,7 +1726,7 @@ public class ArithmeticOperators {
 		 */
 		public static Pow valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Pow(Collections.singletonList(expression));
 		}
 
@@ -1738,7 +1738,7 @@ public class ArithmeticOperators {
 		 */
 		public static Pow valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Pow(Collections.singletonList(value));
 		}
 
@@ -1750,7 +1750,7 @@ public class ArithmeticOperators {
 		 */
 		public Pow pow(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Pow(append(Fields.field(fieldReference)));
 		}
 
@@ -1762,7 +1762,7 @@ public class ArithmeticOperators {
 		 */
 		public Pow pow(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Pow(append(expression));
 		}
 
@@ -1801,7 +1801,7 @@ public class ArithmeticOperators {
 		 */
 		public static Sqrt sqrtOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Sqrt(Fields.field(fieldReference));
 		}
 
@@ -1813,7 +1813,7 @@ public class ArithmeticOperators {
 		 */
 		public static Sqrt sqrtOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Sqrt(expression);
 		}
 
@@ -1825,7 +1825,7 @@ public class ArithmeticOperators {
 		 */
 		public static Sqrt sqrtOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Sqrt(value);
 		}
 	}
@@ -1854,7 +1854,7 @@ public class ArithmeticOperators {
 		 */
 		public static Subtract valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Subtract(asFields(fieldReference));
 		}
 
@@ -1866,7 +1866,7 @@ public class ArithmeticOperators {
 		 */
 		public static Subtract valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Subtract(Collections.singletonList(expression));
 		}
 
@@ -1878,7 +1878,7 @@ public class ArithmeticOperators {
 		 */
 		public static Subtract valueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Subtract(Collections.singletonList(value));
 		}
 
@@ -1890,7 +1890,7 @@ public class ArithmeticOperators {
 		 */
 		public Subtract subtract(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Subtract(append(Fields.field(fieldReference)));
 		}
 
@@ -1902,7 +1902,7 @@ public class ArithmeticOperators {
 		 */
 		public Subtract subtract(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Subtract(append(expression));
 		}
 
@@ -1941,7 +1941,7 @@ public class ArithmeticOperators {
 		 */
 		public static Trunc truncValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Trunc(Fields.field(fieldReference));
 		}
 
@@ -1953,7 +1953,7 @@ public class ArithmeticOperators {
 		 */
 		public static Trunc truncValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Trunc(expression);
 		}
 
@@ -1965,7 +1965,7 @@ public class ArithmeticOperators {
 		 */
 		public static Trunc truncValueOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Trunc(value);
 		}
 	}
@@ -1997,7 +1997,7 @@ public class ArithmeticOperators {
 		 */
 		public static Round roundValueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Round(Collections.singletonList(Fields.field(fieldReference)));
 		}
 
@@ -2009,7 +2009,7 @@ public class ArithmeticOperators {
 		 */
 		public static Round roundValueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Round(Collections.singletonList(expression));
 		}
 
@@ -2021,7 +2021,7 @@ public class ArithmeticOperators {
 		 */
 		public static Round round(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Round(Collections.singletonList(value));
 		}
 
@@ -2043,7 +2043,7 @@ public class ArithmeticOperators {
 		 */
 		public Round placeOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Round(append(expression));
 		}
 
@@ -2056,7 +2056,7 @@ public class ArithmeticOperators {
 		 */
 		public Round placeOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			Assert.notNull(fieldReference, "fieldReference must not be null");
 			return new Round(append(Fields.field(fieldReference)));
 		}
 
@@ -2400,7 +2400,7 @@ public class ArithmeticOperators {
 		 */
 		public static ASin asinOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ASin(Fields.field(fieldReference));
 		}
 
@@ -2704,7 +2704,7 @@ public class ArithmeticOperators {
 		 */
 		public static ACos acosOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ACos(Fields.field(fieldReference));
 		}
 
@@ -2905,7 +2905,7 @@ public class ArithmeticOperators {
 		 */
 		public static ATan atanOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ATan(Fields.field(fieldReference));
 		}
 
@@ -2958,7 +2958,7 @@ public class ArithmeticOperators {
 		 */
 		public static ATan2 valueOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ATan2(asFields(fieldReference));
 		}
 
@@ -2971,7 +2971,7 @@ public class ArithmeticOperators {
 		 */
 		public static ATan2 valueOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ATan2((Collections.singletonList(expression)));
 		}
 
@@ -2985,7 +2985,7 @@ public class ArithmeticOperators {
 		 */
 		public ATan2 atan2of(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ATan2(append(Fields.field(fieldReference)));
 		}
 
@@ -2999,7 +2999,7 @@ public class ArithmeticOperators {
 		 */
 		public ATan2 atan2of(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ATan2(append(expression));
 		}
 

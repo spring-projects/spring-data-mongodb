@@ -43,7 +43,7 @@ public final class GeoCommand {
 	 */
 	public GeoCommand(Shape shape) {
 
-		Assert.notNull(shape, "Shape must not be null!");
+		Assert.notNull(shape, "Shape must not be null");
 
 		this.shape = shape;
 		this.command = getCommand(shape);
@@ -72,7 +72,7 @@ public final class GeoCommand {
 	 */
 	private String getCommand(Shape shape) {
 
-		Assert.notNull(shape, "Shape must not be null!");
+		Assert.notNull(shape, "Shape must not be null");
 
 		if (shape instanceof Box) {
 			return "$box";

@@ -144,7 +144,7 @@ public class AggregationOptions {
 	 */
 	public static AggregationOptions fromDocument(Document document) {
 
-		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(document, "Document must not be null");
 
 		boolean allowDiskUse = document.getBoolean(ALLOW_DISK_USE, false);
 		boolean explain = document.getBoolean(EXPLAIN, false);

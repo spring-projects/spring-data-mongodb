@@ -43,7 +43,7 @@ final class MongoEntityInformationSupport {
 	static <T, ID> MongoEntityInformation<T, ID> entityInformationFor(MongoPersistentEntity<?> entity,
 			@Nullable Class<?> idType) {
 
-		Assert.notNull(entity, "Entity must not be null!");
+		Assert.notNull(entity, "Entity must not be null");
 
 		return new MappingMongoEntityInformation<>((MongoPersistentEntity<T>) entity, (Class<ID>) idType);
 	}

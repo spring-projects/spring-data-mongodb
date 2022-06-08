@@ -70,8 +70,8 @@ public class ReactiveMongoContext {
 	 */
 	public static Context setSession(Context context, Publisher<ClientSession> session) {
 
-		Assert.notNull(context, "Context must not be null!");
-		Assert.notNull(session, "Session publisher must not be null!");
+		Assert.notNull(context, "Context must not be null");
+		Assert.notNull(session, "Session publisher must not be null");
 
 		return context.put(SESSION_KEY, Mono.from(session));
 	}

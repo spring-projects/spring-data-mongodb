@@ -47,9 +47,9 @@ abstract class ReactivePageableExecutionUtils {
 	 */
 	public static <T> Mono<Page<T>> getPage(List<T> content, Pageable pageable, Mono<Long> totalSupplier) {
 
-		Assert.notNull(content, "Content must not be null!");
-		Assert.notNull(pageable, "Pageable must not be null!");
-		Assert.notNull(totalSupplier, "TotalSupplier must not be null!");
+		Assert.notNull(content, "Content must not be null");
+		Assert.notNull(pageable, "Pageable must not be null");
+		Assert.notNull(totalSupplier, "TotalSupplier must not be null");
 
 		if (pageable.isUnpaged() || pageable.getOffset() == 0) {
 

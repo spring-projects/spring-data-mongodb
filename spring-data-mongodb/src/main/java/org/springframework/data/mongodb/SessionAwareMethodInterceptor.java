@@ -76,13 +76,13 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 			Class<D> databaseType, ClientSessionOperator<D> databaseDecorator, Class<C> collectionType,
 			ClientSessionOperator<C> collectionDecorator) {
 
-		Assert.notNull(session, "ClientSession must not be null!");
-		Assert.notNull(target, "Target must not be null!");
-		Assert.notNull(sessionType, "SessionType must not be null!");
-		Assert.notNull(databaseType, "Database type must not be null!");
-		Assert.notNull(databaseDecorator, "Database ClientSessionOperator must not be null!");
-		Assert.notNull(collectionType, "Collection type must not be null!");
-		Assert.notNull(collectionDecorator, "Collection ClientSessionOperator must not be null!");
+		Assert.notNull(session, "ClientSession must not be null");
+		Assert.notNull(target, "Target must not be null");
+		Assert.notNull(sessionType, "SessionType must not be null");
+		Assert.notNull(databaseType, "Database type must not be null");
+		Assert.notNull(databaseDecorator, "Database ClientSessionOperator must not be null");
+		Assert.notNull(collectionType, "Collection type must not be null");
+		Assert.notNull(collectionDecorator, "Collection ClientSessionOperator must not be null");
 
 		this.session = session;
 		this.target = target;

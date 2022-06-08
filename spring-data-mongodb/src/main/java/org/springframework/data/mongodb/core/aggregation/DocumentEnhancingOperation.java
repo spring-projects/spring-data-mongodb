@@ -93,7 +93,7 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 			return exposedFields.and(new ExposedField(Fields.field((String) field), true));
 		}
 
-		throw new IllegalArgumentException(String.format("Expected %s to be a field/property.", field));
+		throw new IllegalArgumentException(String.format("Expected %s to be a field/property", field));
 	}
 
 	private static Document toSetEntry(Entry<Object, Object> entry, AggregationOperationContext context) {
@@ -148,8 +148,8 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 		 */
 		ExpressionProjection(String expression, Object[] parameters) {
 
-			Assert.notNull(expression, "Expression must not be null!");
-			Assert.notNull(parameters, "Parameters must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
+			Assert.notNull(parameters, "Parameters must not be null");
 
 			this.expression = expression;
 			this.params = parameters.clone();

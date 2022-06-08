@@ -91,9 +91,9 @@ public class VariableOperators {
 
 		private Map(Object sourceArray, String itemVariableName, AggregationExpression functionToApply) {
 
-			Assert.notNull(sourceArray, "SourceArray must not be null!");
-			Assert.notNull(itemVariableName, "ItemVariableName must not be null!");
-			Assert.notNull(functionToApply, "FunctionToApply must not be null!");
+			Assert.notNull(sourceArray, "SourceArray must not be null");
+			Assert.notNull(itemVariableName, "ItemVariableName must not be null");
+			Assert.notNull(functionToApply, "FunctionToApply must not be null");
 
 			this.sourceArray = sourceArray;
 			this.itemVariableName = itemVariableName;
@@ -109,21 +109,21 @@ public class VariableOperators {
 		 */
 		public static AsBuilder itemsOf(final String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return new AsBuilder() {
 
 				@Override
 				public FunctionBuilder as(final String variableName) {
 
-					Assert.notNull(variableName, "VariableName must not be null!");
+					Assert.notNull(variableName, "VariableName must not be null");
 
 					return new FunctionBuilder() {
 
 						@Override
 						public Map andApply(final AggregationExpression expression) {
 
-							Assert.notNull(expression, "AggregationExpression must not be null!");
+							Assert.notNull(expression, "AggregationExpression must not be null");
 							return new Map(Fields.field(fieldReference), variableName, expression);
 						}
 					};
@@ -141,21 +141,21 @@ public class VariableOperators {
 		 */
 		public static AsBuilder itemsOf(final AggregationExpression source) {
 
-			Assert.notNull(source, "AggregationExpression must not be null!");
+			Assert.notNull(source, "AggregationExpression must not be null");
 
 			return new AsBuilder() {
 
 				@Override
 				public FunctionBuilder as(final String variableName) {
 
-					Assert.notNull(variableName, "VariableName must not be null!");
+					Assert.notNull(variableName, "VariableName must not be null");
 
 					return new FunctionBuilder() {
 
 						@Override
 						public Map andApply(final AggregationExpression expression) {
 
-							Assert.notNull(expression, "AggregationExpression must not be null!");
+							Assert.notNull(expression, "AggregationExpression must not be null");
 							return new Map(source, variableName, expression);
 						}
 					};
@@ -240,14 +240,14 @@ public class VariableOperators {
 		 */
 		public static LetBuilder define(final Collection<ExpressionVariable> variables) {
 
-			Assert.notNull(variables, "Variables must not be null!");
+			Assert.notNull(variables, "Variables must not be null");
 
 			return new LetBuilder() {
 
 				@Override
 				public Let andApply(final AggregationExpression expression) {
 
-					Assert.notNull(expression, "Expression must not be null!");
+					Assert.notNull(expression, "Expression must not be null");
 					return new Let(new ArrayList<ExpressionVariable>(variables), expression);
 				}
 			};
@@ -261,14 +261,14 @@ public class VariableOperators {
 		 */
 		public static LetBuilder define(final ExpressionVariable... variables) {
 
-			Assert.notNull(variables, "Variables must not be null!");
+			Assert.notNull(variables, "Variables must not be null");
 
 			return new LetBuilder() {
 
 				@Override
 				public Let andApply(final AggregationExpression expression) {
 
-					Assert.notNull(expression, "Expression must not be null!");
+					Assert.notNull(expression, "Expression must not be null");
 					return new Let(Arrays.asList(variables), expression);
 				}
 			};
@@ -357,7 +357,7 @@ public class VariableOperators {
 			 */
 			public static ExpressionVariable newVariable(String variableName) {
 
-				Assert.notNull(variableName, "VariableName must not be null!");
+				Assert.notNull(variableName, "VariableName must not be null");
 				return new ExpressionVariable(variableName, null);
 			}
 
@@ -369,7 +369,7 @@ public class VariableOperators {
 			 */
 			public ExpressionVariable forExpression(AggregationExpression expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				return new ExpressionVariable(variableName, expression);
 			}
 
@@ -381,7 +381,7 @@ public class VariableOperators {
 			 */
 			public ExpressionVariable forExpression(Document expressionObject) {
 
-				Assert.notNull(expressionObject, "Expression must not be null!");
+				Assert.notNull(expressionObject, "Expression must not be null");
 				return new ExpressionVariable(variableName, expressionObject);
 			}
 		}

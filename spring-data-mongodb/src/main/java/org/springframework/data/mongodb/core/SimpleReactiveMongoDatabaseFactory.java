@@ -77,10 +77,10 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 	private SimpleReactiveMongoDatabaseFactory(MongoClient client, String databaseName, boolean mongoInstanceCreated) {
 
-		Assert.notNull(client, "MongoClient must not be null!");
-		Assert.hasText(databaseName, "Database name must not be empty!");
+		Assert.notNull(client, "MongoClient must not be null");
+		Assert.hasText(databaseName, "Database name must not be empty");
 		Assert.isTrue(databaseName.matches("[^/\\\\.$\"\\s]+"),
-				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs!");
+				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs");
 
 		this.mongo = client;
 		this.databaseName = databaseName;
@@ -103,7 +103,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 	public Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException {
 
-		Assert.hasText(dbName, "Database name must not be empty.");
+		Assert.hasText(dbName, "Database name must not be empty");
 
 		return Mono.fromSupplier(() -> {
 

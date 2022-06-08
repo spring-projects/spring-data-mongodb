@@ -48,7 +48,7 @@ public class DateOperators {
 	 */
 	public static DateOperatorFactory dateOf(String fieldReference) {
 
-		Assert.notNull(fieldReference, "FieldReference must not be null!");
+		Assert.notNull(fieldReference, "FieldReference must not be null");
 		return new DateOperatorFactory(fieldReference);
 	}
 
@@ -61,7 +61,7 @@ public class DateOperators {
 	 */
 	public static DateOperatorFactory zonedDateOf(String fieldReference, Timezone timezone) {
 
-		Assert.notNull(fieldReference, "FieldReference must not be null!");
+		Assert.notNull(fieldReference, "FieldReference must not be null");
 		return new DateOperatorFactory(fieldReference).withTimezone(timezone);
 	}
 
@@ -73,7 +73,7 @@ public class DateOperators {
 	 */
 	public static DateOperatorFactory dateOf(AggregationExpression expression) {
 
-		Assert.notNull(expression, "Expression must not be null!");
+		Assert.notNull(expression, "Expression must not be null");
 		return new DateOperatorFactory(expression);
 	}
 
@@ -86,7 +86,7 @@ public class DateOperators {
 	 */
 	public static DateOperatorFactory zonedDateOf(AggregationExpression expression, Timezone timezone) {
 
-		Assert.notNull(expression, "Expression must not be null!");
+		Assert.notNull(expression, "Expression must not be null");
 		return new DateOperatorFactory(expression).withTimezone(timezone);
 	}
 
@@ -109,7 +109,7 @@ public class DateOperators {
 	 */
 	public static DateOperatorFactory dateValue(Object value) {
 
-		Assert.notNull(value, "Value must not be null!");
+		Assert.notNull(value, "Value must not be null");
 		return new DateOperatorFactory(value);
 	}
 
@@ -194,7 +194,7 @@ public class DateOperators {
 		 */
 		public static Timezone valueOf(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Timezone(value);
 		}
 
@@ -207,7 +207,7 @@ public class DateOperators {
 		 */
 		public static Timezone fromOffset(TimeZone timeZone) {
 
-			Assert.notNull(timeZone, "TimeZone must not be null!");
+			Assert.notNull(timeZone, "TimeZone must not be null");
 
 			return fromOffset(
 					ZoneOffset.ofTotalSeconds(Math.toIntExact(TimeUnit.MILLISECONDS.toSeconds(timeZone.getRawOffset()))));
@@ -222,7 +222,7 @@ public class DateOperators {
 		 */
 		public static Timezone fromOffset(ZoneOffset offset) {
 
-			Assert.notNull(offset, "ZoneOffset must not be null!");
+			Assert.notNull(offset, "ZoneOffset must not be null");
 			return new Timezone(offset.toString());
 		}
 
@@ -235,7 +235,7 @@ public class DateOperators {
 		 */
 		public static Timezone fromZone(TimeZone timeZone) {
 
-			Assert.notNull(timeZone, "TimeZone must not be null!");
+			Assert.notNull(timeZone, "TimeZone must not be null");
 
 			return valueOf(timeZone.getID());
 		}
@@ -249,7 +249,7 @@ public class DateOperators {
 		 */
 		public static Timezone fromZone(ZoneId zoneId) {
 
-			Assert.notNull(zoneId, "ZoneId must not be null!");
+			Assert.notNull(zoneId, "ZoneId must not be null");
 			return new Timezone(zoneId.toString());
 		}
 
@@ -316,7 +316,7 @@ public class DateOperators {
 
 			this(fieldReference, null, null, Timezone.none());
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 		}
 
 		/**
@@ -328,7 +328,7 @@ public class DateOperators {
 
 			this(null, expression, null, Timezone.none());
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 		}
 
 		/**
@@ -348,7 +348,7 @@ public class DateOperators {
 
 			this(null, null, value, Timezone.none());
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 		}
 
 		/**
@@ -362,7 +362,7 @@ public class DateOperators {
 		 */
 		public DateOperatorFactory withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null!");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new DateOperatorFactory(fieldReference, expression, dateValue, timezone);
 		}
 
@@ -811,7 +811,7 @@ public class DateOperators {
 		 */
 		public DateFromPartsOperatorFactory withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null!");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new DateFromPartsOperatorFactory(timezone);
 		}
 	}
@@ -893,7 +893,7 @@ public class DateOperators {
 		 */
 		public static DayOfYear dayOfYear(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new DayOfYear(value);
 		}
 
@@ -905,7 +905,7 @@ public class DateOperators {
 		 */
 		public static DayOfYear dayOfYear(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return dayOfYear(Fields.field(fieldReference));
 		}
 
@@ -917,7 +917,7 @@ public class DateOperators {
 		 */
 		public static DayOfYear dayOfYear(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return dayOfYear((Object) expression);
 		}
 
@@ -933,7 +933,7 @@ public class DateOperators {
 		@Override
 		public DayOfYear withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new DayOfYear(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -965,7 +965,7 @@ public class DateOperators {
 		 */
 		public static DayOfMonth dayOfMonth(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new DayOfMonth(value);
 		}
 
@@ -977,7 +977,7 @@ public class DateOperators {
 		 */
 		public static DayOfMonth dayOfMonth(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return dayOfMonth(Fields.field(fieldReference));
 		}
 
@@ -989,7 +989,7 @@ public class DateOperators {
 		 */
 		public static DayOfMonth dayOfMonth(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return dayOfMonth((Object) expression);
 		}
 
@@ -1005,7 +1005,7 @@ public class DateOperators {
 		@Override
 		public DayOfMonth withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new DayOfMonth(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1037,7 +1037,7 @@ public class DateOperators {
 		 */
 		public static DayOfWeek dayOfWeek(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new DayOfWeek(value);
 		}
 
@@ -1049,7 +1049,7 @@ public class DateOperators {
 		 */
 		public static DayOfWeek dayOfWeek(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return dayOfWeek(Fields.field(fieldReference));
 		}
 
@@ -1061,7 +1061,7 @@ public class DateOperators {
 		 */
 		public static DayOfWeek dayOfWeek(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return dayOfWeek((Object) expression);
 		}
 
@@ -1077,7 +1077,7 @@ public class DateOperators {
 		@Override
 		public DayOfWeek withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new DayOfWeek(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1109,7 +1109,7 @@ public class DateOperators {
 		 */
 		public static Year year(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Year(value);
 		}
 
@@ -1121,7 +1121,7 @@ public class DateOperators {
 		 */
 		public static Year yearOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return year(Fields.field(fieldReference));
 		}
 
@@ -1133,7 +1133,7 @@ public class DateOperators {
 		 */
 		public static Year yearOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return year(expression);
 		}
 
@@ -1149,7 +1149,7 @@ public class DateOperators {
 		@Override
 		public Year withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Year(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1181,7 +1181,7 @@ public class DateOperators {
 		 */
 		public static Month month(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Month(value);
 		}
 
@@ -1193,7 +1193,7 @@ public class DateOperators {
 		 */
 		public static Month monthOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return month(Fields.field(fieldReference));
 		}
 
@@ -1205,7 +1205,7 @@ public class DateOperators {
 		 */
 		public static Month monthOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return month(expression);
 		}
 
@@ -1221,7 +1221,7 @@ public class DateOperators {
 		@Override
 		public Month withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Month(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1253,7 +1253,7 @@ public class DateOperators {
 		 */
 		public static Week week(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Week(value);
 		}
 
@@ -1265,7 +1265,7 @@ public class DateOperators {
 		 */
 		public static Week weekOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return week(Fields.field(fieldReference));
 		}
 
@@ -1277,7 +1277,7 @@ public class DateOperators {
 		 */
 		public static Week weekOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return week(expression);
 		}
 
@@ -1293,7 +1293,7 @@ public class DateOperators {
 		@Override
 		public Week withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Week(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1325,7 +1325,7 @@ public class DateOperators {
 		 */
 		public static Hour hour(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Hour(value);
 		}
 
@@ -1337,7 +1337,7 @@ public class DateOperators {
 		 */
 		public static Hour hourOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return hour(Fields.field(fieldReference));
 		}
 
@@ -1349,7 +1349,7 @@ public class DateOperators {
 		 */
 		public static Hour hourOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return hour(expression);
 		}
 
@@ -1365,7 +1365,7 @@ public class DateOperators {
 		@Override
 		public Hour withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Hour(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1397,7 +1397,7 @@ public class DateOperators {
 		 */
 		public static Minute minute(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Minute(value);
 		}
 
@@ -1409,7 +1409,7 @@ public class DateOperators {
 		 */
 		public static Minute minuteOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return minute(Fields.field(fieldReference));
 		}
 
@@ -1421,7 +1421,7 @@ public class DateOperators {
 		 */
 		public static Minute minuteOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return minute(expression);
 		}
 
@@ -1437,7 +1437,7 @@ public class DateOperators {
 		@Override
 		public Minute withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Minute(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1469,7 +1469,7 @@ public class DateOperators {
 		 */
 		public static Second second(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Second(value);
 		}
 
@@ -1481,7 +1481,7 @@ public class DateOperators {
 		 */
 		public static Second secondOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return second(Fields.field(fieldReference));
 		}
 
@@ -1493,7 +1493,7 @@ public class DateOperators {
 		 */
 		public static Second secondOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return second(expression);
 		}
 
@@ -1509,7 +1509,7 @@ public class DateOperators {
 		@Override
 		public Second withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Second(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1541,7 +1541,7 @@ public class DateOperators {
 		 */
 		public static Millisecond millisecond(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new Millisecond(value);
 		}
 
@@ -1553,7 +1553,7 @@ public class DateOperators {
 		 */
 		public static Millisecond millisecondOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return millisecond(Fields.field(fieldReference));
 		}
 
@@ -1565,7 +1565,7 @@ public class DateOperators {
 		 */
 		public static Millisecond millisecondOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return millisecond(expression);
 		}
 
@@ -1581,7 +1581,7 @@ public class DateOperators {
 		@Override
 		public Millisecond withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new Millisecond(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1613,14 +1613,14 @@ public class DateOperators {
 		 */
 		public static FormatBuilder dateToString(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 
 			return new FormatBuilder() {
 
 				@Override
 				public DateToString toString(String format) {
 
-					Assert.notNull(format, "Format must not be null!");
+					Assert.notNull(format, "Format must not be null");
 					return new DateToString(argumentMap(value, format, Timezone.none()));
 				}
 
@@ -1639,7 +1639,7 @@ public class DateOperators {
 		 */
 		public static FormatBuilder dateOf(final String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return dateToString(Fields.field(fieldReference));
 		}
 
@@ -1651,7 +1651,7 @@ public class DateOperators {
 		 */
 		public static FormatBuilder dateOf(final AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return dateToString(expression);
 		}
 
@@ -1667,7 +1667,7 @@ public class DateOperators {
 		@Override
 		public DateToString withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new DateToString(append("timezone", timezone));
 		}
 
@@ -1790,7 +1790,7 @@ public class DateOperators {
 		 */
 		public static IsoDayOfWeek isoDayWeek(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new IsoDayOfWeek(value);
 		}
 
@@ -1802,7 +1802,7 @@ public class DateOperators {
 		 */
 		public static IsoDayOfWeek isoDayOfWeek(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return isoDayWeek(Fields.field(fieldReference));
 		}
 
@@ -1814,7 +1814,7 @@ public class DateOperators {
 		 */
 		public static IsoDayOfWeek isoDayOfWeek(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return isoDayWeek(expression);
 		}
 
@@ -1830,7 +1830,7 @@ public class DateOperators {
 		@Override
 		public IsoDayOfWeek withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new IsoDayOfWeek(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1862,7 +1862,7 @@ public class DateOperators {
 		 */
 		public static IsoWeek isoWeek(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new IsoWeek(value);
 		}
 
@@ -1874,7 +1874,7 @@ public class DateOperators {
 		 */
 		public static IsoWeek isoWeekOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return isoWeek(Fields.field(fieldReference));
 		}
 
@@ -1886,7 +1886,7 @@ public class DateOperators {
 		 */
 		public static IsoWeek isoWeekOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return isoWeek(expression);
 		}
 
@@ -1902,7 +1902,7 @@ public class DateOperators {
 		@Override
 		public IsoWeek withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new IsoWeek(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -1934,7 +1934,7 @@ public class DateOperators {
 		 */
 		public static IsoWeekYear isoWeekYear(Object value) {
 
-			Assert.notNull(value, "value must not be null!");
+			Assert.notNull(value, "value must not be null");
 			return new IsoWeekYear(value);
 		}
 
@@ -1946,7 +1946,7 @@ public class DateOperators {
 		 */
 		public static IsoWeekYear isoWeekYearOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return isoWeekYear(Fields.field(fieldReference));
 		}
 
@@ -1958,7 +1958,7 @@ public class DateOperators {
 		 */
 		public static IsoWeekYear isoWeekYearOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return isoWeekYear(expression);
 		}
 
@@ -1974,7 +1974,7 @@ public class DateOperators {
 		@Override
 		public IsoWeekYear withTimezone(Timezone timezone) {
 
-			Assert.notNull(timezone, "Timezone must not be null.");
+			Assert.notNull(timezone, "Timezone must not be null");
 			return new IsoWeekYear(appendTimezone(values().iterator().next(), timezone));
 		}
 
@@ -2278,7 +2278,7 @@ public class DateOperators {
 			 */
 			default DateFromParts yearOf(String fieldReference) {
 
-				Assert.hasText(fieldReference, "Field reference must not be null nor empty.");
+				Assert.hasText(fieldReference, "Field reference must not be null nor empty");
 				return year(Fields.field(fieldReference));
 			}
 
@@ -2291,7 +2291,7 @@ public class DateOperators {
 			 */
 			default DateFromParts yearOf(AggregationExpression expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				return year(expression);
 			}
 		}
@@ -2454,7 +2454,7 @@ public class DateOperators {
 			 */
 			default IsoDateFromParts isoWeekYearOf(String fieldReference) {
 
-				Assert.hasText(fieldReference, "Field reference must not be null nor empty.");
+				Assert.hasText(fieldReference, "Field reference must not be null nor empty");
 				return isoWeekYear(Fields.field(fieldReference));
 			}
 
@@ -2467,7 +2467,7 @@ public class DateOperators {
 			 */
 			default IsoDateFromParts isoWeekYearOf(AggregationExpression expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				return isoWeekYear(expression);
 			}
 		}
@@ -2498,7 +2498,7 @@ public class DateOperators {
 		 */
 		public static DateToParts dateToParts(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new DateToParts(Collections.singletonMap("date", value));
 		}
 
@@ -2511,7 +2511,7 @@ public class DateOperators {
 		 */
 		public static DateToParts datePartsOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return dateToParts(Fields.field(fieldReference));
 		}
 
@@ -2626,7 +2626,7 @@ public class DateOperators {
 		 */
 		public DateFromString withFormat(String format) {
 
-			Assert.notNull(format, "Format must not be null!");
+			Assert.notNull(format, "Format must not be null");
 			return new DateFromString(append("format", format));
 		}
 

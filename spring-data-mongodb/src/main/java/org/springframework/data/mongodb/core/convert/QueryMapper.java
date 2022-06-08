@@ -97,7 +97,7 @@ public class QueryMapper {
 	 */
 	public QueryMapper(MongoConverter converter) {
 
-		Assert.notNull(converter, "MongoConverter must not be null!");
+		Assert.notNull(converter, "MongoConverter must not be null");
 
 		this.conversionService = converter.getConversionService();
 		this.converter = converter;
@@ -190,7 +190,7 @@ public class QueryMapper {
 	 */
 	public Document getMappedSort(Document sortObject, @Nullable MongoPersistentEntity<?> entity) {
 
-		Assert.notNull(sortObject, "SortObject must not be null!");
+		Assert.notNull(sortObject, "SortObject must not be null");
 
 		if (sortObject.isEmpty()) {
 			return BsonUtils.EMPTY_DOCUMENT;
@@ -211,7 +211,7 @@ public class QueryMapper {
 	 */
 	public Document getMappedFields(Document fieldsObject, @Nullable MongoPersistentEntity<?> entity) {
 
-		Assert.notNull(fieldsObject, "FieldsObject must not be null!");
+		Assert.notNull(fieldsObject, "FieldsObject must not be null");
 
 		Document mappedFields = mapFieldsToPropertyNames(fieldsObject, entity);
 		return mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
@@ -516,7 +516,7 @@ public class QueryMapper {
 	 */
 	protected boolean isAssociationConversionNecessary(Field documentField, @Nullable Object value) {
 
-		Assert.notNull(documentField, "Document field must not be null!");
+		Assert.notNull(documentField, "Document field must not be null");
 
 		if (value == null) {
 			return false;
@@ -707,7 +707,7 @@ public class QueryMapper {
 	 */
 	private Entry<String, Object> createMapEntry(String key, @Nullable Object value) {
 
-		Assert.hasText(key, "Key must not be null or empty!");
+		Assert.hasText(key, "Key must not be null or empty");
 		return new AbstractMap.SimpleEntry<>(key, value);
 	}
 
@@ -853,7 +853,7 @@ public class QueryMapper {
 		public Keyword(Bson bson) {
 
 			Map<String, Object> map = BsonUtils.asMap(bson);
-			Assert.isTrue(map.size() == 1, "Can only use a single value Document!");
+			Assert.isTrue(map.size() == 1, "Can only use a single value Document");
 
 			Set<Entry<String, Object>> entries = map.entrySet();
 			Entry<String, Object> entry = entries.iterator().next();
@@ -947,7 +947,7 @@ public class QueryMapper {
 		 */
 		public Field(String name) {
 
-			Assert.hasText(name, "Name must not be null!");
+			Assert.hasText(name, "Name must not be null");
 			this.name = name;
 		}
 
@@ -1055,7 +1055,7 @@ public class QueryMapper {
 
 		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?");
 		private static final Pattern DOT_POSITIONAL_PATTERN = Pattern.compile("\\.\\d+(?!$)");
-		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s! Associations can only be pointed to directly or via their id property!";
+		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s; Associations can only be pointed to directly or via their id property";
 
 		private final MongoPersistentEntity<?> entity;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -1091,7 +1091,7 @@ public class QueryMapper {
 
 			super(name);
 
-			Assert.notNull(entity, "MongoPersistentEntity must not be null!");
+			Assert.notNull(entity, "MongoPersistentEntity must not be null");
 
 			this.entity = entity;
 			this.mappingContext = context;
@@ -1213,7 +1213,7 @@ public class QueryMapper {
 					String types = StringUtils.collectionToDelimitedString(
 							path.stream().map(it -> it.getType().getSimpleName()).collect(Collectors.toList()), " -> ");
 					QueryMapper.LOGGER.info(String.format(
-							"Could not map '%s'. Maybe a fragment in '%s' is considered a simple type. Mapper continues with %s.",
+							"Could not map '%s'; Maybe a fragment in '%s' is considered a simple type; Mapper continues with %s",
 							path, types, pathExpression));
 				}
 				return null;
@@ -1457,7 +1457,7 @@ public class QueryMapper {
 		 */
 		public AssociationConverter(String name, Association<MongoPersistentProperty> association) {
 
-			Assert.notNull(association, "Association must not be null!");
+			Assert.notNull(association, "Association must not be null");
 			this.property = association.getInverse();
 			this.name = name;
 		}

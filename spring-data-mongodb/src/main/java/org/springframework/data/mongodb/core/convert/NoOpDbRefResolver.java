@@ -56,7 +56,7 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 	}
 
 	private <T> T handle() throws UnsupportedOperationException {
-		throw new UnsupportedOperationException("DBRef resolution is not supported!");
+		throw new UnsupportedOperationException("DBRef resolution is not supported");
 	}
 
 	@Nullable

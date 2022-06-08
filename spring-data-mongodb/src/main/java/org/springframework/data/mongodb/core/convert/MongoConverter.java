@@ -103,8 +103,8 @@ public interface MongoConverter
 	@Nullable
 	default <S, T> T mapValueToTargetType(S source, Class<T> targetType, DbRefResolver dbRefResolver) {
 
-		Assert.notNull(targetType, "TargetType must not be null!");
-		Assert.notNull(dbRefResolver, "DbRefResolver must not be null!");
+		Assert.notNull(targetType, "TargetType must not be null");
+		Assert.notNull(dbRefResolver, "DbRefResolver must not be null");
 
 		if (targetType != Object.class && ClassUtils.isAssignable(targetType, source.getClass())) {
 			return (T) source;

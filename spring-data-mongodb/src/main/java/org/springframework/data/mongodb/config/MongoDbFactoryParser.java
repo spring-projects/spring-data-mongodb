@@ -163,7 +163,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 		if (element.getAttributes().getLength() > allowedAttributesCount) {
 
-			parserContext.getReaderContext().error("Configure either MongoDB " + type + " or details individually!",
+			parserContext.getReaderContext().error("Configure either MongoDB " + type + " or details individually",
 					parserContext.extractSource(element));
 		}
 

@@ -66,7 +66,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 	 */
 	public IndexEnsuringQueryCreationListener(IndexOperationsProvider indexOperationsProvider) {
 
-		Assert.notNull(indexOperationsProvider, "IndexOperationsProvider must not be null!");
+		Assert.notNull(indexOperationsProvider, "IndexOperationsProvider must not be null");
 		this.indexOperationsProvider = indexOperationsProvider;
 	}
 
@@ -134,7 +134,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Created %s!", index));
+			LOG.debug(String.format("Created %s", index));
 		}
 	}
 

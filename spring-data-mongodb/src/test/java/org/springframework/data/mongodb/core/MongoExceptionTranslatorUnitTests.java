@@ -175,7 +175,7 @@ class MongoExceptionTranslatorUnitTests {
 
 		DataAccessException translated = translator.translateExceptionIfPossible(new MongoException(code, ""));
 
-		assertThat(translated).as("Expected exception of type " + clazz.getName() + "!").isNotNull();
+		assertThat(translated).as("Expected exception of type " + clazz.getName()).isNotNull();
 
 		Throwable cause = translated.getRootCause();
 		assertThat(cause).isInstanceOf(MongoException.class);

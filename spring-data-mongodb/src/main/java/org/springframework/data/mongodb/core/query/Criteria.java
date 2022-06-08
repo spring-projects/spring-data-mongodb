@@ -166,11 +166,11 @@ public class Criteria implements CriteriaDefinition {
 
 		if (!isValue.equals(NOT_SET)) {
 			throw new InvalidMongoDbApiUsageException(
-					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
+					"Multiple 'is' values declared; You need to use 'and' with multiple criteria");
 		}
 
 		if (lastOperatorWasNot()) {
-			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
+			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead");
 		}
 
 		this.isValue = value;
@@ -403,8 +403,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria sampleRate(double sampleRate) {
 
-		Assert.isTrue(sampleRate >= 0, "The sample rate must be greater than zero!");
-		Assert.isTrue(sampleRate <= 1, "The sample rate must not be greater than one!");
+		Assert.isTrue(sampleRate >= 0, "The sample rate must be greater than zero");
+		Assert.isTrue(sampleRate <= 1, "The sample rate must not be greater than one");
 
 		criteria.put("$sampleRate", sampleRate);
 		return this;
@@ -432,8 +432,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria type(Type... types) {
 
-		Assert.notNull(types, "Types must not be null!");
-		Assert.noNullElements(types, "Types must not contain null.");
+		Assert.notNull(types, "Types must not be null");
+		Assert.noNullElements(types, "Types must not contain null");
 
 		return type(Arrays.asList(types));
 	}
@@ -448,7 +448,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria type(Collection<Type> types) {
 
-		Assert.notNull(types, "Types must not be null!");
+		Assert.notNull(types, "Types must not be null");
 
 		criteria.put("$type", types.stream().map(Type::value).collect(Collectors.toList()));
 		return this;
@@ -507,7 +507,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria regex(Pattern pattern) {
 
-		Assert.notNull(pattern, "Pattern must not be null!");
+		Assert.notNull(pattern, "Pattern must not be null");
 
 		if (lastOperatorWasNot()) {
 			return not(pattern);
@@ -535,7 +535,7 @@ public class Criteria implements CriteriaDefinition {
 
 	private Pattern toPattern(String regex, @Nullable String options) {
 
-		Assert.notNull(regex, "Regex string must not be null!");
+		Assert.notNull(regex, "Regex string must not be null");
 
 		return Pattern.compile(regex, RegexFlags.toRegexFlags(options));
 	}
@@ -553,7 +553,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinSphere(Circle circle) {
 
-		Assert.notNull(circle, "Circle must not be null!");
+		Assert.notNull(circle, "Circle must not be null");
 
 		criteria.put("$geoWithin", new GeoCommand(new Sphere(circle)));
 		return this;
@@ -569,7 +569,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria within(Shape shape) {
 
-		Assert.notNull(shape, "Shape must not be null!");
+		Assert.notNull(shape, "Shape must not be null");
 
 		criteria.put("$geoWithin", new GeoCommand(shape));
 		return this;
@@ -584,7 +584,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria near(Point point) {
 
-		Assert.notNull(point, "Point must not be null!");
+		Assert.notNull(point, "Point must not be null");
 
 		criteria.put("$near", point);
 		return this;
@@ -601,7 +601,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria nearSphere(Point point) {
 
-		Assert.notNull(point, "Point must not be null!");
+		Assert.notNull(point, "Point must not be null");
 
 		criteria.put("$nearSphere", point);
 		return this;
@@ -618,7 +618,7 @@ public class Criteria implements CriteriaDefinition {
 	@SuppressWarnings("rawtypes")
 	public Criteria intersects(GeoJson geoJson) {
 
-		Assert.notNull(geoJson, "GeoJson must not be null!");
+		Assert.notNull(geoJson, "GeoJson must not be null");
 		criteria.put("$geoIntersects", geoJson);
 		return this;
 	}
@@ -710,7 +710,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria andDocumentStructureMatches(MongoJsonSchema schema) {
 
-		Assert.notNull(schema, "Schema must not be null!");
+		Assert.notNull(schema, "Schema must not be null");
 
 		Criteria schemaCriteria = new Criteria();
 		schemaCriteria.criteria.putAll(schema.toDocument());
@@ -741,7 +741,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria orOperator(Criteria... criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		return orOperator(Arrays.asList(criteria));
 	}
@@ -758,7 +758,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria orOperator(Collection<Criteria> criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$or").is(bsonList));
@@ -775,7 +775,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria norOperator(Criteria... criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		return norOperator(Arrays.asList(criteria));
 	}
@@ -792,7 +792,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria norOperator(Collection<Criteria> criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$nor").is(bsonList));
@@ -809,7 +809,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria andOperator(Criteria... criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		return andOperator(Arrays.asList(criteria));
 	}
@@ -826,7 +826,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria andOperator(Collection<Criteria> criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
@@ -933,8 +933,8 @@ public class Criteria implements CriteriaDefinition {
 			document.put(key, value);
 		} else {
 			throw new InvalidMongoDbApiUsageException("Due to limitations of the org.bson.Document, "
-					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. "
-					+ "Criteria already contains '" + key + " : " + existing + "'.");
+					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "';"
+					+ " Criteria already contains '" + key + " : " + existing + "'");
 		}
 	}
 
@@ -1344,8 +1344,8 @@ public class Criteria implements CriteriaDefinition {
 
 		private Criteria positions(String operator, List<Integer> positions) {
 
-			Assert.notNull(positions, "Positions must not be null!");
-			Assert.noNullElements(positions.toArray(), "Positions must not contain null values.");
+			Assert.notNull(positions, "Positions must not be null");
+			Assert.noNullElements(positions.toArray(), "Positions must not contain null values");
 
 			target.criteria.put(operator, positions);
 			return target;
@@ -1353,7 +1353,7 @@ public class Criteria implements CriteriaDefinition {
 
 		private Criteria stringBitmask(String operator, String bitmask) {
 
-			Assert.hasText(bitmask, "Bitmask must not be null!");
+			Assert.hasText(bitmask, "Bitmask must not be null");
 
 			target.criteria.put(operator, new Binary(Base64Utils.decodeFromString(bitmask)));
 			return target;

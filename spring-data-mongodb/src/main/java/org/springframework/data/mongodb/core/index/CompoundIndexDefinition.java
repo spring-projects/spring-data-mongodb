@@ -35,7 +35,7 @@ public class CompoundIndexDefinition extends Index {
 	 */
 	public CompoundIndexDefinition(Document keys) {
 
-		Assert.notNull(keys, "Keys must not be null!");
+		Assert.notNull(keys, "Keys must not be null");
 		this.keys = keys;
 	}
 

@@ -51,7 +51,7 @@ public class UnionWithOperation implements AggregationOperation {
 
 	public UnionWithOperation(String collection, @Nullable AggregationPipeline pipeline, @Nullable Class<?> domainType) {
 
-		Assert.notNull(collection, "Collection must not be null!");
+		Assert.notNull(collection, "Collection must not be null");
 
 		this.collection = collection;
 		this.pipeline = pipeline;
@@ -120,7 +120,7 @@ public class UnionWithOperation implements AggregationOperation {
 	 */
 	public UnionWithOperation mapFieldsTo(Class<?> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 		return new UnionWithOperation(collection, pipeline, domainType);
 	}
 

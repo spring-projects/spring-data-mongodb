@@ -55,8 +55,8 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 	 */
 	public DefaultReferenceResolver(ReferenceLoader referenceLoader, PersistenceExceptionTranslator exceptionTranslator) {
 
-		Assert.notNull(referenceLoader, "ReferenceLoader must not be null!");
-		Assert.notNull(exceptionTranslator, "ExceptionTranslator must not be null!");
+		Assert.notNull(referenceLoader, "ReferenceLoader must not be null");
+		Assert.notNull(exceptionTranslator, "ExceptionTranslator must not be null");
 
 		this.referenceLoader = referenceLoader;
 		this.proxyFactory = new LazyLoadingProxyFactory(exceptionTranslator);

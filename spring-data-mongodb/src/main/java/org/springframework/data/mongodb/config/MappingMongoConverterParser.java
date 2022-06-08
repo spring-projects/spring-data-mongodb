@@ -255,7 +255,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 				&& Boolean.parseBoolean(abbreviateFieldNames);
 
 		if (fieldNamingStrategyReferenced && abbreviationActivated) {
-			context.error("Field name abbreviation cannot be activated if a field-naming-strategy-ref is configured!",
+			context.error("Field name abbreviation cannot be activated if a field-naming-strategy-ref is configured",
 					element);
 			return;
 		}

@@ -642,7 +642,7 @@ public class ReactivePerformanceTests {
 
 	private static <T> List<T> pickRandomNumerOfItemsFrom(List<T> source) {
 
-		Assert.isTrue(!source.isEmpty(), "Source must not be empty!");
+		Assert.isTrue(!source.isEmpty(), "Source must not be empty");
 
 		Random random = new Random();
 		int numberOfItems = random.nextInt(source.size());

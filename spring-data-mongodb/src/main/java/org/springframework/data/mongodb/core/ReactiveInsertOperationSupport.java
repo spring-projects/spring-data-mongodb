@@ -41,7 +41,7 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 	@Override
 	public <T> ReactiveInsert<T> insert(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ReactiveInsertSupport<>(template, domainType, null);
 	}
@@ -62,7 +62,7 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		@Override
 		public Mono<T> one(T object) {
 
-			Assert.notNull(object, "Object must not be null!");
+			Assert.notNull(object, "Object must not be null");
 
 			return template.insert(object, getCollectionName());
 		}
@@ -70,7 +70,7 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		@Override
 		public Flux<T> all(Collection<? extends T> objects) {
 
-			Assert.notNull(objects, "Objects must not be null!");
+			Assert.notNull(objects, "Objects must not be null");
 
 			return template.insert(objects, getCollectionName());
 		}
@@ -78,7 +78,7 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		@Override
 		public ReactiveInsert<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty.");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ReactiveInsertSupport<>(template, domainType, collection);
 		}

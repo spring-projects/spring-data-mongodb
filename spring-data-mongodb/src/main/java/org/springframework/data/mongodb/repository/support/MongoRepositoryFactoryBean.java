@@ -99,7 +99,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	public void afterPropertiesSet() {
 
 		super.afterPropertiesSet();
-		Assert.state(operations != null, "MongoTemplate must not be null!");
+		Assert.state(operations != null, "MongoTemplate must not be null");
 
 		if (!mappingContextConfigured) {
 			setMappingContext(operations.getConverter().getMappingContext());

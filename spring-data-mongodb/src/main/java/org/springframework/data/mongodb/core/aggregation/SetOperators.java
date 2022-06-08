@@ -65,7 +65,7 @@ public class SetOperators {
 		 */
 		public SetOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -77,7 +77,7 @@ public class SetOperators {
 		 */
 		public SetOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -261,7 +261,7 @@ public class SetOperators {
 		 */
 		public static SetEquals arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetEquals(asFields(arrayReference));
 		}
 
@@ -273,7 +273,7 @@ public class SetOperators {
 		 */
 		public static SetEquals arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetEquals(Collections.singletonList(expression));
 		}
 
@@ -285,7 +285,7 @@ public class SetOperators {
 		 */
 		public SetEquals isEqualTo(String... arrayReferences) {
 
-			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
+			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
 			return new SetEquals(append(Fields.fields(arrayReferences).asList()));
 		}
 
@@ -297,7 +297,7 @@ public class SetOperators {
 		 */
 		public SetEquals isEqualTo(AggregationExpression... expressions) {
 
-			Assert.notNull(expressions, "Expressions must not be null!");
+			Assert.notNull(expressions, "Expressions must not be null");
 			return new SetEquals(append(Arrays.asList(expressions)));
 		}
 
@@ -309,7 +309,7 @@ public class SetOperators {
 		 */
 		public SetEquals isEqualTo(Object[] array) {
 
-			Assert.notNull(array, "Array must not be null!");
+			Assert.notNull(array, "Array must not be null");
 			return new SetEquals(append(array));
 		}
 	}
@@ -338,7 +338,7 @@ public class SetOperators {
 		 */
 		public static SetIntersection arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetIntersection(asFields(arrayReference));
 		}
 
@@ -350,7 +350,7 @@ public class SetOperators {
 		 */
 		public static SetIntersection arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetIntersection(Collections.singletonList(expression));
 		}
 
@@ -362,7 +362,7 @@ public class SetOperators {
 		 */
 		public SetIntersection intersects(String... arrayReferences) {
 
-			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
+			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
 			return new SetIntersection(append(asFields(arrayReferences)));
 		}
 
@@ -374,7 +374,7 @@ public class SetOperators {
 		 */
 		public SetIntersection intersects(AggregationExpression... expressions) {
 
-			Assert.notNull(expressions, "Expressions must not be null!");
+			Assert.notNull(expressions, "Expressions must not be null");
 			return new SetIntersection(append(Arrays.asList(expressions)));
 		}
 	}
@@ -403,7 +403,7 @@ public class SetOperators {
 		 */
 		public static SetUnion arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetUnion(asFields(arrayReference));
 		}
 
@@ -415,7 +415,7 @@ public class SetOperators {
 		 */
 		public static SetUnion arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetUnion(Collections.singletonList(expression));
 		}
 
@@ -427,7 +427,7 @@ public class SetOperators {
 		 */
 		public SetUnion union(String... arrayReferences) {
 
-			Assert.notNull(arrayReferences, "ArrayReferences must not be null!");
+			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
 			return new SetUnion(append(asFields(arrayReferences)));
 		}
 
@@ -439,7 +439,7 @@ public class SetOperators {
 		 */
 		public SetUnion union(AggregationExpression... expressions) {
 
-			Assert.notNull(expressions, "Expressions must not be null!");
+			Assert.notNull(expressions, "Expressions must not be null");
 			return new SetUnion(append(Arrays.asList(expressions)));
 		}
 	}
@@ -468,7 +468,7 @@ public class SetOperators {
 		 */
 		public static SetDifference arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetDifference(asFields(arrayReference));
 		}
 
@@ -480,7 +480,7 @@ public class SetOperators {
 		 */
 		public static SetDifference arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetDifference(Collections.singletonList(expression));
 		}
 
@@ -492,7 +492,7 @@ public class SetOperators {
 		 */
 		public SetDifference differenceTo(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetDifference(append(Fields.field(arrayReference)));
 		}
 
@@ -504,7 +504,7 @@ public class SetOperators {
 		 */
 		public SetDifference differenceTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetDifference(append(expression));
 		}
 	}
@@ -533,7 +533,7 @@ public class SetOperators {
 		 */
 		public static SetIsSubset arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetIsSubset(asFields(arrayReference));
 		}
 
@@ -545,7 +545,7 @@ public class SetOperators {
 		 */
 		public static SetIsSubset arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetIsSubset(Collections.singletonList(expression));
 		}
 
@@ -557,7 +557,7 @@ public class SetOperators {
 		 */
 		public SetIsSubset isSubsetOf(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new SetIsSubset(append(Fields.field(arrayReference)));
 		}
 
@@ -569,7 +569,7 @@ public class SetOperators {
 		 */
 		public SetIsSubset isSubsetOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new SetIsSubset(append(expression));
 		}
 	}
@@ -598,7 +598,7 @@ public class SetOperators {
 		 */
 		public static AnyElementTrue arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new AnyElementTrue(asFields(arrayReference));
 		}
 
@@ -610,7 +610,7 @@ public class SetOperators {
 		 */
 		public static AnyElementTrue arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new AnyElementTrue(Collections.singletonList(expression));
 		}
 
@@ -643,7 +643,7 @@ public class SetOperators {
 		 */
 		public static AllElementsTrue arrayAsSet(String arrayReference) {
 
-			Assert.notNull(arrayReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayReference, "ArrayReference must not be null");
 			return new AllElementsTrue(asFields(arrayReference));
 		}
 
@@ -655,7 +655,7 @@ public class SetOperators {
 		 */
 		public static AllElementsTrue arrayAsSet(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new AllElementsTrue(Collections.singletonList(expression));
 		}
 

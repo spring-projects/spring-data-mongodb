@@ -42,7 +42,7 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 	 */
 	public GeoJsonGeometryCollection(List<GeoJson<?>> geometries) {
 
-		Assert.notNull(geometries, "Geometries must not be null!");
+		Assert.notNull(geometries, "Geometries must not be null");
 
 		this.geometries.addAll(geometries);
 	}

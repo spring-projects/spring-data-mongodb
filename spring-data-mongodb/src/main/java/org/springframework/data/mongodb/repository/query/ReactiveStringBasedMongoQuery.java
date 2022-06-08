@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
  */
 public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
-	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
+	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time";
 	private static final Log LOG = LogFactory.getLog(ReactiveStringBasedMongoQuery.class);
 
 	private final String query;
@@ -85,8 +85,8 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(expressionParser, "SpelExpressionParser must not be null");
 
 		this.query = query;
 		this.expressionParser = expressionParser;

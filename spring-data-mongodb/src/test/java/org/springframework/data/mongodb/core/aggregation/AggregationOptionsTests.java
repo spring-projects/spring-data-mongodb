@@ -41,7 +41,7 @@ class AggregationOptionsTests {
 		aggregationOptions = newAggregationOptions().explain(true) //
 				.cursorBatchSize(1) //
 				.allowDiskUse(true) //
-				.comment("hola!") //
+				.comment("hola") //
 				.hint(dummyHint) //
 				.build();
 	}
@@ -62,7 +62,7 @@ class AggregationOptionsTests {
 		document.put("cursor", new Document("batchSize", 1));
 		document.put("explain", true);
 		document.put("allowDiskUse", true);
-		document.put("comment", "hola!");
+		document.put("comment", "hola");
 		document.put("hint", dummyHint);
 
 		aggregationOptions = AggregationOptions.fromDocument(document);
@@ -71,7 +71,7 @@ class AggregationOptionsTests {
 		assertThat(aggregationOptions.isExplain()).isTrue();
 		assertThat(aggregationOptions.getCursor()).contains(new Document("batchSize", 1));
 		assertThat(aggregationOptions.getCursorBatchSize()).isEqualTo(1);
-		assertThat(aggregationOptions.getComment()).contains("hola!");
+		assertThat(aggregationOptions.getComment()).contains("hola");
 		assertThat(aggregationOptions.getHint()).contains(dummyHint);
 	}
 
@@ -80,6 +80,6 @@ class AggregationOptionsTests {
 
 		assertThat(aggregationOptions.toDocument()).isEqualTo(Document
 				.parse("{ " + "\"allowDiskUse\" : true , " + "\"explain\" : true , " + "\"cursor\" : { \"batchSize\" : 1}, "
-						+ "\"comment\": \"hola!\", " + "\"hint\" : { \"dummyField\" : 1}" + "}"));
+						+ "\"comment\": \"hola\", " + "\"hint\" : { \"dummyField\" : 1}" + "}"));
 	}
 }

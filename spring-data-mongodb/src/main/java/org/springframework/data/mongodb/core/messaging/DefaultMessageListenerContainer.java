@@ -86,8 +86,8 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	public DefaultMessageListenerContainer(MongoTemplate template, Executor taskExecutor,
 			@Nullable ErrorHandler errorHandler) {
 
-		Assert.notNull(template, "Template must not be null!");
-		Assert.notNull(taskExecutor, "TaskExecutor must not be null!");
+		Assert.notNull(template, "Template must not be null");
+		Assert.notNull(taskExecutor, "TaskExecutor must not be null");
 
 		this.taskExecutor = taskExecutor;
 		this.taskFactory = new TaskFactory(template);
@@ -279,7 +279,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		public void handleError(Throwable t) {
 
 			if (logger.isErrorEnabled()) {
-				logger.error("Unexpected error occurred while listening to MongoDB.", t);
+				logger.error("Unexpected error occurred while listening to MongoDB", t);
 			}
 
 			delegate.handleError(t);

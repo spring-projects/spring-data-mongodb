@@ -65,7 +65,7 @@ public class ObjectOperators {
 		 */
 		public ObjectOperatorFactory(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 
 			this.value = value;
 		}

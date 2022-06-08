@@ -64,8 +64,8 @@ public class GeoNearOperation implements AggregationOperation {
 	 */
 	private GeoNearOperation(NearQuery nearQuery, String distanceField, @Nullable String indexKey) {
 
-		Assert.notNull(nearQuery, "NearQuery must not be null.");
-		Assert.hasLength(distanceField, "Distance field must not be null or empty.");
+		Assert.notNull(nearQuery, "NearQuery must not be null");
+		Assert.hasLength(distanceField, "Distance field must not be null or empty");
 
 		this.nearQuery = nearQuery;
 		this.distanceField = distanceField;

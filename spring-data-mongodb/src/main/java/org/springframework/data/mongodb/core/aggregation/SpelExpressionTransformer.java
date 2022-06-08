@@ -94,9 +94,9 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 */
 	public Object transform(String expression, AggregationOperationContext context, Object... params) {
 
-		Assert.notNull(expression, "Expression must not be null!");
-		Assert.notNull(context, "AggregationOperationContext must not be null!");
-		Assert.notNull(params, "Parameters must not be null!");
+		Assert.notNull(expression, "Expression must not be null");
+		Assert.notNull(context, "AggregationOperationContext must not be null");
+		Assert.notNull(params, "Parameters must not be null");
 
 		SpelExpression spelExpression = (SpelExpression) PARSER.parseExpression(expression);
 		ExpressionState state = new ExpressionState(new StandardEvaluationContext(params), CONFIG);
@@ -126,7 +126,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		throw new IllegalArgumentException("Unsupported Element: " + node + " Type: " + node.getClass()
-				+ " You probably have a syntax error in your SpEL expression!");
+				+ " You probably have a syntax error in your SpEL expression");
 	}
 
 	/**
@@ -149,7 +149,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		@SuppressWarnings("unchecked")
 		public ExpressionNodeConversion(AggregationExpressionTransformer transformer) {
 
-			Assert.notNull(transformer, "Transformer must not be null!");
+			Assert.notNull(transformer, "Transformer must not be null");
 
 			this.nodeType = (Class<? extends ExpressionNode>) GenericTypeResolver.resolveTypeArgument(this.getClass(),
 					ExpressionNodeConversion.class);
@@ -176,8 +176,8 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 */
 		protected Object transform(ExpressionNode node, AggregationExpressionTransformationContext<?> context) {
 
-			Assert.notNull(node, "ExpressionNode must not be null!");
-			Assert.notNull(context, "AggregationExpressionTransformationContext must not be null!");
+			Assert.notNull(node, "ExpressionNode must not be null");
+			Assert.notNull(context, "AggregationExpressionTransformationContext must not be null");
 
 			return transform(node, context.getParentNode(), null, context);
 		}
@@ -195,8 +195,8 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		protected Object transform(ExpressionNode node, @Nullable ExpressionNode parent, @Nullable Document operation,
 				AggregationExpressionTransformationContext<?> context) {
 
-			Assert.notNull(node, "ExpressionNode must not be null!");
-			Assert.notNull(context, "AggregationExpressionTransformationContext must not be null!");
+			Assert.notNull(node, "ExpressionNode must not be null");
+			Assert.notNull(context, "AggregationExpressionTransformationContext must not be null");
 
 			return transform(new AggregationExpressionTransformationContext<ExpressionNode>(node, parent, operation,
 					context.getAggregationContext()));
@@ -433,7 +433,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			MethodReferenceNode node = context.getCurrentNode();
 			AggregationMethodReference methodReference = node.getMethodReference();
 
-			Assert.state(methodReference != null, "Cannot resolve current node to AggregationMethodReference!");
+			Assert.state(methodReference != null, "Cannot resolve current node to AggregationMethodReference");
 
 			Object args = null;
 

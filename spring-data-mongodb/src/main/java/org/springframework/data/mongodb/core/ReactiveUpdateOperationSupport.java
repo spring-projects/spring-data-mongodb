@@ -45,7 +45,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 	@Override
 	public <T> ReactiveUpdate<T> update(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType);
 	}
@@ -82,7 +82,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.UpdateDefinition update) {
 
-			Assert.notNull(update, "Update must not be null!");
+			Assert.notNull(update, "Update must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
 					findAndReplaceOptions, replacement, targetType);
@@ -91,7 +91,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public UpdateWithQuery<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty!");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
 					findAndReplaceOptions, replacement, targetType);
@@ -127,7 +127,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public UpdateWithUpdate<T> matching(Query query) {
 
-			Assert.notNull(query, "Query must not be null!");
+			Assert.notNull(query, "Query must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
 					findAndReplaceOptions, replacement, targetType);
@@ -141,7 +141,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
-			Assert.notNull(options, "Options must not be null!");
+			Assert.notNull(options, "Options must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, options,
 					findAndReplaceOptions, replacement, targetType);
@@ -150,7 +150,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public FindAndReplaceWithProjection<T> replaceWith(T replacement) {
 
-			Assert.notNull(replacement, "Replacement must not be null!");
+			Assert.notNull(replacement, "Replacement must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
 					findAndReplaceOptions, replacement, targetType);
@@ -159,7 +159,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public FindAndReplaceWithProjection<T> withOptions(FindAndReplaceOptions options) {
 
-			Assert.notNull(options, "Options must not be null!");
+			Assert.notNull(options, "Options must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions, options,
 					replacement, targetType);
@@ -168,7 +168,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public <R> FindAndReplaceWithOptions<R> as(Class<R> resultType) {
 
-			Assert.notNull(resultType, "ResultType must not be null!");
+			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
 					findAndReplaceOptions, replacement, resultType);

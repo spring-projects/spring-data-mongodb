@@ -49,7 +49,7 @@ class CriteriaValidator implements Validator {
 	 */
 	static CriteriaValidator of(CriteriaDefinition criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 
 		return new CriteriaValidator(criteria);
 	}

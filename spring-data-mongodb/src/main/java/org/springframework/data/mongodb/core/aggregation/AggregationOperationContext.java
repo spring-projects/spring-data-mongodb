@@ -86,7 +86,7 @@ public interface AggregationOperationContext {
 	 */
 	default Fields getFields(Class<?> type) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 
 		return Fields.fields(Arrays.stream(BeanUtils.getPropertyDescriptors(type)) //
 				.filter(it -> { // object and default methods

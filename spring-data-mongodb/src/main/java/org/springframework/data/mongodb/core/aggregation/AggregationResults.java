@@ -48,8 +48,8 @@ public class AggregationResults<T> implements Iterable<T> {
 	 */
 	public AggregationResults(List<T> mappedResults, Document rawResults) {
 
-		Assert.notNull(mappedResults, "List of mapped results must not be null!");
-		Assert.notNull(rawResults, "Raw results must not be null!");
+		Assert.notNull(mappedResults, "List of mapped results must not be null");
+		Assert.notNull(rawResults, "Raw results must not be null");
 
 		this.mappedResults = Collections.unmodifiableList(mappedResults);
 		this.rawResults = rawResults;
@@ -73,7 +73,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	 */
 	@Nullable
 	public T getUniqueMappedResult() {
-		Assert.isTrue(mappedResults.size() < 2, "Expected unique result or null, but got more than one!");
+		Assert.isTrue(mappedResults.size() < 2, "Expected unique result or null, but got more than one");
 		return mappedResults.size() == 1 ? mappedResults.get(0) : null;
 	}
 

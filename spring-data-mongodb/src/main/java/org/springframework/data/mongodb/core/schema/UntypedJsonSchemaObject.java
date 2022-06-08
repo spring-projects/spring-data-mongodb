@@ -208,7 +208,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		Restrictions possibleValues(Collection<? extends Object> possibleValues) {
 
-			Assert.notNull(possibleValues, "PossibleValues must not be null!");
+			Assert.notNull(possibleValues, "PossibleValues must not be null");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
 		}
 
@@ -218,7 +218,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		Restrictions allOf(Collection<JsonSchemaObject> allOf) {
 
-			Assert.notNull(allOf, "AllOf must not be null!");
+			Assert.notNull(allOf, "AllOf must not be null");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
 		}
 
@@ -228,7 +228,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		Restrictions anyOf(Collection<JsonSchemaObject> anyOf) {
 
-			Assert.notNull(anyOf, "AnyOf must not be null!");
+			Assert.notNull(anyOf, "AnyOf must not be null");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
 		}
 
@@ -238,7 +238,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		Restrictions oneOf(Collection<JsonSchemaObject> oneOf) {
 
-			Assert.notNull(oneOf, "OneOf must not be null!");
+			Assert.notNull(oneOf, "OneOf must not be null");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
 		}
 
@@ -248,7 +248,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 */
 		Restrictions notMatch(JsonSchemaObject notMatch) {
 
-			Assert.notNull(notMatch, "NotMatch must not be null!");
+			Assert.notNull(notMatch, "NotMatch must not be null");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);
 		}
 

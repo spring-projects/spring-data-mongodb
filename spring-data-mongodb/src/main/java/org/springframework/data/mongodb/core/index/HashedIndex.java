@@ -32,7 +32,7 @@ public class HashedIndex implements IndexDefinition {
 
 	private HashedIndex(String field) {
 
-		Assert.hasText(field, "Field must not be null nor empty!");
+		Assert.hasText(field, "Field must not be null nor empty");
 		this.field = field;
 	}
 

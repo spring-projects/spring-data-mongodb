@@ -87,7 +87,7 @@ public class ArrayOperators {
 		 */
 		public ArrayOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 			this.values = null;
@@ -100,7 +100,7 @@ public class ArrayOperators {
 		 */
 		public ArrayOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 			this.values = null;
@@ -114,7 +114,7 @@ public class ArrayOperators {
 		 */
 		public ArrayOperatorFactory(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			this.fieldReference = null;
 			this.expression = null;
 			this.values = values;
@@ -140,7 +140,7 @@ public class ArrayOperators {
 		 */
 		public ArrayElemAt elementAt(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createArrayElemAt().elementAt(expression);
 		}
 
@@ -153,7 +153,7 @@ public class ArrayOperators {
 		 */
 		public ArrayElemAt elementAt(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createArrayElemAt().elementAt(fieldReference);
 		}
 
@@ -175,7 +175,7 @@ public class ArrayOperators {
 		 */
 		public ConcatArrays concat(String arrayFieldReference) {
 
-			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null!");
+			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null");
 			return createConcatArrays().concat(arrayFieldReference);
 		}
 
@@ -188,7 +188,7 @@ public class ArrayOperators {
 		 */
 		public ConcatArrays concat(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createConcatArrays().concat(expression);
 		}
 
@@ -213,7 +213,7 @@ public class ArrayOperators {
 				return Filter.filter(fieldReference);
 			}
 
-			Assert.state(values != null, "Values must not be null!");
+			Assert.state(values != null, "Values must not be null");
 			return Filter.filter(new ArrayList<>(values));
 		}
 
@@ -224,7 +224,7 @@ public class ArrayOperators {
 		 */
 		public IsArray isArray() {
 
-			Assert.state(values == null, "Does it make sense to call isArray on an array? Maybe just skip it?");
+			Assert.state(values == null, "Does it make sense to call isArray on an array; Maybe just skip it");
 
 			return usesFieldRef() ? IsArray.isArray(fieldReference) : IsArray.isArray(expression);
 		}
@@ -363,7 +363,7 @@ public class ArrayOperators {
 
 			return usesExpression() ? ArrayToObject.arrayValueOfToObject(expression) : ArrayToObject.arrayToObject(values);
 		}
-		
+
 		/**
 		 * Creates new {@link AggregationExpression} that return the first element in the associated array.
 		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
@@ -379,7 +379,7 @@ public class ArrayOperators {
 
 			return usesExpression() ? First.firstOf(expression) : First.first(values);
 		}
-		
+
 		/**
 		 * Creates new {@link AggregationExpression} that return the last element in the given array.
 		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
@@ -450,7 +450,7 @@ public class ArrayOperators {
 		 */
 		public static ArrayElemAt arrayOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ArrayElemAt(asFields(fieldReference));
 		}
 
@@ -462,7 +462,7 @@ public class ArrayOperators {
 		 */
 		public static ArrayElemAt arrayOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ArrayElemAt(Collections.singletonList(expression));
 		}
 
@@ -475,7 +475,7 @@ public class ArrayOperators {
 		 */
 		public static ArrayElemAt arrayOf(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			return new ArrayElemAt(Collections.singletonList(values));
 		}
 
@@ -497,7 +497,7 @@ public class ArrayOperators {
 		 */
 		public ArrayElemAt elementAt(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ArrayElemAt(append(expression));
 		}
 
@@ -509,7 +509,7 @@ public class ArrayOperators {
 		 */
 		public ArrayElemAt elementAt(String arrayFieldReference) {
 
-			Assert.notNull(arrayFieldReference, "ArrayReference must not be null!");
+			Assert.notNull(arrayFieldReference, "ArrayReference must not be null");
 			return new ArrayElemAt(append(Fields.field(arrayFieldReference)));
 		}
 	}
@@ -538,7 +538,7 @@ public class ArrayOperators {
 		 */
 		public static ConcatArrays arrayOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ConcatArrays(asFields(fieldReference));
 		}
 
@@ -550,7 +550,7 @@ public class ArrayOperators {
 		 */
 		public static ConcatArrays arrayOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ConcatArrays(Collections.singletonList(expression));
 		}
 
@@ -563,7 +563,7 @@ public class ArrayOperators {
 		 */
 		public static ConcatArrays arrayOf(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			return new ConcatArrays(Collections.singletonList(values));
 		}
 
@@ -575,7 +575,7 @@ public class ArrayOperators {
 		 */
 		public ConcatArrays concat(String arrayFieldReference) {
 
-			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null!");
+			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null");
 			return new ConcatArrays(append(Fields.field(arrayFieldReference)));
 		}
 
@@ -587,7 +587,7 @@ public class ArrayOperators {
 		 */
 		public ConcatArrays concat(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ConcatArrays(append(expression));
 		}
 	}
@@ -617,7 +617,7 @@ public class ArrayOperators {
 		 */
 		public static AsBuilder filter(String field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			return filter(Fields.field(field));
 		}
 
@@ -629,7 +629,7 @@ public class ArrayOperators {
 		 */
 		public static AsBuilder filter(Field field) {
 
-			Assert.notNull(field, "Field must not be null!");
+			Assert.notNull(field, "Field must not be null");
 			return new FilterExpressionBuilder().filter(field);
 		}
 
@@ -641,7 +641,7 @@ public class ArrayOperators {
 		 */
 		public static AsBuilder filter(List<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			return new FilterExpressionBuilder().filter(values);
 		}
 
@@ -768,7 +768,7 @@ public class ArrayOperators {
 			@Override
 			public AsBuilder filter(List<?> array) {
 
-				Assert.notNull(array, "Array must not be null!");
+				Assert.notNull(array, "Array must not be null");
 				filter.input = new ArrayList<Object>(array);
 				return this;
 			}
@@ -776,7 +776,7 @@ public class ArrayOperators {
 			@Override
 			public AsBuilder filter(Field field) {
 
-				Assert.notNull(field, "Field must not be null!");
+				Assert.notNull(field, "Field must not be null");
 				filter.input = field;
 				return this;
 			}
@@ -784,7 +784,7 @@ public class ArrayOperators {
 			@Override
 			public ConditionBuilder as(String variableName) {
 
-				Assert.notNull(variableName, "Variable name  must not be null!");
+				Assert.notNull(variableName, "Variable name  must not be null");
 				filter.as = new ExposedField(variableName, true);
 				return this;
 			}
@@ -792,7 +792,7 @@ public class ArrayOperators {
 			@Override
 			public Filter by(AggregationExpression condition) {
 
-				Assert.notNull(condition, "Condition must not be null!");
+				Assert.notNull(condition, "Condition must not be null");
 				filter.condition = condition;
 				return filter;
 			}
@@ -800,7 +800,7 @@ public class ArrayOperators {
 			@Override
 			public Filter by(String expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				filter.condition = expression;
 				return filter;
 			}
@@ -808,7 +808,7 @@ public class ArrayOperators {
 			@Override
 			public Filter by(Document expression) {
 
-				Assert.notNull(expression, "Expression must not be null!");
+				Assert.notNull(expression, "Expression must not be null");
 				filter.condition = expression;
 				return filter;
 			}
@@ -839,7 +839,7 @@ public class ArrayOperators {
 		 */
 		public static IsArray isArray(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new IsArray(Fields.field(fieldReference));
 		}
 
@@ -851,7 +851,7 @@ public class ArrayOperators {
 		 */
 		public static IsArray isArray(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new IsArray(expression);
 		}
 	}
@@ -880,7 +880,7 @@ public class ArrayOperators {
 		 */
 		public static Size lengthOfArray(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Size(Fields.field(fieldReference));
 		}
 
@@ -892,7 +892,7 @@ public class ArrayOperators {
 		 */
 		public static Size lengthOfArray(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Size(expression);
 		}
 
@@ -905,7 +905,7 @@ public class ArrayOperators {
 		 */
 		public static Size lengthOfArray(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			return new Size(Collections.singletonList(values));
 		}
 	}
@@ -934,7 +934,7 @@ public class ArrayOperators {
 		 */
 		public static Slice sliceArrayOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Slice(asFields(fieldReference));
 		}
 
@@ -946,7 +946,7 @@ public class ArrayOperators {
 		 */
 		public static Slice sliceArrayOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Slice(Collections.singletonList(expression));
 		}
 
@@ -959,7 +959,7 @@ public class ArrayOperators {
 		 */
 		public static Slice sliceArrayOf(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			return new Slice(Collections.singletonList(values));
 		}
 
@@ -1029,7 +1029,7 @@ public class ArrayOperators {
 		 */
 		public static IndexOfArrayBuilder arrayOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new IndexOfArrayBuilder(Fields.field(fieldReference));
 		}
 
@@ -1041,7 +1041,7 @@ public class ArrayOperators {
 		 */
 		public static IndexOfArrayBuilder arrayOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new IndexOfArrayBuilder(expression);
 		}
 
@@ -1054,7 +1054,7 @@ public class ArrayOperators {
 		 */
 		public static IndexOfArrayBuilder arrayOf(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 			return new IndexOfArrayBuilder(values);
 		}
 
@@ -1087,7 +1087,7 @@ public class ArrayOperators {
 			 */
 			public IndexOfArray indexOf(Object value) {
 
-				Assert.notNull(value, "Value must not be null!");
+				Assert.notNull(value, "Value must not be null");
 				return new IndexOfArray(Arrays.asList(targetArray, value));
 			}
 		}
@@ -1411,8 +1411,8 @@ public class ArrayOperators {
 
 			protected PropertyExpression(String propertyName, AggregationExpression aggregationExpression) {
 
-				Assert.notNull(propertyName, "Property name must not be null!");
-				Assert.notNull(aggregationExpression, "AggregationExpression must not be null!");
+				Assert.notNull(propertyName, "Property name must not be null");
+				Assert.notNull(aggregationExpression, "AggregationExpression must not be null");
 
 				this.propertyName = propertyName;
 				this.aggregationExpression = aggregationExpression;
@@ -1559,7 +1559,7 @@ public class ArrayOperators {
 		 */
 		public static ZipBuilder arrayOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new ZipBuilder(Fields.field(fieldReference));
 		}
 
@@ -1571,7 +1571,7 @@ public class ArrayOperators {
 		 */
 		public static ZipBuilder arrayOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new ZipBuilder(expression);
 		}
 
@@ -1584,7 +1584,7 @@ public class ArrayOperators {
 		 */
 		public static ZipBuilder arrayOf(Collection<?> values) {
 
-			Assert.notNull(values, "Expression must not be null!");
+			Assert.notNull(values, "Expression must not be null");
 			return new ZipBuilder(values);
 		}
 
@@ -1605,7 +1605,7 @@ public class ArrayOperators {
 		 */
 		public Zip defaultTo(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Zip(append("defaults", Fields.field(fieldReference)));
 		}
 
@@ -1617,7 +1617,7 @@ public class ArrayOperators {
 		 */
 		public Zip defaultTo(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Zip(append("defaults", expression));
 		}
 
@@ -1629,7 +1629,7 @@ public class ArrayOperators {
 		 */
 		public Zip defaultTo(Object[] array) {
 
-			Assert.notNull(array, "Array must not be null!");
+			Assert.notNull(array, "Array must not be null");
 			return new Zip(append("defaults", Arrays.asList(array)));
 		}
 
@@ -1653,7 +1653,7 @@ public class ArrayOperators {
 			 */
 			public Zip zip(Object... arrays) {
 
-				Assert.notNull(arrays, "Arrays must not be null!");
+				Assert.notNull(arrays, "Arrays must not be null");
 				for (Object value : arrays) {
 
 					if (value instanceof String) {
@@ -1696,11 +1696,11 @@ public class ArrayOperators {
 		 */
 		public static InBuilder arrayOf(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 
 			return value -> {
 
-				Assert.notNull(value, "Value must not be null!");
+				Assert.notNull(value, "Value must not be null");
 				return new In(Arrays.asList(value, Fields.field(fieldReference)));
 			};
 		}
@@ -1713,11 +1713,11 @@ public class ArrayOperators {
 		 */
 		public static InBuilder arrayOf(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 
 			return value -> {
 
-				Assert.notNull(value, "Value must not be null!");
+				Assert.notNull(value, "Value must not be null");
 
 				return new In(Arrays.asList(value, expression));
 			};
@@ -1732,11 +1732,11 @@ public class ArrayOperators {
 		 */
 		public static InBuilder arrayOf(Collection<?> values) {
 
-			Assert.notNull(values, "Values must not be null!");
+			Assert.notNull(values, "Values must not be null");
 
 			return value -> {
 
-				Assert.notNull(value, "Value must not be null!");
+				Assert.notNull(value, "Value must not be null");
 
 				return new In(Arrays.asList(value, values));
 			};
@@ -1807,7 +1807,7 @@ public class ArrayOperators {
 			return "$arrayToObject";
 		}
 	}
-	
+
 	/**
 	 * {@link AggregationExpression} for {@code $first} that returns the first element in an array. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
@@ -1861,7 +1861,7 @@ public class ArrayOperators {
 			return "$first";
 		}
 	}
-	
+
 	/**
 	 * {@link AggregationExpression} for {@code $last} that returns the last element in an array. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.

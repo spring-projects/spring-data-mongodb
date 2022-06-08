@@ -183,7 +183,7 @@ class CountQuery {
 				criteria.addAll((Collection) $and);
 			} else {
 				throw new IllegalArgumentException(
-						"Cannot rewrite query as it contains an '$and' element that is not a Collection!: Offending element: "
+						"Cannot rewrite query as it contains an '$and' element that is not a Collection: Offending element: "
 								+ $and);
 			}
 		}

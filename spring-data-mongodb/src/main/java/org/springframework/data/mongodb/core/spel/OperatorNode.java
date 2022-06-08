@@ -117,7 +117,7 @@ public class OperatorNode extends ExpressionNode {
 
 		if (!OPERATORS.containsKey(operator.getOperatorName())) {
 			throw new IllegalArgumentException(String.format(
-					"Unknown operator name. Cannot translate %s into its MongoDB aggregation function representation.",
+					"Unknown operator name; Cannot translate %s into its MongoDB aggregation function representation",
 					operator.getOperatorName()));
 		}
 

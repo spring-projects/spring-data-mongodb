@@ -38,7 +38,7 @@ class SimpleMessage<S, T> implements Message<S, T> {
 	 */
 	SimpleMessage(@Nullable S raw, @Nullable T body, MessageProperties properties) {
 
-		Assert.notNull(properties, "Properties must not be null! Use MessageProperties.empty() instead.");
+		Assert.notNull(properties, "Properties must not be null Use MessageProperties.empty() instead");
 
 		this.raw = raw;
 		this.body = body;

@@ -52,7 +52,7 @@ public class Field {
 	 */
 	public Field include(String field) {
 
-		Assert.notNull(field, "Key must not be null!");
+		Assert.notNull(field, "Key must not be null");
 
 		criteria.put(field, 1);
 
@@ -124,7 +124,7 @@ public class Field {
 	 */
 	public Field include(String... fields) {
 
-		Assert.notNull(fields, "Keys must not be null!");
+		Assert.notNull(fields, "Keys must not be null");
 
 		for (String key : fields) {
 			criteria.put(key, 1);
@@ -141,7 +141,7 @@ public class Field {
 	 */
 	public Field exclude(String field) {
 
-		Assert.notNull(field, "Key must not be null!");
+		Assert.notNull(field, "Key must not be null");
 
 		criteria.put(field, 0);
 
@@ -157,7 +157,7 @@ public class Field {
 	 */
 	public Field exclude(String... fields) {
 
-		Assert.notNull(fields, "Keys must not be null!");
+		Assert.notNull(fields, "Keys must not be null");
 
 		for (String key : fields) {
 			criteria.put(key, 0);
@@ -175,7 +175,7 @@ public class Field {
 	 */
 	public Field slice(String field, int size) {
 
-		Assert.notNull(field, "Key must not be null!");
+		Assert.notNull(field, "Key must not be null");
 
 		slices.put(field, size);
 
@@ -213,7 +213,7 @@ public class Field {
 	 */
 	public Field position(String field, int value) {
 
-		Assert.hasText(field, "DocumentField must not be null or empty!");
+		Assert.hasText(field, "DocumentField must not be null or empty");
 
 		positionKey = field;
 		positionValue = value;

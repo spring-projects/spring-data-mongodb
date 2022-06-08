@@ -393,7 +393,7 @@ abstract class MongoConverters {
 			 */
 			public NumberToNumberConverter(Class<T> targetType) {
 
-				Assert.notNull(targetType, "Target type must not be null!");
+				Assert.notNull(targetType, "Target type must not be null");
 
 				this.targetType = targetType;
 			}

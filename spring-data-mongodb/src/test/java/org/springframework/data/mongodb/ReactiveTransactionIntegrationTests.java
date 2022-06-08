@@ -259,7 +259,7 @@ public class ReactiveTransactionIntegrationTests {
 					new DefaultTransactionDefinition());
 
 			return operations.save(person) //
-					.<Person> flatMap(it -> Mono.error(new RuntimeException("poof!"))) //
+					.<Person> flatMap(it -> Mono.error(new RuntimeException("poof"))) //
 					.as(transactionalOperator::transactional);
 		}
 
@@ -307,7 +307,7 @@ public class ReactiveTransactionIntegrationTests {
 					operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
 					operations.save(person), //
 					operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
-					.<Void> flatMap(it -> Mono.error(new RuntimeException("poof!"))) //
+					.<Void> flatMap(it -> Mono.error(new RuntimeException("poof"))) //
 					.as(transactionalOperator::transactional);
 		}
 
@@ -331,7 +331,7 @@ public class ReactiveTransactionIntegrationTests {
 			return transactionalOperator.execute(reactiveTransaction -> {
 
 				return operations.save(person) //
-						.<Person> flatMap(it -> Mono.error(new RuntimeException("poof!")));
+						.<Person> flatMap(it -> Mono.error(new RuntimeException("poof")));
 			});
 		}
 	}

@@ -286,7 +286,7 @@ public class CleanMongoDB implements TestRule {
 
 		client.getDatabase(dbName).drop();
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Dropping DB '%s'. ", dbName));
+			LOGGER.debug(String.format("Dropping DB '%s'; ", dbName));
 		}
 		return true;
 	}
@@ -305,13 +305,13 @@ public class CleanMongoDB implements TestRule {
 					if (types.contains(Struct.COLLECTION)) {
 						collection.drop();
 						if(LOGGER.isDebugEnabled()) {
-							LOGGER.debug(String.format("Dropping collection '%s' for DB '%s'. ", collectionName, db.getName()));
+							LOGGER.debug(String.format("Dropping collection '%s' for DB '%s'; ", collectionName, db.getName()));
 						}
 					} else if (types.contains(Struct.INDEX)) {
 						collection.dropIndexes();
 						if(LOGGER.isDebugEnabled()) {
 							LOGGER.debug(
-									String.format("Dropping indexes in collection '%s' for DB '%s'. ", collectionName, db.getName()));
+									String.format("Dropping indexes in collection '%s' for DB '%s'; ", collectionName, db.getName()));
 						}
 					}
 				}

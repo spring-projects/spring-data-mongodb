@@ -43,7 +43,7 @@ import org.springframework.util.ObjectUtils;
  * <br />
  * In other words: <br />
  * Assume you've got 5 Documents like the ones below <br />
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -73,10 +73,10 @@ import org.springframework.util.ObjectUtils;
  * }
  *      </code>
  * </pre>
- * 
+ *
  * Fetching all Documents within a 400 Meter radius from {@code [-73.99171, 40.738868] } would look like this using
  * {@literal GeoJSON}:
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -92,9 +92,9 @@ import org.springframework.util.ObjectUtils;
  *
  *     </code>
  * </pre>
- * 
+ *
  * resulting in the following 3 Documents.
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -117,11 +117,11 @@ import org.springframework.util.ObjectUtils;
  * }
  *     </code>
  * </pre>
- * 
+ *
  * Using legacy coordinate pairs one operates upon radians as discussed before. Assume we use {@link Metrics#KILOMETERS}
  * when constructing the geoNear command. The {@link Metric} will make sure the distance multiplier is set correctly, so
  * the command is rendered like
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -137,12 +137,12 @@ import org.springframework.util.ObjectUtils;
  * }
  *     </code>
  * </pre>
- * 
+ *
  * Please note the calculated distance now uses {@literal Kilometers} instead of {@literal Meters} as unit of measure,
  * so we need to take it times 1000 to match up to {@literal Meters} as in the {@literal GeoJSON} variant. <br />
  * Still as we've been requesting the {@link Distance} in {@link Metrics#KILOMETERS} the {@link Distance#getValue()}
  * reflects exactly this.
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -190,8 +190,8 @@ public final class NearQuery {
 	 */
 	private NearQuery(Point point, Metric metric) {
 
-		Assert.notNull(point, "Point must not be null!");
-		Assert.notNull(metric, "Metric must not be null!");
+		Assert.notNull(point, "Point must not be null");
+		Assert.notNull(metric, "Metric must not be null");
 
 		this.point = point;
 		this.spherical = false;
@@ -295,7 +295,7 @@ public final class NearQuery {
 	 */
 	public NearQuery with(Pageable pageable) {
 
-		Assert.notNull(pageable, "Pageable must not be 'null'.");
+		Assert.notNull(pageable, "Pageable must not be 'null'");
 		if (pageable.isPaged()) {
 			this.skip = pageable.getOffset();
 			this.limit = (long) pageable.getPageSize();
@@ -330,7 +330,7 @@ public final class NearQuery {
 	 */
 	public NearQuery maxDistance(double maxDistance, Metric metric) {
 
-		Assert.notNull(metric, "Metric must not be null!");
+		Assert.notNull(metric, "Metric must not be null");
 
 		return maxDistance(new Distance(maxDistance, metric));
 	}
@@ -344,7 +344,7 @@ public final class NearQuery {
 	 */
 	public NearQuery maxDistance(Distance distance) {
 
-		Assert.notNull(distance, "Distance must not be null!");
+		Assert.notNull(distance, "Distance must not be null");
 
 		if (distance.getMetric() != Metrics.NEUTRAL) {
 			this.spherical(true);
@@ -387,7 +387,7 @@ public final class NearQuery {
 	 */
 	public NearQuery minDistance(double minDistance, Metric metric) {
 
-		Assert.notNull(metric, "Metric must not be null!");
+		Assert.notNull(metric, "Metric must not be null");
 
 		return minDistance(new Distance(minDistance, metric));
 	}
@@ -402,7 +402,7 @@ public final class NearQuery {
 	 */
 	public NearQuery minDistance(Distance distance) {
 
-		Assert.notNull(distance, "Distance must not be null!");
+		Assert.notNull(distance, "Distance must not be null");
 
 		if (distance.getMetric() != Metrics.NEUTRAL) {
 			this.spherical(true);
@@ -525,7 +525,7 @@ public final class NearQuery {
 	 */
 	public NearQuery query(Query query) {
 
-		Assert.notNull(query, "Cannot apply 'null' query on NearQuery.");
+		Assert.notNull(query, "Cannot apply 'null' query on NearQuery");
 
 		this.query = query;
 		this.skip = query.getSkip();
@@ -546,7 +546,7 @@ public final class NearQuery {
 
 	/**
 	 * Get the {@link Collation} to use along with the {@link #query(Query)}.
-	 * 
+	 *
 	 * @return the {@link Collation} if set. {@literal null} otherwise.
 	 * @since 2.2
 	 */

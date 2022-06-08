@@ -230,7 +230,7 @@ public class MongoTemplateTests {
 
 		try {
 			template.insert(person);
-			fail("Expected DataIntegrityViolationException!");
+			fail("Expected DataIntegrityViolationException");
 		} catch (DataIntegrityViolationException e) {
 			assertThat(e.getMessage()).contains("E11000 duplicate key error");
 		}
@@ -273,7 +273,7 @@ public class MongoTemplateTests {
 
 		try {
 			template.save(person);
-			fail("Expected DataIntegrityViolationException!");
+			fail("Expected DataIntegrityViolationException");
 		} catch (DataIntegrityViolationException e) {
 			assertThat(e.getMessage()).contains("E11000 duplicate key error");
 		}
@@ -1120,7 +1120,7 @@ public class MongoTemplateTests {
 		assertThat(p2).isNotNull();
 		assertThat(p2.getWishList().size()).isEqualTo(0);
 
-		p2.addToWishList("please work!");
+		p2.addToWishList("please work");
 
 		template.save(p2);
 
@@ -1581,7 +1581,7 @@ public class MongoTemplateTests {
 
 	@Test // DATAMONGO-551
 	public void rejectsNonJsonStringForSave() {
-		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar!", "collection"));
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar", "collection"));
 	}
 
 	@Test // DATAMONGO-588
@@ -3606,13 +3606,13 @@ public class MongoTemplateTests {
 		ImmutableAudited source = new ImmutableAudited(null, null);
 		ImmutableAudited result = template.save(source);
 
-		assertThat(result).isNotSameAs(source).describedAs("Expected a different instances to be returned!");
-		assertThat(result.modified).isNotNull().describedAs("Auditing field must not be null!");
+		assertThat(result).isNotSameAs(source).describedAs("Expected a different instances to be returned");
+		assertThat(result.modified).isNotNull().describedAs("Auditing field must not be null");
 
 		ImmutableAudited read = template.findOne(query(where("id").is(result.getId())), ImmutableAudited.class);
 
 		assertThat(read.modified).isEqualTo(result.modified.truncatedTo(ChronoUnit.MILLIS))
-				.describedAs("Expected auditing information to be read!");
+				.describedAs("Expected auditing information to be read");
 	}
 
 	@Test // DATAMONGO-1798

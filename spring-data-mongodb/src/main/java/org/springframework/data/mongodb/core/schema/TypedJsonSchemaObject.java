@@ -70,7 +70,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 		super(restrictions, description, generateDescription);
 
-		Assert.notNull(types, "Types must not be null! Please consider using 'Collections.emptySet()'.");
+		Assert.notNull(types, "Types must not be null Please consider using 'Collections.emptySet()'");
 
 		this.types = types;
 	}
@@ -83,8 +83,8 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 */
 	public static TypedJsonSchemaObject of(Type... types) {
 
-		Assert.notNull(types, "Types must not be null!");
-		Assert.noNullElements(types, "Types must not contain null!");
+		Assert.notNull(types, "Types must not be null");
+		Assert.noNullElements(types, "Types must not contain null");
 
 		return new TypedJsonSchemaObject(new LinkedHashSet<>(Arrays.asList(types)), null, false, Restrictions.empty());
 	}
@@ -549,7 +549,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 */
 		public NumericJsonSchemaObject multipleOf(Number value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			NumericJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.multipleOf = value;
 
@@ -565,7 +565,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 */
 		public NumericJsonSchemaObject within(Range<? extends Number> range) {
 
-			Assert.notNull(range, "Range must not be null!");
+			Assert.notNull(range, "Range must not be null");
 
 			NumericJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.range = range;
@@ -582,7 +582,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		@SuppressWarnings("unchecked")
 		public NumericJsonSchemaObject gt(Number min) {
 
-			Assert.notNull(min, "Min must not be null!");
+			Assert.notNull(min, "Min must not be null");
 
 			Bound upper = this.range != null ? this.range.getUpperBound() : Bound.unbounded();
 			return within(Range.of(createBound(min, false), upper));
@@ -597,7 +597,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		@SuppressWarnings("unchecked")
 		public NumericJsonSchemaObject gte(Number min) {
 
-			Assert.notNull(min, "Min must not be null!");
+			Assert.notNull(min, "Min must not be null");
 
 			Bound upper = this.range != null ? this.range.getUpperBound() : Bound.unbounded();
 			return within(Range.of(createBound(min, true), upper));
@@ -612,7 +612,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		@SuppressWarnings("unchecked")
 		public NumericJsonSchemaObject lt(Number max) {
 
-			Assert.notNull(max, "Max must not be null!");
+			Assert.notNull(max, "Max must not be null");
 
 			Bound lower = this.range != null ? this.range.getLowerBound() : Bound.unbounded();
 			return within(Range.of(lower, createBound(max, false)));
@@ -627,7 +627,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		@SuppressWarnings("unchecked")
 		public NumericJsonSchemaObject lte(Number max) {
 
-			Assert.notNull(max, "Max must not be null!");
+			Assert.notNull(max, "Max must not be null");
 
 			Bound lower = this.range != null ? this.range.getLowerBound() : Bound.unbounded();
 			return within(Range.of(lower, createBound(max, true)));
@@ -730,14 +730,14 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 				return inclusive ? Bound.inclusive((BigDecimal) number) : Bound.exclusive((BigDecimal) number);
 			}
 
-			throw new IllegalArgumentException("Unsupported numeric value.");
+			throw new IllegalArgumentException("Unsupported numeric value");
 		}
 
 		private static Set<Type> validateTypes(Set<Type> types) {
 
 			types.forEach(type -> {
 				Assert.isTrue(NUMERIC_TYPES.contains(type),
-						() -> String.format("%s is not a valid numeric type. Expected one of %s.", type, NUMERIC_TYPES));
+						() -> String.format("%s is not a valid numeric type; Expected one of %s", type, NUMERIC_TYPES));
 			});
 
 			return types;
@@ -789,7 +789,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 */
 		public StringJsonSchemaObject length(Range<Integer> range) {
 
-			Assert.notNull(range, "Range must not be null!");
+			Assert.notNull(range, "Range must not be null");
 
 			StringJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.length = range;
@@ -829,7 +829,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 */
 		public StringJsonSchemaObject matching(String pattern) {
 
-			Assert.notNull(pattern, "Pattern must not be null!");
+			Assert.notNull(pattern, "Pattern must not be null");
 
 			StringJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
 			newInstance.pattern = pattern;
@@ -1185,7 +1185,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 		@Override
 		protected String generateDescription() {
-			return "Must be a boolean.";
+			return "Must be a boolean";
 		}
 	}
 
@@ -1246,7 +1246,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 		@Override
 		protected String generateDescription() {
-			return "Must be null.";
+			return "Must be null";
 		}
 	}
 
@@ -1306,7 +1306,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 		@Override
 		protected String generateDescription() {
-			return "Must be a date.";
+			return "Must be a date";
 		}
 	}
 
@@ -1367,7 +1367,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 		@Override
 		protected String generateDescription() {
-			return "Must be a timestamp.";
+			return "Must be a timestamp";
 		}
 	}
 }

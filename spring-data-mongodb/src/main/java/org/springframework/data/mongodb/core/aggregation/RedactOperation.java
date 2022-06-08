@@ -63,7 +63,7 @@ public class RedactOperation implements AggregationOperation {
 	 */
 	public RedactOperation(AggregationExpression condition) {
 
-		Assert.notNull(condition, "Condition must not be null!");
+		Assert.notNull(condition, "Condition must not be null");
 		this.condition = condition;
 	}
 
@@ -237,7 +237,7 @@ public class RedactOperation implements AggregationOperation {
 			}
 
 			throw new IllegalArgumentException(String.format(
-					"Invalid Condition. Expected CriteriaDefinition, AggregationExpression or Document but was %s.", when));
+					"Invalid Condition; Expected CriteriaDefinition, AggregationExpression or Document but was %s", when));
 		}
 	}
 }

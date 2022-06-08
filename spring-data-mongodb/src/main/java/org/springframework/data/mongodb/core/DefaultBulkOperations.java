@@ -90,9 +90,9 @@ class DefaultBulkOperations implements BulkOperations {
 	DefaultBulkOperations(MongoOperations mongoOperations, String collectionName,
 			BulkOperationContext bulkOperationContext) {
 
-		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
-		Assert.hasText(collectionName, "CollectionName must not be null nor empty!");
-		Assert.notNull(bulkOperationContext, "BulkOperationContext must not be null!");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null");
+		Assert.hasText(collectionName, "CollectionName must not be null nor empty");
+		Assert.notNull(bulkOperationContext, "BulkOperationContext must not be null");
 
 		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;
@@ -112,7 +112,7 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations insert(Object document) {
 
-		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(document, "Document must not be null");
 
 		maybeEmitEvent(new BeforeConvertEvent<>(document, collectionName));
 		Object source = maybeInvokeBeforeConvertCallback(document);
@@ -124,7 +124,7 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations insert(List<? extends Object> documents) {
 
-		Assert.notNull(documents, "Documents must not be null!");
+		Assert.notNull(documents, "Documents must not be null");
 
 		documents.forEach(this::insert);
 
@@ -135,8 +135,8 @@ class DefaultBulkOperations implements BulkOperations {
 	@SuppressWarnings("unchecked")
 	public BulkOperations updateOne(Query query, Update update) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(update, "Update must not be null!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(update, "Update must not be null");
 
 		return updateOne(Collections.singletonList(Pair.of(query, update)));
 	}
@@ -144,7 +144,7 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations updateOne(List<Pair<Query, Update>> updates) {
 
-		Assert.notNull(updates, "Updates must not be null!");
+		Assert.notNull(updates, "Updates must not be null");
 
 		for (Pair<Query, Update> update : updates) {
 			update(update.getFirst(), update.getSecond(), false, false);
@@ -157,8 +157,8 @@ class DefaultBulkOperations implements BulkOperations {
 	@SuppressWarnings("unchecked")
 	public BulkOperations updateMulti(Query query, Update update) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(update, "Update must not be null!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(update, "Update must not be null");
 
 		return updateMulti(Collections.singletonList(Pair.of(query, update)));
 	}
@@ -166,7 +166,7 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations updateMulti(List<Pair<Query, Update>> updates) {
 
-		Assert.notNull(updates, "Updates must not be null!");
+		Assert.notNull(updates, "Updates must not be null");
 
 		for (Pair<Query, Update> update : updates) {
 			update(update.getFirst(), update.getSecond(), false, true);
@@ -193,7 +193,7 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations remove(Query query) {
 
-		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(query, "Query must not be null");
 
 		DeleteOptions deleteOptions = new DeleteOptions();
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(deleteOptions::collation);
@@ -206,7 +206,7 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations remove(List<Query> removes) {
 
-		Assert.notNull(removes, "Removals must not be null!");
+		Assert.notNull(removes, "Removals must not be null");
 
 		for (Query query : removes) {
 			remove(query);
@@ -218,9 +218,9 @@ class DefaultBulkOperations implements BulkOperations {
 	@Override
 	public BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(replacement, "Replacement must not be null!");
-		Assert.notNull(options, "Options must not be null!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(replacement, "Replacement must not be null");
+		Assert.notNull(options, "Options must not be null");
 
 		ReplaceOptions replaceOptions = new ReplaceOptions();
 		replaceOptions.upsert(options.isUpsert());
@@ -241,7 +241,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 			com.mongodb.bulk.BulkWriteResult result = mongoOperations.execute(collectionName, this::bulkWriteTo);
 
-			Assert.state(result != null, "Result must not be null.");
+			Assert.state(result != null, "Result must not be null");
 
 			models.forEach(this::maybeEmitAfterSaveEvent);
 			models.forEach(this::maybeInvokeAfterSaveCallback);
@@ -308,8 +308,8 @@ class DefaultBulkOperations implements BulkOperations {
 	 */
 	private BulkOperations update(Query query, Update update, boolean upsert, boolean multi) {
 
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(update, "Update must not be null!");
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(update, "Update must not be null");
 
 		UpdateOptions options = computeUpdateOptions(query, update, upsert);
 
@@ -470,7 +470,7 @@ class DefaultBulkOperations implements BulkOperations {
 				return options.ordered(false);
 		}
 
-		throw new IllegalStateException("BulkMode was null!");
+		throw new IllegalStateException("BulkMode was null");
 	}
 
 	/**

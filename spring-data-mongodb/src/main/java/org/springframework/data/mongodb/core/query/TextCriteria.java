@@ -73,7 +73,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 */
 	public static TextCriteria forLanguage(String language) {
 
-		Assert.hasText(language, "Language must not be null or empty!");
+		Assert.hasText(language, "Language must not be null or empty");
 		return new TextCriteria(language);
 	}
 
@@ -99,7 +99,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 */
 	public TextCriteria matching(Term term) {
 
-		Assert.notNull(term, "Term to add must not be null.");
+		Assert.notNull(term, "Term to add must not be null");
 
 		this.terms.add(term);
 		return this;

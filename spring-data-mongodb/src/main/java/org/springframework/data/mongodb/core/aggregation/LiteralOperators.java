@@ -33,7 +33,7 @@ public class LiteralOperators {
 	 */
 	public static LiteralOperatorFactory valueOf(Object value) {
 
-		Assert.notNull(value, "Value must not be null!");
+		Assert.notNull(value, "Value must not be null");
 		return new LiteralOperatorFactory(value);
 	}
 
@@ -51,7 +51,7 @@ public class LiteralOperators {
 		 */
 		public LiteralOperatorFactory(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			this.value = value;
 		}
 
@@ -89,7 +89,7 @@ public class LiteralOperators {
 		 */
 		public static Literal asLiteral(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Literal(value);
 		}
 	}

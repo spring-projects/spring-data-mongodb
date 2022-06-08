@@ -36,7 +36,7 @@ public interface IndexOperationsAdapter extends IndexOperations {
 	 */
 	static IndexOperationsAdapter blocking(ReactiveIndexOperations reactiveIndexOperations) {
 
-		Assert.notNull(reactiveIndexOperations, "ReactiveIndexOperations must not be null!");
+		Assert.notNull(reactiveIndexOperations, "ReactiveIndexOperations must not be null");
 
 		return new IndexOperationsAdapter() {
 

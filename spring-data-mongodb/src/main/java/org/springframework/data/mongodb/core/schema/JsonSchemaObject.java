@@ -265,7 +265,7 @@ public interface JsonSchemaObject {
 			return of(Type.numberType());
 		}
 
-		throw new IllegalArgumentException(String.format("No JSON schema type found for %s.", type));
+		throw new IllegalArgumentException(String.format("No JSON schema type found for %s", type));
 	}
 
 	/**

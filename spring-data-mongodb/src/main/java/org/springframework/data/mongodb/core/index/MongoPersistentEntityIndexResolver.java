@@ -112,10 +112,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 */
 	public List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> root) {
 
-		Assert.notNull(root, "MongoPersistentEntity must not be null!");
+		Assert.notNull(root, "MongoPersistentEntity must not be null");
 		Document document = root.findAnnotation(Document.class);
 		Assert.notNull(document, () -> String
-				.format("Entity %s is not a collection root. Make sure to annotate it with @Document!", root.getName()));
+				.format("Entity %s is not a collection root; Make sure to annotate it with @Document", root.getName()));
 
 		verifyWildcardIndexedProjection(root);
 
@@ -144,7 +144,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				if (!ObjectUtils.isEmpty(indexed.wildcardProjection())) {
 
 					throw new MappingException(String.format(
-							"WildcardIndexed.wildcardProjection cannot be used on nested paths. Offending property: %s.%s",
+							"WildcardIndexed.wildcardProjection cannot be used on nested paths; Offending property: %s.%s",
 							entity.getName(), it.getName()));
 				}
 			}
@@ -251,7 +251,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				|| persistentProperty.isAnnotationPresent(HashIndexed.class)
 				|| persistentProperty.isAnnotationPresent(GeoSpatialIndexed.class))) {
 			throw new InvalidDataAccessApiUsageException(
-					String.format("Index annotation not allowed on unwrapped object for path '%s'.", dotPath));
+					String.format("Index annotation not allowed on unwrapped object for path '%s'", dotPath));
 		}
 
 		if (persistentProperty.isAnnotationPresent(Indexed.class)) {
@@ -384,7 +384,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage());
 						} catch (InvalidDataAccessApiUsageException e) {
-							LOGGER.info(String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
+							LOGGER.info(String.format("Potentially invalid index structure discovered; Breaking operation for %s",
 									entity.getName()), e);
 						}
 					} else if (includeOptions.isForce() || indexed != null) {
@@ -486,7 +486,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			PersistentEntity<?, ?> entity) {
 
 		if (!StringUtils.hasText(dotPath) && !StringUtils.hasText(keyDefinitionString)) {
-			throw new InvalidDataAccessApiUsageException("Cannot create index on root level for empty keys.");
+			throw new InvalidDataAccessApiUsageException("Cannot create index on root level for empty keys");
 		}
 
 		if (!StringUtils.hasText(keyDefinitionString)) {
@@ -557,7 +557,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 			if (index.expireAfterSeconds() >= 0) {
 				throw new IllegalStateException(String.format(
-						"@Indexed already defines an expiration timeout of %s seconds via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
+						"@Indexed already defines an expiration timeout of %s seconds via Indexed#expireAfterSeconds; Please make to use either expireAfterSeconds or expireAfter",
 						index.expireAfterSeconds()));
 			}
 
@@ -756,7 +756,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (property.isAnnotationPresent(GeoSpatialIndexed.class) || property.isAnnotationPresent(TextIndexed.class)) {
 			throw new MappingException(
-					String.format("Cannot create geospatial-/text- index on DBRef in collection '%s' for path '%s'.", collection,
+					String.format("Cannot create geospatial-/text- index on DBRef in collection '%s' for path '%s'", collection,
 							propertyDotPath));
 		}
 

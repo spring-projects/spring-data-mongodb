@@ -57,8 +57,8 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	 */
 	IdentifiableJsonSchemaProperty(String identifier, T jsonSchemaObject) {
 
-		Assert.notNull(identifier, "Identifier must not be null!");
-		Assert.notNull(jsonSchemaObject, "JsonSchemaObject must not be null!");
+		Assert.notNull(identifier, "Identifier must not be null");
+		Assert.notNull(jsonSchemaObject, "JsonSchemaObject must not be null");
 
 		this.identifier = identifier;
 		this.jsonSchemaObjectDelegate = jsonSchemaObject;
@@ -1050,7 +1050,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId,
 				@Nullable List<?> keyIds) {
 
-			Assert.notNull(target, "Target must not be null!");
+			Assert.notNull(target, "Target must not be null");
 			this.targetProperty = target;
 			this.algorithm = algorithm;
 			this.keyId = keyId;

@@ -52,7 +52,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 */
 	public GeospatialIndex(String field) {
 
-		Assert.hasText(field, "Field must have text!");
+		Assert.hasText(field, "Field must have text");
 
 		this.field = field;
 	}
@@ -100,7 +100,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 */
 	public GeospatialIndex typed(GeoSpatialIndexType type) {
 
-		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(type, "Type must not be null");
 
 		this.type = type;
 		return this;

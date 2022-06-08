@@ -322,7 +322,7 @@ public class AbstractMicrobenchmark {
 		try {
 			ResultsWriter.forUri(uri).write(results);
 		} catch (Exception e) {
-			System.err.println(String.format("Cannot save benchmark results to '%s'. Error was %s.", uri, e));
+			System.err.println(String.format("Cannot save benchmark results to '%s'; Error was %s", uri, e));
 		}
 	}
 }

@@ -43,7 +43,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	@Override
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 
-		Assert.notNull(domainType, "DomainType must not be null!");
+		Assert.notNull(domainType, "DomainType must not be null");
 
 		return new ExecutableInsertSupport<>(template, domainType, null, null);
 	}
@@ -70,7 +70,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		@Override
 		public T one(T object) {
 
-			Assert.notNull(object, "Object must not be null!");
+			Assert.notNull(object, "Object must not be null");
 
 			return template.insert(object, getCollectionName());
 		}
@@ -78,7 +78,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		@Override
 		public Collection<T> all(Collection<? extends T> objects) {
 
-			Assert.notNull(objects, "Objects must not be null!");
+			Assert.notNull(objects, "Objects must not be null");
 
 			return template.insert(objects, getCollectionName());
 		}
@@ -86,7 +86,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		@Override
 		public BulkWriteResult bulk(Collection<? extends T> objects) {
 
-			Assert.notNull(objects, "Objects must not be null!");
+			Assert.notNull(objects, "Objects must not be null");
 
 			return template.bulkOps(bulkMode != null ? bulkMode : BulkMode.ORDERED, domainType, getCollectionName())
 					.insert(new ArrayList<>(objects)).execute();
@@ -95,7 +95,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		@Override
 		public InsertWithBulkMode<T> inCollection(String collection) {
 
-			Assert.hasText(collection, "Collection must not be null nor empty.");
+			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ExecutableInsertSupport<>(template, domainType, collection, bulkMode);
 		}
@@ -103,7 +103,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		@Override
 		public TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode) {
 
-			Assert.notNull(bulkMode, "BulkMode must not be null!");
+			Assert.notNull(bulkMode, "BulkMode must not be null");
 
 			return new ExecutableInsertSupport<>(template, domainType, collection, bulkMode);
 		}

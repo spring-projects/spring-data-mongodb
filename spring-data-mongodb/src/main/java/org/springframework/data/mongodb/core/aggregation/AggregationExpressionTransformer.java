@@ -60,7 +60,7 @@ interface AggregationExpressionTransformer
 
 			super(currentNode, parentNode, previousOperationObject);
 
-			Assert.notNull(context, "AggregationOperationContext must not be null!");
+			Assert.notNull(context, "AggregationOperationContext must not be null");
 			this.aggregationContext = context;
 		}
 

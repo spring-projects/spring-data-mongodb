@@ -55,7 +55,7 @@ public class MongoServerCondition implements ExecutionCondition {
 				if (!expectedMinVersion.equals(ANY) && !expectedMinVersion.equals(DEFAULT_LOW)) {
 					if (serverVersion.isLessThan(expectedMinVersion)) {
 						return ConditionEvaluationResult.disabled(String
-								.format("Disabled for server version %s. Requires at least %s.", serverVersion, expectedMinVersion));
+								.format("Disabled for server version %s; Requires at least %s.", serverVersion, expectedMinVersion));
 					}
 				}
 
@@ -63,7 +63,7 @@ public class MongoServerCondition implements ExecutionCondition {
 				if (!expectedMaxVersion.equals(ANY) && !expectedMaxVersion.equals(DEFAULT_HIGH)) {
 					if (serverVersion.isGreaterThanOrEqualTo(expectedMaxVersion)) {
 						return ConditionEvaluationResult.disabled(String
-								.format("Disabled for server version %s. Only supported until %s.", serverVersion, expectedMaxVersion));
+								.format("Disabled for server version %s; Only supported until %s.", serverVersion, expectedMaxVersion));
 					}
 				}
 			}

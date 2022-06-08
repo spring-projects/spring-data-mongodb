@@ -45,7 +45,7 @@ class JsonSchemaValidator implements Validator {
 	 */
 	static JsonSchemaValidator of(MongoJsonSchema schema) {
 
-		Assert.notNull(schema, "Schema must not be null!");
+		Assert.notNull(schema, "Schema must not be null");
 
 		return new JsonSchemaValidator(schema);
 	}

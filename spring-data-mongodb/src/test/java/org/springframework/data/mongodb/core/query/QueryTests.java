@@ -225,7 +225,7 @@ class QueryTests {
 	void queryOfShouldCreateNewQueryWithEqualBehaviour() {
 
 		Query source = new Query();
-		source.addCriteria(where("This you must ken!").is(EnumType.VAL_1));
+		source.addCriteria(where("This you must ken").is(EnumType.VAL_1));
 
 		compareQueries(Query.of(source), source);
 	}
@@ -245,14 +245,14 @@ class QueryTests {
 	void clonedQueryShouldAppendCriteria() {
 
 		Query source = new Query();
-		source.addCriteria(where("Skip o'er the four!").is("From five and six"));
+		source.addCriteria(where("Skip o'er the four").is("From five and six"));
 		Query target = Query.of(source);
 
 		compareQueries(target, source);
 		target.addCriteria(where("the Witch's tricks").is("make seven and eight"));
 
 		assertThat(target.getQueryObject()).isEqualTo(
-				new Document("Skip o'er the four!", "From five and six").append("the Witch's tricks", "make seven and eight"));
+				new Document("Skip o'er the four", "From five and six").append("the Witch's tricks", "make seven and eight"));
 	}
 
 	@Test // DATAMONGO-1783
@@ -284,13 +284,13 @@ class QueryTests {
 	void clonedQueryShouldNotDependOnFieldsFromSource() {
 
 		Query source = new Query();
-		source.fields().include("That is the witch's one-time-one!");
+		source.fields().include("That is the witch's one-time-one");
 		Query target = Query.of(source);
 
 		compareQueries(target, source);
 		source.fields().exclude("Goethe");
 
-		assertThat(target.getFieldsObject()).isEqualTo(new Document("That is the witch's one-time-one!", 1))
+		assertThat(target.getFieldsObject()).isEqualTo(new Document("That is the witch's one-time-one", 1))
 				.isNotEqualTo(source.getFieldsObject());
 	}
 

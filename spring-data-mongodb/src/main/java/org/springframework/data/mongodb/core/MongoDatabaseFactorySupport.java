@@ -64,10 +64,10 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	protected MongoDatabaseFactorySupport(C mongoClient, String databaseName, boolean mongoInstanceCreated,
 			PersistenceExceptionTranslator exceptionTranslator) {
 
-		Assert.notNull(mongoClient, "MongoClient must not be null!");
-		Assert.hasText(databaseName, "Database name must not be empty!");
+		Assert.notNull(mongoClient, "MongoClient must not be null");
+		Assert.hasText(databaseName, "Database name must not be empty");
 		Assert.isTrue(databaseName.matches("[^/\\\\.$\"\\s]+"),
-				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs!");
+				"Database name must not contain slashes, dots, spaces, quotes, or dollar signs");
 
 		this.mongoClient = mongoClient;
 		this.databaseName = databaseName;
@@ -91,7 +91,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	@Override
 	public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
 
-		Assert.hasText(dbName, "Database name must not be empty!");
+		Assert.hasText(dbName, "Database name must not be empty");
 
 		MongoDatabase db = doGetMongoDatabase(dbName);
 

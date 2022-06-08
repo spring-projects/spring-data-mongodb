@@ -47,7 +47,7 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	public MatchOperation(CriteriaDefinition criteriaDefinition) {
 
-		Assert.notNull(criteriaDefinition, "Criteria must not be null!");
+		Assert.notNull(criteriaDefinition, "Criteria must not be null");
 
 		this.criteriaDefinition = criteriaDefinition;
 		this.expression = null;
@@ -61,7 +61,7 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	public MatchOperation(AggregationExpression expression) {
 
-		Assert.notNull(expression, "Expression must not be null!");
+		Assert.notNull(expression, "Expression must not be null");
 
 		this.criteriaDefinition = null;
 		this.expression = expression;

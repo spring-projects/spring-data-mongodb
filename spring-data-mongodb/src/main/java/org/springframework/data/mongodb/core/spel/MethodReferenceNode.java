@@ -362,7 +362,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		AggregationMethodReference mappingParametersTo(String... aggregationExpressionProperties) {
 
 			Assert.isTrue(ObjectUtils.nullSafeEquals(argumentType, ArgumentType.MAP),
-					"Parameter mapping can only be applied to AggregationMethodReference with MAPPED ArgumentType.");
+					"Parameter mapping can only be applied to AggregationMethodReference with MAPPED ArgumentType");
 			return new AggregationMethodReference(mongoOperator, argumentType, aggregationExpressionProperties);
 		}
 

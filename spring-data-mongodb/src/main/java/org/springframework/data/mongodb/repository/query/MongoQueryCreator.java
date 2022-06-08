@@ -99,7 +99,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		super(tree, accessor);
 
-		Assert.notNull(context, "MappingContext must not be null!");
+		Assert.notNull(context, "MappingContext must not be null");
 
 		this.accessor = accessor;
 		this.isGeoNearQuery = isGeoNearQuery;
@@ -250,7 +250,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
-				throw new IllegalArgumentException("Unsupported keyword!");
+				throw new IllegalArgumentException("Unsupported keyword");
 		}
 	}
 
@@ -342,7 +342,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		if (value == null) {
 
 			throw new IllegalArgumentException(String.format(
-					"Argument for creating $regex pattern for property '%s' must not be null!", part.getProperty().getSegment()));
+					"Argument for creating $regex pattern for property '%s' must not be null", part.getProperty().getSegment()));
 		}
 
 		return criteria.regex(toLikeRegex(value.toString(), part), toRegexOptions(part));
@@ -383,7 +383,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 
 		throw new IllegalArgumentException(
-				String.format("Expected parameter type of %s but got %s!", type, parameter.getClass()));
+				String.format("Expected parameter type of %s but got %s", type, parameter.getClass()));
 	}
 
 	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {

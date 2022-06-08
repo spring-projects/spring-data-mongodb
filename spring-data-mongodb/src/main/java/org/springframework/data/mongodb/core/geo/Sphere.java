@@ -47,9 +47,9 @@ public class Sphere implements Shape {
 	@PersistenceConstructor
 	public Sphere(Point center, Distance radius) {
 
-		Assert.notNull(center, "Center point must not be null!");
-		Assert.notNull(radius, "Radius must not be null!");
-		Assert.isTrue(radius.getValue() >= 0, "Radius must not be negative!");
+		Assert.notNull(center, "Center point must not be null");
+		Assert.notNull(radius, "Radius must not be null");
+		Assert.isTrue(radius.getValue() >= 0, "Radius must not be negative");
 
 		this.center = center;
 		this.radius = radius;

@@ -48,7 +48,7 @@ public interface Validator {
 	 */
 	static Validator document(Document validationRules) {
 
-		Assert.notNull(validationRules, "ValidationRules must not be null!");
+		Assert.notNull(validationRules, "ValidationRules must not be null");
 		return DocumentValidator.of(validationRules);
 	}
 
@@ -61,7 +61,7 @@ public interface Validator {
 	 */
 	static Validator schema(MongoJsonSchema schema) {
 
-		Assert.notNull(schema, "Schema must not be null!");
+		Assert.notNull(schema, "Schema must not be null");
 		return JsonSchemaValidator.of(schema);
 	}
 
@@ -75,7 +75,7 @@ public interface Validator {
 	 */
 	static Validator criteria(CriteriaDefinition criteria) {
 
-		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null");
 		return CriteriaValidator.of(criteria);
 	}
 }

@@ -57,8 +57,8 @@ public class MongoAction {
 	public MongoAction(@Nullable WriteConcern defaultWriteConcern, MongoActionOperation mongoActionOperation,
 			String collectionName, @Nullable Class<?> entityType, @Nullable Document document, @Nullable Document query) {
 
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
-		Assert.notNull(mongoActionOperation, "MongoActionOperation must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
+		Assert.notNull(mongoActionOperation, "MongoActionOperation must not be null");
 
 		this.defaultWriteConcern = defaultWriteConcern;
 		this.mongoActionOperation = mongoActionOperation;

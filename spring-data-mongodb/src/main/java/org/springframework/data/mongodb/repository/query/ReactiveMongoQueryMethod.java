@@ -141,19 +141,19 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 			if (singleWrapperWithWrappedPageableResult) {
 				throw new InvalidDataAccessApiUsageException(
-						String.format("'%s.%s' must not use sliced or paged execution. Please use Flux.buffer(size, skip).",
+						String.format("'%s.%s' must not use sliced or paged execution; Please use Flux.buffer(size, skip).",
 								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 			}
 
 			if (!multiWrapper) {
 				throw new IllegalStateException(String.format(
-						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type. Offending method: %s",
+						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type; Offending method: %s",
 						method.toString()));
 			}
 
 			if (hasParameterOfType(method, Sort.class)) {
-				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter. "
-						+ "Use sorting capabilities on Pageable instead! Offending method: %s", method.toString()));
+				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter;"
+						+ " Use sorting capabilities on Pageable instead; Offending method: %s", method));
 			}
 		}
 

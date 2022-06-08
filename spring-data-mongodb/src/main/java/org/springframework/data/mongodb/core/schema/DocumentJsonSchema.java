@@ -30,7 +30,7 @@ class DocumentJsonSchema implements MongoJsonSchema {
 
 	DocumentJsonSchema(Document document) {
 
-		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(document, "Document must not be null");
 		this.document = document;
 	}
 

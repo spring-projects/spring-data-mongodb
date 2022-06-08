@@ -159,7 +159,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 			return persistentProperty;
 		}
 
-		throw new IllegalStateException(String.format("Required property %s not found for %s!", name, getType()));
+		throw new IllegalStateException(String.format("Required property %s not found for %s", name, getType()));
 	}
 
 	@Override

@@ -296,7 +296,7 @@ public class ReactiveMongoTemplateTests {
 					assertThat(actual.getWishList()).isEmpty();
 				}).verifyComplete();
 
-		person.addToWishList("please work!");
+		person.addToWishList("please work");
 
 		template.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1029,7 +1029,7 @@ public class ReactiveMongoTemplateTests {
 
 	@Test // DATAMONGO-1444, DATAMONGO-2150
 	void rejectsNonJsonStringForSave() {
-		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar!", "collection"));
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar", "collection"));
 	}
 
 	@Test // DATAMONGO-1444
@@ -1368,7 +1368,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions; Cannot test message resumption properly; Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
 	void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
 
@@ -1400,7 +1400,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions; Cannot test message resumption properly; Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
 	void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
 
@@ -1432,7 +1432,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions; Cannot test message resumption properly; Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
 	void changeStreamEventsShouldBeFilteredCorrectly() throws InterruptedException {
 
@@ -1508,7 +1508,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions; Cannot test message resumption properly; Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
 	void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
 

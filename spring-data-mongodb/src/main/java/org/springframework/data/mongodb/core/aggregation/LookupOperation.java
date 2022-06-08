@@ -49,10 +49,10 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	 */
 	public LookupOperation(Field from, Field localField, Field foreignField, Field as) {
 
-		Assert.notNull(from, "From must not be null!");
-		Assert.notNull(localField, "LocalField must not be null!");
-		Assert.notNull(foreignField, "ForeignField must not be null!");
-		Assert.notNull(as, "As must not be null!");
+		Assert.notNull(from, "From must not be null");
+		Assert.notNull(localField, "LocalField must not be null");
+		Assert.notNull(foreignField, "ForeignField must not be null");
+		Assert.notNull(as, "As must not be null");
 
 		this.from = from;
 		this.localField = localField;
@@ -155,7 +155,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		@Override
 		public LocalFieldBuilder from(String name) {
 
-			Assert.hasText(name, "'From' must not be null or empty!");
+			Assert.hasText(name, "'From' must not be null or empty");
 			from = Fields.field(name);
 			return this;
 		}
@@ -163,7 +163,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		@Override
 		public LookupOperation as(String name) {
 
-			Assert.hasText(name, "'As' must not be null or empty!");
+			Assert.hasText(name, "'As' must not be null or empty");
 			as = new ExposedField(Fields.field(name), true);
 			return new LookupOperation(from, localField, foreignField, as);
 		}
@@ -171,7 +171,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		@Override
 		public AsBuilder foreignField(String name) {
 
-			Assert.hasText(name, "'ForeignField' must not be null or empty!");
+			Assert.hasText(name, "'ForeignField' must not be null or empty");
 			foreignField = Fields.field(name);
 			return this;
 		}
@@ -179,7 +179,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		@Override
 		public ForeignFieldBuilder localField(String name) {
 
-			Assert.hasText(name, "'LocalField' must not be null or empty!");
+			Assert.hasText(name, "'LocalField' must not be null or empty");
 			localField = Fields.field(name);
 			return this;
 		}

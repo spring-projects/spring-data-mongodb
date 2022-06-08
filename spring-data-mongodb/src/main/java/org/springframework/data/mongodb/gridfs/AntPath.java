@@ -40,7 +40,7 @@ class AntPath {
 	 */
 	public AntPath(String path) {
 
-		Assert.notNull(path, "Path must not be null!");
+		Assert.notNull(path, "Path must not be null");
 
 		this.path = path;
 	}

@@ -87,7 +87,7 @@ public class BooleanOperators {
 		 */
 		public BooleanOperatorFactory(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			this.fieldReference = fieldReference;
 			this.expression = null;
 		}
@@ -99,7 +99,7 @@ public class BooleanOperators {
 		 */
 		public BooleanOperatorFactory(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			this.fieldReference = null;
 			this.expression = expression;
 		}
@@ -113,7 +113,7 @@ public class BooleanOperators {
 		 */
 		public And and(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createAnd().andExpression(expression);
 		}
 
@@ -126,7 +126,7 @@ public class BooleanOperators {
 		 */
 		public And and(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createAnd().andField(fieldReference);
 		}
 
@@ -143,7 +143,7 @@ public class BooleanOperators {
 		 */
 		public Or or(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return createOr().orExpression(expression);
 		}
 
@@ -156,7 +156,7 @@ public class BooleanOperators {
 		 */
 		public Or or(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return createOr().orField(fieldReference);
 		}
 
@@ -213,7 +213,7 @@ public class BooleanOperators {
 		 */
 		public And andExpression(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new And(append(expression));
 		}
 
@@ -225,7 +225,7 @@ public class BooleanOperators {
 		 */
 		public And andField(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new And(append(Fields.field(fieldReference)));
 		}
 
@@ -237,7 +237,7 @@ public class BooleanOperators {
 		 */
 		public And andValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new And(append(value));
 		}
 	}
@@ -267,7 +267,7 @@ public class BooleanOperators {
 		 */
 		public static Or or(Object... expressions) {
 
-			Assert.notNull(expressions, "Expressions must not be null!");
+			Assert.notNull(expressions, "Expressions must not be null");
 			return new Or(Arrays.asList(expressions));
 		}
 
@@ -279,7 +279,7 @@ public class BooleanOperators {
 		 */
 		public Or orExpression(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Or(append(expression));
 		}
 
@@ -291,7 +291,7 @@ public class BooleanOperators {
 		 */
 		public Or orField(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Or(append(Fields.field(fieldReference)));
 		}
 
@@ -303,7 +303,7 @@ public class BooleanOperators {
 		 */
 		public Or orValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+			Assert.notNull(value, "Value must not be null");
 			return new Or(append(value));
 		}
 	}
@@ -333,7 +333,7 @@ public class BooleanOperators {
 		 */
 		public static Not not(String fieldReference) {
 
-			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new Not(asFields(fieldReference));
 		}
 
@@ -346,7 +346,7 @@ public class BooleanOperators {
 		 */
 		public static Not not(AggregationExpression expression) {
 
-			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(expression, "Expression must not be null");
 			return new Not(Collections.singletonList(expression));
 		}
 	}

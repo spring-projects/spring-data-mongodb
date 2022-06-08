@@ -89,6 +89,6 @@ public class RepositoryIndexCreationIntegrationTests {
 			}
 		}
 
-		fail(String.format("Did not find index for field(s) %s in %s!", fields, indexInfo));
+		fail(String.format("Did not find index for field(s) %s in %s", fields, indexInfo));
 	}
 }

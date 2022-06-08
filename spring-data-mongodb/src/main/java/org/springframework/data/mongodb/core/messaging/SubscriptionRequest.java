@@ -101,7 +101,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 */
 		static RequestOptions justDatabase(String database) {
 
-			Assert.notNull(database, "Database must not be null!");
+			Assert.notNull(database, "Database must not be null");
 
 			return new RequestOptions() {
 
@@ -125,7 +125,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 */
 		static RequestOptions justCollection(String collection) {
 
-			Assert.notNull(collection, "Collection must not be null!");
+			Assert.notNull(collection, "Collection must not be null");
 			return () -> collection;
 		}
 
@@ -138,8 +138,8 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 */
 		static RequestOptions of(String database, String collection) {
 
-			Assert.notNull(database, "Database must not be null!");
-			Assert.notNull(collection, "Collection must not be null!");
+			Assert.notNull(database, "Database must not be null");
+			Assert.notNull(collection, "Collection must not be null");
 
 			return new RequestOptions() {
 

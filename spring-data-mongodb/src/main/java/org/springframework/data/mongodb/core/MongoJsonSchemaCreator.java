@@ -192,7 +192,7 @@ public interface MongoJsonSchemaCreator {
 	 */
 	static MongoJsonSchemaCreator create(MongoConverter mongoConverter) {
 
-		Assert.notNull(mongoConverter, "MongoConverter must not be null!");
+		Assert.notNull(mongoConverter, "MongoConverter must not be null");
 		return new MappingMongoJsonSchemaCreator(mongoConverter);
 	}
 

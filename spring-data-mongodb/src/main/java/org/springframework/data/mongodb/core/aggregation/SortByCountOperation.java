@@ -47,7 +47,7 @@ public class SortByCountOperation implements AggregationOperation {
 	 */
 	public SortByCountOperation(Field groupByField) {
 
-		Assert.notNull(groupByField, "Group by field must not be null!");
+		Assert.notNull(groupByField, "Group by field must not be null");
 
 		this.groupByField = groupByField;
 		this.groupByExpression = null;
@@ -60,7 +60,7 @@ public class SortByCountOperation implements AggregationOperation {
 	 */
 	public SortByCountOperation(AggregationExpression groupByExpression) {
 
-		Assert.notNull(groupByExpression, "Group by expression must not be null!");
+		Assert.notNull(groupByExpression, "Group by expression must not be null");
 
 		this.groupByExpression = groupByExpression;
 		this.groupByField = null;
