@@ -548,9 +548,9 @@ public interface PersonRepository extends MongoRepository<Person, String> {
 }
 ----
 
-SpEL in query strings can be a powerful way to enhance queries.
+WARNING: SpEL in query strings can be a powerful way to enhance queries.
 However, they can also accept a broad range of unwanted arguments.
-You should make sure to sanitize strings before passing them to the query to avoid unwanted changes to your query.
+Make sure to sanitize strings before passing them to the query to avoid creation of vulnerabilities or unwanted changes to your query.
 
 Expression support is extensible through the Query SPI: `org.springframework.data.repository.query.spi.EvaluationContextExtension`.
 The Query SPI can contribute properties and functions and can customize the root object.
