@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.util.json;
 
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -58,13 +59,7 @@ public class ParameterBindingContext {
 	 */
 	public ParameterBindingContext(ValueProvider valueProvider, ExpressionParser expressionParser,
 			Supplier<EvaluationContext> evaluationContext) {
-
-		this(valueProvider, new SpELExpressionEvaluator() {
-			@Override
-			public <T> T evaluate(String expressionString) {
-				return (T) expressionParser.parseExpression(expressionString).getValue(evaluationContext.get(), Object.class);
-			}
-		});
+		this(valueProvider, new EvaluationContextExpressionEvaluator(valueProvider, expressionParser, evaluationContext));
 	}
 
 	/**
@@ -87,20 +82,20 @@ public class ParameterBindingContext {
 	 * @return
 	 * @since 3.1
 	 */
-	public static ParameterBindingContext forExpressions(ValueProvider valueProvider,
-			ExpressionParser expressionParser, Function<ExpressionDependencies, EvaluationContext> contextFunction) {
+	public static ParameterBindingContext forExpressions(ValueProvider valueProvider, ExpressionParser expressionParser,
+			Function<ExpressionDependencies, EvaluationContext> contextFunction) {
 
-		return new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
-			@Override
-			public <T> T evaluate(String expressionString) {
+		return new ParameterBindingContext(valueProvider,
+				new EvaluationContextExpressionEvaluator(valueProvider, expressionParser, null) {
 
-				Expression expression = expressionParser.parseExpression(expressionString);
-				ExpressionDependencies dependencies = ExpressionDependencies.discover(expression);
-				EvaluationContext evaluationContext = contextFunction.apply(dependencies);
+					@Override
+					public EvaluationContext getEvaluationContext(String expressionString) {
 
-				return (T) expression.getValue(evaluationContext, Object.class);
-			}
-		});
+						Expression expression = getParsedExpression(expressionString);
+						ExpressionDependencies dependencies = ExpressionDependencies.discover(expression);
+						return contextFunction.apply(dependencies);
+					}
+				});
 	}
 
 	@Nullable
@@ -110,6 +105,16 @@ public class ParameterBindingContext {
 
 	@Nullable
 	public Object evaluateExpression(String expressionString) {
+		return expressionEvaluator.evaluate(expressionString);
+	}
+
+	@Nullable
+	public Object evaluateExpression(String expressionString, Map<String, Object> variables) {
+
+		if (expressionEvaluator instanceof EvaluationContextExpressionEvaluator) {
+			return ((EvaluationContextExpressionEvaluator) expressionEvaluator).evaluateExpression(expressionString,
+					variables);
+		}
 		return expressionEvaluator.evaluate(expressionString);
 	}
 
