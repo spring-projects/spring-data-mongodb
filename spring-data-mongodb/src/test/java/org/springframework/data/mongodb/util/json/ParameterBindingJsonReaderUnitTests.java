@@ -25,14 +25,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
-import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.ParseException;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -369,11 +370,11 @@ class ParameterBindingJsonReaderUnitTests {
 				new SpelExpressionParser());
 	}
 
-	@Test // GH-3871
-	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsJsonString() {
+	@Test // GH-3871, GH-4089
+	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsDocument() {
 
 		Object[] args = new Object[] { "expected", "unexpected" };
-		String json = "?#{ true ? \"{ 'name': ?0 }\" : \"{ 'name' : ?1 }\" }";
+		String json = "?#{ true ? { 'name': ?0 } : { 'name' : ?1 } }";
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
 				.getEvaluationContext(args);
 
@@ -384,25 +385,27 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(new Document("name", "expected"));
 	}
 
-	@Test // GH-3871
-	public void throwsExceptionWhenbindEntireQueryUsingSpelExpressionResultsInInvalidJsonString() {
+	@Test // GH-3871, GH-4089
+	public void throwsExceptionWhenBindEntireQueryUsingSpelExpressionIsMalFormatted() {
 
 		Object[] args = new Object[] { "expected", "unexpected" };
-		String json = "?#{ true ? \"{ 'name': ?0 { }\" : \"{ 'name' : ?1 }\" }";
+		String json = "?#{ true ? { 'name': ?0 { } } : { 'name' : ?1 } }";
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
 				.getEvaluationContext(args);
 
-		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		assertThatExceptionOfType(ParseException.class).isThrownBy(() -> {
+			ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+					new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
 
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build()));
+			new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+		});
 	}
 
-	@Test // GH-3871
+	@Test // GH-3871, GH-4089
 	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsJsonStringContainingUUID() {
 
-		Object[] args = new Object[] { "UUID('cfbca728-4e39-4613-96bc-f920b5c37e16')", "unexpected" };
-		String json = "?#{ true ? \"{ 'name': ?0 }\" : \"{ 'name' : ?1 }\" }";
+		Object[] args = new Object[] { UUID.fromString("cfbca728-4e39-4613-96bc-f920b5c37e16"), "unexpected" };
+		String json = "?#{ true ? { 'name': ?0 } : { 'name' : ?1 } }";
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
 				.getEvaluationContext(args);
 
@@ -411,7 +414,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
-		assertThat(target.get("name")).isInstanceOf(BsonBinary.class);
+		assertThat(target.get("name")).isInstanceOf(UUID.class);
 	}
 
 	@Test // GH-3871
@@ -479,6 +482,69 @@ class ParameterBindingJsonReaderUnitTests {
 
 		Document target = parse("{ 'parent' : null }");
 		assertThat(target).isEqualTo(new Document("parent", null));
+	}
+
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaArgumentIndex() {
+
+		String source = "new java.lang.Object()";
+		Document target = parse("{ arg0 : ?#{[0]} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaParameterPlaceholder() {
+
+		String source = "new java.lang.Object()";
+		Document target = parse("{ arg0 : :#{?0} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void errorsOnNonDocument() {
+
+		String source = "new java.lang.Object()";
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> parse(":#{?0}", source));
+	}
+
+	@Test // GH-4089
+	void bindsFullDocument() {
+
+		Document source = new Document();
+		assertThat(parse(":#{?0}", source)).isSameAs(source);
+	}
+
+	@Test // GH-4089
+	void enforcesStringSpelArgumentTypeViaParameterPlaceholderWhenQuoted() {
+
+		Integer source = 10;
+		Document target = parse("{ arg0 : :#{'?0'} }", source);
+		assertThat(target.get("arg0")).isEqualTo("10");
+	}
+
+	@Test // GH-4089
+	void enforcesSpelArgumentTypeViaParameterPlaceholderWhenQuoted() {
+
+		String source = "new java.lang.Object()";
+		Document target = parse("{ arg0 : :#{'?0'} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaParameterPlaceholderWhenValueContainsSingleQuotes() {
+
+		String source = "' + new java.lang.Object() + '";
+		Document target = parse("{ arg0 : :#{?0} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaParameterPlaceholderWhenValueContainsDoubleQuotes() {
+
+		String source = "\\\" + new java.lang.Object() + \\\"";
+		Document target = parse("{ arg0 : :#{?0} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
 	}
 
 	private static Document parse(String json, Object... args) {
