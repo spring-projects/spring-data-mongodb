@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.ParseException;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -388,6 +390,55 @@ class ParameterBindingJsonReaderUnitTests {
 
 		Document target = parse("{ 'parent' : null }");
 		assertThat(target).isEqualTo(new Document("parent", null));
+	}
+
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaArgumentIndex() {
+
+		String source = "new java.lang.Object()";
+		Document target = parse("{ arg0 : ?#{[0]} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaParameterPlaceholder() {
+
+		String source = "new java.lang.Object()";
+		Document target = parse("{ arg0 : :#{?0} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void enforcesStringSpelArgumentTypeViaParameterPlaceholderWhenQuoted() {
+
+		Integer source = 10;
+		Document target = parse("{ arg0 : :#{'?0'} }", source);
+		assertThat(target.get("arg0")).isEqualTo("10");
+	}
+
+	@Test // GH-4089
+	void enforcesSpelArgumentTypeViaParameterPlaceholderWhenQuoted() {
+
+		String source = "new java.lang.Object()";
+		Document target = parse("{ arg0 : :#{'?0'} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaParameterPlaceholderWhenValueContainsSingleQuotes() {
+
+		String source = "' + new java.lang.Object() + '";
+		Document target = parse("{ arg0 : :#{?0} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
+	}
+
+	@Test // GH-4089
+	void retainsSpelArgumentTypeViaParameterPlaceholderWhenValueContainsDoubleQuotes() {
+
+		String source = "\\\" + new java.lang.Object() + \\\"";
+		Document target = parse("{ arg0 : :#{?0} }", source);
+		assertThat(target.get("arg0")).isEqualTo(source);
 	}
 
 	private static Document parse(String json, Object... args) {
