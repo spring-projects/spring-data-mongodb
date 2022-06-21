@@ -57,6 +57,11 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	}
 
 	@Override
+	public String getModuleIdentifier() {
+		return getModulePrefix();
+	}
+
+	@Override
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
 		return Collections.singleton(Document.class);
 	}
