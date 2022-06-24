@@ -53,8 +53,8 @@ infix fun <T> KProperty<T>.ne(value: T): Criteria =
  * @since 2.2
  * @see Criteria.lt
  */
-infix fun <T> KProperty<T>.lt(value: T): Criteria =
-		Criteria(this.toDotPath()).lt(value)
+infix fun <T> KProperty<T>.lt(value: Any): Criteria =
+	Criteria(this.toDotPath()).lt(value)
 
 /**
  * Creates a criterion using the $lte operator.
@@ -64,8 +64,8 @@ infix fun <T> KProperty<T>.lt(value: T): Criteria =
  * @since 2.2
  * @see Criteria.lte
  */
-infix fun <T> KProperty<T>.lte(value: T): Criteria =
-		Criteria(this.toDotPath()).lte(value)
+infix fun <T> KProperty<T>.lte(value: Any): Criteria =
+	Criteria(this.toDotPath()).lte(value)
 
 /**
  * Creates a criterion using the $gt operator.
@@ -75,8 +75,8 @@ infix fun <T> KProperty<T>.lte(value: T): Criteria =
  * @since 2.2
  * @see Criteria.gt
  */
-infix fun <T> KProperty<T>.gt(value: T): Criteria =
-		Criteria(this.toDotPath()).gt(value)
+infix fun <T> KProperty<T>.gt(value: Any): Criteria =
+	Criteria(this.toDotPath()).gt(value)
 
 /**
  * Creates a criterion using the $gte operator.
@@ -86,8 +86,8 @@ infix fun <T> KProperty<T>.gt(value: T): Criteria =
  * @since 2.2
  * @see Criteria.gte
  */
-infix fun <T> KProperty<T>.gte(value: T): Criteria =
-		Criteria(this.toDotPath()).gte(value)
+infix fun <T> KProperty<T>.gte(value: Any): Criteria =
+	Criteria(this.toDotPath()).gte(value)
 
 /**
  * Creates a criterion using the $in operator.
