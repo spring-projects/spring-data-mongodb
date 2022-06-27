@@ -34,6 +34,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import com.mongodb.MongoClientSettings;
 
 /**
+ * Unit tests for {@link BasicAggregationOperation}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)

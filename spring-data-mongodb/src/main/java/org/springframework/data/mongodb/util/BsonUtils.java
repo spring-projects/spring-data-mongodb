@@ -89,7 +89,7 @@ public class BsonUtils {
 	 * Return the {@link Bson} object as {@link Map}. Depending on the input type, the return value can be either a casted
 	 * version of {@code bson} or a converted (detached from the original value) using the given {@link CodecRegistry} to
 	 * obtain {@link org.bson.codecs.Codec codecs} that might be required for conversion.
-	 * 
+	 *
 	 * @param bson can be {@literal null}.
 	 * @param codecRegistry must not be {@literal null}.
 	 * @return never {@literal null}. Returns an empty {@link Map} if input {@link Bson} is {@literal null}.
@@ -137,10 +137,6 @@ public class BsonUtils {
 	 * @since 4.0
 	 */
 	public static Document asDocument(Bson bson, CodecRegistry codecRegistry) {
-
-		if (bson instanceof Document document) {
-			return document;
-		}
 
 		Map<String, Object> map = asMap(bson, codecRegistry);
 

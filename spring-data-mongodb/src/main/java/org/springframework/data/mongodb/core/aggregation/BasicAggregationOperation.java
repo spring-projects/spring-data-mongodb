@@ -15,40 +15,26 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Map;
-
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
- * {@link AggregationOperation} implementation that c
- * 
+ * {@link AggregationOperation} implementation that can return a {@link Document} from a {@link Bson} or {@link String}
+ * document.
+ *
  * @author Christoph Strobl
  * @since 4.0
  */
-class BasicAggregationOperation implements AggregationOperation {
-
-	private final Object value;
-
-	BasicAggregationOperation(Object value) {
-		this.value = value;
-	}
+record BasicAggregationOperation(Object value) implements AggregationOperation {
 
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
-		if (value instanceof Document document) {
-			return document;
-		}
-
 		if (value instanceof Bson bson) {
 			return BsonUtils.asDocument(bson, context.getCodecRegistry());
-		}
-
-		if (value instanceof Map map) {
-			return new Document(map);
 		}
 
 		if (value instanceof String json && BsonUtils.isJsonDocument(json)) {
@@ -56,6 +42,6 @@ class BasicAggregationOperation implements AggregationOperation {
 		}
 
 		throw new IllegalStateException(
-				String.format("%s cannot be converted to org.bson.Document.", ObjectUtils.nullSafeClassName(value)));
+				String.format("%s cannot be converted to org.bson.Document", ObjectUtils.nullSafeClassName(value)));
 	}
 }
