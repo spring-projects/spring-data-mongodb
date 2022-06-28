@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.BeanMetadataElement;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
@@ -64,6 +63,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
+
 import org.w3c.dom.Element;
 
 /**
@@ -135,9 +135,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 					new BeanComponentDefinition(indexOperationsProviderBuilder.getBeanDefinition(), "indexOperationsProvider"));
 		}
 
-		try {
-			registry.getBeanDefinition(INDEX_HELPER_BEAN_NAME);
-		} catch (NoSuchBeanDefinitionException ignored) {
+		if (!registry.containsBeanDefinition(INDEX_HELPER_BEAN_NAME)) {
 
 			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
@@ -151,7 +149,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 		BeanDefinition validatingMongoEventListener = potentiallyCreateValidatingMongoEventListener(element, parserContext);
 
-		if (validatingMongoEventListener != null) {
+		if (validatingMongoEventListener != null && !registry.containsBeanDefinition(VALIDATING_EVENT_LISTENER_BEAN_NAME)) {
 			parserContext.registerBeanComponent(
 					new BeanComponentDefinition(validatingMongoEventListener, VALIDATING_EVENT_LISTENER_BEAN_NAME));
 		}
@@ -165,15 +163,16 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 	private BeanDefinition potentiallyCreateValidatingMongoEventListener(Element element, ParserContext parserContext) {
 
 		String disableValidation = element.getAttribute("disable-validation");
-		boolean validationDisabled = StringUtils.hasText(disableValidation) && Boolean.valueOf(disableValidation);
+		boolean validationDisabled = StringUtils.hasText(disableValidation) && Boolean.parseBoolean(disableValidation);
 
 		if (!validationDisabled) {
 
 			BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
-			RuntimeBeanReference validator = getValidator(builder, parserContext);
+			RuntimeBeanReference validator = getValidator(element, parserContext);
 
 			if (validator != null) {
 				builder.getRawBeanDefinition().setBeanClass(ValidatingMongoEventListener.class);
+				builder.getRawBeanDefinition().setSource(element);
 				builder.addConstructorArgValue(validator);
 
 				return builder.getBeanDefinition();
@@ -195,7 +194,6 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		validatorDef.setSource(source);
 		validatorDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 		String validatorName = parserContext.getReaderContext().registerWithGeneratedName(validatorDef);
-		parserContext.registerBeanComponent(new BeanComponentDefinition(validatorDef, validatorName));
 
 		return new RuntimeBeanReference(validatorName);
 	}
