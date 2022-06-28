@@ -131,13 +131,15 @@ public class MappingMongoConverterParserIntegrationTests {
 
 	private void loadConfiguration(String configLocation) {
 		factory = new DefaultListableBeanFactory();
+		factory.setAllowBeanDefinitionOverriding(false);
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
 		reader.loadBeanDefinitions(new ClassPathResource(configLocation));
 	}
 
 	private static void assertStrategyReferenceSetFor(String beanId) {
 
-		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
+		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+		factory.setAllowBeanDefinitionOverriding(false);
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-fieldnamingstrategy.xml"));
 
