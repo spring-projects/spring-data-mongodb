@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
  */
 public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotProcessor {
 
-	private LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
+	private final LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
 
 	@Override
 	protected void contribute(AotRepositoryContext repositoryContext, GenerationContext generationContext) {

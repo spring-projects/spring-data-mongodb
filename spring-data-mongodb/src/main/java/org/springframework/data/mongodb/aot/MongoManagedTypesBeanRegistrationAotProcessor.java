@@ -26,9 +26,9 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @since 2022/06
  */
-public class MongoManagedTypesBeanRegistrationAotProcessor extends ManagedTypesBeanRegistrationAotProcessor {
+class MongoManagedTypesBeanRegistrationAotProcessor extends ManagedTypesBeanRegistrationAotProcessor {
 
-	private LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
+	private final LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
 
 	public MongoManagedTypesBeanRegistrationAotProcessor() {
 		setModuleIdentifier("mongo");

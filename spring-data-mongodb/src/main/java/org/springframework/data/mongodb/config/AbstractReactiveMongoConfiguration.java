@@ -84,10 +84,10 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 
 	/**
 	 * Creates a {@link MappingMongoConverter} using the configured {@link #reactiveMongoDbFactory()} and
-	 * {@link #mongoMappingContext(MongoCustomConversions)}. Will get {@link #customConversions()} applied.
+	 * {@link #mongoMappingContext(MongoCustomConversions, org.springframework.data.mongodb.MongoManagedTypes)}. Will get {@link #customConversions()} applied.
 	 *
 	 * @see #customConversions()
-	 * @see #mongoMappingContext(MongoCustomConversions)
+	 * @see #mongoMappingContext(MongoCustomConversions, org.springframework.data.mongodb.MongoManagedTypes)
 	 * @see #reactiveMongoDbFactory()
 	 * @return never {@literal null}.
 	 */

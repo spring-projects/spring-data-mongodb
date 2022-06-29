@@ -93,7 +93,8 @@ public class AbstractMongoConfigurationUnitTests {
 	public void returnsUninitializedMappingContext() throws Exception {
 
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
-		MongoMappingContext context = configuration.mongoMappingContext(configuration.customConversions(), MongoManagedTypes.of(Collections.singleton(Entity.class)));
+		MongoMappingContext context = configuration.mongoMappingContext(configuration.customConversions(),
+				MongoManagedTypes.from(Entity.class));
 
 		assertThat(context.getPersistentEntities()).isEmpty();
 		context.initialize();

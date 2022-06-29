@@ -78,14 +78,13 @@ public abstract class MongoConfigurationSupport {
 	 *
 	 * @see #getMappingBasePackages()
 	 * @return
-	 * @throws ClassNotFoundException
 	 */
 	@Bean
-	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions, ManagedTypes managedTypes)
-			throws ClassNotFoundException {
+	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions,
+			MongoManagedTypes mongoManagedTypes) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setManagedTypes(managedTypes);
+		mappingContext.setManagedTypes(mongoManagedTypes);
 		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setAutoIndexCreation(autoIndexCreation());
@@ -99,8 +98,8 @@ public abstract class MongoConfigurationSupport {
 	 * @since 4.0
 	 */
 	@Bean
-	public MongoManagedTypes managedTypes() throws ClassNotFoundException {
-		return MongoManagedTypes.of(getInitialEntitySet());
+	public MongoManagedTypes mongoManagedTypes() throws ClassNotFoundException {
+		return MongoManagedTypes.fromIterable(getInitialEntitySet());
 	}
 
 	/**
