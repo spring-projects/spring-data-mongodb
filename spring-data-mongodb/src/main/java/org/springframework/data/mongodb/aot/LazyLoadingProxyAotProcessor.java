@@ -36,7 +36,7 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
  * @author Christoph Strobl
  * @since 4.0
  */
-public class LazyLoadingProxyAotProcessor {
+class LazyLoadingProxyAotProcessor {
 
 	private boolean generalLazyLoadingProxyContributed = false;
 

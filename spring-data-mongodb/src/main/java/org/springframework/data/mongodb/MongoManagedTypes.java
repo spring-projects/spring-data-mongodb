@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import org.springframework.data.domain.ManagedTypes;
@@ -27,19 +28,49 @@ public final class MongoManagedTypes implements ManagedTypes {
 
 	private final ManagedTypes delegate;
 
-	public MongoManagedTypes(ManagedTypes types) {
+	private MongoManagedTypes(ManagedTypes types) {
 		this.delegate = types;
 	}
 
+	/**
+	 * Wraps an existing {@link ManagedTypes} object with {@link MongoManagedTypes}.
+	 *
+	 * @param managedTypes
+	 * @return
+	 */
 	public static MongoManagedTypes from(ManagedTypes managedTypes) {
 		return new MongoManagedTypes(managedTypes);
 	}
 
-	public static MongoManagedTypes of(Iterable<? extends Class<?>> types) {
+	/**
+	 * Factory method used to construct {@link MongoManagedTypes} from the given array of {@link Class types}.
+	 *
+	 * @param types array of {@link Class types} used to initialize the {@link ManagedTypes}; must not be {@literal null}.
+	 * @return new instance of {@link MongoManagedTypes} initialized from {@link Class types}.
+	 */
+	public static MongoManagedTypes from(Class<?>... types) {
+		return fromIterable(Arrays.asList(types));
+	}
+
+	/**
+	 * Factory method used to construct {@link MongoManagedTypes} from the given, required {@link Iterable} of
+	 * {@link Class types}.
+	 *
+	 * @param types {@link Iterable} of {@link Class types} used to initialize the {@link ManagedTypes}; must not be
+	 *          {@literal null}.
+	 * @return new instance of {@link MongoManagedTypes} initialized the given, required {@link Iterable} of {@link Class
+	 *         types}.
+	 */
+	public static MongoManagedTypes fromIterable(Iterable<? extends Class<?>> types) {
 		return from(ManagedTypes.fromIterable(types));
 	}
 
-	public static MongoManagedTypes none() {
+	/**
+	 * Factory method to return an empty {@link MongoManagedTypes} object.
+	 *
+	 * @return an empty {@link MongoManagedTypes} object.
+	 */
+	public static MongoManagedTypes empty() {
 		return from(ManagedTypes.empty());
 	}
 

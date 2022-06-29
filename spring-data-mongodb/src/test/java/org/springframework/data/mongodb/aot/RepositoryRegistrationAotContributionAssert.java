@@ -87,7 +87,7 @@ public class RepositoryRegistrationAotContributionAssert
 		BeanRegistrationCode mockBeanRegistrationCode = mock(BeanRegistrationCode.class);
 
 		DefaultGenerationContext generationContext =
-				new DefaultGenerationContext(new ClassNameGenerator(), new InMemoryGeneratedFiles(), new RuntimeHints());
+				new DefaultGenerationContext(new ClassNameGenerator(Object.class), new InMemoryGeneratedFiles());
 
 		this.actual.applyTo(generationContext, mockBeanRegistrationCode);
 

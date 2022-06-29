@@ -25,14 +25,26 @@ import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
+import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.lang.Nullable;
 
 /**
+ * {@link RuntimeHintsRegistrar} for repository types and entity callbacks.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 4.0
  */
-public class DataMongoRuntimeHints implements RuntimeHintsRegistrar {
+class MongoRuntimeHints implements RuntimeHintsRegistrar {
+
+	private static final boolean PROJECT_REACTOR_PRESENT = ReactiveWrappers
+			.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
 
 	@Override
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
@@ -43,5 +55,15 @@ public class DataMongoRuntimeHints implements RuntimeHintsRegistrar {
 						TypeReference.of(AfterSaveCallback.class)),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
+
+		if (PROJECT_REACTOR_PRESENT) {
+
+			hints.reflection()
+					.registerTypes(Arrays.asList(TypeReference.of(SimpleReactiveMongoRepository.class),
+							TypeReference.of(ReactiveBeforeConvertCallback.class), TypeReference.of(ReactiveBeforeSaveCallback.class),
+							TypeReference.of(ReactiveAfterConvertCallback.class), TypeReference.of(ReactiveAfterSaveCallback.class)),
+							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+									MemberCategory.INVOKE_PUBLIC_METHODS));
+		}
 	}
 }
