@@ -38,7 +38,7 @@ import org.springframework.util.ClassUtils;
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
-	private final MongoQueryMethod method;
+	final MongoQueryMethod method;
 
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.

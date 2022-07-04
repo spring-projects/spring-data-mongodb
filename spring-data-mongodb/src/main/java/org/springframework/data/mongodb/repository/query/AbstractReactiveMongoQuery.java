@@ -123,7 +123,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		ReactiveMongoParameterAccessor parameterAccessor = new ReactiveMongoParameterAccessor(method, parameters);
 
-		return execute(parameterAccessor);
+		return parameterAccessor.resolveParameters().flatMapMany(this::execute);
 	}
 
 	private Publisher<Object> execute(MongoParameterAccessor parameterAccessor) {
