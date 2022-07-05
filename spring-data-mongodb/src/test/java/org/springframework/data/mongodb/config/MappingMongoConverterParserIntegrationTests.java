@@ -51,10 +51,10 @@ import org.springframework.stereotype.Component;
  */
 public class MappingMongoConverterParserIntegrationTests {
 
-	DefaultListableBeanFactory factory;
+	private DefaultListableBeanFactory factory;
 
 	@Test // DATAMONGO-243
-	public void allowsDbFactoryRefAttribute() {
+	void allowsDbFactoryRefAttribute() {
 
 		loadValidConfiguration();
 		factory.getBeanDefinition("converter");
@@ -62,7 +62,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-725
-	public void hasCustomTypeMapper() {
+	void hasCustomTypeMapper() {
 
 		loadValidConfiguration();
 		MappingMongoConverter converter = factory.getBean("converter", MappingMongoConverter.class);
@@ -72,7 +72,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-301
-	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
+	void scansForConverterAndSetsUpCustomConversionsAccordingly() {
 
 		loadValidConfiguration();
 		CustomConversions conversions = factory.getBean(CustomConversions.class);
@@ -81,7 +81,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-607
-	public void activatesAbbreviatingPropertiesCorrectly() {
+	void activatesAbbreviatingPropertiesCorrectly() {
 
 		loadValidConfiguration();
 		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mongoMappingContext");
@@ -93,7 +93,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-866
-	public void rejectsInvalidFieldNamingStrategyConfiguration() {
+	void rejectsInvalidFieldNamingStrategyConfiguration() {
 
 		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
@@ -104,20 +104,19 @@ public class MappingMongoConverterParserIntegrationTests {
 	}
 
 	@Test // DATAMONGO-892
-	public void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
+	void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
 
-		assertThatExceptionOfType(BeanDefinitionParsingException.class).isThrownBy(this::loadNestedBeanConfiguration)
-				.withMessageContaining("Mongo Converter must not be defined as nested bean.");
+		assertThatExceptionOfType(BeanDefinitionParsingException.class).isThrownBy(this::loadNestedBeanConfiguration);
 
 	}
 
 	@Test // DATAMONGO-925, DATAMONGO-928
-	public void shouldSupportCustomFieldNamingStrategy() {
+	void shouldSupportCustomFieldNamingStrategy() {
 		assertStrategyReferenceSetFor("mappingConverterWithCustomFieldNamingStrategy");
 	}
 
 	@Test // DATAMONGO-925, DATAMONGO-928
-	public void shouldNotFailLoadingConfigIfAbbreviationIsDisabledAndStrategySet() {
+	void shouldNotFailLoadingConfigIfAbbreviationIsDisabledAndStrategySet() {
 		assertStrategyReferenceSetFor("mappingConverterWithCustomFieldNamingStrategyAndAbbreviationDisabled");
 	}
 
