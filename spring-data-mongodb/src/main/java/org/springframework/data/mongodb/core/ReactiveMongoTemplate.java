@@ -1565,7 +1565,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected Flux<ObjectId> insertDocumentList(String collectionName, List<Document> dbDocList) {
-
 		if (dbDocList.isEmpty()) {
 			return Flux.empty();
 		}
@@ -1582,10 +1581,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					null, null);
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 			MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
-
+			InsertManyOptions insertManyOptions =new InsertManyOptions();
+			insertManyOptions.ordered(false);
 			documents.addAll(toDocuments(dbDocList));
-
-			return collectionToUse.insertMany(documents);
+			return collectionToUse.insertMany(documents, insertManyOptions);
 
 		}).flatMap(s -> {
 
