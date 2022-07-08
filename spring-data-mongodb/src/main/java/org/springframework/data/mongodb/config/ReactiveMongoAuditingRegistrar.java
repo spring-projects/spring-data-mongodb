@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableReactiveMongoAuditing} annotation.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 3.1
  */
 class ReactiveMongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
@@ -49,7 +50,7 @@ class ReactiveMongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 	@Override
 	protected void postProcess(BeanDefinitionBuilder builder, AuditingConfiguration configuration,
 			BeanDefinitionRegistry registry) {
-		MongoAuditingRegistrar.potentiallyRegisterMongoPersistentEntities(builder, registry);
+		builder.setFactoryMethod("from").addConstructorArgReference("mongoMappingContext");
 	}
 
 	@Override

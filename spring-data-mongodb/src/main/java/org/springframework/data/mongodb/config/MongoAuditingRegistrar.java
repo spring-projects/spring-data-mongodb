@@ -17,10 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import java.lang.annotation.Annotation;
 
-import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.Ordered;
@@ -28,9 +26,7 @@ import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -39,6 +35,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport implements Ordered {
 
@@ -55,7 +52,8 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport impl
 	@Override
 	protected void postProcess(BeanDefinitionBuilder builder, AuditingConfiguration configuration,
 			BeanDefinitionRegistry registry) {
-		potentiallyRegisterMongoPersistentEntities(builder, registry);
+
+		builder.setFactoryMethod("from").addConstructorArgReference("mongoMappingContext");
 	}
 
 	@Override
@@ -86,39 +84,5 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport impl
 	@Override
 	public int getOrder() {
 		return Ordered.LOWEST_PRECEDENCE;
-	}
-
-	static void potentiallyRegisterMongoPersistentEntities(BeanDefinitionBuilder builder,
-			BeanDefinitionRegistry registry) {
-
-		String persistentEntitiesBeanName = MongoAuditingRegistrar.detectPersistentEntitiesBeanName(registry);
-
-		if (persistentEntitiesBeanName == null) {
-
-			persistentEntitiesBeanName = BeanDefinitionReaderUtils.uniqueBeanName("mongoPersistentEntities", registry);
-
-			// TODO: https://github.com/spring-projects/spring-framework/issues/28728
-			BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(PersistentEntities.class) //
-					.setFactoryMethod("of") //
-					.addConstructorArgReference("mongoMappingContext");
-
-			registry.registerBeanDefinition(persistentEntitiesBeanName, definition.getBeanDefinition());
-		}
-
-		builder.addConstructorArgReference(persistentEntitiesBeanName);
-	}
-
-	@Nullable
-	private static String detectPersistentEntitiesBeanName(BeanDefinitionRegistry registry) {
-
-		if (registry instanceof ListableBeanFactory beanFactory) {
-			for (String bn : beanFactory.getBeanNamesForType(PersistentEntities.class)) {
-				if (bn.startsWith("mongo")) {
-					return bn;
-				}
-			}
-		}
-
-		return null;
 	}
 }
