@@ -282,7 +282,7 @@ to build an imperative application and this https://start.spring.io/#type=maven-
 to build a reactive one.
 
 However, if you want to try out the latest and greatest, Spring Data MongoDB can be easily built with the https://github.com/takari/maven-wrapper[Maven wrapper]
-and minimally, JDK 8 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
+and minimally, JDK 17 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
 
 In order to build Spring Data MongoDB, you will need to https://www.mongodb.com/try/download/community[download]
 and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution].
