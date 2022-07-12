@@ -23,7 +23,7 @@ import io.micrometer.observation.Observation;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-public interface MongoHandlerKeyValuesProvider extends Observation.KeyValuesProvider<MongoHandlerContext> {
+public interface MongoHandlerObservationConvention extends Observation.ObservationConvention<MongoHandlerContext> {
 
 	@Override
 	default boolean supportsContext(Observation.Context context) {

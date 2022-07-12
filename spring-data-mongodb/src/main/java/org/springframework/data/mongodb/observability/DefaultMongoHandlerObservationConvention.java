@@ -26,12 +26,12 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandStartedEvent;
 
 /**
- * Default {@link MongoHandlerKeyValuesProvider} implementation.
+ * Default {@link MongoHandlerObservationConvention} implementation.
  *
  * @author Greg Turnquist
  * @since 4.0.0
  */
-public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValuesProvider {
+public class DefaultMongoHandlerObservationConvention implements MongoHandlerObservationConvention {
 
 	@Override
 	public KeyValues getLowCardinalityKeyValues(MongoHandlerContext context) {
@@ -58,6 +58,8 @@ public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValu
 				context.getCommandStartedEvent().getCommandName()));
 	}
 
+
+
 	/**
 	 * Extract connection details for a MongoDB connection into a {@link KeyValue}.
 	 *
@@ -78,5 +80,9 @@ public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValu
 		}
 
 		return null;
+	}
+
+	@Override public String getName() {
+		return "spring.data.mongodb.command";
 	}
 }

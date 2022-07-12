@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.observability;
 
 import io.micrometer.common.docs.KeyName;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 /**
@@ -31,10 +32,9 @@ enum MongoObservation implements DocumentedObservation {
 	 * Timer created around a MongoDB command execution.
 	 */
 	MONGODB_COMMAND_OBSERVATION {
-
 		@Override
-		public String getName() {
-			return "spring.data.mongodb.command";
+		public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+			return DefaultMongoHandlerObservationConvention.class;
 		}
 
 		@Override

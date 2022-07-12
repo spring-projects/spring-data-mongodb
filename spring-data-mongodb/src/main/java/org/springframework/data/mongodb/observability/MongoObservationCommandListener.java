@@ -37,18 +37,19 @@ import com.mongodb.event.CommandSucceededEvent;
  * @since 4.0.0
  */
 public final class MongoObservationCommandListener
-		implements CommandListener, Observation.KeyValuesProviderAware<MongoHandlerKeyValuesProvider> {
+		implements CommandListener, Observation.ObservationConventionAware<MongoHandlerObservationConvention> {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
+	private static final MongoHandlerObservationConvention DEFAULT_CONVENTION = new DefaultMongoHandlerObservationConvention();
+
 	private final ObservationRegistry observationRegistry;
 
-	private MongoHandlerKeyValuesProvider keyValuesProvider;
+	private MongoHandlerObservationConvention observationConvention;
 
 	public MongoObservationCommandListener(ObservationRegistry observationRegistry) {
 
 		this.observationRegistry = observationRegistry;
-		this.keyValuesProvider = new DefaultMongoHandlerKeyValuesProvider();
 	}
 
 	@Override
@@ -158,9 +159,8 @@ public final class MongoObservationCommandListener
 		MongoHandlerContext observationContext = new MongoHandlerContext(event, requestContext);
 
 		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
-				.observation(this.observationRegistry, observationContext) //
+				.observation(this.observationConvention, DEFAULT_CONVENTION, observationContext, this.observationRegistry) //
 				.contextualName(observationContext.getContextualName()) //
-				.keyValuesProvider(this.keyValuesProvider) //
 				.start();
 
 		requestContext.put(Observation.class, observation);
@@ -173,7 +173,7 @@ public final class MongoObservationCommandListener
 	}
 
 	@Override
-	public void setKeyValuesProvider(MongoHandlerKeyValuesProvider mongoHandlerKeyValuesProvider) {
-		this.keyValuesProvider = mongoHandlerKeyValuesProvider;
+	public void setObservationConvention(MongoHandlerObservationConvention mongoHandlerObservationConvention) {
+		this.observationConvention = mongoHandlerObservationConvention;
 	}
 }
