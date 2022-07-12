@@ -24,11 +24,10 @@
 	</modules>
 
 	<properties>
-		<source.level>16</source.level>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
-		<mongo>4.6.1</mongo>
+		<mongo>4.7.0-beta0</mongo>
 		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
