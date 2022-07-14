@@ -126,6 +126,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
+ * @author Ben Foster
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -1485,6 +1486,18 @@ public class ReactiveMongoTemplateUnitTests {
 						.granularity(TimeSeriesGranularity.HOURS).toString());
 	}
 
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithExpiration() {
+
+		template.createCollection(TimeSeriesTypeWithExpire.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
+				.isEqualTo(60);
+	}
+
 	private void stubFindSubscribe(Document document) {
 
 		Publisher<Document> realPublisher = Flux.just(document);
@@ -1555,6 +1568,13 @@ public class ReactiveMongoTemplateUnitTests {
 
 		@Field("time_stamp") Instant timestamp;
 		Object meta;
+	}
+
+	@TimeSeries(timeField = "timestamp", expireAfterSeconds = 60)
+	static class TimeSeriesTypeWithExpire {
+
+		String id;
+		Instant timestamp;
 	}
 
 	static class ValueCapturingEntityCallback<T> {

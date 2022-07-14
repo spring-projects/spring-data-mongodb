@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.timeseries.Granularity;
  * Identifies a domain object to be persisted to a MongoDB Time Series collection.
  *
  * @author Christoph Strobl
+ * @author Ben Foster
  * @since 3.3
  * @see <a href="https://docs.mongodb.com/manual/core/timeseries-collections">https://docs.mongodb.com/manual/core/timeseries-collections</a>
  */
@@ -83,4 +84,12 @@ public @interface TimeSeries {
 	@AliasFor(annotation = Document.class, attribute = "collation")
 	String collation() default "";
 
+	/**
+	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
+	 *
+	 * @return {@literal -1} by default.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/timeseries/timeseries-automatic-removal/#set-up-automatic-removal-for-time-series-collections--ttl-</a>
+	 */
+	int expireAfterSeconds() default -1;
 }

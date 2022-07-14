@@ -142,6 +142,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael J. Simons
  * @author Roman Puchkovskiy
  * @author Yadhukrishna S Pai
+ * @author Ben Foster
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -2272,6 +2273,18 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 						.granularity(TimeSeriesGranularity.HOURS).toString());
 	}
 
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithExpiration() {
+
+		template.createCollection(TimeSeriesTypeWithExpire.class);
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
+				.isEqualTo(60);
+	}
+
 	@Test // GH-3522
 	void usedCountDocumentsForEmptyQueryByDefault() {
 
@@ -2429,6 +2442,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		@Field("time_stamp") Instant timestamp;
 		Object meta;
 	}
+
+	@TimeSeries(timeField = "timestamp", expireAfterSeconds = 60)
+	static class TimeSeriesTypeWithExpire {
+
+		String id;
+		Instant timestamp;
+	}
+
 
 	static class TypeImplementingIterator implements Iterator {
 

@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 
@@ -67,6 +68,7 @@ import com.mongodb.client.model.ValidationOptions;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Ben Foster
  * @since 2.1
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
@@ -329,6 +331,10 @@ class EntityOperations {
 			}
 			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
 				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
+			}
+
+			if (it.getExpireAfterSeconds() >= 0) {
+				result.expireAfter(it.getExpireAfterSeconds(), TimeUnit.SECONDS);
 			}
 
 			result.timeSeriesOptions(options);
@@ -916,6 +922,9 @@ class EntityOperations {
 				if (!Granularity.DEFAULT.equals(timeSeries.granularity())) {
 					options = options.granularity(timeSeries.granularity());
 				}
+				if (timeSeries.expireAfterSeconds() >= 0) {
+					options = options.expireAfterSeconds(timeSeries.expireAfterSeconds());
+				}
 				collectionOptions = collectionOptions.timeSeries(options);
 			}
 
@@ -930,7 +939,8 @@ class EntityOperations {
 			if (StringUtils.hasText(source.getMetaField())) {
 				target = target.metaField(mappedNameOrDefault(source.getMetaField()));
 			}
-			return target.granularity(source.getGranularity());
+			return target.granularity(source.getGranularity())
+					.expireAfterSeconds(source.getExpireAfterSeconds());
 		}
 
 		private String mappedNameOrDefault(String name) {
