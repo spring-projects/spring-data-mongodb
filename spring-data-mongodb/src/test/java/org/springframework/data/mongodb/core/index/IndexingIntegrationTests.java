@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.annotation.DirtiesContext;
@@ -59,6 +61,7 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Jordi Llach
  * @author Mark Paluch
+ * @author Ben Foster
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
@@ -102,6 +105,7 @@ public class IndexingIntegrationTests {
 	@AfterEach
 	public void tearDown() {
 		operations.dropCollection(IndexedPerson.class);
+		operations.dropCollection(TimeSeriesWithSpelIndexTimeout.class);
 	}
 
 	@Test // DATAMONGO-237
@@ -159,6 +163,27 @@ public class IndexingIntegrationTests {
 		});
 	}
 
+	@Test // GH-4099
+	@DirtiesContext
+	public void evaluatesTimeSeriesTimeoutSpelExpresssionWithBeanReference() {
+
+		operations.createCollection(TimeSeriesWithSpelIndexTimeout.class);
+
+		final Optional<org.bson.Document> collectionInfo = operations.execute(db -> {
+			return db.listCollections().into(new ArrayList<>())
+					.stream()
+					.filter(c -> "timeSeriesWithSpelIndexTimeout".equals(c.get("name")))
+					.findFirst();
+		});
+
+		assertThat(collectionInfo).isPresent();
+		assertThat(collectionInfo.get()).hasEntrySatisfying("options", options -> {
+			final org.bson.Document optionsDoc = (org.bson.Document) options;
+			// MongoDB 5 returns int not long
+			assertThat(optionsDoc.get("expireAfterSeconds")).isIn(11, 11L);
+		});
+	}
+
 	@Target({ ElementType.FIELD })
 	@Retention(RetentionPolicy.RUNTIME)
 	@Indexed
@@ -187,6 +212,11 @@ public class IndexingIntegrationTests {
 	@Document
 	class WithSpelIndexTimeout {
 		@Indexed(expireAfter = "#{@myTimeoutResolver?.timeout}") String someString;
+	}
+
+	@TimeSeries(expireAfter = "#{@myTimeoutResolver?.timeout}", timeField = "timestamp")
+	class TimeSeriesWithSpelIndexTimeout {
+		Instant timestamp;
 	}
 
 	/**
