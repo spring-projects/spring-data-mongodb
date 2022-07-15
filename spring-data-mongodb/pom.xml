@@ -22,6 +22,11 @@
     <java-module-name>spring.data.mongodb</java-module-name>
     <project.root>${basedir}/..</project.root>
     <multithreadedtc>1.01</multithreadedtc>
+
+    <!-- TEMPORARY -->
+    <micrometer>1.10.0-SNAPSHOT</micrometer>
+    <micrometer-tracing>1.0.0-SNAPSHOT</micrometer-tracing>
+    <micrometer-docs-generator>1.0.0-SNAPSHOT</micrometer-docs-generator>
   </properties>
 
   <dependencies>
@@ -203,6 +208,12 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-tracing</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing-instrumentation-mongodb</artifactId>
       <optional>true</optional>
     </dependency>
 

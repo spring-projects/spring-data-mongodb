@@ -18,11 +18,13 @@ package org.springframework.data.mongodb.observability;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.mongodb.MongoObservationCommandListener;
 import io.micrometer.core.instrument.observation.TimerObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.instrumentation.mongodb.MongoTracingObservationHandler;
 import io.micrometer.tracing.test.SampleTestRunner;
 import io.micrometer.tracing.test.reporter.BuildingBlocks;
 
@@ -71,7 +73,7 @@ import com.mongodb.client.SynchronousContextProvider;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-@Disabled("Run this manually to visually test spans in Zipkin")
+//@Disabled("Run this manually to visually test spans in Zipkin")
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public class ZipkinIntegrationTests extends SampleTestRunner {
@@ -123,8 +125,7 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 	@EnableMongoRepositories
 	static class TestConfig {
 
-		@Bean
-		MongoObservationCommandListener mongoObservationCommandListener(ObservationRegistry registry) {
+		@Bean MongoObservationCommandListener mongoObservationCommandListener(ObservationRegistry registry) {
 			return new MongoObservationCommandListener(registry);
 		}
 
