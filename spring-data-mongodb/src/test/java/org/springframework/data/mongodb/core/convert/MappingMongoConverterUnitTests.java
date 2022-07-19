@@ -44,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2734,6 +2735,23 @@ class MappingMongoConverterUnitTests {
 		assertThat(projection.getName()).isEqualTo("my-book by Walter White");
 	}
 
+	@Test // GH-4120
+	void shouldReadDtoProjection() {
+
+		org.bson.Document author = new org.bson.Document("firstName", "Walter").append("lastName", "White");
+		org.bson.Document book = new org.bson.Document("_id", "foo").append("name", "my-book").append("author", author);
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		AuthorOnly projection = converter.project(introspector.introspect(AuthorOnly.class, Book.class), book);
+
+		assertThat(projection.getAuthor().getFirstName()).isEqualTo("Walter");
+		assertThat(projection.getAuthor().getLastName()).isEqualTo("White");
+	}
+
 	@Test // GH-3596
 	void simpleConverter() {
 
@@ -3635,6 +3653,21 @@ class MappingMongoConverterUnitTests {
 
 		@Value("#{target.name + ' by ' + target.author.firstName + ' ' + target.author.lastName}")
 		String getName();
+	}
+
+	@lombok.Value
+	static class AuthorOnly {
+
+		AuthorNameOnly author;
+	}
+
+	@lombok.Value
+	static class AuthorNameOnly {
+
+		String firstName;
+
+		String lastName;
+
 	}
 
 	@Data

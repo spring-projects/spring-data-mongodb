@@ -38,6 +38,7 @@ import org.bson.codecs.DecoderContext;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -415,8 +416,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
 			if (property == null) {
-				return new ConversionContext(sourceConverter, conversions, path, MappingMongoConverter.this::readDocument, collectionConverter,
-						mapConverter, dbRefConverter, elementConverter);
+				return new ConversionContext(sourceConverter, conversions, path, MappingMongoConverter.this::readDocument,
+						collectionConverter, mapConverter, dbRefConverter, elementConverter);
 			}
 
 			return new ProjectingConversionContext(sourceConverter, conversions, path, collectionConverter, mapConverter,
@@ -966,8 +967,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> type = prop.getTypeInformation();
 
 		if (conversions.getPropertyValueConversions().hasValueConverter(prop)) {
-			accessor.put(prop,
-					conversions.getPropertyValueConversions().getValueConverter(prop).write(obj, new MongoConversionContext(prop, this)));
+			accessor.put(prop, conversions.getPropertyValueConversions().getValueConverter(prop).write(obj,
+					new MongoConversionContext(prop, this)));
 			return;
 		}
 
@@ -1302,9 +1303,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
 		if (conversions.getPropertyValueConversions().hasValueConverter(property)) {
-			accessor.put(property,
-					conversions.getPropertyValueConversions().getValueConverter(property)
-							.write(value, new MongoConversionContext(property, this)));
+			accessor.put(property, conversions.getPropertyValueConversions().getValueConverter(property).write(value,
+					new MongoConversionContext(property, this)));
 			return;
 		}
 
@@ -1971,12 +1971,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			if (context.conversions.getPropertyValueConversions().hasValueConverter(property)) {
-				return (T) context.conversions.getPropertyValueConversions().getValueConverter(property).read(value,
+			CustomConversions conversions = context.conversions;
+			if (conversions.getPropertyValueConversions().hasValueConverter(property)) {
+				return (T) conversions.getPropertyValueConversions().getValueConverter(property).read(value,
 						new MongoConversionContext(property, context.sourceConverter));
 			}
 
-			return (T) context.convert(value, property.getTypeInformation());
+			ConversionContext contextToUse = context.forProperty(property.getName());
+
+			return (T) contextToUse.convert(value, property.getTypeInformation());
 		}
 
 		public MongoDbPropertyValueProvider withContext(ConversionContext context) {
