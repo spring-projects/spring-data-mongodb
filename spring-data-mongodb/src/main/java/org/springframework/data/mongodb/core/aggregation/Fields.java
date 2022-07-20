@@ -267,7 +267,7 @@ public final class Fields implements Iterable<Field> {
 		 */
 		public String getTarget() {
 
-			if (isLocalVar()) {
+			if (isLocalVar() || pointsToDBRefId()) {
 				return this.getRaw();
 			}
 
@@ -294,6 +294,10 @@ public final class Fields implements Iterable<Field> {
 		 */
 		public boolean isLocalVar() {
 			return raw.startsWith("$$") && !raw.startsWith("$$$");
+		}
+
+		protected boolean pointsToDBRefId() { // see https://jira.mongodb.org/browse/SERVER-14466
+			return raw.endsWith(".$id");
 		}
 
 		/**
