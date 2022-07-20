@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -174,6 +175,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final EntityOperations operations;
 	private final PropertyOperations propertyOperations;
 	private final QueryOperations queryOperations;
+	private final EntityLifecycleEventDelegate eventDelegate;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -228,6 +230,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDbFactory);
+		this.eventDelegate = new EntityLifecycleEventDelegate();
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -266,6 +269,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.operations = that.operations;
 		this.propertyOperations = that.propertyOperations;
 		this.queryOperations = that.queryOperations;
+		this.eventDelegate = that.eventDelegate;
 	}
 
 	/**
@@ -308,12 +312,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.readPreference = readPreference;
 	}
 
+	/**
+	 * Configure whether lifecycle events such as {@link AfterLoadEvent}, {@link BeforeSaveEvent}, etc. should be
+	 * published or whether emission should be suppressed. Enabled by default.
+	 *
+	 * @param enabled {@code true} to enable entity lifecycle events; {@code false} to disable entity lifecycle events.
+	 * @since 4.0
+	 * @see MongoMappingEvent
+	 */
+	public void setEntityLifecycleEventsEnabled(boolean enabled) {
+		this.eventDelegate.setEventsEnabled(enabled);
+	}
+
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		prepareIndexCreator(applicationContext);
 
 		eventPublisher = applicationContext;
+		eventDelegate.setPublisher(eventPublisher);
 
 		if (entityCallbacks == null) {
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
@@ -2168,11 +2185,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	protected <E extends MongoMappingEvent<T>, T> E maybeEmitEvent(E event) {
-
-		if (eventPublisher != null) {
-			eventPublisher.publishEvent(event);
-		}
-
+		eventDelegate.publishEvent(event);
 		return event;
 	}
 

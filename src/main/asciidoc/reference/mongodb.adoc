@@ -2537,9 +2537,15 @@ You can get at the MongoDB driver's `MongoDatabase.runCommand( )` method by usin
 [[mongodb.mapping-usage.events]]
 == Lifecycle Events
 
-The MongoDB mapping framework includes several `org.springframework.context.ApplicationEvent` events that your application can respond to by registering special beans in the `ApplicationContext`. Being based on Spring's `ApplicationContext` event infrastructure enables other products, such as Spring Integration, to easily receive these events, as they are a well known eventing mechanism in Spring-based applications.
+The MongoDB mapping framework includes several `org.springframework.context.ApplicationEvent` events that your application can respond to by registering special beans in the `ApplicationContext`.
+Being based on Spring's `ApplicationContext` event infrastructure enables other products, such as Spring Integration, to easily receive these events, as they are a well known eventing mechanism in Spring-based applications.
 
-To intercept an object before it goes through the conversion process (which turns your domain object into a `org.bson.Document`), you can register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method. When the event is dispatched, your listener is called and passed the domain object before it goes into the converter. The following example shows how to do so:
+Entity lifecycle events can be costly and you may notice a change in the performance profile when loading large result sets.
+You can disable lifecycle events on the link:https://docs.spring.io/spring-data/mongodb/docs/{version}/api/org/springframework/data/mongodb/core/MongoTemplate.html#setEntityLifecycleEventsEnabled(boolean)[Template API].
+
+To intercept an object before it goes through the conversion process (which turns your domain object into a `org.bson.Document`), you can register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method.
+When the event is dispatched, your listener is called and passed the domain object before it goes into the converter.
+The following example shows how to do so:
 
 ====
 [source,java]

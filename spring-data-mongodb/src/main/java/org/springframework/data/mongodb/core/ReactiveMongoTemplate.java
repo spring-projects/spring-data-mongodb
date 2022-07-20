@@ -185,6 +185,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private final EntityOperations operations;
 	private final PropertyOperations propertyOperations;
 	private final QueryOperations queryOperations;
+	private final EntityLifecycleEventDelegate eventDelegate;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -256,6 +257,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDatabaseFactory);
+		this.eventDelegate = new EntityLifecycleEventDelegate();
 
 		// We create indexes based on mapping events
 		if (this.mappingContext instanceof MongoMappingContext) {
@@ -287,6 +289,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.propertyOperations = that.propertyOperations;
 		this.sessionSynchronization = that.sessionSynchronization;
 		this.queryOperations = that.queryOperations;
+		this.eventDelegate = that.eventDelegate;
 	}
 
 	private void onCheckForIndexes(MongoPersistentEntity<?> entity, Consumer<Throwable> subscriptionExceptionHandler) {
@@ -339,12 +342,25 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.readPreference = readPreference;
 	}
 
+	/**
+	 * Configure whether lifecycle events such as {@link AfterLoadEvent}, {@link BeforeSaveEvent}, etc. should be
+	 * published or whether emission should be suppressed. Enabled by default.
+	 *
+	 * @param enabled {@code true} to enable entity lifecycle events; {@code false} to disable entity lifecycle events.
+	 * @since 4.0
+	 * @see MongoMappingEvent
+	 */
+	public void setEntityLifecycleEventsEnabled(boolean enabled) {
+		this.eventDelegate.setEventsEnabled(enabled);
+	}
+
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		prepareIndexCreator(applicationContext);
 
 		eventPublisher = applicationContext;
+		eventDelegate.setPublisher(eventPublisher);
 
 		if (entityCallbacks == null) {
 			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
@@ -2324,11 +2340,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected <E extends MongoMappingEvent<T>, T> E maybeEmitEvent(E event) {
-
-		if (eventPublisher != null) {
-			eventPublisher.publishEvent(event);
-		}
-
+		eventDelegate.publishEvent(event);
 		return event;
 	}
 

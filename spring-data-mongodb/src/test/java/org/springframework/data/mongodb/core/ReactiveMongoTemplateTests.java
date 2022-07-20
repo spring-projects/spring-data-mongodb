@@ -1616,6 +1616,21 @@ public class ReactiveMongoTemplateTests {
 		assertThat(saved.get().id).isNotNull();
 	}
 
+	@Test // GH-4107
+	void afterSaveEventCanBeDisabled() {
+
+		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
+		ImmutableVersioned source = new ImmutableVersioned();
+
+		template.setEntityLifecycleEventsEnabled(false);
+		template.insertAll(Collections.singleton(new ImmutableVersioned())) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		assertThat(saved).hasValue(null);
+	}
+
 	@Test // DATAMONGO-2012
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	@EnableIfReplicaSetAvailable

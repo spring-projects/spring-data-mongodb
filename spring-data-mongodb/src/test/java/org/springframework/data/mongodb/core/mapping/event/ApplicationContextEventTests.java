@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.repository.support.MongoRepositoryFactor
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.test.annotation.DirtiesContext;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
@@ -159,6 +160,22 @@ public class ApplicationContextEventTests {
 
 		assertThat(listener.onAfterConvertEvents).hasSize(1);
 		assertThat(listener.onAfterConvertEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
+	}
+
+	@Test // GH-4107
+	@DirtiesContext
+	public void configurationShouldDisableLifecycleEvents() {
+
+		template.setEntityLifecycleEventsEnabled(false);
+
+		PersonPojoStringId entity = new PersonPojoStringId("1", "Text");
+		template.insert(entity);
+
+		template.findOne(query(where("id").is(entity.getId())), PersonPojoStringId.class);
+
+		assertThat(listener.onAfterLoadEvents).isEmpty();
+		assertThat(listener.onBeforeConvertEvents).isEmpty();
+		assertThat(listener.onAfterConvertEvents).isEmpty();
 	}
 
 	@Test // DATAMONGO-1256
