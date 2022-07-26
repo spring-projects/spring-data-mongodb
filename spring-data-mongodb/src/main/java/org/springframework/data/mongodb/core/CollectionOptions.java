@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -445,9 +446,9 @@ public class CollectionOptions {
 
 		private final GranularityDefinition granularity;
 
-		private final int expireAfterSeconds;
+		private final long expireAfterSeconds;
 
-		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity, int expireAfterSeconds) {
+		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity, long expireAfterSeconds) {
 			Assert.hasText(timeField, "Time field must not be empty or null");
 
 			this.timeField = timeField;
@@ -493,13 +494,13 @@ public class CollectionOptions {
 		}
 
 		/**
-		 * Select the expireAfterSeconds parameter to define automatic removal of documents older than a specified
-		 * number of seconds.
+		 * Select the expire parameter to define automatic removal of documents older than a specified
+		 * duration.
 		 *
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
-		public TimeSeriesOptions expireAfterSeconds(int expireAfterSeconds) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfterSeconds);
+		public TimeSeriesOptions expireAfter(Duration timeout) {
+			return new TimeSeriesOptions(timeField, metaField, granularity, timeout.getSeconds());
 		}
 
 		/**
@@ -528,7 +529,7 @@ public class CollectionOptions {
 		/**
 		 * @return {@literal -1} if not specified
 		 */
-		public int getExpireAfterSeconds() {
+		public long getExpireAfterSeconds() {
 			return expireAfterSeconds;
 		}
 	}

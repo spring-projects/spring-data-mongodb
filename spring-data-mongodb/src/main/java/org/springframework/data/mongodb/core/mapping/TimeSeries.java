@@ -85,11 +85,41 @@ public @interface TimeSeries {
 	String collation() default "";
 
 	/**
-	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
+	 * Configures the number of seconds after which the document should expire. Defaults to -1 for no expiry.
 	 *
 	 * @return {@literal -1} by default.
 	 * @see <a href=
 	 *      "https://www.mongodb.com/docs/manual/core/timeseries/timeseries-automatic-removal/#set-up-automatic-removal-for-time-series-collections--ttl-</a>
 	 */
 	int expireAfterSeconds() default -1;
+
+
+	/**
+	 * Alternative for {@link #expireAfterSeconds()} to configure the timeout after which the document should expire.
+	 * Defaults to an empty {@link String} for no expiry. Accepts numeric values followed by their unit of measure:
+	 * <ul>
+	 * <li><b>d</b>: Days</li>
+	 * <li><b>h</b>: Hours</li>
+	 * <li><b>m</b>: Minutes</li>
+	 * <li><b>s</b>: Seconds</li>
+	 * <li>Alternatively: A Spring {@literal template expression}. The expression can result in a
+	 * {@link java.time.Duration} or a valid expiration {@link String} according to the already mentioned
+	 * conventions.</li>
+	 * </ul>
+	 * Supports ISO-8601 style.
+	 *
+	 * <pre class="code">
+	 *
+	 * &#0064;Indexed(expireAfter = "10s") String expireAfterTenSeconds;
+	 *
+	 * &#0064;Indexed(expireAfter = "1d") String expireAfterOneDay;
+	 *
+	 * &#0064;Indexed(expireAfter = "P2D") String expireAfterTwoDays;
+	 *
+	 * &#0064;Indexed(expireAfter = "#{&#0064;mySpringBean.timeout}") String expireAfterTimeoutObtainedFromSpringBean;
+	 * </pre>
+	 *
+	 * @return empty by default.
+	 */
+	String expireAfter() default "";
 }
