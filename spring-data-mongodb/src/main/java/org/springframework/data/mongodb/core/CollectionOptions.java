@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -90,7 +91,7 @@ public class CollectionOptions {
 
 	/**
 	 * Quick way to set up {@link CollectionOptions} for a Time Series collection. For more advanced settings use
-	 * {@link #timeSeries(TimeSeriesOptions)}.
+	 * {@link #timeSeries(String, Function)}.
 	 *
 	 * @param timeField The name of the property which contains the date in each time series document. Must not be
 	 *          {@literal null}.
@@ -99,7 +100,19 @@ public class CollectionOptions {
 	 * @since 3.3
 	 */
 	public static CollectionOptions timeSeries(String timeField) {
-		return empty().timeSeries(TimeSeriesOptions.timeSeries(timeField));
+		return timeSeries(timeField, it -> it);
+	}
+
+	/**
+	 * Set up {@link CollectionOptions} for a Time Series collection.
+	 *
+	 * @param timeField the name of the field that contains the date in each time series document.
+	 * @param options a function to apply additional settings to {@link TimeSeriesOptions}.
+	 * @return new instance of {@link CollectionOptions}.
+	 * @since 4.4
+	 */
+	public static CollectionOptions timeSeries(String timeField, Function<TimeSeriesOptions, TimeSeriesOptions> options) {
+		return empty().timeSeries(options.apply(TimeSeriesOptions.timeSeries(timeField)));
 	}
 
 	/**
@@ -619,9 +632,9 @@ public class CollectionOptions {
 	 * Options applicable to Time Series collections.
 	 *
 	 * @author Christoph Strobl
-	 * @since 3.3
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/core/timeseries-collections">https://docs.mongodb.com/manual/core/timeseries-collections</a>
+	 * @since 3.3
 	 */
 	public static class TimeSeriesOptions {
 
@@ -631,15 +644,16 @@ public class CollectionOptions {
 
 		private final GranularityDefinition granularity;
 
-		private final long expireAfterSeconds;
+		private final Duration expireAfter;
 
-		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity, long expireAfterSeconds) {
+		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity,
+				Duration expireAfter) {
 			Assert.hasText(timeField, "Time field must not be empty or null");
 
 			this.timeField = timeField;
 			this.metaField = metaField;
 			this.granularity = granularity;
-			this.expireAfterSeconds = expireAfterSeconds;
+			this.expireAfter = expireAfter;
 		}
 
 		/**
@@ -651,7 +665,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
 		public static TimeSeriesOptions timeSeries(String timeField) {
-			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT, -1);
+			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT, Duration.ofSeconds(-1));
 		}
 
 		/**
@@ -664,7 +678,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
 		public TimeSeriesOptions metaField(String metaField) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfterSeconds);
+			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
 		}
 
 		/**
@@ -675,17 +689,19 @@ public class CollectionOptions {
 		 * @see Granularity
 		 */
 		public TimeSeriesOptions granularity(GranularityDefinition granularity) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfterSeconds);
+			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
 		}
 
 		/**
-		 * Select the expire parameter to define automatic removal of documents older than a specified
-		 * duration.
+		 * Set the {@link Duration} for automatic removal of documents older than a specified value.
 		 *
+		 * @param ttl must not be {@literal null}.
 		 * @return new instance of {@link TimeSeriesOptions}.
+		 * @see com.mongodb.client.model.CreateCollectionOptions#expireAfter(long, java.util.concurrent.TimeUnit)
+		 * @since 4.4
 		 */
-		public TimeSeriesOptions expireAfter(Duration timeout) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, timeout.getSeconds());
+		public TimeSeriesOptions expireAfter(Duration ttl) {
+			return new TimeSeriesOptions(timeField, metaField, granularity, ttl);
 		}
 
 		/**
@@ -712,10 +728,13 @@ public class CollectionOptions {
 		}
 
 		/**
-		 * @return {@literal -1} if not specified
+		 * Get the {@link Duration} for automatic removal of documents.
+		 *
+		 * @return a {@link Duration#isNegative() negative} value if not specified.
+		 * @since 4.4
 		 */
-		public long getExpireAfterSeconds() {
-			return expireAfterSeconds;
+		public Duration getExpireAfter() {
+			return expireAfter;
 		}
 
 		@Override

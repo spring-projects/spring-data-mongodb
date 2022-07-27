@@ -54,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
+import org.springframework.data.mongodb.util.DurationUtil;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
@@ -800,24 +801,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @throws IllegalArgumentException for invalid duration values.
 	 */
 	private static Duration computeIndexTimeout(String timeoutValue, Supplier<EvaluationContext> evaluationContext) {
-
-		Object evaluatedTimeout = ExpressionUtils.evaluate(timeoutValue, evaluationContext);
-
-		if (evaluatedTimeout == null) {
-			return Duration.ZERO;
-		}
-
-		if (evaluatedTimeout instanceof Duration duration) {
-			return duration;
-		}
-
-		String val = evaluatedTimeout.toString();
-
-		if (val == null) {
-			return Duration.ZERO;
-		}
-
-		return DurationStyle.detectAndParse(val);
+		return DurationUtil.evaluate(timeoutValue, evaluationContext);
 	}
 
 	/**

@@ -201,3 +201,9 @@ template.createCollection(Measurement.class);
 
 The snippets above can easily be transferred to the reactive API offering the very same methods.
 Make sure to properly _subscribe_ to the returned publishers.
+
+[TIP]
+====
+You can use the `@TimeSeries#expireAfter` option to have MongoDB automatically remove expired buckets.
+The attribute allows different timeout formats like `10s`, `3h`,... as well as expression (`#{@mySpringBean.timeout}`) and property placeholder (`${my.property.timeout}`) syntax.
+====

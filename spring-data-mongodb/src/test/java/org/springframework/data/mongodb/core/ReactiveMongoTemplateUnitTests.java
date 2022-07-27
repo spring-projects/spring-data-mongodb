@@ -134,6 +134,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Yadhukrishna S Pai
  * @author Ben Foster
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveMongoTemplateUnitTests {
@@ -1740,18 +1741,6 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
 
-    @Test // GH-4099
-    void createCollectionShouldSetUpTimeSeriesWithExpirationSeconds() {
-
-        template.createCollection(TimeSeriesTypeWithExpireAfterSeconds.class).subscribe();
-
-        ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
-        verify(db).createCollection(any(), options.capture());
-
-        assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
-            .isEqualTo(60);
-    }
-
 	@Test // GH-4099
 	void createCollectionShouldSetUpTimeSeriesWithExpirationFromString() {
 
@@ -1805,14 +1794,6 @@ public class ReactiveMongoTemplateUnitTests {
 
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
 			template.createCollection(TimeSeriesTypeWithInvalidExpireAfter.class).subscribe()
-		);
-	}
-
-	@Test // GH-4099
-	void createCollectionShouldSetUpTimeSeriesWithDuplicateTimeoutExpiration() {
-
-		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() ->
-				template.createCollection(TimeSeriesTypeWithDuplicateExpireAfter.class).subscribe()
 		);
 	}
 
@@ -1964,13 +1945,6 @@ public class ReactiveMongoTemplateUnitTests {
 		Object meta;
 	}
 
-	@TimeSeries(timeField = "timestamp", expireAfterSeconds = 60)
-	static class TimeSeriesTypeWithExpireAfterSeconds {
-
-		String id;
-		Instant timestamp;
-	}
-
 	@TimeSeries(timeField = "timestamp", expireAfter = "10m")
 	static class TimeSeriesTypeWithExpireAfterAsPlainString {
 
@@ -2001,13 +1975,6 @@ public class ReactiveMongoTemplateUnitTests {
 
 	@TimeSeries(timeField = "timestamp", expireAfter = "123ops")
 	static class TimeSeriesTypeWithInvalidExpireAfter {
-
-		String id;
-		Instant timestamp;
-	}
-
-	@TimeSeries(timeField = "timestamp", expireAfter = "1s", expireAfterSeconds = 2)
-	static class TimeSeriesTypeWithDuplicateExpireAfter {
 
 		String id;
 		Instant timestamp;

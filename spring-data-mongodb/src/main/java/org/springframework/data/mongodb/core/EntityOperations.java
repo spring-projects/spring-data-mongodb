@@ -26,8 +26,11 @@ import java.util.concurrent.TimeUnit;
 import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.EnvironmentCapable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -41,26 +44,25 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.FieldName;
-import org.springframework.data.mongodb.core.index.DurationStyle;
-import org.springframework.data.mongodb.core.mapping.*;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.mongodb.util.DurationUtil;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.TargetAware;
-import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.Optionals;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.common.LiteralExpression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -96,7 +98,7 @@ class EntityOperations {
 
 	private final MongoJsonSchemaMapper schemaMapper;
 
-	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;
+	private @Nullable Environment environment;
 
 	EntityOperations(MongoConverter converter) {
 		this(converter, new QueryMapper(converter));
@@ -117,6 +119,9 @@ class EntityOperations {
 						.and(((target, underlyingType) -> !conversions.isSimpleType(target))),
 				context);
 		this.schemaMapper = new MongoJsonSchemaMapper(converter);
+		if (converter instanceof EnvironmentCapable environmentCapable) {
+			this.environment = environmentCapable.getEnvironment();
+		}
 	}
 
 	/**
@@ -285,7 +290,7 @@ class EntityOperations {
 			MongoPersistentEntity<?> entity = context.getPersistentEntity(entityClass);
 
 			if (entity != null) {
-				return new TypedEntityOperations(entity, evaluationContextProvider);
+				return new TypedEntityOperations(entity, environment);
 			}
 
 		}
@@ -363,8 +368,8 @@ class EntityOperations {
 				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
 			}
 
-			if (it.getExpireAfterSeconds() >= 0) {
-				result.expireAfter(it.getExpireAfterSeconds(), TimeUnit.SECONDS);
+			if (!it.getExpireAfter().isNegative()) {
+				result.expireAfter(it.getExpireAfter().toSeconds(), TimeUnit.SECONDS);
 			}
 
 			result.timeSeriesOptions(options);
@@ -1039,13 +1044,14 @@ class EntityOperations {
 	 */
 	static class TypedEntityOperations<T> implements TypedOperations<T> {
 
-		private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 		private final MongoPersistentEntity<T> entity;
-		private final EvaluationContextProvider evaluationContextProvider;
 
-		protected TypedEntityOperations(MongoPersistentEntity<T> entity, EvaluationContextProvider evaluationContextProvider) {
+		@Nullable private final Environment environment;
+
+		protected TypedEntityOperations(MongoPersistentEntity<T> entity, @Nullable Environment environment) {
+
 			this.entity = entity;
-			this.evaluationContextProvider = evaluationContextProvider;
+			this.environment = environment;
 		}
 
 		@Override
@@ -1094,21 +1100,10 @@ class EntityOperations {
 					options = options.granularity(timeSeries.granularity());
 				}
 
-				if (timeSeries.expireAfterSeconds() >= 0) {
-					options = options.expireAfter(Duration.ofSeconds(timeSeries.expireAfterSeconds()));
-				}
-
 				if (StringUtils.hasText(timeSeries.expireAfter())) {
 
-					if (timeSeries.expireAfterSeconds() >= 0) {
-						throw new IllegalStateException(String.format(
-								"@TimeSeries already defines an expiration timeout of %s seconds via TimeSeries#expireAfterSeconds; Please make to use either expireAfterSeconds or expireAfter",
-								timeSeries.expireAfterSeconds()));
-					}
-
-					Duration timeout = computeIndexTimeout(timeSeries.expireAfter(),
-							getEvaluationContextForProperty(entity));
-					if (!timeout.isZero() && !timeout.isNegative()) {
+					Duration timeout = computeIndexTimeout(timeSeries.expireAfter(), getEvaluationContextForEntity(entity));
+					if (!timeout.isNegative()) {
 						options = options.expireAfter(timeout);
 					}
 				}
@@ -1127,8 +1122,12 @@ class EntityOperations {
 			if (StringUtils.hasText(source.getMetaField())) {
 				target = target.metaField(mappedNameOrDefault(source.getMetaField()));
 			}
-			return target.granularity(source.getGranularity())
-					.expireAfter(Duration.ofSeconds(source.getExpireAfterSeconds()));
+			return target.granularity(source.getGranularity()).expireAfter(source.getExpireAfter());
+		}
+
+		@Override
+		public String getIdKeyName() {
+			return entity.getIdProperty().getName();
 		}
 
 		private String mappedNameOrDefault(String name) {
@@ -1136,96 +1135,32 @@ class EntityOperations {
 			return persistentProperty != null ? persistentProperty.getFieldName() : name;
 		}
 
-		@Override
-		public String getIdKeyName() {
-			return entity.getIdProperty().getName();
-		}
-	}
-
-
-    /**
-     * Compute the index timeout value by evaluating a potential
-     * {@link org.springframework.expression.spel.standard.SpelExpression} and parsing the final value.
-     *
-     * @param timeoutValue must not be {@literal null}.
-     * @param evaluationContext must not be {@literal null}.
-     * @return never {@literal null}
-     * @since 2.2
-     * @throws IllegalArgumentException for invalid duration values.
-     */
-    private static Duration computeIndexTimeout(String timeoutValue, EvaluationContext evaluationContext) {
-
-        Object evaluatedTimeout = evaluate(timeoutValue, evaluationContext);
-
-        if (evaluatedTimeout == null) {
-            return Duration.ZERO;
-        }
-
-        if (evaluatedTimeout instanceof Duration) {
-            return (Duration) evaluatedTimeout;
-        }
-
-			String val = evaluatedTimeout.toString();
-
-			if (val == null) {
-				return Duration.ZERO;
-			}
-
-			return DurationStyle.detectAndParse(val);
-		}
-
-		@Nullable
-		private static Object evaluate(String value, EvaluationContext evaluationContext) {
-
-			Expression expression = PARSER.parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
-			if (expression instanceof LiteralExpression) {
-				return value;
-			}
-
-			return expression.getValue(evaluationContext, Object.class);
-		}
-
-
 		/**
-		 * Get the {@link EvaluationContext} for a given {@link PersistentEntity entity} the default one.
+		 * Get the {@link ValueEvaluationContext} for a given {@link PersistentEntity entity} the default one.
 		 *
 		 * @param persistentEntity can be {@literal null}
-		 * @return
+		 * @return the context to use.
 		 */
-		private EvaluationContext getEvaluationContextForProperty(@Nullable PersistentEntity<?, ?> persistentEntity) {
+		private ValueEvaluationContext getEvaluationContextForEntity(@Nullable PersistentEntity<?, ?> persistentEntity) {
 
-			if (!(persistentEntity instanceof BasicMongoPersistentEntity)) {
-				return getEvaluationContext();
+			if (persistentEntity instanceof BasicMongoPersistentEntity<?> mongoEntity) {
+				return mongoEntity.getValueEvaluationContext(null);
 			}
 
-			EvaluationContext contextFromEntity = ((BasicMongoPersistentEntity<?>) persistentEntity).getEvaluationContext(null);
-
-			if (!EvaluationContextProvider.DEFAULT.equals(contextFromEntity)) {
-				return contextFromEntity;
-			}
-
-			return getEvaluationContext();
+			return ValueEvaluationContext.of(this.environment, SimpleEvaluationContext.forReadOnlyDataBinding().build());
 		}
 
 		/**
-		 * Get the default {@link EvaluationContext}.
+		 * Compute the index timeout value by evaluating a potential
+		 * {@link org.springframework.expression.spel.standard.SpelExpression} and parsing the final value.
 		 *
-		 * @return never {@literal null}.
-		 * @since 2.2
+		 * @param timeoutValue must not be {@literal null}.
+		 * @param evaluationContext must not be {@literal null}.
+		 * @return never {@literal null}
+		 * @throws IllegalArgumentException for invalid duration values.
 		 */
-		protected EvaluationContext getEvaluationContext() {
-			return evaluationContextProvider.getEvaluationContext(null);
+		private static Duration computeIndexTimeout(String timeoutValue, ValueEvaluationContext evaluationContext) {
+			return DurationUtil.evaluate(timeoutValue, evaluationContext);
 		}
-	}
-
-	/**
-	 * Set the {@link EvaluationContextProvider} used for obtaining the {@link EvaluationContext} used to compute
-	 * {@link org.springframework.expression.spel.standard.SpelExpression expressions}.
-	 *
-	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @since 2.2
-	 */
-	public void setEvaluationContextProvider(EvaluationContextProvider evaluationContextProvider) {
-		this.evaluationContextProvider = evaluationContextProvider;
 	}
 }
