@@ -74,6 +74,7 @@ import org.springframework.util.StringUtils;
  * @author Martin Macko
  * @author Mark Paluch
  * @author Dave Perryman
+ * @author Stefan Tirea
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -453,6 +454,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
 		}
 
+		if (StringUtils.hasText(index.collation())) {
+			indexDefinition.collation(Collation.parse(index.collation()));
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
@@ -570,6 +575,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (StringUtils.hasText(index.partialFilter())) {
 			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), persistentProperty.getOwner()));
+		}
+
+		if (StringUtils.hasText(index.collation())) {
+			indexDefinition.collation(Collation.parse(index.collation()));
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
