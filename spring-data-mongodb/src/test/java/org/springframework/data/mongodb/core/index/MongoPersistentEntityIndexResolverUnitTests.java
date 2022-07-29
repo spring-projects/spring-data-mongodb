@@ -61,6 +61,7 @@ import org.springframework.data.util.ClassTypeInformation;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Dave Perryman
+ * @author Stefan Tirea
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -699,6 +700,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					org.bson.Document.parse("{'value': {'$exists': true}}"));
 		}
 
+		@Test // DATAMONGO-2133
+		public void compoundIndexWithCollation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					CompoundIndexWithCollation.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "compound_index_with_collation").append("collation",
+							new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1));
+		}
+
 		@Document("CompoundIndexOnLevelOne")
 		class CompoundIndexOnLevelOne {
 
@@ -774,6 +788,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true,
 				unique = true, partialFilter = "{'value': {'$exists': true}}")
 		class SingleCompoundIndexWithPartialFilter {}
+
+		@Document
+		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}",
+				collation = "{'locale': 'en_US', 'strength': 2}")
+		class CompoundIndexWithCollation {}
 	}
 
 	public static class TextIndexedResolutionTests {
@@ -1400,6 +1419,18 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions).hasSize(1);
 		}
 
+		@Test // DATAMONGO-2133
+		public void indexedWithCollation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					IndexedWithCollation.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
+					.append("unique", true)
+					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+		}
+
 		@Document
 		class MixedIndexRoot {
 
@@ -1715,6 +1746,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		class WithComposedHashedIndexAndIndex {
 
 			@ComposedHashIndexed(name = "idx-name") String value;
+		}
+
+		@Document
+		class IndexedWithCollation {
+			@Indexed(collation = "{'locale': 'en_US', 'strength': 2}", unique = true) //
+			private String value;
 		}
 
 		@HashIndexed

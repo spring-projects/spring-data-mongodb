@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
  * @author Christoph Strobl
  * @author Jordi Llach
  * @author Mark Paluch
+ * @author Stefan Tirea
  */
 @Target({ ElementType.ANNOTATION_TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
@@ -173,4 +174,14 @@ public @interface Indexed {
 	 * @since 3.1
 	 */
 	String partialFilter() default "";
+
+	/**
+	 * Apply collation configuration for field <br />
+	 *
+	 * @return empty by default.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation//</a>
+	 * @since 3.1
+	 */
+	String collation() default "";
 }

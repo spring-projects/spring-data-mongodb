@@ -46,6 +46,7 @@ import java.lang.annotation.Target;
  * @author Johno Crawford
  * @author Christoph Strobl
  * @author Dave Perryman
+ * @author Stefan Tirea
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -163,4 +164,19 @@ public @interface CompoundIndex {
 	 * @since 3.1
 	 */
 	String partialFilter() default "";
+
+	/**
+	 * The actual collation definition in JSON format or a {@link org.springframework.expression.spel.standard.SpelExpression
+	 * template expression} resolving to either a JSON String or a {@link org.bson.Document}. The keys of the JSON
+	 * document are configuration options for the collation (language-specific rules for string comparison).
+	 * <br><br>
+	 * TODO write code documentation & example!!!
+	 * <br>
+	 *
+	 * @return empty String by default.
+	 * @see <a href=
+	 * "https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation/</a>
+	 * @since 3.4
+	 */
+	String collation() default "";
 }
