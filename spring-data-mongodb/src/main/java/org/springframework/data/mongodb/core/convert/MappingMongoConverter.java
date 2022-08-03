@@ -39,7 +39,6 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -188,7 +187,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(path, "ObjectPath must not be null");
 
-		return new ConversionContext(this, conversions, path, this::readDocument, this::readCollectionOrArray,
+		return new DefaultConversionContext(this, conversions, path, this::readDocument, this::readCollectionOrArray,
 				this::readMap, this::readDBRef, this::getPotentiallyConvertedSimpleRead);
 	}
 
@@ -385,7 +384,46 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return readDocument(context, source, typeHint);
 	}
 
-	class ProjectingConversionContext extends ConversionContext {
+	static class AssociationConversionContext implements ConversionContext {
+
+		private final ConversionContext delegate;
+
+		public AssociationConversionContext(ConversionContext delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public <S> S convert(Object source, TypeInformation<? extends S> typeHint, ConversionContext context) {
+			return delegate.convert(source, typeHint, context);
+		}
+
+		@Override
+		public ConversionContext withPath(ObjectPath currentPath) {
+			return new AssociationConversionContext(delegate.withPath(currentPath));
+		}
+
+		@Override
+		public ObjectPath getPath() {
+			return delegate.getPath();
+		}
+
+		@Override
+		public CustomConversions getCustomConversions() {
+			return delegate.getCustomConversions();
+		}
+
+		@Override
+		public MongoConverter getSourceConverter() {
+			return delegate.getSourceConverter();
+		}
+
+		@Override
+		public boolean resolveIdsInContext() {
+			return true;
+		}
+	}
+
+	class ProjectingConversionContext extends DefaultConversionContext {
 
 		private final EntityProjection<?, ?> returnedTypeDescriptor;
 
@@ -401,12 +439,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		@Override
-		public ConversionContext forProperty(String name) {
+		public DefaultConversionContext forProperty(String name) {
 
 			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
 			if (property == null) {
-				return new ConversionContext(sourceConverter, conversions, path, MappingMongoConverter.this::readDocument,
-						collectionConverter, mapConverter, dbRefConverter, elementConverter);
+				return new DefaultConversionContext(sourceConverter, conversions, path,
+						MappingMongoConverter.this::readDocument, collectionConverter, mapConverter, dbRefConverter,
+						elementConverter);
 			}
 
 			return new ProjectingConversionContext(sourceConverter, conversions, path, collectionConverter, mapConverter,
@@ -414,7 +453,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		@Override
-		public ConversionContext withPath(ObjectPath currentPath) {
+		public DefaultConversionContext withPath(ObjectPath currentPath) {
 			return new ProjectingConversionContext(sourceConverter, conversions, currentPath, collectionConverter,
 					mapConverter, dbRefConverter, elementConverter, returnedTypeDescriptor);
 		}
@@ -529,7 +568,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
 		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
 
-		if (hasIdentifier(bson)) {
+		if (context.resolveIdsInContext() && hasIdentifier(bson)) {
 			S existing = findContextualEntity(context, entity, bson);
 			if (existing != null) {
 				return existing;
@@ -632,7 +671,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			ConversionContext propertyContext = context.forProperty(prop.getName());
+			ConversionContext propertyContext = context.forProperty(prop);
 			MongoDbPropertyValueProvider valueProviderToUse = valueProvider.withContext(propertyContext);
 
 			if (prop.isAssociation() && !entity.isConstructorArgument(prop)) {
@@ -706,7 +745,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				accessor.setProperty(property,
 						dbRefResolver.resolveReference(property,
 								new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)),
-								referenceLookupDelegate, context::convert));
+								referenceLookupDelegate, context.forProperty(property)::convert));
 			}
 			return;
 		}
@@ -1935,13 +1974,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			CustomConversions conversions = context.conversions;
+			CustomConversions conversions = context.getCustomConversions();
 			if (conversions.hasValueConverter(property)) {
 				return (T) conversions.getPropertyValueConversions().getValueConverter(property).read(value,
-						new MongoConversionContext(property, context.sourceConverter));
+						new MongoConversionContext(property, context.getSourceConverter()));
 			}
 
-			ConversionContext contextToUse = context.forProperty(property.getName());
+			ConversionContext contextToUse = context.forProperty(property);
 
 			return (T) contextToUse.convert(value, property.getTypeInformation());
 		}
@@ -2158,13 +2197,49 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
+	interface ConversionContext {
+
+		default <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint) {
+			return convert(source, typeHint, this);
+		}
+
+		<S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint, ConversionContext context);
+
+		ConversionContext withPath(ObjectPath currentPath);
+
+		ObjectPath getPath();
+
+		default ConversionContext forProperty(String name) {
+			return this;
+		}
+
+		default ConversionContext forProperty(@Nullable PersistentProperty property) {
+
+			if (property != null) {
+				if (property.isAssociation()) {
+					return new AssociationConversionContext(forProperty(property.getName()));
+				}
+				return forProperty(property.getName());
+			}
+			return this;
+		}
+
+		default boolean resolveIdsInContext() {
+			return false;
+		}
+
+		CustomConversions getCustomConversions();
+
+		MongoConverter getSourceConverter();
+	}
+
 	/**
 	 * Conversion context holding references to simple {@link ValueConverter} and {@link ContainerValueConverter}.
 	 * Entrypoint for recursive conversion of {@link Document} and other types.
 	 *
 	 * @since 3.2
 	 */
-	protected static class ConversionContext {
+	protected static class DefaultConversionContext implements ConversionContext {
 
 		final MongoConverter sourceConverter;
 		final org.springframework.data.convert.CustomConversions conversions;
@@ -2175,7 +2250,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		final ContainerValueConverter<DBRef> dbRefConverter;
 		final ValueConverter<Object> elementConverter;
 
-		ConversionContext(MongoConverter sourceConverter,
+		DefaultConversionContext(MongoConverter sourceConverter,
 				org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
 				ContainerValueConverter<Bson> documentConverter, ContainerValueConverter<Collection<?>> collectionConverter,
 				ContainerValueConverter<Bson> mapConverter, ContainerValueConverter<DBRef> dbRefConverter,
@@ -2199,7 +2274,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @return the converted object.
 		 */
 		@SuppressWarnings("unchecked")
-		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint) {
+		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint,
+				ConversionContext context) {
 
 			Assert.notNull(source, "Source must not be null");
 			Assert.notNull(typeHint, "TypeInformation must not be null");
@@ -2219,18 +2295,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				if (typeHint.isCollectionLike() || typeHint.getType().isAssignableFrom(Collection.class)) {
-					return (S) collectionConverter.convert(this, (Collection<?>) source, typeHint);
+					return (S) collectionConverter.convert(context, (Collection<?>) source, typeHint);
 				}
 			}
 
 			if (typeHint.isMap()) {
 
 				if (ClassUtils.isAssignable(Document.class, typeHint.getType())) {
-					return (S) documentConverter.convert(this, BsonUtils.asBson(source), typeHint);
+					return (S) documentConverter.convert(context, BsonUtils.asBson(source), typeHint);
 				}
 
 				if (BsonUtils.supportsBson(source)) {
-					return (S) mapConverter.convert(this, BsonUtils.asBson(source), typeHint);
+					return (S) mapConverter.convert(context, BsonUtils.asBson(source), typeHint);
 				}
 
 				throw new IllegalArgumentException(
@@ -2238,7 +2314,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (source instanceof DBRef) {
-				return (S) dbRefConverter.convert(this, (DBRef) source, typeHint);
+				return (S) dbRefConverter.convert(context, (DBRef) source, typeHint);
 			}
 
 			if (source instanceof Collection) {
@@ -2247,31 +2323,41 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (BsonUtils.supportsBson(source)) {
-				return (S) documentConverter.convert(this, BsonUtils.asBson(source), typeHint);
+				return (S) documentConverter.convert(context, BsonUtils.asBson(source), typeHint);
 			}
 
 			return (S) elementConverter.convert(source, typeHint);
 		}
 
+		@Override
+		public CustomConversions getCustomConversions() {
+			return conversions;
+		}
+
+		@Override
+		public MongoConverter getSourceConverter() {
+			return sourceConverter;
+		}
+
 		/**
-		 * Create a new {@link ConversionContext} with {@link ObjectPath currentPath} applied.
+		 * Create a new {@link DefaultConversionContext} with {@link ObjectPath currentPath} applied.
 		 *
 		 * @param currentPath must not be {@literal null}.
-		 * @return a new {@link ConversionContext} with {@link ObjectPath currentPath} applied.
+		 * @return a new {@link DefaultConversionContext} with {@link ObjectPath currentPath} applied.
 		 */
-		public ConversionContext withPath(ObjectPath currentPath) {
+		public DefaultConversionContext withPath(ObjectPath currentPath) {
 
 			Assert.notNull(currentPath, "ObjectPath must not be null");
 
-			return new ConversionContext(sourceConverter, conversions, currentPath, documentConverter, collectionConverter,
-					mapConverter, dbRefConverter, elementConverter);
+			return new DefaultConversionContext(sourceConverter, conversions, currentPath, documentConverter,
+					collectionConverter, mapConverter, dbRefConverter, elementConverter);
 		}
 
 		public ObjectPath getPath() {
 			return path;
 		}
 
-		public ConversionContext forProperty(String name) {
+		public DefaultConversionContext forProperty(String name) {
 			return this;
 		}
 
