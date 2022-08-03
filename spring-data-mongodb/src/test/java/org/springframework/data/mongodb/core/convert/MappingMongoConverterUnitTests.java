@@ -45,7 +45,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2823,6 +2822,15 @@ class MappingMongoConverterUnitTests {
 		assertThat(read.viaRegisteredConverter).isEqualTo("spring");
 	}
 
+	@Test // GH-4098
+	void resolvesCyclicNonAssociationValueFromSource/* and does not attempt to be smart and look up id values in context */() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("value", "v1").append("cycle",
+				new org.bson.Document("_id", "id-1").append("value", "v2"));
+
+		assertThat(converter.read(Cyclic.class, source).cycle.value).isEqualTo("v2");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3546,12 +3554,10 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef
-		@org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef
-		@org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
 	}
@@ -3663,6 +3669,14 @@ class MappingMongoConverterUnitTests {
 
 		String lastName;
 
+	}
+
+	@Data
+	static class Cyclic {
+
+		@Id String id;
+		String value;
+		Cyclic cycle;
 	}
 
 }
