@@ -395,81 +395,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return readDocument(context, source, typeHint);
 	}
 
-	static class AssociationConversionContext implements ConversionContext {
-
-		private final ConversionContext delegate;
-
-		public AssociationConversionContext(ConversionContext delegate) {
-			this.delegate = delegate;
-		}
-
-		@Override
-		public <S> S convert(Object source, TypeInformation<? extends S> typeHint, ConversionContext context) {
-			return delegate.convert(source, typeHint, context);
-		}
-
-		@Override
-		public ConversionContext withPath(ObjectPath currentPath) {
-			return new AssociationConversionContext(delegate.withPath(currentPath));
-		}
-
-		@Override
-		public ObjectPath getPath() {
-			return delegate.getPath();
-		}
-
-		@Override
-		public CustomConversions getCustomConversions() {
-			return delegate.getCustomConversions();
-		}
-
-		@Override
-		public MongoConverter getSourceConverter() {
-			return delegate.getSourceConverter();
-		}
-
-		@Override
-		public boolean resolveIdsInContext() {
-			return true;
-		}
-	}
-
-	class ProjectingConversionContext extends DefaultConversionContext {
-
-		private final EntityProjection<?, ?> returnedTypeDescriptor;
-
-		ProjectingConversionContext(MongoConverter sourceConverter, CustomConversions customConversions, ObjectPath path,
-				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
-				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
-				EntityProjection<?, ?> projection) {
-			super(sourceConverter, customConversions, path,
-					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, projection),
-
-					collectionConverter, mapConverter, dbRefConverter, elementConverter);
-			this.returnedTypeDescriptor = projection;
-		}
-
-		@Override
-		public DefaultConversionContext forProperty(String name) {
-
-			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
-			if (property == null) {
-				return new DefaultConversionContext(sourceConverter, conversions, path,
-						MappingMongoConverter.this::readDocument, collectionConverter, mapConverter, dbRefConverter,
-						elementConverter);
-			}
-
-			return new ProjectingConversionContext(sourceConverter, conversions, path, collectionConverter, mapConverter,
-					dbRefConverter, elementConverter, property);
-		}
-
-		@Override
-		public DefaultConversionContext withPath(ObjectPath currentPath) {
-			return new ProjectingConversionContext(sourceConverter, conversions, currentPath, collectionConverter,
-					mapConverter, dbRefConverter, elementConverter, returnedTypeDescriptor);
-		}
-	}
-
 	static class MapPersistentPropertyAccessor implements PersistentPropertyAccessor<Map<String, Object>> {
 
 		Map<String, Object> map = new LinkedHashMap<>();
@@ -580,15 +505,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private <S> S read(ConversionContext context, MongoPersistentEntity<S> entity, Document bson) {
 
+		S existing = context.findContextualEntity(entity, bson);
+		if (existing != null) {
+			return existing;
+		}
+
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
 		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
-
-		if (context.resolveIdsInContext() && hasIdentifier(bson)) {
-			S existing = findContextualEntity(context, entity, bson);
-			if (existing != null) {
-				return existing;
-			}
-		}
 
 		PreferredConstructor<S, MongoPersistentProperty> persistenceConstructor = entity.getPersistenceConstructor();
 
@@ -605,16 +528,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return instance;
-	}
-
-	private boolean hasIdentifier(Document bson) {
-		return bson.get(BasicMongoPersistentProperty.ID_FIELD_NAME) != null;
-	}
-
-	@Nullable
-	private <S> S findContextualEntity(ConversionContext context, MongoPersistentEntity<S> entity, Document bson) {
-		return context.getPath().getPathItem(bson.get(BasicMongoPersistentProperty.ID_FIELD_NAME), entity.getCollection(),
-				entity.getType());
 	}
 
 	private <S> S populateProperties(ConversionContext context, MongoPersistentEntity<S> entity,
@@ -2240,40 +2153,130 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
+	/**
+	 * Conversion context defining an interface for graph-traversal-based conversion of documents. Entrypoint for
+	 * recursive conversion of {@link Document} and other types.
+	 *
+	 * @since 3.4.3
+	 */
 	interface ConversionContext {
 
+		/**
+		 * Converts a source object into {@link TypeInformation target}.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @param typeHint must not be {@literal null}.
+		 * @return the converted object.
+		 */
 		default <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint) {
 			return convert(source, typeHint, this);
 		}
 
+		/**
+		 * Converts a source object into {@link TypeInformation target}.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @param typeHint must not be {@literal null}.
+		 * @param context must not be {@literal null}.
+		 * @return the converted object.
+		 */
 		<S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint, ConversionContext context);
 
+		/**
+		 * Create a new {@link ConversionContext} with {@link ObjectPath currentPath} applied.
+		 *
+		 * @param currentPath must not be {@literal null}.
+		 * @return a new {@link ConversionContext} with {@link ObjectPath currentPath} applied.
+		 */
 		ConversionContext withPath(ObjectPath currentPath);
 
-		ObjectPath getPath();
-
+		/**
+		 * Obtain a {@link ConversionContext} for the given property {@code name}.
+		 *
+		 * @param name must not be {@literal null}.
+		 * @return the {@link ConversionContext} to be used for conversion of the given property.
+		 */
 		default ConversionContext forProperty(String name) {
 			return this;
 		}
 
-		default ConversionContext forProperty(@Nullable PersistentProperty property) {
+		/**
+		 * Obtain a {@link ConversionContext} for the given {@link MongoPersistentProperty}.
+		 *
+		 * @param property must not be {@literal null}.
+		 * @return the {@link ConversionContext} to be used for conversion of the given property.
+		 */
+		default ConversionContext forProperty(MongoPersistentProperty property) {
 
-			if (property != null) {
-				if (property.isAssociation()) {
-					return new AssociationConversionContext(forProperty(property.getName()));
-				}
-				return forProperty(property.getName());
-			}
-			return this;
+			return property.isAssociation() ? new AssociationConversionContext(forProperty(property.getName()))
+					: forProperty(property.getName());
 		}
 
-		default boolean resolveIdsInContext() {
-			return false;
+		/**
+		 * Lookup a potentially existing entity instance of the given {@link MongoPersistentEntity} and {@link Document}
+		 *
+		 * @param entity
+		 * @param document
+		 * @return
+		 * @param <S>
+		 */
+		@Nullable
+		default <S> S findContextualEntity(MongoPersistentEntity<S> entity, Document document) {
+			return null;
 		}
+
+		ObjectPath getPath();
 
 		CustomConversions getCustomConversions();
 
 		MongoConverter getSourceConverter();
+
+	}
+
+	/**
+	 * @since 3.4.3
+	 */
+	static class AssociationConversionContext implements ConversionContext {
+
+		private final ConversionContext delegate;
+
+		public AssociationConversionContext(ConversionContext delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public <S> S convert(Object source, TypeInformation<? extends S> typeHint, ConversionContext context) {
+			return delegate.convert(source, typeHint, context);
+		}
+
+		@Override
+		public ConversionContext withPath(ObjectPath currentPath) {
+			return new AssociationConversionContext(delegate.withPath(currentPath));
+		}
+
+		@Override
+		public <S> S findContextualEntity(MongoPersistentEntity<S> entity, Document document) {
+
+			Object identifier = document.get(BasicMongoPersistentProperty.ID_FIELD_NAME);
+
+			return identifier != null ? getPath().getPathItem(identifier, entity.getCollection(), entity.getType()) : null;
+		}
+
+		@Override
+		public ObjectPath getPath() {
+			return delegate.getPath();
+		}
+
+		@Override
+		public CustomConversions getCustomConversions() {
+			return delegate.getCustomConversions();
+		}
+
+		@Override
+		public MongoConverter getSourceConverter() {
+			return delegate.getSourceConverter();
+		}
+
 	}
 
 	/**
@@ -2309,14 +2312,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.elementConverter = elementConverter;
 		}
 
-		/**
-		 * Converts a source object into {@link TypeInformation target}.
-		 *
-		 * @param source must not be {@literal null}.
-		 * @param typeHint must not be {@literal null}.
-		 * @return the converted object.
-		 */
 		@SuppressWarnings("unchecked")
+		@Override
 		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint,
 				ConversionContext context) {
 
@@ -2382,13 +2379,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return sourceConverter;
 		}
 
-		/**
-		 * Create a new {@link DefaultConversionContext} with {@link ObjectPath currentPath} applied.
-		 *
-		 * @param currentPath must not be {@literal null}.
-		 * @return a new {@link DefaultConversionContext} with {@link ObjectPath currentPath} applied.
-		 */
-		public DefaultConversionContext withPath(ObjectPath currentPath) {
+		@Override
+		public ConversionContext withPath(ObjectPath currentPath) {
 
 			Assert.notNull(currentPath, "ObjectPath must not be null");
 
@@ -2396,12 +2388,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					collectionConverter, mapConverter, dbRefConverter, elementConverter);
 		}
 
+		@Override
 		public ObjectPath getPath() {
 			return path;
-		}
-
-		public DefaultConversionContext forProperty(String name) {
-			return this;
 		}
 
 		/**
@@ -2427,6 +2416,45 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		}
 
+	}
+
+	/**
+	 * @since 3.4.3
+	 */
+	class ProjectingConversionContext extends DefaultConversionContext {
+
+		private final EntityProjection<?, ?> returnedTypeDescriptor;
+
+		ProjectingConversionContext(MongoConverter sourceConverter, CustomConversions customConversions, ObjectPath path,
+				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
+				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
+				EntityProjection<?, ?> projection) {
+			super(sourceConverter, customConversions, path,
+					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, projection),
+
+					collectionConverter, mapConverter, dbRefConverter, elementConverter);
+			this.returnedTypeDescriptor = projection;
+		}
+
+		@Override
+		public ConversionContext forProperty(String name) {
+
+			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
+			if (property == null) {
+				return new DefaultConversionContext(sourceConverter, conversions, path,
+						MappingMongoConverter.this::readDocument, collectionConverter, mapConverter, dbRefConverter,
+						elementConverter);
+			}
+
+			return new ProjectingConversionContext(sourceConverter, conversions, path, collectionConverter, mapConverter,
+					dbRefConverter, elementConverter, property);
+		}
+
+		@Override
+		public ConversionContext withPath(ObjectPath currentPath) {
+			return new ProjectingConversionContext(sourceConverter, conversions, currentPath, collectionConverter,
+					mapConverter, dbRefConverter, elementConverter, returnedTypeDescriptor);
+		}
 	}
 
 	private static class PropertyTranslatingPropertyAccessor<T> implements PersistentPropertyPathAccessor<T> {
