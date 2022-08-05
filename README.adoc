@@ -115,7 +115,7 @@ Use `<mongo:client-settings cluster-hosts="..." />` instead
 
 | `<mongo:db-factory writeConcern="..." />`
 | NONE, NORMAL, SAFE, FSYNC_SAFE, REPLICAS_SAFE, MAJORITY
-| W1, W2, W3, UNAKNOWLEDGED, AKNOWLEDGED, JOURNALED, MAJORITY
+| W1, W2, W3, UNACKNOWLEDGED, ACKNOWLEDGED, JOURNALED, MAJORITY
 |===
 
 .Removed XML Namespace Elements and Attributes:
