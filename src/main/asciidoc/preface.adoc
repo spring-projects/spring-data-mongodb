@@ -39,7 +39,7 @@ The starting point for learning about MongoDB is https://www.mongodb.org/[www.mo
 [[requirements]]
 == Requirements
 
-The Spring Data MongoDB 3.x binaries require JDK level 8.0 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
+The Spring Data MongoDB 4.x binaries require JDK level 17 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
 
 In terms of document stores, you need at least version 3.6 of https://www.mongodb.org/[MongoDB], though we recommend a more recent version.
 
