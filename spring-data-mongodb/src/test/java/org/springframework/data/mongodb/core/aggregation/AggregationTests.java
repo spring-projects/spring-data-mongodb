@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
@@ -42,8 +41,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.assertj.core.data.Offset;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
@@ -73,6 +70,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
@@ -100,7 +98,6 @@ import com.mongodb.client.model.WriteModel;
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
-	private static final Log LOGGER = LogFactory.getLog(AggregationTests.class);
 
 	private static boolean initialized = false;
 
@@ -318,6 +315,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1391
+	@EnableIfMongoServerVersion(isLessThan = "6.0") // $sort does not seem to have an effect on $unwind
 	void shouldUnwindPreserveEmpty() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
@@ -1375,7 +1373,8 @@ public class AggregationTests {
 
 		mongoTemplate.dropCollection(ObjectWithDate.class);
 
-		ZonedDateTime dateTime = ZonedDateTime.of(LocalDateTime.of(LocalDate.of(2014, 2, 7), LocalTime.of(3, 4, 5, 6)), ZoneId.of("UTC"));
+		ZonedDateTime dateTime = ZonedDateTime.of(LocalDateTime.of(LocalDate.of(2014, 2, 7), LocalTime.of(3, 4, 5, 6)),
+				ZoneId.of("UTC"));
 
 		ObjectWithDate owd = new ObjectWithDate(Date.from(dateTime.toInstant()));
 		mongoTemplate.insert(owd);
@@ -1706,10 +1705,8 @@ public class AggregationTests {
 				.forExpression(ConditionalOperators.Cond.when("applyDiscount").then(0.9D).otherwise(1.0D));
 
 		TypedAggregation<Sales2> agg = Aggregation.newAggregation(Sales2.class,
-				Aggregation.project()
-						.and(VariableOperators.Let.define(total, discounted).andApply(
-								ArithmeticOperators.valueOf("total").multiplyBy("discounted")))
-						.as("finalTotal"));
+				Aggregation.project().and(VariableOperators.Let.define(total, discounted)
+						.andApply(ArithmeticOperators.valueOf("total").multiplyBy("discounted"))).as("finalTotal"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		assertThat(result.getMappedResults()).contains(new Document("_id", "1").append("finalTotal", 9.450000000000001D),

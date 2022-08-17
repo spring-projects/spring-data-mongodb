@@ -61,8 +61,8 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 
 |2022.0
 |4.0.x
-|4.6.x
-|5.0.x
+|4.7.x
+|6.0.x
 
 |2021.2
 |3.4.x
