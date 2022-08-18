@@ -46,7 +46,6 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -81,6 +80,7 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
@@ -127,16 +127,7 @@ import com.mongodb.CursorType;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.EstimatedDocumentCountOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -669,6 +660,42 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public Mono<MongoCollection<Document>> createCollection(String collectionName,
 			@Nullable CollectionOptions collectionOptions) {
 		return doCreateCollection(collectionName, convertToCreateCollectionOptions(collectionOptions));
+	}
+
+	@Override
+	public Mono<MongoCollection<Document>> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+
+		return createView(name, getCollectionName(source),
+				queryOperations.createAggregation(Aggregation.newAggregation(source, pipeline.getOperations()), source),
+				options);
+	}
+
+	@Override
+	public Mono<MongoCollection<Document>> createView(String name, String source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options) {
+
+		return createView(name, source,
+				queryOperations.createAggregation(Aggregation.newAggregation(pipeline.getOperations()), (Class<?>) null),
+				options);
+	}
+
+	private Mono<MongoCollection<Document>> createView(String name, String source, AggregationDefinition aggregation,
+			@Nullable ViewOptions options) {
+		return doCreateView(name, source, aggregation.getAggregationPipeline(), options);
+	}
+
+	protected Mono<MongoCollection<Document>> doCreateView(String name, String source, List<Document> pipeline,
+			@Nullable ViewOptions options) {
+
+		CreateViewOptions viewOptions = new CreateViewOptions();
+		if (options != null) {
+			options.getCollation().map(Collation::toMongoCollation).ifPresent(viewOptions::collation);
+		}
+
+		return execute(db -> {
+			return Flux.from(db.createView(name, source, pipeline, viewOptions))
+					.then(Mono.fromSupplier(() -> db.getCollection(name)));
+		}).next();
 	}
 
 	@Override
