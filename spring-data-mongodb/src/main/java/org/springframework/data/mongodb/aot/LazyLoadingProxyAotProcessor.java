@@ -29,6 +29,8 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.aot.TypeUtils;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory.LazyLoadingInterceptor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
@@ -72,10 +74,7 @@ class LazyLoadingProxyAotProcessor {
 
 						generationContext.getRuntimeHints().proxies().registerJdkProxy(interfaces.toArray(Class[]::new));
 					} else {
-
-						generationContext.getRuntimeHints().proxies().registerClassProxy(field.getType(), builder -> {
-							builder.proxiedInterfaces(org.springframework.data.mongodb.core.convert.LazyLoadingProxy.class);
-						});
+						LazyLoadingProxyFactory.resolveProxyType(field.getType(), () -> LazyLoadingInterceptor.none());
 					}
 				});
 	}

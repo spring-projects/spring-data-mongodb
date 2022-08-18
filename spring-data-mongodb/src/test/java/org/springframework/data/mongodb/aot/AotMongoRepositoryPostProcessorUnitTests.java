@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.aot.RepositoryRegistrationAotContributionAssert.*;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.beans.factory.aot.BeanRegistrationAotContribution;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.RegisteredBean;
@@ -52,7 +53,6 @@ public class AotMongoRepositoryPostProcessorUnitTests {
 					contribution.contributesJdkProxy(LastModifiedDate.class, SynthesizedAnnotation.class);
 					contribution.contributesJdkProxy(Document.class, SynthesizedAnnotation.class);
 					contribution.contributesJdkProxy(DBRef.class, SynthesizedAnnotation.class);
-//	TODO: not supported yet				contribution.contributesClassProxy(Address.class, LazyLoadingProxy.class);
 				});
 	}
 
@@ -60,7 +60,7 @@ public class AotMongoRepositoryPostProcessorUnitTests {
 
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
 		ctx.register(configuration);
-		ctx.refreshForAotProcessing();
+		ctx.refreshForAotProcessing(new RuntimeHints());
 
 		return it -> {
 

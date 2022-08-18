@@ -22,45 +22,87 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.function.Supplier;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.cglib.core.SpringNamingPolicy;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.NativeDetector;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
-import org.springframework.objenesis.ObjenesisStd;
+import org.springframework.objenesis.SpringObjenesis;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.DBRef;
 
 /**
  * {@link ProxyFactory} to create a proxy for {@link MongoPersistentProperty#getType()} to resolve a reference lazily.
+ * <strong>NOTE</strong> This class is intended for internal usage only.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-class LazyLoadingProxyFactory {
+public final class LazyLoadingProxyFactory {
 
 	private static final Log LOGGER = LogFactory.getLog(LazyLoadingProxyFactory.class);
 
-	private final ObjenesisStd objenesis;
+	private final SpringObjenesis objenesis;
 
 	private final PersistenceExceptionTranslator exceptionTranslator;
 
+	private LazyLoadingProxyFactory() {
+		this(ex -> null);
+	}
+
 	public LazyLoadingProxyFactory(PersistenceExceptionTranslator exceptionTranslator) {
 		this.exceptionTranslator = exceptionTranslator;
-		this.objenesis = new ObjenesisStd(true);
+		this.objenesis = new SpringObjenesis(null);
+	}
+
+	/**
+	 * Predict the proxy target type. This will advice the infrastructure to resolve as many pieces as possible in a
+	 * potential AOT scenario without necessarily resolving the entire object.
+	 * 
+	 * @param propertyType the type to proxy
+	 * @param interceptor the interceptor to be added.
+	 * @return the proxy type.
+	 * @since 4.0
+	 */
+	public static Class<?> resolveProxyType(Class<?> propertyType, Supplier<LazyLoadingInterceptor> interceptor) {
+
+		LazyLoadingProxyFactory factory = new LazyLoadingProxyFactory();
+
+		if (!propertyType.isInterface()) {
+			return factory.getEnhancedTypeFor(propertyType);
+		}
+
+		return factory.prepareProxyFactory(propertyType, interceptor)
+				.getProxyClass(LazyLoadingProxy.class.getClassLoader());
+	}
+
+	private ProxyFactory prepareProxyFactory(Class<?> propertyType, Supplier<LazyLoadingInterceptor> interceptor) {
+
+		ProxyFactory proxyFactory = new ProxyFactory();
+
+		for (Class<?> type : propertyType.getInterfaces()) {
+			proxyFactory.addInterface(type);
+		}
+
+		proxyFactory.addInterface(LazyLoadingProxy.class);
+		proxyFactory.addInterface(propertyType);
+		proxyFactory.addAdvice(interceptor.get());
+
+		return proxyFactory;
 	}
 
 	public Object createLazyLoadingProxy(MongoPersistentProperty property, DbRefResolverCallback callback,
@@ -71,33 +113,14 @@ class LazyLoadingProxyFactory {
 
 		if (!propertyType.isInterface()) {
 
-			if (NativeDetector.inNativeImage()) {
-
-				ProxyFactory factory = new ProxyFactory();
-				factory.addAdvice(interceptor);
-				factory.addInterface(LazyLoadingProxy.class);
-				factory.setTargetClass(propertyType);
-				factory.setProxyTargetClass(true);
-				return factory.getProxy(propertyType.getClassLoader());
-			}
-
 			Factory factory = (Factory) objenesis.newInstance(getEnhancedTypeFor(propertyType));
 			factory.setCallbacks(new Callback[] { interceptor });
 
 			return factory;
 		}
 
-		ProxyFactory proxyFactory = new ProxyFactory();
-
-		for (Class<?> type : propertyType.getInterfaces()) {
-			proxyFactory.addInterface(type);
-		}
-
-		proxyFactory.addInterface(LazyLoadingProxy.class);
-		proxyFactory.addInterface(propertyType);
-		proxyFactory.addAdvice(interceptor);
-
-		return proxyFactory.getProxy(LazyLoadingProxy.class.getClassLoader());
+		return prepareProxyFactory(propertyType,
+				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator)).getProxy();
 	}
 
 	/**
@@ -110,8 +133,10 @@ class LazyLoadingProxyFactory {
 
 		Enhancer enhancer = new Enhancer();
 		enhancer.setSuperclass(type);
-		enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
+		enhancer.setCallbackType(LazyLoadingInterceptor.class);
 		enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
+		enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+		enhancer.setAttemptLoad(true);
 
 		return enhancer.createClass();
 	}
@@ -138,6 +163,29 @@ class LazyLoadingProxyFactory {
 		private final PersistenceExceptionTranslator exceptionTranslator;
 		private volatile boolean resolved;
 		private @Nullable Object result;
+
+		/**
+		 * @return a {@link LazyLoadingInterceptor} that just continues with the invocation.
+		 * @since 4.0
+		 */
+		public static LazyLoadingInterceptor none() {
+
+			return new LazyLoadingInterceptor(null, null, null, null) {
+				@Nullable
+				@Override
+				public Object invoke(MethodInvocation invocation) throws Throwable {
+					return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
+				}
+
+				@Nullable
+				@Override
+				public Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+
+					ReflectionUtils.makeAccessible(method);
+					return method.invoke(o, args);
+				}
+			};
+		}
 
 		public LazyLoadingInterceptor(MongoPersistentProperty property, DbRefResolverCallback callback, Object source,
 				PersistenceExceptionTranslator exceptionTranslator) {
