@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -33,6 +34,10 @@ import org.springframework.util.Assert;
 public class AggregationPipeline {
 
 	private final List<AggregationOperation> pipeline;
+
+	public static AggregationPipeline of(AggregationOperation... stages) {
+		return new AggregationPipeline(Arrays.asList(stages));
+	}
 
 	/**
 	 * Create an empty pipeline

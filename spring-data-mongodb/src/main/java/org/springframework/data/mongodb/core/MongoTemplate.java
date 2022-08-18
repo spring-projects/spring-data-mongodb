@@ -23,7 +23,6 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,6 +66,7 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -631,6 +631,40 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		return doCreateCollection(collectionName,
 				operations.convertToCreateCollectionOptions(collectionOptions, Object.class));
+	}
+
+	@Override
+	public MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+
+		return createView(name, getCollectionName(source),
+				queryOperations.createAggregation(Aggregation.newAggregation(source, pipeline.getOperations()), source),
+				options);
+	}
+
+	@Override
+	public MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+
+		return createView(name, source,
+				queryOperations.createAggregation(Aggregation.newAggregation(pipeline.getOperations()), (Class<?>) null),
+				options);
+	}
+
+	private MongoCollection<Document> createView(String name, String source, AggregationDefinition aggregation,
+			@Nullable ViewOptions options) {
+		return doCreateView(name, source, aggregation.getAggregationPipeline(), options);
+	}
+
+	protected MongoCollection<Document> doCreateView(String name, String source, List<Document> pipeline, @Nullable ViewOptions options) {
+
+		CreateViewOptions viewOptions = new CreateViewOptions();
+		if (options != null) {
+			options.getCollation().map(Collation::toMongoCollation).ifPresent(viewOptions::collation);
+		}
+
+		return execute(db -> {
+			db.createView(name, source, pipeline, viewOptions);
+			return db.getCollection(name);
+		});
 	}
 
 	@Override

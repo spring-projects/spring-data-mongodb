@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.test.util;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.List;
@@ -35,7 +36,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.MongoClients;
-import reactor.util.retry.Retry;
 
 /**
  * Utility to create (and reuse) imperative and reactive {@code MongoClient} instances.
@@ -275,5 +275,16 @@ public class MongoTestUtils {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static CollectionInfo readCollectionInfo(MongoDatabase db, String collectionName) {
+
+		List<Document> list = db.runCommand(new Document().append("listCollections", 1).append("filter", new Document("name", collectionName)))
+				.get("cursor", Document.class).get("firstBatch", List.class);
+
+		if(list.isEmpty()) {
+			throw new IllegalStateException(String.format("Collection %s not found.", collectionName));
+		}
+		return CollectionInfo.from(list.get(0));
 	}
 }

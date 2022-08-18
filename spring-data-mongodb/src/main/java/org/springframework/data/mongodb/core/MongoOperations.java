@@ -26,7 +26,9 @@ import org.bson.Document;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -279,6 +281,56 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the created collection.
 	 */
 	MongoCollection<Document> createCollection(String collectionName, @Nullable CollectionOptions collectionOptions);
+
+	/**
+	 * Create a view with the the provided name whose contents are defined by the {@link AggregationOperation pipeline
+	 * stages} on another collection or view identified by the given {@link #getCollectionName(Class) source type}.
+	 * 
+	 * @param name the name of the view to create.
+	 * @param source the type defining the views source collection.
+	 * @param stages the {@link AggregationOperation aggregation pipeline stages} defining the view content.
+	 * @since 4.0
+	 */
+	default MongoCollection<Document> createView(String name, Class<?> source, AggregationOperation... stages) {
+		return createView(name, source, AggregationPipeline.of(stages));
+	}
+
+	/**
+	 * Create a view with the the provided name whose contents are defined by the  {@link AggregationPipeline pipeline} on
+	 * another collection or view identified by the given {@link #getCollectionName(Class) source type}.
+	 *
+	 * @param name the name of the view to create.
+	 * @param source the type defining the views source collection.
+	 * @param pipeline the {@link AggregationPipeline} defining the view content.
+	 * @since 4.0
+	 */
+	default MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline) {
+		return createView(name, source, pipeline, null);
+	}
+
+	/**
+	 * Create a view with the the provided name whose contents are defined by the {@link AggregationPipeline pipeline} on
+	 * another collection or view identified by the given {@link #getCollectionName(Class) source type}.
+	 *
+	 * @param name the name of the view to create.
+	 * @param source the type defining the views source collection.
+	 * @param pipeline the {@link AggregationPipeline} defining the view content.
+	 * @param options additional settings to apply when creating the view. Can be {@literal null}.
+	 * @since 4.0
+	 */
+	MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options);
+
+	/**
+	 * Create a view with the the provided name whose contents are defined by the {@link AggregationPipeline pipeline} on
+	 * another collection or view identified by the given source.
+	 *
+	 * @param name the name of the view to create.
+	 * @param source the name of the collection or view defining the to be created views source.
+	 * @param pipeline the {@link AggregationPipeline} defining the view content.
+	 * @param options additional settings to apply when creating the view. Can be {@literal null}.
+	 * @since 4.0
+	 */
+	MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline, @Nullable ViewOptions options);
 
 	/**
 	 * A set of collection names.
