@@ -24,10 +24,14 @@ import org.springframework.data.util.Pair;
 import com.mongodb.bulk.BulkWriteResult;
 
 /**
- * Bulk operations for insert/update/remove actions on a collection. These bulks operation are available since MongoDB
- * 2.6 and make use of low level bulk commands on the protocol level. This interface defines a fluent API to add
- * multiple single operations or list of similar operations in sequence which can then eventually be executed by calling
+ * Bulk operations for insert/update/remove actions on a collection. Bulk operations are available since MongoDB 2.6 and
+ * make use of low level bulk commands on the protocol level. This interface defines a fluent API to add multiple single
+ * operations or list of similar operations in sequence which can then eventually be executed by calling
  * {@link #execute()}.
+ * <p>
+ * Bulk operations are issued as one batch that pulls together all insert, update, and delete operations. Operations
+ * that require individual operation results such as optimistic locking (using {@code @Version}) are not supported and
+ * the version field remains not populated.
  *
  * @author Tobias Trelle
  * @author Oliver Gierke
