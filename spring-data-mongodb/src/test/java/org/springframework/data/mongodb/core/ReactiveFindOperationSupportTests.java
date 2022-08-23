@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,9 +36,10 @@ import java.util.function.Consumer;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -50,6 +52,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
@@ -61,8 +64,9 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Juergen Zimmermann
  */
-@ExtendWith(MongoClientExtension.class)
-class ReactiveFindOperationSupportTests {
+@ExtendWith({ MongoClientExtension.class, DirtiesStateExtension.class })
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ReactiveFindOperationSupportTests implements StateFunctions {
 
 	private static final String STAR_WARS = "star-wars";
 	private MongoTemplate blocking;
@@ -74,15 +78,25 @@ class ReactiveFindOperationSupportTests {
 	private Person han;
 	private Person luke;
 
-	@BeforeEach
 	void setUp() {
-
 		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableFindOperationSupportTests"));
-		recreateCollection(STAR_WARS, false);
-
-		insertObjects();
-
 		template = new ReactiveMongoTemplate(reactiveClient, "ExecutableFindOperationSupportTests");
+	}
+
+	@Override
+	public void clear() {
+		if (blocking == null) {
+			setUp();
+		}
+		recreateCollection(STAR_WARS, false);
+	}
+
+	@Override
+	public void setupState() {
+		if (blocking == null) {
+			setUp();
+		}
+		insertObjects();
 	}
 
 	void insertObjects() {
@@ -244,6 +258,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	@DirtiesState
 	void findAllNearBy() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
@@ -264,6 +279,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	@DirtiesState
 	void findAllNearByWithCollectionAndProjection() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
@@ -287,6 +303,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	@DirtiesState
 	void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
@@ -310,6 +327,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	@DirtiesState
 	void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
@@ -333,6 +351,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
+	@ProvidesState
 	void tail() throws InterruptedException {
 
 		recreateCollection(STAR_WARS, true);
@@ -361,6 +380,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
+	@ProvidesState
 	void tailWithProjection() {
 
 		recreateCollection(STAR_WARS, true);
@@ -374,6 +394,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
+	@ProvidesState
 	void tailWithClosedInterfaceProjection() {
 
 		recreateCollection(STAR_WARS, true);
@@ -391,6 +412,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
+	@ProvidesState
 	void tailWithOpenInterfaceProjection() {
 
 		recreateCollection(STAR_WARS, true);
@@ -431,6 +453,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
+	@DirtiesState
 	void existsShouldReturnFalseIfNoElementExistsInCollection() {
 
 		blocking.remove(new BasicQuery("{}"), STAR_WARS);
@@ -462,6 +485,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
 
 		Person anakin = new Person();
@@ -476,6 +500,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsSimpleFieldValuesCorrectly() {
 
 		Person anakin = new Person();
@@ -504,6 +529,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsComplexValuesCorrectly() {
 
 		Sith sith = new Sith();
@@ -521,6 +547,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsComplexValuesCorrectlyHavingReturnTypeSpecified() {
 
 		Sith sith = new Sith();
@@ -538,6 +565,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsComplexValuesCorrectlyReturnTypeDocumentSpecified() {
 
 		Sith sith = new Sith();
@@ -573,6 +601,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
 
 		blocking.save(new Document("darth", "vader"), STAR_WARS);
@@ -583,6 +612,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsMappedDomainTypeForProjections() {
 
 		luke.father = new Person();
@@ -596,6 +626,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctAlllowsQueryUsingObjectSourceType() {
 
 		luke.father = new Person();
@@ -609,6 +640,7 @@ class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
 
 		luke.father = new Person();

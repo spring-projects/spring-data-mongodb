@@ -47,9 +47,7 @@ class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryIntegration
 	@Autowired ApplicationContext context;
 
 	@BeforeEach
-	@Override
 	public void setUp() throws InterruptedException {
-		super.setUp();
 		factory = new DefaultListableBeanFactory();
 		reader = new XmlBeanDefinitionReader(factory);
 	}

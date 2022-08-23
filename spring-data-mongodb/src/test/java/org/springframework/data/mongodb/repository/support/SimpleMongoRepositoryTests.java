@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
+import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Example;
@@ -47,6 +49,7 @@ import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
@@ -64,8 +67,9 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Mark Paluch
  * @author Jens Schauder
  */
-@ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
-class SimpleMongoRepositoryTests {
+@ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class, DirtiesStateExtension.class })
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class SimpleMongoRepositoryTests implements StateFunctions {
 
 	@Template(initialEntitySet = Person.class) //
 	private static MongoTestTemplate template;
@@ -74,13 +78,25 @@ class SimpleMongoRepositoryTests {
 	private List<Person> all;
 
 	private MongoEntityInformation<Person, String> personEntityInformation = new CustomizedPersonInformation();
-	private SimpleMongoRepository<Person, String> repository = new SimpleMongoRepository<>(personEntityInformation,
-			template);
+	private SimpleMongoRepository<Person, String> repository;
 
 	@BeforeEach
 	void setUp() {
+		repository = new SimpleMongoRepository<>(personEntityInformation, template);
+	}
+
+	@Override
+	public void clear() {
+
+		if (repository == null) {
+			setUp();
+		}
 
 		repository.deleteAll();
+	}
+
+	@Override
+	public void setupState() {
 
 		oliver = new Person("Oliver August", "Matthews", 4);
 		dave = new Person("Dave", "Matthews", 42);
@@ -104,6 +120,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test
+	@DirtiesState
 	void deleteFromCustomCollectionName() {
 
 		repository.delete(dave);
@@ -112,6 +129,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test
+	@DirtiesState
 	void deleteByIdFromCustomCollectionName() {
 
 		repository.deleteById(dave.getId());
@@ -120,6 +138,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1054
+	@DirtiesState
 	void shouldInsertSingle() {
 
 		String randomId = UUID.randomUUID().toString();
@@ -131,6 +150,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1054
+	@DirtiesState
 	void shouldInsertMultipleFromList() {
 
 		String randomId = UUID.randomUUID().toString();
@@ -150,6 +170,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1054
+	@DirtiesState
 	void shouldInsertMutlipleFromSet() {
 
 		String randomId = UUID.randomUUID().toString();
@@ -218,6 +239,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObject() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -234,6 +256,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingPartialNestedObject() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -250,6 +273,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldNotFindEntriesWhenUsingPartialNestedObjectInStrictMode() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -265,6 +289,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObjectInStrictMode() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
@@ -292,6 +317,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldResolveDbRefCorrectly() {
 
 		User user = new User();
@@ -312,6 +338,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldResolveLegacyCoordinatesCorrectly() {
 
 		Person megan = new Person("megan", "tarash");
@@ -327,6 +354,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldResolveGeoJsonCoordinatesCorrectly() {
 
 		Person megan = new Person("megan", "tarash");
@@ -342,6 +370,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
+	@DirtiesState
 	void findAllByExampleShouldProcessInheritanceCorrectly() {
 
 		PersonExtended reference = new PersonExtended();
@@ -390,6 +419,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1896
+	@DirtiesState
 	void saveAllUsesEntityCollection() {
 
 		Person first = new PersonExtended();
@@ -410,6 +440,7 @@ class SimpleMongoRepositoryTests {
 	@Test // DATAMONGO-2130
 	@EnableIfReplicaSetAvailable
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+	@DirtiesState
 	void countShouldBePossibleInTransaction() {
 
 		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDatabaseFactory());
@@ -434,6 +465,7 @@ class SimpleMongoRepositoryTests {
 	@Test // DATAMONGO-2130
 	@EnableIfReplicaSetAvailable
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+	@DirtiesState
 	void existsShouldBePossibleInTransaction() {
 
 		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDatabaseFactory());
@@ -454,6 +486,7 @@ class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2652
+	@DirtiesState
 	void deleteAllByIds() {
 
 		repository.deleteAllById(asList(dave.getId(), carter.getId()));

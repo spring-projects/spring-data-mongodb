@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.util.AnnotationUtils;
 import org.junit.platform.commons.util.ExceptionUtils;
 import org.junit.platform.commons.util.ReflectionUtils;
@@ -44,7 +45,7 @@ import org.springframework.util.ClassUtils;
  * @see MongoTestTemplate
  * @see ReactiveMongoTestTemplate
  */
-public class MongoTemplateExtension extends MongoClientExtension {
+public class MongoTemplateExtension extends MongoClientExtension implements TestInstancePostProcessor {
 
 	private static final String DEFAULT_DATABASE = "database";
 
@@ -54,6 +55,11 @@ public class MongoTemplateExtension extends MongoClientExtension {
 		super.beforeAll(context);
 
 		injectFields(context, null, ReflectionUtils::isStatic);
+	}
+
+	@Override
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) throws Exception {
+		injectFields(context, testInstance, it -> true);
 	}
 
 	@Override
@@ -142,4 +148,5 @@ public class MongoTemplateExtension extends MongoClientExtension {
 
 		throw new IllegalStateException("Damn - something went wrong.");
 	}
+
 }

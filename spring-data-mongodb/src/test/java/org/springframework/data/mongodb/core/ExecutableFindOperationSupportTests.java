@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,9 +32,9 @@ import java.util.stream.Stream;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +51,7 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -60,8 +62,9 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
-class ExecutableFindOperationSupportTests {
+@ExtendWith({ MongoTemplateExtension.class, DirtiesStateExtension.class })
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ExecutableFindOperationSupportTests implements StateFunctions {
 
 	private static final String STAR_WARS = "star-wars";
 	private static final String STAR_WARS_PLANETS = "star-wars-universe";
@@ -75,11 +78,13 @@ class ExecutableFindOperationSupportTests {
 	private Planet alderan;
 	private Planet dantooine;
 
-	@BeforeEach
-	void setUp() {
-
+	@Override
+	public void clear() {
 		template.flush();
+	}
 
+	@Override
+	public void setupState() {
 		template.indexOps(Planet.class).ensureIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
@@ -118,6 +123,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2041
+	@DirtiesState
 	void findAllWithProjectionOnEmbeddedType() {
 
 		luke.father = new Person();
@@ -364,6 +370,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1734
+	@DirtiesState
 	void existsShouldReturnFalseIfNoElementExistsInCollection() {
 
 		template.remove(new BasicQuery("{}"), STAR_WARS);
@@ -491,6 +498,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
 
 		template.save(new Document("darth", "vader"), STAR_WARS);
@@ -499,6 +507,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsMappedDomainTypeForProjections() {
 
 		luke.father = new Person();
@@ -511,6 +520,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctAlllowsQueryUsingObjectSourceType() {
 
 		luke.father = new Person();
@@ -523,6 +533,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
+	@DirtiesState
 	void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
 
 		luke.father = new Person();
@@ -570,6 +581,7 @@ class ExecutableFindOperationSupportTests {
 
 	@Test // GH-2860
 	@Disabled("GH-3913")
+	@DirtiesState
 	void propertyProjectionOnDbRef() {
 
 		WithRefs source = new WithRefs();
@@ -586,6 +598,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // GH-2860
+	@DirtiesState
 	void projectionOnDocRef() {
 
 		WithRefs source = new WithRefs();
@@ -602,6 +615,7 @@ class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // GH-2860
+	@DirtiesState
 	void propertyProjectionOnDocRef() {
 
 		WithRefs source = new WithRefs();

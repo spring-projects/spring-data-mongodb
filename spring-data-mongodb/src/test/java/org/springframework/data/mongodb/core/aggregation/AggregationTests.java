@@ -49,14 +49,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.CollectionCallback;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
@@ -76,10 +75,7 @@ import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.InsertOneModel;
-import com.mongodb.client.model.WriteModel;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(Aggregation, Class, Class)}.
@@ -100,6 +96,7 @@ public class AggregationTests {
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
 
 	private static boolean initialized = false;
+	private static List<Document> documents = parseDocuments();
 
 	@Template //
 	private static MongoTestTemplate mongoTemplate;
@@ -137,36 +134,35 @@ public class AggregationTests {
 		if (!initialized) {
 
 			mongoTemplate.dropCollection(ZipInfo.class);
-			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
 
-				@Override
-				public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-
-					List<WriteModel<Document>> docs = new ArrayList<>();
-					Scanner scanner = null;
-					try {
-						scanner = new Scanner(new BufferedInputStream(new ClassPathResource("zips.json").getInputStream()));
-						while (scanner.hasNextLine()) {
-							String zipInfoRecord = scanner.nextLine();
-							docs.add(new InsertOneModel<>(Document.parse(zipInfoRecord)));
-						}
-					} catch (Exception e) {
-						if (scanner != null) {
-							scanner.close();
-						}
-						throw new RuntimeException("Could not load mongodb sample dataset", e);
-					}
-
-					collection.bulkWrite(docs);
-					return null;
-				}
-			});
+			mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, ZipInfo.class).insert(documents).execute();
 
 			long count = mongoTemplate.count(new Query(), ZipInfo.class);
 			assertThat(count).isEqualTo(29467L);
 
 			initialized = true;
 		}
+	}
+
+	static List<Document> parseDocuments() {
+
+		Scanner scanner = null;
+		List<Document> documents = new ArrayList<>(30000);
+
+		try {
+			scanner = new Scanner(new BufferedInputStream(new ClassPathResource("zips.json").getInputStream()));
+			while (scanner.hasNextLine()) {
+				String zipInfoRecord = scanner.nextLine();
+				documents.add(Document.parse(zipInfoRecord));
+			}
+		} catch (Exception e) {
+			if (scanner != null) {
+				scanner.close();
+			}
+			throw new RuntimeException("Could not load mongodb sample dataset", e);
+		}
+
+		return documents;
 	}
 
 	@Test // DATAMONGO-586

@@ -58,7 +58,7 @@ class ExecutableUpdateOperationSupportTests {
 	@BeforeEach
 	void setUp() {
 
-		template.flush();
+		template.remove(Person.class).all();
 
 		han = new Person();
 		han.firstname = "han";

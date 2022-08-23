@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
@@ -65,7 +66,7 @@ public class MongoTestTemplateConfiguration {
 
 		if (converter == null) {
 
-			if(dbFactoryConfig.syncClient != null || syncClient != null) {
+			if (dbFactoryConfig.syncClient != null || syncClient != null) {
 				converter = new MappingMongoConverter(new DefaultDbRefResolver(databaseFactory()), mappingContext());
 			} else {
 				converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext());

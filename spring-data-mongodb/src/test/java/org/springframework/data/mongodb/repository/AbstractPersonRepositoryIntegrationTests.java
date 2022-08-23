@@ -35,13 +35,13 @@ import java.util.stream.Stream;
 
 import org.assertj.core.api.Assertions;
 import org.bson.Document;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,6 +69,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesState;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension.ProvidesState;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.querydsl.QSort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -84,8 +87,9 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Fırat KÜÇÜK
  * @author Edward Prentice
  */
-@ExtendWith(SpringExtension.class)
-public abstract class AbstractPersonRepositoryIntegrationTests {
+@ExtendWith({ SpringExtension.class, DirtiesStateExtension.class })
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class AbstractPersonRepositoryIntegrationTests implements DirtiesStateExtension.StateFunctions {
 
 	@Autowired protected PersonRepository repository;
 
@@ -96,8 +100,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	List<Person> all;
 
-	@BeforeEach
-	public void setUp() throws InterruptedException {
+	public void clear() {
+		repository.deleteAll();
+	}
+
+	public void setupState() {
 
 		repository.deleteAll();
 
@@ -143,6 +150,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test
+	@DirtiesState
 	void deletesPersonCorrectly() {
 
 		repository.delete(dave);
@@ -153,6 +161,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test
+	@DirtiesState
 	void deletesPersonByIdCorrectly() {
 
 		repository.deleteById(dave.getId());
@@ -716,6 +725,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-821
+	@DirtiesState
 	void findUsingAnnotatedQueryOnDBRef() {
 
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
@@ -734,6 +744,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
 
 		List<Person> result = repository.deleteByLastname("Beauford");
@@ -742,6 +753,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByShouldRemoveElementsMatchingDerivedQuery() {
 
 		repository.deleteByLastname("Beauford");
@@ -750,11 +762,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
 		assertThat(repository.deletePersonByLastname("Beauford")).isEqualTo(1L);
 	}
 
 	@Test // DATAMONGO-1997
+	@DirtiesState
 	void deleteByShouldResultWrappedInOptionalCorrectly() {
 
 		assertThat(repository.deleteOptionalByLastname("Beauford")).isPresent();
@@ -762,16 +776,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByShouldReturnZeroInCaseNoDocumentHasBeenRemovedAndReturnTypeIsNumber() {
 		assertThat(repository.deletePersonByLastname("dorfuaeB")).isEqualTo(0L);
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByShouldReturnEmptyListInCaseNoDocumentHasBeenRemovedAndReturnTypeIsCollectionLike() {
 		assertThat(repository.deleteByLastname("dorfuaeB")).isEmpty();
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByUsingAnnotatedQueryShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
 
 		List<Person> result = repository.removeByLastnameUsingAnnotatedQuery("Beauford");
@@ -780,6 +797,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByUsingAnnotatedQueryShouldRemoveElementsMatchingDerivedQuery() {
 
 		repository.removeByLastnameUsingAnnotatedQuery("Beauford");
@@ -788,11 +806,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-566
+	@DirtiesState
 	void deleteByUsingAnnotatedQueryShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
 		assertThat(repository.removePersonByLastnameUsingAnnotatedQuery("Beauford")).isEqualTo(1L);
 	}
 
 	@Test // DATAMONGO-893
+	@ProvidesState
 	void findByNestedPropertyInCollectionShouldFindMatchingDocuments() {
 
 		Person p = new Person("Mary", "Poppins");
@@ -807,6 +827,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-745
+	@ProvidesState
 	void findByCustomQueryFirstnamesInListAndLastname() {
 
 		repository.save(new Person("foo", "bar"));
@@ -823,6 +844,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-745
+	@ProvidesState
 	void findByCustomQueryLastnameAndStreetInList() {
 
 		repository.save(new Person("foo", "bar").withAddress(new Address("street1", "1", "SB")));
@@ -840,6 +862,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-950
+	@ProvidesState
 	void shouldLimitCollectionQueryToMaxResultsWhenPresent() {
 
 		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -849,6 +872,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-950, DATAMONGO-1464
+	@ProvidesState
 	void shouldNotLimitPagedQueryWhenPageRequestWithinBounds() {
 
 		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -859,6 +883,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-950
+	@ProvidesState
 	void shouldLimitPagedQueryWhenPageRequestExceedsUpperBoundary() {
 
 		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -868,6 +893,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-950, DATAMONGO-1464
+	@ProvidesState
 	void shouldReturnEmptyWhenPageRequestedPageIsTotallyOutOfScopeForLimit() {
 
 		repository.saveAll(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
@@ -889,6 +915,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-972
+	@DirtiesState
 	void shouldExecuteFindOnDbRefCorrectly() {
 
 		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
@@ -920,9 +947,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1057
+	@ProvidesState
 	void sliceShouldTraverseElementsWithoutSkippingOnes() {
-
-		repository.deleteAll();
 
 		List<Person> persons = new ArrayList<Person>(100);
 		for (int i = 0; i < 100; i++) {
@@ -956,6 +982,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1085
+	@ProvidesState
 	void shouldSupportSortingByQueryDslOrderSpecifier() {
 
 		repository.deleteAll();
@@ -979,9 +1006,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1085
+	@ProvidesState
 	void shouldSupportSortingWithQSortByQueryDslOrderSpecifier() {
-
-		repository.deleteAll();
 
 		List<Person> persons = new ArrayList<Person>();
 
@@ -1001,9 +1027,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1085
+	@ProvidesState
 	void shouldSupportSortingWithQSort() {
-
-		repository.deleteAll();
 
 		List<Person> persons = new ArrayList<Person>();
 
@@ -1034,6 +1059,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1110
+	@DirtiesState
 	void executesGeoNearQueryForResultsCorrectlyWhenGivenMinAndMaxDistance() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -1075,6 +1101,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1911
+	@DirtiesState
 	void findByUUIDShouldReturnCorrectResult() {
 
 		dave.setUniqueId(UUID.randomUUID());
@@ -1152,6 +1179,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1539
+	@DirtiesState
 	void deletesPersonsByFirstname() {
 
 		repository.deleteByThePersonsFirstname("Dave");
@@ -1212,6 +1240,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-2149
+	@DirtiesState
 	void annotatedQueryShouldAllowSliceInFieldsProjectionWithDbRef() {
 
 		operations.remove(new Query(), User.class);
@@ -1235,6 +1264,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-2149
+	@DirtiesState
 	void annotatedQueryShouldAllowPositionalParameterInFieldsProjection() {
 
 		Set<Address> addressList = IntStream.range(0, 10).mapToObj(it -> new Address("street-" + it, "zip", "lnz"))
@@ -1250,6 +1280,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-2149, DATAMONGO-2154, DATAMONGO-2199
+	@DirtiesState
 	void annotatedQueryShouldAllowPositionalParameterInFieldsProjectionWithDbRef() {
 
 		List<User> userList = IntStream.range(0, 10).mapToObj(it -> {
@@ -1358,6 +1389,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1677
+	@DirtiesState
 	void findWithMoreThan10Arguments() {
 
 		alicia.setSkills(Arrays.asList("musician", "singer", "composer", "actress", "pianist"));
@@ -1384,6 +1416,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1902
+	@DirtiesState
 	void findByValueInsideUnwrapped() {
 
 		Person bart = new Person("bart", "simpson");
@@ -1401,6 +1434,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1902
+	@DirtiesState
 	void findByUnwrapped() {
 
 		Person bart = new Person("bart", "simpson");
@@ -1441,6 +1475,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-3633
+	@DirtiesState
 	void annotatedQueryWithNullEqualityCheckShouldWork() {
 
 		operations.updateFirst(Query.query(Criteria.where("id").is(dave.getId())), Update.update("age", null),
@@ -1451,6 +1486,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-3602
+	@DirtiesState
 	void executesQueryWithDocumentReferenceCorrectly() {
 
 		Person josh = new Person("Josh", "Long");
@@ -1466,6 +1502,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-3656
+	@DirtiesState
 	void resultProjectionWithOptionalIsExcecutedCorrectly() {
 
 		carter.setAddress(new Address("batman", "robin", "gotham"));
@@ -1479,11 +1516,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void shouldAllowToUpdateAllElements() {
-		assertThat(repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337))).isEqualTo(2);
+		assertThat(repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337)))
+				.isEqualTo(2);
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void annotatedUpdateIsAppliedCorrectly() {
 
 		assertThat(repository.findAndIncrementVisitsByLastname("Matthews", 1337)).isEqualTo(2);
@@ -1492,6 +1532,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void mixAnnotatedUpdateWithAnnotatedQuery() {
 
 		assertThat(repository.updateAllByLastname("Matthews", 1337)).isEqualTo(2);
@@ -1500,6 +1541,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void annotatedUpdateWithSpELIsAppliedCorrectly() {
 
 		assertThat(repository.findAndIncrementVisitsUsingSpELByLastname("Matthews", 1337)).isEqualTo(2);
@@ -1509,6 +1551,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test // GH-2107
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	@DirtiesState
 	void annotatedAggregationUpdateIsAppliedCorrectly() {
 
 		repository.findAndIncrementVisitsViaPipelineByLastname("Matthews", 1337);
@@ -1517,6 +1560,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void shouldAllowToUpdateAllElementsWithVoidReturn() {
 
 		repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337));
@@ -1525,11 +1569,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void allowsToUseComplexTypesInUpdate() {
 
 		Address address = new Address("1007 Mountain Drive", "53540", "Gotham");
 
 		assertThat(repository.findAndPushShippingAddressByEmail(dave.getEmail(), address)).isEqualTo(1);
-		assertThat(repository.findById(dave.getId()).map(Person::getShippingAddresses)).contains(Collections.singleton(address));
+		assertThat(repository.findById(dave.getId()).map(Person::getShippingAddresses))
+				.contains(Collections.singleton(address));
 	}
 }
