@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.lang.annotation.Annotation;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,13 +24,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -50,12 +53,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
+import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -454,10 +455,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
 		}
 
-		if (StringUtils.hasText(index.collation())) {
-			indexDefinition.collation(evaluateCollation(index.collation(), entity));
-		}
-
+		indexDefinition.collation(resolveCollation(index, entity));
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
@@ -478,12 +476,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
 		}
 
-		if (StringUtils.hasText(index.collation())) {
-			indexDefinition.collation(evaluateCollation(index.collation(), entity));
-		} else if (entity != null && entity.hasCollation()) {
-			indexDefinition.collation(entity.getCollation());
-		}
-
+		indexDefinition.collation(resolveCollation(index, entity));
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
@@ -498,7 +491,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return new org.bson.Document(dotPath, 1);
 		}
 
-		Object keyDefToUse = evaluate(keyDefinitionString, getEvaluationContextForProperty(entity));
+		Object keyDefToUse = ExpressionUtils.evaluate(keyDefinitionString, () -> getEvaluationContextForProperty(entity));
 
 		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document) ? (org.bson.Document) keyDefToUse
 				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
@@ -567,7 +560,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 
 			Duration timeout = computeIndexTimeout(index.expireAfter(),
-					getEvaluationContextForProperty(persistentProperty.getOwner()));
+					() -> getEvaluationContextForProperty(persistentProperty.getOwner()));
 			if (!timeout.isZero() && !timeout.isNegative()) {
 				indexDefinition.expire(timeout);
 			}
@@ -577,16 +570,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), persistentProperty.getOwner()));
 		}
 
-		if (StringUtils.hasText(index.collation())) {
-			indexDefinition.collation(evaluateCollation(index.collation(), persistentProperty.getOwner()));
-		}
-
+		indexDefinition.collation(resolveCollation(index, persistentProperty.getOwner()));
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
 	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?, ?> entity) {
 
-		Object result = evaluate(filterExpression, getEvaluationContextForProperty(entity));
+		Object result = ExpressionUtils.evaluate(filterExpression, () -> getEvaluationContextForProperty(entity));
 
 		if (result instanceof org.bson.Document) {
 			return PartialIndexFilter.of((org.bson.Document) result);
@@ -597,7 +587,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private org.bson.Document evaluateWildcardProjection(String projectionExpression, PersistentEntity<?, ?> entity) {
 
-		Object result = evaluate(projectionExpression, getEvaluationContextForProperty(entity));
+		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getEvaluationContextForProperty(entity));
 
 		if (result instanceof org.bson.Document) {
 			return (org.bson.Document) result;
@@ -608,7 +598,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private Collation evaluateCollation(String collationExpression, PersistentEntity<?, ?> entity) {
 
-		Object result = evaluate(collationExpression, getEvaluationContextForProperty(entity));
+		Object result = ExpressionUtils.evaluate(collationExpression, () -> getEvaluationContextForProperty(entity));
 		if (result instanceof org.bson.Document) {
 			return Collation.from((org.bson.Document) result);
 		}
@@ -617,6 +607,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 		if (result instanceof String) {
 			return Collation.parse(result.toString());
+		}
+		if (result instanceof Map) {
+			return Collation.from(new org.bson.Document((Map<String, ?>) result));
 		}
 		throw new IllegalStateException("Cannot parse collation " + result);
 
@@ -726,7 +719,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		String nameToUse = "";
 		if (StringUtils.hasText(indexName)) {
 
-			Object result = evaluate(indexName, getEvaluationContextForProperty(entity));
+			Object result = ExpressionUtils.evaluate(indexName, () -> getEvaluationContextForProperty(entity));
 
 			if (result != null) {
 				nameToUse = ObjectUtils.nullSafeToString(result);
@@ -787,9 +780,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @since 2.2
 	 * @throws IllegalArgumentException for invalid duration values.
 	 */
-	private static Duration computeIndexTimeout(String timeoutValue, EvaluationContext evaluationContext) {
+	private static Duration computeIndexTimeout(String timeoutValue, Supplier<EvaluationContext> evaluationContext) {
 
-		Object evaluatedTimeout = evaluate(timeoutValue, evaluationContext);
+		Object evaluatedTimeout = ExpressionUtils.evaluate(timeoutValue, evaluationContext);
 
 		if (evaluatedTimeout == null) {
 			return Duration.ZERO;
@@ -808,15 +801,25 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return DurationStyle.detectAndParse(val);
 	}
 
+	/**
+	 * Resolve the "collation" attribute from a given {@link Annotation} if present.
+	 *
+	 * @param annotation
+	 * @param entity
+	 * @return the collation present on either the annotation or the entity as a fallback. Might be {@literal null}.
+	 * @since 4.0
+	 */
 	@Nullable
-	private static Object evaluate(String value, EvaluationContext evaluationContext) {
+	private Collation resolveCollation(Annotation annotation, @Nullable PersistentEntity<?, ?> entity) {
+		return MergedAnnotation.from(annotation).getValue("collation", String.class).filter(StringUtils::hasText)
+				.map(it -> evaluateCollation(it, entity)).orElseGet(() -> {
 
-		Expression expression = PARSER.parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
-		if (expression instanceof LiteralExpression) {
-			return value;
-		}
-
-		return expression.getValue(evaluationContext, Object.class);
+					if (entity instanceof MongoPersistentEntity<?> mongoPersistentEntity
+							&& mongoPersistentEntity.hasCollation()) {
+						return mongoPersistentEntity.getCollation();
+					}
+					return null;
+				});
 	}
 
 	private static boolean isMapWithoutWildcardIndex(MongoPersistentProperty property) {

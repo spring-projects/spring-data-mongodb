@@ -21,7 +21,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.QueryAnnotation;
+import org.springframework.data.mongodb.core.annotation.Collation;
 
 /**
  * Annotation to declare finder queries directly on repository methods. Both attributes allow using a placeholder
@@ -32,6 +34,7 @@ import org.springframework.data.annotation.QueryAnnotation;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@Collation
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
@@ -124,5 +127,6 @@ public @interface Query {
 	 * @return an empty {@link String} by default.
 	 * @since 2.2
 	 */
+	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
 }

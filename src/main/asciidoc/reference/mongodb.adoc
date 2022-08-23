@@ -2011,7 +2011,35 @@ and `Document` (eg. new Document("locale", "en_US"))
 NOTE: In case you enabled the automatic index creation for repository finder methods a potential static collation definition,
 as shown in (1) and (2), will be included when creating the index.
 
-TIP: The most specifc `Collation` outroules potentially defined others. Which means Method argument over query method annotation over doamin type annotation.
+TIP: The most specifc `Collation` outrules potentially defined others. Which means Method argument over query method annotation over domain type annotation.
+====
+
+To streamline usage of collation attributes throughout the codebase it is also possible to use the `@Collation` annotation, which serves as a meta annotation for the ones mentioned above.
+The same rules and locations apply, plus, direct usage of `@Collation` supersedes any collation values defined on `@Query` and other annotations.
+Which means, if a collation is declared via `@Query` and additionally via `@Collation`, then the one from `@Collation` is picked.
+
+.Using `@Collation`
+====
+[source,java]
+----
+@Collation("en_US") <1>
+class Game {
+  // ...
+}
+
+interface GameRepository extends Repository<Game, String> {
+
+  @Collation("en_GB")  <2>
+  List<Game> findByTitle(String title);
+
+  @Collation("de_AT")  <3>
+  @Query(collation="en_GB")
+  List<Game> findByDescriptionContaining(String keyword);
+}
+----
+<1> Instead of `@Document(collation=...)`.
+<2> Instead of `@Query(collation=...)`.
+<3> Favors `@Collation` over meta usage.
 ====
 
 include::./mongo-json-schema.adoc[leveloffset=+1]

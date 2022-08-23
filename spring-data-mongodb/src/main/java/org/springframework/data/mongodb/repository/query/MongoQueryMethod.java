@@ -28,6 +28,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -321,14 +322,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 2.2
 	 */
 	public boolean hasAnnotatedCollation() {
-
-		Optional<String> optionalCollation = lookupQueryAnnotation().map(Query::collation);
-
-		if (!optionalCollation.isPresent()) {
-			optionalCollation = lookupAggregationAnnotation().map(Aggregation::collation);
-		}
-
-		return optionalCollation.filter(StringUtils::hasText).isPresent();
+		return doFindAnnotation(Collation.class).map(Collation::value).filter(StringUtils::hasText).isPresent();
 	}
 
 	/**
@@ -341,10 +335,9 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	public String getAnnotatedCollation() {
 
-		return lookupQueryAnnotation().map(Query::collation)
-				.orElseGet(() -> lookupAggregationAnnotation().map(Aggregation::collation) //
+		return doFindAnnotation(Collation.class).map(Collation::value) //
 						.orElseThrow(() -> new IllegalStateException(
-								"Expected to find @Query annotation but did not; Make sure to check hasAnnotatedCollation() before.")));
+								"Expected to find @Collation annotation but did not; Make sure to check hasAnnotatedCollation() before."));
 	}
 
 	/**
@@ -447,7 +440,7 @@ public class MongoQueryMethod extends QueryMethod {
 	private boolean isNumericOrVoidReturnValue() {
 
 		Class<?> resultType = getReturnedObjectType();
-		if(ReactiveWrappers.usesReactiveType(resultType)) {
+		if (ReactiveWrappers.usesReactiveType(resultType)) {
 			resultType = getReturnType().getComponentType().getType();
 		}
 

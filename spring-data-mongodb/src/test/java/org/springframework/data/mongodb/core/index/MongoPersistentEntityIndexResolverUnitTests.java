@@ -713,6 +713,32 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1));
 		}
 
+		@Test // GH-3002
+		public void compoundIndexWithCollationFromDocumentAnnotation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithCompoundCollationFromDocument.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "compound_index_with_collation").append("collation",
+							new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1));
+		}
+
+		@Test // GH-3002
+		public void compoundIndexWithEvaluatedCollationFromAnnotation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithEvaluatedCollationFromCompoundIndex.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "compound_index_with_collation").append("collation",
+							new org.bson.Document().append("locale", "de_AT")));
+			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1));
+		}
+
 		@Document("CompoundIndexOnLevelOne")
 		class CompoundIndexOnLevelOne {
 
@@ -793,6 +819,14 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}",
 				collation = "{'locale': 'en_US', 'strength': 2}")
 		class CompoundIndexWithCollation {}
+
+		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
+		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}")
+		class WithCompoundCollationFromDocument {}
+
+		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
+		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}", collation = "#{{ 'locale' : 'de' + '_' + 'AT' }}")
+		class WithEvaluatedCollationFromCompoundIndex {}
 	}
 
 	public static class TextIndexedResolutionTests {
@@ -1423,12 +1457,35 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void indexedWithCollation() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
-					IndexedWithCollation.class);
+					WithCollationFromIndexedAnnotation.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
 					.append("unique", true)
 					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+		}
+
+		@Test // GH-3002
+		public void indexedWithCollationFromDocumentAnnotation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithCollationFromDocumentAnnotation.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
+					.append("unique", true)
+					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+		}
+
+		@Test // GH-3002
+		public void indexedWithEvaluatedCollation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithEvaluatedCollationFromIndexedAnnotation.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
+					.append("collation", new org.bson.Document().append("locale", "de_AT")));
 		}
 
 		@Document
@@ -1749,8 +1806,23 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		class IndexedWithCollation {
+		class WithCollationFromIndexedAnnotation {
+
 			@Indexed(collation = "{'locale': 'en_US', 'strength': 2}", unique = true) //
+			private String value;
+		}
+
+		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
+		class WithCollationFromDocumentAnnotation {
+
+			@Indexed(unique = true) //
+			private String value;
+		}
+
+		@Document(collation = "en_US")
+		class WithEvaluatedCollationFromIndexedAnnotation {
+
+			@Indexed(collation = "#{{'locale' :  'de' + '_' + 'AT'}}") //
 			private String value;
 		}
 

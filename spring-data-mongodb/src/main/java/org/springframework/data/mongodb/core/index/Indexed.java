@@ -20,7 +20,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 /**
  * Mark a field to be indexed using MongoDB's indexing feature.
  *
@@ -34,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @author Mark Paluch
  * @author Stefan Tirea
  */
+@Collation
 @Target({ ElementType.ANNOTATION_TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Indexed {
@@ -188,5 +192,6 @@ public @interface Indexed {
 	 * @see <a href="https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation/</a>
 	 * @since 4.0
 	 */
+	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
 }

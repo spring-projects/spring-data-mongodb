@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.util.spel;
 
+import java.util.function.Supplier;
+
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
@@ -48,5 +51,16 @@ public final class ExpressionUtils {
 
 		Expression expression = PARSER.parseExpression(potentialExpression, ParserContext.TEMPLATE_EXPRESSION);
 		return expression instanceof LiteralExpression ? null : expression;
+	}
+
+	@Nullable
+	public static Object evaluate(String value, Supplier<EvaluationContext> evaluationContext) {
+
+		Expression expression = detectExpression(value);
+		if (expression == null) {
+			return value;
+		}
+
+		return expression.getValue(evaluationContext.get(), Object.class);
 	}
 }

@@ -23,6 +23,7 @@ import java.lang.annotation.Target;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.QueryAnnotation;
+import org.springframework.data.mongodb.core.annotation.Collation;
 
 /**
  * The {@link Aggregation} annotation can be used to annotate a {@link org.springframework.data.repository.Repository}
@@ -38,6 +39,7 @@ import org.springframework.data.annotation.QueryAnnotation;
  * @author Christoph Strobl
  * @since 2.2
  */
+@Collation
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
@@ -123,5 +125,6 @@ public @interface Aggregation {
 	 *
 	 * @return an empty {@link String} by default.
 	 */
+	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
 }

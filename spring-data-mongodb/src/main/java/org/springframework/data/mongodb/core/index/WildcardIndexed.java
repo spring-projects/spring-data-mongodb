@@ -21,6 +21,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+import org.springframework.data.mongodb.core.annotation.Collation;
+
 /**
  * Annotation for an entity or property that should be used as key for a
  * <a href="https://docs.mongodb.com/manual/core/index-wildcard/">Wildcard Index</a>. <br />
@@ -79,6 +82,7 @@ import java.lang.annotation.Target;
  * @author Christoph Strobl
  * @since 3.3
  */
+@Collation
 @Documented
 @Target({ ElementType.TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
@@ -126,5 +130,6 @@ public @interface WildcardIndexed {
 	 *
 	 * @return an empty {@link String} by default.
 	 */
+	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
 }

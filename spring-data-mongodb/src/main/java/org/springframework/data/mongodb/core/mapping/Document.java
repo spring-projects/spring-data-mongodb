@@ -23,6 +23,7 @@ import java.lang.annotation.Target;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Persistent;
+import org.springframework.data.mongodb.core.annotation.Collation;
 
 /**
  * Identifies a domain object to be persisted to MongoDB.
@@ -32,6 +33,7 @@ import org.springframework.data.annotation.Persistent;
  * @author Christoph Strobl
  */
 @Persistent
+@Collation
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
@@ -71,6 +73,7 @@ public @interface Document {
 	 * @return an empty {@link String} by default.
 	 * @since 2.2
 	 */
+	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
 
 }

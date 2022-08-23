@@ -17,6 +17,10 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.annotation.Collation;
+import org.springframework.data.mongodb.repository.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -24,8 +28,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
@@ -56,7 +58,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 
 	MongoMappingContext context;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		context = new MongoMappingContext();
 	}
@@ -102,13 +104,13 @@ public class ReactiveMongoQueryMethodUnitTests {
 				.isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
+	@Test // DATAMONGO-1444
 	public void rejectsNullMappingContext() throws Exception {
 
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Point.class);
 
-		new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
-				new SpelAwareProxyProjectionFactory(), null);
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
+				new SpelAwareProxyProjectionFactory(), null));
 	}
 
 	@Test // DATAMONGO-1444
@@ -197,6 +199,33 @@ public class ReactiveMongoQueryMethodUnitTests {
 				.withMessageContaining("findAndIncrementVisitsByFirstname");
 	}
 
+	@Test // GH-3002
+	void readsCollationFromAtCollationAnnotation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithCollationFromAtCollationByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedCollation()).isTrue();
+		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
+	}
+
+	@Test // GH-3002
+	void readsCollationFromAtQueryAnnotation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithCollationFromAtQueryByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedCollation()).isTrue();
+		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
+	}
+
+	@Test // GH-3002
+	void annotatedCollationClashSelectsAtCollationAnnotationValue() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedCollation()).isTrue();
+		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
+	}
+
 	private ReactiveMongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
 			throws Exception {
 
@@ -238,6 +267,16 @@ public class ReactiveMongoQueryMethodUnitTests {
 		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
 				collation = "de_AT")
 		Flux<User> findByAggregationWithCollation();
+
+		@Collation("en_US")
+		List<User> findWithCollationFromAtCollationByFirstname(String firstname);
+
+		@Query(collation = "en_US")
+		List<User> findWithCollationFromAtQueryByFirstname(String firstname);
+
+		@Collation("de_AT")
+		@Query(collation = "en_US")
+		List<User> findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname(String firstname);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

@@ -22,7 +22,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 /**
  * Mark a class to use compound indexes. <br />
  * <p>
@@ -49,6 +52,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @author Dave Perryman
  * @author Stefan Tirea
  */
+@Collation
 @Target({ ElementType.TYPE })
 @Documented
 @Repeatable(CompoundIndexes.class)
@@ -181,5 +185,6 @@ public @interface CompoundIndex {
 	 *      "https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation/</a>
 	 * @since 4.0
 	 */
+	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
 }

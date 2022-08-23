@@ -31,6 +31,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -278,6 +280,33 @@ public class MongoQueryMethodUnitTests {
 				.withMessageContaining("findAndIncrementVisitsByFirstname");
 	}
 
+	@Test // GH-3002
+	void readsCollationFromAtCollationAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtCollationByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedCollation()).isTrue();
+		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
+	}
+
+	@Test // GH-3002
+	void readsCollationFromAtQueryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtQueryByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedCollation()).isTrue();
+		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
+	}
+
+	@Test // GH-3002
+	void annotatedCollationClashSelectsAtCollationAnnotationValue() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedCollation()).isTrue();
+		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
+	}
+
 	private MongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters) throws Exception {
 
 		Method method = repository.getMethod(name, parameters);
@@ -338,6 +367,16 @@ public class MongoQueryMethodUnitTests {
 		void findAndUpdateBy(String firstname, UpdateDefinition update);
 
 		void findAndUpdateBy(String firstname, AggregationUpdate update);
+
+		@Collation("en_US")
+		List<User> findWithCollationFromAtCollationByFirstname(String firstname);
+
+		@Query(collation = "en_US")
+		List<User> findWithCollationFromAtQueryByFirstname(String firstname);
+
+		@Collation("de_AT")
+		@Query(collation = "en_US")
+		List<User> findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname(String firstname);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {
