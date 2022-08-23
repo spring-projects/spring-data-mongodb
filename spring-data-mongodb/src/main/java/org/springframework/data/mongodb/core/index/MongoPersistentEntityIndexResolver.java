@@ -455,7 +455,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		if (StringUtils.hasText(index.collation())) {
-			indexDefinition.collation(Collation.parse(index.collation()));
+			indexDefinition.collation(evaluateCollation(index.collation(), entity));
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
@@ -578,7 +578,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		if (StringUtils.hasText(index.collation())) {
-			indexDefinition.collation(Collation.parse(index.collation()));
+			indexDefinition.collation(evaluateCollation(index.collation(), persistentProperty.getOwner()));
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);

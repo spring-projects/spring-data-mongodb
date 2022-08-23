@@ -93,7 +93,7 @@ public class IndexInfoUnitTests {
 				.contains(new Document("fieldA", 0).append("fieldB.fieldC", 0));
 	}
 
-	@Test // DATAMONGO-2133
+	@Test // GH-3002
 	public void collationParsedCorrectly() {
 		assertThat(getIndexInfo(INDEX_WITH_COLLATION).getCollation())
 				.contains(Document.parse("{ \"locale\": \"en_US\", \"strength\": 2 }"));

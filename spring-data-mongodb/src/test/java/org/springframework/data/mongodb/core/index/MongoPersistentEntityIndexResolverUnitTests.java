@@ -700,7 +700,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					org.bson.Document.parse("{'value': {'$exists': true}}"));
 		}
 
-		@Test // DATAMONGO-2133
+		@Test // GH-3002
 		public void compoundIndexWithCollation() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
@@ -1419,7 +1419,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions).hasSize(1);
 		}
 
-		@Test // DATAMONGO-2133
+		@Test // GH-3002
 		public void indexedWithCollation() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(

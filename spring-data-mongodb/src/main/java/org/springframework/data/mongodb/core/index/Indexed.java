@@ -20,6 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Mark a field to be indexed using MongoDB's indexing feature.
  *
@@ -176,12 +177,16 @@ public @interface Indexed {
 	String partialFilter() default "";
 
 	/**
-	 * Apply collation configuration for field <br />
+	 * The actual collation definition in JSON format or a
+	 * {@link org.springframework.expression.spel.standard.SpelExpression template expression} resolving to either a JSON
+	 * String or a {@link org.bson.Document}. The keys of the JSON document are configuration options for the collation
+	 * (language-specific rules for string comparison) applied to the indexed based on the field value.
+	 * <p>
+	 * <strong>NOTE:</strong> Overrides {@link Document#collation()}.
 	 *
 	 * @return empty by default.
-	 * @see <a href=
-	 *      "https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation//</a>
-	 * @since 3.1
+	 * @see <a href="https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation/</a>
+	 * @since 4.0
 	 */
 	String collation() default "";
 }

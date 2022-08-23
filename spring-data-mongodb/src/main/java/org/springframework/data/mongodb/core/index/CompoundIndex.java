@@ -22,6 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Mark a class to use compound indexes. <br />
  * <p>
@@ -166,17 +167,19 @@ public @interface CompoundIndex {
 	String partialFilter() default "";
 
 	/**
-	 * The actual collation definition in JSON format or a {@link org.springframework.expression.spel.standard.SpelExpression
-	 * template expression} resolving to either a JSON String or a {@link org.bson.Document}. The keys of the JSON
-	 * document are configuration options for the collation (language-specific rules for string comparison).
-	 * <br><br>
-	 * TODO write code documentation & example!!!
-	 * <br>
+	 * The actual collation definition in JSON format or a
+	 * {@link org.springframework.expression.spel.standard.SpelExpression template expression} resolving to either a JSON
+	 * String or a {@link org.bson.Document}. The keys of the JSON document are configuration options for the collation
+	 * (language-specific rules for string comparison) to be applied on string properties being part of the index.
+	 * <p>
+	 * <strong>NOTE:</strong> Overrides {@link Document#collation()}.
+	 * <p>
+	 *
 	 *
 	 * @return empty String by default.
 	 * @see <a href=
-	 * "https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation/</a>
-	 * @since 3.4
+	 *      "https://www.mongodb.com/docs/manual/reference/collation/">https://www.mongodb.com/docs/manual/reference/collation/</a>
+	 * @since 4.0
 	 */
 	String collation() default "";
 }
