@@ -66,7 +66,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -2112,10 +2111,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
-
-		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
-				mappingContext, queryMapper);
-		return aggregateStream(aggregation, inputCollectionName, outputType, context);
+		return aggregateStream(aggregation, inputCollectionName, outputType, null);
 	}
 
 	/* (non-Javadoc)
@@ -2133,7 +2129,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
 		return aggregateStream(aggregation, getCollectionName(inputType), outputType,
-				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+				queryOperations.createAggregation(aggregation, inputType).getAggregationOperationContext());
 	}
 
 	/* (non-Javadoc)
