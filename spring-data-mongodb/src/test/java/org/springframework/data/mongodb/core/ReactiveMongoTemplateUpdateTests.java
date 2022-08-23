@@ -186,7 +186,6 @@ public class ReactiveMongoTemplateUpdateTests {
 		two.author = new Author("Grace", "Hopper");
 
 		template.insertAll(Arrays.asList(one, two)).then().as(StepVerifier::create).verifyComplete();
-		;
 
 		AggregationUpdate update = AggregationUpdate.update()
 				.replaceWith(ReplaceWithOperation.replaceWithValueOf("author"));

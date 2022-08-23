@@ -20,10 +20,10 @@ import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,17 +35,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -64,16 +63,13 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
-import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
-import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
  * Test for {@link ReactiveMongoRepository} query methods.
@@ -82,12 +78,11 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Christoph Strobl
  * @author Jens Schauder
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
-class ReactiveMongoRepositoryTests {
+@ExtendWith({ SpringExtension.class, DirtiesStateExtension.class })
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctions {
 
 	private static final int PERSON_COUNT = 7;
-	private static @Client MongoClient mongoClient;
-
 	@Autowired ReactiveMongoTemplate template;
 
 	@Autowired ReactivePersonRepository repository;
@@ -99,12 +94,6 @@ class ReactiveMongoRepositoryTests {
 
 	@Configuration
 	static class Config extends ReactiveMongoClientClosingTestConfiguration {
-
-		@Bean
-		@Override
-		public MongoClient reactiveMongoClient() {
-			return mongoClient;
-		}
 
 		@Override
 		protected String getDatabaseName() {
@@ -144,15 +133,13 @@ class ReactiveMongoRepositoryTests {
 		}
 	}
 
-	@BeforeAll
-	static void cleanDb() {
-
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", mongoClient);
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", mongoClient);
+	@Override
+	public void clear() {
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 	}
 
-	@BeforeEach
-	void setUp() throws Exception {
+	@Override
+	public void setupState() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -160,7 +147,11 @@ class ReactiveMongoRepositoryTests {
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
 		carter.setSkills(Arrays.asList("Drums", "percussion", "vocals"));
-		Thread.sleep(10);
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 		boyd = new Person("Boyd", "Tinsley", 45);
 		boyd.setSkills(Arrays.asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
 		stefan = new Person("Stefan", "Lessard", 34);
@@ -295,6 +286,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
+	@DirtiesState
 	void findsPeopleByLocationWithinCircle() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -307,6 +299,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
+	@DirtiesState
 	void findsPeopleByPageableLocationWithinCircle() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -320,6 +313,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
+	@DirtiesState
 	void findsPeopleGeoresultByLocationWithinBox() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -335,6 +329,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
+	@DirtiesState
 	void findsPeoplePageableGeoresultByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -355,6 +350,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
+	@DirtiesState
 	void findsPeopleByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -404,11 +400,8 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2181
+	@ProvidesState
 	void considersRepositoryCollectionName() {
-
-		repository.deleteAll() //
-				.as(StepVerifier::create) //
-				.verifyComplete();
 
 		contactRepository.deleteAll() //
 				.as(StepVerifier::create) //
@@ -450,8 +443,7 @@ class ReactiveMongoRepositoryTests {
 				.collectList() //
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
-					assertThat(actual)
-							.contains("Lessard", "Keys", "Tinsley", "Beauford", "Moore", "Matthews");
+					assertThat(actual).contains("Lessard", "Keys", "Tinsley", "Beauford", "Moore", "Matthews");
 				}).verifyComplete();
 	}
 
@@ -554,6 +546,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2403
+	@DirtiesState
 	void annotatedAggregationExtractingSimpleValueIsEmptyForEmptyDocument() {
 
 		Person p = new Person("project-on-lastanme", null);
@@ -565,6 +558,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2403
+	@DirtiesState
 	void annotatedAggregationSkipsEmptyDocumentsWhenExtractingSimpleValue() {
 
 		String firstname = "project-on-lastanme";
@@ -584,6 +578,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2406
+	@DirtiesState
 	void deleteByShouldHandleVoidResultTypeCorrectly() {
 
 		repository.deleteByLastname(dave.getLastname()) //
@@ -596,6 +591,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1997
+	@DirtiesState
 	void deleteByShouldAllowDeletedCountAsResult() {
 
 		repository.deleteCountByLastname(dave.getLastname()) //
@@ -605,6 +601,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1997
+	@DirtiesState
 	void deleteByShouldAllowSingleDocumentRemovalCorrectly() {
 
 		repository.deleteSinglePersonByLastname(carter.getLastname()) //
@@ -618,6 +615,7 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2652
+	@DirtiesState
 	void deleteAllById() {
 
 		repository.deleteAllById(Arrays.asList(carter.id, dave.id)) //
@@ -630,74 +628,57 @@ class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void shouldAllowToUpdateAllElements() {
 		repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337))
-				.as(StepVerifier::create)
-				.expectNext(2L)
-				.verifyComplete();
+				.as(StepVerifier::create).expectNext(2L).verifyComplete();
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void mixAnnotatedUpdateWithAnnotatedQuery() {
 
-		repository.updateAllByLastname("Matthews", 1337)
-				.as(StepVerifier::create)
-				.expectNext(2L)
-				.verifyComplete();
+		repository.updateAllByLastname("Matthews", 1337).as(StepVerifier::create).expectNext(2L).verifyComplete();
 
-		repository.findByLastname("Matthews")
-				.map(Person::getVisits)
-				.as(StepVerifier::create)
-				.expectNext(1337, 1337)
+		repository.findByLastname("Matthews").map(Person::getVisits).as(StepVerifier::create).expectNext(1337, 1337)
 				.verifyComplete();
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void annotatedUpdateWithSpELIsAppliedCorrectly() {
 
-		repository.findAndIncrementVisitsUsingSpELByLastname("Matthews", 1337)
-				.as(StepVerifier::create)
-				.expectNext(2L)
+		repository.findAndIncrementVisitsUsingSpELByLastname("Matthews", 1337).as(StepVerifier::create).expectNext(2L)
 				.verifyComplete();
 
-		repository.findByLastname("Matthews")
-				.map(Person::getVisits)
-				.as(StepVerifier::create)
-				.expectNext(1337, 1337)
+		repository.findByLastname("Matthews").map(Person::getVisits).as(StepVerifier::create).expectNext(1337, 1337)
 				.verifyComplete();
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
 	void annotatedAggregationUpdateIsAppliedCorrectly() {
 
-		repository.findAndIncrementVisitsViaPipelineByLastname("Matthews", 1337)
-				.as(StepVerifier::create)
-				.verifyComplete();
+		repository.findAndIncrementVisitsViaPipelineByLastname("Matthews", 1337).as(StepVerifier::create).verifyComplete();
 
-		repository.findByLastname("Matthews")
-				.map(Person::getVisits)
-				.as(StepVerifier::create)
-				.expectNext(1337, 1337)
+		repository.findByLastname("Matthews").map(Person::getVisits).as(StepVerifier::create).expectNext(1337, 1337)
 				.verifyComplete();
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void shouldAllowToUpdateAllElementsWithVoidReturn() {
 
-		repository.findAndIncrementVisitsByLastname("Matthews", 1337)
-				.as(StepVerifier::create)
-				.expectNext(2L)
+		repository.findAndIncrementVisitsByLastname("Matthews", 1337).as(StepVerifier::create).expectNext(2L)
 				.verifyComplete();
 
-		repository.findByLastname("Matthews")
-				.map(Person::getVisits)
-				.as(StepVerifier::create)
-				.expectNext(1337, 1337)
+		repository.findByLastname("Matthews").map(Person::getVisits).as(StepVerifier::create).expectNext(1337, 1337)
 				.verifyComplete();
 	}
 
 	@Test // GH-2107
+	@DirtiesState
 	void allowsToUseComplexTypesInUpdate() {
 
 		Address address = new Address("1007 Mountain Drive", "53540", "Gotham");
@@ -707,10 +688,8 @@ class ReactiveMongoRepositoryTests {
 				.expectNext(1L) //
 				.verifyComplete();
 
-		repository.findById(dave.getId()).map(Person::getShippingAddresses)
-				.as(StepVerifier::create)
-				.consumeNextWith(it -> assertThat(it).containsExactly(address))
-				.verifyComplete();
+		repository.findById(dave.getId()).map(Person::getShippingAddresses).as(StepVerifier::create)
+				.consumeNextWith(it -> assertThat(it).containsExactly(address)).verifyComplete();
 	}
 
 	interface ReactivePersonRepository
@@ -799,7 +778,8 @@ class ReactiveMongoRepositoryTests {
 		@org.springframework.data.mongodb.repository.Update("{ '$inc' : { 'visits' : ?1 } }")
 		Mono<Long> updateAllByLastname(String lastname, int increment);
 
-		@org.springframework.data.mongodb.repository.Update( pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+		@org.springframework.data.mongodb.repository.Update(
+				pipeline = { "{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }" })
 		Mono<Void> findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment);
 
 		@org.springframework.data.mongodb.repository.Update("{ '$inc' : { 'visits' : ?#{[1]} } }")
