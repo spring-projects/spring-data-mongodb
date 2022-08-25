@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -2070,6 +2071,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
+
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		return aggregate(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
@@ -2079,9 +2082,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
-
-		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
-
 		return aggregate(aggregation, inputCollectionName, outputType, null);
 	}
 
@@ -2091,6 +2091,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		return aggregate(aggregation, getCollectionName(inputType), outputType,
 				queryOperations.createAggregation(aggregation, inputType).getAggregationOperationContext());
 	}
@@ -2109,8 +2110,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
-
-		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		return aggregateStream(aggregation, inputCollectionName, outputType, null);
 	}
 
@@ -2119,6 +2118,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
+
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		return aggregateStream(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
@@ -2128,6 +2129,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		return aggregateStream(aggregation, getCollectionName(inputType), outputType,
 				queryOperations.createAggregation(aggregation, inputType).getAggregationOperationContext());
 	}
@@ -2286,8 +2288,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName,
 			Class<O> outputType, @Nullable AggregationOperationContext context) {
 
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(outputType, "Output type must not be null!");
 		Assert.isTrue(!aggregation.getOptions().isExplain(), "Can't use explain option with streaming!");
 

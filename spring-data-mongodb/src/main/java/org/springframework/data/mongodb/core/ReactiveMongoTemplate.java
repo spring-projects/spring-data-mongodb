@@ -1018,7 +1018,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <O> Flux<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName, Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
-
 		return doAggregate(aggregation, inputCollectionName, aggregation.getInputType(), outputType);
 	}
 
@@ -1028,6 +1027,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <O> Flux<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
+
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		return aggregate(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
