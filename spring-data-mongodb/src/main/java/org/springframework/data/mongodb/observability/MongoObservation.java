@@ -63,7 +63,7 @@ enum MongoObservation implements DocumentedObservation {
 		 */
 		MONGODB_COLLECTION {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.data.mongodb.collection";
 			}
 		},
@@ -73,7 +73,7 @@ enum MongoObservation implements DocumentedObservation {
 		 */
 		MONGODB_CLUSTER_ID {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.data.mongodb.cluster_id";
 			}
 		}
@@ -89,7 +89,7 @@ enum MongoObservation implements DocumentedObservation {
 		 */
 		MONGODB_COMMAND {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.data.mongodb.command";
 			}
 		}

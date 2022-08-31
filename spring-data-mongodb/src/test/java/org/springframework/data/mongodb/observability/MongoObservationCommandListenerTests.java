@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import static io.micrometer.core.tck.MeterRegistryAssert.*;
+import static io.micrometer.core.tck.MeterRegistryAssert.assertThat;
 
-import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.observation.TimerObservationHandler;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
@@ -42,7 +41,7 @@ import com.mongodb.event.CommandSucceededEvent;
 
 /**
  * Series of test cases exercising {@link MongoObservationCommandListener}.
- * 
+ *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
  * @since 4.0.0
@@ -59,7 +58,7 @@ class MongoObservationCommandListenerTests {
 
 		this.meterRegistry = new SimpleMeterRegistry();
 		this.observationRegistry = ObservationRegistry.create();
-		this.observationRegistry.observationConfig().observationHandler(new TimerObservationHandler(meterRegistry));
+		this.observationRegistry.observationConfig().observationHandler(new DefaultMeterObservationHandler(meterRegistry));
 
 		this.listener = new MongoObservationCommandListener(observationRegistry);
 	}
@@ -149,8 +148,8 @@ class MongoObservationCommandListenerTests {
 		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
 
 		// then
-		assertThat(meterRegistry).hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.getKeyName(),
-				KeyValues.of(KeyValue.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.getKeyName(), "user")));
+		assertThat(meterRegistry).hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
+				KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user")));
 	}
 
 	@Test
@@ -178,10 +177,10 @@ class MongoObservationCommandListenerTests {
 	private void assertThatTimerRegisteredWithTags() {
 
 		assertThat(meterRegistry) //
-				.hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.getKeyName(),
-						KeyValues.of(KeyValue.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.getKeyName(), "user"))) //
-				.hasTimerWithNameAndTagKeys(HighCardinalityCommandKeyNames.MONGODB_COMMAND.getKeyName(),
-						LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.getKeyName());
+				.hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
+						KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user"))) //
+				.hasTimerWithNameAndTagKeys(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
+						LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.asString());
 	}
 
 }

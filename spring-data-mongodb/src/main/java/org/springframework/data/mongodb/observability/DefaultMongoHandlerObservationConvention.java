@@ -26,12 +26,12 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandStartedEvent;
 
 /**
- * Default {@link MongoHandlerKeyValuesProvider} implementation.
+ * Default {@link MongoHandlerObservationConvention} implementation.
  *
  * @author Greg Turnquist
  * @since 4.0.0
  */
-public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValuesProvider {
+public class DefaultMongoHandlerObservationConvention implements MongoHandlerObservationConvention {
 
 	@Override
 	public KeyValues getLowCardinalityKeyValues(MongoHandlerContext context) {
@@ -40,7 +40,7 @@ public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValu
 
 		if (context.getCollectionName() != null) {
 			keyValues = keyValues
-					.and(KeyValue.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.getKeyName(), context.getCollectionName()));
+					.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(context.getCollectionName()));
 		}
 
 		KeyValue connectionTag = connectionTag(context.getCommandStartedEvent());
@@ -54,8 +54,8 @@ public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValu
 	@Override
 	public KeyValues getHighCardinalityKeyValues(MongoHandlerContext context) {
 
-		return KeyValues.of(KeyValue.of(HighCardinalityCommandKeyNames.MONGODB_COMMAND.getKeyName(),
-				context.getCommandStartedEvent().getCommandName()));
+		return KeyValues.of(
+				HighCardinalityCommandKeyNames.MONGODB_COMMAND.withValue(context.getCommandStartedEvent().getCommandName()));
 	}
 
 	/**
@@ -72,8 +72,8 @@ public class DefaultMongoHandlerKeyValuesProvider implements MongoHandlerKeyValu
 
 			ConnectionId connectionId = connectionDescription.getConnectionId();
 			if (connectionId != null) {
-				return KeyValue.of(LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.getKeyName(),
-						connectionId.getServerId().getClusterId().getValue());
+				return LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID
+						.withValue(connectionId.getServerId().getClusterId().getValue());
 			}
 		}
 

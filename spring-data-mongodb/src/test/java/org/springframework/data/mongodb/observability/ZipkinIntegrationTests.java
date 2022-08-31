@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.observation.TimerObservationHandler;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
@@ -80,7 +80,7 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 	private static final ObservationRegistry OBSERVATION_REGISTRY = ObservationRegistry.create();
 
 	static {
-		OBSERVATION_REGISTRY.observationConfig().observationHandler(new TimerObservationHandler(METER_REGISTRY));
+		OBSERVATION_REGISTRY.observationConfig().observationHandler(new DefaultMeterObservationHandler(METER_REGISTRY));
 	}
 
 	@Autowired PersonRepository repository;

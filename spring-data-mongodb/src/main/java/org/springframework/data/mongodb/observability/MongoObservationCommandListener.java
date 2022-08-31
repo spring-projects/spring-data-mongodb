@@ -36,19 +36,18 @@ import com.mongodb.event.CommandSucceededEvent;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-public final class MongoObservationCommandListener
-		implements CommandListener, Observation.KeyValuesProviderAware<MongoHandlerKeyValuesProvider> {
+public final class MongoObservationCommandListener implements CommandListener {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
 	private final ObservationRegistry observationRegistry;
 
-	private MongoHandlerKeyValuesProvider keyValuesProvider;
+	private MongoHandlerObservationConvention observationConvention;
 
 	public MongoObservationCommandListener(ObservationRegistry observationRegistry) {
 
 		this.observationRegistry = observationRegistry;
-		this.keyValuesProvider = new DefaultMongoHandlerKeyValuesProvider();
+		this.observationConvention = new DefaultMongoHandlerObservationConvention();
 	}
 
 	@Override
@@ -130,7 +129,7 @@ public final class MongoObservationCommandListener
 
 	/**
 	 * Extract the {@link Observation} from MongoDB's {@link RequestContext}.
-	 * 
+	 *
 	 * @param context
 	 * @return
 	 */
@@ -160,7 +159,7 @@ public final class MongoObservationCommandListener
 		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
 				.observation(this.observationRegistry, observationContext) //
 				.contextualName(observationContext.getContextualName()) //
-				.keyValuesProvider(this.keyValuesProvider) //
+				.observationConvention(this.observationConvention) //
 				.start();
 
 		requestContext.put(Observation.class, observation);
@@ -170,10 +169,5 @@ public final class MongoObservationCommandListener
 			log.debug(
 					"Created a child observation  [" + observation + "] for mongo instrumentation and put it in mongo context");
 		}
-	}
-
-	@Override
-	public void setKeyValuesProvider(MongoHandlerKeyValuesProvider mongoHandlerKeyValuesProvider) {
-		this.keyValuesProvider = mongoHandlerKeyValuesProvider;
 	}
 }

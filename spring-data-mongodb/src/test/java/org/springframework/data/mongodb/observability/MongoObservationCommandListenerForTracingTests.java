@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.observability;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.observation.TimerObservationHandler;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
@@ -67,7 +67,7 @@ class MongoObservationCommandListenerForTracingTests {
 
 		this.meterRegistry = new SimpleMeterRegistry();
 		this.observationRegistry = ObservationRegistry.create();
-		this.observationRegistry.observationConfig().observationHandler(new TimerObservationHandler(meterRegistry));
+		this.observationRegistry.observationConfig().observationHandler(new DefaultMeterObservationHandler(meterRegistry));
 		this.observationRegistry.observationConfig().observationHandler(handler);
 
 		this.listener = new MongoObservationCommandListener(observationRegistry);
@@ -135,7 +135,7 @@ class MongoObservationCommandListenerForTracingTests {
 	 * Execute MongoDB's {@link com.mongodb.event.CommandListener#commandStarted(CommandStartedEvent)} and
 	 * {@link com.mongodb.event.CommandListener#commandSucceeded(CommandSucceededEvent)} operations against the
 	 * {@link TestRequestContext} in order to inject some test data.
-	 * 
+	 *
 	 * @param testRequestContext
 	 */
 	private void commandStartedAndSucceeded(TestRequestContext testRequestContext) {
@@ -163,8 +163,8 @@ class MongoObservationCommandListenerForTracingTests {
 				.hasNameEqualTo("insert user") //
 				.hasKindEqualTo(Span.Kind.CLIENT) //
 				.hasRemoteServiceNameEqualTo("mongodb-database") //
-				.hasTag(HighCardinalityCommandKeyNames.MONGODB_COMMAND.getKeyName(), "insert") //
-				.hasTag(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.getKeyName(), "user") //
-				.hasTagWithKey(LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.getKeyName());
+				.hasTag(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(), "insert") //
+				.hasTag(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.asString(), "user") //
+				.hasTagWithKey(LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.asString());
 	}
 }
