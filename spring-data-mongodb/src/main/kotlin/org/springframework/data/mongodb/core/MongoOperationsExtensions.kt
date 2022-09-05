@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults
 import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.Update
+import org.springframework.data.mongodb.core.query.UpdateDefinition
 import java.util.stream.Stream
 
 /**
@@ -261,7 +261,7 @@ inline fun <reified T : Any, reified E : Any> MongoOperations.findDistinct(query
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): T? =
+inline fun <reified T : Any> MongoOperations.findAndModify(query: Query, update: UpdateDefinition, options: FindAndModifyOptions, collectionName: String? = null): T? =
 		if (collectionName != null) findAndModify(query, update, options, T::class.java, collectionName)
 		else findAndModify(query, update, options, T::class.java)
 
@@ -301,7 +301,7 @@ inline fun <reified T : Any> MongoOperations.insert(batchToSave: Collection<T>):
  * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update, collectionName: String? = null): UpdateResult =
+inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: UpdateDefinition, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) upsert(query, update, T::class.java, collectionName)
 		else upsert(query, update, T::class.java)
 
@@ -312,7 +312,7 @@ inline fun <reified T : Any> MongoOperations.upsert(query: Query, update: Update
  * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: Update, collectionName: String? = null): UpdateResult =
+inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: UpdateDefinition, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateFirst(query, update, T::class.java, collectionName)
 		else updateFirst(query, update, T::class.java)
 
@@ -323,7 +323,7 @@ inline fun <reified T : Any> MongoOperations.updateFirst(query: Query, update: U
  * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: Update, collectionName: String? = null): UpdateResult =
+inline fun <reified T : Any> MongoOperations.updateMulti(query: Query, update: UpdateDefinition, collectionName: String? = null): UpdateResult =
 		if (collectionName != null) updateMulti(query, update, T::class.java, collectionName)
 		else updateMulti(query, update, T::class.java)
 
