@@ -25,7 +25,7 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations
 import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.Update
+import org.springframework.data.mongodb.core.query.UpdateDefinition
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
@@ -194,7 +194,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.geoNear(near: NearQuery, co
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> ReactiveMongoOperations.findAndModify(query: Query, update: Update, options: FindAndModifyOptions, collectionName: String? = null): Mono<T> =
+inline fun <reified T : Any> ReactiveMongoOperations.findAndModify(query: Query, update: UpdateDefinition, options: FindAndModifyOptions, collectionName: String? = null): Mono<T> =
 		if (collectionName != null) findAndModify(query, update, options, T::class.java, collectionName) else findAndModify(query, update, options, T::class.java)
 
 /**
@@ -234,7 +234,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.insert(batchToSave: Collect
  * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> ReactiveMongoOperations.upsert(query: Query, update: Update, collectionName: String? = null): Mono<UpdateResult> =
+inline fun <reified T : Any> ReactiveMongoOperations.upsert(query: Query, update: UpdateDefinition, collectionName: String? = null): Mono<UpdateResult> =
 		if (collectionName != null) upsert(query, update, T::class.java, collectionName)
 		else upsert(query, update, T::class.java)
 
@@ -245,7 +245,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.upsert(query: Query, update
  * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> ReactiveMongoOperations.updateFirst(query: Query, update: Update, collectionName: String? = null): Mono<UpdateResult> =
+inline fun <reified T : Any> ReactiveMongoOperations.updateFirst(query: Query, update: UpdateDefinition, collectionName: String? = null): Mono<UpdateResult> =
 		if (collectionName != null) updateFirst(query, update, T::class.java, collectionName)
 		else updateFirst(query, update, T::class.java)
 
@@ -256,7 +256,7 @@ inline fun <reified T : Any> ReactiveMongoOperations.updateFirst(query: Query, u
  * @since 2.0
  */
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-inline fun <reified T : Any> ReactiveMongoOperations.updateMulti(query: Query, update: Update, collectionName: String? = null): Mono<UpdateResult> =
+inline fun <reified T : Any> ReactiveMongoOperations.updateMulti(query: Query, update: UpdateDefinition, collectionName: String? = null): Mono<UpdateResult> =
 		if (collectionName != null) updateMulti(query, update, T::class.java, collectionName)
 		else updateMulti(query, update, T::class.java)
 
