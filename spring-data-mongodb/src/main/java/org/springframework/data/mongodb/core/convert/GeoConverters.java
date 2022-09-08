@@ -757,7 +757,9 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static GeoJsonPolygon toGeoJsonPolygon(List dbList) {
-		return new GeoJsonPolygon(toListOfPoint((List) dbList.get(0)));
+
+		GeoJsonPolygon polygon = new GeoJsonPolygon(toListOfPoint((List) dbList.get(0)));
+		return dbList.size() > 1 ? polygon.withInnerRing(toListOfPoint((List) dbList.get(1))) : polygon;
 	}
 
 	/**

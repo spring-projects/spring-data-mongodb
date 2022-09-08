@@ -24,6 +24,7 @@ import java.util.List;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link GeoJson} representation of {@link Polygon}. Unlike {@link Polygon} the {@link GeoJsonPolygon} requires a
@@ -132,6 +133,30 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 		result.add(fourth);
 		result.addAll(Arrays.asList(others));
 
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		if (!super.equals(o)) {
+			return false;
+		}
+
+		GeoJsonPolygon that = (GeoJsonPolygon) o;
+
+		return ObjectUtils.nullSafeEquals(this.coordinates, that.coordinates);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + ObjectUtils.nullSafeHashCode(coordinates);
 		return result;
 	}
 }
