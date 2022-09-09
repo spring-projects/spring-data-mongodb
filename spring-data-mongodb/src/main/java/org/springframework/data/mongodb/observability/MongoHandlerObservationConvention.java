@@ -16,14 +16,15 @@
 package org.springframework.data.mongodb.observability;
 
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 
 /**
- * {@link Observation.ObservationConvention} for {@link MongoHandlerContext}.
+ * {@link ObservationConvention} for {@link MongoHandlerContext}.
  *
  * @author Greg Turnquist
  * @since 4.0.0
  */
-public interface MongoHandlerObservationConvention extends Observation.ObservationConvention<MongoHandlerContext> {
+public interface MongoHandlerObservationConvention extends ObservationConvention<MongoHandlerContext> {
 
 	@Override
 	default boolean supportsContext(Observation.Context context) {
