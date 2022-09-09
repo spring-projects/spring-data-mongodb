@@ -86,7 +86,17 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 	@Autowired PersonRepository repository;
 
 	ZipkinIntegrationTests() {
-		super(SampleRunnerConfig.builder().build(), OBSERVATION_REGISTRY, METER_REGISTRY);
+		super(SampleRunnerConfig.builder().build());
+	}
+
+	@Override
+	protected MeterRegistry createMeterRegistry() {
+		return METER_REGISTRY;
+	}
+
+	@Override
+	protected ObservationRegistry createObservationRegistry() {
+		return OBSERVATION_REGISTRY;
 	}
 
 	@Override
