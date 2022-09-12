@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
@@ -358,8 +359,11 @@
               <goal>test-process</goal>
             </goals>
             <configuration>
-              <outputDirectory>target/generated-test-sources</outputDirectory>
-              <processor>org.springframework.data.mongodb.repository.support.MongoAnnotationProcessor</processor>
+              <outputDirectory>target/generated-test-sources
+              </outputDirectory>
+              <processor>
+                org.springframework.data.mongodb.repository.support.MongoAnnotationProcessor
+              </processor>
             </configuration>
           </execution>
         </executions>
@@ -379,7 +383,9 @@
             <exclude>**/ReactivePerformanceTests.java</exclude>
           </excludes>
           <systemPropertyVariables>
-            <java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
+            <java.util.logging.config.file>
+              src/test/resources/logging.properties
+            </java.util.logging.config.file>
             <reactor.trace.cancel>true</reactor.trace.cancel>
           </systemPropertyVariables>
         </configuration>
