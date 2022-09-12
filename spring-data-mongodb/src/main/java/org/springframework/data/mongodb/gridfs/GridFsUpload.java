@@ -24,7 +24,6 @@ import org.bson.types.ObjectId;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StreamUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
@@ -74,7 +73,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 
 	@Override
 	public InputStream getContent() {
-		return dataStream.orElse(StreamUtils.emptyInput());
+		return dataStream.orElse(InputStream.nullInputStream());
 	}
 
 	@Override
