@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -44,12 +45,10 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.Function;
 
 /**
@@ -61,8 +60,8 @@ import com.mongodb.Function;
  * @author Thiago Diniz da Silveira
  * @since 1.5
  */
+@SuppressWarnings("ConstantConditions")
 abstract class GeoConverters {
-
 
 	private final static Map<String, Function<Document, GeoJson<?>>> converters;
 
@@ -93,7 +92,6 @@ abstract class GeoConverters {
 	 *
 	 * @return never {@literal null}.
 	 */
-	@SuppressWarnings("unchecked")
 	public static Collection<? extends Object> getConvertersToRegister() {
 		return Arrays.asList( //
 				BoxToDocumentConverter.INSTANCE //
@@ -420,7 +418,7 @@ abstract class GeoConverters {
 				return null;
 			}
 
-			List argument = new ArrayList();
+			List<Object> argument = new ArrayList<>();
 
 			Shape shape = source.getShape();
 
@@ -458,13 +456,12 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	@SuppressWarnings("rawtypes")
-	enum GeoJsonToDocumentConverter implements Converter<GeoJson, Document> {
+	enum GeoJsonToDocumentConverter implements Converter<GeoJson<?>, Document> {
 
 		INSTANCE;
 
 		@Override
-		public Document convert(GeoJson source) {
+		public Document convert(GeoJson<?> source) {
 
 			if (source == null) {
 				return null;
@@ -474,33 +471,33 @@ abstract class GeoConverters {
 
 			if (source instanceof GeoJsonGeometryCollection) {
 
-				List dbl = new ArrayList();
+				List<Object> dbl = new ArrayList<>();
 
-				for (GeoJson geometry : ((GeoJsonGeometryCollection) source).getCoordinates()) {
+				for (GeoJson<?> geometry : ((GeoJsonGeometryCollection) source).getCoordinates()) {
 					dbl.add(convert(geometry));
 				}
 
 				dbo.put("geometries", dbl);
 
 			} else {
-				dbo.put("coordinates", convertIfNecessarry(source.getCoordinates()));
+				dbo.put("coordinates", convertIfNecessary(source.getCoordinates()));
 			}
 
 			return dbo;
 		}
 
-		private Object convertIfNecessarry(Object candidate) {
+		private Object convertIfNecessary(Object candidate) {
 
 			if (candidate instanceof GeoJson) {
-				return convertIfNecessarry(((GeoJson) candidate).getCoordinates());
+				return convertIfNecessary(((GeoJson<?>) candidate).getCoordinates());
 			}
 
-			if (candidate instanceof Iterable) {
+			if (candidate instanceof Iterable<?>) {
 
-				List dbl = new ArrayList();
+				List<Object> dbl = new ArrayList<>();
 
-				for (Object element : (Iterable) candidate) {
-					dbl.add(convertIfNecessarry(element));
+				for (Object element : (Iterable<?>) candidate) {
+					dbl.add(convertIfNecessary(element));
 				}
 
 				return dbl;
@@ -584,7 +581,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "Polygon"),
 					String.format("Cannot convert type '%s' to Polygon", source.get("type")));
 
-			return toGeoJsonPolygon((List) source.get("coordinates"));
+			return toGeoJsonPolygon((List<?>) source.get("coordinates"));
 		}
 	}
 
@@ -606,11 +603,11 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiPolygon"),
 					String.format("Cannot convert type '%s' to MultiPolygon", source.get("type")));
 
-			List dbl = (List) source.get("coordinates");
+			List<?> dbl = (List<?>) source.get("coordinates");
 			List<GeoJsonPolygon> polygones = new ArrayList<>();
 
 			for (Object polygon : dbl) {
-				polygones.add(toGeoJsonPolygon((List) polygon));
+				polygones.add(toGeoJsonPolygon((List<?>) polygon));
 			}
 
 			return new GeoJsonMultiPolygon(polygones);
@@ -635,7 +632,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "LineString"),
 					String.format("Cannot convert type '%s' to LineString", source.get("type")));
 
-			List cords = (List) source.get("coordinates");
+			List<?> cords = (List<?>) source.get("coordinates");
 
 			return new GeoJsonLineString(toListOfPoint(cords));
 		}
@@ -659,7 +656,7 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiPoint"),
 					String.format("Cannot convert type '%s' to MultiPoint", source.get("type")));
 
-			List cords = (List) source.get("coordinates");
+			List<?> cords = (List<?>) source.get("coordinates");
 
 			return new GeoJsonMultiPoint(toListOfPoint(cords));
 		}
@@ -683,11 +680,11 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiLineString"),
 					String.format("Cannot convert type '%s' to MultiLineString", source.get("type")));
 
-			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>();
-			List cords = (List) source.get("coordinates");
+			List<GeoJsonLineString> lines = new ArrayList<>();
+			List<?> cords = (List<?>) source.get("coordinates");
 
 			for (Object line : cords) {
-				lines.add(new GeoJsonLineString(toListOfPoint((List) line)));
+				lines.add(new GeoJsonLineString(toListOfPoint((List<?>) line)));
 			}
 			return new GeoJsonMultiLineString(lines);
 		}
@@ -726,16 +723,16 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPoint}s.
+	 * Converts a coordinate pairs nested in {@link List} into {@link GeoJsonPoint}s.
 	 *
 	 * @param listOfCoordinatePairs must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 1.7
 	 */
 	@SuppressWarnings("unchecked")
-	static List<Point> toListOfPoint(List listOfCoordinatePairs) {
+	static List<Point> toListOfPoint(List<?> listOfCoordinatePairs) {
 
-		List<Point> points = new ArrayList<>();
+		List<Point> points = new ArrayList<>(listOfCoordinatePairs.size());
 
 		for (Object point : listOfCoordinatePairs) {
 
@@ -750,16 +747,16 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPolygon}.
+	 * Converts a coordinate pairs nested in {@link List} into {@link GeoJsonPolygon}.
 	 *
 	 * @param dbList must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 1.7
 	 */
-	static GeoJsonPolygon toGeoJsonPolygon(List dbList) {
+	static GeoJsonPolygon toGeoJsonPolygon(List<?> dbList) {
 
-		GeoJsonPolygon polygon = new GeoJsonPolygon(toListOfPoint((List) dbList.get(0)));
-		return dbList.size() > 1 ? polygon.withInnerRing(toListOfPoint((List) dbList.get(1))) : polygon;
+		GeoJsonPolygon polygon = new GeoJsonPolygon(toListOfPoint((List<?>) dbList.get(0)));
+		return dbList.size() > 1 ? polygon.withInnerRing(toListOfPoint((List<?>) dbList.get(1))) : polygon;
 	}
 
 	/**
@@ -770,13 +767,11 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 */
 	@ReadingConverter
-	enum DocumentToGeoJsonConverter implements Converter<Document, GeoJson> {
+	enum DocumentToGeoJsonConverter implements Converter<Document, GeoJson<?>> {
 		INSTANCE;
 
-
-		@Nullable
 		@Override
-		public GeoJson convert(Document source) {
+		public GeoJson<?> convert(Document source) {
 			return toGenericGeoJson(source);
 		}
 	}
@@ -785,22 +780,21 @@ abstract class GeoConverters {
 
 		String type = source.get("type", String.class);
 
-		if(type != null) {
+		if (type != null) {
 
 			Function<Document, GeoJson<?>> converter = converters.get(type);
 
-			if(converter != null){
+			if (converter != null) {
 				return converter.apply(source);
 			}
 		}
 
-		throw new IllegalArgumentException(
-				String.format("No converter found capable of converting GeoJson type %s", type));
+		throw new IllegalArgumentException(String.format("No converter found capable of converting GeoJson type %s", type));
 	}
 
 	private static double toPrimitiveDoubleValue(Object value) {
 
 		Assert.isInstanceOf(Number.class, value, "Argument must be a Number");
-		return NumberUtils.convertNumberToTargetClass((Number) value, Double.class).doubleValue();
+		return NumberUtils.convertNumberToTargetClass((Number) value, Double.class);
 	}
 }
