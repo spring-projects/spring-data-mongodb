@@ -41,7 +41,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.ReactiveWrappers;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -195,7 +194,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		if (Iterable.class.isAssignableFrom(returnType)) {
-			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
+			TypeInformation<?> from = TypeInformation.fromReturnTypeOf(method);
 			return GeoResult.class.equals(from.getRequiredComponentType().getType());
 		}
 
@@ -217,7 +216,7 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	TypeInformation<?> getReturnType() {
-		return ClassTypeInformation.fromReturnTypeOf(method);
+		return TypeInformation.fromReturnTypeOf(method);
 	}
 
 	/**

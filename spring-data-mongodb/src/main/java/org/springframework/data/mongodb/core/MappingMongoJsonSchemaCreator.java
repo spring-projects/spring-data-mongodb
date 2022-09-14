@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -267,7 +267,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	private boolean isSpecificType(MongoPersistentProperty property) {
-		return !ClassTypeInformation.OBJECT.equals(property.getTypeInformation().getActualType());
+		return !TypeInformation.OBJECT.equals(property.getTypeInformation().getActualType());
 	}
 
 	private JsonSchemaProperty applyEncryptionDataIfNecessary(MongoPersistentProperty property,

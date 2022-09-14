@@ -187,7 +187,9 @@ public interface ExecutableMapReduceOperation {
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.1
+	 * @deprecated since 4.0 in favor of {@link org.springframework.data.mongodb.core.aggregation}.
 	 */
+	@Deprecated
 	interface MapReduceWithOptions<T> {
 
 		/**

@@ -19,7 +19,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
@@ -76,7 +75,7 @@ public interface IndexResolver {
 	 * @see 2.2
 	 */
 	default Iterable<? extends IndexDefinition> resolveIndexFor(Class<?> entityType) {
-		return resolveIndexFor(ClassTypeInformation.from(entityType));
+		return resolveIndexFor(TypeInformation.of(entityType));
 	}
 
 }

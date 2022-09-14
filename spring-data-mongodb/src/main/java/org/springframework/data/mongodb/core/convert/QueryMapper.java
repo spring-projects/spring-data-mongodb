@@ -48,7 +48,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.Pro
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -78,7 +77,7 @@ public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
 	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
-	static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
+	static final TypeInformation<?> NESTED_DOCUMENT = TypeInformation.of(NestedDocument.class);
 
 	private enum MetaMapping {
 		FORCE, WHEN_PRESENT, IGNORE
@@ -1040,7 +1039,7 @@ public class QueryMapper {
 		}
 
 		public TypeInformation<?> getTypeHint() {
-			return ClassTypeInformation.OBJECT;
+			return TypeInformation.OBJECT;
 		}
 
 	}
@@ -1352,7 +1351,7 @@ public class QueryMapper {
 
 			if (property.getActualType().isInterface()
 					|| java.lang.reflect.Modifier.isAbstract(property.getActualType().getModifiers())) {
-				return ClassTypeInformation.OBJECT;
+				return TypeInformation.OBJECT;
 			}
 
 			return NESTED_DOCUMENT;
