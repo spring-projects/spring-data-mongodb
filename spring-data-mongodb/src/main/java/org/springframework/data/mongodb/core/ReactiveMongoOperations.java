@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,10 +25,13 @@ import java.util.function.Supplier;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -243,7 +244,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<MongoCollection<Document>> createCollection(String collectionName, CollectionOptions collectionOptions);
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the {@link AggregationOperation pipeline
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationOperation pipeline
 	 * stages} on another collection or view identified by the given {@link #getCollectionName(Class) source type}.
 	 *
 	 * @param name the name of the view to create.
@@ -256,7 +257,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	}
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the  {@link AggregationPipeline pipeline} on
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
 	 * another collection or view identified by the given {@link #getCollectionName(Class) source type}.
 	 *
 	 * @param name the name of the view to create.
@@ -269,7 +270,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	}
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the {@link AggregationPipeline pipeline} on
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
 	 * another collection or view identified by the given {@link #getCollectionName(Class) source type}.
 	 *
 	 * @param name the name of the view to create.
@@ -281,7 +282,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<MongoCollection<Document>> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options);
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the {@link AggregationPipeline pipeline} on
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
 	 * another collection or view identified by the given source.
 	 *
 	 * @param name the name of the view to create.
@@ -1445,7 +1446,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove, String collectionName);
 
 	/**
-	 * Remove all documents that match the provided query document criteria from the the collection used to store the
+	 * Remove all documents that match the provided query document criteria from the collection used to store the
 	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
 	 *
 	 * @param query the query document that specifies the criteria used to remove a record.
@@ -1455,7 +1456,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<DeleteResult> remove(Query query, Class<?> entityClass);
 
 	/**
-	 * Remove all documents that match the provided query document criteria from the the collection used to store the
+	 * Remove all documents that match the provided query document criteria from the collection used to store the
 	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
 	 *
 	 * @param query the query document that specifies the criteria used to remove a record.
@@ -1498,9 +1499,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> findAllAndRemove(Query query, Class<T> entityClass);
 
 	/**
-	 * Returns and removes all documents that match the provided query document criteria from the the collection used to
-	 * store the entityClass. The Class parameter is also used to help convert the Id of the object if it is present in
-	 * the query.
+	 * Returns and removes all documents that match the provided query document criteria from the collection used to store
+	 * the entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the
+	 * query.
 	 *
 	 * @param query the query document that specifies the criteria used to find and remove documents.
 	 * @param entityClass class of the pojo to be operated on.

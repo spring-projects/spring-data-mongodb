@@ -283,9 +283,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	MongoCollection<Document> createCollection(String collectionName, @Nullable CollectionOptions collectionOptions);
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the {@link AggregationOperation pipeline
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationOperation pipeline
 	 * stages} on another collection or view identified by the given {@link #getCollectionName(Class) source type}.
-	 * 
+	 *
 	 * @param name the name of the view to create.
 	 * @param source the type defining the views source collection.
 	 * @param stages the {@link AggregationOperation aggregation pipeline stages} defining the view content.
@@ -296,7 +296,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the  {@link AggregationPipeline pipeline} on
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
 	 * another collection or view identified by the given {@link #getCollectionName(Class) source type}.
 	 *
 	 * @param name the name of the view to create.
@@ -309,7 +309,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the {@link AggregationPipeline pipeline} on
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
 	 * another collection or view identified by the given {@link #getCollectionName(Class) source type}.
 	 *
 	 * @param name the name of the view to create.
@@ -321,7 +321,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options);
 
 	/**
-	 * Create a view with the the provided name whose contents are defined by the {@link AggregationPipeline pipeline} on
+	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
 	 * another collection or view identified by the given source.
 	 *
 	 * @param name the name of the view to create.
@@ -1593,7 +1593,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	DeleteResult remove(Object object, String collectionName);
 
 	/**
-	 * Remove all documents that match the provided query document criteria from the the collection used to store the
+	 * Remove all documents that match the provided query document criteria from the collection used to store the
 	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
 	 *
 	 * @param query the query document that specifies the criteria used to remove a record.
@@ -1604,7 +1604,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	DeleteResult remove(Query query, Class<?> entityClass);
 
 	/**
-	 * Remove all documents that match the provided query document criteria from the the collection used to store the
+	 * Remove all documents that match the provided query document criteria from the collection used to store the
 	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
 	 *
 	 * @param query the query document that specifies the criteria used to remove a record.
@@ -1652,9 +1652,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> findAllAndRemove(Query query, Class<T> entityClass);
 
 	/**
-	 * Returns and removes all documents that match the provided query document criteria from the the collection used to
-	 * store the entityClass. The Class parameter is also used to help convert the Id of the object if it is present in
-	 * the query.
+	 * Returns and removes all documents that match the provided query document criteria from the collection used to store
+	 * the entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the
+	 * query.
 	 *
 	 * @param query the query document that specifies the criteria used to find and remove documents.
 	 * @param entityClass class of the pojo to be operated on.

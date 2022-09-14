@@ -41,6 +41,8 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import com.mongodb.client.MongoClient;
 
 /**
+ * Integration tests for Views.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoClientExtension.class)

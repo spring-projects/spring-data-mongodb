@@ -23,13 +23,13 @@ import org.springframework.lang.Nullable;
 /**
  * Immutable object holding additional options to be applied when creating a MongoDB
  * <a href="https://www.mongodb.com/docs/manual/core/views/">views</a>.
- * 
+ *
  * @author Christoph Strobl
  * @since 4.0
  */
 public class ViewOptions {
 
-	@Nullable private Collation collation;
+	private final @Nullable Collation collation;
 
 	static ViewOptions none() {
 		return new ViewOptions();
