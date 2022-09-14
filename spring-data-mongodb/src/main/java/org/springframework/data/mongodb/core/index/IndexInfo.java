@@ -104,7 +104,7 @@ public class IndexInfo {
 					indexFields.add(IndexField.wildcard(key));
 				} else {
 
-					Double keyValue = new Double(value.toString());
+					Double keyValue = Double.valueOf(value.toString());
 
 					if (ONE.equals(keyValue)) {
 						indexFields.add(IndexField.create(key, ASC));

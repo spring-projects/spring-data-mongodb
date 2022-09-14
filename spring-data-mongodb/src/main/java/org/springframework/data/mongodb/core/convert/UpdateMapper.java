@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
@@ -134,7 +133,7 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		return converter.convertToMongoType(source,
-				entity == null ? ClassTypeInformation.OBJECT : getTypeHintForEntity(source, entity));
+				entity == null ? TypeInformation.OBJECT : getTypeHintForEntity(source, entity));
 	}
 
 	@Override
@@ -209,7 +208,7 @@ public class UpdateMapper extends QueryMapper {
 					: getMappedSort(sortObject, field.getPropertyEntity());
 		}
 
-		TypeInformation<?> typeHint = field == null ? ClassTypeInformation.OBJECT : field.getTypeHint();
+		TypeInformation<?> typeHint = field == null ? TypeInformation.OBJECT : field.getTypeHint();
 
 		return converter.convertToMongoType(value, typeHint);
 	}

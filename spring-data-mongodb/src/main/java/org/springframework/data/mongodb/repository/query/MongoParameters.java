@@ -30,7 +30,6 @@ import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
@@ -64,7 +63,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		this.fullTextIndex = parameterTypes.indexOf(TextCriteria.class);
 
-		ClassTypeInformation<?> declaringClassInfo = ClassTypeInformation.from(method.getDeclaringClass());
+		TypeInformation<?> declaringClassInfo = TypeInformation.of(method.getDeclaringClass());
 		List<TypeInformation<?>> parameterTypeInfo = declaringClassInfo.getParameterTypes(method);
 
 		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);

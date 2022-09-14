@@ -31,7 +31,6 @@ import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
@@ -52,9 +51,9 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 	public static final String DEFAULT_TYPE_KEY = "_class";
 	@SuppressWarnings("rawtypes") //
-	private static final TypeInformation<List> LIST_TYPE_INFO = ClassTypeInformation.from(List.class);
+	private static final TypeInformation<List> LIST_TYPE_INFO = TypeInformation.of(List.class);
 	@SuppressWarnings("rawtypes") //
-	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
+	private static final TypeInformation<Map> MAP_TYPE_INFO = TypeInformation.MAP;
 
 	private final TypeAliasAccessor<Bson> accessor;
 	private final @Nullable String typeKey;
@@ -139,7 +138,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 		for (Class<?> restrictedType : restrictedTypes) {
 
-			Alias typeAlias = getAliasFor(ClassTypeInformation.from(restrictedType));
+			Alias typeAlias = getAliasFor(TypeInformation.of(restrictedType));
 
 			if (!ObjectUtils.nullSafeEquals(Alias.NONE, typeAlias) && typeAlias.isPresent()) {
 				restrictedMappedTypes.add(typeAlias.getValue());
