@@ -39,6 +39,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -50,7 +51,16 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.TypeMapper;
-import org.springframework.data.mapping.*;
+import org.springframework.data.mapping.AccessOptions;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.InstanceCreatorMetadata;
+import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.Parameter;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.mapping.PersistentPropertyPathAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -344,7 +354,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		};
 
-		InstanceCreatorMetadata<MongoPersistentProperty> instanceCreatorMetadata = mappedEntity.getInstanceCreatorMetadata();
+		InstanceCreatorMetadata<MongoPersistentProperty> instanceCreatorMetadata = mappedEntity
+				.getInstanceCreatorMetadata();
 		ParameterValueProvider<MongoPersistentProperty> provider = instanceCreatorMetadata != null
 				&& instanceCreatorMetadata.hasParameters()
 						? getParameterProvider(context, mappedEntity, documentAccessor, evaluator)
@@ -989,8 +1000,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							.getPointer();
 				}).collect(Collectors.toList());
 
-				return writeCollectionInternal(targetCollection, TypeInformation.of(DocumentPointer.class),
-						new ArrayList<>());
+				return writeCollectionInternal(targetCollection, TypeInformation.of(DocumentPointer.class), new ArrayList<>());
 			}
 
 			if (property.hasExplicitWriteTarget()) {
@@ -2091,7 +2101,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		@Override
-		public org.springframework.data.util.TypeInformation<? extends S> specialize(ClassTypeInformation type) {
+		public org.springframework.data.util.TypeInformation<? extends S> specialize(TypeInformation<?> type) {
 			return delegate.specialize(type);
 		}
 

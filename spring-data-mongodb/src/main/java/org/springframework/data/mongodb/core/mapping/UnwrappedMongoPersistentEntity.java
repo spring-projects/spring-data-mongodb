@@ -99,6 +99,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 
 	@Override
 	@Nullable
+	@Deprecated
 	public PreferredConstructor<T, MongoPersistentProperty> getPersistenceConstructor() {
 		return delegate.getPersistenceConstructor();
 	}
@@ -110,7 +111,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 
 	@Override
 	public boolean isCreatorArgument(PersistentProperty<?> property) {
-		return delegate.isConstructorArgument(property);
+		return delegate.isCreatorArgument(property);
 	}
 
 	@Override

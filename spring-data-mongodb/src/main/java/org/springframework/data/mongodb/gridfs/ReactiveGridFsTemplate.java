@@ -127,7 +127,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		}
 
 		String filename = upload.getFilename();
-		Flux<ByteBuffer> source = Flux.from(upload.getContent()).map(DataBuffer::asByteBuffer);
+		Flux<ByteBuffer> source = Flux.from(upload.getContent()).map(DataBuffer::toByteBuffer);
 		T fileId = upload.getFileId();
 
 		if (fileId == null) {

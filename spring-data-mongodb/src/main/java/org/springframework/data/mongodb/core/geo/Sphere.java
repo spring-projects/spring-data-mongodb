@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.geo;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -44,7 +44,7 @@ public class Sphere implements Shape {
 	 * @param center must not be {@literal null}.
 	 * @param radius must not be {@literal null}.
 	 */
-	@PersistenceConstructor
+	@PersistenceCreator
 	public Sphere(Point center, Distance radius) {
 
 		Assert.notNull(center, "Center point must not be null");

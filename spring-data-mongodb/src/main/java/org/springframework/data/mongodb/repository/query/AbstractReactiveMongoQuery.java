@@ -376,23 +376,6 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param dependencies must not be {@literal null}.
 	 * @param accessor must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@link SpELExpressionEvaluator} when ready.
-	 * @since 2.4
-	 * @deprecated in favor of {@link #getSpelEvaluatorFor(ExpressionDependencies, MongoParameterAccessor)}
-	 */
-	@Deprecated
-	protected Mono<SpELExpressionEvaluator> getSpelEvaluatorFor(ExpressionDependencies dependencies,
-			ConvertingParameterAccessor accessor) {
-
-		return getSpelEvaluatorFor(dependencies, (MongoParameterAccessor) accessor);
-	}
-
-	/**
-	 * Obtain a {@link Mono publisher} emitting the {@link SpELExpressionEvaluator} suitable to evaluate expressions
-	 * backed by the given dependencies.
-	 *
-	 * @param dependencies must not be {@literal null}.
-	 * @param accessor must not be {@literal null}.
-	 * @return a {@link Mono} emitting the {@link SpELExpressionEvaluator} when ready.
 	 * @since 3.4
 	 */
 	protected Mono<SpELExpressionEvaluator> getSpelEvaluatorFor(ExpressionDependencies dependencies,

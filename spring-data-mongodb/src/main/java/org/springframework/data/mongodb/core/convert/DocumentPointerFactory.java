@@ -29,6 +29,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.mapping.PersistentPropertyPathAccessor;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapperPropertyAccessorFactory;
@@ -239,9 +240,11 @@ class DocumentPointerFactory {
 						continue;
 					}
 
+					PersistentPropertyPathAccessor<?> propertyPathAccessor = persistentEntity
+							.getPropertyPathAccessor(propertyAccessor.getBean());
 					PersistentPropertyPath<?> path = mappingContext
 							.getPersistentPropertyPath(PropertyPath.from(fieldName, persistentEntity.getTypeInformation()));
-					Object targetValue = propertyAccessor.getProperty(path);
+					Object targetValue = propertyPathAccessor.getProperty(path);
 					target.put(attribute, targetValue);
 					continue;
 				}
