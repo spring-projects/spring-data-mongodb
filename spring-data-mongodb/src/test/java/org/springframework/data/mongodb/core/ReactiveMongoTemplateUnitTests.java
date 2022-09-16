@@ -1500,7 +1500,9 @@ public class ReactiveMongoTemplateUnitTests {
 		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
 
 		BsonDocument token = new BsonDocument("token", new BsonString("id"));
-		template.changeStream("database", "collection", ChangeStreamOptions.builder().startAfter(token).build(), Object.class).subscribe();
+		template
+				.changeStream("database", "collection", ChangeStreamOptions.builder().startAfter(token).build(), Object.class)
+				.subscribe();
 
 		verify(changeStreamPublisher).startAfter(eq(token));
 	}
@@ -1530,6 +1532,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 		AutogenerateableId foo;
 	}
+
 	static class PersonExtended extends Person {
 
 		String lastname;
