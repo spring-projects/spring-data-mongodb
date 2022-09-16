@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
+import org.bson.BsonDocument;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -111,6 +113,7 @@ import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MapReducePublisher;
@@ -146,6 +149,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher deletePublisher;
 	@Mock MapReducePublisher mapReducePublisher;
+	@Mock ChangeStreamPublisher changeStreamPublisher;
 
 	private MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private MappingMongoConverter converter;
@@ -1483,6 +1487,22 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getTimeSeriesOptions().toString())
 				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta")
 						.granularity(TimeSeriesGranularity.HOURS).toString());
+	}
+
+	@Test // GH-4167
+	void changeStreamOptionStartAftershouldApplied() {
+
+		when(factory.getMongoDatabase(anyString())).thenReturn(Mono.just(db));
+
+		when(collection.watch(any(Class.class))).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.batchSize(anyInt())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.startAfter(any())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
+
+		BsonDocument token = new BsonDocument("token", new BsonString("id"));
+		template.changeStream("database", "collection", ChangeStreamOptions.builder().startAfter(token).build(), Object.class).subscribe();
+
+		verify(changeStreamPublisher).startAfter(eq(token));
 	}
 
 	private void stubFindSubscribe(Document document) {
