@@ -175,9 +175,12 @@ class EntityOperations {
 		}
 
 		MongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(entityClass);
-		if(persistentEntity == null) {
-			throw new MappingException(String.format("Collection name cannot be derived for type %s. Is it a store native type?", entityClass));
+
+		if (persistentEntity == null) {
+			throw new MappingException(String.format(
+					"Cannot determine collection name from type '%s'. Is it a store native type?", entityClass.getName()));
 		}
+
 		return persistentEntity.getCollection();
 	}
 
