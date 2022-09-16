@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
  * @author Phillip Webb
  * @since 2.2
  */
-enum DurationStyle {
+public enum DurationStyle {
 
 	/**
 	 * Simple formatting, for example '1s'.

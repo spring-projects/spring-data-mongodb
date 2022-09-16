@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -37,6 +38,7 @@ import com.mongodb.client.model.ValidationLevel;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Andreas Zink
+ * @author Ben Foster
  */
 public class CollectionOptions {
 
@@ -444,13 +446,15 @@ public class CollectionOptions {
 
 		private final GranularityDefinition granularity;
 
-		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity) {
+		private final long expireAfterSeconds;
 
+		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity, long expireAfterSeconds) {
 			Assert.hasText(timeField, "Time field must not be empty or null");
 
 			this.timeField = timeField;
 			this.metaField = metaField;
 			this.granularity = granularity;
+			this.expireAfterSeconds = expireAfterSeconds;
 		}
 
 		/**
@@ -462,7 +466,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
 		public static TimeSeriesOptions timeSeries(String timeField) {
-			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT);
+			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT, -1);
 		}
 
 		/**
@@ -475,7 +479,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
 		public TimeSeriesOptions metaField(String metaField) {
-			return new TimeSeriesOptions(timeField, metaField, granularity);
+			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfterSeconds);
 		}
 
 		/**
@@ -486,7 +490,17 @@ public class CollectionOptions {
 		 * @see Granularity
 		 */
 		public TimeSeriesOptions granularity(GranularityDefinition granularity) {
-			return new TimeSeriesOptions(timeField, metaField, granularity);
+			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfterSeconds);
+		}
+
+		/**
+		 * Select the expire parameter to define automatic removal of documents older than a specified
+		 * duration.
+		 *
+		 * @return new instance of {@link TimeSeriesOptions}.
+		 */
+		public TimeSeriesOptions expireAfter(Duration timeout) {
+			return new TimeSeriesOptions(timeField, metaField, granularity, timeout.getSeconds());
 		}
 
 		/**
@@ -510,6 +524,13 @@ public class CollectionOptions {
 		 */
 		public GranularityDefinition getGranularity() {
 			return granularity;
+		}
+
+		/**
+		 * @return {@literal -1} if not specified
+		 */
+		public long getExpireAfterSeconds() {
+			return expireAfterSeconds;
 		}
 	}
 }
