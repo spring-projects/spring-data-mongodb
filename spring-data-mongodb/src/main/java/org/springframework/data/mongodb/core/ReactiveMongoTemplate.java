@@ -2141,7 +2141,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						publisher = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
 					}
 
-					publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
+					if(options.isResumeAfter()) {
+						publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
+					} else if (options.isStartAfter()) {
+						publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::startAfter).orElse(publisher);
+					}
 					publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation)
 							.orElse(publisher);
 					publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
