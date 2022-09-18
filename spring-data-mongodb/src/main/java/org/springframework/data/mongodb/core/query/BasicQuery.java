@@ -73,7 +73,7 @@ public class BasicQuery extends Query {
 	 *
 	 * @param queryObject must not be {@literal null}.
 	 * @param fieldsObject must not be {@literal null}.
-	 * @throws IllegalArgumentException when {@code sortObject} or {@code fieldsObject} is {@literal null}.
+	 * @throws IllegalArgumentException when {@code queryObject} or {@code fieldsObject} is {@literal null}.
 	 */
 	public BasicQuery(Document queryObject, Document fieldsObject) {
 
