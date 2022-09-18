@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,14 +28,14 @@ public enum SystemVariable {
 
 	/**
 	 * Variable for the current datetime.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	NOW,
 
 	/**
 	 * Variable for the current timestamp.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	CLUSTER_TIME,
@@ -57,27 +57,27 @@ public enum SystemVariable {
 
 	/**
 	 * One of the allowed results of a {@literal $redact} expression
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	DESCEND,
 
 	/**
 	 * One of the allowed results of a {@literal $redact} expression
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	PRUNE,
 	/**
 	 * One of the allowed results of a {@literal $redact} expression
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	KEEP,
 
 	/**
 	 * A variable that stores the metadata results of an Atlas Search query.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	SEARCH_META;
