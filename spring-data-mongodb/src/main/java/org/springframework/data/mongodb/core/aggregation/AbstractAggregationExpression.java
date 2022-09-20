@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.Aggregation.SystemVariable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
