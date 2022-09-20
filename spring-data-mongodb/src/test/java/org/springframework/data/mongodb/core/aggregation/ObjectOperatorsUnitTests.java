@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.aggregation.Aggregation.SystemVariable;
 import org.springframework.data.mongodb.core.aggregation.ObjectOperators.MergeObjects;
 
 /**

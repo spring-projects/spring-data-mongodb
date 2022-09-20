@@ -35,7 +35,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -765,49 +764,5 @@ public class Aggregation {
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument("__collection__", DEFAULT_CONTEXT));
-	}
-
-	/**
-	 * Describes the system variables available in MongoDB aggregation framework pipeline expressions.
-	 *
-	 * @author Thomas Darimont
-	 * @author Christoph Strobl
-	 * @see <a href="https://docs.mongodb.com/manual/reference/aggregation-variables">Aggregation Variables</a>.
-	 */
-	enum SystemVariable {
-
-		ROOT, CURRENT, REMOVE;
-
-		private static final String PREFIX = "$$";
-
-		/**
-		 * Return {@literal true} if the given {@code fieldRef} denotes a well-known system variable, {@literal false}
-		 * otherwise.
-		 *
-		 * @param fieldRef may be {@literal null}.
-		 * @return {@literal true} if the given field refers to a {@link SystemVariable}.
-		 */
-		public static boolean isReferingToSystemVariable(@Nullable String fieldRef) {
-
-			if (fieldRef == null || !fieldRef.startsWith(PREFIX) || fieldRef.length() <= 2) {
-				return false;
-			}
-
-			int indexOfFirstDot = fieldRef.indexOf('.');
-			String candidate = fieldRef.substring(2, indexOfFirstDot == -1 ? fieldRef.length() : indexOfFirstDot);
-
-			for (SystemVariable value : values()) {
-				if (value.name().equals(candidate)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return PREFIX.concat(name());
-		}
 	}
 }

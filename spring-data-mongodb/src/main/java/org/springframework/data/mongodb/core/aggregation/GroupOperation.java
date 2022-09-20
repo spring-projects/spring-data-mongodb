@@ -510,7 +510,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 				return value;
 			}
 
-			if (Aggregation.SystemVariable.isReferingToSystemVariable(reference)) {
+			if (SystemVariable.isReferingToSystemVariable(reference)) {
 				return reference;
 			}
 
