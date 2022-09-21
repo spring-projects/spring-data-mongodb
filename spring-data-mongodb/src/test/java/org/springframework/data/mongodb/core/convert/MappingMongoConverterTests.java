@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

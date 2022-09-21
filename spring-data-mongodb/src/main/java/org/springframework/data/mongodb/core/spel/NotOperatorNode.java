@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.spel;
 
 import org.springframework.expression.spel.ExpressionState;
-import org.springframework.expression.spel.SpelNode;
 import org.springframework.expression.spel.ast.OperatorNot;
 
 /**

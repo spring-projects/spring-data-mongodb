@@ -21,10 +21,8 @@ import io.mockk.verify
 import org.junit.Test
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation
-import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
-import reactor.core.publisher.Mono
 
 /**
  * @author Sebastien Deleuze

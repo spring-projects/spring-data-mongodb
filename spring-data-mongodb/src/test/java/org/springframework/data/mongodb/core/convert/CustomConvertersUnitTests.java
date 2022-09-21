@@ -33,7 +33,6 @@ import org.mockito.quality.Strictness;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**

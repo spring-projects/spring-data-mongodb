@@ -19,8 +19,6 @@ import org.springframework.aot.generate.GenerationContext;
 import org.springframework.data.aot.AotRepositoryContext;
 import org.springframework.data.aot.RepositoryRegistrationAotProcessor;
 import org.springframework.data.aot.TypeContributor;
-import org.springframework.data.aot.TypeUtils;
-import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 
 /**
  * @author Christoph Strobl

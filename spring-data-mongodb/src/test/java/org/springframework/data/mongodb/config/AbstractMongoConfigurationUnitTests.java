@@ -33,7 +33,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.data.domain.ManagedTypes;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -47,7 +46,6 @@ import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 
 /**
  * Unit tests for {@link AbstractMongoClientConfiguration}.

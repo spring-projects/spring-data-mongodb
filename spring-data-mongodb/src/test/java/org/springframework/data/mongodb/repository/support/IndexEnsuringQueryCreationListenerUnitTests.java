@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.repository.support;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.anyString;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
