@@ -117,8 +117,8 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 	/**
 	 * Returns whether an index with the given name exists for the given entity type.
 	 *
-	 * @param indexName
 	 * @param entityType
+	 * @param type
 	 * @return
 	 */
 	private boolean hasIndexOfType(Class<?> entityType, final String type) {
