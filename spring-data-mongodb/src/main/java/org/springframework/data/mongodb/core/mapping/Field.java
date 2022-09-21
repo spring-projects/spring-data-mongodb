@@ -72,7 +72,7 @@ public @interface Field {
 	 * {@literal null} values are not written to the target {@code Document}. Setting the value to {@link Write#ALWAYS}
 	 * explicitly adds an entry for the given field holding {@literal null} as a value {@code 'fieldName' : null }.
 	 * <br />
-	 * <strong>NOTE</strong>Setting the value to {@link Write#ALWAYS} may lead to increased document size.
+	 * <strong>NOTE:</strong> Setting the value to {@link Write#ALWAYS} may lead to increased document size.
 	 *
 	 * @return {@link Write#NON_NULL} by default.
 	 * @since 3.3

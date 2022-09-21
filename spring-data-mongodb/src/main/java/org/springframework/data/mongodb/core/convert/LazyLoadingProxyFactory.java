@@ -47,7 +47,7 @@ import com.mongodb.DBRef;
 
 /**
  * {@link ProxyFactory} to create a proxy for {@link MongoPersistentProperty#getType()} to resolve a reference lazily.
- * <strong>NOTE</strong> This class is intended for internal usage only.
+ * <strong>NOTE:</strong> This class is intended for internal usage only.
  *
  * @author Christoph Strobl
  * @author Mark Paluch

@@ -206,7 +206,7 @@ public abstract class MongoConfigurationSupport {
 	 * {@link org.springframework.data.mongodb.core.index.IndexDefinition} from the entity or not.
 	 *
 	 * @return {@literal false} by default. <br />
-	 *         <strong>INFO</strong>: As of 3.x the default is set to {@literal false}; In 2.x it was {@literal true}.
+	 *         <strong>INFO:</strong> As of 3.x the default is set to {@literal false}; In 2.x it was {@literal true}.
 	 * @since 2.2
 	 */
 	protected boolean autoIndexCreation() {

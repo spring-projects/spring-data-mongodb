@@ -114,7 +114,7 @@ public class CollectionOptions {
 
 	/**
 	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}. <br />
-	 * <strong>NOTE</strong> Using capped collections requires defining {@link #size(long)}.
+	 * <strong>NOTE:</strong> Using capped collections requires defining {@link #size(long)}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0

@@ -232,7 +232,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 
 	/**
 	 * Creates a new {@link NearQuery} starting at the given {@link Point}. <br />
-	 * <strong>NOTE</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
+	 * <strong>NOTE:</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
 	 * values are rendered as coordinate pairs in the legacy format and operate upon radians, whereas the
 	 * {@link GeoJsonPoint} uses according to its specification {@literal meters} as unit of measure. This may lead to
 	 * different results when using a {@link Metrics#NEUTRAL neutral Metric}.
@@ -248,7 +248,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * Creates a {@link NearQuery} starting near the given {@link Point} using the given {@link Metric} to adapt given
 	 * values to further configuration. E.g. setting a {@link #maxDistance(double)} will be interpreted as a value of the
 	 * initially set {@link Metric}. <br />
-	 * <strong>NOTE</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
+	 * <strong>NOTE:</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
 	 * values are rendered as coordinate pairs in the legacy format and operate upon radians, whereas the
 	 * {@link GeoJsonPoint} uses according to its specification {@literal meters} as unit of measure. This may lead to
 	 * different results when using a {@link Metrics#NEUTRAL neutral Metric}.

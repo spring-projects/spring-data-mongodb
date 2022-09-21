@@ -244,7 +244,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Define the index to span all fields using wildcard. <br/>
-		 * <strong>NOTE</strong> {@link TextIndexDefinition} cannot contain any other fields when defined with wildcard.
+		 * <strong>NOTE:</strong> {@link TextIndexDefinition} cannot contain any other fields when defined with wildcard.
 		 *
 		 * @return
 		 */
