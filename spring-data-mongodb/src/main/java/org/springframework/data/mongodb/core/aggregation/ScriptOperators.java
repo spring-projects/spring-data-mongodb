@@ -446,7 +446,7 @@ public class ScriptOperators {
 			/**
 			 * Define the optional {@code initArgs} for the {@link #init(String)} function.
 			 *
-			 * @param function must not be {@literal null}.
+			 * @param args must not be {@literal null}.
 			 * @return this.
 			 */
 			@Override

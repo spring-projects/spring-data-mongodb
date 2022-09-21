@@ -32,7 +32,7 @@ public abstract class Assertions extends org.assertj.core.api.Assertions {
 	/**
 	 * Create assertion for {@link Document}.
 	 *
-	 * @param actual the actual value.
+	 * @param document the actual value.
 	 * @return the created assertion object.
 	 */
 	public static DocumentAssert assertThat(Document document) {
