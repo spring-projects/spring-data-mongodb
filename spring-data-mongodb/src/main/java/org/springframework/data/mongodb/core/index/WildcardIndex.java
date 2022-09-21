@@ -61,7 +61,7 @@ public class WildcardIndex extends Index {
 	/**
 	 * Create a new instance of {@link WildcardIndex} for the given {@literal path}. If no {@literal path} is provided the
 	 * index will be considered a root one using {@code $**}. <br />
-	 * <strong>NOTE</strong> {@link #wildcardProjectionInclude(String...)}, {@link #wildcardProjectionExclude(String...)}
+	 * <strong>NOTE:</strong> {@link #wildcardProjectionInclude(String...)}, {@link #wildcardProjectionExclude(String...)}
 	 * can only be used for top level index definitions having an {@literal empty} or {@literal null} path.
 	 *
 	 * @param path can be {@literal null}. If {@literal null} all fields will be indexed.

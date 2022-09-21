@@ -119,7 +119,7 @@ public @interface WildcardIndexed {
 	/**
 	 * Explicitly specify sub fields to be in-/excluded as a {@link org.bson.Document#parse(String) prasable} String.
 	 * <br />
-	 * <strong>NOTE: </strong>Can only be applied on root level documents.
+	 * <strong>NOTE:</strong> Can only be applied on root level documents.
 	 *
 	 * @return empty by default.
 	 */

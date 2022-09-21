@@ -159,7 +159,7 @@ public class DateOperators {
 	 * +/-[hh], e.g. "+03"</td>
 	 * </tr>
 	 * </table>
-	 * <strong>NOTE: </strong>Support for timezones in aggregations Requires MongoDB 3.6 or later.
+	 * <strong>NOTE:</strong> Support for timezones in aggregations Requires MongoDB 3.6 or later.
 	 *
 	 * @author Christoph Strobl
 	 * @author Mark Paluch
