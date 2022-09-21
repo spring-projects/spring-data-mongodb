@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyList;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;

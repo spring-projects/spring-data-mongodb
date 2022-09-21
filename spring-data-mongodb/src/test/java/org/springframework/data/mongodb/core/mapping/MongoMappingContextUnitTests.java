@@ -36,7 +36,6 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 
 import com.mongodb.DBRef;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link MongoMappingContext}.

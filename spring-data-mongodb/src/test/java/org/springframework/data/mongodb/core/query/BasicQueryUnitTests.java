@@ -25,7 +25,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.condition.DisabledForJreRange;
-import org.junit.jupiter.api.condition.DisabledOnJre;
 import org.junit.jupiter.api.condition.JRE;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;

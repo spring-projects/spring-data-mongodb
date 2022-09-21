@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.util.ObjectUtils.*;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 

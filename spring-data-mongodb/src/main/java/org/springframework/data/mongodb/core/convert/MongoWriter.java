@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import org.bson.conversions.Bson;
 import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
