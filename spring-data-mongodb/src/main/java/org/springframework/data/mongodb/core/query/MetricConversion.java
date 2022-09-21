@@ -67,8 +67,8 @@ public class MetricConversion {
 	 * Return {@code distance} in radians (on an earth like sphere).
 	 *
 	 * @param distance must not be {@literal null}.
-	 * @return distance in rads.
-	 * @since 3.4
+	 * @return distance in radians.
+	 * @since 3.4.4
 	 */
 	public static double toRadians(Distance distance) {
 		return metersToRadians(getDistanceInMeters(distance));
@@ -78,8 +78,8 @@ public class MetricConversion {
 	 * Return {@code distance} in radians (on an earth like sphere).
 	 *
 	 * @param meters
-	 * @return distance in rads.
-	 * @since 3.4
+	 * @return distance in radians.
+	 * @since 3.4.4
 	 */
 	public static double metersToRadians(double meters) {
 		return BigDecimal.valueOf(meters).divide(METERS_MULTIPLIER, MathContext.DECIMAL64).doubleValue();
