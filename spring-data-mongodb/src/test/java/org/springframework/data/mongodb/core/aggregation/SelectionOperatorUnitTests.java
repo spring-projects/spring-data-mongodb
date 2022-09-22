@@ -90,6 +90,46 @@ class SelectionOperatorUnitTests {
 	}
 
 	@Test // GH-4139
+	void topMapsFieldNamesCorrectly() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext aggregationContext = new RelaxedTypeBasedAggregationOperationContext(
+				Player.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+
+		Document document = SelectionOperators.Top.top().output(Fields.fields("playerId", "score"))
+				.sortBy(Sort.by(Direction.DESC, "score")).toDocument(aggregationContext);
+
+		assertThat(document).isEqualTo(Document.parse("""
+				{
+				   $top:
+				   {
+				      output: [ "$player_id", "$s_cor_e" ],
+				      sortBy: { "s_cor_e": -1 }
+				   }
+				}
+				"""));
+	}
+
+	@Test // GH-4139
+	void topNRenderedCorrectly() {
+
+		Document document = SelectionOperators.Top.top().output(Fields.fields("playerId", "score"))
+				.sortBy(Sort.by(Direction.DESC, "score")).limit(3).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document).isEqualTo(Document.parse("""
+				{
+				   $topN:
+				   {
+				      n : 3,
+				      output: [ "$playerId", "$score" ],
+				      sortBy: { "score": -1 }
+				   }
+				}
+				"""));
+	}
+
+	@Test // GH-4139
 	void firstNMapsFieldNamesCorrectly() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();

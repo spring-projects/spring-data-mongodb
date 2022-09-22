@@ -1185,6 +1185,16 @@ public class SpelExpressionTransformerUnitTests {
 	}
 
 	@Test // GH-4139
+	void shouldRenderTop() {
+		assertThat(transform("top(new String[]{\"$playerId\", \"$score\" }, { \"score\" : -1 })")).isEqualTo("{ $top : { output: [ \"$playerId\", \"$score\" ], sortBy: { \"score\": -1 }}}");
+	}
+
+	@Test // GH-4139
+	void shouldRenderTopN() {
+		assertThat(transform("topN(3, new String[]{\"$playerId\", \"$score\" }, { \"score\" : -1 })")).isEqualTo("{ $topN : { n : 3, output: [ \"$playerId\", \"$score\" ], sortBy: { \"score\": -1 }}}");
+	}
+
+	@Test // GH-4139
 	void shouldRenderFirstN() {
 		assertThat(transform("firstN(3, \"$score\")")).isEqualTo("{ $firstN : { n : 3, input : \"$score\" }}");
 	}
