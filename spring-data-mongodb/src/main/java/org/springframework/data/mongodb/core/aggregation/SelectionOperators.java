@@ -56,6 +56,14 @@ public class SelectionOperators {
 		}
 
 		/**
+		 * @param numberOfResults Limits the number of returned elements to the given value.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public static Bottom bottom(int numberOfResults) {
+			return bottom().limit(numberOfResults);
+		}
+
+		/**
 		 * Limits the number of returned elements to the given value.
 		 *
 		 * @param numberOfResults
@@ -239,14 +247,14 @@ public class SelectionOperators {
 		 * @return new instance of {@link First}.
 		 */
 		public static First first() {
-			return new First(Collections.emptyMap()).limit(1);
+			return new First(Collections.emptyMap());
 		}
 
 		/**
 		 * @return new instance of {@link First}.
 		 */
 		public static First first(int numberOfResults) {
-			return new First(Collections.emptyMap()).limit(numberOfResults);
+			return first().limit(numberOfResults);
 		}
 
 		/**
@@ -333,14 +341,14 @@ public class SelectionOperators {
 		 * @return new instance of {@link Last}.
 		 */
 		public static Last last() {
-			return new Last(Collections.emptyMap()).limit(1);
+			return new Last(Collections.emptyMap());
 		}
 
 		/**
 		 * @return new instance of {@link Last}.
 		 */
 		public static Last last(int numberOfResults) {
-			return new Last(Collections.emptyMap()).limit(numberOfResults);
+			return last().limit(numberOfResults);
 		}
 
 		/**
