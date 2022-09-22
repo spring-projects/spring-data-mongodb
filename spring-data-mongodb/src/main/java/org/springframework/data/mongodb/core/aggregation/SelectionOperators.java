@@ -38,9 +38,14 @@ public class SelectionOperators {
 			super(value);
 		}
 
+		/**
+		 * In case a limit value ({@literal n}) is present {@literal $bottomN} is used instead of {@literal $bottom}.
+		 *
+		 * @return
+		 */
 		@Override
 		protected String getMongoMethod() {
-			return "$bottom";
+			return get("n") == null ? "$bottom" : "$bottomN";
 		}
 
 		/**
@@ -48,6 +53,31 @@ public class SelectionOperators {
 		 */
 		public static Bottom bottom() {
 			return new Bottom(Collections.emptyMap());
+		}
+
+		/**
+		 * Limits the number of returned elements to the given value.
+		 *
+		 * @param numberOfResults
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Bottom limit(int numberOfResults) {
+			return limit((Object) numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the value defined by the given {@link AggregationExpression
+		 * expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Bottom limit(AggregationExpression expression) {
+			return limit((Object) expression);
+		}
+
+		private Bottom limit(Object value) {
+			return new Bottom(append("n", value));
 		}
 
 		/**

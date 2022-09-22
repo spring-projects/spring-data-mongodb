@@ -71,6 +71,24 @@ class SelectionOperatorUnitTests {
 				"""));
 	}
 
+	@Test // GH-4139
+	void bottomNRenderedCorrectly() {
+
+		Document document = SelectionOperators.Bottom.bottom().output(Fields.fields("playerId", "score"))
+				.sortBy(Sort.by(Direction.DESC, "score")).limit(3).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(document).isEqualTo(Document.parse("""
+				{
+				   $bottomN:
+				   {
+				      n : 3,
+				      output: [ "$playerId", "$score" ],
+				      sortBy: { "score": -1 }
+				   }
+				}
+				"""));
+	}
+
 	static class Player {
 
 		@Field("player_id") String playerId;
