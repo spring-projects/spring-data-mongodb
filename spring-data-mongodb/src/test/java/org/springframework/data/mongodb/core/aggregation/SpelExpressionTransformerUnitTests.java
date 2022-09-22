@@ -1174,6 +1174,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("rand()")).isEqualTo("{ $rand : {} }");
 	}
 
+	@Test // GH-4139
+	void shouldRenderBottom() {
+		assertThat(transform("bottom(new String[]{\"$playerId\", \"$score\" }, { \"score\" : -1 })")).isEqualTo("{ $bottom : { output: [ \"$playerId\", \"$score\" ], sortBy: { \"score\": -1 }}}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}
