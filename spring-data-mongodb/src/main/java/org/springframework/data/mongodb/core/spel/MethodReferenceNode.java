@@ -212,6 +212,10 @@ public class MethodReferenceNode extends ExpressionNode {
 		// OBJECT OPERATORS
 		map.put("objectToArray", singleArgRef().forOperator("$objectToArray"));
 		map.put("mergeObjects", arrayArgRef().forOperator("$mergeObjects"));
+		map.put("bottom", mapArgRef().forOperator("$bottom") //
+				.mappingParametersTo("output", "sortBy"));
+		map.put("bottomN", mapArgRef().forOperator("$bottomN") //
+				.mappingParametersTo("n", "output", "sortBy"));
 
 		// CONVERT OPERATORS
 		map.put("convert", mapArgRef().forOperator("$convert") //
@@ -226,9 +230,6 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("toString", singleArgRef().forOperator("$toString"));
 		map.put("degreesToRadians", singleArgRef().forOperator("$degreesToRadians"));
 
-		// SELECT OPERATORS
-		map.put("bottom", mapArgRef().forOperator("$bottom") //
-				.mappingParametersTo("output", "sortBy"));
 
 		FUNCTIONS = Collections.unmodifiableMap(map);
 	}
