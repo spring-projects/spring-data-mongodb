@@ -74,8 +74,8 @@ class SelectionOperatorUnitTests {
 	@Test // GH-4139
 	void bottomNRenderedCorrectly() {
 
-		Document document = SelectionOperators.Bottom.bottom().output(Fields.fields("playerId", "score"))
-				.sortBy(Sort.by(Direction.DESC, "score")).limit(3).toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = SelectionOperators.Bottom.bottom(3).output(Fields.fields("playerId", "score"))
+				.sortBy(Sort.by(Direction.DESC, "score")).toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(document).isEqualTo(Document.parse("""
 				{
@@ -114,8 +114,8 @@ class SelectionOperatorUnitTests {
 	@Test // GH-4139
 	void topNRenderedCorrectly() {
 
-		Document document = SelectionOperators.Top.top().output(Fields.fields("playerId", "score"))
-				.sortBy(Sort.by(Direction.DESC, "score")).limit(3).toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document document = SelectionOperators.Top.top(3).output(Fields.fields("playerId", "score"))
+				.sortBy(Sort.by(Direction.DESC, "score")).toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(document).isEqualTo(Document.parse("""
 				{
