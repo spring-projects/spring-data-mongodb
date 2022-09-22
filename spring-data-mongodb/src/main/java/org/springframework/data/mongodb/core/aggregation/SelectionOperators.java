@@ -216,4 +216,98 @@ public class SelectionOperators {
 			return "$firstN";
 		}
 	}
+
+	/**
+	 * {@link AbstractAggregationExpression} to return the {@literal $lastN} elements.
+	 */
+	public static class Last extends AbstractAggregationExpression {
+
+		protected Last(Object value) {
+			super(value);
+		}
+
+		/**
+		 * @return new instance of {@link Last}.
+		 */
+		public static Last last() {
+			return new Last(Collections.emptyMap()).limit(1);
+		}
+
+		/**
+		 * @return new instance of {@link Last}.
+		 */
+		public static Last last(int numberOfResults) {
+			return new Last(Collections.emptyMap()).limit(numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the given value.
+		 *
+		 * @param numberOfResults
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Last limit(int numberOfResults) {
+			return limit((Object) numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the value defined by the given {@link AggregationExpression
+		 * expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Last limit(AggregationExpression expression) {
+			return limit((Object) expression);
+		}
+
+		private Last limit(Object value) {
+			return new Last(append("n", value));
+		}
+
+		/**
+		 * Define the field to serve as source.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Last of(String fieldName) {
+			return input(fieldName);
+		}
+
+		/**
+		 * Define the expression building the value to serve as source.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Last of(AggregationExpression expression) {
+			return input(expression);
+		}
+
+		/**
+		 * Define the field to serve as source.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Last input(String fieldName) {
+			return new Last(append("input", Fields.field(fieldName)));
+		}
+
+		/**
+		 * Define the expression building the value to serve as source.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public Last input(AggregationExpression expression) {
+			return new Last(append("input", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$lastN";
+		}
+	}
 }

@@ -110,6 +110,27 @@ class SelectionOperatorUnitTests {
 				"""));
 	}
 
+	@Test // GH-4139
+	void lastNMapsFieldNamesCorrectly() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext aggregationContext = new RelaxedTypeBasedAggregationOperationContext(
+				Player.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+
+		Document document = SelectionOperators.Last.last(3).of("score").toDocument(aggregationContext);
+
+		assertThat(document).isEqualTo(Document.parse("""
+				{
+				   $lastN:
+				   {
+				      n: 3,
+				      input: "$s_cor_e"
+				   }
+				}
+				"""));
+	}
+
 	static class Player {
 
 		@Field("player_id") String playerId;
