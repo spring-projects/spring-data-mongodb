@@ -349,7 +349,7 @@ static class Patient {
 
 [TIP]
 ====
-The `@Encrypted` Annoation supports resolving keyIds via SpEL Expressions.
+The `@Encrypted` Annotation supports resolving keyIds via SpEL Expressions.
 To do so additional environment metadata (via the `MappingContext`) is required and must be provided.
 
 [source,java]
