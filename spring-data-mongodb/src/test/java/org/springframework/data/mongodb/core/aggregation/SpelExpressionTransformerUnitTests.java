@@ -1184,6 +1184,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("bottomN(3, new String[]{\"$playerId\", \"$score\" }, { \"score\" : -1 })")).isEqualTo("{ $bottomN : { n : 3, output: [ \"$playerId\", \"$score\" ], sortBy: { \"score\": -1 }}}");
 	}
 
+	@Test // GH-4139
+	void shouldRenderFirstN() {
+		assertThat(transform("firstN(3, \"$score\")")).isEqualTo("{ $firstN : { n : 3, input : \"$score\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}

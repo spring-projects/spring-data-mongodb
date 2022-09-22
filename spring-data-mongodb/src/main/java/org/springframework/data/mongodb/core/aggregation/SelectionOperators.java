@@ -122,4 +122,98 @@ public class SelectionOperators {
 			return new Bottom(append("output", Arrays.asList(out)));
 		}
 	}
+
+	/**
+	 * {@link AbstractAggregationExpression} to return the {@literal $firstN} elements.
+	 */
+	public static class First extends AbstractAggregationExpression {
+
+		protected First(Object value) {
+			super(value);
+		}
+
+		/**
+		 * @return new instance of {@link First}.
+		 */
+		public static First first() {
+			return new First(Collections.emptyMap()).limit(1);
+		}
+
+		/**
+		 * @return new instance of {@link First}.
+		 */
+		public static First first(int numberOfResults) {
+			return new First(Collections.emptyMap()).limit(numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the given value.
+		 *
+		 * @param numberOfResults
+		 * @return new instance of {@link Bottom}.
+		 */
+		public First limit(int numberOfResults) {
+			return limit((Object) numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the value defined by the given {@link AggregationExpression
+		 * expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public First limit(AggregationExpression expression) {
+			return limit((Object) expression);
+		}
+
+		private First limit(Object value) {
+			return new First(append("n", value));
+		}
+
+		/**
+		 * Define the field to serve as source.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public First of(String fieldName) {
+			return input(fieldName);
+		}
+
+		/**
+		 * Define the expression building the value to serve as source.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public First of(AggregationExpression expression) {
+			return input(expression);
+		}
+
+		/**
+		 * Define the field to serve as source.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public First input(String fieldName) {
+			return new First(append("input", Fields.field(fieldName)));
+		}
+
+		/**
+		 * Define the expression building the value to serve as source.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Bottom}.
+		 */
+		public First input(AggregationExpression expression) {
+			return new First(append("input", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$firstN";
+		}
+	}
 }
