@@ -124,6 +124,109 @@ public class SelectionOperators {
 	}
 
 	/**
+	 * {@link AbstractAggregationExpression} to return the top element according to the specified {@link #sortBy(Sort)
+	 * order}.
+	 */
+	public static class Top extends AbstractAggregationExpression {
+
+		private Top(Object value) {
+			super(value);
+		}
+
+		/**
+		 * In case a limit value ({@literal n}) is present {@literal $topN} is used instead of {@literal $top}.
+		 *
+		 * @return
+		 */
+		@Override
+		protected String getMongoMethod() {
+			return get("n") == null ? "$top" : "$topN";
+		}
+
+		/**
+		 * @return new instance of {@link Top}.
+		 */
+		public static Top top() {
+			return new Top(Collections.emptyMap());
+		}
+
+		/**
+		 * @param numberOfResults Limits the number of returned elements to the given value.
+		 * @return new instance of {@link Top}.
+		 */
+		public static Top top(int numberOfResults) {
+			return top().limit(numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the given value.
+		 *
+		 * @param numberOfResults
+		 * @return new instance of {@link Top}.
+		 */
+		public Top limit(int numberOfResults) {
+			return limit((Object) numberOfResults);
+		}
+
+		/**
+		 * Limits the number of returned elements to the value defined by the given {@link AggregationExpression
+		 * expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Top}.
+		 */
+		public Top limit(AggregationExpression expression) {
+			return limit((Object) expression);
+		}
+
+		private Top limit(Object value) {
+			return new Top(append("n", value));
+		}
+
+		/**
+		 * Define result ordering.
+		 *
+		 * @param sort must not be {@literal null}.
+		 * @return new instance of {@link Top}.
+		 */
+		public Top sortBy(Sort sort) {
+			return new Top(append("sortBy", sort));
+		}
+
+		/**
+		 * Define result ordering.
+		 *
+		 * @param out must not be {@literal null}.
+		 * @return new instance of {@link Top}.
+		 */
+		public Top output(Fields out) {
+			return new Top(append("output", out));
+		}
+
+		/**
+		 * Define fields included in the output for each element.
+		 *
+		 * @param fieldNames must not be {@literal null}.
+		 * @return new instance of {@link Top}.
+		 * @see #output(Fields)
+		 */
+		public Top output(String... fieldNames) {
+			return output(Fields.fields(fieldNames));
+		}
+
+		/**
+		 * Define expressions building the value included in the output for each element.
+		 *
+		 * @param out must not be {@literal null}.
+		 * @return new instance of {@link Top}.
+		 * @see #output(Fields)
+		 */
+		public Top output(AggregationExpression... out) {
+			return new Top(append("output", Arrays.asList(out)));
+		}
+	}
+
+	/**
 	 * {@link AbstractAggregationExpression} to return the {@literal $firstN} elements.
 	 */
 	public static class First extends AbstractAggregationExpression {
