@@ -22,8 +22,12 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -68,8 +72,24 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			return ((AggregationExpression) value).toDocument(context);
 		}
 
-		if (value instanceof Field) {
-			return context.getReference((Field) value).toString();
+		if (value instanceof Field field) {
+			return context.getReference(field).toString();
+		}
+
+		if(value instanceof Fields fields) {
+			return fields.asList().stream().map(it -> unpack(it, context)).collect(Collectors.toList());
+		}
+
+		if(value instanceof Sort sort) {
+
+			Document sortDoc = new Document();
+			for (Order order : sort) {
+
+				// Check reference
+				FieldReference reference = context.getReference(order.getProperty());
+				sortDoc.put(reference.getRaw(), order.isAscending() ? 1 : -1);
+			}
+			return sortDoc;
 		}
 
 		if (value instanceof List) {

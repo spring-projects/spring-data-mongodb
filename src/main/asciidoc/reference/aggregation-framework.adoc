@@ -120,6 +120,9 @@ At the time of this writing, we provide support for the following Aggregation Op
 | Script Aggregation Operators
 | `function`, `accumulator`
 
+| Selection Aggregation Operators
+| `bottom`
+
 |===
 
 +++*+++ The operation is mapped or added by Spring Data MongoDB.

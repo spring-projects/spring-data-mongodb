@@ -387,6 +387,17 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return new GroupOperationBuilder(this, new Operation(accumulator));
 	}
 
+	/**
+	 * Adds a computed field to the {@link GroupOperation}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.0
+	 */
+	public GroupOperation and(String fieldName, AggregationExpression expression) {
+		return new GroupOperationBuilder(this, new Operation(expression)).as(fieldName);
+	}
+
 	private GroupOperationBuilder newBuilder(Keyword keyword, @Nullable String reference, @Nullable Object value) {
 		return new GroupOperationBuilder(this, new Operation(keyword, null, reference, value));
 	}
