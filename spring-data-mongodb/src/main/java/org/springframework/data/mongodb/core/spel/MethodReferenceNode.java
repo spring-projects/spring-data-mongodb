@@ -218,6 +218,8 @@ public class MethodReferenceNode extends ExpressionNode {
 				.mappingParametersTo("n", "output", "sortBy"));
 		map.put("firstN", mapArgRef().forOperator("$firstN") //
 				.mappingParametersTo("n", "input"));
+		map.put("lastN", mapArgRef().forOperator("$lastN") //
+				.mappingParametersTo("n", "input"));
 
 		// CONVERT OPERATORS
 		map.put("convert", mapArgRef().forOperator("$convert") //
