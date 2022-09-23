@@ -165,8 +165,8 @@ public class MethodReferenceNode extends ExpressionNode {
 				mapArgRef().forOperator("$dateSubtract").mappingParametersTo("startDate", "unit", "amount", "timezone"));
 		map.put("dateDiff", mapArgRef().forOperator("$dateDiff").mappingParametersTo("startDate", "endDate", "unit",
 				"timezone", "startOfWeek"));
-		map.put("dateTrunc",
-				mapArgRef().forOperator("$dateTrunc").mappingParametersTo("date", "unit", "binSize", "startOfWeek", "timezone"));
+		map.put("dateTrunc", mapArgRef().forOperator("$dateTrunc").mappingParametersTo("date", "unit", "binSize",
+				"startOfWeek", "timezone"));
 		map.put("dayOfYear", singleArgRef().forOperator("$dayOfYear"));
 		map.put("dayOfMonth", singleArgRef().forOperator("$dayOfMonth"));
 		map.put("dayOfWeek", singleArgRef().forOperator("$dayOfWeek"));
@@ -209,13 +209,6 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("stdDevSamp", arrayArgRef().forOperator("$stdDevSamp"));
 		map.put("covariancePop", arrayArgRef().forOperator("$covariancePop"));
 		map.put("covarianceSamp", arrayArgRef().forOperator("$covarianceSamp"));
-
-		// TYPE OPERATORS
-		map.put("type", singleArgRef().forOperator("$type"));
-
-		// OBJECT OPERATORS
-		map.put("objectToArray", singleArgRef().forOperator("$objectToArray"));
-		map.put("mergeObjects", arrayArgRef().forOperator("$mergeObjects"));
 		map.put("bottom", mapArgRef().forOperator("$bottom") //
 				.mappingParametersTo("output", "sortBy"));
 		map.put("bottomN", mapArgRef().forOperator("$bottomN") //
@@ -232,6 +225,14 @@ public class MethodReferenceNode extends ExpressionNode {
 				.mappingParametersTo("n", "input"));
 		map.put("minN", mapArgRef().forOperator("$minN") //
 				.mappingParametersTo("n", "input"));
+
+		// TYPE OPERATORS
+		map.put("type", singleArgRef().forOperator("$type"));
+
+		// OBJECT OPERATORS
+		map.put("objectToArray", singleArgRef().forOperator("$objectToArray"));
+		map.put("mergeObjects", arrayArgRef().forOperator("$mergeObjects"));
+		map.put("getField", mapArgRef().forOperator("$getField").mappingParametersTo("field", "input"));
 
 		// CONVERT OPERATORS
 		map.put("convert", mapArgRef().forOperator("$convert") //

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
@@ -123,6 +124,16 @@ public class ObjectOperators {
 		 */
 		public ObjectToArray toArray() {
 			return ObjectToArray.toArray(value);
+		}
+
+		/**
+		 * Creates new {@link GetField aggregation expression} that takes the associated value and obtains the value of the
+		 * field with matching name.
+		 *
+		 * @since 4.0
+		 */
+		public GetField getField(String fieldName) {
+			return GetField.getField(fieldName).from(value);
 		}
 	}
 
@@ -281,6 +292,44 @@ public class ObjectOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$objectToArray";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $getField}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class GetField extends AbstractAggregationExpression {
+
+		protected GetField(Object value) {
+			super(value);
+		}
+
+		public static GetField getField(String fieldName) {
+			return new GetField(Collections.singletonMap("field", fieldName));
+		}
+
+		public static GetField getField(Field field) {
+			return getField(field.getTarget());
+		}
+
+		public GetField from(String fieldRef) {
+			return from(Fields.field(fieldRef));
+		}
+
+		public GetField from(AggregationExpression expression) {
+			return from((Object) expression);
+		}
+
+		private GetField from(Object fieldRef) {
+			return new GetField(append("input", fieldRef));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$getField";
 		}
 	}
 }

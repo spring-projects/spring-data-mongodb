@@ -102,4 +102,11 @@ public class ObjectOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $objectToArray : " + EXPRESSION_STRING + " }"));
 	}
 
+	@Test // GH-4139
+	public void getField() {
+
+		assertThat(ObjectOperators.valueOf("batman").getField("robin").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $getField : { field : \"robin\", input : \"$batman\" }}"));
+	}
+
 }
