@@ -23,9 +23,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -78,7 +78,14 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		}
 
 		if (value instanceof Fields fields) {
-			return fields.asList().stream().map(it -> unpack(it, context)).collect(Collectors.toList());
+
+			List<Object> mapped = new ArrayList<>(fields.size());
+
+			for (Field field : fields) {
+				mapped.add(unpack(field, context));
+			}
+
+			return mapped;
 		}
 
 		if (value instanceof Sort sort) {
@@ -98,7 +105,9 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			List<Object> sourceList = (List<Object>) value;
 			List<Object> mappedList = new ArrayList<>(sourceList.size());
 
-			sourceList.stream().map((item) -> unpack(item, context)).forEach(mappedList::add);
+			for (Object o : sourceList) {
+				mappedList.add(unpack(o, context));
+			}
 
 			return mappedList;
 		}
@@ -150,7 +159,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return append(value, Expand.EXPAND_VALUES);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	protected Map<String, Object> append(String key, Object value) {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
@@ -165,6 +174,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return clone;
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected Map<String, Object> appendTo(String key, Object value) {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");

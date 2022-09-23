@@ -18,10 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.Aggregation.SystemVariable;
 import org.springframework.util.Assert;
 
 /**
@@ -135,7 +133,7 @@ public class ObjectOperators {
 		 * @since 4.0
 		 */
 		public GetField getField(String fieldName) {
-			return GetField.getField(fieldName).from(value);
+			return GetField.getField(fieldName).of(value);
 		}
 
 		/**
@@ -145,7 +143,7 @@ public class ObjectOperators {
 		 * @since 4.0
 		 */
 		public SetField setField(String fieldName) {
-			return SetField.setField(fieldName).of(value);
+			return SetField.field(fieldName).input(value);
 		}
 
 		/**
@@ -155,7 +153,7 @@ public class ObjectOperators {
 		 * @since 4.0
 		 */
 		public AggregationExpression removeField(String fieldName) {
-			return SetField.setField(fieldName).of(value).toValue(SystemVariable.REMOVE);
+			return SetField.field(fieldName).input(value).toValue(SystemVariable.REMOVE);
 		}
 	}
 
@@ -329,23 +327,49 @@ public class ObjectOperators {
 			super(value);
 		}
 
+		/**
+		 * Creates new {@link GetField aggregation expression} that takes the value pointed to by given {@code fieldName}.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link GetField}.
+		 */
 		public static GetField getField(String fieldName) {
 			return new GetField(Collections.singletonMap("field", fieldName));
 		}
 
+		/**
+		 * Creates new {@link GetField aggregation expression} that takes the value pointed to by given {@link Field}.
+		 *
+		 * @param field must not be {@literal null}.
+		 * @return new instance of {@link GetField}.
+		 */
 		public static GetField getField(Field field) {
 			return getField(field.getTarget());
 		}
 
-		public GetField from(String fieldRef) {
-			return from(Fields.field(fieldRef));
+		/**
+		 * Creates new {@link GetField aggregation expression} that takes the value pointed to by given
+		 * {@code field reference}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return new instance of {@link GetField}.
+		 */
+		public GetField of(String fieldRef) {
+			return of(Fields.field(fieldRef));
 		}
 
-		public GetField from(AggregationExpression expression) {
-			return from((Object) expression);
+		/**
+		 * Creates new {@link GetField aggregation expression} that takes the value pointed to by given
+		 * {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link GetField}.
+		 */
+		public GetField of(AggregationExpression expression) {
+			return of((Object) expression);
 		}
 
-		private GetField from(Object fieldRef) {
+		private GetField of(Object fieldRef) {
 			return new GetField(append("input", fieldRef));
 		}
 
@@ -367,34 +391,87 @@ public class ObjectOperators {
 			super(value);
 		}
 
-		public static SetField setField(String fieldName) {
+		/**
+		 * Creates new {@link SetField aggregation expression} that takes the value pointed to by given input
+		 * {@code fieldName}.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link SetField}.
+		 */
+		public static SetField field(String fieldName) {
 			return new SetField(Collections.singletonMap("field", fieldName));
 		}
 
-		public static SetField setField(Field field) {
-			return setField(field.getTarget());
+		/**
+		 * Creates new {@link SetField aggregation expression} that takes the value pointed to by given input {@link Field}.
+		 *
+		 * @param field must not be {@literal null}.
+		 * @return new instance of {@link SetField}.
+		 */
+		public static SetField field(Field field) {
+			return field(field.getTarget());
 		}
 
-		public SetField of(String fieldRef) {
-			return of(Fields.field(fieldRef));
+		/**
+		 * Creates new {@link GetField aggregation expression} that takes the value pointed to by given input
+		 * {@code field reference}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return new instance of {@link GetField}.
+		 */
+		public SetField input(String fieldRef) {
+			return input(Fields.field(fieldRef));
 		}
 
-		public SetField of(AggregationExpression expression) {
-			return of((Object) expression);
+		/**
+		 * Creates new {@link SetField aggregation expression} that takes the value pointed to by given input
+		 * {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link SetField}.
+		 */
+		public SetField input(AggregationExpression expression) {
+			return input((Object) expression);
 		}
 
-		private SetField of(Object fieldRef) {
+		/**
+		 * Creates new {@link SetField aggregation expression} that takes the value pointed to by given input
+		 * {@code field reference}.
+		 *
+		 * @param fieldRef must not be {@literal null}.
+		 * @return new instance of {@link SetField}.
+		 */
+		private SetField input(Object fieldRef) {
 			return new SetField(append("input", fieldRef));
 		}
 
+		/**
+		 * Creates new {@link SetField aggregation expression} providing the {@code value} using {@literal fieldReference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link SetField}.
+		 */
 		public SetField toValueOf(String fieldReference) {
 			return toValue(Fields.field(fieldReference));
 		}
 
+		/**
+		 * Creates new {@link SetField aggregation expression} providing the {@code value} using
+		 * {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link SetField}.
+		 */
 		public SetField toValueOf(AggregationExpression expression) {
 			return toValue(expression);
 		}
 
+		/**
+		 * Creates new {@link SetField aggregation expression} providing the {@code value}.
+		 *
+		 * @param value
+		 * @return new instance of {@link SetField}.
+		 */
 		public SetField toValue(Object value) {
 			return new SetField(append("value", value));
 		}

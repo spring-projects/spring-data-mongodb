@@ -261,7 +261,7 @@ public class SelectionOperators {
 		 * Limits the number of returned elements to the given value.
 		 *
 		 * @param numberOfResults
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link First}.
 		 */
 		public First limit(int numberOfResults) {
 			return limit((Object) numberOfResults);
@@ -272,7 +272,7 @@ public class SelectionOperators {
 		 * expression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link First}.
 		 */
 		public First limit(AggregationExpression expression) {
 			return limit((Object) expression);
@@ -286,7 +286,7 @@ public class SelectionOperators {
 		 * Define the field to serve as source.
 		 *
 		 * @param fieldName must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link First}.
 		 */
 		public First of(String fieldName) {
 			return input(fieldName);
@@ -296,7 +296,7 @@ public class SelectionOperators {
 		 * Define the expression building the value to serve as source.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link First}.
 		 */
 		public First of(AggregationExpression expression) {
 			return input(expression);
@@ -306,7 +306,7 @@ public class SelectionOperators {
 		 * Define the field to serve as source.
 		 *
 		 * @param fieldName must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link First}.
 		 */
 		public First input(String fieldName) {
 			return new First(append("input", Fields.field(fieldName)));
@@ -316,7 +316,7 @@ public class SelectionOperators {
 		 * Define the expression building the value to serve as source.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link First}.
 		 */
 		public First input(AggregationExpression expression) {
 			return new First(append("input", expression));
@@ -355,7 +355,7 @@ public class SelectionOperators {
 		 * Limits the number of returned elements to the given value.
 		 *
 		 * @param numberOfResults
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link Last}.
 		 */
 		public Last limit(int numberOfResults) {
 			return limit((Object) numberOfResults);
@@ -366,7 +366,7 @@ public class SelectionOperators {
 		 * expression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link Last}.
 		 */
 		public Last limit(AggregationExpression expression) {
 			return limit((Object) expression);
@@ -380,7 +380,7 @@ public class SelectionOperators {
 		 * Define the field to serve as source.
 		 *
 		 * @param fieldName must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link Last}.
 		 */
 		public Last of(String fieldName) {
 			return input(fieldName);
@@ -390,7 +390,7 @@ public class SelectionOperators {
 		 * Define the expression building the value to serve as source.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link Last}.
 		 */
 		public Last of(AggregationExpression expression) {
 			return input(expression);
@@ -400,7 +400,7 @@ public class SelectionOperators {
 		 * Define the field to serve as source.
 		 *
 		 * @param fieldName must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link Last}.
 		 */
 		public Last input(String fieldName) {
 			return new Last(append("input", Fields.field(fieldName)));
@@ -410,7 +410,7 @@ public class SelectionOperators {
 		 * Define the expression building the value to serve as source.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return new instance of {@link Bottom}.
+		 * @return new instance of {@link Last}.
 		 */
 		public Last input(AggregationExpression expression) {
 			return new Last(append("input", expression));

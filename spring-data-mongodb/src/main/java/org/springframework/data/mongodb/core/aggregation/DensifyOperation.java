@@ -190,7 +190,7 @@ public class DensifyOperation implements AggregationOperation {
 
 		/**
 		 * Set the {@link DensifyUnit unit} for the step field.
-		 * 
+		 *
 		 * @param unit
 		 * @return this.
 		 */
@@ -354,6 +354,8 @@ public class DensifyOperation implements AggregationOperation {
 		 */
 		public DensifyOperationBuilder fullRange(Consumer<DensifyRange> consumer) {
 
+			Assert.notNull(consumer, "Consumer must not be null");
+
 			DensifyRange range = Range.full();
 			consumer.accept(range);
 
@@ -374,7 +376,7 @@ public class DensifyOperation implements AggregationOperation {
 			return range(range);
 		}
 
-		DensifyOperation build() {
+		public DensifyOperation build() {
 			return new DensifyOperation(target.field, target.partitionBy, target.range);
 		}
 	}

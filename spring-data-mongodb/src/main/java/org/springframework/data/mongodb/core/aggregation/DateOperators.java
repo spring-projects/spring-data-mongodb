@@ -826,7 +826,7 @@ public class DateOperators {
 		 */
 		public TsIncrement tsIncrement() {
 
-			if(timezone != null && !Timezone.none().equals(timezone)) {
+			if (timezone != null && !Timezone.none().equals(timezone)) {
 				throw new IllegalArgumentException("$tsIncrement does not support timezones");
 			}
 
@@ -841,7 +841,7 @@ public class DateOperators {
 		 */
 		public TsSecond tsSecond() {
 
-			if(timezone != null && !Timezone.none().equals(timezone)) {
+			if (timezone != null && !Timezone.none().equals(timezone)) {
 				throw new IllegalArgumentException("$tsSecond does not support timezones");
 			}
 

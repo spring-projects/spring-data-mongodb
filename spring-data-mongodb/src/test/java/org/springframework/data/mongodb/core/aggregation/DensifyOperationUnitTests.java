@@ -30,6 +30,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link DensifyOperation}.
+ *
  * @author Christoph Strobl
  */
 class DensifyOperationUnitTests {
@@ -38,7 +40,8 @@ class DensifyOperationUnitTests {
 	void rendersFieldNamesAsIsForUntypedContext() {
 
 		DensifyOperation densify = DensifyOperation.builder().densify("ts")
-				.range(Range.bounded("2021-05-18T00:00:00", "2021-05-18T08:00:00").incrementBy(1).unit(DensifyUnits.HOUR)).build();
+				.range(Range.bounded("2021-05-18T00:00:00", "2021-05-18T08:00:00").incrementBy(1).unit(DensifyUnits.HOUR))
+				.build();
 
 		assertThat(densify.toDocument(contextFor(null))).isEqualTo("""
 				{
@@ -58,7 +61,8 @@ class DensifyOperationUnitTests {
 	void rendersFieldNamesCorrectly() {
 
 		DensifyOperation densify = DensifyOperation.builder().densify("ts")
-				.range(Range.bounded("2021-05-18T00:00:00", "2021-05-18T08:00:00").incrementBy(1).unit(DensifyUnits.HOUR)).build();
+				.range(Range.bounded("2021-05-18T00:00:00", "2021-05-18T08:00:00").incrementBy(1).unit(DensifyUnits.HOUR))
+				.build();
 
 		assertThat(densify.toDocument(contextFor(Weather.class))).isEqualTo("""
 				{
@@ -95,7 +99,7 @@ class DensifyOperationUnitTests {
 	}
 
 	@Test // GH-4139
-	void rendersPartitonRangeCorrectly() {
+	void rendersPartitionRangeCorrectly() {
 
 		DensifyOperation densify = DensifyOperation.builder().densify("alt").partitionBy("var")
 				.partitionRange(range -> range.incrementBy(200)).build();
