@@ -114,6 +114,17 @@ public class AccumulatorOperators {
 
 		/**
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
+		 * requested number of maximum values.
+		 *
+		 * @return new instance of {@link Max}.
+		 * @since 4.0
+		 */
+		public Max max(int numberOfResults) {
+			return max().limit(numberOfResults);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * minimum value.
 		 *
 		 * @return new instance of {@link Min}.
@@ -441,7 +452,7 @@ public class AccumulatorOperators {
 
 		@Override
 		protected String getMongoMethod() {
-			return "$max";
+			return contains("n") ? "$maxN" : "$max";
 		}
 
 		/**
@@ -453,7 +464,7 @@ public class AccumulatorOperators {
 		public static Max maxOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
-			return new Max(asFields(fieldReference));
+			return new Max(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
 		/**
@@ -465,7 +476,7 @@ public class AccumulatorOperators {
 		public static Max maxOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
-			return new Max(Collections.singletonList(expression));
+			return new Max(Collections.singletonMap("input", expression));
 		}
 
 		/**
@@ -478,7 +489,7 @@ public class AccumulatorOperators {
 		public Max and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
-			return new Max(append(Fields.field(fieldReference)));
+			return new Max(appendTo("input", Fields.field(fieldReference)));
 		}
 
 		/**
@@ -491,7 +502,26 @@ public class AccumulatorOperators {
 		public Max and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
-			return new Max(append(expression));
+			return new Max(appendTo("input", expression));
+		}
+
+		/**
+		 * Creates new {@link Max} that returns the given number of maxmimum values ({@literal $maxN}).
+		 * <strong>NOTE</strong>: Cannot be used with more than one {@literal input} value.
+		 *
+		 * @param numberOfResults
+		 * @return new instance of {@link Max}.
+		 */
+		public Max limit(int numberOfResults) {
+			return new Max(append("n", numberOfResults));
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+			if (get("n") == null) {
+				return toDocument(get("input"), context);
+			}
+			return super.toDocument(context);
 		}
 
 		@Override

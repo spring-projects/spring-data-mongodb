@@ -80,6 +80,20 @@ class AccumulatorOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $expMovingAvg: { input: \"$price\", alpha: 0.75 } }"));
 	}
 
+	@Test // GH-4139
+	void rendersMax() {
+
+		assertThat(valueOf("price").max().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $max: \"$price\" }"));
+	}
+
+	@Test // GH-4139
+	void rendersMaxN() {
+
+		assertThat(valueOf("price").max(3).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $maxN: { n: 3, input : \"$price\" } }"));
+	}
+
 	static class Jedi {
 
 		String name;
