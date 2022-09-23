@@ -1209,6 +1209,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("maxN(3, \"$score\")")).isEqualTo("{ $maxN : { n : 3, input : \"$score\" }}");
 	}
 
+	@Test // GH-4139
+	void shouldRenderMinN() {
+		assertThat(transform("minN(3, \"$score\")")).isEqualTo("{ $minN : { n : 3, input : \"$score\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}

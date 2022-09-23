@@ -94,6 +94,20 @@ class AccumulatorOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $maxN: { n: 3, input : \"$price\" } }"));
 	}
 
+	@Test // GH-4139
+	void rendersMin() {
+
+		assertThat(valueOf("price").min().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $min: \"$price\" }"));
+	}
+
+	@Test // GH-4139
+	void rendersMinN() {
+
+		assertThat(valueOf("price").min(3).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $minN: { n: 3, input : \"$price\" } }"));
+	}
+
 	static class Jedi {
 
 		String name;
