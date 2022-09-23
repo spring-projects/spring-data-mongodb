@@ -134,6 +134,17 @@ public class AccumulatorOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
+		 * requested number of maximum values.
+		 *
+		 * @return new instance of {@link Max}.
+		 * @since 4.0
+		 */
+		public Min min(int numberOfResults) {
+			return min().limit(numberOfResults);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates the
 		 * population standard deviation of the input values.
 		 *
@@ -551,7 +562,7 @@ public class AccumulatorOperators {
 
 		@Override
 		protected String getMongoMethod() {
-			return "$min";
+			return contains("n") ? "$minN" : "$min";
 		}
 
 		/**
@@ -563,7 +574,7 @@ public class AccumulatorOperators {
 		public static Min minOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
-			return new Min(asFields(fieldReference));
+			return new Min(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
 		/**
@@ -575,7 +586,7 @@ public class AccumulatorOperators {
 		public static Min minOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
-			return new Min(Collections.singletonList(expression));
+			return new Min(Collections.singletonMap("input", expression));
 		}
 
 		/**
@@ -588,7 +599,7 @@ public class AccumulatorOperators {
 		public Min and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
-			return new Min(append(Fields.field(fieldReference)));
+			return new Min(appendTo("input", Fields.field(fieldReference)));
 		}
 
 		/**
@@ -601,7 +612,27 @@ public class AccumulatorOperators {
 		public Min and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
-			return new Min(append(expression));
+			return new Min(appendTo("input", expression));
+		}
+
+		/**
+		 * Creates new {@link Min} that returns the given number of minimum values ({@literal $minN}).
+		 * <strong>NOTE</strong>: Cannot be used with more than one {@literal input} value.
+		 *
+		 * @param numberOfResults
+		 * @return new instance of {@link Min}.
+		 */
+		public Min limit(int numberOfResults) {
+			return new Min(append("n", numberOfResults));
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+
+			if (get("n") == null) {
+				return toDocument(get("input"), context);
+			}
+			return super.toDocument(context);
 		}
 
 		@Override
