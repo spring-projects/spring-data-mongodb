@@ -18,10 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.Aggregation.SystemVariable;
 import org.springframework.util.Assert;
 
 /**
