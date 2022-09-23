@@ -1225,6 +1225,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("dateTrunc(purchaseDate, \"week\", 2, \"monday\")")).isEqualTo("{ $dateTrunc : { date : \"$purchaseDate\", unit : \"week\", binSize : 2, startOfWeek : \"monday\" }}");
 	}
 
+	@Test // GH-4139
+	void shouldRenderGetField() {
+		assertThat(transform("getField(\"score\", source)")).isEqualTo("{ $getField : { field : \"score\", input : \"$source\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}
