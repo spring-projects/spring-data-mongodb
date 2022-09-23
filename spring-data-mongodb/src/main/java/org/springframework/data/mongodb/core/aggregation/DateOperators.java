@@ -450,6 +450,95 @@ public class DateOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that subtracts the value of the given {@link AggregationExpression
+		 * expression} (in {@literal units}).
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 * @since 4.0
+		 */
+		public DateSubtract subtractValueOf(AggregationExpression expression, String unit) {
+			return applyTimezone(DateSubtract.subtractValueOf(expression, unit).fromDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that subtracts the value of the given {@link AggregationExpression
+		 * expression} (in {@literal units}).
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 * @since 4.0
+		 */
+		public DateSubtract subtractValueOf(AggregationExpression expression, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+			return applyTimezone(
+					DateSubtract.subtractValueOf(expression, unit.name().toLowerCase(Locale.ROOT)).fromDate(dateReference()),
+					timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that subtracts the value stored at the given {@literal field} (in
+		 * {@literal units}).
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 * @since 4.0
+		 */
+		public DateSubtract subtractValueOf(String fieldReference, String unit) {
+			return applyTimezone(DateSubtract.subtractValueOf(fieldReference, unit).fromDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that subtracts the value stored at the given {@literal field} (in
+		 * {@literal units}).
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 * @since 4.0
+		 */
+		public DateSubtract subtractValueOf(String fieldReference, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(
+					DateSubtract.subtractValueOf(fieldReference, unit.name().toLowerCase(Locale.ROOT)).fromDate(dateReference()),
+					timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that subtracts the given value (in {@literal units}).
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 * @since 4.0
+		 */
+		public DateSubtract subtract(Object value, String unit) {
+			return applyTimezone(DateSubtract.subtractValue(value, unit).fromDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that subtracts the given value (in {@literal units}).
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 * @since 4.0
+		 */
+		public DateSubtract subtract(Object value, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(
+					DateSubtract.subtractValue(value, unit.name().toLowerCase(Locale.ROOT)).fromDate(dateReference()), timezone);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that returns the day of the year for a date as a number between 1 and
 		 * 366.
 		 *
@@ -2730,6 +2819,103 @@ public class DateOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$dateAdd";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateSubtract}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 5.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class DateSubtract extends TimezonedDateAggregationExpression {
+
+		private DateSubtract(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Subtract the number of {@literal units} of the result of the given {@link AggregationExpression expression} from
+		 * a {@link #fromDate(Object) start date}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public static DateSubtract subtractValueOf(AggregationExpression expression, String unit) {
+			return subtractValue(expression, unit);
+		}
+
+		/**
+		 * Subtract the number of {@literal units} from a {@literal field} from a {@link #fromDate(Object) start date}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public static DateSubtract subtractValueOf(String fieldReference, String unit) {
+			return subtractValue(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Subtract the number of {@literal units} from a {@link #fromDate(Object) start date}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public static DateSubtract subtractValue(Object value, String unit) {
+
+			Map<String, Object> args = new HashMap<>();
+			args.put("unit", unit);
+			args.put("amount", value);
+			return new DateSubtract(args);
+		}
+
+		/**
+		 * Define the start date, in UTC, for the subtraction operation.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public DateSubtract fromDateOf(AggregationExpression expression) {
+			return fromDate(expression);
+		}
+
+		/**
+		 * Define the start date, in UTC, for the subtraction operation.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public DateSubtract fromDateOf(String fieldReference) {
+			return fromDate(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Define the start date, in UTC, for the subtraction operation.
+		 *
+		 * @param dateExpression anything that evaluates to a valid date. Must not be {@literal null}.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public DateSubtract fromDate(Object dateExpression) {
+			return new DateSubtract(append("startDate", dateExpression));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateSubtract}.
+		 */
+		public DateSubtract withTimezone(Timezone timezone) {
+			return new DateSubtract(appendTimezone(argumentMap(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateSubtract";
 		}
 	}
 

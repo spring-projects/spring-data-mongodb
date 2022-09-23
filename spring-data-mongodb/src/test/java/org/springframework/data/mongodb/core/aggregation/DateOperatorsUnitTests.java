@@ -49,6 +49,21 @@ class DateOperatorsUnitTests {
 						"{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3, timezone : \"America/Chicago\" } }");
 	}
 
+	@Test // GH-4139
+	void rendersDateSubtract() {
+
+		assertThat(DateOperators.dateOf("purchaseDate").subtract(3, "day").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $dateSubtract: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }");
+	}
+
+	@Test // GH-4139
+	void rendersDateSubtractWithTimezone() {
+
+		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).subtract(3, "day")
+				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+				"{ $dateSubtract: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3, timezone : \"America/Chicago\" } }");
+	}
+
 	@Test // GH-3713
 	void rendersDateDiff() {
 

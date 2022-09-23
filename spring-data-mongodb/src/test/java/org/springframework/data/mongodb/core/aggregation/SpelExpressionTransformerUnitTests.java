@@ -1163,6 +1163,12 @@ public class SpelExpressionTransformerUnitTests {
 				.isEqualTo("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }");
 	}
 
+	@Test // GH-4139
+	void shouldRenderDateSubtract() {
+		assertThat(transform("dateSubtract(purchaseDate, 'day', 3)"))
+				.isEqualTo("{ $dateSubtract: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }");
+	}
+
 	@Test // GH-3713
 	void shouldRenderDateDiff() {
 		assertThat(transform("dateDiff(purchaseDate, delivered, 'day')"))
