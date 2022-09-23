@@ -1220,6 +1220,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("minN(3, \"$score\")")).isEqualTo("{ $minN : { n : 3, input : \"$score\" }}");
 	}
 
+	@Test // GH-4139
+	void shouldRenderDateTrunc() {
+		assertThat(transform("dateTrunc(purchaseDate, \"week\", 2, \"monday\")")).isEqualTo("{ $dateTrunc : { date : \"$purchaseDate\", unit : \"week\", binSize : 2, startOfWeek : \"monday\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}

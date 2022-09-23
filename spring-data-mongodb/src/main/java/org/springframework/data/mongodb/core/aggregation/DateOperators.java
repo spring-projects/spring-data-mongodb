@@ -539,6 +539,32 @@ public class DateOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that truncates a date to the given {@literal unit}.
+		 *
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 * @since 4.0
+		 */
+		public DateTrunc truncate(String unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+			return applyTimezone(DateTrunc.truncateValue(dateReference()).to(unit), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that truncates a date to the given {@literal unit}.
+		 *
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 * @since 4.0
+		 */
+		public DateTrunc truncate(TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+			return truncate(unit.name().toLowerCase(Locale.ROOT));
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that returns the day of the year for a date as a number between 1 and
 		 * 366.
 		 *
@@ -3024,6 +3050,135 @@ public class DateOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$dateDiff";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateTrunc}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 5.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class DateTrunc extends TimezonedDateAggregationExpression {
+
+		private DateTrunc(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Truncates the date value of computed by the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public static DateTrunc truncateValueOf(AggregationExpression expression) {
+			return truncateValue(expression);
+		}
+
+		/**
+		 * Truncates the date value of the referenced {@literal field}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public static DateTrunc truncateValueOf(String fieldReference) {
+			return truncateValue(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Truncates the date value.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public static DateTrunc truncateValue(Object value) {
+			return new DateTrunc(Collections.singletonMap("date", value));
+		}
+
+		/**
+		 * Define the unit of time.
+		 *
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc to(String unit) {
+			return new DateTrunc(append("unit", unit));
+		}
+
+		/**
+		 * Define the unit of time via an {@link AggregationExpression}.
+		 *
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc to(AggregationExpression unit) {
+			return new DateTrunc(append("unit", unit));
+		}
+
+		/**
+		 * Define the weeks starting day if {@link #to(String)} resolves to {@literal week}.
+		 *
+		 * @param day must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc startOfWeek(java.time.DayOfWeek day) {
+			return startOfWeek(day.name().toLowerCase(Locale.US));
+		}
+
+		/**
+		 * Define the weeks starting day if {@link #to(String)} resolves to {@literal week}.
+		 *
+		 * @param day must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc startOfWeek(String day) {
+			return new DateTrunc(append("startOfWeek", day));
+		}
+
+		/**
+		 * Define the numeric time value.
+		 *
+		 * @param binSize must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc binSize(int binSize) {
+			return binSize((Object) binSize);
+		}
+
+		/**
+		 * Define the numeric time value via an {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc binSize(AggregationExpression expression) {
+			return binSize((Object) expression);
+		}
+
+		/**
+		 * Define the numeric time value.
+		 *
+		 * @param binSize must not be {@literal null}.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc binSize(Object binSize) {
+			return new DateTrunc(append("binSize", binSize));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateTrunc}.
+		 */
+		public DateTrunc withTimezone(Timezone timezone) {
+			return new DateTrunc(appendTimezone(argumentMap(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateTrunc";
 		}
 	}
 

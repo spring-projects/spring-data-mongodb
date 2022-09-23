@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +25,7 @@ import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.data.mongodb.core.aggregation.DateOperators.TemporalUnit;
 import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 
 /**
@@ -101,5 +103,19 @@ class DateOperatorsUnitTests {
 	@Test // GH-3713
 	void rendersTimezoneFromZoneId() {
 		assertThat(DateOperators.Timezone.fromZone(ZoneId.of("America/Chicago")).getValue()).isEqualTo("America/Chicago");
+	}
+
+	@Test // GH-4139
+	void rendersDateTrunc() {
+
+		assertThat(DateOperators.dateOf("purchaseDate").truncate("week").binSize(2).startOfWeek(DayOfWeek.MONDAY).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $dateTrunc: { date: \"$purchaseDate\", unit: \"week\", binSize: 2, startOfWeek : \"monday\" } }");
+	}
+
+	@Test // GH-4139
+	void rendersDateTruncWithTimezone() {
+
+		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).truncate("week").binSize(2).startOfWeek(DayOfWeek.MONDAY).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $dateTrunc: { date: \"$purchaseDate\", unit: \"week\", binSize: 2, startOfWeek : \"monday\", timezone : \"America/Chicago\" } }");
 	}
 }

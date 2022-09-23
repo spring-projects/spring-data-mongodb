@@ -165,6 +165,8 @@ public class MethodReferenceNode extends ExpressionNode {
 				mapArgRef().forOperator("$dateSubtract").mappingParametersTo("startDate", "unit", "amount", "timezone"));
 		map.put("dateDiff", mapArgRef().forOperator("$dateDiff").mappingParametersTo("startDate", "endDate", "unit",
 				"timezone", "startOfWeek"));
+		map.put("dateTrunc",
+				mapArgRef().forOperator("$dateTrunc").mappingParametersTo("date", "unit", "binSize", "startOfWeek", "timezone"));
 		map.put("dayOfYear", singleArgRef().forOperator("$dayOfYear"));
 		map.put("dayOfMonth", singleArgRef().forOperator("$dayOfMonth"));
 		map.put("dayOfWeek", singleArgRef().forOperator("$dayOfWeek"));
