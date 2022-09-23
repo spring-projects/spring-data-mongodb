@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,11 +77,11 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			return context.getReference(field).toString();
 		}
 
-		if(value instanceof Fields fields) {
+		if (value instanceof Fields fields) {
 			return fields.asList().stream().map(it -> unpack(it, context)).collect(Collectors.toList());
 		}
 
-		if(value instanceof Sort sort) {
+		if (value instanceof Sort sort) {
 
 			Document sortDoc = new Document();
 			for (Order order : sort) {
@@ -154,9 +155,40 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
-		Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
+		return append((Map<String, Object>) this.value, key, value);
+	}
+
+	private Map<String, Object> append(Map<String, Object> existing, String key, Object value) {
+
+		Map<String, Object> clone = new LinkedHashMap<>(existing);
 		clone.put(key, value);
 		return clone;
+	}
+
+	protected Map<String, Object> appendTo(String key, Object value) {
+
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
+
+		if (this.value instanceof Map map) {
+
+			Map<String, Object> target = new HashMap<>(map);
+			if (!target.containsKey(key)) {
+				target.put(key, value);
+				return target;
+			}
+			target.computeIfPresent(key, (k, v) -> {
+
+				if (v instanceof List<?> list) {
+					List<Object> targetList = new ArrayList<>(list);
+					targetList.add(value);
+					return targetList;
+				}
+				return Arrays.asList(v, value);
+			});
+			return target;
+		}
+		throw new IllegalStateException(
+				String.format("Cannot append value to %s type", ObjectUtils.nullSafeClassName(this.value)));
 
 	}
 
@@ -245,6 +277,10 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 
 		return (T) ((Map<String, Object>) this.value).get(key);
+	}
+
+	protected boolean isArgumentMap() {
+		return this.value instanceof Map;
 	}
 
 	/**

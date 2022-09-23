@@ -224,6 +224,8 @@ public class MethodReferenceNode extends ExpressionNode {
 				.mappingParametersTo("output", "sortBy"));
 		map.put("topN", mapArgRef().forOperator("$topN") //
 				.mappingParametersTo("n", "output", "sortBy"));
+		map.put("maxN", mapArgRef().forOperator("$maxN") //
+				.mappingParametersTo("n", "input"));
 
 		// CONVERT OPERATORS
 		map.put("convert", mapArgRef().forOperator("$convert") //
