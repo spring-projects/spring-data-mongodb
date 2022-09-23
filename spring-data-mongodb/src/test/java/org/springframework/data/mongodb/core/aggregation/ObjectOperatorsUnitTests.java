@@ -109,4 +109,18 @@ public class ObjectOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $getField : { field : \"robin\", input : \"$batman\" }}"));
 	}
 
+	@Test // GH-4139
+	public void setField() {
+
+		assertThat(ObjectOperators.valueOf("batman").setField("friend").toValue("robin").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $setField : { field : \"friend\", value : \"robin\", input : \"$batman\" }}"));
+	}
+
+	@Test // GH-4139
+	public void removeField() {
+
+		assertThat(ObjectOperators.valueOf("batman").removeField("joker").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $setField : { field : \"joker\", value : \"$$REMOVE\", input : \"$batman\" }}"));
+	}
+
 }

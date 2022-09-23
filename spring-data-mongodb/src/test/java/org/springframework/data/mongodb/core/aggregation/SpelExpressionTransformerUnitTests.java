@@ -1230,6 +1230,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("getField(\"score\", source)")).isEqualTo("{ $getField : { field : \"score\", input : \"$source\" }}");
 	}
 
+	@Test // GH-4139
+	void shouldRenderSetField() {
+		assertThat(transform("setField(\"score\", 100, source)")).isEqualTo("{ $setField : { field : \"score\", value : 100, input : \"$source\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}

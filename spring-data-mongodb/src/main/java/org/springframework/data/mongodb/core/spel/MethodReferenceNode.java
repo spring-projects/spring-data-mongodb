@@ -233,6 +233,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("objectToArray", singleArgRef().forOperator("$objectToArray"));
 		map.put("mergeObjects", arrayArgRef().forOperator("$mergeObjects"));
 		map.put("getField", mapArgRef().forOperator("$getField").mappingParametersTo("field", "input"));
+		map.put("setField", mapArgRef().forOperator("$setField").mappingParametersTo("field", "value", "input"));
 
 		// CONVERT OPERATORS
 		map.put("convert", mapArgRef().forOperator("$convert") //
