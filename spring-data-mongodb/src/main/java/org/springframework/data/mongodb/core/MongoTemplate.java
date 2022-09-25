@@ -161,6 +161,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Yadhukrishna S Pai
  * @author Anton Barkan
  * @author Bartłomiej Mazur
+ * @author Sangyong Choi
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
