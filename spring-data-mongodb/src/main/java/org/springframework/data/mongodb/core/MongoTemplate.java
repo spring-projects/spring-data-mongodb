@@ -32,12 +32,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
@@ -185,6 +187,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private @Nullable EntityCallbacks entityCallbacks;
 	private @Nullable ResourceLoader resourceLoader;
 	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
+	private @Nullable ListableBeanFactory listableBeanFactory;
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
@@ -331,7 +334,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		eventPublisher = applicationContext;
 		eventDelegate.setPublisher(eventPublisher);
-
+		listableBeanFactory = applicationContext;
 		if (entityCallbacks == null) {
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
 		}
@@ -2761,11 +2764,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return type != null ? mappingContext.getPersistentEntity(type) : null;
 	}
 
-	private static MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
+	private MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
+		List<Converter> converters = listableBeanFactory
+				.getBeansOfType(Converter.class)
+				.values()
+				.stream()
+				.toList();
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
-		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
-
+		MongoCustomConversions conversions = new MongoCustomConversions(converters);
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.afterPropertiesSet();
