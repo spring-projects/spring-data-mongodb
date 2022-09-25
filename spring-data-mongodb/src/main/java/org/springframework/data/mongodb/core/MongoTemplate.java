@@ -2765,11 +2765,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
-		List<Converter> converters = listableBeanFactory
-				.getBeansOfType(Converter.class)
-				.values()
-				.stream()
-				.toList();
+		List<Converter> converters;
+		if (listableBeanFactory != null) {
+			converters = listableBeanFactory
+					.getBeansOfType(Converter.class)
+					.values()
+					.stream()
+					.toList();
+		} else {
+			converters = Collections.emptyList();
+		}
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(converters);

@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.core.convert.converter.Converter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -185,6 +187,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private @Nullable ApplicationEventPublisher eventPublisher;
 	private @Nullable ReactiveEntityCallbacks entityCallbacks;
 	private @Nullable ReactiveMongoPersistentEntityIndexCreator indexCreator;
+	private @Nullable ListableBeanFactory listableBeanFactory;
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
@@ -352,7 +355,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		eventPublisher = applicationContext;
 		eventDelegate.setPublisher(eventPublisher);
-
+		listableBeanFactory = applicationContext;
 		if (entityCallbacks == null) {
 			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
 		}
@@ -2581,8 +2584,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	private MappingMongoConverter getDefaultMongoConverter() {
+		List<Converter> converters;
+		if (listableBeanFactory != null) {
+			converters = listableBeanFactory
+					.getBeansOfType(Converter.class)
+					.values()
+					.stream()
+					.toList();
+		} else {
+			converters = Collections.emptyList();
+		}
 
-		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
+		MongoCustomConversions conversions = new MongoCustomConversions(converters);
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
