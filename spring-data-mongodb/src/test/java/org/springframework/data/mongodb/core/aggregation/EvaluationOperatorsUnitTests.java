@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link EvaluationOperators}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 class EvaluationOperatorsUnitTests {
 
@@ -31,5 +32,12 @@ class EvaluationOperatorsUnitTests {
 
 		assertThat(EvaluationOperators.valueOf("foo").expr().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $expr: \"$foo\" }");
+	}
+
+	@Test // GH-4139
+	void shouldRenderLocfCorrectly() {
+
+		assertThat(EvaluationOperators.valueOf("foo").locf().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $locf: \"$foo\" }");
 	}
 }
