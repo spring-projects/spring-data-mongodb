@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -313,6 +314,21 @@ public class ArrayOperators {
 
 			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
 					.withInitialValue(initialValue).reduce(expressions);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort order}.
+		 *
+		 * @return new instance of {@link SortArray}.
+		 * @since 4.0
+		 */
+		public SortArray sort(Sort sort) {
+
+			if (usesFieldRef()) {
+				return SortArray.sortArrayOf(fieldReference).by(sort);
+			}
+
+			return (usesExpression() ? SortArray.sortArrayOf(expression) : SortArray.sortArray(values)).by(sort);
 		}
 
 		/**
@@ -1913,6 +1929,68 @@ public class ArrayOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$last";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $sortArray} that sorts elements in an array. <br />
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class SortArray extends AbstractAggregationExpression {
+
+		private SortArray(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Returns the given array.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return new instance of {@link SortArray}.
+		 */
+		public static SortArray sortArray(Object array) {
+			return new SortArray(Collections.singletonMap("input", array));
+		}
+
+		/**
+		 * Sorts the elements in the array pointed to by the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link SortArray}.
+		 */
+		public static SortArray sortArrayOf(String fieldReference) {
+			return sortArray(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Sorts the elements of the array computed buy the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link SortArray}.
+		 */
+		public static SortArray sortArrayOf(AggregationExpression expression) {
+			return sortArray(expression);
+		}
+
+		/**
+		 * Set the order to put elements in.
+		 * 
+		 * @param sort must not be {@literal null}.
+		 * @return new instance of {@link SortArray}.
+		 */
+		public SortArray by(Sort sort) {
+			return new SortArray(append("sortBy", sort));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		 */
+		@Override
+		protected String getMongoMethod() {
+			return "$sortArray";
 		}
 	}
 }

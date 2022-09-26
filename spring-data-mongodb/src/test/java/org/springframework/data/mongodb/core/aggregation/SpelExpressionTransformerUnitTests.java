@@ -1235,6 +1235,12 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("setField(\"score\", 100, source)")).isEqualTo("{ $setField : { field : \"score\", value : 100, input : \"$source\" }}");
 	}
 
+	@Test // GH-4139
+	void shouldRenderSortArray() {
+		assertThat(transform(
+				"sortArray(team, new org.bson.Document(\"name\" , 1))")).isEqualTo("{ $sortArray : { input : \"$team\", sortBy : {\"name\" : 1 } }}");
+	}
+	
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}
