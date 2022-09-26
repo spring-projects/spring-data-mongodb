@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
@@ -24,6 +23,7 @@ import org.springframework.util.Assert;
  * Gateway to {@literal evaluation operators} such as {@literal $expr}.
  *
  * @author Divya Srivastava
+ * @author Christoph Strobl
  * @since 3.3
  */
 public class EvaluationOperators {
@@ -84,6 +84,15 @@ public class EvaluationOperators {
 		 */
 		public Expr expr() {
 			return usesFieldRef() ? Expr.valueOf(fieldReference) : Expr.valueOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that is a valid aggregation expression.
+		 *
+		 * @return new instance of {@link Expr}.
+		 */
+		public LastObservationCarriedForward locf() {
+			return usesFieldRef() ? LastObservationCarriedForward.locfValueOf(fieldReference) : LastObservationCarriedForward.locfValueOf(expression);
 		}
 
 		/**
@@ -149,6 +158,47 @@ public class EvaluationOperators {
 
 		private boolean usesFieldRef() {
 			return fieldReference != null;
+		}
+	}
+
+	/**
+	 * Sets {@literal null} and missing values to the last non-null value.
+	 *
+	 * @since 4.0
+	 */
+	public static class LastObservationCarriedForward extends AbstractAggregationExpression {
+
+		private LastObservationCarriedForward(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$locf";
+		}
+
+		/**
+		 * Creates new {@link EvaluationOperatorFactory.Expr}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link EvaluationOperatorFactory.Expr}.
+		 */
+		public static LastObservationCarriedForward locfValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return new LastObservationCarriedForward(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link LastObservationCarriedForward}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link LastObservationCarriedForward}.
+		 */
+		public static LastObservationCarriedForward locfValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return new LastObservationCarriedForward(expression);
 		}
 	}
 

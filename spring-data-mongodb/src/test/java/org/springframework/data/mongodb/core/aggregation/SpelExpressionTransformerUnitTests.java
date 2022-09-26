@@ -1250,6 +1250,11 @@ public class SpelExpressionTransformerUnitTests {
 	void shouldTsSecond() {
 		assertThat(transform("tsSecond(saleTimestamp)")).isEqualTo("{ $tsSecond: \"$saleTimestamp\" }");
 	}
+
+	@Test // GH-4139
+	void shouldRenderLocf() {
+		assertThat(transform("locf(price)")).isEqualTo("{ $locf: \"$price\" }");
+	}
 	
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
