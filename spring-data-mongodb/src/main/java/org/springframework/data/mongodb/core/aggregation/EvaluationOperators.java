@@ -92,72 +92,73 @@ public class EvaluationOperators {
 		 * @return new instance of {@link Expr}.
 		 */
 		public LastObservationCarriedForward locf() {
-			return usesFieldRef() ? LastObservationCarriedForward.locfValueOf(fieldReference) : LastObservationCarriedForward.locfValueOf(expression);
-		}
-
-		/**
-		 * Allows the use of aggregation expressions within the query language.
-		 */
-		public static class Expr extends AbstractAggregationExpression {
-
-			private Expr(Object value) {
-				super(value);
-			}
-
-			@Override
-			protected String getMongoMethod() {
-				return "$expr";
-			}
-
-			/**
-			 * Creates new {@link Expr}.
-			 *
-			 * @param fieldReference must not be {@literal null}.
-			 * @return new instance of {@link Expr}.
-			 */
-			public static Expr valueOf(String fieldReference) {
-
-				Assert.notNull(fieldReference, "FieldReference must not be null");
-				return new Expr(Fields.field(fieldReference));
-			}
-
-			/**
-			 * Creates new {@link Expr}.
-			 *
-			 * @param expression must not be {@literal null}.
-			 * @return new instance of {@link Expr}.
-			 */
-			public static Expr valueOf(AggregationExpression expression) {
-
-				Assert.notNull(expression, "Expression must not be null");
-				return new Expr(expression);
-			}
-
-			/**
-			 * Creates {@code $expr} as {@link CriteriaDefinition}.
-			 *
-			 * @return the {@link CriteriaDefinition} from this expression.
-			 */
-			public CriteriaDefinition toCriteriaDefinition(AggregationOperationContext context) {
-
-				Document criteriaObject = toDocument(context);
-
-				return new CriteriaDefinition() {
-					@Override
-					public Document getCriteriaObject() {
-						return criteriaObject;
-					}
-
-					@Override
-					public String getKey() {
-						return getMongoMethod();
-					}
-				};
-			}
+			return usesFieldRef() ? LastObservationCarriedForward.locfValueOf(fieldReference)
+					: LastObservationCarriedForward.locfValueOf(expression);
 		}
 
 		private boolean usesFieldRef() {
 			return fieldReference != null;
+		}
+	}
+
+	/**
+	 * Allows the use of aggregation expressions within the query language.
+	 */
+	public static class Expr extends AbstractAggregationExpression {
+
+		private Expr(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$expr";
+		}
+
+		/**
+		 * Creates new {@link Expr}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Expr}.
+		 */
+		public static Expr valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return new Expr(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link Expr}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Expr}.
+		 */
+		public static Expr valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return new Expr(expression);
+		}
+
+		/**
+		 * Creates {@code $expr} as {@link CriteriaDefinition}.
+		 *
+		 * @return the {@link CriteriaDefinition} from this expression.
+		 */
+		public CriteriaDefinition toCriteriaDefinition(AggregationOperationContext context) {
+
+			Document criteriaObject = toDocument(context);
+
+			return new CriteriaDefinition() {
+				@Override
+				public Document getCriteriaObject() {
+					return criteriaObject;
+				}
+
+				@Override
+				public String getKey() {
+					return getMongoMethod();
+				}
+			};
 		}
 	}
 

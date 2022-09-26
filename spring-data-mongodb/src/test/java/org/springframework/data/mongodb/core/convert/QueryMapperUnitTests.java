@@ -1416,7 +1416,7 @@ public class QueryMapperUnitTests {
 	@Test // GH-3790
 	void shouldAcceptExprAsCriteriaDefinition() {
 
-		EvaluationOperators.EvaluationOperatorFactory.Expr expr = EvaluationOperators
+		EvaluationOperators.Expr expr = EvaluationOperators
 				.valueOf(ConditionalOperators.ifNull("customizedField").then(true)).expr();
 
 		Query query = query(
