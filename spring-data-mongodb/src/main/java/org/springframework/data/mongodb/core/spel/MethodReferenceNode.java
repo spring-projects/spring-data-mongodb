@@ -191,6 +191,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("isoDayOfWeek", singleArgRef().forOperator("$isoDayOfWeek"));
 		map.put("isoWeek", singleArgRef().forOperator("$isoWeek"));
 		map.put("isoWeekYear", singleArgRef().forOperator("$isoWeekYear"));
+		map.put("tsIncrement", singleArgRef().forOperator("$tsIncrement"));
 
 		// CONDITIONAL OPERATORS
 		map.put("cond", mapArgRef().forOperator("$cond") //

@@ -1240,6 +1240,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform(
 				"sortArray(team, new org.bson.Document(\"name\" , 1))")).isEqualTo("{ $sortArray : { input : \"$team\", sortBy : {\"name\" : 1 } }}");
 	}
+
+	@Test // GH-4139
+	void shouldTsIncrement() {
+		assertThat(transform("tsIncrement(saleTimestamp)")).isEqualTo("{ $tsIncrement: \"$saleTimestamp\" }");
+	}
 	
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);

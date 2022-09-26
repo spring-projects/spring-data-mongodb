@@ -818,6 +818,21 @@ public class DateOperators {
 			return applyTimezone(DateFromString.fromString(dateReference()), timezone);
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that returns the incrementing ordinal from a timestamp.
+		 *
+		 * @return new instance of {@link TsIncrement}.
+		 * @since 4.0
+		 */
+		public TsIncrement tsIncrement() {
+
+			if(timezone != null && !Timezone.none().equals(timezone)) {
+				throw new IllegalArgumentException("$tsIncrement does not support timezones");
+			}
+
+			return TsIncrement.tsIncrement(dateReference());
+		}
+
 		private Object dateReference() {
 
 			if (usesFieldRef()) {
@@ -3179,6 +3194,63 @@ public class DateOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$dateTrunc";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $tsIncrement}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class TsIncrement extends AbstractAggregationExpression {
+
+		private TsIncrement(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link TsIncrement} that returns the incrementing ordinal from a timestamp.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link TsIncrement}.
+		 * @throws IllegalArgumentException if given {@literal value} is {@literal null}.
+		 */
+		public static TsIncrement tsIncrement(Object value) {
+
+			Assert.notNull(value, "Value must not be null");
+			return new TsIncrement(value);
+		}
+
+		/**
+		 * Creates new {@link TsIncrement} that returns the incrementing ordinal from a timestamp.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link TsIncrement}.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public static TsIncrement tsIncrementValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return tsIncrement(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link TsIncrement}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link TsIncrement}.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public static TsIncrement tsIncrementValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return tsIncrement(expression);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$tsIncrement";
 		}
 	}
 

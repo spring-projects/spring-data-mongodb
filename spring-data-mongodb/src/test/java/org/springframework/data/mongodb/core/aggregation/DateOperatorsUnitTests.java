@@ -24,8 +24,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
-
-import org.springframework.data.mongodb.core.aggregation.DateOperators.TemporalUnit;
 import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 
 /**
@@ -117,5 +115,19 @@ class DateOperatorsUnitTests {
 
 		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).truncate("week").binSize(2).startOfWeek(DayOfWeek.MONDAY).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $dateTrunc: { date: \"$purchaseDate\", unit: \"week\", binSize: 2, startOfWeek : \"monday\", timezone : \"America/Chicago\" } }");
+	}
+
+	@Test // GH-4139
+	void rendersTsIncrement() {
+
+		assertThat(DateOperators.dateOf("saleTimestamp").tsIncrement().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+						"{ $tsIncrement: \"$saleTimestamp\" }");
+	}
+
+	@Test // GH-4139
+	void tsIncrementErrorsOnTimezone() {
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).tsIncrement());
 	}
 }
