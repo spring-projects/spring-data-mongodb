@@ -142,6 +142,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("last", singleArgRef().forOperator("$last"));
 		map.put("size", singleArgRef().forOperator("$size"));
 		map.put("slice", arrayArgRef().forOperator("$slice"));
+		map.put("sortArray", mapArgRef().forOperator("$sortArray").mappingParametersTo("input", "sortBy"));
 		map.put("reverseArray", singleArgRef().forOperator("$reverseArray"));
 		map.put("reduce", mapArgRef().forOperator("$reduce").mappingParametersTo("input", "initialValue", "in"));
 		map.put("zip", mapArgRef().forOperator("$zip").mappingParametersTo("inputs", "useLongestLength", "defaults"));
