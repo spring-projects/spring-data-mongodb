@@ -130,4 +130,18 @@ class DateOperatorsUnitTests {
 		assertThatExceptionOfType(IllegalArgumentException.class)
 				.isThrownBy(() -> DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).tsIncrement());
 	}
+
+	@Test // GH-4139
+	void rendersTsSecond() {
+
+		assertThat(DateOperators.dateOf("saleTimestamp").tsSecond().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+				"{ $tsSecond: \"$saleTimestamp\" }");
+	}
+
+	@Test // GH-4139
+	void tsSecondErrorsOnTimezone() {
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).tsSecond());
+	}
 }

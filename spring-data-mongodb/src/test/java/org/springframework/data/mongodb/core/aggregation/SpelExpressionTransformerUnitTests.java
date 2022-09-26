@@ -1245,6 +1245,11 @@ public class SpelExpressionTransformerUnitTests {
 	void shouldTsIncrement() {
 		assertThat(transform("tsIncrement(saleTimestamp)")).isEqualTo("{ $tsIncrement: \"$saleTimestamp\" }");
 	}
+
+	@Test // GH-4139
+	void shouldTsSecond() {
+		assertThat(transform("tsSecond(saleTimestamp)")).isEqualTo("{ $tsSecond: \"$saleTimestamp\" }");
+	}
 	
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);

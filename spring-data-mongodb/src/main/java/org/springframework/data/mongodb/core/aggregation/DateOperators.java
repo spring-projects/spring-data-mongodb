@@ -833,6 +833,21 @@ public class DateOperators {
 			return TsIncrement.tsIncrement(dateReference());
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that returns the seconds from a timestamp.
+		 *
+		 * @return new instance of {@link TsIncrement}.
+		 * @since 4.0
+		 */
+		public TsSecond tsSecond() {
+
+			if(timezone != null && !Timezone.none().equals(timezone)) {
+				throw new IllegalArgumentException("$tsSecond does not support timezones");
+			}
+
+			return TsSecond.tsSecond(dateReference());
+		}
+
 		private Object dateReference() {
 
 			if (usesFieldRef()) {
@@ -3251,6 +3266,63 @@ public class DateOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$tsIncrement";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $tsSecond}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class TsSecond extends AbstractAggregationExpression {
+
+		private TsSecond(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link TsSecond} that returns the incrementing ordinal from a timestamp.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link TsSecond}.
+		 * @throws IllegalArgumentException if given {@literal value} is {@literal null}.
+		 */
+		public static TsSecond tsSecond(Object value) {
+
+			Assert.notNull(value, "Value must not be null");
+			return new TsSecond(value);
+		}
+
+		/**
+		 * Creates new {@link TsSecond} that returns the incrementing ordinal from a timestamp.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link TsSecond}.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 */
+		public static TsSecond tsSecondValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return tsSecond(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link TsSecond}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link TsSecond}.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 */
+		public static TsSecond tsSecondValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return tsSecond(expression);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$tsSecond";
 		}
 	}
 
