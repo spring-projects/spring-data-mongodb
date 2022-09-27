@@ -72,16 +72,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -2766,10 +2757,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
-		List<Converter> converters;
+		List<DocumentFieldConverter> converters;
 		if (listableBeanFactory != null) {
 			converters = listableBeanFactory
-					.getBeansOfType(Converter.class)
+					.getBeansOfType(DocumentFieldConverter.class)
 					.values()
 					.stream()
 					.toList();

@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.core.convert.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -87,14 +88,6 @@ import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggr
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.index.ReactiveMongoPersistentEntityIndexCreator;
@@ -2585,10 +2578,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	private MappingMongoConverter getDefaultMongoConverter() {
-		List<Converter> converters;
+		List<DocumentFieldConverter> converters;
 		if (listableBeanFactory != null) {
 			converters = listableBeanFactory
-					.getBeansOfType(Converter.class)
+					.getBeansOfType(DocumentFieldConverter.class)
 					.values()
 					.stream()
 					.toList();
