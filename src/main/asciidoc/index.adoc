@@ -3,7 +3,8 @@ Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Da
 :revnumber: {version}
 :revdate: {localdate}
 ifdef::backend-epub3[:front-cover-image: image:epub-cover.png[Front Cover,1050,1600]]
-:spring-data-commons-docs: ../../../../../spring-data-commons/src/main/asciidoc
+:spring-data-commons-docs: ../../../../spring-data-commons/src/main/asciidoc
+:store: Mongo
 
 (C) 2008-2022 The original authors.
 

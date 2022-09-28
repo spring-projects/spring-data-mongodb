@@ -266,11 +266,11 @@ calling `get()` before the actual conversion
 
 Unless explicitly configured, an instance of `MappingMongoConverter` is created by default when you create a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter`. Doing so lets you dictate where in the classpath your domain classes can be found, so that Spring Data MongoDB can extract metadata and construct indexes. Also, by creating your own instance, you can register Spring converters to map specific classes to and from the database.
 
-You can configure the `MappingMongoConverter` as well as `com.mongodb.client.MongoClient` and MongoTemplate by using either Java-based or XML-based metadata. The following example uses Spring's Java-based configuration:
+You can configure the `MappingMongoConverter` as well as `com.mongodb.client.MongoClient` and MongoTemplate by using either Java-based or XML-based metadata. The following example shows the configuration:
 
-.@Configuration class to configure MongoDB mapping support
 ====
-[source,java]
+.Java
+[source,java,role="primary"]
 ----
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
@@ -299,24 +299,11 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     return new LoggingEventListener<MongoMappingEvent>();
   }
 }
+
 ----
-<1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`. By default the configuration classes package is used.
-<2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
-====
 
-`AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name. `AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
-
-You can add additional converters to the converter by overriding the `customConversionsConfiguration` method.
-MongoDB's native JSR-310 support can be enabled through `MongoConverterConfigurationAdapter.useNativeDriverJavaTimeCodecs()`.
-Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
-
-NOTE: `AbstractMongoClientConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
-
-Spring's MongoDB namespace lets you enable mapping functionality in XML, as the following example shows:
-
-.XML schema to configure MongoDB mapping support
-====
-[source,xml]
+.XML
+[source,xml,role="secondary"]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -353,7 +340,18 @@ Spring's MongoDB namespace lets you enable mapping functionality in XML, as the 
 
 </beans>
 ----
+<1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`. By default the configuration classes package is used.
+<2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
 ====
+
+`AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name. `AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
+
+You can add additional converters to the converter by overriding the `customConversionsConfiguration` method.
+MongoDB's native JSR-310 support can be enabled through `MongoConverterConfigurationAdapter.useNativeDriverJavaTimeCodecs()`.
+Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
+
+NOTE: `AbstractMongoClientConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
+
 
 The `base-package` property tells it where to scan for classes annotated with the `@org.springframework.data.mongodb.core.mapping.Document` annotation.
 
@@ -607,7 +605,7 @@ The mapping subsystem allows the customization of the object construction by ann
 
 * If a parameter is annotated with the `@Value` annotation, the given expression is evaluated and the result is used as the parameter value.
 * If the Java type has a property whose name matches the given field of the input document, then it's property information is used to select the appropriate constructor parameter to pass the input field value to. This works only if the parameter name information is present in the java `.class` files which can be achieved by compiling the source with debug information or using the new `-parameters` command-line switch for javac in Java 8.
-* Otherwise a `MappingException` will be thrown indicating that the given constructor parameter could not be bound.
+* Otherwise, a `MappingException` will be thrown indicating that the given constructor parameter could not be bound.
 
 [source,java]
 ----

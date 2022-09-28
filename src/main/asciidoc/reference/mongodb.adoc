@@ -321,7 +321,8 @@ The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the o
 NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 
 [[mongo.mongo-db-factory-java]]
-=== Registering a `MongoDatabaseFactory` Instance by Using Java-based Metadata
+[[mongo.mongo-db-factory.config]]
+=== Registering a `MongoDatabaseFactory`
 
 To register a `MongoDatabaseFactory` instance with the container, you write code much like what was highlighted in the previous code listing. The following listing shows a simple example:
 
@@ -330,7 +331,8 @@ To register a `MongoDatabaseFactory` instance with the container, you write code
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean MongoDatabaseFactory mongoDatabaseFactory() {
+  @Bean
+  public MongoDatabaseFactory mongoDatabaseFactory() {
     return new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database");
   }
 }
@@ -338,7 +340,9 @@ public class MongoConfiguration {
 
 MongoDB Server generation 3 changed the authentication model when connecting to the DB. Therefore, some of the configuration options available for authentication are no longer valid. You should use the `MongoClient`-specific options for setting credentials through `MongoCredential` to provide authentication data, as shown in the following example:
 
-[source,java]
+====
+.Java
+[source,java,role="primary"]
 ----
 @Configuration
 public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
@@ -351,35 +355,70 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientCo
   @Override
   protected void configureClientSettings(Builder builder) {
 
-  	builder
-  	    .credential(MongoCredential.createCredential("name", "db", "pwd".toCharArray()))
-  	    .applyToClusterSettings(settings  -> {
-  	    	settings.hosts(singletonList(new ServerAddress("127.0.0.1", 27017)));
-  	    });
+    builder
+        .credential(MongoCredential.createCredential("name", "db", "pwd".toCharArray()))
+        .applyToClusterSettings(settings  -> {
+          settings.hosts(singletonList(new ServerAddress("127.0.0.1", 27017)));
+        });
   }
 }
 ----
 
-In order to use authentication with XML-based configuration, use the `credential` attribute on the `<mongo-client>` element.
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:db-factory dbname="database" />
+----
+====
+
 
 NOTE: Username and password credentials used in XML-based configuration must be URL-encoded when these contain reserved characters, such as `:`, `%`, `@`, or `,`.
 The following example shows encoded credentials:
 `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
 See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for further details.
 
-[[mongo.mongo-db-factory-xml]]
-=== Registering a `MongoDatabaseFactory` Instance by Using XML-based Metadata
+If you need to configure additional options on the `com.mongodb.client.MongoClient` instance that is used to create a `SimpleMongoClientDbFactory`, you can refer to an existing bean as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
 
-The `mongo` namespace provides a convenient way to create a `SimpleMongoClientDbFactory`, as compared to using the `<beans/>` namespace, as shown in the following example:
-
-[source,xml]
+====
+.Java
+[source,java,role="primary"]
 ----
-<mongo:db-factory dbname="database">
+@Configuration
+@PropertySource("classpath:/com/myapp/mongodb/config/mongo.properties")
+public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
+
+  @Autowired
+  Environment env;
+
+  @Override
+  public String getDatabaseName() {
+    return "database";
+  }
+
+  @Override
+  protected void configureClientSettings(Builder builder) {
+
+    builder.applyToClusterSettings(settings -> {
+    settings.hosts(singletonList(
+          new ServerAddress(env.getProperty("mongo.host"), env.getProperty("mongo.port", Integer.class))));
+    });
+
+    builder.applyToConnectionPoolSettings(settings -> {
+
+      settings.maxConnectionLifeTime(env.getProperty("mongo.pool-max-life-time", Integer.class), TimeUnit.MILLISECONDS)
+          .minSize(env.getProperty("mongo.pool-min-size", Integer.class))
+          .maxSize(env.getProperty("mongo.pool-max-size", Integer.class))
+          .maintenanceFrequency(10, TimeUnit.MILLISECONDS)
+          .maintenanceInitialDelay(11, TimeUnit.MILLISECONDS)
+          .maxConnectionIdleTime(30, TimeUnit.SECONDS)
+          .maxWaitTime(15, TimeUnit.MILLISECONDS);
+    });
+  }
+}
 ----
 
-If you need to configure additional options on the `com.mongodb.client.MongoClient` instance that is used to create a `SimpleMongoClientDbFactory`, you can refer to an existing bean by using the `mongo-ref` attribute as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
-
-[source,xml]
+.XML
+[source,xml,role="secondary"]
 ----
 <context:property-placeholder location="classpath:/com/myapp/mongodb/config/mongo.properties"/>
 
@@ -387,10 +426,10 @@ If you need to configure additional options on the `com.mongodb.client.MongoClie
   <mongo:client-settings connection-pool-max-connection-life-time="${mongo.pool-max-life-time}"
     connection-pool-min-size="${mongo.pool-min-size}"
     connection-pool-max-size="${mongo.pool-max-size}"
-	connection-pool-maintenance-frequency="10"
-	connection-pool-maintenance-initial-delay="11"
-	connection-pool-max-connection-idle-time="30"
-	connection-pool-max-wait-time="15" />
+    connection-pool-maintenance-frequency="10"
+    connection-pool-maintenance-initial-delay="11"
+    connection-pool-max-connection-idle-time="30"
+    connection-pool-max-wait-time="15" />
 </mongo:mongo-client>
 
 <mongo:db-factory dbname="database" mongo-ref="mongoClient"/>
@@ -399,6 +438,7 @@ If you need to configure additional options on the `com.mongodb.client.MongoClie
   <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 </bean>
 ----
+====
 
 [[mongo-template]]
 == Introduction to `MongoTemplate`
@@ -424,23 +464,37 @@ The next section contains an example of how to work with the `MongoTemplate` in 
 [[mongo-template.instantiating]]
 === Instantiating `MongoTemplate`
 
-You can use Java to create and register an instance of `MongoTemplate`, as the following example shows:
+You can use the following configuration to create and register an instance of `MongoTemplate`, as the following example shows:
 
 .Registering a `com.mongodb.client.MongoClient` object and enabling Spring's exception translation support
 ====
-[source,java]
+.Java
+[source,java,role="primary"]
 ----
 @Configuration
-public class AppConfig {
+class AppConfig {
 
-  public @Bean MongoClient mongoClient() {
+  @Bean
+  MongoClient mongoClient() {
       return MongoClients.create("mongodb://localhost:27017");
   }
 
-  public @Bean MongoTemplate mongoTemplate() {
-      return new MongoTemplate(mongoClient(), "mydatabase");
+  @Bean
+  MongoTemplate mongoTemplate(MongoClient mongoClient) {
+      return new MongoTemplate(mongoClient, "geospatial");
   }
 }
+----
+
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:mongo-client host="localhost" port="27017"/>
+
+<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+  <constructor-arg ref="mongoClient"/>
+  <constructor-arg name="databaseName" value="geospatial"/>
+</bean>
 ----
 ====
 
@@ -450,17 +504,6 @@ There are several overloaded constructors of `MongoTemplate`:
 * `MongoTemplate(MongoDatabaseFactory mongoDbFactory)`: Takes a MongoDbFactory object that encapsulated the `MongoClient` object, database name, and username and password.
 * `MongoTemplate(MongoDatabaseFactory mongoDbFactory, MongoConverter mongoConverter)`: Adds a `MongoConverter` to use for mapping.
 
-You can also configure a MongoTemplate by using Spring's XML <beans/> schema, as the following example shows:
-
-[source,xml]
-----
-<mongo:mongo-client host="localhost" port="27017"/>
-
-<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-  <constructor-arg ref="mongoClient"/>
-  <constructor-arg name="databaseName" value="geospatial"/>
-</bean>
-----
 
 Other optional properties that you might like to set when creating a `MongoTemplate` are the default `WriteResultCheckingPolicy`, `WriteConcern`, and `ReadPreference` properties.
 
@@ -677,13 +720,13 @@ To achieve that, the `MappingMongoConverter` uses a `MongoTypeMapper` abstractio
 ====
 [source,java]
 ----
-public class Sample {
+class Sample {
   Contact value;
 }
 
-public abstract class Contact { … }
+abstract class Contact { … }
 
-public class Person extends Contact { … }
+class Person extends Contact { … }
 
 Sample sample = new Sample();
 sample.value = new Person();
@@ -725,7 +768,7 @@ By default, the configuration class scans the base package for potential candida
 [source,java]
 ----
 @Configuration
-public class AppConfig extends AbstractMongoClientConfiguration {
+class AppConfig extends AbstractMongoClientConfiguration {
 
   @Override
   protected Set<Class<?>> getInitialEntitySet() {
@@ -741,8 +784,6 @@ public class AppConfig extends AbstractMongoClientConfiguration {
 
 The following example shows how to configure a custom `MongoTypeMapper` in `MappingMongoConverter`:
 
-.Configuring a custom `MongoTypeMapper` with Spring Java Config
-====
 [source,java]
 ----
 class CustomMongoTypeMapper extends DefaultMongoTypeMapper {
@@ -750,8 +791,10 @@ class CustomMongoTypeMapper extends DefaultMongoTypeMapper {
 }
 ----
 
-
-[source,java]
+.Configuring a custom `MongoTypeMapper`
+====
+.Java
+[source,java,role="primary"]
 ----
 @Configuration
 class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
@@ -763,7 +806,8 @@ class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
 
   @Bean
   @Override
-  public MappingMongoConverter mappingMongoConverter() throws Exception {
+  public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
     MappingMongoConverter mmc = super.mappingMongoConverter();
     mmc.setTypeMapper(customTypeMapper());
     return mmc;
@@ -775,21 +819,18 @@ class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
   }
 }
 ----
+
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:mapping-converter type-mapper-ref="customMongoTypeMapper"/>
+
+<bean name="customMongoTypeMapper" class="com.acme.CustomMongoTypeMapper"/>
+----
 ====
 
 Note that the preceding example extends the `AbstractMongoClientConfiguration` class and overrides the bean definition of the `MappingMongoConverter` where we configured our custom `MongoTypeMapper`.
 
-The following example shows how to use XML to configure a custom `MongoTypeMapper`:
-
-.Configuring a custom `MongoTypeMapper` with XML
-====
-[source,xml]
-----
-<mongo:mapping-converter type-mapper-ref="customMongoTypeMapper"/>
-
-<bean name="customMongoTypeMapper" class="com.bubu.mongo.CustomMongoTypeMapper"/>
-----
-====
 
 [[mongo-template.save-insert]]
 === Methods for Saving and Inserting Documents

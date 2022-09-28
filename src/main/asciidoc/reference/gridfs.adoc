@@ -3,9 +3,10 @@
 
 MongoDB supports storing binary files inside its filesystem, GridFS. Spring Data MongoDB provides a `GridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate`, to let you interact with the filesystem. You can set up a `GridFsTemplate` instance by handing it a `MongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
 
-.JavaConfig setup for a GridFsTemplate
+
 ====
-[source,java]
+.Java
+[source,java,role="primary"]
 ----
 class GridFsConfiguration extends AbstractMongoClientConfiguration {
 
@@ -17,13 +18,9 @@ class GridFsConfiguration extends AbstractMongoClientConfiguration {
   }
 }
 ----
-====
 
-The corresponding XML configuration follows:
-
-.XML configuration for a GridFsTemplate
-====
-[source,xml]
+.XML
+[source,xml,role="secondary"]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"

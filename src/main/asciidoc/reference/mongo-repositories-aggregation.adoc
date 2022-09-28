@@ -82,7 +82,7 @@ Use the `@Meta` annotation to set those options via `maxExecutionTimeMs`, `comme
 
 [source,java]
 ----
-public interface PersonRepository extends CrudReppsitory<Person, String> {
+interface PersonRepository extends CrudReppsitory<Person, String> {
 
   @Meta(allowDiskUse = true)
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
@@ -99,7 +99,7 @@ Or use `@Meta` to create your own annotation as shown in the sample below.
 @Meta(allowDiskUse = true)
 @interface AllowDiskUse { }
 
-public interface PersonRepository extends CrudReppsitory<Person, String> {
+interface PersonRepository extends CrudReppsitory<Person, String> {
 
   @AllowDiskUse
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")

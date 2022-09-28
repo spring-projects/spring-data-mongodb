@@ -166,21 +166,14 @@ Please refer to <<mapping.index-creation>> on how to create indexes programmatic
 
 .Enable Auto Index Creation
 ====
-
-.XML Namespace
-[source,xml]
-----
-<mongo:mapping-converter auto-index-creation="true" />    <1>
-----
-
-.Java Config
-[source,java]
+.Java
+[source,java,role="primary"]
 ----
 @Configuration
 public class Config extends AbstractMongoClientConfiguration {
 
 	@Override
-    protected boolean autoIndexCreation() {               <2>
+    protected boolean autoIndexCreation() {
         return true;
     }
 
@@ -188,22 +181,25 @@ public class Config extends AbstractMongoClientConfiguration {
 }
 ----
 
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:mapping-converter auto-index-creation="true" />
+----
+
 .Programmatic
-[source,java]
+[source,java,role="secondary"]
 ----
 MongoDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(...);
 DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(dbFactory);
 
 MongoMappingContext mappingContext = new MongoMappingContext();
-mappingContext.setAutoIndexCreation(true);                <3>
+mappingContext.setAutoIndexCreation(true);
 // ...
 mappingContext.afterPropertiesSet();
 
 MongoTemplate template = new MongoTemplate(dbFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
 ----
-<1> Use the XML namespace attribute `auto-index-creation` on `mapping-converter`.
-<2> Override `autoIndexCreation` via `AbstractMongoClientConfiguration` or `AbstractReactiveMongoClientConfiguration`.
-<3> Set the flag on `MongoMappingContext`.
 ====
 
 === UUID Types

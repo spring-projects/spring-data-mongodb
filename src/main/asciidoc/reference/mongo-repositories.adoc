@@ -51,14 +51,14 @@ Right now this interface serves only to provide type information, but we can add
 To start using the repository, use the `@EnableMongoRepositories` annotation.
 That annotation carries the same attributes as the namespace element.
 If no base package is configured, the infrastructure scans the package of the annotated configuration class.
-The following example shows how to use Java configuration for a repository:
+The following example shows how to configuration your application to use MongoDB repositories:
 
-.Java configuration for repositories
 ====
-[source,java]
+.Java
+[source,java,role="primary"]
 ----
 @Configuration
-@EnableMongoRepositories
+@EnableMongoRepositories("com.acme.*.repositories")
 class ApplicationConfig extends AbstractMongoClientConfiguration {
 
   @Override
@@ -68,17 +68,13 @@ class ApplicationConfig extends AbstractMongoClientConfiguration {
 
   @Override
   protected String getMappingBasePackage() {
-    return "com.oreilly.springdata.mongodb";
+    return "com.acme.*.repositories";
   }
 }
 ----
-====
 
-If you would rather go with XML based configuration add the following content:
-
-.General MongoDB repository Spring XML configuration
-====
-[source,xml]
+.XML
+[source,xml,role="secondary"]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -113,14 +109,14 @@ Consequently, accessing the second page of `Person` objects at a page size of 10
 ====
 [source,java]
 ----
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class PersonRepositoryTests {
+class PersonRepositoryTests {
 
     @Autowired PersonRepository repository;
 
     @Test
-    public void readsFirstPageCorrectly() {
+    void readsFirstPageCorrectly() {
 
       Page<Person> persons = repository.findAll(PageRequest.of(0, 10));
       assertThat(persons.isFirstPage()).isTrue();
