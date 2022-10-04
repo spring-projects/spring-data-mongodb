@@ -157,7 +157,7 @@ public final class MongoObservationCommandListener implements CommandListener {
 		MongoHandlerContext observationContext = new MongoHandlerContext(event, requestContext);
 
 		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
-				.observation(this.observationRegistry, observationContext) //
+				.observation(this.observationRegistry, () -> observationContext) //
 				.contextualName(observationContext.getContextualName()) //
 				.observationConvention(this.observationConvention) //
 				.start();
