@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
+		<version>4.0.x-GH-4191-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -23,6 +23,9 @@
 		<java-module-name>spring.data.mongodb</java-module-name>
 		<project.root>${basedir}/..</project.root>
 		<multithreadedtc>1.01</multithreadedtc>
+		<micrometer>1.10.0-SNAPSHOT</micrometer>
+		<micrometer-tracing>1.0.0-SNAPSHOT</micrometer-tracing>
+		<micrometer-docs-generator>1.0.0-SNAPSHOT</micrometer-docs-generator>
 	</properties>
 
 	<dependencies>
