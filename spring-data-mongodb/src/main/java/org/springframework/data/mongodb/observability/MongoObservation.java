@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.observability;
 
 import io.micrometer.common.docs.KeyName;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
 /**
  * A MongoDB-based {@link io.micrometer.observation.Observation}.
@@ -25,7 +25,7 @@ import io.micrometer.observation.docs.DocumentedObservation;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-enum MongoObservation implements DocumentedObservation {
+enum MongoObservation implements ObservationDocumentation {
 
 	/**
 	 * Timer created around a MongoDB command execution.
