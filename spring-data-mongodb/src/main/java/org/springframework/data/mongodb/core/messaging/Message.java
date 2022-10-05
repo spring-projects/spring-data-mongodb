@@ -31,6 +31,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myroslav Kosinskyi
  * @see MessageProperties
  * @since 2.1
  */

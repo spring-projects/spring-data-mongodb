@@ -91,6 +91,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myroslav Kosinskyi
  * @since 2.1
  */
 public class ChangeStreamRequest<T>

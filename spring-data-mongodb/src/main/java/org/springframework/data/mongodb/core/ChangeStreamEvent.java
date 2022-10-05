@@ -36,6 +36,7 @@ import com.mongodb.client.model.changestream.OperationType;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myroslav Kosinskyi
  * @since 2.1
  */
 public class ChangeStreamEvent<T> {

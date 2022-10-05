@@ -42,6 +42,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 
 /**
  * @author Christoph Strobl
+ * @author Myroslav Kosinskyi
  */
 @ExtendWith(MockitoExtension.class)
 class ChangeStreamTaskUnitTests {
