@@ -50,7 +50,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamTask.ChangeStreamEventMessage;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
-import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
@@ -550,11 +549,11 @@ class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.fullDocumentLookup(FullDocument.WHEN_AVAILABLE) //
-			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE) //
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.fullDocumentLookup(FullDocument.WHEN_AVAILABLE) //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -580,11 +579,11 @@ class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.fullDocumentLookup(FullDocument.WHEN_AVAILABLE) //
-			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED) //
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.fullDocumentLookup(FullDocument.WHEN_AVAILABLE) //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -610,9 +609,9 @@ class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -635,10 +634,9 @@ class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.DEFAULT)
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.DEFAULT).maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -661,10 +659,9 @@ class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.OFF)
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.OFF).maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -681,14 +678,14 @@ class ChangeStreamTests {
 
 	@Test // issue/41087
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
-	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailableAndChangeStreamPreAndPostImagesDisabled() throws InterruptedException {
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailableAndChangeStreamPreAndPostImagesDisabled()
+			throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE)
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE).maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -709,10 +706,9 @@ class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
-			.collection("user") //
-			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED)
-			.maxAwaitTime(Duration.ofMillis(10)) //
-			.publishTo(messageListener).build();
+				.collection("user") //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).maxAwaitTime(Duration.ofMillis(10)) //
+				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);

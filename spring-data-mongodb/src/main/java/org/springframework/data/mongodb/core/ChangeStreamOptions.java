@@ -78,8 +78,8 @@ public class ChangeStreamOptions {
 	}
 
 	/**
-	* @return {@link Optional#empty()} if not set.
-	*/
+	 * @return {@link Optional#empty()} if not set.
+	 */
 	public Optional<FullDocumentBeforeChange> getFullDocumentBeforeChangeLookup() {
 		return Optional.ofNullable(fullDocumentBeforeChangeLookup);
 	}
@@ -338,11 +338,11 @@ public class ChangeStreamOptions {
 		}
 
 		/**
-		* Set the {@link FullDocumentBeforeChange} lookup to use.
-		*
-		* @param lookup must not be {@literal null}.
-		* @return this.
-		*/
+		 * Set the {@link FullDocumentBeforeChange} lookup to use.
+		 *
+		 * @param lookup must not be {@literal null}.
+		 * @return this.
+		 */
 		public ChangeStreamOptionsBuilder fullDocumentBeforeChangeLookup(FullDocumentBeforeChange lookup) {
 
 			Assert.notNull(lookup, "Lookup must not be null");

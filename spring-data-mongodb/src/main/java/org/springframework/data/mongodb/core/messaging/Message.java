@@ -54,10 +54,10 @@ public interface Message<S, T> {
 	T getBody();
 
 	/**
-	* The converted message body before change if available.
-	*
-	* @return can be {@literal null}.
-	*/
+	 * The converted message body before change if available.
+	 *
+	 * @return can be {@literal null}.
+	 */
 	@Nullable
 	default T getBodyBeforeChange() {
 		return null;

@@ -117,7 +117,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 							: FullDocument.UPDATE_LOOKUP);
 
 			fullDocumentBeforeChange = changeStreamOptions.getFullDocumentBeforeChangeLookup()
-				.orElse(FullDocumentBeforeChange.DEFAULT);
+					.orElse(FullDocumentBeforeChange.DEFAULT);
 
 			startAt = changeStreamOptions.getResumeBsonTimestamp().orElse(null);
 		}

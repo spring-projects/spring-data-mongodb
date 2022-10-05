@@ -43,11 +43,11 @@ public class ChangeStreamEvent<T> {
 
 	@SuppressWarnings("rawtypes") //
 	private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_FULL_DOCUMENT_UPDATER = AtomicReferenceFieldUpdater
-            .newUpdater(ChangeStreamEvent.class, Object.class, "convertedFullDocument");
+			.newUpdater(ChangeStreamEvent.class, Object.class, "convertedFullDocument");
 
-    @SuppressWarnings("rawtypes") //
-    private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_FULL_DOCUMENT_BEFORE_CHANGE_UPDATER = AtomicReferenceFieldUpdater
-		   .newUpdater(ChangeStreamEvent.class, Object.class, "convertedFullDocumentBeforeChange");
+	@SuppressWarnings("rawtypes") //
+	private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_FULL_DOCUMENT_BEFORE_CHANGE_UPDATER = AtomicReferenceFieldUpdater
+			.newUpdater(ChangeStreamEvent.class, Object.class, "convertedFullDocumentBeforeChange");
 
 	private final @Nullable ChangeStreamDocument<Document> raw;
 
@@ -188,7 +188,6 @@ public class ChangeStreamEvent<T> {
 	private T getConvertedFullDocumentBeforeChange(Document fullDocument) {
 		return (T) doGetConverted(fullDocument, CONVERTED_FULL_DOCUMENT_BEFORE_CHANGE_UPDATER);
 	}
-
 
 	@SuppressWarnings("unchecked")
 	private T getConvertedFullDocument(Document fullDocument) {
