@@ -41,16 +41,23 @@ import com.mongodb.client.model.changestream.OperationType;
 public class ChangeStreamEvent<T> {
 
 	@SuppressWarnings("rawtypes") //
-	private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_UPDATER = AtomicReferenceFieldUpdater
-			.newUpdater(ChangeStreamEvent.class, Object.class, "converted");
+	private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_FULL_DOCUMENT_UPDATER = AtomicReferenceFieldUpdater
+            .newUpdater(ChangeStreamEvent.class, Object.class, "convertedFullDocument");
+
+    @SuppressWarnings("rawtypes") //
+    private static final AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> CONVERTED_FULL_DOCUMENT_BEFORE_CHANGE_UPDATER = AtomicReferenceFieldUpdater
+		   .newUpdater(ChangeStreamEvent.class, Object.class, "convertedFullDocumentBeforeChange");
 
 	private final @Nullable ChangeStreamDocument<Document> raw;
 
 	private final Class<T> targetType;
 	private final MongoConverter converter;
 
-	// accessed through CONVERTED_UPDATER.
-	private volatile @Nullable T converted;
+	// accessed through CONVERTED_FULL_DOCUMENT_UPDATER.
+	private volatile @Nullable T convertedFullDocument;
+
+	// accessed through CONVERTED_FULL_DOCUMENT_BEFORE_CHANGE_UPDATER.
+	private volatile @Nullable T convertedFullDocumentBeforeChange;
 
 	/**
 	 * @param raw can be {@literal null}.
@@ -157,17 +164,39 @@ public class ChangeStreamEvent<T> {
 			return targetType.cast(fullDocument);
 		}
 
-		return getConverted(fullDocument);
+		return getConvertedFullDocument(fullDocument);
+	}
+
+	@Nullable
+	public T getBodyBeforeChange() {
+
+		if (raw == null) {
+			return null;
+		}
+
+		Document fullDocumentBeforeChange = raw.getFullDocumentBeforeChange();
+
+		if (fullDocumentBeforeChange == null) {
+			return targetType.cast(fullDocumentBeforeChange);
+		}
+
+		return getConvertedFullDocumentBeforeChange(fullDocumentBeforeChange);
 	}
 
 	@SuppressWarnings("unchecked")
-	private T getConverted(Document fullDocument) {
-		return (T) doGetConverted(fullDocument);
+	private T getConvertedFullDocumentBeforeChange(Document fullDocument) {
+		return (T) doGetConverted(fullDocument, CONVERTED_FULL_DOCUMENT_BEFORE_CHANGE_UPDATER);
 	}
 
-	private Object doGetConverted(Document fullDocument) {
 
-		Object result = CONVERTED_UPDATER.get(this);
+	@SuppressWarnings("unchecked")
+	private T getConvertedFullDocument(Document fullDocument) {
+		return (T) doGetConverted(fullDocument, CONVERTED_FULL_DOCUMENT_UPDATER);
+	}
+
+	private Object doGetConverted(Document fullDocument, AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> updater) {
+
+		Object result = updater.get(this);
 
 		if (result != null) {
 			return result;
@@ -176,13 +205,13 @@ public class ChangeStreamEvent<T> {
 		if (ClassUtils.isAssignable(Document.class, fullDocument.getClass())) {
 
 			result = converter.read(targetType, fullDocument);
-			return CONVERTED_UPDATER.compareAndSet(this, null, result) ? result : CONVERTED_UPDATER.get(this);
+			return updater.compareAndSet(this, null, result) ? result : updater.get(this);
 		}
 
 		if (converter.getConversionService().canConvert(fullDocument.getClass(), targetType)) {
 
 			result = converter.getConversionService().convert(fullDocument, targetType);
-			return CONVERTED_UPDATER.compareAndSet(this, null, result) ? result : CONVERTED_UPDATER.get(this);
+			return updater.compareAndSet(this, null, result) ? result : updater.get(this);
 		}
 
 		throw new IllegalArgumentException(

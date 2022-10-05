@@ -67,6 +67,8 @@ class ChangeStreamTaskUnitTests {
 		when(mongoCollection.watch(eq(Document.class))).thenReturn(changeStreamIterable);
 
 		when(changeStreamIterable.fullDocument(any())).thenReturn(changeStreamIterable);
+
+		when(changeStreamIterable.fullDocumentBeforeChange(any())).thenReturn(changeStreamIterable);
 	}
 
 	@Test // DATAMONGO-2258

@@ -21,6 +21,9 @@ import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import com.mongodb.client.model.ChangeStreamPreAndPostImagesOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -92,6 +95,10 @@ class ChangeStreamTests {
 	void setUp() {
 
 		template.dropCollection(User.class);
+
+		CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
+		createCollectionOptions.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(true));
+		template.getDb().createCollection("user", createCollectionOptions);
 
 		container = new DefaultMessageListenerContainer(template, executor);
 		container.start();
@@ -538,6 +545,133 @@ class ChangeStreamTests {
 		assertThat(messageBodies).hasSize(2);
 	}
 
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailable() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.fullDocumentLookup(FullDocument.WHEN_AVAILABLE) //
+			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE) //
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getFirstMessage().getBody()).isEqualTo(jellyBelly);
+
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isEqualTo(jellyBelly);
+		assertThat(messageListener.getLastMessage().getBody()).isEqualTo(jellyBelly.withAge(8));
+	}
+
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequired() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.fullDocumentLookup(FullDocument.WHEN_AVAILABLE) //
+			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED) //
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getFirstMessage().getBody()).isEqualTo(jellyBelly);
+
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isEqualTo(jellyBelly);
+		assertThat(messageListener.getLastMessage().getBody()).isEqualTo(jellyBelly.withAge(8));
+	}
+
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionIsNotDeclared() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
+	}
+
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredDefault() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.DEFAULT)
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
+	}
+
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredOff() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.OFF)
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
+	}
+
 	@Data
 	static class User {
 
@@ -546,6 +680,15 @@ class ChangeStreamTests {
 		int age;
 
 		Address address;
+
+		User withAge(int age) {
+			User user = new User();
+			user.id = id;
+			user.userName = userName;
+			user.age = age;
+
+			return user;
+		}
 	}
 
 	@Data

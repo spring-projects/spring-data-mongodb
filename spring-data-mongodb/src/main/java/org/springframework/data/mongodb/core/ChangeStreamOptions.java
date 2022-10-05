@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
@@ -47,6 +48,7 @@ public class ChangeStreamOptions {
 	private @Nullable Object filter;
 	private @Nullable BsonValue resumeToken;
 	private @Nullable FullDocument fullDocumentLookup;
+	private @Nullable FullDocumentBeforeChange fullDocumentBeforeChangeLookup;
 	private @Nullable Collation collation;
 	private @Nullable Object resumeTimestamp;
 	private Resume resume = Resume.UNDEFINED;
@@ -72,6 +74,13 @@ public class ChangeStreamOptions {
 	 */
 	public Optional<FullDocument> getFullDocumentLookup() {
 		return Optional.ofNullable(fullDocumentLookup);
+	}
+
+	/**
+	* @return {@link Optional#empty()} if not set.
+	*/
+	public Optional<FullDocumentBeforeChange> getFullDocumentBeforeChangeLookup() {
+		return Optional.ofNullable(fullDocumentBeforeChangeLookup);
 	}
 
 	/**
@@ -170,6 +179,9 @@ public class ChangeStreamOptions {
 		if (!ObjectUtils.nullSafeEquals(this.fullDocumentLookup, that.fullDocumentLookup)) {
 			return false;
 		}
+		if (!ObjectUtils.nullSafeEquals(this.fullDocumentBeforeChangeLookup, that.fullDocumentBeforeChangeLookup)) {
+			return false;
+		}
 		if (!ObjectUtils.nullSafeEquals(this.collation, that.collation)) {
 			return false;
 		}
@@ -184,6 +196,7 @@ public class ChangeStreamOptions {
 		int result = ObjectUtils.nullSafeHashCode(filter);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resumeToken);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(fullDocumentLookup);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(fullDocumentBeforeChangeLookup);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(collation);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resumeTimestamp);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(resume);
@@ -220,6 +233,7 @@ public class ChangeStreamOptions {
 		private @Nullable Object filter;
 		private @Nullable BsonValue resumeToken;
 		private @Nullable FullDocument fullDocumentLookup;
+		private @Nullable FullDocumentBeforeChange fullDocumentBeforeChangeLookup;
 		private @Nullable Collation collation;
 		private @Nullable Object resumeTimestamp;
 		private Resume resume = Resume.UNDEFINED;
@@ -323,6 +337,20 @@ public class ChangeStreamOptions {
 		}
 
 		/**
+		* Set the {@link FullDocumentBeforeChange} lookup to use.
+		*
+		* @param lookup must not be {@literal null}.
+		* @return this.
+		*/
+		public ChangeStreamOptionsBuilder fullDocumentBeforeChangeLookup(FullDocumentBeforeChange lookup) {
+
+			Assert.notNull(lookup, "Lookup must not be null");
+
+			this.fullDocumentBeforeChangeLookup = lookup;
+			return this;
+		}
+
+		/**
 		 * Set the cluster time to resume from.
 		 *
 		 * @param resumeTimestamp must not be {@literal null}.
@@ -391,6 +419,7 @@ public class ChangeStreamOptions {
 			options.filter = this.filter;
 			options.resumeToken = this.resumeToken;
 			options.fullDocumentLookup = this.fullDocumentLookup;
+			options.fullDocumentBeforeChangeLookup = this.fullDocumentBeforeChangeLookup;
 			options.collation = this.collation;
 			options.resumeTimestamp = this.resumeTimestamp;
 			options.resume = this.resume;

@@ -53,6 +53,16 @@ public interface Message<S, T> {
 	T getBody();
 
 	/**
+	* The converted message body before change if available.
+	*
+	* @return can be {@literal null}.
+	*/
+	@Nullable
+	default T getBodyBeforeChange() {
+		return null;
+	}
+
+	/**
 	 * {@link MessageProperties} containing information about the {@link Message} origin and other metadata.
 	 *
 	 * @return never {@literal null}.
