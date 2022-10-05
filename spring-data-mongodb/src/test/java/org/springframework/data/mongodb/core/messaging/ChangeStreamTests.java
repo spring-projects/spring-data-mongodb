@@ -97,10 +97,6 @@ class ChangeStreamTests {
 
 		template.dropCollection(User.class);
 
-		CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
-		createCollectionOptions.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(true));
-		template.getDb().createCollection("user", createCollectionOptions);
-
 		container = new DefaultMessageListenerContainer(template, executor);
 		container.start();
 
@@ -550,6 +546,8 @@ class ChangeStreamTests {
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailable() throws InterruptedException {
 
+		createUserCollectionWithChangeStreamPreAndPostImagesEnabled();
+
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
 			.collection("user") //
@@ -577,6 +575,8 @@ class ChangeStreamTests {
 	@Test // issue/41087
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequired() throws InterruptedException {
+
+		createUserCollectionWithChangeStreamPreAndPostImagesEnabled();
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
@@ -606,6 +606,8 @@ class ChangeStreamTests {
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionIsNotDeclared() throws InterruptedException {
 
+		createUserCollectionWithChangeStreamPreAndPostImagesEnabled();
+
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
 			.collection("user") //
@@ -628,6 +630,8 @@ class ChangeStreamTests {
 	@Test // issue/41087
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredDefault() throws InterruptedException {
+
+		createUserCollectionWithChangeStreamPreAndPostImagesEnabled();
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
@@ -653,6 +657,8 @@ class ChangeStreamTests {
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredOff() throws InterruptedException {
 
+		createUserCollectionWithChangeStreamPreAndPostImagesEnabled();
+
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
 			.collection("user") //
@@ -671,6 +677,60 @@ class ChangeStreamTests {
 
 		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
 		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
+	}
+
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailableAndChangeStreamPreAndPostImagesDisabled() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE)
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
+	}
+
+	@Test // issue/41087
+	@EnableIfMongoServerVersion(isLessThan = "6.0")
+	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
+
+		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
+		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
+			.collection("user") //
+			.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED)
+			.maxAwaitTime(Duration.ofMillis(10)) //
+			.publishTo(messageListener).build();
+
+		Subscription subscription = container.register(request, User.class);
+		awaitSubscription(subscription);
+
+		template.save(jellyBelly);
+
+		template.update(User.class).matching(query(where("id").is(jellyBelly.id))).apply(Update.update("age", 8)).first();
+
+		awaitMessages(messageListener, 2);
+
+		assertThat(messageListener.getFirstMessage().getBodyBeforeChange()).isNull();
+		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
+	}
+
+	private void createUserCollectionWithChangeStreamPreAndPostImagesEnabled() {
+		CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
+		createCollectionOptions.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(true));
+		template.getDb().createCollection("user", createCollectionOptions);
 	}
 
 	@Data
