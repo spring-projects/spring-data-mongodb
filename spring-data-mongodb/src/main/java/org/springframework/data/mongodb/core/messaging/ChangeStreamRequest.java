@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.messaging;
 import java.time.Duration;
 import java.time.Instant;
 
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
@@ -90,6 +91,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myroslav Kosinskyi
  * @since 2.1
  */
 public class ChangeStreamRequest<T>
@@ -422,6 +424,20 @@ public class ChangeStreamRequest<T>
 			Assert.notNull(lookup, "FullDocument not be null");
 
 			this.delegate.fullDocumentLookup(lookup);
+			return this;
+		}
+
+		/**
+		 * @return this.
+		 * @see #fullDocumentBeforeChangeLookup(FullDocumentBeforeChange) (FullDocumentBeforeChange)
+		 * @see ChangeStreamOptions#getFullDocumentBeforeChangeLookup()
+		 * @see ChangeStreamOptionsBuilder#fullDocumentBeforeChangeLookup(FullDocumentBeforeChange)
+		 */
+		public ChangeStreamRequestBuilder<T> fullDocumentBeforeChangeLookup(FullDocumentBeforeChange lookup) {
+
+			Assert.notNull(lookup, "FullDocumentBeforeChange not be null");
+
+			this.delegate.fullDocumentBeforeChangeLookup(lookup);
 			return this;
 		}
 

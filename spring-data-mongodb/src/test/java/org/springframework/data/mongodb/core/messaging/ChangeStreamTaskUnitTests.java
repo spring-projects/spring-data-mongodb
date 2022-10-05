@@ -42,6 +42,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 
 /**
  * @author Christoph Strobl
+ * @author Myroslav Kosinskyi
  */
 @ExtendWith(MockitoExtension.class)
 class ChangeStreamTaskUnitTests {
@@ -67,6 +68,8 @@ class ChangeStreamTaskUnitTests {
 		when(mongoCollection.watch(eq(Document.class))).thenReturn(changeStreamIterable);
 
 		when(changeStreamIterable.fullDocument(any())).thenReturn(changeStreamIterable);
+
+		when(changeStreamIterable.fullDocumentBeforeChange(any())).thenReturn(changeStreamIterable);
 	}
 
 	@Test // DATAMONGO-2258

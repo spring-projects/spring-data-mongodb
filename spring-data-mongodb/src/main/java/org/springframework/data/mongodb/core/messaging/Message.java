@@ -31,6 +31,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myroslav Kosinskyi
  * @see MessageProperties
  * @since 2.1
  */
@@ -51,6 +52,16 @@ public interface Message<S, T> {
 	 */
 	@Nullable
 	T getBody();
+
+	/**
+	 * The converted message body before change if available.
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	default T getBodyBeforeChange() {
+		return null;
+	}
 
 	/**
 	 * {@link MessageProperties} containing information about the {@link Message} origin and other metadata.

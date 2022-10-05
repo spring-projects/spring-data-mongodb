@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
@@ -58,6 +59,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myroslav Kosinskyi
  * @since 2.1
  */
 class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>, Object> {
@@ -86,6 +88,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		Collation collation = null;
 		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 				: FullDocument.UPDATE_LOOKUP;
+		FullDocumentBeforeChange fullDocumentBeforeChange = FullDocumentBeforeChange.DEFAULT;
 		BsonTimestamp startAt = null;
 		boolean resumeAfter = true;
 
@@ -112,6 +115,9 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			fullDocument = changeStreamOptions.getFullDocumentLookup()
 					.orElseGet(() -> ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 							: FullDocument.UPDATE_LOOKUP);
+
+			fullDocumentBeforeChange = changeStreamOptions.getFullDocumentBeforeChangeLookup()
+					.orElse(FullDocumentBeforeChange.DEFAULT);
 
 			startAt = changeStreamOptions.getResumeBsonTimestamp().orElse(null);
 		}
@@ -152,6 +158,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		iterable = iterable.fullDocument(fullDocument);
+		iterable = iterable.fullDocumentBeforeChange(fullDocumentBeforeChange);
 
 		return iterable.iterator();
 	}
@@ -228,6 +235,12 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		@Override
 		public T getBody() {
 			return delegate.getBody();
+		}
+
+		@Nullable
+		@Override
+		public T getBodyBeforeChange() {
+			return delegate.getBodyBeforeChange();
 		}
 
 		@Override
