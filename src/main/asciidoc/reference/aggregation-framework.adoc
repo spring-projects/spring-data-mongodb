@@ -128,7 +128,7 @@ Note that the aggregation operations not listed here are currently not supported
 
 [TIP]
 ====
-Unsupported aggregation operations/operators can be provided by implementing either `AggregationOperation` or `AggregationExpression`.
+Unsupported aggregation operations/operators (like https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/[$search] for MongoDB Atlas) can be provided by implementing either `AggregationOperation` or `AggregationExpression`.
 `Aggregation.stage` is a shortcut for registering a pipeline stage by providing its JSON or `Bson` representation.
 
 [source,java]
