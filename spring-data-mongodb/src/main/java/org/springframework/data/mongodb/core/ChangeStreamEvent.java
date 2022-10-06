@@ -155,33 +155,21 @@ public class ChangeStreamEvent<T> {
 	@Nullable
 	public T getBody() {
 
-		if (raw == null) {
+		if (raw == null || raw.getFullDocument() == null) {
 			return null;
 		}
 
-		Document fullDocument = raw.getFullDocument();
-
-		if (fullDocument == null) {
-			return targetType.cast(fullDocument);
-		}
-
-		return getConvertedFullDocument(fullDocument);
+		return getConvertedFullDocument(raw.getFullDocument());
 	}
 
 	@Nullable
 	public T getBodyBeforeChange() {
 
-		if (raw == null) {
+		if (raw == null || raw.getFullDocumentBeforeChange() == null) {
 			return null;
 		}
 
-		Document fullDocumentBeforeChange = raw.getFullDocumentBeforeChange();
-
-		if (fullDocumentBeforeChange == null) {
-			return targetType.cast(fullDocumentBeforeChange);
-		}
-
-		return getConvertedFullDocumentBeforeChange(fullDocumentBeforeChange);
+		return getConvertedFullDocumentBeforeChange(raw.getFullDocumentBeforeChange());
 	}
 
 	@SuppressWarnings("unchecked")
