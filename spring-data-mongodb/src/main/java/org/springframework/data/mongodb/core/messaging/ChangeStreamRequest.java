@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.messaging;
 import java.time.Duration;
 import java.time.Instant;
 
-import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
@@ -31,6 +30,7 @@ import org.springframework.util.Assert;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
  * {@link SubscriptionRequest} implementation to be used for listening to
@@ -415,7 +415,6 @@ public class ChangeStreamRequest<T>
 		 * Set the {@link FullDocument} lookup to {@link FullDocument#UPDATE_LOOKUP}.
 		 *
 		 * @return this.
-		 * @see #fullDocumentLookup(FullDocument)
 		 * @see ChangeStreamOptions#getFullDocumentLookup()
 		 * @see ChangeStreamOptionsBuilder#fullDocumentLookup(FullDocument)
 		 */
@@ -428,8 +427,10 @@ public class ChangeStreamRequest<T>
 		}
 
 		/**
+		 * Set the {@link FullDocumentBeforeChange} lookup to the given value.
+		 *
 		 * @return this.
-		 * @see #fullDocumentBeforeChangeLookup(FullDocumentBeforeChange) (FullDocumentBeforeChange)
+		 * @since 4.0
 		 * @see ChangeStreamOptions#getFullDocumentBeforeChangeLookup()
 		 * @see ChangeStreamOptionsBuilder#fullDocumentBeforeChangeLookup(FullDocumentBeforeChange)
 		 */

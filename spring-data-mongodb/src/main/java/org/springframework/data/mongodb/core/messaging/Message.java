@@ -57,6 +57,7 @@ public interface Message<S, T> {
 	 * The converted message body before change if available.
 	 *
 	 * @return can be {@literal null}.
+	 * @since 4.0
 	 */
 	@Nullable
 	default T getBodyBeforeChange() {

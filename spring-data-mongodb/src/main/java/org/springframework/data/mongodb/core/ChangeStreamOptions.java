@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
@@ -33,6 +32,7 @@ import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
  * Options applicable to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a>. Intended
@@ -79,6 +79,7 @@ public class ChangeStreamOptions {
 
 	/**
 	 * @return {@link Optional#empty()} if not set.
+	 * @since 4.0
 	 */
 	public Optional<FullDocumentBeforeChange> getFullDocumentBeforeChangeLookup() {
 		return Optional.ofNullable(fullDocumentBeforeChangeLookup);
@@ -342,6 +343,7 @@ public class ChangeStreamOptions {
 		 *
 		 * @param lookup must not be {@literal null}.
 		 * @return this.
+		 * @since 4.0
 		 */
 		public ChangeStreamOptionsBuilder fullDocumentBeforeChangeLookup(FullDocumentBeforeChange lookup) {
 
@@ -349,6 +351,17 @@ public class ChangeStreamOptions {
 
 			this.fullDocumentBeforeChangeLookup = lookup;
 			return this;
+		}
+
+		/**
+		 * Return the full document before being changed if it is available.
+		 *
+		 * @return this.
+		 * @since 4.0
+		 * @see #fullDocumentBeforeChangeLookup(FullDocumentBeforeChange) 
+		 */
+		public ChangeStreamOptionsBuilder returnFullDocumentBeforeChange() {
+			return fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE);
 		}
 
 		/**

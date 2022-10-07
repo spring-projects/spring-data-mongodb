@@ -541,7 +541,7 @@ class ChangeStreamTests {
 		assertThat(messageBodies).hasSize(2);
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailable() throws InterruptedException {
 
@@ -571,7 +571,7 @@ class ChangeStreamTests {
 		assertThat(messageListener.getLastMessage().getBody()).isEqualTo(jellyBelly.withAge(8));
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequired() throws InterruptedException {
 
@@ -601,7 +601,7 @@ class ChangeStreamTests {
 		assertThat(messageListener.getLastMessage().getBody()).isEqualTo(jellyBelly.withAge(8));
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionIsNotDeclared() throws InterruptedException {
 
@@ -626,7 +626,7 @@ class ChangeStreamTests {
 		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredDefault() throws InterruptedException {
 
@@ -651,7 +651,7 @@ class ChangeStreamTests {
 		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredOff() throws InterruptedException {
 
@@ -676,7 +676,7 @@ class ChangeStreamTests {
 		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredWhenAvailableAndChangeStreamPreAndPostImagesDisabled()
 			throws InterruptedException {
@@ -700,7 +700,7 @@ class ChangeStreamTests {
 		assertThat(messageListener.getLastMessage().getBodyBeforeChange()).isNull();
 	}
 
-	@Test // issue/41087
+	@Test // GH-4187
 	@EnableIfMongoServerVersion(isLessThan = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
 
@@ -739,6 +739,7 @@ class ChangeStreamTests {
 		Address address;
 
 		User withAge(int age) {
+
 			User user = new User();
 			user.id = id;
 			user.userName = userName;

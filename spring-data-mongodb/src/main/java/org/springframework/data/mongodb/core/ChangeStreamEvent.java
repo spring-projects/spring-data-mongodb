@@ -162,6 +162,13 @@ public class ChangeStreamEvent<T> {
 		return getConvertedFullDocument(raw.getFullDocument());
 	}
 
+	/**
+	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocumentBeforeChange() document} before being changed.
+	 *
+	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocumentBeforeChange()} is
+	 *         {@literal null}.
+	 * @since 4.0
+	 */
 	@Nullable
 	public T getBodyBeforeChange() {
 
