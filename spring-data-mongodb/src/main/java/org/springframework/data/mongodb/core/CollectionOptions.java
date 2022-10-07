@@ -46,10 +46,11 @@ public class CollectionOptions {
 	private @Nullable Collation collation;
 	private ValidationOptions validationOptions;
 	private @Nullable TimeSeriesOptions timeSeriesOptions;
+	private @Nullable CollectionChangeStreamOptions changeStreamOptions;
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
 			@Nullable Collation collation, ValidationOptions validationOptions,
-			@Nullable TimeSeriesOptions timeSeriesOptions) {
+			@Nullable TimeSeriesOptions timeSeriesOptions, @Nullable CollectionChangeStreamOptions changeStreamOptions) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -57,6 +58,7 @@ public class CollectionOptions {
 		this.collation = collation;
 		this.validationOptions = validationOptions;
 		this.timeSeriesOptions = timeSeriesOptions;
+		this.changeStreamOptions = changeStreamOptions;
 	}
 
 	/**
@@ -70,7 +72,7 @@ public class CollectionOptions {
 
 		Assert.notNull(collation, "Collation must not be null");
 
-		return new CollectionOptions(null, null, null, collation, ValidationOptions.none(), null);
+		return new CollectionOptions(null, null, null, collation, ValidationOptions.none(), null, null);
 	}
 
 	/**
@@ -80,7 +82,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public static CollectionOptions empty() {
-		return new CollectionOptions(null, null, null, null, ValidationOptions.none(), null);
+		return new CollectionOptions(null, null, null, null, ValidationOptions.none(), null, null);
 	}
 
 	/**
@@ -98,6 +100,18 @@ public class CollectionOptions {
 	}
 
 	/**
+	 * Quick way to set up {@link CollectionOptions} for emitting (pre & post) change events.
+	 *
+	 * @return new instance of {@link CollectionOptions}.
+	 * @see #changeStream(CollectionChangeStreamOptions)
+	 * @see CollectionChangeStreamOptions#preAndPostImages(boolean) 
+	 * @since 4.0
+	 */
+	public static CollectionOptions emitChangedRevisions() {
+		return empty().changeStream(CollectionChangeStreamOptions.preAndPostImages(true));
+	}
+
+	/**
 	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}. <br />
 	 * <strong>NOTE</strong> Using capped collections requires defining {@link #size(long)}.
 	 *
@@ -105,7 +119,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions capped() {
-		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, null);
+		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
 	}
 
 	/**
@@ -116,7 +130,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions maxDocuments(long maxDocuments) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
 	}
 
 	/**
@@ -127,7 +141,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions size(long size) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
 	}
 
 	/**
@@ -138,7 +152,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions collation(@Nullable Collation collation) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
 	}
 
 	/**
@@ -258,7 +272,7 @@ public class CollectionOptions {
 	public CollectionOptions validation(ValidationOptions validationOptions) {
 
 		Assert.notNull(validationOptions, "ValidationOptions must not be null");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
 	}
 
 	/**
@@ -271,7 +285,20 @@ public class CollectionOptions {
 	public CollectionOptions timeSeries(TimeSeriesOptions timeSeriesOptions) {
 
 		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+	}
+
+	/**
+	 * Create new {@link CollectionOptions} with the given {@link TimeSeriesOptions}.
+	 *
+	 * @param changeStreamOptions must not be {@literal null}.
+	 * @return new instance of {@link CollectionOptions}.
+	 * @since 3.3
+	 */
+	public CollectionOptions changeStream(CollectionChangeStreamOptions changeStreamOptions) {
+
+		Assert.notNull(changeStreamOptions, "ChangeStreamOptions must not be null");
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
 	}
 
 	/**
@@ -330,6 +357,16 @@ public class CollectionOptions {
 	 */
 	public Optional<TimeSeriesOptions> getTimeSeriesOptions() {
 		return Optional.ofNullable(timeSeriesOptions);
+	}
+
+	/**
+	 * Get the {@link CollectionChangeStreamOptions} if available.
+	 *
+	 * @return {@link Optional#empty()} if not specified.
+	 * @since 4.0
+	 */
+	public Optional<CollectionChangeStreamOptions> getChangeStreamOptions() {
+		return Optional.ofNullable(changeStreamOptions);
 	}
 
 	/**
@@ -425,6 +462,34 @@ public class CollectionOptions {
 		 */
 		boolean isEmpty() {
 			return !Optionals.isAnyPresent(getValidator(), getValidationAction(), getValidationLevel());
+		}
+	}
+
+	/**
+	 * Encapsulation of options applied to define collections change stream behaviour.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.0
+	 */
+	public static class CollectionChangeStreamOptions {
+
+		private final boolean preAndPostImages;
+
+		private CollectionChangeStreamOptions(boolean emitChangedRevisions) {
+			this.preAndPostImages = emitChangedRevisions;
+		}
+
+		/**
+		 * Output the version of a document before and after changes (the document pre- and post-images).
+		 *
+		 * @return new instance of {@link CollectionChangeStreamOptions}.
+		 */
+		public static CollectionChangeStreamOptions preAndPostImages(boolean emitChangedRevisions) {
+			return new CollectionChangeStreamOptions(true);
+		}
+
+		public boolean getPreAndPostImages() {
+			return preAndPostImages;
 		}
 	}
 

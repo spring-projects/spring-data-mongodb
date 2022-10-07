@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
+import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamTask.ChangeStreamEventMessage;
@@ -724,9 +725,7 @@ class ChangeStreamTests {
 	}
 
 	private void createUserCollectionWithChangeStreamPreAndPostImagesEnabled() {
-		CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
-		createCollectionOptions.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(true));
-		template.getDb().createCollection("user", createCollectionOptions);
+		template.createCollection(User.class, CollectionOptions.emitChangedRevisions());
 	}
 
 	@Data

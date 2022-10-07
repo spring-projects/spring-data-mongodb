@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
@@ -57,6 +56,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.client.model.ChangeStreamPreAndPostImagesOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.TimeSeriesGranularity;
 import com.mongodb.client.model.ValidationOptions;
@@ -340,6 +340,9 @@ class EntityOperations {
 
 			result.timeSeriesOptions(options);
 		});
+
+		collectionOptions.getChangeStreamOptions().ifPresent(it -> result
+				.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(it.getPreAndPostImages())));
 
 		return result;
 	}

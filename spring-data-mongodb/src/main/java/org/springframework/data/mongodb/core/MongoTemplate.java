@@ -2511,6 +2511,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			doc.put("timeseries", timeseries);
 		});
 
+		collectionOptions.getChangeStreamOptions().map(it -> new Document("enabled", it.getPreAndPostImages()))
+				.ifPresent(it -> {
+					doc.put("changeStreamPreAndPostImages", it);
+				});
+
 		return doc;
 	}
 
