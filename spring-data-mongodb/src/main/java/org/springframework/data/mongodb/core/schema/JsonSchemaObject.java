@@ -295,7 +295,7 @@ public interface JsonSchemaObject {
 		Type OBJECT = jsonTypeOf("object");
 		Type ARRAY = jsonTypeOf("array");
 		Type NUMBER = jsonTypeOf("number");
-		Type BOOLEAN = jsonTypeOf("boolean");
+		Type BOOLEAN = jsonTypeOf("bool");
 		Type STRING = jsonTypeOf("string");
 		Type NULL = jsonTypeOf("null");
 
