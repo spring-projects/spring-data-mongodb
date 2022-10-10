@@ -179,7 +179,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 			"        're-named-property' : { 'type' : 'string' }," + //
 			"        'retypedProperty' : { 'bsonType' : 'javascript' }," + //
 			"        'primitiveInt' : { 'bsonType' : 'int' }," + //
-			"        'booleanProperty' : { 'type' : 'boolean' }," + //
+			"        'booleanProperty' : { 'type' : 'bool' }," + //
 			"        'longProperty' : { 'bsonType' : 'long' }," + //
 			"        'intProperty' : { 'bsonType' : 'int' }," + //
 			"        'dateProperty' : { 'bsonType' : 'date' }," + //
