@@ -66,6 +66,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
@@ -312,6 +313,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1391
+	@EnableIfMongoServerVersion(isLessThan = "6.0")
 	void shouldUnwindPreserveEmpty() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
