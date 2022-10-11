@@ -218,6 +218,23 @@ public class ReactiveMongoTemplateTests {
 				}).verifyComplete();
 	}
 
+	@Test // GH-4184
+	void insertHonorsExistingRawId() {
+
+		MongoTemplateTests.RawStringId source = new MongoTemplateTests.RawStringId();
+		source.id = "abc";
+		source.value = "new value";
+
+		template.insert(source)
+				.then(template.execute(db -> Flux.from(
+						db.getCollection(template.getCollectionName(MongoTemplateTests.RawStringId.class)).find().limit(1).first()))
+						.next())
+				.as(StepVerifier::create).consumeNextWith(result -> {
+					assertThat(result).isNotNull();
+					assertThat(result.get("_id")).isEqualTo("abc");
+				});
+	}
+
 	@Test // DATAMONGO-1444
 	void insertsSimpleEntityCorrectly() {
 
