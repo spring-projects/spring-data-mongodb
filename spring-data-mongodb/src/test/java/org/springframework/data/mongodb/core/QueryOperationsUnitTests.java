@@ -205,6 +205,15 @@ class QueryOperationsUnitTests {
 				});
 	}
 
+	@Test // GH-4184
+	void insertContextDoesNotOverrideExistingId() {
+
+		assertThat(queryOperations.createInsertContext(new Document("_id", "abc")).prepareId(Person.class).getDocument())//
+				.satisfies(result -> {
+					assertThat(result).isEqualTo(new Document("_id", "abc"));
+				});
+	}
+
 	static class Person {
 
 	}

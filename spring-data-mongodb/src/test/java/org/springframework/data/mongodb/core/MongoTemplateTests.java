@@ -3659,6 +3659,26 @@ public class MongoTemplateTests {
 		assertThat(target).isEqualTo(source);
 	}
 
+	@Test // GH-4184
+	void insertHonorsExistingRawId() {
+
+		RawStringId source = new RawStringId();
+		source.id = "abc";
+		source.value = "new value";
+
+		template.insert(source);
+
+		org.bson.Document result = template
+				.execute(db -> db.getCollection(template.getCollectionName(RawStringId.class))
+						.find().limit(1).cursor().next());
+
+		assertThat(result).isNotNull();
+		assertThat(result.get("_id")).isEqualTo("abc");
+
+		RawStringId target = template.findOne(query(where("id").is(source.id)), RawStringId.class);
+		assertThat(target).isEqualTo(source);
+	}
+
 	@Test // GH-4026
 	void saveShouldGenerateNewIdOfTypeIfExplicitlyDefined() {
 
