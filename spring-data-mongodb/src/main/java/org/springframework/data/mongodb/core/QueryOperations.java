@@ -272,7 +272,7 @@ class QueryOperations {
 		 */
 		<T> MappedDocument prepareId(@Nullable MongoPersistentEntity<T> entity) {
 
-			if (entity == null) {
+			if (entity == null || source.hasId()) {
 				return source;
 			}
 
