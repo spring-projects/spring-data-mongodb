@@ -16,9 +16,9 @@
 package org.springframework.data.mongodb.aot;
 
 import org.springframework.aot.generate.GenerationContext;
-import org.springframework.data.aot.AotRepositoryContext;
-import org.springframework.data.aot.RepositoryRegistrationAotProcessor;
 import org.springframework.data.aot.TypeContributor;
+import org.springframework.data.repository.aot.AotRepositoryContext;
+import org.springframework.data.repository.aot.RepositoryRegistrationAotProcessor;
 
 /**
  * @author Christoph Strobl

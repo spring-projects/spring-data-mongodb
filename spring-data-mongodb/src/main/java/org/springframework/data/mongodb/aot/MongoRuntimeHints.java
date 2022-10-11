@@ -29,8 +29,6 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertC
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
-import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
-import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.lang.Nullable;
 
@@ -50,16 +48,17 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
 		hints.reflection().registerTypes(
-				Arrays.asList(TypeReference.of(SimpleMongoRepository.class), TypeReference.of(BeforeConvertCallback.class),
-						TypeReference.of(BeforeSaveCallback.class), TypeReference.of(AfterConvertCallback.class),
-						TypeReference.of(AfterSaveCallback.class)),
+				Arrays.asList(TypeReference.of("org.springframework.data.mongodb.repository.support.SimpleMongoRepository"),
+						TypeReference.of(BeforeConvertCallback.class), TypeReference.of(BeforeSaveCallback.class),
+						TypeReference.of(AfterConvertCallback.class), TypeReference.of(AfterSaveCallback.class)),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
 
 		if (PROJECT_REACTOR_PRESENT) {
 
 			hints.reflection()
-					.registerTypes(Arrays.asList(TypeReference.of(SimpleReactiveMongoRepository.class),
+					.registerTypes(Arrays.asList(
+							TypeReference.of("org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository"),
 							TypeReference.of(ReactiveBeforeConvertCallback.class), TypeReference.of(ReactiveBeforeSaveCallback.class),
 							TypeReference.of(ReactiveAfterConvertCallback.class), TypeReference.of(ReactiveAfterSaveCallback.class)),
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
