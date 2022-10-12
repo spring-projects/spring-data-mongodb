@@ -179,10 +179,10 @@ public class EvaluationOperators {
 		}
 
 		/**
-		 * Creates new {@link EvaluationOperatorFactory.Expr}.
+		 * Creates new {@link LastObservationCarriedForward}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return new instance of {@link EvaluationOperatorFactory.Expr}.
+		 * @return new instance of {@link LastObservationCarriedForward}.
 		 */
 		public static LastObservationCarriedForward locfValueOf(String fieldReference) {
 

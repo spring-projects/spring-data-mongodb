@@ -177,8 +177,6 @@ public @interface CompoundIndex {
 	 * (language-specific rules for string comparison) to be applied on string properties being part of the index.
 	 * <p>
 	 * <strong>NOTE:</strong> Overrides {@link Document#collation()}.
-	 * <p>
-	 *
 	 *
 	 * @return empty String by default.
 	 * @see <a href=
