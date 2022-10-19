@@ -87,7 +87,7 @@ class MongoObservationCommandListenerTests {
 	void commandStartedShouldNotInstrumentWhenNoParentSampleInRequestContext() {
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(new TestRequestContext(), 0, null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(new TraceRequestContext(), 0, null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasNoMetrics();
@@ -98,17 +98,17 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
+		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
 								new ServerAddress("localhost", 1234))),
 				"database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
-		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
 
 		// then
 		assertThatTimerRegisteredWithTags();
@@ -119,17 +119,17 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
+		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
 								new ServerAddress("localhost", 1234))), //
 				"database", "aggregate", //
 				new BsonDocument("aggregate", new BsonString("user"))));
-		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "aggregate", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "aggregate", null, 0));
 
 		// then
 		assertThatTimerRegisteredWithTags();
@@ -140,12 +140,12 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
+		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, null, "database", "insert",
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, null, "database", "insert",
 				new BsonDocument("collection", new BsonString("user"))));
-		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
 
 		// then
 		assertThat(meterRegistry).hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
@@ -157,10 +157,10 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TestRequestContext testRequestContext = TestRequestContext.withObservation(parent);
+		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
@@ -168,7 +168,7 @@ class MongoObservationCommandListenerTests {
 				"database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandFailed( //
-				new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
+				new CommandFailedEvent(traceRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
 
 		// then
 		assertThatTimerRegisteredWithTags();

@@ -23,15 +23,16 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.test.SampleTestRunner;
 import io.micrometer.tracing.test.reporter.BuildingBlocks;
+import io.micrometer.tracing.test.simple.SimpleTracer;
 
 import java.io.IOException;
 import java.util.Deque;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
@@ -56,8 +57,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.ConnectionString;
+import com.mongodb.ContextProvider;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.RequestContext;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.SynchronousContextProvider;
@@ -71,7 +72,6 @@ import com.mongodb.client.SynchronousContextProvider;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-@Disabled("Run this manually to visually test spans in Zipkin")
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public class ZipkinIntegrationTests extends SampleTestRunner {
@@ -139,14 +139,16 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 		}
 
 		@Bean
-		MongoDatabaseFactory mongoDatabaseFactory(MongoObservationCommandListener commandListener,
-				ObservationRegistry registry) {
+		MongoDatabaseFactory mongoDatabaseFactory(MongoClientSettings settings) {
+			return new SimpleMongoClientDatabaseFactory(MongoClients.create(settings), "observable");
+		}
+
+		@Bean
+		MongoClientSettings mongoClientSettings(MongoObservationCommandListener commandListener,
+				ContextProvider contextProvider) {
 
 			ConnectionString connectionString = new ConnectionString(
 					String.format("mongodb://%s:%s/?w=majority&uuidrepresentation=javaLegacy", "127.0.0.1", 27017));
-
-			RequestContext requestContext = TestRequestContext.withObservation(Observation.start("name", registry));
-			SynchronousContextProvider contextProvider = () -> requestContext;
 
 			MongoClientSettings settings = MongoClientSettings.builder() //
 					.addCommandListener(commandListener) //
@@ -154,16 +156,22 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 					.applyConnectionString(connectionString) //
 					.build();
 
-			return new SimpleMongoClientDatabaseFactory(MongoClients.create(settings), "observable");
+			return settings;
 		}
 
 		@Bean
-		MappingMongoConverter mongoConverter(MongoDatabaseFactory factory) {
+		SynchronousContextProvider contextProvider(ObservationRegistry registry) {
+			return () -> TestRequestContext.withObservation(Observation.start("name", registry));
+		}
 
-			MongoMappingContext mappingContext = new MongoMappingContext();
-			mappingContext.afterPropertiesSet();
-
+		@Bean
+		MappingMongoConverter mongoConverter(MongoMappingContext mappingContext, MongoDatabaseFactory factory) {
 			return new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
+		}
+
+		@Bean
+		MongoMappingContext mappingContext() {
+			return new MongoMappingContext();
 		}
 
 		@Bean
@@ -203,5 +211,11 @@ public class ZipkinIntegrationTests extends SampleTestRunner {
 		ObservationRegistry registry() {
 			return OBSERVATION_REGISTRY;
 		}
+
+		@Bean
+		Tracer tracer() {
+			return new SimpleTracer();
+		}
+
 	}
 }
