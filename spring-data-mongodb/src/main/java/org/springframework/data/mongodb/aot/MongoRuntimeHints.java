@@ -29,6 +29,8 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertC
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.querydsl.QuerydslUtils;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.lang.Nullable;
 
@@ -63,6 +65,13 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 							TypeReference.of(ReactiveAfterConvertCallback.class), TypeReference.of(ReactiveAfterSaveCallback.class)),
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 									MemberCategory.INVOKE_PUBLIC_METHODS));
+
+			if(QuerydslUtils.QUERY_DSL_PRESENT) {
+
+				hints.reflection().registerType(TypeReference.of("org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor"),
+						hint -> hint.withMembers(MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS)
+								.onReachableType(QuerydslPredicateExecutor.class));
+			}
 		}
 	}
 }
