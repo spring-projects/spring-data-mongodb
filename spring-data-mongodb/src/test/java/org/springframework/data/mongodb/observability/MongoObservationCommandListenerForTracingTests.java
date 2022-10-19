@@ -77,10 +77,10 @@ class MongoObservationCommandListenerForTracingTests {
 	void successfullyCompletedCommandShouldCreateSpanWhenParentSampleInRequestContext() {
 
 		// given
-		TestRequestContext testRequestContext = createTestRequestContextWithParentObservationAndStartIt();
+		TraceRequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
 
 		// when
-		commandStartedAndSucceeded(testRequestContext);
+		commandStartedAndSucceeded(traceRequestContext);
 
 		// then
 		assertThatMongoSpanIsClientWithTags().hasIpThatIsBlank().hasPortThatIsNotSet();
@@ -91,10 +91,10 @@ class MongoObservationCommandListenerForTracingTests {
 
 		// given
 		handler.setSetRemoteIpAndPortEnabled(true);
-		TestRequestContext testRequestContext = createTestRequestContextWithParentObservationAndStartIt();
+		TraceRequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
 
 		// when
-		commandStartedAndSucceeded(testRequestContext);
+		commandStartedAndSucceeded(traceRequestContext);
 
 		// then
 		assertThatMongoSpanIsClientWithTags().hasIpThatIsNotBlank().hasPortThatIsSet();
@@ -104,10 +104,10 @@ class MongoObservationCommandListenerForTracingTests {
 	void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
 
 		// given
-		TestRequestContext testRequestContext = createTestRequestContextWithParentObservationAndStartIt();
+		TraceRequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
@@ -115,17 +115,17 @@ class MongoObservationCommandListenerForTracingTests {
 				"database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandFailed( //
-				new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
+				new CommandFailedEvent(traceRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
 
 		// then
 		assertThatMongoSpanIsClientWithTags().assertThatThrowable().isInstanceOf(IllegalAccessException.class);
 	}
 
 	/**
-	 * Create a parent {@link Observation} then wrap it inside a {@link TestRequestContext}.
+	 * Create a parent {@link Observation} then wrap it inside a {@link TraceRequestContext}.
 	 */
 	@NotNull
-	private TestRequestContext createTestRequestContextWithParentObservationAndStartIt() {
+	private TraceRequestContext createTestRequestContextWithParentObservationAndStartIt() {
 
 		Observation parent = Observation.start("name", observationRegistry);
 		return TestRequestContext.withObservation(parent);
@@ -134,13 +134,13 @@ class MongoObservationCommandListenerForTracingTests {
 	/**
 	 * Execute MongoDB's {@link com.mongodb.event.CommandListener#commandStarted(CommandStartedEvent)} and
 	 * {@link com.mongodb.event.CommandListener#commandSucceeded(CommandSucceededEvent)} operations against the
-	 * {@link TestRequestContext} in order to inject some test data.
+	 * {@link TraceRequestContext} in order to inject some test data.
 	 *
-	 * @param testRequestContext
+	 * @param traceRequestContext
 	 */
-	private void commandStartedAndSucceeded(TestRequestContext testRequestContext) {
+	private void commandStartedAndSucceeded(TraceRequestContext traceRequestContext) {
 
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
@@ -148,7 +148,7 @@ class MongoObservationCommandListenerForTracingTests {
 				"database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
 
-		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
 	}
 
 	/**

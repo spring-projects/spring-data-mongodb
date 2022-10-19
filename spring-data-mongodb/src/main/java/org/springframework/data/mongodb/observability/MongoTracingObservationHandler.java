@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.observability;
 
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.handler.TracingObservationHandler;
@@ -47,6 +48,10 @@ public class MongoTracingObservationHandler implements TracingObservationHandler
 
 	public MongoTracingObservationHandler(Tracer tracer) {
 		this.tracer = tracer;
+	}
+
+	public void register(ObservationRegistry observationRegistry) {
+		observationRegistry.observationConfig().observationHandler(this);
 	}
 
 	@Override
