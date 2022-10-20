@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import com.mongodb.RequestContext;
 import com.mongodb.event.CommandFailedEvent;
@@ -27,27 +26,35 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+
 /**
  * Implement MongoDB's {@link CommandListener} using Micrometer's {@link Observation} API.
  *
- * @see https://github.com/openzipkin/brave/blob/release-5.13.0/instrumentation/mongodb/src/main/java/brave/mongodb/TraceMongoCommandListener.java
  * @author OpenZipkin Brave Authors
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
- * @since 4.0.0
+ * @since 4.0
  */
-public final class MongoObservationCommandListener implements CommandListener {
+public class MongoObservationCommandListener implements CommandListener {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
 	private final ObservationRegistry observationRegistry;
 
-	private MongoHandlerObservationConvention observationConvention;
+	private final MongoHandlerObservationConvention observationConvention = new DefaultMongoHandlerObservationConvention();
 
+	/**
+	 * Create a new {@link MongoObservationCommandListener} to record {@link Observation}s.
+	 *
+	 * @param observationRegistry must not be {@literal null}
+	 */
 	public MongoObservationCommandListener(ObservationRegistry observationRegistry) {
 
+		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
+
 		this.observationRegistry = observationRegistry;
-		this.observationConvention = new DefaultMongoHandlerObservationConvention();
 	}
 
 	@Override
@@ -75,11 +82,26 @@ public final class MongoObservationCommandListener implements CommandListener {
 			log.debug("Found the following observation passed from the mongo context [" + parent + "]");
 		}
 
-		if (parent == null) {
-			return;
+		MongoHandlerContext observationContext = new MongoHandlerContext(event, requestContext);
+		observationContext.setRemoteServiceName("mongo");
+
+		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
+				.observation(this.observationRegistry, () -> observationContext) //
+				.observationConvention(this.observationConvention);
+
+		if (parent != null) {
+			observation.parentObservation(parent);
 		}
 
-		setupObservability(event, requestContext);
+		observation.start();
+
+		requestContext.put(Observation.class, observation);
+		requestContext.put(MongoHandlerContext.class, observationContext);
+
+		if (log.isDebugEnabled()) {
+			log.debug(
+					"Created a child observation  [" + observation + "] for Mongo instrumentation and put it in Mongo context");
+		}
 	}
 
 	@Override
@@ -133,6 +155,7 @@ public final class MongoObservationCommandListener implements CommandListener {
 	 * @param context
 	 * @return
 	 */
+	@Nullable
 	private static Observation observationFromContext(RequestContext context) {
 
 		Observation observation = context.getOrDefault(Observation.class, null);
@@ -140,7 +163,7 @@ public final class MongoObservationCommandListener implements CommandListener {
 		if (observation != null) {
 
 			if (log.isDebugEnabled()) {
-				log.debug("Found a observation in mongo context [" + observation + "]");
+				log.debug("Found a observation in Mongo context [" + observation + "]");
 			}
 			return observation;
 		}
@@ -150,24 +173,5 @@ public final class MongoObservationCommandListener implements CommandListener {
 		}
 
 		return null;
-	}
-
-	private void setupObservability(CommandStartedEvent event, RequestContext requestContext) {
-
-		MongoHandlerContext observationContext = new MongoHandlerContext(event, requestContext);
-
-		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
-				.observation(this.observationRegistry, () -> observationContext) //
-				.contextualName(observationContext.getContextualName()) //
-				.observationConvention(this.observationConvention) //
-				.start();
-
-		requestContext.put(Observation.class, observation);
-		requestContext.put(MongoHandlerContext.class, observationContext);
-
-		if (log.isDebugEnabled()) {
-			log.debug(
-					"Created a child observation  [" + observation + "] for mongo instrumentation and put it in mongo context");
-		}
 	}
 }

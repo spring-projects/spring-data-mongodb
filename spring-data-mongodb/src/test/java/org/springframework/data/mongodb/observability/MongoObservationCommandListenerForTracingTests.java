@@ -15,6 +15,24 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import org.bson.BsonDocument;
+import org.bson.BsonString;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
+import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
+
+import com.mongodb.RequestContext;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.SynchronousContextProvider;
+import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.connection.ServerId;
+import com.mongodb.event.CommandFailedEvent;
+import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -25,34 +43,15 @@ import io.micrometer.tracing.test.simple.SimpleTracer;
 import io.micrometer.tracing.test.simple.SpanAssert;
 import io.micrometer.tracing.test.simple.TracerAssert;
 
-import org.bson.BsonDocument;
-import org.bson.BsonString;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
-import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
-
-import com.mongodb.ServerAddress;
-import com.mongodb.connection.ClusterId;
-import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerId;
-import com.mongodb.event.CommandFailedEvent;
-import com.mongodb.event.CommandStartedEvent;
-import com.mongodb.event.CommandSucceededEvent;
-
 /**
  * Series of test cases exercising {@link MongoObservationCommandListener} to ensure proper creation of {@link Span}s.
  *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
- * @since 4.0.0
  */
 class MongoObservationCommandListenerForTracingTests {
 
 	SimpleTracer simpleTracer;
-
-	MongoTracingObservationHandler handler;
 
 	MeterRegistry meterRegistry;
 	ObservationRegistry observationRegistry;
@@ -63,12 +62,10 @@ class MongoObservationCommandListenerForTracingTests {
 	void setup() {
 
 		this.simpleTracer = new SimpleTracer();
-		this.handler = new MongoTracingObservationHandler(simpleTracer);
 
 		this.meterRegistry = new SimpleMeterRegistry();
 		this.observationRegistry = ObservationRegistry.create();
 		this.observationRegistry.observationConfig().observationHandler(new DefaultMeterObservationHandler(meterRegistry));
-		this.observationRegistry.observationConfig().observationHandler(handler);
 
 		this.listener = new MongoObservationCommandListener(observationRegistry);
 	}
@@ -77,7 +74,7 @@ class MongoObservationCommandListenerForTracingTests {
 	void successfullyCompletedCommandShouldCreateSpanWhenParentSampleInRequestContext() {
 
 		// given
-		TraceRequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
+		RequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
 
 		// when
 		commandStartedAndSucceeded(traceRequestContext);
@@ -86,25 +83,12 @@ class MongoObservationCommandListenerForTracingTests {
 		assertThatMongoSpanIsClientWithTags().hasIpThatIsBlank().hasPortThatIsNotSet();
 	}
 
-	@Test
-	void successfullyCompletedCommandShouldCreateSpanWithAddressInfoWhenParentSampleInRequestContextAndHandlerAddressInfoEnabled() {
-
-		// given
-		handler.setSetRemoteIpAndPortEnabled(true);
-		TraceRequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
-
-		// when
-		commandStartedAndSucceeded(traceRequestContext);
-
-		// then
-		assertThatMongoSpanIsClientWithTags().hasIpThatIsNotBlank().hasPortThatIsSet();
-	}
 
 	@Test
 	void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
 
 		// given
-		TraceRequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
+		RequestContext traceRequestContext = createTestRequestContextWithParentObservationAndStartIt();
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
@@ -122,23 +106,21 @@ class MongoObservationCommandListenerForTracingTests {
 	}
 
 	/**
-	 * Create a parent {@link Observation} then wrap it inside a {@link TraceRequestContext}.
+	 * Create a parent {@link Observation} then wrap it inside a {@link MapRequestContext}.
 	 */
 	@NotNull
-	private TraceRequestContext createTestRequestContextWithParentObservationAndStartIt() {
-
-		Observation parent = Observation.start("name", observationRegistry);
-		return TestRequestContext.withObservation(parent);
+	private RequestContext createTestRequestContextWithParentObservationAndStartIt() {
+		return ((SynchronousContextProvider) ContextProviderFactory.create(observationRegistry)).getContext();
 	}
 
 	/**
 	 * Execute MongoDB's {@link com.mongodb.event.CommandListener#commandStarted(CommandStartedEvent)} and
 	 * {@link com.mongodb.event.CommandListener#commandSucceeded(CommandSucceededEvent)} operations against the
-	 * {@link TraceRequestContext} in order to inject some test data.
+	 * {@link MapRequestContext} in order to inject some test data.
 	 *
 	 * @param traceRequestContext
 	 */
-	private void commandStartedAndSucceeded(TraceRequestContext traceRequestContext) {
+	private void commandStartedAndSucceeded(RequestContext traceRequestContext) {
 
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
 				new ConnectionDescription( //

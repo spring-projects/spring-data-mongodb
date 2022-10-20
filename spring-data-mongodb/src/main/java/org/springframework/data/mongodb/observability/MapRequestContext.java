@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,15 @@ import com.mongodb.RequestContext;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-class TraceRequestContext implements RequestContext {
+class MapRequestContext implements RequestContext {
 
 	private final Map<Object, Object> map;
 
-	public TraceRequestContext() {
+	public MapRequestContext() {
 		this(new HashMap<>());
 	}
 
-	public TraceRequestContext(Map<Object, Object> context) {
+	public MapRequestContext(Map<Object, Object> context) {
 		this.map = context;
 	}
 

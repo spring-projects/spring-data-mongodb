@@ -15,14 +15,7 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import static io.micrometer.core.tck.MeterRegistryAssert.assertThat;
-
-import io.micrometer.common.KeyValues;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
+import static io.micrometer.core.tck.MeterRegistryAssert.*;
 
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -31,7 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 
+import com.mongodb.RequestContext;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.SynchronousContextProvider;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
@@ -39,12 +34,18 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 
+import io.micrometer.common.KeyValues;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+
 /**
  * Series of test cases exercising {@link MongoObservationCommandListener}.
  *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
- * @since 4.0.0
  */
 class MongoObservationCommandListenerTests {
 
@@ -87,7 +88,7 @@ class MongoObservationCommandListenerTests {
 	void commandStartedShouldNotInstrumentWhenNoParentSampleInRequestContext() {
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(new TraceRequestContext(), 0, null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasNoMetrics();
@@ -98,7 +99,7 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
+		RequestContext traceRequestContext = getContext();
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
@@ -119,7 +120,7 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
+		RequestContext traceRequestContext = getContext();
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
@@ -135,12 +136,13 @@ class MongoObservationCommandListenerTests {
 		assertThatTimerRegisteredWithTags();
 	}
 
+
 	@Test
 	void successfullyCompletedCommandWithoutClusterInformationShouldCreateTimerWhenParentSampleInRequestContext() {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
+		RequestContext traceRequestContext = getContext();
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, null, "database", "insert",
@@ -157,7 +159,7 @@ class MongoObservationCommandListenerTests {
 
 		// given
 		Observation parent = Observation.start("name", observationRegistry);
-		TraceRequestContext traceRequestContext = TestRequestContext.withObservation(parent);
+		RequestContext traceRequestContext = getContext();
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
@@ -172,6 +174,10 @@ class MongoObservationCommandListenerTests {
 
 		// then
 		assertThatTimerRegisteredWithTags();
+	}
+
+	private RequestContext getContext() {
+		return ((SynchronousContextProvider) ContextProviderFactory.create(observationRegistry)).getContext();
 	}
 
 	private void assertThatTimerRegisteredWithTags() {
