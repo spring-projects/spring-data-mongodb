@@ -38,11 +38,11 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
  * @author Christoph Strobl
  * @since 4.0
  */
-class LazyLoadingProxyAotProcessor {
+public class LazyLoadingProxyAotProcessor {
 
 	private boolean generalLazyLoadingProxyContributed = false;
 
-	void registerLazyLoadingProxyIfNeeded(Class<?> type, GenerationContext generationContext) {
+	public void registerLazyLoadingProxyIfNeeded(Class<?> type, GenerationContext generationContext) {
 
 		Set<Field> refFields = getFieldsWithAnnotationPresent(type, Reference.class);
 		if (refFields.isEmpty()) {

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.aot;
 
+import static org.springframework.data.mongodb.aot.MongoAotPredicates.*;
+
 import java.util.Arrays;
 
 import org.springframework.aot.hint.MemberCategory;
@@ -29,9 +31,6 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertC
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
-import org.springframework.data.querydsl.QuerydslUtils;
-import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.lang.Nullable;
 
 /**
@@ -43,35 +42,24 @@ import org.springframework.lang.Nullable;
  */
 class MongoRuntimeHints implements RuntimeHintsRegistrar {
 
-	private static final boolean PROJECT_REACTOR_PRESENT = ReactiveWrappers
-			.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
-
 	@Override
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
 		hints.reflection().registerTypes(
-				Arrays.asList(TypeReference.of("org.springframework.data.mongodb.repository.support.SimpleMongoRepository"),
-						TypeReference.of(BeforeConvertCallback.class), TypeReference.of(BeforeSaveCallback.class),
+				Arrays.asList(TypeReference.of(BeforeConvertCallback.class), TypeReference.of(BeforeSaveCallback.class),
 						TypeReference.of(AfterConvertCallback.class), TypeReference.of(AfterSaveCallback.class)),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
 
-		if (PROJECT_REACTOR_PRESENT) {
+		if (isReactorPresent()) {
 
 			hints.reflection()
-					.registerTypes(Arrays.asList(
-							TypeReference.of("org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository"),
-							TypeReference.of(ReactiveBeforeConvertCallback.class), TypeReference.of(ReactiveBeforeSaveCallback.class),
-							TypeReference.of(ReactiveAfterConvertCallback.class), TypeReference.of(ReactiveAfterSaveCallback.class)),
+					.registerTypes(Arrays.asList(TypeReference.of(ReactiveBeforeConvertCallback.class),
+							TypeReference.of(ReactiveBeforeSaveCallback.class), TypeReference.of(ReactiveAfterConvertCallback.class),
+							TypeReference.of(ReactiveAfterSaveCallback.class)),
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 									MemberCategory.INVOKE_PUBLIC_METHODS));
 
-			if(QuerydslUtils.QUERY_DSL_PRESENT) {
-
-				hints.reflection().registerType(TypeReference.of("org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor"),
-						hint -> hint.withMembers(MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS)
-								.onReachableType(QuerydslPredicateExecutor.class));
-			}
 		}
 	}
 }
