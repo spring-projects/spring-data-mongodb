@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.aot.generate.GenerationContext;
+import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.TypeReference;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -74,7 +75,13 @@ class LazyLoadingProxyAotProcessor {
 
 						generationContext.getRuntimeHints().proxies().registerJdkProxy(interfaces.toArray(Class[]::new));
 					} else {
-						LazyLoadingProxyFactory.resolveProxyType(field.getType(), () -> LazyLoadingInterceptor.none());
+
+						Class<?> proxyClass = LazyLoadingProxyFactory.resolveProxyType(field.getType(),
+								() -> LazyLoadingInterceptor.none());
+
+						// see: spring-projects/spring-framework/issues/29309
+						generationContext.getRuntimeHints().reflection().registerType(proxyClass,
+								MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS);
 					}
 				});
 	}
