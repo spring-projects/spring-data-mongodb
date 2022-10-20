@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot;
+package org.springframework.data.mongodb.repository.aot;
 
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.data.aot.TypeContributor;
+import org.springframework.data.mongodb.aot.LazyLoadingProxyAotProcessor;
+import org.springframework.data.mongodb.aot.MongoAotPredicates;
 import org.springframework.data.repository.aot.AotRepositoryContext;
 import org.springframework.data.repository.aot.RepositoryRegistrationAotProcessor;
 

@@ -19,13 +19,20 @@ import java.util.function.Predicate;
 
 import org.springframework.data.aot.TypeUtils;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.data.repository.util.ReactiveWrappers.ReactiveLibrary;
 
 /**
  * @author Christoph Strobl
  * @since 4.0
  */
-class MongoAotPredicates {
+public class MongoAotPredicates {
 
-	static final Predicate<Class<?>> IS_SIMPLE_TYPE = (type) ->  MongoSimpleTypes.HOLDER.isSimpleType(type) || TypeUtils.type(type).isPartOf("org.bson");
+	public static final Predicate<Class<?>> IS_SIMPLE_TYPE = (type) ->  MongoSimpleTypes.HOLDER.isSimpleType(type) || TypeUtils.type(type).isPartOf("org.bson");
+	public static final Predicate<ReactiveLibrary> IS_REACTIVE_LIBARARY_AVAILABLE = (lib) -> ReactiveWrappers.isAvailable(lib);
+
+	public static boolean isReactorPresent() {
+		return IS_REACTIVE_LIBARARY_AVAILABLE.test(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
+	}
 
 }
