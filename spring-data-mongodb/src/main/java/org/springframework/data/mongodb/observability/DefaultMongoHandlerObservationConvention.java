@@ -15,30 +15,32 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.common.KeyValue;
-import io.micrometer.common.KeyValues;
-
 import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandStartedEvent;
 
+import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
+
 /**
  * Default {@link MongoHandlerObservationConvention} implementation.
  *
  * @author Greg Turnquist
- * @since 4.0.0
+ * @since 4
  */
-public class DefaultMongoHandlerObservationConvention implements MongoHandlerObservationConvention {
+class DefaultMongoHandlerObservationConvention implements MongoHandlerObservationConvention {
 
 	@Override
 	public KeyValues getLowCardinalityKeyValues(MongoHandlerContext context) {
 
 		KeyValues keyValues = KeyValues.empty();
 
-		if (context.getCollectionName() != null) {
+		if (!ObjectUtils.isEmpty(context.getCollectionName())) {
 			keyValues = keyValues
 					.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(context.getCollectionName()));
 		}
@@ -58,12 +60,18 @@ public class DefaultMongoHandlerObservationConvention implements MongoHandlerObs
 				HighCardinalityCommandKeyNames.MONGODB_COMMAND.withValue(context.getCommandStartedEvent().getCommandName()));
 	}
 
+	@Override
+	public String getContextualName(MongoHandlerContext context) {
+		return context.getContextualName();
+	}
+
 	/**
 	 * Extract connection details for a MongoDB connection into a {@link KeyValue}.
 	 *
 	 * @param event
 	 * @return
 	 */
+	@Nullable
 	private static KeyValue connectionTag(CommandStartedEvent event) {
 
 		ConnectionDescription connectionDescription = event.getConnectionDescription();

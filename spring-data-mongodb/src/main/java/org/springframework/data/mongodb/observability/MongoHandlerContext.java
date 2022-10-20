@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.observability;
 
-import io.micrometer.observation.Observation;
-
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,6 +28,10 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.transport.Kind;
+import io.micrometer.observation.transport.SenderContext;
+
 /**
  * A {@link Observation.Context} that contains MongoDB events.
  *
@@ -37,10 +39,12 @@ import com.mongodb.event.CommandSucceededEvent;
  * @author Greg Turnquist
  * @since 4.0.0
  */
-public class MongoHandlerContext extends Observation.Context {
+public class MongoHandlerContext extends SenderContext<Object> {
 
 	/**
-	 * @see https://docs.mongodb.com/manual/reference/command for the command reference
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/command">https://docs.mongodb.com/manual/reference/command</a> for
+	 *      the command reference
 	 */
 	private static final Set<String> COMMANDS_WITH_COLLECTION_NAME = new LinkedHashSet<>(
 			Arrays.asList("aggregate", "count", "distinct", "mapReduce", "geoSearch", "delete", "find", "findAndModify",
@@ -55,7 +59,7 @@ public class MongoHandlerContext extends Observation.Context {
 	private CommandFailedEvent commandFailedEvent;
 
 	public MongoHandlerContext(CommandStartedEvent commandStartedEvent, RequestContext requestContext) {
-
+		super((carrier, key, value) -> {}, Kind.CLIENT);
 		this.commandStartedEvent = commandStartedEvent;
 		this.requestContext = requestContext;
 		this.collectionName = getCollectionName(commandStartedEvent);

@@ -22,7 +22,7 @@ import io.micrometer.observation.ObservationConvention;
  * {@link ObservationConvention} for {@link MongoHandlerContext}.
  *
  * @author Greg Turnquist
- * @since 4.0.0
+ * @since 4
  */
 public interface MongoHandlerObservationConvention extends ObservationConvention<MongoHandlerContext> {
 
