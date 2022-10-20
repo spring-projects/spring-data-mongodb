@@ -1,82 +1,29 @@
 :root-target: ../../../../target/
 
-[[observability]]
-== Observability metadata
-
-include::{root-target}_conventions.adoc[]
-
-include::{root-target}_metrics.adoc[]
-
-include::{root-target}_spans.adoc[]
-
-[[observability.registration]]
-== Observability Registration
+[[mongodb.observability]]
+== Observability
 
 Spring Data MongoDB currently has the most up-to-date code to support Observability in your MongoDB application.
 These changes, however, haven't been picked up by Spring Boot (yet).
 Until those changes are applied, if you wish to use Spring Data MongoDB's flavor of Observability, you must carry out the following steps.
 
-. First of all, you must opt into Spring Data MongoDB's configuration settings by adding the `@EnableMongoObservability` to either your `@SpringBootApplication` class or one of your configuration classes.
+. First of all, you must opt into Spring Data MongoDB's configuration settings by customizing `MongoClientSettings` through either your `@SpringBootApplication` class or one of your configuration classes.
++
+.Registering MongoDB Micrometer customizer setup
+====
+[source,java]
+----
+@Bean
+MongoClientSettingsBuilderCustomizer mongoMetricsSynchronousContextProvider(ObservationRegistry registry) {
+    return (clientSettingsBuilder) -> {
+        clientSettingsBuilder.contextProvider(ContextProviderFactory.create(registry))
+                             .addCommandListener(new MongoObservationCommandListener(registry));
+    };
+}
+----
+====
++
 . Your project must include *Spring Boot Actuator*.
-. Next you must add one of the following bean definitions based on whether you're using non-reactive or reactive Spring Data MongoDB.
-+
-.Registering a synchronous (non-reactive) MongoDB Micrometer setup
-====
-[source,java]
-----
-@Bean
-MongoClientSettingsBuilderCustomizer mongoMetricsSynchronousContextProvider(Tracer tracer,
-        ObservationRegistry registry) {
-    return (clientSettingsBuilder) -> {
-        clientSettingsBuilder.contextProvider( //
-                MongoMetricsConfigurationHelper.synchronousContextProvider(tracer, registry));
-    };
-}
-----
-====
-+
-.Registering a reactive MongoDB Micrometer setup
-====
-[source,java]
-----
-@Bean
-MongoClientSettingsBuilderCustomizer mongoMetricsReactiveContextProvider(ObservationRegistry registry) {
-    return (clientSettingsBuilder) -> {
-        clientSettingsBuilder.contextProvider( //
-                MongoMetricsReactiveConfigurationHelper.reactiveContextProvider(registry));
-    };
-}
-----
-====
-+
-IMPORTANT: ONLY add one of these two bean definitions!
-. Add the following bean definition to listen for MongoDB command events and record them with Micrometer.
-+
-.Registering to listen for MongoDB commands.
-====
-[source,java]
-----
-@Bean
-MongoClientSettingsBuilderCustomizer mongoObservationCommandListenerCustomizer(MongoDBContainer mongoDBContainer,
-        MongoObservationCommandListener commandListener) {
-    return (clientSettingsBuilder) -> clientSettingsBuilder //
-            .addCommandListener(commandListener);
-}
-----
-====
-. Add the following bean definition to register Spring Data MongoDB's trace observation handler
-+
-.Registering
-====
-[source,java]
-----
-@Bean
-ObservationRegistryCustomizer<ObservationRegistry> mongoTracingHandlerCustomizer(
-        MongoTracingObservationHandler handler) {
-    return handler::register;
-}
-----
-====
 . Disable Spring Boot's autoconfigured MongoDB command listener and enable tracing manually by adding the following properties to your `application.properties`
 +
 .Custom settings to apply
@@ -92,3 +39,11 @@ Be sure to add any other relevant settings needed to configure the tracer you ar
 ====
 
 This should do it! You are now running with Spring Data MongoDB's usage of Spring Observability's `Observation` API.
+
+include::{root-target}_conventions.adoc[]
+
+include::{root-target}_metrics.adoc[]
+
+include::{root-target}_spans.adoc[]
+
+See also https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/#mongodb[OpenTelemetry Semantic Conventions] for further reference.

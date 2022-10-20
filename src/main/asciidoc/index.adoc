@@ -23,6 +23,7 @@ include::{spring-data-commons-docs}/repositories.adoc[leveloffset=+1]
 
 include::reference/introduction.adoc[leveloffset=+1]
 include::reference/mongodb.adoc[leveloffset=+1]
+include::reference/observability.adoc[leveloffset=+1]
 include::reference/client-session-transactions.adoc[leveloffset=+1]
 include::reference/reactive-mongodb.adoc[leveloffset=+1]
 include::reference/mongo-repositories.adoc[leveloffset=+1]
@@ -42,4 +43,3 @@ include::{spring-data-commons-docs}/repository-namespace-reference.adoc[leveloff
 include::{spring-data-commons-docs}/repository-populator-namespace-reference.adoc[leveloffset=+1]
 include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[leveloffset=+1]
 include::{spring-data-commons-docs}/repository-query-return-types-reference.adoc[leveloffset=+1]
-include::reference/observability.adoc[leveloffset=+1]
