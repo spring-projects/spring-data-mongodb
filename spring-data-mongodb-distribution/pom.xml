@@ -41,7 +41,7 @@
 				<executions>
 					<execution>
 						<id>generate-metrics-metadata</id>
-						<phase>prepare-package</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>java</goal>
 						</goals>
@@ -52,7 +52,7 @@
 					</execution>
 					<execution>
 						<id>generate-tracing-metadata</id>
-						<phase>prepare-package</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>java</goal>
 						</goals>

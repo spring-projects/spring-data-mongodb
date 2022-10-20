@@ -18,66 +18,23 @@ Until those changes are applied, if you wish to use Spring Data MongoDB's flavor
 
 . First of all, you must opt into Spring Data MongoDB's configuration settings by adding the `@EnableMongoObservability` to either your `@SpringBootApplication` class or one of your configuration classes.
 . Your project must include *Spring Boot Actuator*.
-. Next you must add one of the following bean definitions based on whether you're using non-reactive or reactive Spring Data MongoDB.
+. Next you must add the customizer bean based:
 +
-.Registering a synchronous (non-reactive) MongoDB Micrometer setup
+.Registering MongoDB Micrometer setup
 ====
 [source,java]
 ----
 @Bean
-MongoClientSettingsBuilderCustomizer mongoMetricsSynchronousContextProvider(Tracer tracer,
-        ObservationRegistry registry) {
+MongoClientSettingsBuilderCustomizer mongoMetricsSynchronousContextProvider(ObservationRegistry registry) {
     return (clientSettingsBuilder) -> {
-        clientSettingsBuilder.contextProvider( //
-                MongoMetricsConfigurationHelper.synchronousContextProvider(tracer, registry));
+        clientSettingsBuilder.contextProvider(ContextProviderFactory.create(registry))
+                             .addCommandListener(new MongoObservationCommandListener(registry));
     };
 }
 ----
 ====
 +
-.Registering a reactive MongoDB Micrometer setup
-====
-[source,java]
-----
-@Bean
-MongoClientSettingsBuilderCustomizer mongoMetricsReactiveContextProvider(ObservationRegistry registry) {
-    return (clientSettingsBuilder) -> {
-        clientSettingsBuilder.contextProvider( //
-                MongoMetricsReactiveConfigurationHelper.reactiveContextProvider(registry));
-    };
-}
-----
-====
-+
-IMPORTANT: ONLY add one of these two bean definitions!
-. Add the following bean definition to listen for MongoDB command events and record them with Micrometer.
-+
-.Registering to listen for MongoDB commands.
-====
-[source,java]
-----
-@Bean
-MongoClientSettingsBuilderCustomizer mongoObservationCommandListenerCustomizer(MongoDBContainer mongoDBContainer,
-        MongoObservationCommandListener commandListener) {
-    return (clientSettingsBuilder) -> clientSettingsBuilder //
-            .addCommandListener(commandListener);
-}
-----
-====
-. Add the following bean definition to register Spring Data MongoDB's trace observation handler
-+
-.Registering
-====
-[source,java]
-----
-@Bean
-ObservationRegistryCustomizer<ObservationRegistry> mongoTracingHandlerCustomizer(
-        MongoTracingObservationHandler handler) {
-    return handler::register;
-}
-----
-====
-. Disable Spring Boot's autoconfigured MongoDB command listener and enable tracing manually by adding the following properties to your `application.properties`
+.Disable Spring Boot's autoconfigured MongoDB command listener and enable tracing manually by adding the following properties to your `application.properties`
 +
 .Custom settings to apply
 ====
