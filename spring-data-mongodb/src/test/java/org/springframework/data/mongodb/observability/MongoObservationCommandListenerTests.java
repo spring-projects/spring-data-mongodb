@@ -21,7 +21,6 @@ import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 
 import com.mongodb.RequestContext;
@@ -91,7 +90,7 @@ class MongoObservationCommandListenerTests {
 		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, null, "some name", "", null));
 
 		// then
-		assertThat(meterRegistry).hasNoMetrics();
+		assertThat(meterRegistry).hasMeterWithName("spring.data.mongodb.command.active");
 	}
 
 	@Test
@@ -136,7 +135,6 @@ class MongoObservationCommandListenerTests {
 		assertThatTimerRegisteredWithTags();
 	}
 
-
 	@Test
 	void successfullyCompletedCommandWithoutClusterInformationShouldCreateTimerWhenParentSampleInRequestContext() {
 
@@ -149,9 +147,11 @@ class MongoObservationCommandListenerTests {
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
 
-		// then
-		assertThat(meterRegistry).hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
-				KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user")));
+		assertThat(meterRegistry).hasTimerWithNameAndTags(MongoObservation.MONGODB_COMMAND_OBSERVATION.getName(),
+				KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user"),
+						LowCardinalityCommandKeyNames.DB_NAME.withValue("database"),
+						LowCardinalityCommandKeyNames.MONGODB_COMMAND.withValue("insert"),
+						LowCardinalityCommandKeyNames.DB_SYSTEM.withValue("mongodb")).and("error", "none"));
 	}
 
 	@Test
@@ -183,10 +183,8 @@ class MongoObservationCommandListenerTests {
 	private void assertThatTimerRegisteredWithTags() {
 
 		assertThat(meterRegistry) //
-				.hasTimerWithNameAndTags(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
-						KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user"))) //
-				.hasTimerWithNameAndTagKeys(HighCardinalityCommandKeyNames.MONGODB_COMMAND.asString(),
-						LowCardinalityCommandKeyNames.MONGODB_CLUSTER_ID.asString());
+				.hasTimerWithNameAndTags(MongoObservation.MONGODB_COMMAND_OBSERVATION.getName(),
+						KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user")));
 	}
 
 }

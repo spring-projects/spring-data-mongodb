@@ -66,11 +66,6 @@ class TestConfig {
 	}
 
 	@Bean
-	MongoObservationCommandListener mongoObservationCommandListener(ObservationRegistry registry) {
-		return new MongoObservationCommandListener(registry);
-	}
-
-	@Bean
 	MongoDatabaseFactory mongoDatabaseFactory(MongoClientSettings settings) {
 		return new SimpleMongoClientDatabaseFactory(MongoClients.create(settings), "observable");
 	}
@@ -82,14 +77,13 @@ class TestConfig {
 	}
 
 	@Bean
-	MongoClientSettings mongoClientSettings(MongoObservationCommandListener commandListener,
-			ObservationRegistry observationRegistry) {
+	MongoClientSettings mongoClientSettings(ObservationRegistry observationRegistry) {
 
 		ConnectionString connectionString = new ConnectionString(
 				String.format("mongodb://%s:%s/?w=majority&uuidrepresentation=javaLegacy", "127.0.0.1", 27017));
 
 		MongoClientSettings settings = MongoClientSettings.builder() //
-				.addCommandListener(commandListener) //
+				.addCommandListener(new MongoObservationCommandListener(observationRegistry, connectionString)) //
 				.contextProvider(ContextProviderFactory.create(observationRegistry)) //
 				.applyConnectionString(connectionString) //
 				.build();

@@ -31,7 +31,6 @@ import com.mongodb.reactivestreams.client.ReactiveContextProvider;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import reactor.core.CoreSubscriber;
 
 /**
@@ -105,9 +104,6 @@ public class ContextProviderFactory {
 
 				Map<Object, Object> map = cs.currentContext().stream()
 						.collect(Collectors.toConcurrentMap(Entry::getKey, Entry::getValue));
-				if (map.containsKey(ObservationThreadLocalAccessor.KEY)) {
-					map.put(Observation.class, map.get(ObservationThreadLocalAccessor.KEY));
-				}
 
 				return new MapRequestContext(map);
 			}

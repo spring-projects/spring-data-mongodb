@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
@@ -42,6 +43,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
 	private final ObservationRegistry observationRegistry;
+	private final @Nullable ConnectionString connectionString;
 
 	private final MongoHandlerObservationConvention observationConvention = new DefaultMongoHandlerObservationConvention();
 
@@ -55,6 +57,23 @@ public class MongoObservationCommandListener implements CommandListener {
 		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
 
 		this.observationRegistry = observationRegistry;
+		this.connectionString = null;
+	}
+
+	/**
+	 * Create a new {@link MongoObservationCommandListener} to record {@link Observation}s. This constructor attaches the
+	 * {@link ConnectionString} to every {@link Observation}.
+	 *
+	 * @param observationRegistry must not be {@literal null}
+	 * @param connectionString must not be {@literal null}
+	 */
+	public MongoObservationCommandListener(ObservationRegistry observationRegistry, ConnectionString connectionString) {
+
+		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
+		Assert.notNull(connectionString, "ConnectionString must not be null");
+
+		this.observationRegistry = observationRegistry;
+		this.connectionString = connectionString;
 	}
 
 	@Override
@@ -82,7 +101,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			log.debug("Found the following observation passed from the mongo context [" + parent + "]");
 		}
 
-		MongoHandlerContext observationContext = new MongoHandlerContext(event, requestContext);
+		MongoHandlerContext observationContext = new MongoHandlerContext(connectionString, event, requestContext);
 		observationContext.setRemoteServiceName("mongo");
 
 		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION
@@ -107,16 +126,18 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Override
 	public void commandSucceeded(CommandSucceededEvent event) {
 
-		if (event.getRequestContext() == null) {
+		RequestContext requestContext = event.getRequestContext();
+
+		if (requestContext == null) {
 			return;
 		}
 
-		Observation observation = event.getRequestContext().getOrDefault(Observation.class, null);
+		Observation observation = requestContext.getOrDefault(Observation.class, null);
 		if (observation == null) {
 			return;
 		}
 
-		MongoHandlerContext context = event.getRequestContext().get(MongoHandlerContext.class);
+		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
 		context.setCommandSucceededEvent(event);
 
 		if (log.isDebugEnabled()) {
@@ -129,16 +150,18 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Override
 	public void commandFailed(CommandFailedEvent event) {
 
-		if (event.getRequestContext() == null) {
+		RequestContext requestContext = event.getRequestContext();
+
+		if (requestContext == null) {
 			return;
 		}
 
-		Observation observation = event.getRequestContext().getOrDefault(Observation.class, null);
+		Observation observation = requestContext.getOrDefault(Observation.class, null);
 		if (observation == null) {
 			return;
 		}
 
-		MongoHandlerContext context = event.getRequestContext().get(MongoHandlerContext.class);
+		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
 		context.setCommandFailedEvent(event);
 
 		if (log.isDebugEnabled()) {

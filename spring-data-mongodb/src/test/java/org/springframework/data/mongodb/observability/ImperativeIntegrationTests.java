@@ -29,6 +29,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.exporter.FinishedSpan;
 import io.micrometer.tracing.test.SampleTestRunner;
 
 /**
@@ -72,6 +73,17 @@ public class ImperativeIntegrationTests extends SampleTestRunner {
 			repository.deleteAll();
 
 			System.out.println(((SimpleMeterRegistry) meterRegistry).getMetersAsString());
+
+			assertThat(tracer.getFinishedSpans()).hasSize(5).extracting(FinishedSpan::getName).contains("person.delete",
+					"person.update", "person.find");
+
+			for (FinishedSpan span : tracer.getFinishedSpans()) {
+
+				assertThat(span.getTags()).containsEntry("db.system", "mongodb").containsEntry("net.transport", "IP.TCP");
+
+				assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+						"db.mongodb.collection", "net.peer.name", "net.peer.port", "net.sock.peer.addr", "net.sock.peer.port");
+			}
 		};
 	}
 }
