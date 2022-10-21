@@ -85,7 +85,8 @@ public class ContextProviderFactory {
 
 			Observation currentObservation = observationRegistry.getCurrentObservation();
 			if (currentObservation != null) {
-				requestContext.put(Observation.class, currentObservation);
+				// Aligned with ObservationThreadLocalAccessor.KEY
+				requestContext.put("micrometer.observation", currentObservation);
 			}
 
 			return requestContext;

@@ -114,8 +114,7 @@ public class MongoObservationCommandListener implements CommandListener {
 
 		observation.start();
 
-		requestContext.put(Observation.class, observation);
-		requestContext.put(MongoHandlerContext.class, observationContext);
+		requestContext.put("micrometer.observation", observation);
 
 		if (log.isDebugEnabled()) {
 			log.debug(
@@ -132,12 +131,12 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault(Observation.class, null);
+		Observation observation = requestContext.getOrDefault("micrometer.observation", null);
 		if (observation == null) {
 			return;
 		}
 
-		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
+		MongoHandlerContext context = (MongoHandlerContext) observation.getContext();
 		context.setCommandSucceededEvent(event);
 
 		if (log.isDebugEnabled()) {
@@ -156,12 +155,12 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault(Observation.class, null);
+		Observation observation = requestContext.getOrDefault("micrometer.observation", null);
 		if (observation == null) {
 			return;
 		}
 
-		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
+		MongoHandlerContext context = (MongoHandlerContext) observation.getContext();
 		context.setCommandFailedEvent(event);
 
 		if (log.isDebugEnabled()) {
@@ -181,7 +180,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Nullable
 	private static Observation observationFromContext(RequestContext context) {
 
-		Observation observation = context.getOrDefault(Observation.class, null);
+		Observation observation = context.getOrDefault("micrometer.observation", null);
 
 		if (observation != null) {
 

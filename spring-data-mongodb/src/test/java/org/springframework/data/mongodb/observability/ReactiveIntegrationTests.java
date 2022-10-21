@@ -73,7 +73,7 @@ public class ReactiveIntegrationTests extends SampleTestRunner {
 					.verifyComplete();
 
 			repository.findByLastname("Matthews") //
-					.contextWrite(Context.of(Observation.class, intermediate)) //
+					.contextWrite(Context.of("micrometer.observation", intermediate)) //
 					.as(StepVerifier::create).assertNext(actual -> {
 
 						assertThat(actual).extracting("firstname", "lastname").containsExactly("Dave", "Matthews");
