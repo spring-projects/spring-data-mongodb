@@ -15,11 +15,15 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import java.net.InetSocketAddress;
+
 import org.springframework.data.mongodb.observability.MongoObservation.HighCardinalityCommandKeyNames;
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandStartedEvent;
@@ -38,11 +42,46 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 	@Override
 	public KeyValues getLowCardinalityKeyValues(MongoHandlerContext context) {
 
-		KeyValues keyValues = KeyValues.empty();
+		KeyValues keyValues = KeyValues.of(LowCardinalityCommandKeyNames.DB_SYSTEM.withValue("mongodb"));
+
+		ConnectionString connectionString = context.getConnectionString();
+		if (connectionString != null) {
+
+			keyValues = keyValues
+					.and(LowCardinalityCommandKeyNames.DB_CONNECTION_STRING.withValue(connectionString.getConnectionString()));
+
+			String user = connectionString.getUsername();
+
+			if (!ObjectUtils.isEmpty(user)) {
+				keyValues = keyValues.and(LowCardinalityCommandKeyNames.DB_USER.withValue(user));
+			}
+
+		}
+
+		if (!ObjectUtils.isEmpty(context.getDatabaseName())) {
+			keyValues = keyValues.and(LowCardinalityCommandKeyNames.DB_NAME.withValue(context.getDatabaseName()));
+		}
 
 		if (!ObjectUtils.isEmpty(context.getCollectionName())) {
 			keyValues = keyValues
 					.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(context.getCollectionName()));
+		}
+
+		ServerAddress serverAddress = context.getCommandStartedEvent().getConnectionDescription().getServerAddress();
+
+		if (serverAddress != null) {
+
+			keyValues = keyValues.and(LowCardinalityCommandKeyNames.NET_TRANSPORT.withValue("IP.TCP"),
+					LowCardinalityCommandKeyNames.NET_PEER_ADDR.withValue(serverAddress.getHost()));
+
+			InetSocketAddress socketAddress = serverAddress.getSocketAddress();
+
+			if (socketAddress != null) {
+
+				keyValues = keyValues.and(LowCardinalityCommandKeyNames.NET_PEER_NAME.withValue(socketAddress.getHostName()),
+						LowCardinalityCommandKeyNames.NET_PEER_PORT.withValue("" + socketAddress.getPort()));
+			}
+
 		}
 
 		KeyValue connectionTag = connectionTag(context.getCommandStartedEvent());
@@ -56,8 +95,7 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 	@Override
 	public KeyValues getHighCardinalityKeyValues(MongoHandlerContext context) {
 
-		return KeyValues.of(
-				HighCardinalityCommandKeyNames.MONGODB_COMMAND.withValue(context.getCommandStartedEvent().getCommandName()));
+		return KeyValues.of(HighCardinalityCommandKeyNames.MONGODB_COMMAND.withValue(context.getCommandName()));
 	}
 
 	@Override

@@ -23,6 +23,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.springframework.lang.Nullable;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
@@ -37,9 +38,10 @@ import io.micrometer.observation.transport.SenderContext;
  *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
- * @since 4.0.0
+ * @author Mark Paluch
+ * @since 4.0
  */
-public class MongoHandlerContext extends SenderContext<Object> {
+class MongoHandlerContext extends SenderContext<Object> {
 
 	/**
 	 * @see <a href=
@@ -51,6 +53,7 @@ public class MongoHandlerContext extends SenderContext<Object> {
 					"insert", "update", "collMod", "compact", "convertToCapped", "create", "createIndexes", "drop", "dropIndexes",
 					"killCursors", "listIndexes", "reIndex"));
 
+	private final @Nullable ConnectionString connectionString;
 	private final CommandStartedEvent commandStartedEvent;
 	private final RequestContext requestContext;
 	private final String collectionName;
@@ -58,8 +61,11 @@ public class MongoHandlerContext extends SenderContext<Object> {
 	private CommandSucceededEvent commandSucceededEvent;
 	private CommandFailedEvent commandFailedEvent;
 
-	public MongoHandlerContext(CommandStartedEvent commandStartedEvent, RequestContext requestContext) {
+	public MongoHandlerContext(@Nullable ConnectionString connectionString, CommandStartedEvent commandStartedEvent,
+			RequestContext requestContext) {
+
 		super((carrier, key, value) -> {}, Kind.CLIENT);
+		this.connectionString = connectionString;
 		this.commandStartedEvent = commandStartedEvent;
 		this.requestContext = requestContext;
 		this.collectionName = getCollectionName(commandStartedEvent);
@@ -73,8 +79,21 @@ public class MongoHandlerContext extends SenderContext<Object> {
 		return this.requestContext;
 	}
 
+	public String getDatabaseName() {
+		return commandStartedEvent.getDatabaseName();
+	}
+
 	public String getCollectionName() {
 		return this.collectionName;
+	}
+
+	public String getCommandName() {
+		return commandStartedEvent.getCommandName();
+	}
+
+	@Nullable
+	public ConnectionString getConnectionString() {
+		return connectionString;
 	}
 
 	public String getContextualName() {
@@ -83,7 +102,7 @@ public class MongoHandlerContext extends SenderContext<Object> {
 			return this.commandStartedEvent.getCommandName();
 		}
 
-		return this.commandStartedEvent.getCommandName() + " " + this.collectionName;
+		return this.collectionName + "." + this.commandStartedEvent.getCommandName();
 	}
 
 	public void setCommandSucceededEvent(CommandSucceededEvent commandSucceededEvent) {
@@ -135,4 +154,5 @@ public class MongoHandlerContext extends SenderContext<Object> {
 
 		return stringValue.isEmpty() ? null : stringValue;
 	}
+
 }

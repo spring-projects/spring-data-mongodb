@@ -19,6 +19,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
@@ -41,11 +42,18 @@ public class MongoObservationCommandListener implements CommandListener {
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
 	private final ObservationRegistry observationRegistry;
+	private final @Nullable ConnectionString connectionString;
 
 	private final MongoHandlerObservationConvention observationConvention = new DefaultMongoHandlerObservationConvention();
 
 	public MongoObservationCommandListener(ObservationRegistry observationRegistry) {
 		this.observationRegistry = observationRegistry;
+		this.connectionString = null;
+	}
+
+	public MongoObservationCommandListener(ObservationRegistry observationRegistry, ConnectionString connectionString) {
+		this.observationRegistry = observationRegistry;
+		this.connectionString = connectionString;
 	}
 
 	@Override
@@ -73,7 +81,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			log.debug("Found the following observation passed from the mongo context [" + parent + "]");
 		}
 
-		MongoHandlerContext observationContext = new MongoHandlerContext(event, requestContext);
+		MongoHandlerContext observationContext = new MongoHandlerContext(connectionString, event, requestContext);
 		observationContext.setRemoteServiceName("mongo");
 
 		Observation observation = MongoObservation.MONGODB_COMMAND_OBSERVATION

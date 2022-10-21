@@ -47,10 +47,6 @@ enum MongoObservation implements ObservationDocumentation {
 			return HighCardinalityCommandKeyNames.values();
 		}
 
-		@Override
-		public String getPrefix() {
-			return "spring.data.mongodb";
-		}
 	};
 
 	/**
@@ -59,12 +55,92 @@ enum MongoObservation implements ObservationDocumentation {
 	enum LowCardinalityCommandKeyNames implements KeyName {
 
 		/**
+		 * MongoDB database system.
+		 */
+		DB_SYSTEM {
+			@Override
+			public String asString() {
+				return "db.system";
+			}
+		},
+
+		/**
+		 * MongoDB connection string.
+		 */
+		DB_CONNECTION_STRING {
+			@Override
+			public String asString() {
+				return "db.connection_string";
+			}
+		},
+
+		/**
+		 * Network transport.
+		 */
+		NET_TRANSPORT {
+			@Override
+			public String asString() {
+				return "net.transport";
+			}
+		},
+
+		/**
+		 * Name of the database host.
+		 */
+		NET_PEER_NAME {
+			@Override
+			public String asString() {
+				return "net.peer.name";
+			}
+		},
+
+		/**
+		 * Logical remote port number.
+		 */
+		NET_PEER_PORT {
+			@Override
+			public String asString() {
+				return "net.peer.port";
+			}
+		},
+
+		/**
+		 * Redis peer address.
+		 */
+		NET_PEER_ADDR {
+			@Override
+			public String asString() {
+				return "net.sock.peer.addr";
+			}
+		},
+
+		/**
+		 * MongoDB user.
+		 */
+		DB_USER {
+			@Override
+			public String asString() {
+				return "db.user";
+			}
+		},
+
+		/**
+		 * MongoDB database name.
+		 */
+		DB_NAME {
+			@Override
+			public String asString() {
+				return "db.name";
+			}
+		},
+
+		/**
 		 * MongoDB collection name.
 		 */
 		MONGODB_COLLECTION {
 			@Override
 			public String asString() {
-				return "spring.data.mongodb.collection";
+				return "db.mongodb.collection";
 			}
 		},
 
@@ -90,7 +166,7 @@ enum MongoObservation implements ObservationDocumentation {
 		MONGODB_COMMAND {
 			@Override
 			public String asString() {
-				return "spring.data.mongodb.command";
+				return "db.operation";
 			}
 		}
 	}

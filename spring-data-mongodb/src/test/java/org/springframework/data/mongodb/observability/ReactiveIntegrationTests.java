@@ -64,16 +64,20 @@ public class ReactiveIntegrationTests extends SampleTestRunner {
 
 			Observation intermediate = Observation.start("intermediate", createObservationRegistry());
 
-			repository.deleteAll().then(repository.save(new Person("Dave", "Matthews", 42)))
-					.contextWrite(Context.of(Observation.class, intermediate)).as(StepVerifier::create).expectNextCount(1)
+			repository.deleteAll() //
+					.then(repository.save(new Person("Dave", "Matthews", 42))) //
+					.contextWrite(Context.of(Observation.class, intermediate)) //
+					.as(StepVerifier::create).expectNextCount(1)//
 					.verifyComplete();
 
-			repository.findByLastname("Matthews").contextWrite(Context.of(Observation.class, intermediate))
+			repository.findByLastname("Matthews") //
+					.contextWrite(Context.of(Observation.class, intermediate)) //
 					.as(StepVerifier::create).assertNext(actual -> {
 
 						assertThat(actual).extracting("firstname", "lastname").containsExactly("Dave", "Matthews");
 					}).verifyComplete();
 
+			intermediate.stop();
 			System.out.println(((SimpleMeterRegistry) meterRegistry).getMetersAsString());
 		};
 	}
