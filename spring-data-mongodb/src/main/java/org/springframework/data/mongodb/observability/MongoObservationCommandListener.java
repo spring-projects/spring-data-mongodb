@@ -42,6 +42,11 @@ public class MongoObservationCommandListener implements CommandListener {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
+	/**
+	 * Aligns with ObservationThreadLocalAccessor.KEY.
+	 */
+	private static final String MICROMETER_OBSERVATION_KEY = "micrometer.observation";
+
 	private final ObservationRegistry observationRegistry;
 	private final @Nullable ConnectionString connectionString;
 
@@ -114,8 +119,7 @@ public class MongoObservationCommandListener implements CommandListener {
 
 		observation.start();
 
-		requestContext.put(Observation.class, observation);
-		requestContext.put(MongoHandlerContext.class, observationContext);
+		requestContext.put(MICROMETER_OBSERVATION_KEY, observation);
 
 		if (log.isDebugEnabled()) {
 			log.debug(
@@ -132,12 +136,12 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault(Observation.class, null);
+		Observation observation = requestContext.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
 		if (observation == null) {
 			return;
 		}
 
-		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
+		MongoHandlerContext context = (MongoHandlerContext) observation.getContext();
 		context.setCommandSucceededEvent(event);
 
 		if (log.isDebugEnabled()) {
@@ -156,12 +160,12 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault(Observation.class, null);
+		Observation observation = requestContext.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
 		if (observation == null) {
 			return;
 		}
 
-		MongoHandlerContext context = requestContext.get(MongoHandlerContext.class);
+		MongoHandlerContext context = (MongoHandlerContext) observation.getContext();
 		context.setCommandFailedEvent(event);
 
 		if (log.isDebugEnabled()) {
@@ -181,7 +185,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Nullable
 	private static Observation observationFromContext(RequestContext context) {
 
-		Observation observation = context.getOrDefault(Observation.class, null);
+		Observation observation = context.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
 
 		if (observation != null) {
 
@@ -192,7 +196,7 @@ public class MongoObservationCommandListener implements CommandListener {
 		}
 
 		if (log.isDebugEnabled()) {
-			log.debug("No observation was found - will not create any child spans");
+			log.debug("No observation was found - will not create any child observations");
 		}
 
 		return null;
