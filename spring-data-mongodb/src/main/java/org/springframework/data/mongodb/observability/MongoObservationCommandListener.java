@@ -29,6 +29,7 @@ import com.mongodb.event.CommandSucceededEvent;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 
 /**
  * Implement MongoDB's {@link CommandListener} using Micrometer's {@link Observation} API.
@@ -41,11 +42,6 @@ import io.micrometer.observation.ObservationRegistry;
 public class MongoObservationCommandListener implements CommandListener {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
-
-	/**
-	 * Aligns with ObservationThreadLocalAccessor.KEY.
-	 */
-	private static final String MICROMETER_OBSERVATION_KEY = "micrometer.observation";
 
 	private final ObservationRegistry observationRegistry;
 	private final @Nullable ConnectionString connectionString;
@@ -119,7 +115,7 @@ public class MongoObservationCommandListener implements CommandListener {
 
 		observation.start();
 
-		requestContext.put(MICROMETER_OBSERVATION_KEY, observation);
+		requestContext.put(ObservationThreadLocalAccessor.KEY, observation);
 
 		if (log.isDebugEnabled()) {
 			log.debug(
@@ -136,7 +132,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
+		Observation observation = requestContext.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
 		if (observation == null) {
 			return;
 		}
@@ -160,7 +156,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
+		Observation observation = requestContext.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
 		if (observation == null) {
 			return;
 		}
@@ -185,7 +181,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Nullable
 	private static Observation observationFromContext(RequestContext context) {
 
-		Observation observation = context.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
+		Observation observation = context.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
 
 		if (observation != null) {
 

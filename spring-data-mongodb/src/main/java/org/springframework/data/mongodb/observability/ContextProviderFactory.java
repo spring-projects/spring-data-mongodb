@@ -31,6 +31,7 @@ import com.mongodb.reactivestreams.client.ReactiveContextProvider;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import reactor.core.CoreSubscriber;
 
 /**
@@ -85,8 +86,7 @@ public class ContextProviderFactory {
 
 			Observation currentObservation = observationRegistry.getCurrentObservation();
 			if (currentObservation != null) {
-				// Aligned with ObservationThreadLocalAccessor.KEY
-				requestContext.put("micrometer.observation", currentObservation);
+				requestContext.put(ObservationThreadLocalAccessor.KEY, currentObservation);
 			}
 
 			return requestContext;
