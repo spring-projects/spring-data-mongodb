@@ -42,6 +42,11 @@ public class MongoObservationCommandListener implements CommandListener {
 
 	private static final Log log = LogFactory.getLog(MongoObservationCommandListener.class);
 
+	/**
+	 * Aligns with ObservationThreadLocalAccessor.KEY.
+	 */
+	private static final String MICROMETER_OBSERVATION_KEY = "micrometer.observation";
+
 	private final ObservationRegistry observationRegistry;
 	private final @Nullable ConnectionString connectionString;
 
@@ -114,7 +119,7 @@ public class MongoObservationCommandListener implements CommandListener {
 
 		observation.start();
 
-		requestContext.put("micrometer.observation", observation);
+		requestContext.put(MICROMETER_OBSERVATION_KEY, observation);
 
 		if (log.isDebugEnabled()) {
 			log.debug(
@@ -131,7 +136,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault("micrometer.observation", null);
+		Observation observation = requestContext.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
 		if (observation == null) {
 			return;
 		}
@@ -155,7 +160,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		Observation observation = requestContext.getOrDefault("micrometer.observation", null);
+		Observation observation = requestContext.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
 		if (observation == null) {
 			return;
 		}
@@ -180,7 +185,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Nullable
 	private static Observation observationFromContext(RequestContext context) {
 
-		Observation observation = context.getOrDefault("micrometer.observation", null);
+		Observation observation = context.getOrDefault(MICROMETER_OBSERVATION_KEY, null);
 
 		if (observation != null) {
 
