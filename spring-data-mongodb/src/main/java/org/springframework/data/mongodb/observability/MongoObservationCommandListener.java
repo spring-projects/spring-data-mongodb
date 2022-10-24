@@ -196,7 +196,7 @@ public class MongoObservationCommandListener implements CommandListener {
 		}
 
 		if (log.isDebugEnabled()) {
-			log.debug("No observation was found - will not create any child spans");
+			log.debug("No observation was found - will not create any child observations");
 		}
 
 		return null;
