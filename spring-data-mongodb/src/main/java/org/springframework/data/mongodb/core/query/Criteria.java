@@ -450,7 +450,7 @@ public class Criteria implements CriteriaDefinition {
 
 		Assert.notNull(types, "Types must not be null!");
 
-		criteria.put("$type", types.stream().map(Type::value).collect(Collectors.toList()));
+		criteria.put("$type", types.stream().map(Type::toBsonType).map(Type::value).collect(Collectors.toList()));
 		return this;
 	}
 
