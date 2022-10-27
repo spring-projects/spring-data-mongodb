@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.schema;
 import static org.springframework.data.domain.Range.from;
 import static org.springframework.data.domain.Range.Bound.*;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.*;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.array;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.of;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
@@ -131,7 +133,7 @@ class JsonSchemaObjectUnitTests {
 				.append("description", "Must be an object defining restrictions for name, active.").append("properties",
 						new Document("name", new Document("type", "string")
 								.append("description", "Must be a string with length unbounded-10].").append("maxLength", 10))
-										.append("active", new Document("type", "bool")));
+										.append("active", new Document("type", "boolean")));
 
 		assertThat(object().generatedDescription()
 				.properties(JsonSchemaProperty.string("name").maxLength(10).generatedDescription(),
@@ -264,7 +266,7 @@ class JsonSchemaObjectUnitTests {
 	void arrayObjectShouldRenderItemsCorrectly() {
 
 		assertThat(array().items(Arrays.asList(string(), bool())).toDocument()).isEqualTo(new Document("type", "array")
-				.append("items", Arrays.asList(new Document("type", "string"), new Document("type", "bool"))));
+				.append("items", Arrays.asList(new Document("type", "string"), new Document("type", "boolean"))));
 	}
 
 	@Test // DATAMONGO-2613
@@ -314,7 +316,7 @@ class JsonSchemaObjectUnitTests {
 	void booleanShouldRenderCorrectly() {
 
 		assertThat(bool().generatedDescription().toDocument())
-				.isEqualTo(new Document("type", "bool").append("description", "Must be a boolean"));
+				.isEqualTo(new Document("type", "boolean").append("description", "Must be a boolean"));
 	}
 
 	// -----------------

@@ -23,11 +23,11 @@ import java.util.Collections;
 
 import org.bson.Document;
 import org.junit.Test;
-
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 
 /**
@@ -90,8 +90,7 @@ public class CriteriaUnitTests {
 	@Test // GH-3286
 	public void shouldBuildCorrectAndOperator() {
 
-		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
-				Criteria.where("y").is(42),
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true), Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
 
 		Criteria criteria = Criteria.where("foo").is("bar").andOperator(operatorCriteria);
@@ -103,8 +102,7 @@ public class CriteriaUnitTests {
 	@Test // GH-3286
 	public void shouldBuildCorrectOrOperator() {
 
-		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
-				Criteria.where("y").is(42),
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true), Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
 
 		Criteria criteria = Criteria.where("foo").is("bar").orOperator(operatorCriteria);
@@ -116,8 +114,7 @@ public class CriteriaUnitTests {
 	@Test // GH-3286
 	public void shouldBuildCorrectNorOperator() {
 
-		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
-				Criteria.where("y").is(42),
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true), Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
 
 		Criteria criteria = Criteria.where("foo").is("bar").norOperator(operatorCriteria);
@@ -203,6 +200,14 @@ public class CriteriaUnitTests {
 		Document document = new Criteria().lt("foo").not().getCriteriaObject();
 
 		assertThat(document).isEqualTo(new Document().append("$not", new Document("$lt", "foo")));
+	}
+
+	@Test // GH-4220
+	public void usesCorrectBsonType() {
+
+		Document document = new Criteria("foo").type(Type.BOOLEAN).getCriteriaObject();
+
+		assertThat(document).containsEntry("foo.$type", Collections.singletonList("bool"));
 	}
 
 	@Test // DATAMONGO-1135
@@ -302,8 +307,7 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allClear(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo("{ \"field\" : { \"$bitsAllClear\" : 5} }");
+		assertThat(numericBitmaskCriteria.getCriteriaObject()).isEqualTo("{ \"field\" : { \"$bitsAllClear\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -320,8 +324,7 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allSet(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo("{ \"field\" : { \"$bitsAllSet\" : 5} }");
+		assertThat(numericBitmaskCriteria.getCriteriaObject()).isEqualTo("{ \"field\" : { \"$bitsAllSet\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -338,8 +341,7 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anyClear(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo("{ \"field\" : { \"$bitsAnyClear\" : 5} }");
+		assertThat(numericBitmaskCriteria.getCriteriaObject()).isEqualTo("{ \"field\" : { \"$bitsAnyClear\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -356,8 +358,7 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anySet(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo("{ \"field\" : { \"$bitsAnySet\" : 5} }");
+		assertThat(numericBitmaskCriteria.getCriteriaObject()).isEqualTo("{ \"field\" : { \"$bitsAnySet\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -429,14 +430,10 @@ public class CriteriaUnitTests {
 	@Test // GH-3414
 	public void shouldEqualForNestedPattern() {
 
-		Criteria left = new Criteria("a").orOperator(
-			new Criteria("foo").regex("value", "i"),
-			new Criteria("bar").regex("value")
-		);
-		Criteria right = new Criteria("a").orOperator(
-			new Criteria("foo").regex("value", "i"),
-			new Criteria("bar").regex("value")
-		);
+		Criteria left = new Criteria("a").orOperator(new Criteria("foo").regex("value", "i"),
+				new Criteria("bar").regex("value"));
+		Criteria right = new Criteria("a").orOperator(new Criteria("foo").regex("value", "i"),
+				new Criteria("bar").regex("value"));
 
 		assertThat(left).isEqualTo(right);
 	}
