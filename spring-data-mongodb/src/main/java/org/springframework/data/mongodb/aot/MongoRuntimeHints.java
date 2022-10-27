@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCall
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link RuntimeHintsRegistrar} for repository types and entity callbacks.
@@ -50,6 +51,16 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 						TypeReference.of(AfterConvertCallback.class), TypeReference.of(AfterSaveCallback.class)),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
+
+		if (ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
+
+			hints.proxies().registerJdkProxy(TypeReference.of(com.mongodb.client.MongoDatabase.class),
+					TypeReference.of("org.springframework.aop.SpringProxy"),
+					TypeReference.of("org.springframework.core.DecoratingProxy"));
+			hints.proxies().registerJdkProxy(TypeReference.of(com.mongodb.client.MongoCollection.class),
+					TypeReference.of("org.springframework.aop.SpringProxy"),
+					TypeReference.of("org.springframework.core.DecoratingProxy"));
+		}
 
 		if (isReactorPresent()) {
 
