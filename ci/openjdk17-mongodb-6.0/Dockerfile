@@ -9,12 +9,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
 	sed -i -e 's/archive.ubuntu.com/mirror.one.com/g' /etc/apt/sources.list && \
 	sed -i -e 's/security.ubuntu.com/mirror.one.com/g' /etc/apt/sources.list && \
+    sed -i -e 's/ports.ubuntu.com/mirrors.ocf.berkeley.edu/g' /etc/apt/sources.list && \
 	sed -i -e 's/http/https/g' /etc/apt/sources.list && \
 	apt-get update && apt-get install -y apt-transport-https apt-utils gnupg2 wget && \
 	# MongoDB 6.0 release signing key
 	wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add - && \
 	# Needed when MongoDB creates a 6.0 folder.
-	echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
+	echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
 	echo ${TZ} > /etc/timezone
 
 RUN apt-get update && \
