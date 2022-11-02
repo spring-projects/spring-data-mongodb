@@ -17,10 +17,10 @@ package org.springframework.data.mongodb.aot;
 
 import java.util.function.Predicate;
 
-import org.springframework.data.aot.TypeUtils;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.repository.util.ReactiveWrappers;
-import org.springframework.data.repository.util.ReactiveWrappers.ReactiveLibrary;
+import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.util.ReactiveWrappers.ReactiveLibrary;
+import org.springframework.data.util.TypeUtils;
 
 /**
  * @author Christoph Strobl

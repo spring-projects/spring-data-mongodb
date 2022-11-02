@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
-import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;

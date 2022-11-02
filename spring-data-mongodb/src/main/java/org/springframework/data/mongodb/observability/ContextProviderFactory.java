@@ -15,24 +15,24 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
+import reactor.core.CoreSubscriber;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Subscriber;
-import org.springframework.data.repository.util.ReactiveWrappers;
-import org.springframework.data.repository.util.ReactiveWrappers.ReactiveLibrary;
+import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.util.ReactiveWrappers.ReactiveLibrary;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.ContextProvider;
 import com.mongodb.RequestContext;
 import com.mongodb.client.SynchronousContextProvider;
 import com.mongodb.reactivestreams.client.ReactiveContextProvider;
-
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
-import reactor.core.CoreSubscriber;
 
 /**
  * Factory to create a {@link ContextProvider} to propagate the request context across tasks. Requires either

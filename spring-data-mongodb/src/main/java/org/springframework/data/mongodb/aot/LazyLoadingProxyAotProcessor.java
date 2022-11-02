@@ -29,11 +29,11 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.annotation.Reference;
-import org.springframework.data.aot.TypeUtils;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory.LazyLoadingInterceptor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import org.springframework.data.util.TypeUtils;
 
 /**
  * @author Christoph Strobl
