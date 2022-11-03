@@ -52,15 +52,7 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
 
-		if (ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
-
-			hints.proxies().registerJdkProxy(TypeReference.of(com.mongodb.client.MongoDatabase.class),
-					TypeReference.of("org.springframework.aop.SpringProxy"),
-					TypeReference.of("org.springframework.core.DecoratingProxy"));
-			hints.proxies().registerJdkProxy(TypeReference.of(com.mongodb.client.MongoCollection.class),
-					TypeReference.of("org.springframework.aop.SpringProxy"),
-					TypeReference.of("org.springframework.core.DecoratingProxy"));
-		}
+		registerTransactionProxyHints(hints, classLoader);
 
 		if (isReactorPresent()) {
 
@@ -71,6 +63,19 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 									MemberCategory.INVOKE_PUBLIC_METHODS));
 
+		}
+	}
+
+	private static void registerTransactionProxyHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+
+		if (MongoAotPredicates.isSyncClientPresent(classLoader) && ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
+
+			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoDatabase"),
+					TypeReference.of("org.springframework.aop.SpringProxy"),
+					TypeReference.of("org.springframework.core.DecoratingProxy"));
+			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoCollection"),
+					TypeReference.of("org.springframework.aop.SpringProxy"),
+					TypeReference.of("org.springframework.core.DecoratingProxy"));
 		}
 	}
 }
