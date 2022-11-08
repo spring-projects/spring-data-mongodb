@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTe
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SerializationUtils;
 
@@ -847,7 +848,7 @@ class DbRefMappingMongoConverterUnitTests {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 			if (this == obj)
 				return true;
 			if (obj == null)

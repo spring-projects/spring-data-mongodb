@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.query.TextQueryTests.FullTextDoc.Fu
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -251,7 +252,7 @@ public class TextQueryTests {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 			if (this == obj) {
 				return true;
 			}

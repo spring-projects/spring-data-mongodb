@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 import com.querydsl.core.annotations.QueryEmbeddable;
@@ -87,7 +88,7 @@ public class Address {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 

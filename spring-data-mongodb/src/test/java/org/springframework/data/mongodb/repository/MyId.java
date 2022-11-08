@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import java.io.Serializable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -42,7 +43,7 @@ public class MyId implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (obj == this) {
 			return true;
