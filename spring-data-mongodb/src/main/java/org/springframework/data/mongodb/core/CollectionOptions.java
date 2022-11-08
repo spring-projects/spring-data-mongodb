@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
@@ -49,8 +50,8 @@ public class CollectionOptions {
 	private @Nullable CollectionChangeStreamOptions changeStreamOptions;
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
-			@Nullable Collation collation, ValidationOptions validationOptions,
-			@Nullable TimeSeriesOptions timeSeriesOptions, @Nullable CollectionChangeStreamOptions changeStreamOptions) {
+			@Nullable Collation collation, ValidationOptions validationOptions, @Nullable TimeSeriesOptions timeSeriesOptions,
+			@Nullable CollectionChangeStreamOptions changeStreamOptions) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -104,7 +105,7 @@ public class CollectionOptions {
 	 *
 	 * @return new instance of {@link CollectionOptions}.
 	 * @see #changeStream(CollectionChangeStreamOptions)
-	 * @see CollectionChangeStreamOptions#preAndPostImages(boolean) 
+	 * @see CollectionChangeStreamOptions#preAndPostImages(boolean)
 	 * @since 4.0
 	 */
 	public static CollectionOptions emitChangedRevisions() {
@@ -119,7 +120,8 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions capped() {
-		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -130,7 +132,8 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions maxDocuments(long maxDocuments) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -141,7 +144,8 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions size(long size) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -152,7 +156,8 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions collation(@Nullable Collation collation) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -272,7 +277,8 @@ public class CollectionOptions {
 	public CollectionOptions validation(ValidationOptions validationOptions) {
 
 		Assert.notNull(validationOptions, "ValidationOptions must not be null");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -285,7 +291,8 @@ public class CollectionOptions {
 	public CollectionOptions timeSeries(TimeSeriesOptions timeSeriesOptions) {
 
 		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -298,7 +305,8 @@ public class CollectionOptions {
 	public CollectionOptions changeStream(CollectionChangeStreamOptions changeStreamOptions) {
 
 		Assert.notNull(changeStreamOptions, "ChangeStreamOptions must not be null");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions, changeStreamOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions);
 	}
 
 	/**
@@ -367,6 +375,60 @@ public class CollectionOptions {
 	 */
 	public Optional<CollectionChangeStreamOptions> getChangeStreamOptions() {
 		return Optional.ofNullable(changeStreamOptions);
+	}
+
+	@Override
+	public String toString() {
+		return "CollectionOptions{" + "maxDocuments=" + maxDocuments + ", size=" + size + ", capped=" + capped
+				+ ", collation=" + collation + ", validationOptions=" + validationOptions + ", timeSeriesOptions="
+				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", disableValidation="
+				+ disableValidation() + ", strictValidation=" + strictValidation() + ", moderateValidation="
+				+ moderateValidation() + ", warnOnValidationError=" + warnOnValidationError() + ", failOnValidationError="
+				+ failOnValidationError() + '}';
+	}
+
+	@Override
+	public boolean equals(@Nullable Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		CollectionOptions that = (CollectionOptions) o;
+
+		if (!ObjectUtils.nullSafeEquals(maxDocuments, that.maxDocuments)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(size, that.size)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(capped, that.capped)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(collation, that.collation)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(validationOptions, that.validationOptions)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(timeSeriesOptions, that.timeSeriesOptions)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(changeStreamOptions, that.changeStreamOptions);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = ObjectUtils.nullSafeHashCode(maxDocuments);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(size);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(capped);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(collation);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(validationOptions);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(timeSeriesOptions);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(changeStreamOptions);
+		return result;
 	}
 
 	/**
@@ -463,6 +525,40 @@ public class CollectionOptions {
 		boolean isEmpty() {
 			return !Optionals.isAnyPresent(getValidator(), getValidationAction(), getValidationLevel());
 		}
+
+		@Override
+		public String toString() {
+
+			return "ValidationOptions{" + "validator=" + validator + ", validationLevel=" + validationLevel
+					+ ", validationAction=" + validationAction + '}';
+		}
+
+		@Override
+		public boolean equals(@Nullable Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			ValidationOptions that = (ValidationOptions) o;
+
+			if (!ObjectUtils.nullSafeEquals(validator, that.validator)) {
+				return false;
+			}
+			if (validationLevel != that.validationLevel)
+				return false;
+			return validationAction == that.validationAction;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(validator);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(validationLevel);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(validationAction);
+			return result;
+		}
 	}
 
 	/**
@@ -490,6 +586,30 @@ public class CollectionOptions {
 
 		public boolean getPreAndPostImages() {
 			return preAndPostImages;
+		}
+
+		@Override
+		public String toString() {
+			return "CollectionChangeStreamOptions{" + "preAndPostImages=" + preAndPostImages + '}';
+		}
+
+		@Override
+		public boolean equals(@Nullable Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			CollectionChangeStreamOptions that = (CollectionChangeStreamOptions) o;
+
+			return preAndPostImages == that.preAndPostImages;
+		}
+
+		@Override
+		public int hashCode() {
+			return (preAndPostImages ? 1 : 0);
 		}
 	}
 
@@ -575,6 +695,41 @@ public class CollectionOptions {
 		 */
 		public GranularityDefinition getGranularity() {
 			return granularity;
+		}
+
+		@Override
+		public String toString() {
+
+			return "TimeSeriesOptions{" + "timeField='" + timeField + '\'' + ", metaField='" + metaField + '\''
+					+ ", granularity=" + granularity + '}';
+		}
+
+		@Override
+		public boolean equals(@Nullable Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			TimeSeriesOptions that = (TimeSeriesOptions) o;
+
+			if (!ObjectUtils.nullSafeEquals(timeField, that.timeField)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(metaField, that.metaField)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(granularity, that.granularity);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(timeField);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(metaField);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(granularity);
+			return result;
 		}
 	}
 }
