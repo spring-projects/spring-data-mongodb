@@ -550,7 +550,7 @@ public class Update implements UpdateDefinition {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
 			return true;
@@ -628,7 +628,7 @@ public class Update implements UpdateDefinition {
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 
 			if (this == obj) {
 				return true;
@@ -697,7 +697,7 @@ public class Update implements UpdateDefinition {
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
-		public boolean equals(Object that) {
+		public boolean equals(@Nullable Object that) {
 
 			if (this == that) {
 				return true;
@@ -1027,7 +1027,7 @@ public class Update implements UpdateDefinition {
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 
 			if (this == obj) {
 				return true;

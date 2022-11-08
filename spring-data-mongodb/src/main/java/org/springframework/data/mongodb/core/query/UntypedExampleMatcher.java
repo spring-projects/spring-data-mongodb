@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Set;
 
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -223,7 +224,7 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 
 		if (this == o)
 			return true;

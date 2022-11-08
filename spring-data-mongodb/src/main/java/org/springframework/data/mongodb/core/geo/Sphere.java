@@ -23,6 +23,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -105,7 +106,7 @@ public class Sphere implements Shape {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
 			return true;

@@ -176,7 +176,7 @@ public class BasicQuery extends Query {
 	 * @see org.springframework.data.mongodb.core.query.Query#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 
 		if (this == o) {
 			return true;

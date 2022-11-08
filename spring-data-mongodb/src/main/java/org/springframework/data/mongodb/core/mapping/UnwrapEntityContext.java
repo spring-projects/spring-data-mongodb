@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -39,7 +40,7 @@ class UnwrapEntityContext {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
 			return true;

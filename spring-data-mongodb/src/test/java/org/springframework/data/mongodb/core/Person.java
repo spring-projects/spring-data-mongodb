@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.bson.types.ObjectId;
+import org.springframework.lang.Nullable;
 
 public class Person {
 
@@ -95,7 +96,7 @@ public class Person {
 	  * @see java.lang.Object#equals(java.lang.Object)
 	  */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (obj == this) {
 			return true;
 		}
