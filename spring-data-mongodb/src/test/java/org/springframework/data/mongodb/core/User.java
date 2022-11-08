@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.lang.Nullable;
+
 public class User {
 
 	@Override
@@ -27,7 +29,7 @@ public class User {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

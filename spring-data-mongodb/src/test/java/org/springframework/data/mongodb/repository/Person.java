@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
+import org.springframework.lang.Nullable;
 
 /**
  * Sample domain class.
@@ -275,7 +276,7 @@ public class Person extends Contact {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
 			return true;

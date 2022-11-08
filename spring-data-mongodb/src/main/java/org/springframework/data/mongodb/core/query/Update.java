@@ -486,7 +486,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
 			return true;
@@ -552,7 +552,7 @@ public class Update implements UpdateDefinition {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 
 			if (this == obj) {
 				return true;
@@ -613,7 +613,7 @@ public class Update implements UpdateDefinition {
 		}
 
 		@Override
-		public boolean equals(Object that) {
+		public boolean equals(@Nullable Object that) {
 
 			if (this == that) {
 				return true;
@@ -907,7 +907,7 @@ public class Update implements UpdateDefinition {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 
 			if (this == obj) {
 				return true;

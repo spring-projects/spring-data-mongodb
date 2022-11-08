@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Value object to encapsulate results of a map-reduce count.
  *
@@ -77,7 +79,7 @@ public class MapReduceCounts {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj) {
 			return true;
 		}

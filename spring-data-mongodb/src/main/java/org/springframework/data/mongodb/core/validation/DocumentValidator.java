@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.validation;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -61,7 +62,7 @@ class DocumentValidator implements Validator {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 
 		if (this == o)
 			return true;

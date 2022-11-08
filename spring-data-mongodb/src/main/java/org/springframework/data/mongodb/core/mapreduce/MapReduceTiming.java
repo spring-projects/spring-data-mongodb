@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @deprecated since 3.4 in favor of {@link org.springframework.data.mongodb.core.aggregation}.
  */
@@ -61,7 +63,7 @@ public class MapReduceTiming {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
 			return true;
