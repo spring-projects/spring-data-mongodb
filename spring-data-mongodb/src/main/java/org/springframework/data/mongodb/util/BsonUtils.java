@@ -38,6 +38,7 @@ import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
+import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
@@ -368,6 +369,10 @@ public class BsonUtils {
 
 		if (source instanceof Float) {
 			return new BsonDouble((Float) source);
+		}
+
+		if(source instanceof Binary binary) {
+			return new BsonBinary(binary.getType(), binary.getData());
 		}
 
 		throw new IllegalArgumentException(String.format("Unable to convert %s (%s) to BsonValue.", source,

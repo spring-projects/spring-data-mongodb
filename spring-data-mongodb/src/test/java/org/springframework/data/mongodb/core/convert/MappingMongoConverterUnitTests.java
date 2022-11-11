@@ -2613,7 +2613,7 @@ class MappingMongoConverterUnitTests {
 		doReturn(Person.class).when(persistentProperty).getType();
 		doReturn(Person.class).when(persistentProperty).getRawType();
 
-		converter.writePropertyInternal(sourceValue, accessor, persistentProperty);
+		converter.writePropertyInternal(sourceValue, accessor, persistentProperty, null);
 
 		assertThat(accessor.getDocument())
 				.isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));

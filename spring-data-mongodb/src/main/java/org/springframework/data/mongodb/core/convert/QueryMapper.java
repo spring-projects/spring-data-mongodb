@@ -439,7 +439,7 @@ public class QueryMapper {
 				&& converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
 			return converter.getCustomConversions().getPropertyValueConversions()
 					.getValueConverter(documentField.getProperty())
-					.write(value, new MongoConversionContext(documentField.getProperty(), converter));
+					.write(value, new MongoConversionContext(null, documentField.getProperty(), converter));
 		}
 
 		if (documentField.isIdField() && !documentField.isAssociation()) {

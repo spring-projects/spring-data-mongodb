@@ -396,36 +396,7 @@ public class EncryptionExtension implements EvaluationContextExtension {
     }
 }
 ----
-
-To combine derived encryption settings with `AutoEncryptionSettings` in a Spring Boot application use the `MongoClientSettingsBuilderCustomizer`.
-
-[source,java]
-----
-@Bean
-MongoClientSettingsBuilderCustomizer customizer(MappingContext mappingContext) {
-    return (builder) -> {
-
-        // ... keyVaultCollection, kmsProvider, ...
-
-        MongoJsonSchemaCreator schemaCreator = MongoJsonSchemaCreator.create(mappingContext);
-        MongoJsonSchema patientSchema = schemaCreator
-            .filter(MongoJsonSchemaCreator.encryptedOnly())
-            .createSchemaFor(Patient.class);
-
-        AutoEncryptionSettings autoEncryptionSettings = AutoEncryptionSettings.builder()
-            .keyVaultNamespace(keyVaultCollection)
-            .kmsProviders(kmsProviders)
-            .extraOptions(extraOpts)
-            .schemaMap(Collections.singletonMap("db.patient", patientSchema.schemaDocument().toBsonDocument()))
-            .build();
-
-        builder.autoEncryptionSettings(autoEncryptionSettings);
-    };
-}
-----
 ====
-
-NOTE: Make sure to set the drivers `com.mongodb.AutoEncryptionSettings` to use client-side encryption. MongoDB does not support encryption for all field types. Specific data types require deterministic encryption to preserve equality comparison functionality.
 
 [[mongo.jsonSchema.types]]
 ==== JSON Schema Types
