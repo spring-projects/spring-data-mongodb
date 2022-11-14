@@ -110,6 +110,11 @@ public class FLETests {
 
 		person.listOfString = Arrays.asList("spring", "data", "mongodb");
 
+		Address partOfList = new Address();
+		partOfList.city = "SFO";
+		partOfList.street = "---";
+		person.listOfComplex = Collections.singletonList(partOfList);
+
 		template.save(person);
 
 		System.out.println("source: " + person);
@@ -120,8 +125,13 @@ public class FLETests {
 
 		// ssn should look like "ssn": {"$binary": {"base64": "...
 		System.out.println("saved: " + savedDocument.toJson());
-		assertThat(savedDocument.get("ssn")).isInstanceOf(org.bson.types.Binary.class);
-		assertThat(savedDocument.get("wallet")).isInstanceOf(org.bson.types.Binary.class);
+		assertThat(savedDocument.get("ssn")).isInstanceOf(Binary.class);
+		assertThat(savedDocument.get("wallet")).isInstanceOf(Binary.class);
+		assertThat(savedDocument.get("encryptedZip")).isInstanceOf(Document.class);
+		assertThat(savedDocument.get("encryptedZip", Document.class).get("zip")).isInstanceOf(Binary.class);
+		assertThat(savedDocument.get("address")).isInstanceOf(Binary.class);
+		assertThat(savedDocument.get("listOfString")).isInstanceOf(Binary.class);
+		assertThat(savedDocument.get("listOfComplex")).isInstanceOf(Binary.class);
 
 		// count should be 1 using a deterministic algorithm
 		long queryCount = template.query(Person.class).matching(where("ssn").is(person.ssn)).count();
@@ -220,6 +230,9 @@ public class FLETests {
 
 		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<String> listOfString;
+
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		List<Address> listOfComplex;
 
 	}
 
@@ -322,6 +335,9 @@ public class FLETests {
 				}
 				return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
 			}
+			if (persistentProperty.isCollectionLike()) {
+				return clientEncryption.encrypt(collectionLikeToBsonValue(value), encryptOptions);
+			}
 
 			Object write = context.write(value);
 			if (write instanceof Document doc) {
@@ -341,6 +357,19 @@ public class FLETests {
 					} else if (ObjectUtils.isArray(value)) {
 						for (Object o : ObjectUtils.toObjectArray(value)) {
 							bsonArray.add(BsonUtils.simpleToBsonValue(o));
+						}
+					}
+					return bsonArray;
+				} else {
+					if (value instanceof Collection values) {
+						values.forEach(it -> {
+							Document write = (Document) context.write(it, persistentProperty.getTypeInformation());
+							bsonArray.add(write.toBsonDocument());
+						});
+					} else if (ObjectUtils.isArray(value)) {
+						for (Object o : ObjectUtils.toObjectArray(value)) {
+							Document write = (Document) context.write(0, persistentProperty.getTypeInformation());
+							bsonArray.add(write.toBsonDocument());
 						}
 					}
 					return bsonArray;
@@ -379,6 +408,12 @@ public class FLETests {
 				if (!persistentProperty.isEntity()) {
 					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 					iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
+					return collection;
+				} else {
+					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
+					iterable.forEach(it -> {
+						collection.add(context.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
+					});
 					return collection;
 				}
 			}
