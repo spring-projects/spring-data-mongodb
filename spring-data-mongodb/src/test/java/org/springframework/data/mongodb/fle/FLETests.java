@@ -20,19 +20,22 @@ import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import lombok.Generated;
-import lombok.Getter;
-import lombok.Setter;
+import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -44,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.CollectionFactory;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ValueConverter;
@@ -60,6 +64,7 @@ import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ConnectionString;
@@ -102,6 +107,8 @@ public class FLETests {
 		person.encryptedZip.city = "Boston";
 		person.encryptedZip.street = "central square";
 		person.encryptedZip.zip = "1234567890";
+
+		person.listOfString = Arrays.asList("spring", "data", "mongodb");
 
 		template.save(person);
 
@@ -206,10 +213,14 @@ public class FLETests {
 		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "mySuperSecretKey") //
 		String wallet;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
 		Address address;
 
 		AddressWithEncryptedZip encryptedZip;
+
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		List<String> listOfString;
+
 	}
 
 	@Data
@@ -218,19 +229,16 @@ public class FLETests {
 		String street;
 	}
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	static class AddressWithEncryptedZip extends Address {
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random)
-		String zip;
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) String zip;
 
 		@Override
 		public String toString() {
-			return "AddressWithEncryptedZip{" +
-					"zip='" + zip + '\'' +
-					", city='" + getCity() + '\'' +
-					", street='" + getStreet() + '\'' +
-					'}';
+			return "AddressWithEncryptedZip{" + "zip='" + zip + '\'' + ", city='" + getCity() + '\'' + ", street='"
+					+ getStreet() + '\'' + '}';
 		}
 	}
 
@@ -308,6 +316,10 @@ public class FLETests {
 			}
 
 			if (!persistentProperty.isEntity()) {
+
+				if (persistentProperty.isCollectionLike()) {
+					return clientEncryption.encrypt(collectionLikeToBsonValue(value), encryptOptions);
+				}
 				return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
 			}
 
@@ -316,6 +328,35 @@ public class FLETests {
 				return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
 			}
 			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
+		}
+
+		public BsonValue collectionLikeToBsonValue(Object value) {
+
+			if (persistentProperty.isCollectionLike()) {
+
+				BsonArray bsonArray = new BsonArray();
+				if (!persistentProperty.isEntity()) {
+					if (value instanceof Collection values) {
+						values.forEach(it -> bsonArray.add(BsonUtils.simpleToBsonValue(it)));
+					} else if (ObjectUtils.isArray(value)) {
+						for (Object o : ObjectUtils.toObjectArray(value)) {
+							bsonArray.add(BsonUtils.simpleToBsonValue(o));
+						}
+					}
+					return bsonArray;
+				}
+			}
+
+			if (!persistentProperty.isEntity()) {
+				if (persistentProperty.isCollectionLike()) {
+
+					if (persistentProperty.isEntity()) {
+
+					}
+				}
+			}
+
+			return null;
 		}
 
 		public Object decrypt(Object value, ClientEncryption clientEncryption) {
@@ -332,6 +373,14 @@ public class FLETests {
 			// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
 			if (value == result) {
 				return result;
+			}
+
+			if (persistentProperty.isCollectionLike() && result instanceof Iterable<?> iterable) {
+				if (!persistentProperty.isEntity()) {
+					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
+					iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
+					return collection;
+				}
 			}
 
 			if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
