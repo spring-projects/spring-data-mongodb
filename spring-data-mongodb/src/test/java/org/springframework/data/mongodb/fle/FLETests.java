@@ -30,7 +30,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Generated;
+import lombok.Getter;
+import lombok.Setter;
 import org.bson.BsonBinary;
+import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.Binary;
@@ -88,6 +92,16 @@ public class FLETests {
 		person.name = "p1-name";
 		person.ssn = "mySecretSSN"; // determinisitc encryption (queryable)
 		person.wallet = "myEvenMoreSecretStuff"; // random encryption (non queryable)
+
+		// nested full document encryption
+		person.address = new Address();
+		person.address.city = "NYC";
+		person.address.street = "4th Ave.";
+
+		person.encryptedZip = new AddressWithEncryptedZip();
+		person.encryptedZip.city = "Boston";
+		person.encryptedZip.street = "central square";
+		person.encryptedZip.zip = "1234567890";
 
 		template.save(person);
 
@@ -191,6 +205,33 @@ public class FLETests {
 
 		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "mySuperSecretKey") //
 		String wallet;
+
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		Address address;
+
+		AddressWithEncryptedZip encryptedZip;
+	}
+
+	@Data
+	static class Address {
+		String city;
+		String street;
+	}
+
+	@Getter @Setter
+	static class AddressWithEncryptedZip extends Address {
+
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random)
+		String zip;
+
+		@Override
+		public String toString() {
+			return "AddressWithEncryptedZip{" +
+					"zip='" + zip + '\'' +
+					", city='" + getCity() + '\'' +
+					", street='" + getStreet() + '\'' +
+					'}';
+		}
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
@@ -235,18 +276,20 @@ public class FLETests {
 		}
 
 		ManualEncryptionContext buildEncryptionContext(MongoConversionContext context) {
-			return new ManualEncryptionContext(context.getProperty(), this.dataKeyId);
+			return new ManualEncryptionContext(context, this.dataKeyId);
 		}
 	}
 
 	static class ManualEncryptionContext {
 
+		MongoConversionContext context;
 		MongoPersistentProperty persistentProperty;
 		BsonBinary dataKeyId;
 		Lazy<Encrypted> encryption;
 
-		public ManualEncryptionContext(MongoPersistentProperty persistentProperty, BsonBinary dataKeyId) {
-			this.persistentProperty = persistentProperty;
+		public ManualEncryptionContext(MongoConversionContext context, BsonBinary dataKeyId) {
+			this.context = context;
+			this.persistentProperty = context.getProperty();
 			this.dataKeyId = dataKeyId;
 			this.encryption = Lazy.of(() -> persistentProperty.findAnnotation(Encrypted.class));
 		}
@@ -264,21 +307,42 @@ public class FLETests {
 				encryptOptions = encryptOptions.keyId(this.dataKeyId);
 			}
 
-			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
+			if (!persistentProperty.isEntity()) {
+				return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
+			}
+
+			Object write = context.write(value);
+			if (write instanceof Document doc) {
+				return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
+			}
+			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
 		}
 
 		public Object decrypt(Object value, ClientEncryption clientEncryption) {
 
+			Object result = value;
 			if (value instanceof Binary binary) {
-				return clientEncryption.decrypt(new BsonBinary(binary.getType(), binary.getData()));
+				result = clientEncryption.decrypt(new BsonBinary(binary.getType(), binary.getData()));
 			}
 			if (value instanceof BsonBinary binary) {
-				return clientEncryption.decrypt(binary);
+				result = clientEncryption.decrypt(binary);
 			}
 
 			// in case the driver has auto decryption (aka .bypassAutoEncryption(true)) active
 			// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
-			return value;
+			if (value == result) {
+				return result;
+			}
+
+			if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
+				return BsonUtils.toJavaType(bsonValue);
+			}
+
+			if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
+				return context.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
+			}
+
+			return result;
 		}
 	}
 }
