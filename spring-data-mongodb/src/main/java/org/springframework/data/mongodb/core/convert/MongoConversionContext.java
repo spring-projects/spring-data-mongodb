@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
 import org.springframework.data.convert.ValueConversionContext;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -29,11 +31,13 @@ import org.springframework.lang.Nullable;
  */
 public class MongoConversionContext implements ValueConversionContext<MongoPersistentProperty> {
 
+	private final PropertyValueProvider accessor; // TODO: generics
 	private final MongoPersistentProperty persistentProperty;
 	private final MongoConverter mongoConverter;
 
-	public MongoConversionContext(MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
+	public MongoConversionContext(PropertyValueProvider<?> accessor, MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
 
+		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
 	}
@@ -41,6 +45,10 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	@Override
 	public MongoPersistentProperty getProperty() {
 		return persistentProperty;
+	}
+
+	public Object getValue(String propertyPath) {
+		return accessor.getPropertyValue(persistentProperty.getOwner().getRequiredPersistentProperty(propertyPath));
 	}
 
 	@Override

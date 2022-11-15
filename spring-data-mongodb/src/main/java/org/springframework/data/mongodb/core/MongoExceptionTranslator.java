@@ -68,6 +68,8 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
 			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
 
+	private static final Set<String> SECURITY_EXCEPTIONS = Set.of("MongoCryptException");
+
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
@@ -131,6 +133,8 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				return new ClientSessionException(ex.getMessage(), ex);
 			} else if (MongoDbErrorCodes.isTransactionFailureCode(code)) {
 				return new MongoTransactionException(ex.getMessage(), ex);
+			} else if(ex.getCause() != null && SECURITY_EXCEPTIONS.contains(ClassUtils.getShortName(ex.getCause().getClass()))) {
+				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
 			}
 
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
