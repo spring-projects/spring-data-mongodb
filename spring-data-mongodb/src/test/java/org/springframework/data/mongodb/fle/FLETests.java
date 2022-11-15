@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
@@ -49,6 +50,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -65,6 +67,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ConnectionString;
@@ -77,6 +80,7 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.model.vault.EncryptOptions;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
@@ -145,6 +149,56 @@ public class FLETests {
 		Person byWallet = template.query(Person.class).matching(where("wallet").is(person.wallet)).firstValue();
 		System.out.println("not-queryable: " + byWallet);
 		assertThat(byWallet).isNull();
+	}
+
+	@Test
+	void altKeyDetection(@Autowired ClientEncryption clientEncryption) throws InterruptedException {
+
+		BsonBinary user1key = clientEncryption.createDataKey("local",
+				new DataKeyOptions().keyAltNames(Collections.singletonList("user-1")));
+
+		BsonBinary user2key = clientEncryption.createDataKey("local",
+				new DataKeyOptions().keyAltNames(Collections.singletonList("user-2")));
+
+		Person p1 = new Person();
+		p1.id = "id-1";
+		p1.name = "user-1";
+		p1.ssn = "ssn";
+		p1.viaAltKeyNameField = "value-1";
+
+		Person p2 = new Person();
+		p2.id = "id-2";
+		p2.name = "user-2";
+		p2.viaAltKeyNameField = "value-1";
+
+		Person p3 = new Person();
+		p3.id = "id-3";
+		p3.name = "user-1";
+		p3.viaAltKeyNameField = "value-1";
+
+		template.save(p1);
+		template.save(p2);
+		template.save(p3);
+
+		template.execute(Person.class, collection -> {
+			collection.find(new Document()).forEach(it -> System.out.println(it.toJson()));
+			return null;
+		});
+
+		// System.out.println(template.query(Person.class).matching(where("id").is(p1.id)).firstValue());
+		// System.out.println(template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
+
+		DeleteResult deleteResult = clientEncryption.deleteKey(user2key);
+		clientEncryption.getKeys().forEach(System.out::println);
+		System.out.println("deleteResult: " + deleteResult);
+
+		System.out.println("---- waiting for cache timeout ----");
+		TimeUnit.SECONDS.sleep(90);
+
+		assertThat(template.query(Person.class).matching(where("id").is(p1.id)).firstValue()).isEqualTo(p1);
+
+		assertThatExceptionOfType(PermissionDeniedDataAccessException.class)
+				.isThrownBy(() -> template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
 	}
 
 	@Configuration
@@ -234,6 +288,8 @@ public class FLETests {
 		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<Address> listOfComplex;
 
+		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/name") //
+		String viaAltKeyNameField;
 	}
 
 	@Data
@@ -323,10 +379,20 @@ public class FLETests {
 
 			EncryptedField annotation = persistentProperty.findAnnotation(EncryptedField.class);
 			if (annotation != null && !annotation.altKeyName().isBlank()) {
-				encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
+				if (annotation.altKeyName().startsWith("/")) {
+					String fieldName = annotation.altKeyName().replace("/", "");
+					Object altKeyNameValue = context.getValue(fieldName);
+					encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
+				} else {
+					encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
+				}
 			} else {
 				encryptOptions = encryptOptions.keyId(this.dataKeyId);
 			}
+
+			System.out.println(
+					"encrypting with: " + (StringUtils.hasText(encryptOptions.getKeyAltName()) ? encryptOptions.getKeyAltName()
+							: encryptOptions.getKeyId()));
 
 			if (!persistentProperty.isEntity()) {
 
@@ -389,6 +455,11 @@ public class FLETests {
 		}
 
 		public Object decrypt(Object value, ClientEncryption clientEncryption) {
+
+			// this was a hack to avoid the 60 sec timeout of the key cache
+			// ClientEncryptionSettings settings = (ClientEncryptionSettings) new DirectFieldAccessor(clientEncryption)
+			// .getPropertyValue("options");
+			// clientEncryption = ClientEncryptions.create(settings);
 
 			Object result = value;
 			if (value instanceof Binary binary) {

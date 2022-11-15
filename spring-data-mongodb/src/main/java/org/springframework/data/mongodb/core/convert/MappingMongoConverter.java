@@ -868,9 +868,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					dbObjectAccessor.put(prop, null);
 				}
 			} else if (!conversions.isSimpleType(value.getClass())) {
-				writePropertyInternal(value, dbObjectAccessor, prop);
+				writePropertyInternal(value, dbObjectAccessor, prop, accessor);
 			} else {
-				writeSimpleInternal(value, bson, prop);
+				writeSimpleInternal(value, bson, prop, accessor);
 			}
 		}
 	}
@@ -887,11 +887,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		writePropertyInternal(value, dbObjectAccessor, inverseProp);
+		writePropertyInternal(value, dbObjectAccessor, inverseProp, accessor);
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected void writePropertyInternal(@Nullable Object obj, DocumentAccessor accessor, MongoPersistentProperty prop) {
+	protected void writePropertyInternal(@Nullable Object obj, DocumentAccessor accessor, MongoPersistentProperty prop, PersistentPropertyAccessor<?> persistentPropertyAccessor) {
 
 		if (obj == null) {
 			return;
@@ -902,7 +902,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (conversions.hasValueConverter(prop)) {
 			accessor.put(prop, conversions.getPropertyValueConversions().getValueConverter(prop).write(obj,
-					new MongoConversionContext(prop, this)));
+					new MongoConversionContext(new PropertyValueProvider<MongoPersistentProperty>() {
+						@Nullable
+						@Override
+						public <T> T getPropertyValue(MongoPersistentProperty property) {
+							return (T) persistentPropertyAccessor.getProperty(property);
+						}
+					}, prop, this)));
 			return;
 		}
 
@@ -1234,12 +1240,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		BsonUtils.addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value, Object.class));
 	}
 
-	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property) {
+	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property, PersistentPropertyAccessor<?> persistentPropertyAccessor) {
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
 		if (conversions.hasValueConverter(property)) {
 			accessor.put(property, conversions.getPropertyValueConversions().getValueConverter(property).write(value,
-					new MongoConversionContext(property, this)));
+					new MongoConversionContext(new PropertyValueProvider<MongoPersistentProperty>() {
+						@Nullable
+						@Override
+						public <T> T getPropertyValue(MongoPersistentProperty property) {
+							return (T) persistentPropertyAccessor.getProperty(property);
+						}
+					}, property, this)));
 			return;
 		}
 
@@ -1892,7 +1904,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			CustomConversions conversions = context.getCustomConversions();
 			if (conversions.hasValueConverter(property)) {
 				return (T) conversions.getPropertyValueConversions().getValueConverter(property).read(value,
-						new MongoConversionContext(property, context.getSourceConverter()));
+						new MongoConversionContext(this, property, context.getSourceConverter()));
 			}
 
 			ConversionContext contextToUse = context.forProperty(property);
