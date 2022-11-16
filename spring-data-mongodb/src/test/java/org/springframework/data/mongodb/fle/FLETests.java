@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions.Mong
 import org.springframework.data.mongodb.core.convert.MongoValueConverter;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.fle.FLETests.Config;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.Lazy;
@@ -149,6 +150,30 @@ public class FLETests {
 		Person byWallet = template.query(Person.class).matching(where("wallet").is(person.wallet)).firstValue();
 		System.out.println("not-queryable: " + byWallet);
 		assertThat(byWallet).isNull();
+	}
+
+	@Test
+	void theUpdateStuff() {
+
+		Person person = new Person();
+		person.id = "id-1";
+		person.name = "p1-name";
+
+		template.save(person);
+
+		Document savedDocument = template.execute(Person.class, collection -> {
+			return collection.find(new Document()).first();
+		});
+		System.out.println("saved: " + savedDocument.toJson());
+
+		template.update(Person.class).matching(where("id").is(person.id)).apply(Update.update("ssn", "secret-value")).first();
+
+		savedDocument = template.execute(Person.class, collection -> {
+			return collection.find(new Document()).first();
+		});
+		System.out.println("updated: " + savedDocument.toJson());
+		assertThat(savedDocument.get("ssn")).isInstanceOf(Binary.class);
+
 	}
 
 	@Test
