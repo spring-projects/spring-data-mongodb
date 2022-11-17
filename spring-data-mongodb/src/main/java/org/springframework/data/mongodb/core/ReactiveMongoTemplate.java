@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -1431,7 +1432,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				Document dbDoc = entity.toMappedDocument(writer).getDocument();
 				maybeEmitEvent(new BeforeSaveEvent<T>(toConvert, dbDoc, collectionName));
 
-				return maybeCallBeforeSave(toConvert, dbDoc, collectionName).flatMap(it -> {
+				return maybeCallBeforeSave(toConvert, dbDoc, collectionName)
+						.flatMap(it -> {
 
 					return saveDocument(collectionName, dbDoc, it.getClass()).flatMap(id -> {
 
@@ -1441,6 +1443,26 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					});
 				});
 			});
+		});
+	}
+
+	private Mono<Document> resolveValues(Mono<Document> document) {
+		return document.flatMap(source -> {
+			for (Entry<String, Object> entry : source.entrySet()) {
+				if (entry.getValue()instanceof Mono<?> valueMono) {
+					return valueMono.flatMap(value -> {
+						source.put(entry.getKey(), value);
+						return resolveValues(Mono.just(source));
+					});
+				}
+				if (entry.getValue()instanceof Document nested) {
+					return resolveValues(Mono.just(nested)).map(it -> {
+						source.put(entry.getKey(), it);
+						return source;
+					});
+				}
+			}
+			return Mono.just(source);
 		});
 	}
 
@@ -1527,16 +1549,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					? collection //
 					: collection.withWriteConcern(writeConcernToUse);
 
-			Publisher<?> publisher;
+			Publisher<?> publisher = null;
+			Mono<Document> resolved = resolveValues(Mono.just(queryOperations.createInsertContext(mapped).prepareId(entityClass).getDocument()));
 			if (!mapped.hasId()) {
-				publisher = collectionToUse
-						.insertOne(queryOperations.createInsertContext(mapped).prepareId(entityClass).getDocument());
+				publisher = resolved.flatMap(it -> Mono.from(collectionToUse.insertOne(it)));
 			} else {
 
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 				UpdateContext updateContext = queryOperations.replaceSingleContext(mapped, true);
 				Document filter = updateContext.getMappedQuery(entity);
-				Document replacement = updateContext.getMappedUpdate(entity);
+				Mono<Document> replacement = resolveValues(Mono.just(updateContext.getMappedUpdate(entity)));
 
 				Mono<Document> deferredFilter;
 
@@ -1547,14 +1569,22 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						deferredFilter = Mono
 								.from(
 										collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
-								.defaultIfEmpty(replacement).map(it -> updateContext.applyShardKey(entity, filter, it));
+								.zipWith(replacement)
+								//.defaultIfEmpty(replacement)
+								.map(it -> {
+									if(it.getT1() == null) {
+										return updateContext.applyShardKey(entity, filter, it.getT2());
+									} else {
+										return updateContext.applyShardKey(entity, filter, it.getT1());
+									}
+								});
 					}
 				} else {
 					deferredFilter = Mono.just(filter);
 				}
 
-				publisher = deferredFilter.flatMapMany(
-						it -> collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entityClass)));
+				publisher = deferredFilter.zipWith(replacement).flatMapMany(
+						it -> collectionToUse.replaceOne(it.getT1(), it.getT2(), updateContext.getReplaceOptions(entityClass)));
 			}
 
 			return Mono.from(publisher).map(o -> mapped.getId());
