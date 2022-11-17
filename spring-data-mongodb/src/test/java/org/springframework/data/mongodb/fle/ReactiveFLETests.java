@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.fle;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.Data;
 import org.springframework.data.mongodb.fle.FLETests.Person;
@@ -34,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import org.bson.BsonArray;
@@ -152,8 +154,10 @@ public class ReactiveFLETests {
 			return Mono.from(collection.find(new Document()).first());
 		});
 
-		System.out.println(": " + result.blockFirst().toJson());
+		System.out.println("encrypted: " + result.blockFirst().toJson());
 
+		Person id = template.query(Person.class).matching(where("id").is(person.id)).first().block();
+		System.out.println("decrypted: " + id);
 	}
 
 	@Data
@@ -260,7 +264,14 @@ public class ReactiveFLETests {
 		public Object read(Object value, MongoConversionContext context) {
 
 			ManualEncryptionContext encryptionContext = buildEncryptionContext(context);
-			Object decrypted = encryptionContext.decrypt(value, clientEncryption);
+			Object decrypted = null;
+			try {
+				decrypted = encryptionContext.decrypt(value, clientEncryption);
+			} catch (ExecutionException e) {
+				throw new RuntimeException(e);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
 			return decrypted instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) decrypted) : decrypted;
 		}
 
@@ -374,50 +385,55 @@ public class ReactiveFLETests {
 			return null;
 		}
 
-		public Object decrypt(Object value, ClientEncryption clientEncryption) {
+		public Object decrypt(Object value, ClientEncryption clientEncryption) throws ExecutionException, InterruptedException {
 
 			// this was a hack to avoid the 60 sec timeout of the key cache
 			// ClientEncryptionSettings settings = (ClientEncryptionSettings) new DirectFieldAccessor(clientEncryption)
 			// .getPropertyValue("options");
 			// clientEncryption = ClientEncryptions.create(settings);
 
-			Object result = value;
+			Object r = value;
 			if (value instanceof Binary binary) {
-				result = clientEncryption.decrypt(new BsonBinary(binary.getType(), binary.getData()));
+				r = clientEncryption.decrypt(new BsonBinary(binary.getType(), binary.getData()));
 			}
 			if (value instanceof BsonBinary binary) {
-				result = clientEncryption.decrypt(binary);
+				r = clientEncryption.decrypt(binary);
 			}
 
 			// in case the driver has auto decryption (aka .bypassAutoEncryption(true)) active
 			// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
-			if (value == result) {
-				return result;
+			if (value == r) {
+				return r;
 			}
 
-			if (persistentProperty.isCollectionLike() && result instanceof Iterable<?> iterable) {
-				if (!persistentProperty.isEntity()) {
-					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
-					iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
-					return collection;
-				} else {
-					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
-					iterable.forEach(it -> {
-						collection.add(context.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
-					});
-					return collection;
-				}
+			if(r instanceof Mono mono) {
+				return mono.map(result -> {
+					if (persistentProperty.isCollectionLike() && result instanceof Iterable<?> iterable) {
+						if (!persistentProperty.isEntity()) {
+							Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
+							iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
+							return collection;
+						} else {
+							Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
+							iterable.forEach(it -> {
+								collection.add(context.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
+							});
+							return collection;
+						}
+					}
+
+					if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
+						return BsonUtils.toJavaType(bsonValue);
+					}
+
+					if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
+						return context.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
+					}
+					return result;
+				}).toFuture().get();
 			}
 
-			if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
-				return BsonUtils.toJavaType(bsonValue);
-			}
-
-			if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
-				return context.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
-			}
-
-			return result;
+			return r;
 		}
 	}
 
