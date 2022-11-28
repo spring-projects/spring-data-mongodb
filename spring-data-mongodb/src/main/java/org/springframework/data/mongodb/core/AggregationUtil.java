@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,23 +22,16 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
-import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions.DomainTypeMapping;
-import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Utility methods to map {@link org.springframework.data.mongodb.core.aggregation.Aggregation} pipeline definitions and
@@ -75,12 +66,11 @@ class AggregationUtil {
 
 		if (!(aggregation instanceof TypedAggregation)) {
 
-			if(inputType == null) {
+			if (inputType == null) {
 				return untypedMappingContext.get();
 			}
 
-			if (domainTypeMapping == DomainTypeMapping.STRICT
-					&& !aggregation.getPipeline().containsUnionWith()) {
+			if (domainTypeMapping == DomainTypeMapping.STRICT && !aggregation.getPipeline().containsUnionWith()) {
 				return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 			}
 
@@ -88,8 +78,7 @@ class AggregationUtil {
 		}
 
 		inputType = ((TypedAggregation<?>) aggregation).getInputType();
-		if (domainTypeMapping == DomainTypeMapping.STRICT
-				&& !aggregation.getPipeline().containsUnionWith()) {
+		if (domainTypeMapping == DomainTypeMapping.STRICT && !aggregation.getPipeline().containsUnionWith()) {
 			return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 		}
 
@@ -104,12 +93,7 @@ class AggregationUtil {
 	 * @return
 	 */
 	List<Document> createPipeline(Aggregation aggregation, AggregationOperationContext context) {
-
-		if (ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return aggregation.toPipeline(context);
-		}
-
-		return mapAggregationPipeline(aggregation.toPipeline(context));
+		return aggregation.toPipeline(context);
 	}
 
 	/**
@@ -120,16 +104,7 @@ class AggregationUtil {
 	 * @return
 	 */
 	Document createCommand(String collection, Aggregation aggregation, AggregationOperationContext context) {
-
-		Document command = aggregation.toDocument(collection, context);
-
-		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return command;
-		}
-
-		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
-
-		return command;
+		return aggregation.toDocument(collection, context);
 	}
 
 	private List<Document> mapAggregationPipeline(List<Document> pipeline) {
