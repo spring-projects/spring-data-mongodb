@@ -245,7 +245,7 @@ public final class Fields implements Iterable<Field> {
 
 		private static String cleanUp(String source) {
 
-			if (SystemVariable.isReferingToSystemVariable(source)) {
+			if (AggregationVariable.isVariable(source)) {
 				return source;
 			}
 
