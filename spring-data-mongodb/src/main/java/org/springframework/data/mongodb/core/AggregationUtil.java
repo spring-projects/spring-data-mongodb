@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Utility methods to map {@link org.springframework.data.mongodb.core.aggregation.Aggregation} pipeline definitions and
@@ -96,12 +95,7 @@ class AggregationUtil {
 	 * @return
 	 */
 	List<Document> createPipeline(Aggregation aggregation, AggregationOperationContext context) {
-
-		if (ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return aggregation.toPipeline(context);
-		}
-
-		return mapAggregationPipeline(aggregation.toPipeline(context));
+		return aggregation.toPipeline(context);
 	}
 
 	/**
@@ -112,16 +106,7 @@ class AggregationUtil {
 	 * @return
 	 */
 	Document createCommand(String collection, Aggregation aggregation, AggregationOperationContext context) {
-
-		Document command = aggregation.toDocument(collection, context);
-
-		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
-			return command;
-		}
-
-		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
-
-		return command;
+		return aggregation.toDocument(collection, context);
 	}
 
 	private List<Document> mapAggregationPipeline(List<Document> pipeline) {
