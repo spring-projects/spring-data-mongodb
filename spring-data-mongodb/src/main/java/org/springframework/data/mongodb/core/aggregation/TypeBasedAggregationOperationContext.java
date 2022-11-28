@@ -133,7 +133,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	protected FieldReference getReferenceFor(Field field) {
 
-		if(entity.getNullable() == null) {
+		if(entity.getNullable() == null || AggregationVariable.isVariable(field)) {
 			return new DirectFieldReference(new ExposedField(field, true));
 		}
 

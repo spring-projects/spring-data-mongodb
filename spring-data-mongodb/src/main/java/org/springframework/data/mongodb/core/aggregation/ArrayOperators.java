@@ -1515,22 +1515,13 @@ public class ArrayOperators {
 			}
 		}
 
-		public enum Variable implements Field {
+		public enum Variable implements AggregationVariable {
 
 			THIS {
-				@Override
-				public String getName() {
-					return "$$this";
-				}
 
 				@Override
 				public String getTarget() {
 					return "$$this";
-				}
-
-				@Override
-				public boolean isAliased() {
-					return false;
 				}
 
 				@Override
@@ -1540,10 +1531,6 @@ public class ArrayOperators {
 			},
 
 			VALUE {
-				@Override
-				public String getName() {
-					return "$$value";
-				}
 
 				@Override
 				public String getTarget() {
@@ -1551,15 +1538,15 @@ public class ArrayOperators {
 				}
 
 				@Override
-				public boolean isAliased() {
-					return false;
-				}
-
-				@Override
 				public String toString() {
 					return getName();
 				}
 			};
+
+			@Override
+			public boolean isInternal() {
+				return true;
+			}
 
 			/**
 			 * Create a {@link Field} reference to a given {@literal property} prefixed with the {@link Variable} identifier.
@@ -1591,6 +1578,16 @@ public class ArrayOperators {
 						return getName();
 					}
 				};
+			}
+
+			public static boolean isVariable(Field field) {
+
+				for (Variable var : values()) {
+					if (field.getTarget().startsWith(var.getTarget())) {
+						return true;
+					}
+				}
+				return false;
 			}
 		}
 	}
