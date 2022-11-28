@@ -43,11 +43,11 @@ import java.util.stream.Stream;
 
 import org.assertj.core.data.Offset;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
@@ -65,6 +65,7 @@ import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.E
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1933,6 +1934,24 @@ public class AggregationTests {
 		assertThat(results.getMappedResults()).hasSize(1);
 	}
 
+	@Test // GH-4043
+	void considersMongoIdWithinTypedCollections() {
+
+		UserRef userRef = new UserRef();
+		userRef.id = "4ee921aca44fd11b3254e001";
+		userRef.name = "u-1";
+
+		Widget widget = new Widget();
+		widget.id = "w-1";
+		widget.users = List.of(userRef);
+
+		mongoTemplate.save(widget);
+
+		Criteria criteria = Criteria.where("users").elemMatch(Criteria.where("id").is("4ee921aca44fd11b3254e001"));
+		AggregationResults<Widget> aggregate = mongoTemplate.aggregate(newAggregation(match(criteria)), Widget.class, Widget.class);
+		assertThat(aggregate.getMappedResults()).contains(widget);
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -2249,5 +2268,19 @@ public class AggregationTests {
 
 		@Id String id;
 		MyEnum enumValue;
+	}
+
+	@lombok.Data
+	static class Widget {
+		@Id
+		String id;
+		List<UserRef> users;
+	}
+
+	@lombok.Data
+	static class UserRef {
+		@MongoId
+		String id;
+		String name;
 	}
 }
