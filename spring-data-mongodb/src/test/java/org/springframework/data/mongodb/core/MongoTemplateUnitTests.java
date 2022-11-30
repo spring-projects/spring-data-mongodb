@@ -204,6 +204,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
 		when(aggregateIterable.maxTime(anyLong(), any())).thenReturn(aggregateIterable);
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
+		when(aggregateIterable.hint(any())).thenReturn(aggregateIterable);
+		when(aggregateIterable.hintString(any())).thenReturn(aggregateIterable);
 		when(distinctIterable.collation(any())).thenReturn(distinctIterable);
 		when(distinctIterable.map(any())).thenReturn(distinctIterable);
 		when(distinctIterable.into(any())).thenReturn(Collections.emptyList());
@@ -495,6 +497,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
 
 		verify(aggregateIterable).hint(hint);
+	}
+
+	@Test // GH-4238
+	void aggregateShouldHonorOptionsHintString() {
+
+		AggregationOptions options = AggregationOptions.builder().hint("index-1").build();
+
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(aggregateIterable).hintString("index-1");
 	}
 
 	@Test // GH-3542

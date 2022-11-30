@@ -23,6 +23,8 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplateUnitTests.Wrapper;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -664,6 +666,17 @@ public class ReactiveMongoTemplateUnitTests {
 				Document.class).subscribe();
 
 		verify(aggregatePublisher).hint(hint);
+	}
+
+	@Test // GH-4238
+	void aggregateShouldHonorOptionsHintString() {
+
+		AggregationOptions options = AggregationOptions.builder().hint("index-1").build();
+
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(options), AutogenerateableId.class,
+				Document.class).subscribe();
+
+		verify(aggregatePublisher).hintString("index-1");
 	}
 
 	@Test // DATAMONGO-2390

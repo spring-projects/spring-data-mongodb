@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -634,7 +633,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+	public MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options) {
 
 		return createView(name, getCollectionName(source),
 				queryOperations.createAggregation(Aggregation.newAggregation(source, pipeline.getOperations()), source),
@@ -642,7 +642,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+	public MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options) {
 
 		return createView(name, source,
 				queryOperations.createAggregation(Aggregation.newAggregation(pipeline.getOperations()), (Class<?>) null),
@@ -654,7 +655,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateView(name, source, aggregation.getAggregationPipeline(), options);
 	}
 
-	protected MongoCollection<Document> doCreateView(String name, String source, List<Document> pipeline, @Nullable ViewOptions options) {
+	protected MongoCollection<Document> doCreateView(String name, String source, List<Document> pipeline,
+			@Nullable ViewOptions options) {
 
 		CreateViewOptions viewOptions = new CreateViewOptions();
 		if (options != null) {
@@ -2065,7 +2067,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(aggregateIterable::comment);
-			options.getHint().ifPresent(aggregateIterable::hint);
+			if (options.getHintObject().isPresent()) {
+				Object hintObject = options.getHintObject().get();
+				if (hintObject instanceof String hintString) {
+					aggregateIterable = aggregateIterable.hintString(hintString);
+				} else if (hintObject instanceof Document hintDocument) {
+					aggregateIterable = aggregateIterable.hint(hintDocument);
+				} else {
+					throw new IllegalStateException("Unable to read hint of type %s".formatted(hintObject.getClass()));
+				}
+			}
 
 			if (options.hasExecutionTimeLimit()) {
 				aggregateIterable = aggregateIterable.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
@@ -2124,7 +2135,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(cursor::comment);
-			options.getHint().ifPresent(cursor::hint);
+			if (options.getHintObject().isPresent()) {
+				Object hintObject = options.getHintObject().get();
+				if (hintObject instanceof String hintString) {
+					cursor = cursor.hintString(hintString);
+				} else if (hintObject instanceof Document hintDocument) {
+					cursor = cursor.hint(hintDocument);
+				} else {
+					throw new IllegalStateException("Unable to read hint of type %s".formatted(hintObject.getClass()));
+				}
+			}
 
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
 					: null;
