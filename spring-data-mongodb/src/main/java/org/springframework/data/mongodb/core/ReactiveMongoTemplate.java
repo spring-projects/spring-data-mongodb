@@ -938,7 +938,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		options.getComment().ifPresent(cursor::comment);
-		options.getHint().ifPresent(cursor::hint);
+		if (options.getHintObject().isPresent()) {
+			Object hintObject = options.getHintObject().get();
+			if (hintObject instanceof String hintString) {
+				cursor = cursor.hintString(hintString);
+			} else if (hintObject instanceof Document hintDocument) {
+				cursor = cursor.hint(hintDocument);
+			} else {
+				throw new IllegalStateException("Unable to read hint of type %s".formatted(hintObject.getClass()));
+			}
+		}
 
 		Optionals.firstNonEmpty(options::getCollation, () -> operations.forType(inputType).getCollation()) //
 				.map(Collation::toMongoCollation) //

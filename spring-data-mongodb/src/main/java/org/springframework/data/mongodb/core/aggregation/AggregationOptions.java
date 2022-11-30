@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -53,7 +54,7 @@ public class AggregationOptions {
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
-	private final Optional<Document> hint;
+	private final Optional<Object> hint;
 	private Duration maxTime = Duration.ZERO;
 	private ResultOptions resultOptions = ResultOptions.READ;
 	private DomainTypeMapping domainTypeMapping = DomainTypeMapping.RELAXED;
@@ -113,7 +114,7 @@ public class AggregationOptions {
 	 * @since 3.1
 	 */
 	private AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
-			@Nullable Collation collation, @Nullable String comment, @Nullable Document hint) {
+			@Nullable Collation collation, @Nullable String comment, @Nullable Object hint) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
@@ -242,6 +243,44 @@ public class AggregationOptions {
 	 * @since 3.1
 	 */
 	public Optional<Document> getHint() {
+		return hint.map(it -> {
+			if (it instanceof Document doc) {
+				return doc;
+			}
+			if (it instanceof String hintString) {
+				if (BsonUtils.isJsonDocument(hintString)) {
+					return BsonUtils.parse(hintString, null);
+				}
+			}
+			throw new IllegalStateException("Unable to read hint of type %s".formatted(it.getClass()));
+		});
+	}
+
+	/**
+	 * Get the hint (indexName) used to to fulfill the aggregation.
+	 *
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	public Optional<String> getHintAsString() {
+		return hint.map(it -> {
+			if (it instanceof String hintString) {
+				return hintString;
+			}
+			if (it instanceof Document doc) {
+				return BsonUtils.toJson(doc);
+			}
+			throw new IllegalStateException("Unable to read hint of type %s".formatted(it.getClass()));
+		});
+	}
+
+	/**
+	 * Get the hint used to to fulfill the aggregation.
+	 *
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	public Optional<Object> getHintObject() {
 		return hint;
 	}
 
@@ -361,7 +400,7 @@ public class AggregationOptions {
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
 		private @Nullable String comment;
-		private @Nullable Document hint;
+		private @Nullable Object hint;
 		private @Nullable Duration maxTime;
 		private @Nullable ResultOptions resultOptions;
 		private @Nullable DomainTypeMapping domainTypeMapping;
@@ -451,6 +490,19 @@ public class AggregationOptions {
 		public Builder hint(@Nullable Document hint) {
 
 			this.hint = hint;
+			return this;
+		}
+
+		/**
+		 * Define a hint that is used by query optimizer to to fulfill the aggregation.
+		 *
+		 * @param indexName can be {@literal null}.
+		 * @return this.
+		 * @since 4.1
+		 */
+		public Builder hint(@Nullable String indexName) {
+
+			this.hint = indexName;
 			return this;
 		}
 
