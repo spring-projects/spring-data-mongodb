@@ -31,6 +31,8 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertC
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
+import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
+import org.springframework.data.mongodb.repository.support.ReactiveQuerydslMongoPredicateExecutor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
@@ -62,13 +64,15 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 							TypeReference.of(ReactiveAfterSaveCallback.class)),
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 									MemberCategory.INVOKE_PUBLIC_METHODS));
-
 		}
+
+		registerQuerydslHints(hints, classLoader);
 	}
 
 	private static void registerTransactionProxyHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
-		if (MongoAotPredicates.isSyncClientPresent(classLoader) && ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
+		if (MongoAotPredicates.isSyncClientPresent(classLoader)
+				&& ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
 
 			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoDatabase"),
 					TypeReference.of("org.springframework.aop.SpringProxy"),
@@ -76,6 +80,30 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoCollection"),
 					TypeReference.of("org.springframework.aop.SpringProxy"),
 					TypeReference.of("org.springframework.core.DecoratingProxy"));
+		}
+	}
+
+	/**
+	 * Register hints for Querydsl integration.
+	 *
+	 * @param hints must not be {@literal null}.
+	 * @param classLoader can be {@literal null}.
+	 * @since 4.0.1
+	 */
+	private static void registerQuerydslHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+
+		if (ClassUtils.isPresent("com.querydsl.core.types.Predicate", classLoader)) {
+
+			if (isReactorPresent()) {
+				hints.reflection().registerType(ReactiveQuerydslMongoPredicateExecutor.class,
+						MemberCategory.INVOKE_PUBLIC_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+
+			}
+
+			if (MongoAotPredicates.isSyncClientPresent(classLoader)) {
+				hints.reflection().registerType(QuerydslMongoPredicateExecutor.class, MemberCategory.INVOKE_PUBLIC_METHODS,
+						MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+			}
 		}
 	}
 }
