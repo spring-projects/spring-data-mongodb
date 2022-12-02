@@ -22,8 +22,6 @@ import org.bson.codecs.DocumentCodec;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 
-import org.springframework.beans.DirectFieldAccessor;
-
 import com.mongodb.MongoClientSettings;
 import com.querydsl.core.support.QueryMixin;
 import com.querydsl.core.types.OrderSpecifier;
@@ -49,11 +47,10 @@ abstract class SpringDataMongodbQuerySupport<Q extends SpringDataMongodbQuerySup
 
 	@SuppressWarnings("unchecked")
 	SpringDataMongodbQuerySupport(MongodbDocumentSerializer serializer) {
+
 		super(serializer);
 		this.serializer = serializer;
-
-		DirectFieldAccessor fieldAccessor = new DirectFieldAccessor(this);
-		this.superQueryMixin = (QueryMixin<Q>) fieldAccessor.getPropertyValue("queryMixin");
+		this.superQueryMixin = super.getQueryMixin();
 	}
 
 	/**
