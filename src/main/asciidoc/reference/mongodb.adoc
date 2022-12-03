@@ -2198,7 +2198,7 @@ directly there are several methods for those options.
 ----
 Query query = query(where("firstname").is("luke"))
     .comment("find luke")         <1>
-    .batchSize(100)                                 <2>
+    .cursorBatchSize(100)                                 <2>
 ----
 <1> The comment propagated to the MongoDB profile log.
 <2> The number of documents to return in each response batch.
@@ -2209,7 +2209,7 @@ On the repository level the `@Meta` annotation provides means to add query optio
 ====
 [source,java]
 ----
-@Meta(comment = "find luke", batchSize = 100, flags = { SLAVE_OK })
+@Meta(comment = "find luke", cursorBatchSize = 100, flags = { SLAVE_OK })
 List<Person> findByFirstname(String firstname);
 ----
 ====
