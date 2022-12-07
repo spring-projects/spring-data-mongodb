@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.aot.MongoAotPredicates;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.config.RepositoryRegistrationAotProcessor;
 import org.springframework.data.util.TypeContributor;
+import org.springframework.data.util.TypeUtils;
 
 /**
  * @author Christoph Strobl
@@ -38,5 +39,14 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 			TypeContributor.contribute(type, it -> true, generationContext);
 			lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type, generationContext);
 		});
+	}
+
+	@Override
+	protected void contributeType(Class<?> type, GenerationContext generationContext) {
+
+		if (TypeUtils.type(type).isPartOf("org.springframework.data.mongodb", "com.mongodb")) {
+			return;
+		}
+		super.contributeType(type, generationContext);
 	}
 }
