@@ -2357,7 +2357,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @return the {@link List} of converted objects.
+	 * @return the converted object or null if none exists.
 	 */
 	protected <T> T doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass) {
 		return doFindOne(collectionName, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
@@ -2372,7 +2372,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param preparer the preparer used to modify the cursor on execution.
-	 * @return the {@link List} of converted objects.
+	 * @return the converted object or null if none exists.
 	 * @since 2.2
 	 */
 	@SuppressWarnings("ConstantConditions")
