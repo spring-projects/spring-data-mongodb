@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Yadhukrishna S Pai
+ * @author Soumya Prakash Behera
  * @see Aggregation#withOptions(AggregationOptions)
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
@@ -66,7 +67,7 @@ public class AggregationOptions {
 	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
 	 * @param cursor can be {@literal null}, used to pass additional options to the aggregation.
 	 */
-	public AggregationOptions(boolean allowDiskUse, boolean explain, Document cursor) {
+	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor) {
 		this(allowDiskUse, explain, cursor, null);
 	}
 
