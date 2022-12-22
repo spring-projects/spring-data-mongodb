@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.bson.BsonRegularExpression;
 import org.bson.BsonType;
@@ -65,6 +66,7 @@ import com.mongodb.BasicDBList;
  * @author Ziemowit Stolarczyk
  * @author Clément Petit
  * @author James McNee
+ * @author Stefaan Dutry
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -145,6 +147,34 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public static Criteria matchingDocumentStructure(MongoJsonSchema schema) {
 		return new Criteria().andDocumentStructureMatches(schema);
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} which combines criterea with a logical and
+	 *
+	 * @param criterias the criteria to combine
+	 * @return the combined criteria
+	 */
+	public static Criteria andCombination(final Criteria... criterias) {
+		return createCombinedCriteria("$and", criterias);
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} which combines criterea with a logical or
+	 *
+	 * @param criterias the criteria to combine
+	 * @return the combined criteria
+	 */
+	public static Criteria orCombination(final Criteria... criterias) {
+		return createCombinedCriteria("$or", criterias);
+	}
+
+	private static Criteria createCombinedCriteria(final String key, final Criteria... criterias) {
+		return new Criteria(key).is(toBsonList(criterias));
+	}
+
+	private static List<Document> toBsonList(final Criteria... criteria) {
+		return Stream.of(criteria).map(Criteria::getCriteriaObject).toList();
 	}
 
 	/**

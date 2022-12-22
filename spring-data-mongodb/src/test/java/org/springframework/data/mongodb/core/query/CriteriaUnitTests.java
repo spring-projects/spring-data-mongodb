@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Clément Petit
  * @author Mark Paluch
  * @author James McNee
+ * @author Stefaan Dutry
  */
 public class CriteriaUnitTests {
 
@@ -436,5 +437,21 @@ public class CriteriaUnitTests {
 				new Criteria("bar").regex("value"));
 
 		assertThat(left).isEqualTo(right);
+	}
+
+	@Test // GH-4257
+	public void shouldCreateAndCombination() {
+		Criteria criteria = Criteria.andCombination(Criteria.where("x").is(true), Criteria.where("y").is(42),
+				Criteria.where("z").is("value"));
+
+		assertThat(criteria.getCriteriaObject()).isEqualTo("{\"$and\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}]}");
+	}
+
+	@Test // GH-4257
+	public void shouldCreateOrCombination() {
+		Criteria criteria = Criteria.orCombination(Criteria.where("x").is(true), Criteria.where("y").is(42),
+				Criteria.where("z").is("value"));
+
+		assertThat(criteria.getCriteriaObject()).isEqualTo("{\"$or\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}]}");
 	}
 }
