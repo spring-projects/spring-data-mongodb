@@ -2690,13 +2690,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
-			if (LOGGER.isDebugEnabled()) {
-
-				LOGGER.debug(
-						String.format("findOne using query: %s fields: %s in db.collection: %s", serializeToJsonSafely(query),
-								serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName()));
-			}
-
 			FindPublisher<Document> publisher = preparer.initiateFind(collectionPreparer.prepare(collection),
 					col -> col.find(query, Document.class));
 
