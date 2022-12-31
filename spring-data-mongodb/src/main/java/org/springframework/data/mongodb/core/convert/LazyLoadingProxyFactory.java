@@ -120,7 +120,7 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		return prepareProxyFactory(propertyType,
-				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator)).getProxy();
+				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator)).getProxy(LazyLoadingProxy.class.getClassLoader());
 	}
 
 	/**
