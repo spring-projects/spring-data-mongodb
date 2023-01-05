@@ -50,7 +50,7 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	@Override
 	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
-		return value instanceof Bson ? mongoConverter.read(target.getType(), (Bson) value)
+		return value instanceof Bson bson ? mongoConverter.read(target.getType(), bson)
 				: ValueConversionContext.super.read(value, target);
 	}
 }

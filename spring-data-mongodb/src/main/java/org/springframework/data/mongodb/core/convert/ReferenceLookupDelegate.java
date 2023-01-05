@@ -101,7 +101,7 @@ public final class ReferenceLookupDelegate {
 	public Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
 
-		Object value = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+		Object value = source instanceof DocumentReferenceSource documentReferenceSource ? documentReferenceSource.getTargetSource()
 				: source;
 
 		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
@@ -125,22 +125,20 @@ public final class ReferenceLookupDelegate {
 			SpELContext spELContext) {
 
 		// Use the first value as a reference for others in case of collection like
-		if (value instanceof Iterable) {
+		if (value instanceof Iterable<?> iterable) {
 
-			Iterator<?> iterator = ((Iterable<?>) value).iterator();
+			Iterator<?> iterator = iterable.iterator();
 			value = iterator.hasNext() ? iterator.next() : new Document();
 		}
 
 		// handle DBRef value
-		if (value instanceof DBRef) {
-			return ReferenceCollection.fromDBRef((DBRef) value);
+		if (value instanceof DBRef dbRef) {
+			return ReferenceCollection.fromDBRef(dbRef);
 		}
 
 		String collection = mappingContext.getRequiredPersistentEntity(property.getAssociationTargetType()).getCollection();
 
-		if (value instanceof Document) {
-
-			Document documentPointer = (Document) value;
+		if (value instanceof Document documentPointer) {
 
 			if (property.isDocumentReference()) {
 
@@ -216,9 +214,9 @@ public final class ReferenceLookupDelegate {
 
 	ValueProvider valueProviderFor(Object source) {
 
-		return (index) -> {
-			if (source instanceof Document) {
-				return Streamable.of(((Document) source).values()).toList().get(index);
+		return index -> {
+			if (source instanceof Document document) {
+				return Streamable.of(document.values()).toList().get(index);
 			}
 			return source;
 		};
@@ -226,7 +224,7 @@ public final class ReferenceLookupDelegate {
 
 	EvaluationContext evaluationContextFor(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		Object target = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+		Object target = source instanceof DocumentReferenceSource documentReferenceSource ? documentReferenceSource.getTargetSource()
 				: source;
 
 		if (target == null) {
@@ -405,7 +403,7 @@ public final class ReferenceLookupDelegate {
 		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
 			Map<String, Object> targetMap = new LinkedHashMap<>();
-			List<Document> collected = documents instanceof List ? (List<Document>) documents
+			List<Document> collected = documents instanceof List<Document> list ? list
 					: Streamable.of(documents).toList();
 
 			for (Entry<Object, Document> filterMapping : filterOrderMap.entrySet()) {
@@ -438,7 +436,7 @@ public final class ReferenceLookupDelegate {
 		@Override
 		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
-			List<Document> target = documents instanceof List ? (List<Document>) documents
+			List<Document> target = documents instanceof List<Document> list ? list
 					: Streamable.of(documents).toList();
 
 			if (!sort.isEmpty() || !query.containsKey("$or")) {

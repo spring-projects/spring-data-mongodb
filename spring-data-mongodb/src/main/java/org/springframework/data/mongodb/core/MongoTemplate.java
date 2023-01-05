@@ -235,12 +235,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
 		// We create indexes based on mapping events
-		if (mappingContext instanceof MongoMappingContext) {
-
-			MongoMappingContext mappingContext = (MongoMappingContext) this.mappingContext;
+		if (mappingContext instanceof MongoMappingContext mappingContext) {
 
 			if (mappingContext.isAutoIndexCreation()) {
-
 				indexCreator = new MongoPersistentEntityIndexCreator(mappingContext, this);
 				eventPublisher = new MongoMappingEventPublisher(indexCreator);
 				mappingContext.setApplicationEventPublisher(eventPublisher);
@@ -256,8 +253,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		// we need to (re)create the MappingMongoConverter as we need to have it use a DbRefResolver that operates within
 		// the sames session. Otherwise loading referenced objects would happen outside of it.
-		if (that.mongoConverter instanceof MappingMongoConverter) {
-			this.mongoConverter = ((MappingMongoConverter) that.mongoConverter).with(dbFactory);
+		if (that.mongoConverter instanceof MappingMongoConverter mappingMongoConverter) {
+			this.mongoConverter = mappingMongoConverter.with(dbFactory);
 		} else {
 			this.mongoConverter = that.mongoConverter;
 		}
@@ -336,8 +333,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
 		}
 
-		if (mappingContext instanceof ApplicationEventPublisherAware) {
-			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
+		if (mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
+			applicationEventPublisherAware.setApplicationEventPublisher(eventPublisher);
 		}
 
 		resourceLoader = applicationContext;
@@ -419,8 +416,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 		}
 
-		if (context instanceof ConfigurableApplicationContext && indexCreator != null) {
-			((ConfigurableApplicationContext) context).addApplicationListener(indexCreator);
+		if (context instanceof ConfigurableApplicationContext configurableApplicationContext && indexCreator != null) {
+			configurableApplicationContext.addApplicationListener(indexCreator);
 		}
 	}
 
@@ -1221,7 +1218,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
+					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -2126,7 +2123,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			options.getComment().ifPresent(cursor::comment);
 			options.getHint().ifPresent(cursor::hint);
 
-			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
+			Class<?> domainType = aggregation instanceof TypedAggregation typedAggregation ? typedAggregation.getInputType()
 					: null;
 
 			Optionals.firstNonEmpty(options::getCollation, //
@@ -2982,8 +2979,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				opts.arrayFilters(arrayFilters);
 			}
 
-			if (update instanceof Document) {
-				return collection.findOneAndUpdate(query, (Document) update, opts);
+			if (update instanceof Document document) {
+				return collection.findOneAndUpdate(query, document, opts);
 			} else if (update instanceof List) {
 				return collection.findOneAndUpdate(query, (List<Document>) update, opts);
 			}

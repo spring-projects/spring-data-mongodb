@@ -467,8 +467,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	private static String nullSafeToString(@Nullable Object value) {
 
-		if (value instanceof Date) {
-			return DateTimeFormatter.format(((Date) value).getTime());
+		if (value instanceof Date date) {
+			return DateTimeFormatter.format(date.getTime());
 		}
 
 		return ObjectUtils.nullSafeToString(value);
@@ -1316,10 +1316,10 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				// Spring Data Customization START
 
 				Object dt = bindableValueFor(valueToken).getValue();
-				if (dt instanceof Date) {
-					value = ((Date) dt).getTime();
-				} else if (dt instanceof Number) {
-					value = NumberUtils.convertNumberToTargetClass((Number) dt, Long.class);
+				if (dt instanceof Date date) {
+					value = date.getTime();
+				} else if (dt instanceof Number numberValue) {
+					value = NumberUtils.convertNumberToTargetClass(numberValue, Long.class);
 				} else {
 					try {
 						value = DateTimeFormatter.parse(dt.toString());

@@ -106,12 +106,10 @@ public final class GeoCommand {
 			return true;
 		}
 
-		if (!(obj instanceof GeoCommand)) {
+		if (!(obj instanceof GeoCommand other)) {
 			return false;
 		}
 
-		GeoCommand that = (GeoCommand) obj;
-
-		return nullSafeEquals(this.command, that.command) && nullSafeEquals(this.shape, that.shape);
+		return nullSafeEquals(this.command, other.command) && nullSafeEquals(this.shape, other.shape);
 	}
 }

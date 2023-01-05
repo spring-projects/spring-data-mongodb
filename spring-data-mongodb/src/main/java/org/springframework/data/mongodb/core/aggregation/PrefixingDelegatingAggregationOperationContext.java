@@ -115,8 +115,8 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		List<Object> prefixed = new ArrayList<>(sourceCollection.size());
 
 		for (Object o : sourceCollection) {
-			if (o instanceof Document) {
-				prefixed.add(doPrefix((Document) o));
+			if (o instanceof Document document) {
+				prefixed.add(doPrefix(document));
 			} else {
 				prefixed.add(o);
 			}

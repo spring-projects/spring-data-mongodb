@@ -360,10 +360,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -440,10 +438,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -539,10 +535,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -639,10 +633,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -719,10 +711,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -799,10 +789,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);

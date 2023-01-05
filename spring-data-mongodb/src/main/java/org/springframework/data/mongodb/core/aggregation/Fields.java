@@ -308,13 +308,11 @@ public final class Fields implements Iterable<Field> {
 				return true;
 			}
 
-			if (!(obj instanceof AggregationField)) {
+			if (!(obj instanceof AggregationField field)) {
 				return false;
 			}
 
-			AggregationField that = (AggregationField) obj;
-
-			return this.name.equals(that.name) && ObjectUtils.nullSafeEquals(this.target, that.target);
+			return this.name.equals(field.name) && ObjectUtils.nullSafeEquals(this.target, field.target);
 		}
 
 		@Override

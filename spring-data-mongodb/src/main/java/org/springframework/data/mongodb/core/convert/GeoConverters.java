@@ -422,32 +422,32 @@ abstract class GeoConverters {
 
 			Shape shape = source.getShape();
 
-			if (shape instanceof GeoJson) {
-				return GeoJsonToDocumentConverter.INSTANCE.convert((GeoJson) shape);
+			if (shape instanceof GeoJson geoJson) {
+				return GeoJsonToDocumentConverter.INSTANCE.convert(geoJson);
 			}
 
-			if (shape instanceof Box) {
+			if (shape instanceof Box box) {
 
-				argument.add(toList(((Box) shape).getFirst()));
-				argument.add(toList(((Box) shape).getSecond()));
+				argument.add(toList(box.getFirst()));
+				argument.add(toList(box.getSecond()));
 
-			} else if (shape instanceof Circle) {
+			} else if (shape instanceof Circle circle) {
 
-				argument.add(toList(((Circle) shape).getCenter()));
-				argument.add(((Circle) shape).getRadius().getNormalizedValue());
+				argument.add(toList(circle.getCenter()));
+				argument.add(circle.getRadius().getNormalizedValue());
 
-			} else if (shape instanceof Polygon) {
+			} else if (shape instanceof Polygon polygon) {
 
-				List<Point> points = ((Polygon) shape).getPoints();
-				argument = new ArrayList(points.size());
+				List<Point> points = polygon.getPoints();
+				argument = new ArrayList<>(points.size());
 				for (Point point : points) {
 					argument.add(toList(point));
 				}
 
-			} else if (shape instanceof Sphere) {
+			} else if (shape instanceof Sphere sphere) {
 
-				argument.add(toList(((Sphere) shape).getCenter()));
-				argument.add(((Sphere) shape).getRadius().getNormalizedValue());
+				argument.add(toList(sphere.getCenter()));
+				argument.add(sphere.getRadius().getNormalizedValue());
 			}
 
 			return new Document(source.getCommand(), argument);
@@ -471,11 +471,11 @@ abstract class GeoConverters {
 
 			Document dbo = new Document("type", source.getType());
 
-			if (source instanceof GeoJsonGeometryCollection) {
+			if (source instanceof GeoJsonGeometryCollection collection) {
 
 				List<Object> dbl = new ArrayList<>();
 
-				for (GeoJson<?> geometry : ((GeoJsonGeometryCollection) source).getCoordinates()) {
+				for (GeoJson<?> geometry : collection.getCoordinates()) {
 					dbl.add(convert(geometry));
 				}
 
@@ -490,23 +490,23 @@ abstract class GeoConverters {
 
 		private Object convertIfNecessary(Object candidate) {
 
-			if (candidate instanceof GeoJson) {
-				return convertIfNecessary(((GeoJson<?>) candidate).getCoordinates());
+			if (candidate instanceof GeoJson geoJson) {
+				return convertIfNecessary(geoJson.getCoordinates());
 			}
 
-			if (candidate instanceof Iterable<?>) {
+			if (candidate instanceof Iterable<?> iterable) {
 
 				List<Object> dbl = new ArrayList<>();
 
-				for (Object element : (Iterable<?>) candidate) {
+				for (Object element : iterable) {
 					dbl.add(convertIfNecessary(element));
 				}
 
 				return dbl;
 			}
 
-			if (candidate instanceof Point) {
-				return toList((Point) candidate);
+			if (candidate instanceof Point point) {
+				return toList(point);
 			}
 
 			return candidate;

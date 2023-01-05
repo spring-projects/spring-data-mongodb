@@ -493,7 +493,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Object keyDefToUse = ExpressionUtils.evaluate(keyDefinitionString, () -> getEvaluationContextForProperty(entity));
 
-		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document) ? (org.bson.Document) keyDefToUse
+		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document document) ? document
 				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
 
 		if (!StringUtils.hasText(dotPath)) {
@@ -578,8 +578,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Object result = ExpressionUtils.evaluate(filterExpression, () -> getEvaluationContextForProperty(entity));
 
-		if (result instanceof org.bson.Document) {
-			return PartialIndexFilter.of((org.bson.Document) result);
+		if (result instanceof org.bson.Document document) {
+			return PartialIndexFilter.of(document);
 		}
 
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
@@ -589,8 +589,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getEvaluationContextForProperty(entity));
 
-		if (result instanceof org.bson.Document) {
-			return (org.bson.Document) result;
+		if (result instanceof org.bson.Document document) {
+			return document;
 		}
 
 		return BsonUtils.parse(projectionExpression, null);
@@ -599,14 +599,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private Collation evaluateCollation(String collationExpression, PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(collationExpression, () -> getEvaluationContextForProperty(entity));
-		if (result instanceof org.bson.Document) {
-			return Collation.from((org.bson.Document) result);
+		if (result instanceof org.bson.Document document) {
+			return Collation.from(document);
 		}
-		if (result instanceof Collation) {
-			return (Collation) result;
+		if (result instanceof Collation collation) {
+			return collation;
 		}
-		if (result instanceof String) {
-			return Collation.parse(result.toString());
+		if (result instanceof String stringValue) {
+			return Collation.parse(stringValue);
 		}
 		if (result instanceof Map) {
 			return Collation.from(new org.bson.Document((Map<String, ?>) result));
@@ -788,8 +788,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return Duration.ZERO;
 		}
 
-		if (evaluatedTimeout instanceof Duration) {
-			return (Duration) evaluatedTimeout;
+		if (evaluatedTimeout instanceof Duration duration) {
+			return duration;
 		}
 
 		String val = evaluatedTimeout.toString();

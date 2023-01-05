@@ -107,7 +107,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	@Override
 	protected Document asDocument(@Nullable String key, @Nullable Object value) {
 
-		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
+		value = value instanceof Optional<?> optional ? optional.orElse(null) : value;
 
 		return super.asDocument(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}
@@ -134,11 +134,9 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		Expression<?> arg = expr.getArg(index);
 		String key = super.asDBKey(expr, index);
 
-		if (!(arg instanceof Path)) {
+		if (!(arg instanceof Path<?> path)) {
 			return key;
 		}
-
-		Path<?> path = (Path<?>) arg;
 
 		if (!isReference(path)) {
 			return key;

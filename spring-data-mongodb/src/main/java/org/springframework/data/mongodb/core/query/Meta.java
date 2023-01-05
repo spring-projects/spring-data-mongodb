@@ -217,7 +217,7 @@ public class Meta {
 			values = new LinkedHashMap<>(2);
 		}
 
-		if (value == null || (value instanceof String && !StringUtils.hasText((String) value))) {
+		if (value == null || (value instanceof String stringValue && !StringUtils.hasText(stringValue))) {
 			this.values.remove(key);
 		}
 		this.values.put(key, value);
@@ -250,11 +250,10 @@ public class Meta {
 			return true;
 		}
 
-		if (!(obj instanceof Meta)) {
+		if (!(obj instanceof Meta other)) {
 			return false;
 		}
 
-		Meta other = (Meta) obj;
 		if (!ObjectUtils.nullSafeEquals(this.values, other.values)) {
 			return false;
 		}

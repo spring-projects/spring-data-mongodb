@@ -93,10 +93,10 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 
 			return withOptions(builder -> {
 
-				if (token instanceof Instant) {
-					builder.resumeAt((Instant) token);
-				} else if (token instanceof BsonTimestamp) {
-					builder.resumeAt((BsonTimestamp) token);
+				if (token instanceof Instant instant) {
+					builder.resumeAt(instant);
+				} else if (token instanceof BsonTimestamp bsonTimestamp) {
+					builder.resumeAt(bsonTimestamp);
 				}
 			});
 		}
@@ -161,8 +161,8 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 			}
 
 			options.getFilter().ifPresent(it -> {
-				if (it instanceof Aggregation) {
-					builder.filter((Aggregation) it);
+				if (it instanceof Aggregation aggregation) {
+					builder.filter(aggregation);
 				} else {
 					builder.filter(((List<Document>) it).toArray(new Document[0]));
 				}

@@ -197,7 +197,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case REGEX:
 
 				Object param = parameters.next();
-				return param instanceof Pattern ? criteria.regex((Pattern) param) : criteria.regex(param.toString());
+				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 			case EXISTS:
 				return criteria.exists((Boolean) parameters.next());
 			case TRUE:
@@ -398,8 +398,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private Streamable<?> asStreamable(Object value) {
 
-		if (value instanceof Collection) {
-			return Streamable.of((Collection<?>) value);
+		if (value instanceof Collection<?> collection) {
+			return Streamable.of(collection);
 		} else if (ObjectUtils.isArray(value)) {
 			return Streamable.of((Object[]) value);
 		}
@@ -436,11 +436,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private static Criteria computeBetweenPart(Criteria criteria, Iterator<Object> parameters) {
 
 		Object value = parameters.next();
-		if (!(value instanceof Range)) {
+		if (!(value instanceof Range<?> range)) {
 			return criteria.gt(value).lt(parameters.next());
 		}
 
-		Range<?> range = (Range<?>) value;
 		Optional<?> min = range.getLowerBound().getValue();
 		Optional<?> max = range.getUpperBound().getValue();
 

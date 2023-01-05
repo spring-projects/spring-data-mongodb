@@ -80,7 +80,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 
 		super(bucketOperation);
 
-		this.boundaries = new ArrayList<Object>(boundaries);
+		this.boundaries = new ArrayList<>(boundaries);
 		this.defaultBucket = defaultBucket;
 	}
 
@@ -129,7 +129,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		Assert.notNull(boundaries, "Boundaries must not be null");
 		Assert.noNullElements(boundaries, "Boundaries must not contain null values");
 
-		List<Object> newBoundaries = new ArrayList<Object>(this.boundaries.size() + boundaries.length);
+		List<Object> newBoundaries = new ArrayList<>(this.boundaries.size() + boundaries.length);
 		newBoundaries.addAll(this.boundaries);
 		newBoundaries.addAll(Arrays.asList(boundaries));
 

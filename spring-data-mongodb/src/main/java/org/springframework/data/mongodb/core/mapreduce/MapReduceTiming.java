@@ -69,14 +69,12 @@ public class MapReduceTiming {
 			return true;
 		}
 
-		if (!(obj instanceof MapReduceTiming)) {
+		if (!(obj instanceof MapReduceTiming other)) {
 			return false;
 		}
 
-		MapReduceTiming that = (MapReduceTiming) obj;
-
-		return this.emitLoopTime == that.emitLoopTime && //
-				this.mapTime == that.mapTime && //
-				this.totalTime == that.totalTime;
+		return this.emitLoopTime == other.emitLoopTime && //
+				this.mapTime == other.mapTime && //
+				this.totalTime == other.totalTime;
 	}
 }

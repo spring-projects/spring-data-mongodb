@@ -681,18 +681,18 @@ public class ArrayOperators {
 		}
 
 		private Object getMappedInput(AggregationOperationContext context) {
-			return input instanceof Field ? context.getReference((Field) input).toString() : input;
+			return input instanceof Field field? context.getReference(field).toString() : input;
 		}
 
 		private Object getMappedCondition(AggregationOperationContext context) {
 
-			if (!(condition instanceof AggregationExpression)) {
+			if (!(condition instanceof AggregationExpression aggregationExpression)) {
 				return condition;
 			}
 
 			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(
 					context, Collections.singleton(as));
-			return ((AggregationExpression) condition).toDocument(nea);
+			return aggregationExpression.toDocument(nea);
 		}
 
 		/**
@@ -785,7 +785,7 @@ public class ArrayOperators {
 			public AsBuilder filter(List<?> array) {
 
 				Assert.notNull(array, "Array must not be null");
-				filter.input = new ArrayList<Object>(array);
+				filter.input = new ArrayList<>(array);
 				return this;
 			}
 
@@ -1292,10 +1292,10 @@ public class ArrayOperators {
 			if (value instanceof Document) {
 				return value;
 			}
-			if (value instanceof AggregationExpression) {
-				return ((AggregationExpression) value).toDocument(context);
-			} else if (value instanceof Field) {
-				return context.getReference(((Field) value)).toString();
+			if (value instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(context);
+			} else if (value instanceof Field field) {
+				return context.getReference(field).toString();
 			} else {
 				return context.getMappedObject(new Document("###val###", value)).get("###val###");
 			}
@@ -1655,7 +1655,7 @@ public class ArrayOperators {
 
 			private ZipBuilder(Object sourceArray) {
 
-				this.sourceArrays = new ArrayList<Object>();
+				this.sourceArrays = new ArrayList<>();
 				this.sourceArrays.add(sourceArray);
 			}
 
@@ -1672,14 +1672,14 @@ public class ArrayOperators {
 				Assert.notNull(arrays, "Arrays must not be null");
 				for (Object value : arrays) {
 
-					if (value instanceof String) {
-						sourceArrays.add(Fields.field((String) value));
+					if (value instanceof String stringValue) {
+						sourceArrays.add(Fields.field(stringValue));
 					} else {
 						sourceArrays.add(value);
 					}
 				}
 
-				return new Zip(Collections.<String, Object>singletonMap("inputs", sourceArrays));
+				return new Zip(Collections.singletonMap("inputs", sourceArrays));
 			}
 		}
 	}

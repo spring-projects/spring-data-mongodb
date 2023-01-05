@@ -326,8 +326,8 @@ public class QueryMapper {
 		String key = field.getMappedKey();
 		Object value;
 
-		if (rawValue instanceof MongoExpression) {
-			return createMapEntry(key, getMappedObject(((MongoExpression) rawValue).toDocument(), field.getEntity()));
+		if (rawValue instanceof MongoExpression mongoExpression) {
+			return createMapEntry(key, getMappedObject(mongoExpression.toDocument(), field.getEntity()));
 		}
 
 		if (isNestedKeyword(rawValue) && !field.isIdField()) {
@@ -373,8 +373,8 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List<Object> newConditions = conditions instanceof Collection
-					? new ArrayList<>(((Collection<?>) conditions).size())
+			List<Object> newConditions = conditions instanceof Collection<?> collection
+					? new ArrayList<>(collection.size())
 					: new ArrayList<>();
 
 			for (Object condition : conditions) {
@@ -412,8 +412,8 @@ public class QueryMapper {
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
 				: getMappedValue(property.with(keyword.getKey()), value);
 
-		if (keyword.isSample() && convertedValue instanceof Document) {
-			return (Document) convertedValue;
+		if (keyword.isSample() && convertedValue instanceof Document document) {
+			return document;
 		}
 
 		return new Document(keyword.key, convertedValue);
@@ -556,8 +556,8 @@ public class QueryMapper {
 	@SuppressWarnings("unchecked")
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
-		if (source instanceof Example) {
-			return exampleMapper.getMappedExample((Example<?>) source, entity);
+		if (source instanceof Example<?> example) {
+			return exampleMapper.getMappedExample(example, entity);
 		}
 
 		if (source instanceof List) {
@@ -588,8 +588,8 @@ public class QueryMapper {
 
 				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
 
-				if (it.getValue() instanceof Document) {
-					map.put(key, getMappedObject((Document) it.getValue(), entity));
+				if (it.getValue() instanceof Document document) {
+					map.put(key, getMappedObject(document, entity));
 				} else {
 					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
 				}
@@ -641,9 +641,8 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (source instanceof DBRef) {
+		if (source instanceof DBRef ref) {
 
-			DBRef ref = (DBRef) source;
 			Object id = convertId(ref.getId(),
 					property != null && property.isIdProperty() ? property.getFieldType() : ObjectId.class);
 
@@ -654,9 +653,9 @@ public class QueryMapper {
 			}
 		}
 
-		if (source instanceof Iterable) {
+		if (source instanceof Iterable<?> iterable) {
 			BasicDBList result = new BasicDBList();
-			for (Object element : (Iterable<?>) source) {
+			for (Object element : iterable) {
 				result.add(createReferenceFor(element, property));
 			}
 			return result;
@@ -720,8 +719,8 @@ public class QueryMapper {
 
 	private Object createReferenceFor(Object source, MongoPersistentProperty property) {
 
-		if (source instanceof DBRef) {
-			return (DBRef) source;
+		if (source instanceof DBRef dbRef) {
+			return dbRef;
 		}
 
 		if (property != null && (property.isDocumentReference()
@@ -823,9 +822,8 @@ public class QueryMapper {
 			return value;
 		}
 
-		if (value instanceof Collection) {
+		if (value instanceof Collection<?> source) {
 
-			Collection<Object> source = (Collection<Object>) value;
 			Collection<Object> converted = new ArrayList<>(source.size());
 
 			for (Object o : source) {

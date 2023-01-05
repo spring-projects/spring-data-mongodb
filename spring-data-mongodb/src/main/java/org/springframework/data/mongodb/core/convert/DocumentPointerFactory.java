@@ -73,8 +73,8 @@ class DocumentPointerFactory {
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			MongoPersistentProperty property, Object value, Class<?> typeHint) {
 
-		if (value instanceof LazyLoadingProxy) {
-			return () -> ((LazyLoadingProxy) value).getSource();
+		if (value instanceof LazyLoadingProxy proxy) {
+			return proxy::getSource;
 		}
 
 		if (conversionService.canConvert(typeHint, DocumentPointer.class)) {
@@ -94,8 +94,8 @@ class DocumentPointerFactory {
 				return () -> conversionService.convert(idValue, idProperty.getFieldType());
 			}
 
-			if (idValue instanceof String && ObjectId.isValid((String) idValue)) {
-				return () -> new ObjectId((String) idValue);
+			if (idValue instanceof String stringValue && ObjectId.isValid((String) idValue)) {
+				return () -> new ObjectId(stringValue);
 			}
 
 			return () -> idValue;
@@ -210,13 +210,13 @@ class DocumentPointerFactory {
 							lookup, entry.getKey()));
 				}
 
-				if (entry.getValue() instanceof Document) {
+				if (entry.getValue() instanceof Document document) {
 
 					MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(entry.getKey());
 					if (persistentProperty != null && persistentProperty.isEntity()) {
 
 						MongoPersistentEntity<?> nestedEntity = mappingContext.getPersistentEntity(persistentProperty.getType());
-						target.put(entry.getKey(), updatePlaceholders((Document) entry.getValue(), new Document(), mappingContext,
+						target.put(entry.getKey(), updatePlaceholders(document, new Document(), mappingContext,
 								nestedEntity, nestedEntity.getPropertyAccessor(propertyAccessor.getProperty(persistentProperty))));
 					} else {
 						target.put(entry.getKey(), updatePlaceholders((Document) entry.getValue(), new Document(), mappingContext,

@@ -533,8 +533,8 @@ class EntityOperations {
 
 		@Override
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
-			return MappedDocument.of(map instanceof Document //
-					? (Document) map //
+			return MappedDocument.of(map instanceof Document document //
+					? document //
 					: new Document(map));
 		}
 
@@ -576,8 +576,8 @@ class EntityOperations {
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
 
 			T bean = getBean();
-			bean = (T) (bean instanceof Document //
-					? (Document) bean //
+			bean = (T) (bean instanceof Document document//
+					? document //
 					: new Document(bean));
 			Document document = new Document();
 			writer.write(bean, document);

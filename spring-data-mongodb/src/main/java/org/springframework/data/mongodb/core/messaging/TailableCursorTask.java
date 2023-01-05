@@ -51,9 +51,8 @@ class TailableCursorTask extends CursorReadingTask<Document, Object> {
 		Document filter = new Document();
 		Collation collation = null;
 
-		if (options instanceof TailableCursorRequest.TailableCursorRequestOptions) {
+		if (options instanceof TailableCursorRequest.TailableCursorRequestOptions requestOptions) {
 
-			TailableCursorRequestOptions requestOptions = (TailableCursorRequestOptions) options;
 			if (requestOptions.getQuery().isPresent()) {
 
 				Query query = requestOptions.getQuery().get();

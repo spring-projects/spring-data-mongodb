@@ -274,8 +274,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		ClassLoader classLoader = applicationContext.getClassLoader();
-		if (this.defaultTypeMapper instanceof BeanClassLoaderAware && classLoader != null) {
-			((BeanClassLoaderAware) this.defaultTypeMapper).setBeanClassLoader(classLoader);
+		if (this.defaultTypeMapper instanceof BeanClassLoaderAware beanClassLoaderAware && classLoader != null) {
+			beanClassLoaderAware.setBeanClassLoader(classLoader);
 		}
 	}
 
@@ -426,7 +426,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected <S extends Object> S readDocument(ConversionContext context, Bson bson,
 			TypeInformation<? extends S> typeHint) {
 
-		Document document = bson instanceof BasicDBObject ? new Document((BasicDBObject) bson) : (Document) bson;
+		Document document = bson instanceof BasicDBObject dbObject ? new Document(dbObject) : (Document) bson;
 		TypeInformation<? extends S> typeToRead = getTypeMapper().readType(document, typeHint);
 		Class<? extends S> rawType = typeToRead.getType();
 
@@ -444,8 +444,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return (S) bson;
 			}
 
-			if (bson instanceof Document) {
-				return (S) new BasicDBObject((Document) bson);
+			if (bson instanceof Document doc) {
+				return (S) new BasicDBObject(doc);
 			}
 
 			return (S) bson;
@@ -668,7 +668,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
+		DBRef dbref = value instanceof DBRef dbRef ? dbRef : null;
 
 		accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
 	}
@@ -699,8 +699,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		// DATAMONGO-913
-		if (object instanceof LazyLoadingProxy) {
-			return ((LazyLoadingProxy) object).toDBRef();
+		if (object instanceof LazyLoadingProxy proxy) {
+			return proxy.toDBRef();
 		}
 
 		return createDBRef(object, referringProperty);
@@ -709,8 +709,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@Override
 	public DocumentPointer toDocumentPointer(Object source, @Nullable MongoPersistentProperty referringProperty) {
 
-		if (source instanceof LazyLoadingProxy) {
-			return () -> ((LazyLoadingProxy) source).getSource();
+		if (source instanceof LazyLoadingProxy proxy) {
+			return proxy::getSource;
 		}
 
 		Assert.notNull(referringProperty, "Cannot create DocumentReference; The referringProperty must not be null");
@@ -732,8 +732,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return () -> source;
 		}
 
-		if (source instanceof DocumentPointer) {
-			return (DocumentPointer<?>) source;
+		if (source instanceof DocumentPointer<?> pointer) {
+			return pointer;
 		}
 
 		if (ClassUtils.isAssignableValue(referringProperty.getType(), source)
@@ -764,7 +764,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> entityType = ClassUtils.getUserClass(obj.getClass());
 		TypeInformation<? extends Object> type = TypeInformation.of(entityType);
 
-		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
+		Object target = obj instanceof LazyLoadingProxy proxy ? proxy.getTarget() : obj;
 
 		writeInternal(target, bson, type);
 		BsonUtils.removeNullId(bson);
@@ -937,8 +937,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			 * If we already have a LazyLoadingProxy, we use it's cached DBRef value instead of
 			 * unnecessarily initializing it only to convert it to a DBRef a few instructions later.
 			 */
-			if (obj instanceof LazyLoadingProxy) {
-				dbRefObj = ((LazyLoadingProxy) obj).toDBRef();
+			if (obj instanceof LazyLoadingProxy proxy) {
+				dbRefObj = proxy.toDBRef();
 			}
 
 			dbRefObj = dbRefObj != null ? dbRefObj : createDBRef(obj, prop);
@@ -957,8 +957,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		/*
 		 * If we have a LazyLoadingProxy we make sure it is initialized first.
 		 */
-		if (obj instanceof LazyLoadingProxy) {
-			obj = ((LazyLoadingProxy) obj).getTarget();
+		if (obj instanceof LazyLoadingProxy proxy) {
+			obj = proxy.getTarget();
 		}
 
 		// Lookup potential custom target type
@@ -975,7 +975,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				: mappingContext.getRequiredPersistentEntity(type);
 
 		Object existingValue = accessor.get(prop);
-		Document document = existingValue instanceof Document ? (Document) existingValue : new Document();
+		Document document = existingValue instanceof Document existingDocument ? existingDocument : new Document();
 
 		writeInternal(obj, document, entity);
 		addCustomTypeKeyIfNecessary(TypeInformation.of(prop.getRawType()), obj, document);
@@ -1185,8 +1185,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	private String potentiallyConvertMapKey(Object key) {
 
-		if (key instanceof String) {
-			return (String) key;
+		if (key instanceof String stringValue) {
+			return stringValue;
 		}
 
 		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
@@ -1322,8 +1322,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(target, "Target object must not be null");
 
-		if (target instanceof DBRef) {
-			return (DBRef) target;
+		if (target instanceof DBRef dbRef) {
+			return dbRef;
 		}
 
 		MongoPersistentEntity<?> targetEntity = mappingContext.getPersistentEntity(target.getClass());
@@ -1484,26 +1484,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return getPotentiallyConvertedSimpleWrite(obj, conversionTargetType);
 		}
 
-		if (obj instanceof List) {
-			return maybeConvertList((List<Object>) obj, typeInformation);
+		if (obj instanceof List<?> list) {
+			return maybeConvertList(list, typeInformation);
 		}
 
-		if (obj instanceof Document) {
+		if (obj instanceof Document document) {
 
 			Document newValueDocument = new Document();
-			for (String vk : ((Document) obj).keySet()) {
-				Object o = ((Document) obj).get(vk);
+			for (String vk : document.keySet()) {
+				Object o = document.get(vk);
 				newValueDocument.put(vk, convertToMongoType(o, typeInformation));
 			}
 			return newValueDocument;
 		}
 
-		if (obj instanceof DBObject) {
+		if (obj instanceof DBObject dbObject) {
 
 			Document newValueDbo = new Document();
-			for (String vk : ((DBObject) obj).keySet()) {
+			for (String vk : dbObject.keySet()) {
 
-				Object o = ((DBObject) obj).get(vk);
+				Object o = dbObject.get(vk);
 				newValueDbo.put(vk, convertToMongoType(o, typeInformation));
 			}
 
@@ -1525,8 +1525,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return maybeConvertList(Arrays.asList((Object[]) obj), typeInformation);
 		}
 
-		if (obj instanceof Collection) {
-			return maybeConvertList((Collection<?>) obj, typeInformation);
+		if (obj instanceof Collection<?> collection) {
+			return maybeConvertList(collection, typeInformation);
 		}
 
 		Document newDocument = new Document();
@@ -1572,21 +1572,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings("unchecked")
 	private Object removeTypeInfo(Object object, boolean recursively) {
 
-		if (!(object instanceof Document)) {
+		if (!(object instanceof Document document)) {
 			return object;
 		}
 
-		Document document = (Document) object;
 		String keyToRemove = null;
 
-		for (String key : document.keySet()) {
+		for (Map.Entry<String, Object> entry : document.entrySet()) {
 
 			if (recursively) {
 
-				Object value = document.get(key);
+				Object value = entry.getValue();
 
-				if (value instanceof BasicDBList) {
-					for (Object element : (BasicDBList) value) {
+				if (value instanceof BasicDBList dbList) {
+					for (Object element : dbList) {
 						removeTypeInfo(element, recursively);
 					}
 				} else if (value instanceof List) {
@@ -1598,9 +1597,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 			}
 
-			if (getTypeMapper().isTypeKey(key)) {
+			if (getTypeMapper().isTypeKey(entry.getKey())) {
 
-				keyToRemove = key;
+				keyToRemove = entry.getKey();
 
 				if (!recursively) {
 					break;
@@ -1629,8 +1628,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
 			return (T) doConvert(value, rawType);
-		} else if (value instanceof DBRef) {
-			return (T) readDBRef(context, (DBRef) value, type);
+		} else if (value instanceof DBRef dbRef) {
+			return (T) readDBRef(context, dbRef, type);
 		}
 
 		return (T) context.convert(value, type);
@@ -1810,11 +1809,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		for (Object dbObjItem : source) {
 
-			if (!(dbObjItem instanceof DBRef)) {
+			if (!(dbObjItem instanceof DBRef dbRef)) {
 				return false;
 			}
 
-			collectionsFound.add(((DBRef) dbObjItem).getCollectionName());
+			collectionsFound.add(dbRef.getCollectionName());
 
 			if (collectionsFound.size() > 1) {
 				return false;
@@ -1944,7 +1943,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						evaluator, (prop, bson, evaluator, path) -> MappingMongoConverter.this.getValueInternal(context, prop, bson,
 								evaluator));
 
-				DBRef dbref = rawRefValue instanceof DBRef ? (DBRef) rawRefValue : null;
+				DBRef dbref = rawRefValue instanceof DBRef dbRef ? dbRef : null;
 				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
 			}
 
@@ -2283,7 +2282,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return (S) elementConverter.convert(source, typeHint);
 			}
 
-			if (source instanceof Collection) {
+			if (source instanceof Collection<?> collection) {
 
 				Class<?> rawType = typeHint.getType();
 				if (!Object.class.equals(rawType)) {
@@ -2294,7 +2293,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				if (typeHint.isCollectionLike() || typeHint.getType().isAssignableFrom(Collection.class)) {
-					return (S) collectionConverter.convert(context, (Collection<?>) source, typeHint);
+					return (S) collectionConverter.convert(context, collection, typeHint);
 				}
 			}
 
@@ -2312,8 +2311,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						String.format("Expected map like structure but found %s", source.getClass()));
 			}
 
-			if (source instanceof DBRef) {
-				return (S) dbRefConverter.convert(context, (DBRef) source, typeHint);
+			if (source instanceof DBRef dbRef) {
+				return (S) dbRefConverter.convert(context, dbRef, typeHint);
 			}
 
 			if (source instanceof Collection) {

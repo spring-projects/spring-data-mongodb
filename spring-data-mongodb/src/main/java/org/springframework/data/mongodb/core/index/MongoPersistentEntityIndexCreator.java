@@ -106,9 +106,9 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		PersistentEntity<?, ?> entity = event.getPersistentEntity();
 
 		// Double check type as Spring infrastructure does not consider nested generics
-		if (entity instanceof MongoPersistentEntity) {
+		if (entity instanceof MongoPersistentEntity<?> mongoPersistentEntity) {
 
-			checkForIndexes((MongoPersistentEntity<?>) entity);
+			checkForIndexes(mongoPersistentEntity);
 		}
 	}
 
@@ -136,8 +136,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
-				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
-						? (IndexDefinitionHolder) indexDefinition
+				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder definitionHolder
+						? definitionHolder
 						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				createIndex(indexToCreate);
@@ -154,8 +154,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 		} catch (UncategorizedMongoDbException ex) {
 
-			if (ex.getCause() instanceof MongoException
-					&& MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) ex.getCause()).getCode())) {
+			if (ex.getCause() instanceof MongoException mongoException
+					&& MongoDbErrorCodes.isDataIntegrityViolationCode(mongoException.getCode())) {
 
 				IndexInfo existingIndex = fetchIndexInformation(indexDefinition);
 				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'";

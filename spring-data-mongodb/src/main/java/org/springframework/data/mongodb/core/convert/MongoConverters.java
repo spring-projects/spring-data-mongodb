@@ -401,12 +401,12 @@ abstract class MongoConverters {
 			@Override
 			public T convert(Number source) {
 
-				if (source instanceof AtomicInteger) {
-					return NumberUtils.convertNumberToTargetClass(((AtomicInteger) source).get(), this.targetType);
+				if (source instanceof AtomicInteger atomicInteger) {
+					return NumberUtils.convertNumberToTargetClass(atomicInteger.get(), this.targetType);
 				}
 
-				if (source instanceof AtomicLong) {
-					return NumberUtils.convertNumberToTargetClass(((AtomicLong) source).get(), this.targetType);
+				if (source instanceof AtomicLong atomicLong) {
+					return NumberUtils.convertNumberToTargetClass(atomicLong.get(), this.targetType);
 				}
 
 				return NumberUtils.convertNumberToTargetClass(source, this.targetType);

@@ -64,18 +64,15 @@ class CountQuery {
 
 		for (Map.Entry<String, Object> entry : source.entrySet()) {
 
-			if (entry.getValue() instanceof Document && requiresRewrite(entry.getValue())) {
+			if (entry.getValue() instanceof Document document && requiresRewrite(entry.getValue())) {
 
-				Document theValue = (Document) entry.getValue();
-				target.putAll(createGeoWithin(entry.getKey(), theValue, source.get("$and")));
+				target.putAll(createGeoWithin(entry.getKey(), document, source.get("$and")));
 				continue;
 			}
 
-			if (entry.getValue() instanceof Collection && requiresRewrite(entry.getValue())) {
+			if (entry.getValue() instanceof Collection<?> collection && requiresRewrite(entry.getValue())) {
 
-				Collection<?> source = (Collection<?>) entry.getValue();
-
-				target.put(entry.getKey(), rewriteCollection(source));
+				target.put(entry.getKey(), rewriteCollection(collection));
 				continue;
 			}
 
@@ -96,12 +93,12 @@ class CountQuery {
 	 */
 	private boolean requiresRewrite(Object valueToInspect) {
 
-		if (valueToInspect instanceof Document) {
-			return requiresRewrite((Document) valueToInspect);
+		if (valueToInspect instanceof Document document) {
+			return requiresRewrite(document);
 		}
 
-		if (valueToInspect instanceof Collection) {
-			return requiresRewrite((Collection<?>) valueToInspect);
+		if (valueToInspect instanceof Collection<?> collection) {
+			return requiresRewrite(collection);
 		}
 
 		return false;
@@ -110,7 +107,7 @@ class CountQuery {
 	private boolean requiresRewrite(Collection<?> collection) {
 
 		for (Object o : collection) {
-			if (o instanceof Document && requiresRewrite((Document) o)) {
+			if (o instanceof Document document && requiresRewrite(document)) {
 				return true;
 			}
 		}
@@ -139,8 +136,8 @@ class CountQuery {
 		Collection<Object> rewrittenCollection = new ArrayList<>(source.size());
 
 		for (Object item : source) {
-			if (item instanceof Document && requiresRewrite(item)) {
-				rewrittenCollection.add(CountQuery.of((Document) item).toQueryDocument());
+			if (item instanceof Document document && requiresRewrite(item)) {
+				rewrittenCollection.add(CountQuery.of(document).toQueryDocument());
 			} else {
 				rewrittenCollection.add(item);
 			}
@@ -242,8 +239,8 @@ class CountQuery {
 			return value;
 		}
 
-		if (value instanceof Point) {
-			return Arrays.asList(((Point) value).getX(), ((Point) value).getY());
+		if (value instanceof Point point) {
+			return Arrays.asList(point.getX(), point.getY());
 		}
 
 		if (value instanceof Document document) {

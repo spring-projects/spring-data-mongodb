@@ -251,9 +251,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.eventDelegate = new EntityLifecycleEventDelegate();
 
 		// We create indexes based on mapping events
-		if (this.mappingContext instanceof MongoMappingContext) {
-
-			MongoMappingContext mongoMappingContext = (MongoMappingContext) this.mappingContext;
+		if (this.mappingContext instanceof MongoMappingContext mongoMappingContext) {
 
 			if (mongoMappingContext.isAutoIndexCreation()) {
 				this.indexCreator = new ReactiveMongoPersistentEntityIndexCreator(mongoMappingContext, this::indexOps);
@@ -357,8 +355,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
 		}
 
-		if (mappingContext instanceof ApplicationEventPublisherAware) {
-			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
+		if (mappingContext instanceof ApplicationEventPublisherAware applicationEventPublisherAware) {
+			applicationEventPublisherAware.setApplicationEventPublisher(eventPublisher);
 		}
 	}
 
@@ -442,8 +440,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 		}
 
-		if (context instanceof ConfigurableApplicationContext) {
-			((ConfigurableApplicationContext) context).addApplicationListener(indexCreatorListener);
+		if (context instanceof ConfigurableApplicationContext configurableApplicationContext) {
+			configurableApplicationContext.addApplicationListener(indexCreatorListener);
 		}
 	}
 
@@ -1916,10 +1914,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Object filter = options.getFilter().orElse(Collections.emptyList());
 
-		if (filter instanceof Aggregation) {
-			Aggregation agg = (Aggregation) filter;
-			AggregationOperationContext context = agg instanceof TypedAggregation
-					? new TypeBasedAggregationOperationContext(((TypedAggregation<?>) agg).getInputType(),
+		if (filter instanceof Aggregation agg) {
+			AggregationOperationContext context = agg instanceof TypedAggregation typedAggregation
+					? new TypeBasedAggregationOperationContext(typedAggregation.getInputType(),
 							getConverter().getMappingContext(), queryMapper)
 					: new RelaxedTypeBasedAggregationOperationContext(Object.class, mappingContext, queryMapper);
 
@@ -2490,7 +2487,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
+					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -2553,8 +2550,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return throwable -> {
 
-			if (throwable instanceof RuntimeException) {
-				return potentiallyConvertRuntimeException((RuntimeException) throwable, exceptionTranslator);
+			if (throwable instanceof RuntimeException runtimeException) {
+				return potentiallyConvertRuntimeException(runtimeException, exceptionTranslator);
 			}
 
 			return throwable;
@@ -2757,8 +2754,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			FindOneAndUpdateOptions findOneAndUpdateOptions = convertToFindOneAndUpdateOptions(options, fields, sort,
 					arrayFilters);
-			if (update instanceof Document) {
-				return collection.findOneAndUpdate(query, (Document) update, findOneAndUpdateOptions);
+			if (update instanceof Document document) {
+				return collection.findOneAndUpdate(query, document, findOneAndUpdateOptions);
 			} else if (update instanceof List) {
 				return collection.findOneAndUpdate(query, (List<Document>) update, findOneAndUpdateOptions);
 			}
@@ -3180,9 +3177,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			PersistentEntity<?, ?> entity = event.getPersistentEntity();
 
 			// Double check type as Spring infrastructure does not consider nested generics
-			if (entity instanceof MongoPersistentEntity) {
+			if (entity instanceof MongoPersistentEntity<?> mongoPersistentProperties) {
 
-				onCheckForIndexes((MongoPersistentEntity<?>) entity, subscriptionExceptionHandler);
+				onCheckForIndexes(mongoPersistentProperties, subscriptionExceptionHandler);
 			}
 		}
 	}

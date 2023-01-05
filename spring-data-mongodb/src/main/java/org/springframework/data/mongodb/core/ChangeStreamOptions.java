@@ -150,12 +150,12 @@ public class ChangeStreamOptions {
 			return timestamp;
 		}
 
-		if (timestamp instanceof Instant) {
-			return new BsonTimestamp((int) ((Instant) timestamp).getEpochSecond(), 0);
+		if (timestamp instanceof Instant instant) {
+			return new BsonTimestamp((int) instant.getEpochSecond(), 0);
 		}
 
-		if (timestamp instanceof BsonTimestamp) {
-			return Instant.ofEpochSecond(((BsonTimestamp) timestamp).getTime());
+		if (timestamp instanceof BsonTimestamp bsonTimestamp) {
+			return Instant.ofEpochSecond(bsonTimestamp.getTime());
 		}
 
 		throw new IllegalArgumentException(

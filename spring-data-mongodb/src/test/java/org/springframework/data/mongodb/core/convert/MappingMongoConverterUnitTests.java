@@ -1586,11 +1586,11 @@ class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1034
 	void rejectsBasicDbListToBeConvertedIntoComplexType() {
 
-		List<Object> inner = new ArrayList<Object>();
+		List<Object> inner = new ArrayList<>();
 		inner.add("key");
 		inner.add("value");
 
-		List<Object> outer = new ArrayList<Object>();
+		List<Object> outer = new ArrayList<>();
 		outer.add(inner);
 		outer.add(inner);
 

@@ -158,16 +158,14 @@ public class BasicQuery extends Query {
 			return true;
 		}
 
-		if (!(o instanceof BasicQuery)) {
+		if (!(o instanceof BasicQuery other)) {
 			return false;
 		}
 
-		BasicQuery that = (BasicQuery) o;
-
-		return querySettingsEquals(that) && //
-				nullSafeEquals(fieldsObject, that.fieldsObject) && //
-				nullSafeEquals(queryObject, that.queryObject) && //
-				nullSafeEquals(sortObject, that.sortObject);
+		return querySettingsEquals(other) && //
+				nullSafeEquals(fieldsObject, other.fieldsObject) && //
+				nullSafeEquals(queryObject, other.queryObject) && //
+				nullSafeEquals(sortObject, other.sortObject);
 	}
 
 	@Override

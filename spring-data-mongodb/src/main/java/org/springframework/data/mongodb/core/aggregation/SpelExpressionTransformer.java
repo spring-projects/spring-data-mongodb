@@ -259,7 +259,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		private Document createOperationObjectAndAddToPreviousArgumentsIfNecessary(
 				AggregationExpressionTransformationContext<OperatorNode> context, OperatorNode currentNode) {
 
-			Document nextDocument = new Document(currentNode.getMongoOperator(), new ArrayList<Object>());
+			Document nextDocument = new Document(currentNode.getMongoOperator(), new ArrayList<>());
 
 			if (!context.hasPreviousOperation()) {
 				return nextDocument;
@@ -282,7 +282,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 				@Nullable Object leftResult) {
 
 			Object result = leftResult instanceof Number ? leftResult
-					: new Document("$multiply", Arrays.<Object> asList(Integer.valueOf(-1), leftResult));
+					: new Document("$multiply", Arrays.asList(Integer.valueOf(-1), leftResult));
 
 			if (leftResult != null && context.hasPreviousOperation()) {
 				context.addToPreviousOperation(result);
@@ -453,7 +453,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			}
 			else {
 
-				List<Object> argList = new ArrayList<Object>();
+				List<Object> argList = new ArrayList<>();
 
 				for (ExpressionNode childNode : node) {
 					argList.add(transform(childNode, context));
@@ -516,7 +516,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		protected Object convert(AggregationExpressionTransformationContext<NotOperatorNode> context) {
 
 			NotOperatorNode node = context.getCurrentNode();
-			List<Object> args = new ArrayList<Object>();
+			List<Object> args = new ArrayList<>();
 
 			for (ExpressionNode childNode : node) {
 				args.add(transform(childNode, context));

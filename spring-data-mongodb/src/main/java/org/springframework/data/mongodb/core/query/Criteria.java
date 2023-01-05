@@ -337,7 +337,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/mod/">MongoDB Query operator: $mod</a>
 	 */
 	public Criteria mod(Number value, Number remainder) {
-		List<Object> l = new ArrayList<Object>(2);
+		List<Object> l = new ArrayList<>(2);
 		l.add(value);
 		l.add(remainder);
 		criteria.put("$mod", l);
@@ -953,9 +953,9 @@ public class Criteria implements CriteriaDefinition {
 
 		Object existingNearOperationValue = criteria.get(command);
 
-		if (existingNearOperationValue instanceof Document) {
+		if (existingNearOperationValue instanceof Document document) {
 
-			((Document) existingNearOperationValue).put(operation, maxDistance);
+			document.put(operation, maxDistance);
 
 			return true;
 
@@ -1022,27 +1022,22 @@ public class Criteria implements CriteriaDefinition {
 			return right == null;
 		}
 
-		if (left instanceof Pattern) {
+		if (left instanceof Pattern leftPattern) {
 
-			if (!(right instanceof Pattern)) {
+			if (!(right instanceof Pattern rightPattern)) {
 				return false;
 			}
-
-			Pattern leftPattern = (Pattern) left;
-			Pattern rightPattern = (Pattern) right;
 
 			return leftPattern.pattern().equals(rightPattern.pattern()) //
 					&& leftPattern.flags() == rightPattern.flags();
 		}
 
-		if (left instanceof Document) {
+		if (left instanceof Document leftDocument) {
 
-			if (!(right instanceof Document)) {
+			if (!(right instanceof Document rightDocument)) {
 				return false;
 			}
 
-			Document leftDocument = (Document) left;
-			Document rightDocument = (Document) right;
 			Iterator<Entry<String, Object>> leftIterator = leftDocument.entrySet().iterator();
 			Iterator<Entry<String, Object>> rightIterator = rightDocument.entrySet().iterator();
 
@@ -1098,7 +1093,7 @@ public class Criteria implements CriteriaDefinition {
 
 	private static boolean requiresGeoJsonFormat(Object value) {
 		return value instanceof GeoJson
-				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
+				|| (value instanceof GeoCommand geoCommand && geoCommand.getShape() instanceof GeoJson);
 	}
 
 	/**

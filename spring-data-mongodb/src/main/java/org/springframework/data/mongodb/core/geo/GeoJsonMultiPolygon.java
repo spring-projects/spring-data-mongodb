@@ -69,10 +69,10 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 			return true;
 		}
 
-		if (!(obj instanceof GeoJsonMultiPolygon)) {
+		if (!(obj instanceof GeoJsonMultiPolygon other)) {
 			return false;
 		}
 
-		return ObjectUtils.nullSafeEquals(this.coordinates, ((GeoJsonMultiPolygon) obj).coordinates);
+		return ObjectUtils.nullSafeEquals(this.coordinates, other.coordinates);
 	}
 }

@@ -15,16 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
@@ -177,8 +169,8 @@ public class MongoExampleMapper {
 
 			if (entry.getValue() instanceof String) {
 				applyStringMatcher(entry, stringMatcher, ignoreCase);
-			} else if (entry.getValue() instanceof Document) {
-				applyPropertySpecs(propertyPath, (Document) entry.getValue(), probeType, exampleSpecAccessor);
+			} else if (entry.getValue() instanceof Document document) {
+				applyPropertySpecs(propertyPath, document, probeType, exampleSpecAccessor);
 			}
 		}
 	}
@@ -189,7 +181,7 @@ public class MongoExampleMapper {
 
 		Iterator<String> parts = Arrays.asList(path.split("\\.")).iterator();
 
-		final Stack<MongoPersistentProperty> stack = new Stack<>();
+		final Deque<MongoPersistentProperty> stack = new LinkedList<>();
 
 		List<String> resultParts = new ArrayList<>();
 
@@ -225,7 +217,7 @@ public class MongoExampleMapper {
 		return StringUtils.collectionToDelimitedString(resultParts, ".");
 	}
 
-	private Document updateTypeRestrictions(Document query, Example example) {
+	private Document updateTypeRestrictions(Document query, Example<?> example) {
 
 		Document result = new Document();
 
@@ -245,7 +237,7 @@ public class MongoExampleMapper {
 		return result;
 	}
 
-	private boolean isTypeRestricting(Example example) {
+	private boolean isTypeRestricting(Example<?> example) {
 
 		if (example.getMatcher() instanceof UntypedExampleMatcher) {
 			return false;
@@ -324,20 +316,13 @@ public class MongoExampleMapper {
 	 */
 	private static MatchMode toMatchMode(StringMatcher matcher) {
 
-		switch (matcher) {
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING:
-				return MatchMode.STARTING_WITH;
-			case ENDING:
-				return MatchMode.ENDING_WITH;
-			case EXACT:
-				return MatchMode.EXACT;
-			case REGEX:
-				return MatchMode.REGEX;
-			case DEFAULT:
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return switch (matcher) {
+			case CONTAINING -> MatchMode.CONTAINING;
+			case STARTING -> MatchMode.STARTING_WITH;
+			case ENDING -> MatchMode.ENDING_WITH;
+			case EXACT -> MatchMode.EXACT;
+			case REGEX -> MatchMode.REGEX;
+			default -> MatchMode.DEFAULT;
+		};
 	}
 }

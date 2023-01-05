@@ -92,16 +92,16 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		BsonTimestamp startAt = null;
 		boolean resumeAfter = true;
 
-		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions) {
+		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions changeStreamRequestOptions) {
 
-			ChangeStreamOptions changeStreamOptions = ((ChangeStreamRequestOptions) options).getChangeStreamOptions();
+			ChangeStreamOptions changeStreamOptions = changeStreamRequestOptions.getChangeStreamOptions();
 			filter = prepareFilter(template, changeStreamOptions);
 
 			if (changeStreamOptions.getFilter().isPresent()) {
 
 				Object val = changeStreamOptions.getFilter().get();
-				if (val instanceof Aggregation) {
-					collation = ((Aggregation) val).getOptions().getCollation()
+				if (val instanceof Aggregation aggregation) {
+					collation = aggregation.getOptions().getCollation()
 							.map(org.springframework.data.mongodb.core.query.Collation::toMongoCollation).orElse(null);
 				}
 			}
@@ -172,14 +172,13 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 
 		Object filter = options.getFilter().orElse(null);
 
-		if (filter instanceof Aggregation) {
-			Aggregation agg = (Aggregation) filter;
-			AggregationOperationContext context = agg instanceof TypedAggregation
-					? new TypeBasedAggregationOperationContext(((TypedAggregation<?>) agg).getInputType(),
+		if (filter instanceof Aggregation aggregation) {
+			AggregationOperationContext context = aggregation instanceof TypedAggregation<?> typedAggregation
+					? new TypeBasedAggregationOperationContext(typedAggregation.getInputType(),
 							template.getConverter().getMappingContext(), queryMapper)
 					: Aggregation.DEFAULT_CONTEXT;
 
-			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", denylist));
+			return aggregation.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", denylist));
 		}
 
 		if (filter instanceof List) {

@@ -67,7 +67,7 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 				}
 
 				// Store the EntityManager bean using its qualifiers.
-				mongoOperations.put(new HashSet<Annotation>(bean.getQualifiers()), (Bean<MongoOperations>) bean);
+				mongoOperations.put(new HashSet<>(bean.getQualifiers()), (Bean<MongoOperations>) bean);
 			}
 		}
 	}

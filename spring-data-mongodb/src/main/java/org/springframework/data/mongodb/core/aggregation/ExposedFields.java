@@ -300,13 +300,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof ExposedField)) {
+			if (!(obj instanceof ExposedField field)) {
 				return false;
 			}
 
-			ExposedField that = (ExposedField) obj;
-
-			return this.field.equals(that.field) && this.synthetic == that.synthetic;
+			return this.field.equals(field.field) && this.synthetic == field.synthetic;
 		}
 
 		@Override
@@ -393,13 +391,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof DirectFieldReference)) {
+			if (!(obj instanceof DirectFieldReference fieldReference)) {
 				return false;
 			}
 
-			DirectFieldReference that = (DirectFieldReference) obj;
-
-			return this.field.equals(that.field);
+			return this.field.equals(fieldReference.field);
 		}
 
 		@Override
@@ -460,12 +456,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof ExpressionFieldReference)) {
+			if (!(obj instanceof ExpressionFieldReference fieldReference)) {
 				return false;
 			}
 
-			ExpressionFieldReference that = (ExpressionFieldReference) obj;
-			return ObjectUtils.nullSafeEquals(this.delegate, that.delegate);
+			return ObjectUtils.nullSafeEquals(this.delegate, fieldReference.delegate);
 		}
 
 		@Override

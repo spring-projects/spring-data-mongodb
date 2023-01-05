@@ -339,7 +339,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	}
 
 	private static <E> Collection<E> toCollection(Iterable<E> ids) {
-		return ids instanceof Collection ? (Collection<E>) ids
+		return ids instanceof Collection<E> collection ? collection
 				: StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
 	}
 

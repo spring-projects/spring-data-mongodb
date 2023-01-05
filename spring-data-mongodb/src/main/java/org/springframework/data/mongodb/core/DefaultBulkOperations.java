@@ -267,9 +267,8 @@ class DefaultBulkOperations implements BulkOperations {
 					bulkOptions);
 		} catch (RuntimeException ex) {
 
-			if (ex instanceof MongoBulkWriteException) {
+			if (ex instanceof MongoBulkWriteException mongoBulkWriteException) {
 
-				MongoBulkWriteException mongoBulkWriteException = (MongoBulkWriteException) ex;
 				if (mongoBulkWriteException.getWriteConcernError() != null) {
 					throw new DataIntegrityViolationException(ex.getMessage(), ex);
 				}
@@ -284,13 +283,13 @@ class DefaultBulkOperations implements BulkOperations {
 
 		maybeEmitBeforeSaveEvent(it);
 
-		if (it.getModel() instanceof InsertOneModel) {
+		if (it.getModel() instanceof InsertOneModel<Document> model) {
 
-			Document target = ((InsertOneModel<Document>) it.getModel()).getDocument();
+			Document target = model.getDocument();
 			maybeInvokeBeforeSaveCallback(it.getSource(), target);
-		} else if (it.getModel() instanceof ReplaceOneModel) {
+		} else if (it.getModel() instanceof ReplaceOneModel<Document> model) {
 
-			Document target = ((ReplaceOneModel<Document>) it.getModel()).getReplacement();
+			Document target = model.getReplacement();
 			maybeInvokeBeforeSaveCallback(it.getSource(), target);
 		}
 
@@ -324,33 +323,19 @@ class DefaultBulkOperations implements BulkOperations {
 
 	private WriteModel<Document> mapWriteModel(WriteModel<Document> writeModel) {
 
-		if (writeModel instanceof UpdateOneModel) {
-
-			UpdateOneModel<Document> model = (UpdateOneModel<Document>) writeModel;
-
-			return new UpdateOneModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
-					model.getOptions());
+		if (writeModel instanceof UpdateOneModel<Document> model) {
+			return new UpdateOneModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()), model.getOptions());
 		}
 
-		if (writeModel instanceof UpdateManyModel) {
-
-			UpdateManyModel<Document> model = (UpdateManyModel<Document>) writeModel;
-
-			return new UpdateManyModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
-					model.getOptions());
+		if (writeModel instanceof UpdateManyModel<Document> model) {
+			return new UpdateManyModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()), model.getOptions());
 		}
 
-		if (writeModel instanceof DeleteOneModel) {
-
-			DeleteOneModel<Document> model = (DeleteOneModel<Document>) writeModel;
-
+		if (writeModel instanceof DeleteOneModel<Document> model) {
 			return new DeleteOneModel<>(getMappedQuery(model.getFilter()), model.getOptions());
 		}
 
-		if (writeModel instanceof DeleteManyModel) {
-
-			DeleteManyModel<Document> model = (DeleteManyModel<Document>) writeModel;
-
+		if (writeModel instanceof DeleteManyModel<Document> model) {
 			return new DeleteManyModel<>(getMappedQuery(model.getFilter()), model.getOptions());
 		}
 
@@ -367,8 +352,8 @@ class DefaultBulkOperations implements BulkOperations {
 
 	private Document getMappedObject(Object source) {
 
-		if (source instanceof Document) {
-			return (Document) source;
+		if (source instanceof Document document) {
+			return document;
 		}
 
 		Document sink = new Document();
@@ -383,39 +368,39 @@ class DefaultBulkOperations implements BulkOperations {
 
 	private void maybeEmitBeforeSaveEvent(SourceAwareWriteModelHolder holder) {
 
-		if (holder.getModel() instanceof InsertOneModel) {
+		if (holder.getModel() instanceof InsertOneModel<Document> model) {
 
-			Document target = ((InsertOneModel<Document>) holder.getModel()).getDocument();
+			Document target = model.getDocument();
 			maybeEmitEvent(new BeforeSaveEvent<>(holder.getSource(), target, collectionName));
-		} else if (holder.getModel() instanceof ReplaceOneModel) {
+		} else if (holder.getModel() instanceof ReplaceOneModel<Document> model) {
 
-			Document target = ((ReplaceOneModel<Document>) holder.getModel()).getReplacement();
+			Document target = model.getReplacement();
 			maybeEmitEvent(new BeforeSaveEvent<>(holder.getSource(), target, collectionName));
 		}
 	}
 
 	private void maybeEmitAfterSaveEvent(SourceAwareWriteModelHolder holder) {
 
-		if (holder.getModel() instanceof InsertOneModel) {
+		if (holder.getModel() instanceof InsertOneModel<Document> model) {
 
-			Document target = ((InsertOneModel<Document>) holder.getModel()).getDocument();
+			Document target = model.getDocument();
 			maybeEmitEvent(new AfterSaveEvent<>(holder.getSource(), target, collectionName));
-		} else if (holder.getModel() instanceof ReplaceOneModel) {
+		} else if (holder.getModel() instanceof ReplaceOneModel<Document> model) {
 
-			Document target = ((ReplaceOneModel<Document>) holder.getModel()).getReplacement();
+			Document target = model.getReplacement();
 			maybeEmitEvent(new AfterSaveEvent<>(holder.getSource(), target, collectionName));
 		}
 	}
 
 	private void maybeInvokeAfterSaveCallback(SourceAwareWriteModelHolder holder) {
 
-		if (holder.getModel() instanceof InsertOneModel) {
+		if (holder.getModel() instanceof InsertOneModel<Document> model) {
 
-			Document target = ((InsertOneModel<Document>) holder.getModel()).getDocument();
+			Document target = model.getDocument();
 			maybeInvokeAfterSaveCallback(holder.getSource(), target);
-		} else if (holder.getModel() instanceof ReplaceOneModel) {
+		} else if (holder.getModel() instanceof ReplaceOneModel<Document> model) {
 
-			Document target = ((ReplaceOneModel<Document>) holder.getModel()).getReplacement();
+			Document target = model.getReplacement();
 			maybeInvokeAfterSaveCallback(holder.getSource(), target);
 		}
 	}
