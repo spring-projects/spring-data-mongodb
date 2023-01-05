@@ -43,11 +43,11 @@ public interface AggregationExpression extends MongoExpression {
 	 */
 	static AggregationExpression from(MongoExpression expression) {
 
-		if (expression instanceof AggregationExpression) {
-			return AggregationExpression.class.cast(expression);
+		if (expression instanceof AggregationExpression aggregationExpression) {
+			return aggregationExpression;
 		}
 
-		return (context) -> context.getMappedObject(expression.toDocument());
+		return context -> context.getMappedObject(expression.toDocument());
 	}
 
 	/**

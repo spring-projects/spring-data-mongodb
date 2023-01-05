@@ -95,8 +95,8 @@ public class Update implements UpdateDefinition {
 
 			Object value = object.get(key);
 			update.modifierOps.put(key, value);
-			if (isKeyword(key) && value instanceof Document) {
-				update.keysToUpdate.addAll(((Document) value).keySet());
+			if (isKeyword(key) && value instanceof Document document) {
+				update.keysToUpdate.addAll(document.keySet());
 			} else {
 				update.keysToUpdate.add(key);
 			}
@@ -448,8 +448,8 @@ public class Update implements UpdateDefinition {
 			keyValueMap = new Document();
 			this.modifierOps.put(operator, keyValueMap);
 		} else {
-			if (existingValue instanceof Document) {
-				keyValueMap = (Document) existingValue;
+			if (existingValue instanceof Document document) {
+				keyValueMap = document;
 			} else {
 				throw new InvalidDataAccessApiUsageException(
 						"Modifier Operations should be a LinkedHashMap but was " + existingValue.getClass());
@@ -656,8 +656,8 @@ public class Update implements UpdateDefinition {
 				return values;
 			}
 
-			if (values.length == 1 && values[0] instanceof Collection) {
-				return ((Collection<?>) values[0]).toArray();
+			if (values.length == 1 && values[0] instanceof Collection<?> collection) {
+				return collection.toArray();
 			}
 
 			return Arrays.copyOf(values, values.length);

@@ -174,8 +174,8 @@ public class VariableOperators {
 					exposedFields, context);
 
 			Document input;
-			if (sourceArray instanceof Field) {
-				input = new Document("input", context.getReference((Field) sourceArray).toString());
+			if (sourceArray instanceof Field field) {
+				input = new Document("input", context.getReference(field).toString());
 			} else {
 				input = new Document("input", ((AggregationExpression) sourceArray).toDocument(context));
 			}

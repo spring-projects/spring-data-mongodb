@@ -55,9 +55,8 @@ class AggregationOperationRenderer {
 
 			operationDocuments.addAll(operation.toPipelineStages(contextToUse));
 
-			if (operation instanceof FieldsExposingAggregationOperation) {
+			if (operation instanceof FieldsExposingAggregationOperation exposedFieldsOperation) {
 
-				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
 				ExposedFields fields = exposedFieldsOperation.getFields();
 
 				if (operation instanceof InheritsFieldsAggregationOperation || exposedFieldsOperation.inheritsFields()) {

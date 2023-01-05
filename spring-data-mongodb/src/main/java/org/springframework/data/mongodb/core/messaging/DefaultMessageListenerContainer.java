@@ -117,7 +117,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 			subscriptions.values().stream() //
 					.filter(it -> !it.isActive()) //
-					.filter(it -> it instanceof TaskSubscription) //
+					.filter(TaskSubscription.class::isInstance) //
 					.map(TaskSubscription.class::cast) //
 					.map(TaskSubscription::getTask) //
 					.forEach(taskExecutor::execute);

@@ -109,7 +109,7 @@ public enum MongoRegexCreator {
 	 * @since 2.2.14
 	 */
 	public Object toCaseInsensitiveMatch(Object source) {
-		return source instanceof String ? new BsonRegularExpression(Pattern.quote((String) source), "i") : source;
+		return source instanceof String stringValue ? new BsonRegularExpression(Pattern.quote(stringValue), "i") : source;
 	}
 
 	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, MatchMode matcherType) {

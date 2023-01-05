@@ -278,15 +278,15 @@ public final class LazyLoadingProxyFactory {
 
 			StringBuilder description = new StringBuilder();
 			if (source != null) {
-				if (source instanceof DBRef) {
-					description.append(((DBRef) source).getCollectionName());
+				if (source instanceof DBRef dbRef) {
+					description.append(dbRef.getCollectionName());
 					description.append(":");
-					description.append(((DBRef) source).getId());
+					description.append(dbRef.getId());
 				} else {
 					description.append(source);
 				}
 			} else {
-				description.append(System.identityHashCode(source));
+				description.append(0);
 			}
 			description.append("$").append(LazyLoadingProxy.class.getSimpleName());
 

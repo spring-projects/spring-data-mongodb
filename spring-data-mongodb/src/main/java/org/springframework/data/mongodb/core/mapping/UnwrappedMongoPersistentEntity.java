@@ -212,8 +212,8 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	public void doWithProperties(SimplePropertyHandler handler) {
 
 		delegate.doWithProperties((SimplePropertyHandler) property -> {
-			if (property instanceof MongoPersistentProperty) {
-				handler.doWithPersistentProperty(wrap((MongoPersistentProperty) property));
+			if (property instanceof MongoPersistentProperty mongoPersistentProperty) {
+				handler.doWithPersistentProperty(wrap(mongoPersistentProperty));
 			} else {
 				handler.doWithPersistentProperty(property);
 			}

@@ -78,10 +78,10 @@ public class SetWindowFieldsOperation
 
 		Document $setWindowFields = new Document();
 		if (partitionBy != null) {
-			if (partitionBy instanceof AggregationExpression) {
-				$setWindowFields.append("partitionBy", ((AggregationExpression) partitionBy).toDocument(context));
-			} else if (partitionBy instanceof Field) {
-				$setWindowFields.append("partitionBy", context.getReference((Field) partitionBy).toString());
+			if (partitionBy instanceof AggregationExpression aggregationExpression) {
+				$setWindowFields.append("partitionBy", aggregationExpression.toDocument(context));
+			} else if (partitionBy instanceof Field field) {
+				$setWindowFields.append("partitionBy", context.getReference(field).toString());
 			} else {
 				$setWindowFields.append("partitionBy", partitionBy);
 			}

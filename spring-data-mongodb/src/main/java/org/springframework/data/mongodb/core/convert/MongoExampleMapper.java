@@ -177,8 +177,8 @@ public class MongoExampleMapper {
 
 			if (entry.getValue() instanceof String) {
 				applyStringMatcher(entry, stringMatcher, ignoreCase);
-			} else if (entry.getValue() instanceof Document) {
-				applyPropertySpecs(propertyPath, (Document) entry.getValue(), probeType, exampleSpecAccessor);
+			} else if (entry.getValue() instanceof Document document) {
+				applyPropertySpecs(propertyPath, document, probeType, exampleSpecAccessor);
 			}
 		}
 	}
@@ -225,7 +225,7 @@ public class MongoExampleMapper {
 		return StringUtils.collectionToDelimitedString(resultParts, ".");
 	}
 
-	private Document updateTypeRestrictions(Document query, Example example) {
+	private Document updateTypeRestrictions(Document query, Example<?> example) {
 
 		Document result = new Document();
 
@@ -245,7 +245,7 @@ public class MongoExampleMapper {
 		return result;
 	}
 
-	private boolean isTypeRestricting(Example example) {
+	private boolean isTypeRestricting(Example<?> example) {
 
 		if (example.getMatcher() instanceof UntypedExampleMatcher) {
 			return false;
@@ -324,20 +324,13 @@ public class MongoExampleMapper {
 	 */
 	private static MatchMode toMatchMode(StringMatcher matcher) {
 
-		switch (matcher) {
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING:
-				return MatchMode.STARTING_WITH;
-			case ENDING:
-				return MatchMode.ENDING_WITH;
-			case EXACT:
-				return MatchMode.EXACT;
-			case REGEX:
-				return MatchMode.REGEX;
-			case DEFAULT:
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return switch (matcher) {
+			case CONTAINING -> MatchMode.CONTAINING;
+			case STARTING -> MatchMode.STARTING_WITH;
+			case ENDING -> MatchMode.ENDING_WITH;
+			case EXACT -> MatchMode.EXACT;
+			case REGEX -> MatchMode.REGEX;
+			default -> MatchMode.DEFAULT;
+		};
 	}
 }

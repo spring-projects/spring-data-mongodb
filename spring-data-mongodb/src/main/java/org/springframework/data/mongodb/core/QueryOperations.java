@@ -388,12 +388,12 @@ class QueryOperations {
 
 			for (Entry<String, Object> entry : fields.entrySet()) {
 
-				if (entry.getValue() instanceof MongoExpression) {
+				if (entry.getValue() instanceof MongoExpression mongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
 
-					evaluated.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
+					evaluated.put(entry.getKey(), AggregationExpression.from(mongoExpression).toDocument(ctx));
 				} else {
 					evaluated.put(entry.getKey(), entry.getValue());
 				}
@@ -456,7 +456,7 @@ class QueryOperations {
 		 */
 		private DistinctQueryContext(@Nullable Object query, String fieldName) {
 
-			super(query instanceof Document ? new BasicQuery((Document) query) : (Query) query);
+			super(query instanceof Document document ? new BasicQuery(document) : (Query) query);
 			this.fieldName = fieldName;
 		}
 
@@ -907,10 +907,10 @@ class QueryOperations {
 
 			this.aggregation = aggregation;
 
-			if (aggregation instanceof TypedAggregation) {
-				this.inputType = ((TypedAggregation<?>) aggregation).getInputType();
-			} else if (aggregationOperationContext instanceof TypeBasedAggregationOperationContext) {
-				this.inputType = ((TypeBasedAggregationOperationContext) aggregationOperationContext).getType();
+			if (aggregation instanceof TypedAggregation typedAggregation) {
+				this.inputType = typedAggregation.getInputType();
+			} else if (aggregationOperationContext instanceof TypeBasedAggregationOperationContext typeBasedAggregationOperationContext) {
+				this.inputType = typeBasedAggregationOperationContext.getType();
 			} else {
 				this.inputType = null;
 			}
@@ -935,8 +935,8 @@ class QueryOperations {
 
 			this.aggregation = aggregation;
 
-			if (aggregation instanceof TypedAggregation) {
-				this.inputType = ((TypedAggregation<?>) aggregation).getInputType();
+			if (aggregation instanceof TypedAggregation typedAggregation) {
+				this.inputType = typedAggregation.getInputType();
 			} else {
 				this.inputType = inputType;
 			}

@@ -288,13 +288,13 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 
 		maybeEmitBeforeSaveEvent(it);
 
-		if (it.model() instanceof InsertOneModel) {
+		if (it.model() instanceof InsertOneModel<Document> model) {
 
-			Document target = ((InsertOneModel<Document>) it.model()).getDocument();
+			Document target = model.getDocument();
 			maybeInvokeBeforeSaveCallback(it.source(), target);
-		} else if (it.model() instanceof ReplaceOneModel) {
+		} else if (it.model() instanceof ReplaceOneModel<Document> model) {
 
-			Document target = ((ReplaceOneModel<Document>) it.model()).getReplacement();
+			Document target = model.getReplacement();
 			maybeInvokeBeforeSaveCallback(it.source(), target);
 		}
 
@@ -348,8 +348,8 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 
 	private Document getMappedObject(Object source) {
 
-		if (source instanceof Document) {
-			return (Document) source;
+		if (source instanceof Document document) {
+			return document;
 		}
 
 		Document sink = new Document();
@@ -364,13 +364,13 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 
 	private void maybeInvokeAfterSaveCallback(SourceAwareWriteModelHolder holder) {
 
-		if (holder.model() instanceof InsertOneModel) {
+		if (holder.model() instanceof InsertOneModel<Document> model) {
 
-			Document target = ((InsertOneModel<Document>) holder.model()).getDocument();
+			Document target = model.getDocument();
 			maybeInvokeAfterSaveCallback(holder.source(), target);
-		} else if (holder.model() instanceof ReplaceOneModel) {
+		} else if (holder.model() instanceof ReplaceOneModel<Document> model) {
 
-			Document target = ((ReplaceOneModel<Document>) holder.model()).getReplacement();
+			Document target = model.getReplacement();
 			maybeInvokeAfterSaveCallback(holder.source(), target);
 		}
 	}

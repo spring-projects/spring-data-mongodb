@@ -177,10 +177,10 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 				return Alias.NONE;
 			}
 
-			if (source instanceof Document) {
-				return Alias.ofNullable(((Document) source).get(typeKey));
-			} else if (source instanceof DBObject) {
-				return Alias.ofNullable(((DBObject) source).get(typeKey));
+			if (source instanceof Document document) {
+				return Alias.ofNullable(document.get(typeKey));
+			} else if (source instanceof DBObject dbObject) {
+				return Alias.ofNullable(dbObject.get(typeKey));
 			}
 
 			throw new IllegalArgumentException("Cannot read alias from " + source.getClass());
@@ -190,10 +190,10 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 			if (typeKey != null) {
 
-				if (sink instanceof Document) {
-					((Document) sink).put(typeKey, alias);
-				} else if (sink instanceof DBObject) {
-					((DBObject) sink).put(typeKey, alias);
+				if (sink instanceof Document document) {
+					document.put(typeKey, alias);
+				} else if (sink instanceof DBObject dbObject) {
+					dbObject.put(typeKey, alias);
 				}
 			}
 		}

@@ -322,7 +322,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	private TypedJsonSchemaObject createSchemaObject(Object type, Collection<?> possibleValues) {
 
-		TypedJsonSchemaObject schemaObject = type instanceof Type ? JsonSchemaObject.of(Type.class.cast(type))
+		TypedJsonSchemaObject schemaObject = type instanceof Type typeObject ? JsonSchemaObject.of(typeObject)
 				: JsonSchemaObject.of(Class.class.cast(type));
 
 		if (!CollectionUtils.isEmpty(possibleValues)) {
@@ -331,23 +331,22 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return schemaObject;
 	}
 
-	private String computePropertyFieldName(PersistentProperty property) {
+	private String computePropertyFieldName(PersistentProperty<?> property) {
 
-		return property instanceof MongoPersistentProperty ? ((MongoPersistentProperty) property).getFieldName()
-				: property.getName();
+		return property instanceof MongoPersistentProperty  mongoPersistentProperty ?
+				mongoPersistentProperty.getFieldName() : property.getName();
 	}
 
-	private boolean isRequiredProperty(PersistentProperty property) {
+	private boolean isRequiredProperty(PersistentProperty<?> property) {
 		return property.getType().isPrimitive();
 	}
 
 	private Class<?> computeTargetType(PersistentProperty<?> property) {
 
-		if (!(property instanceof MongoPersistentProperty)) {
+		if (!(property instanceof MongoPersistentProperty mongoProperty)) {
 			return property.getType();
 		}
 
-		MongoPersistentProperty mongoProperty = (MongoPersistentProperty) property;
 		if (!mongoProperty.isIdProperty()) {
 			return mongoProperty.getFieldType();
 		}

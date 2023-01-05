@@ -69,11 +69,9 @@ public class MapReduceTiming {
 			return true;
 		}
 
-		if (!(obj instanceof MapReduceTiming)) {
+		if (!(obj instanceof MapReduceTiming that)) {
 			return false;
 		}
-
-		MapReduceTiming that = (MapReduceTiming) obj;
 
 		return this.emitLoopTime == that.emitLoopTime && //
 				this.mapTime == that.mapTime && //

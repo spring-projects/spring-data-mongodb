@@ -98,9 +98,7 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 				return collection;
 			}
 
-			if (aggregation instanceof TypedAggregation) {
-
-				TypedAggregation<?> typedAggregation = (TypedAggregation<?>) aggregation;
+			if (aggregation instanceof TypedAggregation typedAggregation) {
 
 				if (typedAggregation.getInputType() != null) {
 					return template.getCollectionName(typedAggregation.getInputType());

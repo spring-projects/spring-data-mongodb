@@ -230,12 +230,12 @@ interface ReactiveMongoQueryExecution {
 
 			if (ReflectionUtils.isVoid(returnedType.getReturnedType())) {
 
-				if (source instanceof Mono) {
-					return ((Mono<?>) source).then();
+				if (source instanceof Mono<?> mono) {
+					return mono.then();
 				}
 
-				if (source instanceof Publisher) {
-					return Flux.from((Publisher<?>) source).then();
+				if (source instanceof Publisher<?> publisher) {
+					return Flux.from(publisher).then();
 				}
 			}
 

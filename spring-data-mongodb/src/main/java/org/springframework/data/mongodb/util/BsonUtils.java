@@ -132,8 +132,8 @@ public class BsonUtils {
 
 		Map<String, Object> map = asMap(bson, codecRegistry);
 
-		if (map instanceof Document) {
-			return (Document) map;
+		if (map instanceof Document document) {
+			return document;
 		}
 
 		return new Document(map);
@@ -152,14 +152,14 @@ public class BsonUtils {
 			bson = new Document(asDocument(bson));
 		}
 
-		if (bson instanceof Document) {
-			return (Document) bson;
+		if (bson instanceof Document document) {
+			return document;
 		}
 
 		Map<String, Object> map = asMap(bson);
 
-		if (map instanceof Document) {
-			return (Document) map;
+		if (map instanceof Document document) {
+			return document;
 		}
 
 		return new Document(map);
@@ -167,14 +167,14 @@ public class BsonUtils {
 
 	public static void addToMap(Bson bson, String key, @Nullable Object value) {
 
-		if (bson instanceof Document) {
+		if (bson instanceof Document document) {
 
-			((Document) bson).put(key, value);
+			document.put(key, value);
 			return;
 		}
-		if (bson instanceof BSONObject) {
+		if (bson instanceof BSONObject bsonObject) {
 
-			((BSONObject) bson).put(key, value);
+			bsonObject.put(key, value);
 			return;
 		}
 
@@ -191,15 +191,15 @@ public class BsonUtils {
 	 */
 	public static void addAllToMap(Bson target, Map<String, ?> source) {
 
-		if (target instanceof Document) {
+		if (target instanceof Document document) {
 
-			((Document) target).putAll(source);
+			document.putAll(source);
 			return;
 		}
 
-		if (target instanceof BSONObject) {
+		if (target instanceof BSONObject bsonObject) {
 
-			((BSONObject) target).putAll(source);
+			bsonObject.putAll(source);
 			return;
 		}
 
@@ -218,14 +218,10 @@ public class BsonUtils {
 	 */
 	public static boolean contains(Bson bson, String key, @Nullable Object value) {
 
-		if (bson instanceof Document) {
-
-			Document doc = (Document) bson;
-			return doc.containsKey(key) && ObjectUtils.nullSafeEquals(doc.get(key), value);
+		if (bson instanceof Document document) {
+			return document.containsKey(key) && ObjectUtils.nullSafeEquals(document.get(key), value);
 		}
-		if (bson instanceof BSONObject) {
-
-			BSONObject bsonObject = (BSONObject) bson;
+		if (bson instanceof BSONObject bsonObject) {
 			return bsonObject.containsField(key) && ObjectUtils.nullSafeEquals(bsonObject.get(key), value);
 		}
 
@@ -258,15 +254,15 @@ public class BsonUtils {
 	 */
 	static void removeFrom(Bson bson, String key) {
 
-		if (bson instanceof Document) {
+		if (bson instanceof Document document) {
 
-			((Document) bson).remove(key);
+			document.remove(key);
 			return;
 		}
 
-		if (bson instanceof BSONObject) {
+		if (bson instanceof BSONObject bsonObject) {
 
-			((BSONObject) bson).removeField(key);
+			bsonObject.removeField(key);
 			return;
 		}
 
@@ -326,40 +322,40 @@ public class BsonUtils {
 	 */
 	public static BsonValue simpleToBsonValue(Object source) {
 
-		if (source instanceof BsonValue) {
-			return (BsonValue) source;
+		if (source instanceof BsonValue bsonValue) {
+			return bsonValue;
 		}
 
-		if (source instanceof ObjectId) {
-			return new BsonObjectId((ObjectId) source);
+		if (source instanceof ObjectId objectId) {
+			return new BsonObjectId(objectId);
 		}
 
-		if (source instanceof String) {
-			return new BsonString((String) source);
+		if (source instanceof String stringValue) {
+			return new BsonString(stringValue);
 		}
 
-		if (source instanceof Double) {
-			return new BsonDouble((Double) source);
+		if (source instanceof Double doubleValue) {
+			return new BsonDouble(doubleValue);
 		}
 
-		if (source instanceof Integer) {
-			return new BsonInt32((Integer) source);
+		if (source instanceof Integer integerValue) {
+			return new BsonInt32(integerValue);
 		}
 
-		if (source instanceof Long) {
-			return new BsonInt64((Long) source);
+		if (source instanceof Long longValue) {
+			return new BsonInt64(longValue);
 		}
 
-		if (source instanceof byte[]) {
-			return new BsonBinary((byte[]) source);
+		if (source instanceof byte[] byteArray) {
+			return new BsonBinary(byteArray);
 		}
 
-		if (source instanceof Boolean) {
-			return new BsonBoolean((Boolean) source);
+		if (source instanceof Boolean booleanValue) {
+			return new BsonBoolean(booleanValue);
 		}
 
-		if (source instanceof Float) {
-			return new BsonDouble((Float) source);
+		if (source instanceof Float floatValue) {
+			return new BsonDouble(floatValue);
 		}
 
 		if(source instanceof Binary binary) {
@@ -519,11 +515,11 @@ public class BsonUtils {
 
 			Object result = source.get(parts[i - 1]);
 
-			if (!(result instanceof Bson)) {
+			if (!(result instanceof Bson resultBson)) {
 				return null;
 			}
 
-			source = asMap((Bson) result);
+			source = asMap(resultBson);
 		}
 
 		return source.get(parts[parts.length - 1]);
@@ -577,16 +573,16 @@ public class BsonUtils {
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> getAsMap(Object source) {
 
-		if (source instanceof Document) {
-			return (Document) source;
+		if (source instanceof Document document) {
+			return document;
 		}
 
-		if (source instanceof BasicDBObject) {
-			return (BasicDBObject) source;
+		if (source instanceof BasicDBObject basicDBObject) {
+			return basicDBObject;
 		}
 
-		if (source instanceof DBObject) {
-			return ((DBObject) source).toMap();
+		if (source instanceof DBObject dbObject) {
+			return dbObject.toMap();
 		}
 
 		if (source instanceof Map) {
@@ -609,16 +605,16 @@ public class BsonUtils {
 	@SuppressWarnings("unchecked")
 	public static Bson asBson(Object source) {
 
-		if (source instanceof Document) {
-			return (Document) source;
+		if (source instanceof Document document) {
+			return document;
 		}
 
-		if (source instanceof BasicDBObject) {
-			return (BasicDBObject) source;
+		if (source instanceof BasicDBObject basicDBObject) {
+			return basicDBObject;
 		}
 
-		if (source instanceof DBObject) {
-			return new Document(((DBObject) source).toMap());
+		if (source instanceof DBObject dbObject) {
+			return new Document(dbObject.toMap());
 		}
 
 		if (source instanceof Map) {
@@ -650,8 +646,8 @@ public class BsonUtils {
 	 */
 	public static Collection<?> asCollection(Object source) {
 
-		if (source instanceof Collection) {
-			return (Collection<?>) source;
+		if (source instanceof Collection<?> collection) {
+			return collection;
 		}
 
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
@@ -665,21 +661,21 @@ public class BsonUtils {
 		}
 
 		try {
-			return value instanceof Document
-					? ((Document) value).toJson(MongoClientSettings.getDefaultCodecRegistry().get(Document.class))
+			return value instanceof Document document
+					? document.toJson(MongoClientSettings.getDefaultCodecRegistry().get(Document.class))
 					: serializeValue(value);
 
 		} catch (Exception e) {
 
-			if (value instanceof Collection) {
-				return toString((Collection<?>) value);
-			} else if (value instanceof Map) {
-				return toString((Map<?, ?>) value);
+			if (value instanceof Collection<?> collection) {
+				return toString(collection);
+			} else if (value instanceof Map<?,?> map) {
+				return toString(map);
 			} else if (ObjectUtils.isArray(value)) {
 				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
 			}
 
-			throw e instanceof JsonParseException ? (JsonParseException) e : new JsonParseException(e);
+			throw e instanceof JsonParseException jsonParseException ? jsonParseException : new JsonParseException(e);
 		}
 	}
 

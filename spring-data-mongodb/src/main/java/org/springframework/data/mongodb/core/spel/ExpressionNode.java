@@ -67,20 +67,20 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	public static ExpressionNode from(SpelNode node, ExpressionState state) {
 
-		if (node instanceof Operator) {
-			return new OperatorNode((Operator) node, state);
+		if (node instanceof Operator operator) {
+			return new OperatorNode(operator, state);
 		}
 
-		if (node instanceof MethodReference) {
-			return new MethodReferenceNode((MethodReference) node, state);
+		if (node instanceof MethodReference methodReference) {
+			return new MethodReferenceNode(methodReference, state);
 		}
 
-		if (node instanceof Literal) {
-			return new LiteralNode((Literal) node, state);
+		if (node instanceof Literal literal) {
+			return new LiteralNode(literal, state);
 		}
 
-		if (node instanceof OperatorNot) {
-			return new NotOperatorNode((OperatorNot) node, state);
+		if (node instanceof OperatorNot operatorNot) {
+			return new NotOperatorNode(operatorNot, state);
 		}
 
 		return new ExpressionNode(node, state);

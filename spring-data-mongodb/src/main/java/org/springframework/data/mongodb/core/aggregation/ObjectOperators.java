@@ -245,12 +245,8 @@ public class ObjectOperators {
 		@SuppressWarnings("unchecked")
 		private Object potentiallyExtractSingleValue(Object value) {
 
-			if (value instanceof Collection) {
-
-				Collection<Object> collection = ((Collection<Object>) value);
-				if (collection.size() == 1) {
-					return collection.iterator().next();
-				}
+			if (value instanceof Collection<?> collection && collection.size() == 1) {
+				return collection.iterator().next();
 			}
 			return value;
 		}

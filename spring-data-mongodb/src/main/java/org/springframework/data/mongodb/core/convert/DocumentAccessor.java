@@ -169,8 +169,8 @@ class DocumentAccessor {
 
 		Object existing = BsonUtils.asMap(source).get(key);
 
-		if (existing instanceof Document) {
-			return (Document) existing;
+		if (existing instanceof Document document) {
+			return document;
 		}
 
 		Document nested = new Document();

@@ -172,7 +172,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 					Collection<?> values = asCollection(next);
 
-					List<DBRef> dbRefs = new ArrayList<DBRef>(values.size());
+					List<DBRef> dbRefs = new ArrayList<>(values.size());
 					for (Object element : values) {
 						dbRefs.add(writer.toDBRef(element, property));
 					}
@@ -201,14 +201,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	private static Collection<?> asCollection(@Nullable Object source) {
 
-		if (source instanceof Iterable) {
+		if (source instanceof Iterable<?> iterable) {
 
-			if (source instanceof Collection) {
-				return new ArrayList<>((Collection<?>) source);
+			if(source instanceof Collection<?> collection) {
+				return new ArrayList<>(collection);
 			}
 
 			List<Object> result = new ArrayList<>();
-			for (Object element : (Iterable<?>) source) {
+			for (Object element : iterable) {
 				result.add(element);
 			}
 			return result;

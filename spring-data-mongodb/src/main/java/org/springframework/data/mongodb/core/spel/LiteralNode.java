@@ -75,12 +75,11 @@ public class LiteralNode extends ExpressionNode {
 	 */
 	public boolean isUnaryMinus(@Nullable ExpressionNode parent) {
 
-		if (!(parent instanceof OperatorNode)) {
+		if (!(parent instanceof OperatorNode operatorNode)) {
 			return false;
 		}
 
-		OperatorNode operator = (OperatorNode) parent;
-		return operator.isUnaryMinus();
+		return operatorNode.isUnaryMinus();
 	}
 
 	@Override

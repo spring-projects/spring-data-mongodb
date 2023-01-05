@@ -272,8 +272,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public EvaluationContext getEvaluationContext(@Nullable Object rootObject) {
 
-		if (getOwner() instanceof BasicMongoPersistentEntity) {
-			return ((BasicMongoPersistentEntity) getOwner()).getEvaluationContext(rootObject);
+		if (getOwner() instanceof BasicMongoPersistentEntity mongoPersistentEntity) {
+			return mongoPersistentEntity.getEvaluationContext(rootObject);
 		}
 		return rootObject != null ? new StandardEvaluationContext(rootObject) : new StandardEvaluationContext();
 	}

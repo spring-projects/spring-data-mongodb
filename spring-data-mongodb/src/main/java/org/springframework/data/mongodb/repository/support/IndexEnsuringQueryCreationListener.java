@@ -116,7 +116,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			indexOperationsProvider.indexOps(metadata.getCollectionName(), metadata.getJavaType()).ensureIndex(index);
 		} catch (UncategorizedMongoDbException e) {
 
-			if (e.getCause() instanceof MongoException) {
+			if (e.getCause() instanceof MongoException mongoException) {
 
 				/*
 				 * As of MongoDB 4.2 index creation raises an error when creating an index for the very same keys with
@@ -127,7 +127,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 				 *
 				 * For details please see: https://docs.mongodb.com/master/release-notes/4.2-compatibility/#indexes
 				 */
-				if (((MongoException) e.getCause()).getCode() != 85) {
+				if (mongoException.getCode() != 85) {
 					throw e;
 				}
 			}

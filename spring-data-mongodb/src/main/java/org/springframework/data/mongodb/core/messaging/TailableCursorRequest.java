@@ -72,8 +72,8 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		Assert.notNull(options, "Options must not be null");
 
 		this.messageListener = messageListener;
-		this.options = options instanceof TailableCursorRequestOptions ? (TailableCursorRequestOptions) options
-				: TailableCursorRequestOptions.of(options);
+		this.options = options instanceof TailableCursorRequestOptions tailableCursorRequestOptions ?
+				tailableCursorRequestOptions : TailableCursorRequestOptions.of(options);
 	}
 
 	@Override

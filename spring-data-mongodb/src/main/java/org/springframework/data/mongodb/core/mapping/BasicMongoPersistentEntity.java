@@ -159,12 +159,12 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			return null;
 		}
 
-		if (collationValue instanceof org.bson.Document) {
-			return org.springframework.data.mongodb.core.query.Collation.from((org.bson.Document) collationValue);
+		if (collationValue instanceof org.bson.Document document) {
+			return org.springframework.data.mongodb.core.query.Collation.from(document);
 		}
 
-		if (collationValue instanceof org.springframework.data.mongodb.core.query.Collation) {
-			return org.springframework.data.mongodb.core.query.Collation.class.cast(collationValue);
+		if (collationValue instanceof org.springframework.data.mongodb.core.query.Collation collation) {
+			return collation;
 		}
 
 		return StringUtils.hasText(collationValue.toString())

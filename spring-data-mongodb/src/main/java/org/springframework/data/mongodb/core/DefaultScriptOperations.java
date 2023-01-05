@@ -150,7 +150,7 @@ class DefaultScriptOperations implements ScriptOperations {
 			return args;
 		}
 
-		List<Object> convertedValues = new ArrayList<Object>(args.length);
+		List<Object> convertedValues = new ArrayList<>(args.length);
 
 		for (Object arg : args) {
 			convertedValues.add(arg instanceof String && quote ? String.format("'%s'", arg)

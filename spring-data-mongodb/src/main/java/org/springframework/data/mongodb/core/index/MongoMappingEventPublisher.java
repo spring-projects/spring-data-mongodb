@@ -68,8 +68,8 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 
 	@SuppressWarnings("unchecked")
 	public void publishEvent(ApplicationEvent event) {
-		if (event instanceof MappingContextEvent) {
-			indexCreator.onApplicationEvent((MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>) event);
+		if (event instanceof MappingContextEvent<?,?> mappingContextEvent) {
+			indexCreator.onApplicationEvent(mappingContextEvent);
 		}
 	}
 
