@@ -15,34 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-
+import com.mongodb.WriteConcern;
+import com.mongodb.client.model.InsertManyOptions;
+import com.mongodb.reactivestreams.client.MongoClient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
-import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
@@ -84,15 +63,38 @@ import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import com.mongodb.WriteConcern;
-import com.mongodb.reactivestreams.client.MongoClient;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static java.util.List.of;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 /**
  * Integration test for {@link MongoTemplate}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Tomasz Forys
  */
 @ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class ReactiveMongoTemplateTests {
@@ -537,13 +539,58 @@ public class ReactiveMongoTemplateTests {
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
-		ObjectId id = new ObjectId();
-		Person person = new Person(id, "Amol");
-		person.setAge(28);
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
 
-		template.insertAll(Arrays.asList(person, person)) //
+		template.insertAll(of(first, second, uniquePerson)) //
 				.as(StepVerifier::create) //
 				.verifyError(DataIntegrityViolationException.class);
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class).block();
+		assertThat(found).isNull();
+	}
+
+	@Test
+	void storeCorrectObjectsOnInsertAllWithInsertManyOptionsAndUniqueViolation() {
+
+		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
+
+		template.insertAll(of(first, second, uniquePerson), new InsertManyOptions().ordered(false)) //
+				.as(StepVerifier::create) //
+				.verifyError(DataIntegrityViolationException.class);
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class).block();
+		assertThat(found).isNotNull();
+		assertThat(found.getAge()).isEqualTo(30);
+	}
+
+	@Test
+	void testNullInsertManyOptionsValidation() {
+
+		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		Person person = new Person("Amol", 30);
+
+		template.insertAll(of(person), null) //
+				.as(StepVerifier::create) //
+				.verifyErrorSatisfies(error ->
+						assertThat(error).isInstanceOf(IllegalArgumentException.class)
+								.hasMessage("InsertManyOptions must not be null"));
 	}
 
 	@Test // DATAMONGO-1444

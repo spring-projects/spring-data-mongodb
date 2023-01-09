@@ -15,29 +15,27 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
-
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
+import com.mongodb.MongoNamespace;
+import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
+import com.mongodb.ServerCursor;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.*;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigInteger;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
 import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -105,33 +103,24 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoException;
-import com.mongodb.MongoNamespace;
-import com.mongodb.ReadPreference;
-import com.mongodb.ServerAddress;
-import com.mongodb.ServerCursor;
-import com.mongodb.WriteConcern;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.DistinctIterable;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.MapReduceAction;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.TimeSeriesGranularity;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 /**
  * Unit tests for {@link MongoTemplate}.
@@ -2174,7 +2163,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Collection<Person> saved = template.insertAll(Arrays.asList(entity1, entity2));
 
 		verify(afterSaveCallback, times(2)).onAfterSave(any(), any(), anyString());
-		assertThat(saved.iterator().next().getId()).isEqualTo("after-save");
+		assertThat(saved).hasSize(2);
+		assertThat(saved).map(e -> e.getId()).containsExactly("after-save", "after-save");
 	}
 
 	@Test // DATAMONGO-2479

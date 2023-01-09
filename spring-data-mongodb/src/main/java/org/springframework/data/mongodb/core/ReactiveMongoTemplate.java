@@ -15,29 +15,25 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.CursorType;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.model.*;
+import com.mongodb.client.model.changestream.FullDocument;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.InsertOneResult;
+import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
+import com.mongodb.reactivestreams.client.ClientSession;
+import com.mongodb.reactivestreams.client.DistinctPublisher;
+import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonValue;
@@ -121,26 +117,28 @@ import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.CursorType;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.client.model.*;
-import com.mongodb.client.model.changestream.FullDocument;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.InsertOneResult;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.AggregatePublisher;
-import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
-import com.mongodb.reactivestreams.client.ClientSession;
-import com.mongodb.reactivestreams.client.DistinctPublisher;
-import com.mongodb.reactivestreams.client.FindPublisher;
-import com.mongodb.reactivestreams.client.MapReducePublisher;
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.MongoDatabase;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
 
 /**
  * Primary implementation of {@link ReactiveMongoOperations}. It simplifies the use of Reactive MongoDB usage and helps
@@ -157,6 +155,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
+ * @author Tomasz Forys
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -1208,11 +1207,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass, InsertManyOptions options) {
+		return insertAll(batchToSave, getCollectionName(entityClass), options);
+	}
+
+	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName) {
+		return insertAll(batchToSave, collectionName, new InsertManyOptions());
+	}
+
+	@Override
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName, InsertManyOptions options) {
 
 		Assert.notNull(batchToSave, "Batch to insert must not be null");
 
-		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
+		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName, options));
 	}
 
 	@Override
@@ -1265,17 +1274,32 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public <T> Flux<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass) {
-		return doInsertBatch(getCollectionName(entityClass), batchToSave, this.mongoConverter);
+		return insert(batchToSave, getCollectionName(entityClass));
 	}
 
 	@Override
 	public <T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName) {
-		return doInsertBatch(collectionName, batchToSave, this.mongoConverter);
+		return insert(batchToSave, collectionName, new InsertManyOptions());
+	}
+
+	@Override
+	public <T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName, InsertManyOptions options) {
+		return doInsertBatch(collectionName, batchToSave, this.mongoConverter, options);
+	}
+
+	@Override
+	public <T> Flux<T> insertAll(Collection<? extends T> objectsToSave, InsertManyOptions options) {
+		return doInsertAll(objectsToSave, this.mongoConverter, options);
+	}
+
+	@Override
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave, InsertManyOptions options) {
+		return Flux.from(objectsToSave).flatMap(collection -> insertAll(collection, options));
 	}
 
 	@Override
 	public <T> Flux<T> insertAll(Collection<? extends T> objectsToSave) {
-		return doInsertAll(objectsToSave, this.mongoConverter);
+		return doInsertAll(objectsToSave, this.mongoConverter, new InsertManyOptions());
 	}
 
 	@Override
@@ -1283,7 +1307,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return Flux.from(objectsToSave).flatMap(this::insertAll);
 	}
 
-	protected <T> Flux<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<Object> writer) {
+	protected <T> Flux<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<Object> writer, InsertManyOptions insertManyOptions) {
 
 		Map<String, List<T>> elementsByCollection = new HashMap<>();
 
@@ -1296,13 +1320,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 
 		return Flux.fromIterable(elementsByCollection.keySet())
-				.flatMap(collectionName -> doInsertBatch(collectionName, elementsByCollection.get(collectionName), writer));
+				.flatMap(collectionName -> doInsertBatch(collectionName, elementsByCollection.get(collectionName), writer, insertManyOptions));
 	}
 
 	protected <T> Flux<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
-			MongoWriter<Object> writer) {
+			MongoWriter<Object> writer, InsertManyOptions options) {
 
 		Assert.notNull(writer, "MongoWriter must not be null");
+		Assert.notNull(options, "InsertManyOptions must not be null");
 
 		Mono<List<Tuple2<AdaptibleEntity<T>, Document>>> prepareDocuments = Flux.fromIterable(batchToSave)
 				.flatMap(uninitialized -> {
@@ -1328,7 +1353,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			List<Document> documents = tuples.stream().map(Tuple2::getT2).collect(Collectors.toList());
 
-			return insertDocumentList(collectionName, documents).thenMany(Flux.fromIterable(tuples));
+			return insertDocumentList(collectionName, documents, options).thenMany(Flux.fromIterable(tuples));
 		});
 
 		return insertDocuments.flatMap(tuple -> {
@@ -1465,7 +1490,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return Flux.from(execute).last().map(success -> document.getId());
 	}
 
-	protected Flux<ObjectId> insertDocumentList(String collectionName, List<Document> dbDocList) {
+	protected Flux<ObjectId> insertDocumentList(String collectionName, List<Document> dbDocList, InsertManyOptions options) {
 
 		if (dbDocList.isEmpty()) {
 			return Flux.empty();
@@ -1486,7 +1511,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			documents.addAll(toDocuments(dbDocList));
 
-			return collectionToUse.insertMany(documents);
+			return collectionToUse.insertMany(documents, options);
 
 		}).flatMap(s -> {
 

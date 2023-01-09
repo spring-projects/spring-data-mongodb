@@ -15,22 +15,18 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiPredicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.*;
+import com.mongodb.client.model.*;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -70,16 +66,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -113,23 +100,16 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.DistinctIterable;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.*;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -159,6 +139,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Yadhukrishna S Pai
  * @author Anton Barkan
  * @author Bartłomiej Mazur
+ * @author Tomasz Forys
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
@@ -1250,34 +1231,44 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass) {
+		return insert(batchToSave, getCollectionName(entityClass));
+	}
 
-		Assert.notNull(batchToSave, "BatchToSave must not be null");
+	@Override
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass, InsertManyOptions options) {
+		return insert(batchToSave, getCollectionName(entityClass), options);
+	}
 
-		return (Collection<T>) doInsertBatch(getCollectionName(entityClass), batchToSave, this.mongoConverter);
+	@Override
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName) {
+		return insert(batchToSave, collectionName, new InsertManyOptions());
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName) {
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName, InsertManyOptions options) {
 
 		Assert.notNull(batchToSave, "BatchToSave must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
 
-		return (Collection<T>) doInsertBatch(collectionName, batchToSave, this.mongoConverter);
+		return (Collection<T>) doInsertBatch(collectionName, batchToSave, this.mongoConverter, options);
+	}
+
+	@Override
+	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave) {
+		return insertAll(objectsToSave, new InsertManyOptions());
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave) {
+	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave, InsertManyOptions options) {
 
 		Assert.notNull(objectsToSave, "ObjectsToSave must not be null");
-		return (Collection<T>) doInsertAll(objectsToSave, this.mongoConverter);
+		return (Collection<T>) doInsertAll(objectsToSave, this.mongoConverter, options);
 	}
 
-	@SuppressWarnings("unchecked")
-	protected <T> Collection<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer) {
+	protected <T> Collection<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer, InsertManyOptions options) {
 
 		Map<String, List<T>> elementsByCollection = new HashMap<>();
 		List<T> savedObjects = new ArrayList<>(listToSave.size());
@@ -1289,27 +1280,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			String collection = getCollectionName(ClassUtils.getUserClass(element));
-			List<T> collectionElements = elementsByCollection.get(collection);
-
-			if (null == collectionElements) {
-				collectionElements = new ArrayList<>();
-				elementsByCollection.put(collection, collectionElements);
-			}
-
+			List<T> collectionElements = elementsByCollection.computeIfAbsent(collection, k -> new ArrayList<>());
 			collectionElements.add(element);
 		}
 
 		for (Map.Entry<String, List<T>> entry : elementsByCollection.entrySet()) {
-			savedObjects.addAll((Collection<T>) doInsertBatch(entry.getKey(), entry.getValue(), this.mongoConverter));
+			savedObjects.addAll(doInsertBatch(entry.getKey(), entry.getValue(), writer, options));
 		}
 
 		return savedObjects;
 	}
 
 	protected <T> Collection<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
-			MongoWriter<T> writer) {
+			MongoWriter<T> writer, InsertManyOptions options) {
 
 		Assert.notNull(writer, "MongoWriter must not be null");
+		Assert.notNull(options, "InsertManyOptions must not be null");
 
 		List<Document> documentList = new ArrayList<>(batchToSave.size());
 		List<T> initializedBatchToSave = new ArrayList<>(batchToSave.size());
@@ -1331,7 +1317,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			initializedBatchToSave.add(initialized);
 		}
 
-		List<Object> ids = insertDocumentList(collectionName, documentList);
+		List<Object> ids = insertDocumentList(collectionName, documentList, options);
 		List<T> savedObjects = new ArrayList<>(documentList.size());
 
 		int i = 0;
@@ -1461,7 +1447,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	protected List<Object> insertDocumentList(String collectionName, List<Document> documents) {
+	protected List<Object> insertDocumentList(String collectionName, List<Document> documents, InsertManyOptions options) {
 
 		if (documents.isEmpty()) {
 			return Collections.emptyList();
@@ -1478,9 +1464,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			if (writeConcernToUse == null) {
-				collection.insertMany(documents);
+				collection.insertMany(documents, options);
 			} else {
-				collection.withWriteConcern(writeConcernToUse).insertMany(documents);
+				collection.withWriteConcern(writeConcernToUse).insertMany(documents, options);
 			}
 
 			return null;

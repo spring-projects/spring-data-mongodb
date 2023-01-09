@@ -15,11 +15,22 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.query.Update.*;
-
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.InsertManyOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,26 +38,10 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.With;
-
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -93,21 +88,24 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.ListIndexesIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -122,6 +120,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author duozhilin
+ * @author Tomasz Forys
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
@@ -287,16 +286,56 @@ public class MongoTemplateTests {
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
-		ObjectId id = new ObjectId();
-		Person person = new Person(id, "Amol");
-		person.setAge(28);
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
 
-		List<Person> records = new ArrayList<>();
-		records.add(person);
-		records.add(person);
-
-		assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> template.insertAll(records))
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.insertAll(Arrays.asList(first, second, uniquePerson)))
 				.withMessageContaining("E11000 duplicate key error");
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class);
+		assertThat(found).isNull();
+	}
+
+	@Test
+	public void storeCorrectObjectsOnInsertAllWithInsertManyOptionsAndUniqueViolation() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.insertAll(Arrays.asList(first, second, uniquePerson), new InsertManyOptions().ordered(false)))
+				.withMessageContaining("E11000 duplicate key error");
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class);
+		assertThat(found).isNotNull();
+		assertThat(found.getAge()).isEqualTo(30);
+	}
+
+	@Test
+	void testNullInsertManyOptionsValidation() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		Person person = new Person("Amol", 30);
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.insertAll(Arrays.asList(person), null))
+				.withMessageContaining("InsertManyOptions must not be null");
 	}
 
 	@Test // DATAMONGO-1687

@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.ReadPreference;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.InsertManyOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
@@ -47,12 +47,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.ReadPreference;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
@@ -1371,6 +1371,19 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass);
 
 	/**
+	 * Insert a Collection of objects into a collection in a single batch write to the database with additional
+	 * insert options.
+	 *
+	 * @param batchToSave the batch of objects to save. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects that.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} from the given type.
+	 */
+    <T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass, InsertManyOptions options);
+
+    /**
 	 * Insert a batch of objects into the specified collection in a single batch write to the database.
 	 *
 	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
@@ -1378,6 +1391,17 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the inserted objects that.
 	 */
 	<T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName);
+
+	/**
+	 * Insert a batch of objects into the specified collection in a single batch write to the database with additional
+	 * insert options.
+	 *
+	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
+	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects that.
+	 */
+	<T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName, InsertManyOptions options);
 
 	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
@@ -1389,6 +1413,18 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} for the given objects.
 	 */
 	<T> Collection<T> insertAll(Collection<? extends T> objectsToSave);
+
+	/**
+	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
+	 * class with additional insert options.
+	 *
+	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} for the given objects.
+	 */
+	<T> Collection<T> insertAll(Collection<? extends T> objectsToSave, InsertManyOptions options);
 
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
