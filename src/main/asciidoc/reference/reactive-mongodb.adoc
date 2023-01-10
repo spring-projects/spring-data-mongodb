@@ -164,7 +164,7 @@ public class AppConfig {
 
 This approach lets you use the standard `com.mongodb.reactivestreams.client.MongoClient` API (which you may already know).
 
-An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container by using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the `FactoryBean` approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
+An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container by using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the `FactoryBean` approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/data-access.html[Spring's DAO support features].
 
 The following example shows Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
@@ -532,7 +532,7 @@ class ReactiveGridFsClient {
 
 The `store(…)` operations take an `Publisher<DataBuffer>`, a filename, and (optionally) metadata information about the file to store. The metadata can be an arbitrary object, which will be marshaled by the `MongoConverter` configured with the `ReactiveGridFsTemplate`. Alternatively, you can also provide a `Document`.
 
-NOTE: MongoDB's driver uses `AsyncInputStream` and `AsyncOutputStream` interfaces to exchange binary streams. Spring Data MongoDB adapts these interfaces to `Publisher<DataBuffer>`. Read more about `DataBuffer` in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#databuffers[Spring's reference documentation].
+NOTE: MongoDB's driver uses `AsyncInputStream` and `AsyncOutputStream` interfaces to exchange binary streams. Spring Data MongoDB adapts these interfaces to `Publisher<DataBuffer>`. Read more about `DataBuffer` in https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#databuffers[Spring's reference documentation].
 
 You can read files from the filesystem through either the `find(…)` or the `getResources(…)` methods. Let's have a look at the `find(…)` methods first. You can either find a single file or multiple files that match a `Query`. You can use the `GridFsCriteria` helper class to define queries. It provides static factory methods to encapsulate default metadata fields (such as `whereFilename()` and `whereContentType()`) or a custom one through `whereMetaData()`. The following example shows how to use `ReactiveGridFsTemplate` to query for files:
 
