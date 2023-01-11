@@ -237,10 +237,11 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Get the hint used to to fulfill the aggregation.
+	 * Get the hint used to fulfill the aggregation.
 	 *
 	 * @return never {@literal null}.
 	 * @since 3.1
+	 * @deprecated since 4.1, use {@link #getHintObject()} instead.
 	 */
 	public Optional<Document> getHint() {
 		return hint.map(it -> {
@@ -257,25 +258,7 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Get the hint (indexName) used to to fulfill the aggregation.
-	 *
-	 * @return never {@literal null}.
-	 * @since 4.1
-	 */
-	public Optional<String> getHintAsString() {
-		return hint.map(it -> {
-			if (it instanceof String hintString) {
-				return hintString;
-			}
-			if (it instanceof Document doc) {
-				return BsonUtils.toJson(doc);
-			}
-			throw new IllegalStateException("Unable to read hint of type %s".formatted(it.getClass()));
-		});
-	}
-
-	/**
-	 * Get the hint used to to fulfill the aggregation.
+	 * Get the hint used to fulfill the aggregation.
 	 *
 	 * @return never {@literal null}.
 	 * @since 4.1

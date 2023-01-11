@@ -110,7 +110,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
-import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -938,15 +937,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		options.getComment().ifPresent(cursor::comment);
-		if (options.getHintObject().isPresent()) {
-			Object hintObject = options.getHintObject().get();
-			if (hintObject instanceof String hintString) {
-				cursor = cursor.hintString(hintString);
-			} else if (hintObject instanceof Document hintDocument) {
-				cursor = cursor.hint(hintDocument);
-			} else {
-				throw new IllegalStateException("Unable to read hint of type %s".formatted(hintObject.getClass()));
-			}
+
+		HintFunction hintFunction = options.getHintObject().map(HintFunction::from).orElseGet(HintFunction::empty);
+		if (hintFunction.isPresent()) {
+			cursor = hintFunction.apply(mongoDatabaseFactory, cursor::hintString, cursor::hint);
 		}
 
 		Optionals.firstNonEmpty(options::getCollation, () -> operations.forType(inputType).getCollation()) //
@@ -1535,7 +1529,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			Publisher<?> publisher;
 			if (!mapped.hasId()) {
-				publisher = collectionToUse.insertOne(queryOperations.createInsertContext(mapped).prepareId(entityClass).getDocument());
+				publisher = collectionToUse
+						.insertOne(queryOperations.createInsertContext(mapped).prepareId(entityClass).getDocument());
 			} else {
 
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
@@ -3044,9 +3039,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					.map(findPublisher::collation) //
 					.orElse(findPublisher);
 
+			HintFunction hintFunction = HintFunction.from(query.getHint());
 			Meta meta = query.getMeta();
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& !StringUtils.hasText(query.getHint()) && !meta.hasValues()) {
+					&& !hintFunction.isPresent() && !meta.hasValues()) {
 				return findPublisherToUse;
 			}
 
@@ -3065,15 +3061,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					findPublisherToUse = findPublisherToUse.sort(sort);
 				}
 
-				if (StringUtils.hasText(query.getHint())) {
-
-					String hint = query.getHint();
-
-					if (BsonUtils.isJsonDocument(hint)) {
-						findPublisherToUse = findPublisherToUse.hint(BsonUtils.parse(hint, mongoDatabaseFactory));
-					} else {
-						findPublisherToUse = findPublisherToUse.hintString(hint);
-					}
+				if (hintFunction.isPresent()) {
+					findPublisherToUse = hintFunction.apply(mongoDatabaseFactory, findPublisherToUse::hintString,
+							findPublisherToUse::hint);
 				}
 
 				if (meta.hasValues()) {
