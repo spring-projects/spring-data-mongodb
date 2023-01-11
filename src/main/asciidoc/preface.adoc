@@ -31,7 +31,7 @@ NoSQL stores have taken the storage world by storm. It is a vast domain with a p
 The starting point for learning about MongoDB is https://www.mongodb.org/[www.mongodb.org]. Here is a list of other useful resources:
 
 * The https://docs.mongodb.org/manual/[manual] introduces MongoDB and contains links to getting started guides, reference documentation, and tutorials.
-* The https://try.mongodb.org/[online shell] provides a convenient way to interact with a MongoDB instance in combination with the online https://docs.mongodb.org/manual/tutorial/getting-started/[tutorial.]
+* Visit https://learn.mongodb.com/[MongoDB University] for free training material and online courses.
 * MongoDB https://docs.mongodb.org/ecosystem/drivers/java/[Java Language Center].
 * Several https://www.mongodb.org/books[books] you can purchase.
 * Karl Seguin's online book: https://openmymind.net/mongodb.pdf[The Little MongoDB Book].

@@ -20,7 +20,7 @@ For most tasks, you should use `MongoTemplate` or the Repository support, which 
 [[mongodb-getting-started]]
 == Getting Started
 
-An easy way to bootstrap setting up a working environment is to create a Spring-based project in https://spring.io/tools/sts[STS].
+An easy way to bootstrap setting up a working environment is to create a Spring-based project in https://spring.io/tools/[STS].
 
 First, you need to set up a running MongoDB server. Refer to the https://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of running the following command: `${MONGO_HOME}/bin/mongod`
 
