@@ -9,7 +9,7 @@ The definition may contain simple placeholders like `?0` as well as https://docs
 ====
 [source,java]
 ----
-public interface PersonRepository extends CrudReppsitory<Person, String> {
+public interface PersonRepository extends CrudRepository<Person, String> {
 
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
   List<PersonAggregate> groupByLastnameAndFirstnames();                            <1>
@@ -82,7 +82,7 @@ Use the `@Meta` annotation to set those options via `maxExecutionTimeMs`, `comme
 
 [source,java]
 ----
-interface PersonRepository extends CrudReppsitory<Person, String> {
+interface PersonRepository extends CrudRepository<Person, String> {
 
   @Meta(allowDiskUse = true)
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
@@ -99,7 +99,7 @@ Or use `@Meta` to create your own annotation as shown in the sample below.
 @Meta(allowDiskUse = true)
 @interface AllowDiskUse { }
 
-interface PersonRepository extends CrudReppsitory<Person, String> {
+interface PersonRepository extends CrudRepository<Person, String> {
 
   @AllowDiskUse
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
