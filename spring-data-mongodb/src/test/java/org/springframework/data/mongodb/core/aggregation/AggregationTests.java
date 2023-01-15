@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1514,7 +1515,7 @@ public class AggregationTests {
                         "_id",
                         "firstname",
                         "linkedPerson",
-                        AggregationPipeline.of(match(where("firstname").is("u1")))), //
+                        List.of(match(where("firstname").is("u1")))), //
                 sort(ASC, "id"));
 
         AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
@@ -1537,10 +1538,8 @@ public class AggregationTests {
 						"_id",
 						"firstname",
 						"linkedPerson",
-						new LookupOperation.Let(
-								List.of(new LookupOperation.Let.ExpressionVariable("test", "test"))
-						),
-						AggregationPipeline.of(match(where("firstname").is("u1")))), //
+						List.of(new LookupOperation.Let.ExpressionVariable("personFirstname", "firstname")),
+						List.of(match(where("firstname").is("u1")))),
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);

@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.mongodb.core.aggregation.Fields.*;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.domain.Sort;
@@ -36,6 +31,11 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.springframework.data.mongodb.core.aggregation.Fields.field;
 
 /**
  * An {@code Aggregation} is a representation of a list of aggregation steps to be performed by the MongoDB Aggregation
@@ -665,12 +665,12 @@ public class Aggregation {
 		return new LookupOperation(from, localField, foreignField, as);
 	}
 
-	public static LookupOperation lookup(String from, String localField, String foreignField, String as, AggregationPipeline pipeline) {
-		return lookup(field(from), field(localField), field(foreignField), field(as), null, pipeline);
+	public static LookupOperation lookup(String from, String localField, String foreignField, String as, List<AggregationOperation> aggregationOperations) {
+		return lookup(field(from), field(localField), field(foreignField), field(as), null, new AggregationPipeline(aggregationOperations));
 	}
 
-	public static LookupOperation lookup(String from, String localField, String foreignField, String as, LookupOperation.Let let, AggregationPipeline pipeline) {
-		return lookup(field(from), field(localField), field(foreignField), field(as), let, pipeline);
+	public static LookupOperation lookup(String from, String localField, String foreignField, String as, List<LookupOperation.Let.ExpressionVariable> letExpressionVars, List<AggregationOperation> aggregationOperations) {
+		return lookup(field(from), field(localField), field(foreignField), field(as), new LookupOperation.Let(letExpressionVars), new AggregationPipeline(aggregationOperations));
 	}
 
 	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as, LookupOperation.Let let, AggregationPipeline pipeline) {
