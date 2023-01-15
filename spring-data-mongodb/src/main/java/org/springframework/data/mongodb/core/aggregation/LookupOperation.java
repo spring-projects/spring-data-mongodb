@@ -59,10 +59,6 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		this(from, localField, foreignField, as, null, null);
 	}
 
-	public LookupOperation(Field from, Field localField, Field foreignField, Field as, @Nullable AggregationPipeline pipeline) {
-		this(from, localField, foreignField, as, null, pipeline);
-	}
-
 	public LookupOperation(Field from, Field localField, Field foreignField, Field as, @Nullable Let let, @Nullable AggregationPipeline pipeline) {
 		Assert.notNull(from, "From must not be null");
 		Assert.notNull(localField, "LocalField must not be null");
