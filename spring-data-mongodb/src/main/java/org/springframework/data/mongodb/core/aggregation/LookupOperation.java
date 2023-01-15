@@ -21,6 +21,8 @@ import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregati
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import java.util.List;
+
 /**
  * Encapsulates the aggregation framework {@code $lookup}-operation. We recommend to use the static factory method
  * {@link Aggregation#lookup(String, String, String, String)} instead of creating instances of this class directly.
@@ -28,6 +30,7 @@ import org.springframework.util.Assert;
  * @author Alessio Fachechi
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Sangyong Choi
  * @since 1.9
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/lookup/">MongoDB Aggregation Framework:
  *      $lookup</a>
@@ -39,6 +42,11 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	private final Field foreignField;
 	private final ExposedField as;
 
+	@Nullable
+	private final Let let;
+	@Nullable
+	private final AggregationPipeline pipeline;
+
 	/**
 	 * Creates a new {@link LookupOperation} for the given {@link Field}s.
 	 *
@@ -48,7 +56,14 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	 * @param as must not be {@literal null}.
 	 */
 	public LookupOperation(Field from, Field localField, Field foreignField, Field as) {
+		this(from, localField, foreignField, as, null, null);
+	}
 
+	public LookupOperation(Field from, Field localField, Field foreignField, Field as, @Nullable AggregationPipeline pipeline) {
+		this(from, localField, foreignField, as, null, pipeline);
+	}
+
+	public LookupOperation(Field from, Field localField, Field foreignField, Field as, @Nullable Let let, @Nullable AggregationPipeline pipeline) {
 		Assert.notNull(from, "From must not be null");
 		Assert.notNull(localField, "LocalField must not be null");
 		Assert.notNull(foreignField, "ForeignField must not be null");
@@ -58,6 +73,8 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		this.localField = localField;
 		this.foreignField = foreignField;
 		this.as = new ExposedField(as, true);
+		this.let = let;
+		this.pipeline = pipeline;
 	}
 
 	@Override
@@ -74,6 +91,14 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		lookupObject.append("localField", localField.getTarget());
 		lookupObject.append("foreignField", foreignField.getTarget());
 		lookupObject.append("as", as.getTarget());
+
+		if (let != null) {
+			lookupObject.append("let", let.toDocument(context));
+		}
+
+		if (pipeline != null) {
+			lookupObject.append("pipeline", pipeline.toDocuments(context));
+		}
 
 		return new Document(getOperator(), lookupObject);
 	}
@@ -182,6 +207,51 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 			Assert.hasText(name, "'LocalField' must not be null or empty");
 			localField = Fields.field(name);
 			return this;
+		}
+	}
+
+	public static class Let implements AggregationExpression{
+
+		private final List<ExpressionVariable> vars;
+
+		public Let(List<ExpressionVariable> vars) {
+			Assert.notEmpty(vars, "'let' must not be null or empty");
+			this.vars = vars;
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+			return toLet();
+		}
+
+		private Document toLet() {
+			Document mappedVars = new Document();
+
+			for (ExpressionVariable var : this.vars) {
+				mappedVars.putAll(getMappedVariable(var));
+			}
+
+			return mappedVars;
+		}
+
+		private Document getMappedVariable(ExpressionVariable var) {
+			return new Document(var.variableName, prefixDollarSign(var.expression));
+		}
+
+		private String prefixDollarSign(String expression) {
+			return "$" + expression;
+		}
+
+		public static class ExpressionVariable {
+
+			private final String variableName;
+
+			private final String expression;
+
+			public ExpressionVariable(String variableName, String expression) {
+				this.variableName = variableName;
+				this.expression = expression;
+			}
 		}
 	}
 }

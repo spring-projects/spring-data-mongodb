@@ -15,35 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.domain.Sort.Direction.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
-
+import com.mongodb.client.MongoCollection;
 import lombok.Builder;
-
-import java.io.BufferedInputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Stream;
-
 import org.assertj.core.data.Offset;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,13 +45,23 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
-import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
-import org.springframework.data.mongodb.test.util.MongoTestTemplate;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.data.mongodb.test.util.*;
 
-import com.mongodb.client.MongoCollection;
+import java.io.BufferedInputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(Aggregation, Class, Class)}.
@@ -90,6 +75,7 @@ import com.mongodb.client.MongoCollection;
  * @author Maninder Singh
  * @author Sergey Shcherbakov
  * @author Minsu Kim
+ * @author Sangyong Choi
  */
 @ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
@@ -1506,6 +1492,55 @@ public class AggregationTests {
 
 		TypedAggregation<User> agg = newAggregation(User.class, //
 				lookup("person", "_id", "firstname", "linkedPerson"), //
+				sort(ASC, "id"));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
+
+		List<Document> mappedResults = results.getMappedResults();
+
+		Document firstItem = mappedResults.get(0);
+
+		assertThat(firstItem).containsEntry("_id", "u1");
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
+	}
+
+    @Test
+    void shouldLookupPeopleCorrectlyWithPipeline() {
+        createUsersWithReferencedPersons();
+
+        TypedAggregation<User> agg = newAggregation(User.class, //
+                lookup(
+                        "person",
+                        "_id",
+                        "firstname",
+                        "linkedPerson",
+                        AggregationPipeline.of(match(where("firstname").is("u1")))), //
+                sort(ASC, "id"));
+
+        AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
+
+        List<Document> mappedResults = results.getMappedResults();
+
+        Document firstItem = mappedResults.get(0);
+
+        assertThat(firstItem).containsEntry("_id", "u1");
+        assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
+    }
+
+	@Test
+	void shouldLookupPeopleCorrectlyWithPipelineAndLet() {
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				lookup(
+						"person",
+						"_id",
+						"firstname",
+						"linkedPerson",
+						new LookupOperation.Let(
+								List.of(new LookupOperation.Let.ExpressionVariable("test", "test"))
+						),
+						AggregationPipeline.of(match(where("firstname").is("u1")))), //
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
