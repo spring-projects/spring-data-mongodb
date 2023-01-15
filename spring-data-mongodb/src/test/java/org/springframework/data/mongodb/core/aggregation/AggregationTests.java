@@ -43,7 +43,6 @@ import java.util.stream.Stream;
 
 import org.assertj.core.data.Offset;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,6 +89,7 @@ import com.mongodb.client.MongoCollection;
  * @author Maninder Singh
  * @author Sergey Shcherbakov
  * @author Minsu Kim
+ * @author Sangyong Choi
  */
 @ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
@@ -499,7 +499,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-
+		
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -1506,6 +1506,48 @@ public class AggregationTests {
 
 		TypedAggregation<User> agg = newAggregation(User.class, //
 				lookup("person", "_id", "firstname", "linkedPerson"), //
+				sort(ASC, "id"));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
+
+		List<Document> mappedResults = results.getMappedResults();
+
+		Document firstItem = mappedResults.get(0);
+
+		assertThat(firstItem).containsEntry("_id", "u1");
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
+	}
+
+	@Test
+	void shouldLookupPeopleCorrectlyWithPipeline() {
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				lookup("person", "_id", "firstname", "linkedPerson", List.of(match(where("firstname").is("u1")))), //
+				sort(ASC, "id"));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
+
+		List<Document> mappedResults = results.getMappedResults();
+
+		Document firstItem = mappedResults.get(0);
+
+		assertThat(firstItem).containsEntry("_id", "u1");
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
+	}
+
+	@Test
+	void shouldLookupPeopleCorrectlyWithPipelineAndLet() {
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				lookup(
+						"person",
+						"_id",
+						"firstname",
+						"linkedPerson",
+						List.of(new LookupOperation.Let.ExpressionVariable("personFirstname", "firstname")),
+						List.of(match(where("firstname").is("u1")))),
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);

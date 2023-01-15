@@ -50,6 +50,7 @@ import org.springframework.util.Assert;
  * @author Nikolay Bogdanov
  * @author Gustavo de Geus
  * @author Jérôme Guyon
+ * @author Sangyong Choi
  * @since 1.3
  */
 public class Aggregation {
@@ -662,6 +663,18 @@ public class Aggregation {
 	 */
 	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as) {
 		return new LookupOperation(from, localField, foreignField, as);
+	}
+
+	public static LookupOperation lookup(String from, String localField, String foreignField, String as, List<AggregationOperation> aggregationOperations) {
+		return lookup(field(from), field(localField), field(foreignField), field(as), null, new AggregationPipeline(aggregationOperations));
+	}
+
+	public static LookupOperation lookup(String from, String localField, String foreignField, String as, List<LookupOperation.Let.ExpressionVariable> letExpressionVars, List<AggregationOperation> aggregationOperations) {
+		return lookup(field(from), field(localField), field(foreignField), field(as), new LookupOperation.Let(letExpressionVars), new AggregationPipeline(aggregationOperations));
+	}
+
+	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as, LookupOperation.Let let, AggregationPipeline pipeline) {
+		return new LookupOperation(from, localField, foreignField, as, let, pipeline);
 	}
 
 	/**
