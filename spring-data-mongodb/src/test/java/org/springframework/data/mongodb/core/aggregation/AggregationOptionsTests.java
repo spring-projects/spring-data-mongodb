@@ -53,6 +53,7 @@ class AggregationOptionsTests {
 		assertThat(aggregationOptions.isExplain()).isTrue();
 		assertThat(aggregationOptions.getCursor()).contains(new Document("batchSize", 1));
 		assertThat(aggregationOptions.getHint()).contains(dummyHint);
+		assertThat(aggregationOptions.getHintObject()).contains(dummyHint);
 	}
 
 	@Test // DATAMONGO-1637, DATAMONGO-2153, DATAMONGO-1836
@@ -73,6 +74,7 @@ class AggregationOptionsTests {
 		assertThat(aggregationOptions.getCursorBatchSize()).isEqualTo(1);
 		assertThat(aggregationOptions.getComment()).contains("hola");
 		assertThat(aggregationOptions.getHint()).contains(dummyHint);
+		assertThat(aggregationOptions.getHintObject()).contains(dummyHint);
 	}
 
 	@Test // DATAMONGO-960, DATAMONGO-2153, DATAMONGO-1836

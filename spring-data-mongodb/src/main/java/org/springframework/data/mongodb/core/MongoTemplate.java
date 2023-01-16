@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -70,16 +69,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -100,7 +90,6 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
-import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -117,16 +106,7 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.DistinctIterable;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
+import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -159,6 +139,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Yadhukrishna S Pai
  * @author Anton Barkan
  * @author Bartłomiej Mazur
+ * @author Michael Krog
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
@@ -634,7 +615,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+	public MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options) {
 
 		return createView(name, getCollectionName(source),
 				queryOperations.createAggregation(Aggregation.newAggregation(source, pipeline.getOperations()), source),
@@ -642,7 +624,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline, @Nullable ViewOptions options) {
+	public MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options) {
 
 		return createView(name, source,
 				queryOperations.createAggregation(Aggregation.newAggregation(pipeline.getOperations()), (Class<?>) null),
@@ -654,7 +637,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateView(name, source, aggregation.getAggregationPipeline(), options);
 	}
 
-	protected MongoCollection<Document> doCreateView(String name, String source, List<Document> pipeline, @Nullable ViewOptions options) {
+	protected MongoCollection<Document> doCreateView(String name, String source, List<Document> pipeline,
+			@Nullable ViewOptions options) {
 
 		CreateViewOptions viewOptions = new CreateViewOptions();
 		if (options != null) {
@@ -2065,7 +2049,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(aggregateIterable::comment);
-			options.getHint().ifPresent(aggregateIterable::hint);
+			HintFunction hintFunction = options.getHintObject().map(HintFunction::from).orElseGet(HintFunction::empty);
+			if (hintFunction.isPresent()) {
+				aggregateIterable = hintFunction.apply(mongoDbFactory, aggregateIterable::hintString, aggregateIterable::hint);
+			}
 
 			if (options.hasExecutionTimeLimit()) {
 				aggregateIterable = aggregateIterable.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
@@ -2124,7 +2111,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(cursor::comment);
-			options.getHint().ifPresent(cursor::hint);
+			HintFunction hintFunction = options.getHintObject().map(HintFunction::from).orElseGet(HintFunction::empty);
+			if (options.getHintObject().isPresent()) {
+				cursor = hintFunction.apply(mongoDbFactory, cursor::hintString, cursor::hint);
+			}
 
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
 					: null;
@@ -2357,8 +2347,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @return the {@link List} of converted objects.
+	 * @return the converted object or {@literal null} if none exists.
 	 */
+	@Nullable
 	protected <T> T doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass) {
 		return doFindOne(collectionName, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
 	}
@@ -2372,9 +2363,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param preparer the preparer used to modify the cursor on execution.
-	 * @return the {@link List} of converted objects.
+	 * @return the converted object or {@literal null} if none exists.
 	 * @since 2.2
 	 */
+	@Nullable
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindOne(String collectionName, Document query, Document fields, CursorPreparer preparer,
 			Class<T> entityClass) {
@@ -3152,8 +3144,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					.ifPresent(cursorToUse::collation);
 
 			Meta meta = query.getMeta();
+			HintFunction hintFunction = HintFunction.from(query.getHint());
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& !StringUtils.hasText(query.getHint()) && !meta.hasValues() && !query.getCollation().isPresent()) {
+					&& !hintFunction.isPresent() && !meta.hasValues() && !query.getCollation().isPresent()) {
 				return cursorToUse;
 			}
 
@@ -3169,15 +3162,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					cursorToUse = cursorToUse.sort(sort);
 				}
 
-				if (StringUtils.hasText(query.getHint())) {
-
-					String hint = query.getHint();
-
-					if (BsonUtils.isJsonDocument(hint)) {
-						cursorToUse = cursorToUse.hint(BsonUtils.parse(hint, mongoDbFactory));
-					} else {
-						cursorToUse = cursorToUse.hintString(hint);
-					}
+				if (hintFunction.isPresent()) {
+					cursorToUse = hintFunction.apply(mongoDbFactory, cursorToUse::hintString, cursorToUse::hint);
 				}
 
 				if (meta.hasValues()) {

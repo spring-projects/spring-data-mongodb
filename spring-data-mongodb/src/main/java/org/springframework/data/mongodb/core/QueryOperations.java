@@ -60,7 +60,6 @@ import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -567,14 +566,11 @@ class QueryOperations {
 			if (query.getSkip() > 0) {
 				options.skip((int) query.getSkip());
 			}
-			if (StringUtils.hasText(query.getHint())) {
 
-				String hint = query.getHint();
-				if (BsonUtils.isJsonDocument(hint)) {
-					options.hint(BsonUtils.parse(hint, codecRegistryProvider));
-				} else {
-					options.hintString(hint);
-				}
+			HintFunction hintFunction = HintFunction.from(query.getHint());
+
+			if (hintFunction.isPresent()) {
+				options = hintFunction.apply(codecRegistryProvider, options::hintString, options::hint);
 			}
 
 			if (callback != null) {
