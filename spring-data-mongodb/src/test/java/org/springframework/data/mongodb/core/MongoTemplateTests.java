@@ -106,6 +106,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -122,6 +123,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author duozhilin
+ * @author Tomasz Forys
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
@@ -287,16 +289,56 @@ public class MongoTemplateTests {
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
-		ObjectId id = new ObjectId();
-		Person person = new Person(id, "Amol");
-		person.setAge(28);
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
 
-		List<Person> records = new ArrayList<>();
-		records.add(person);
-		records.add(person);
-
-		assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> template.insertAll(records))
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.insertAll(Arrays.asList(first, second, uniquePerson)))
 				.withMessageContaining("E11000 duplicate key error");
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class);
+		assertThat(found).isNull();
+	}
+
+	@Test
+	public void storeCorrectObjectsOnInsertAllWithInsertManyOptionsAndUniqueViolation() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.insertAll(Arrays.asList(first, second, uniquePerson), new InsertManyOptions().ordered(false)))
+				.withMessageContaining("E11000 duplicate key error");
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class);
+		assertThat(found).isNotNull();
+		assertThat(found.getAge()).isEqualTo(30);
+	}
+
+	@Test
+	void testNullInsertManyOptionsValidation() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		Person person = new Person("Amol", 30);
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.insertAll(Arrays.asList(person), null))
+				.withMessageContaining("InsertManyOptions must not be null");
 	}
 
 	@Test // DATAMONGO-1687

@@ -131,6 +131,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
+ * @author Tomasz Forys
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -1372,7 +1373,7 @@ public class ReactiveMongoTemplateUnitTests {
 		entity1.id = "2";
 		entity1.firstname = "luke";
 
-		when(collection.insertMany(anyList())).then(invocation -> {
+		when(collection.insertMany(anyList(), any())).then(invocation -> {
 			List<?> list = invocation.getArgument(0);
 			return Flux.fromIterable(list).map(i -> mock(InsertManyResult.class));
 		});

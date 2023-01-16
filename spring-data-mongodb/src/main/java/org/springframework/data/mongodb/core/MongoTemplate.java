@@ -140,6 +140,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Anton Barkan
  * @author Bartłomiej Mazur
  * @author Michael Krog
+ * @author Tomasz Forys
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
@@ -1234,34 +1235,44 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass) {
+		return insert(batchToSave, getCollectionName(entityClass));
+	}
 
-		Assert.notNull(batchToSave, "BatchToSave must not be null");
+	@Override
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass, InsertManyOptions options) {
+		return insert(batchToSave, getCollectionName(entityClass), options);
+	}
 
-		return (Collection<T>) doInsertBatch(getCollectionName(entityClass), batchToSave, this.mongoConverter);
+	@Override
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName) {
+		return insert(batchToSave, collectionName, new InsertManyOptions());
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName) {
+	public <T> Collection<T> insert(Collection<? extends T> batchToSave, String collectionName, InsertManyOptions options) {
 
 		Assert.notNull(batchToSave, "BatchToSave must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
 
-		return (Collection<T>) doInsertBatch(collectionName, batchToSave, this.mongoConverter);
+		return (Collection<T>) doInsertBatch(collectionName, batchToSave, this.mongoConverter, options);
+	}
+
+	@Override
+	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave) {
+		return insertAll(objectsToSave, new InsertManyOptions());
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave) {
+	public <T> Collection<T> insertAll(Collection<? extends T> objectsToSave, InsertManyOptions options) {
 
 		Assert.notNull(objectsToSave, "ObjectsToSave must not be null");
-		return (Collection<T>) doInsertAll(objectsToSave, this.mongoConverter);
+		return (Collection<T>) doInsertAll(objectsToSave, this.mongoConverter, options);
 	}
 
-	@SuppressWarnings("unchecked")
-	protected <T> Collection<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer) {
+	protected <T> Collection<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer, InsertManyOptions options) {
 
 		Map<String, List<T>> elementsByCollection = new HashMap<>();
 		List<T> savedObjects = new ArrayList<>(listToSave.size());
@@ -1273,27 +1284,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			String collection = getCollectionName(ClassUtils.getUserClass(element));
-			List<T> collectionElements = elementsByCollection.get(collection);
-
-			if (null == collectionElements) {
-				collectionElements = new ArrayList<>();
-				elementsByCollection.put(collection, collectionElements);
-			}
-
+			List<T> collectionElements = elementsByCollection.computeIfAbsent(collection, k -> new ArrayList<>());
 			collectionElements.add(element);
 		}
 
 		for (Map.Entry<String, List<T>> entry : elementsByCollection.entrySet()) {
-			savedObjects.addAll((Collection<T>) doInsertBatch(entry.getKey(), entry.getValue(), this.mongoConverter));
+			savedObjects.addAll(doInsertBatch(entry.getKey(), entry.getValue(), writer, options));
 		}
 
 		return savedObjects;
 	}
 
 	protected <T> Collection<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
-			MongoWriter<T> writer) {
+			MongoWriter<T> writer, InsertManyOptions options) {
 
 		Assert.notNull(writer, "MongoWriter must not be null");
+		Assert.notNull(options, "InsertManyOptions must not be null");
 
 		List<Document> documentList = new ArrayList<>(batchToSave.size());
 		List<T> initializedBatchToSave = new ArrayList<>(batchToSave.size());
@@ -1315,7 +1321,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			initializedBatchToSave.add(initialized);
 		}
 
-		List<Object> ids = insertDocumentList(collectionName, documentList);
+		List<Object> ids = insertDocumentList(collectionName, documentList, options);
 		List<T> savedObjects = new ArrayList<>(documentList.size());
 
 		int i = 0;
@@ -1445,7 +1451,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	protected List<Object> insertDocumentList(String collectionName, List<Document> documents) {
+	protected List<Object> insertDocumentList(String collectionName, List<Document> documents, InsertManyOptions options) {
 
 		if (documents.isEmpty()) {
 			return Collections.emptyList();
@@ -1462,9 +1468,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			if (writeConcernToUse == null) {
-				collection.insertMany(documents);
+				collection.insertMany(documents, options);
 			} else {
-				collection.withWriteConcern(writeConcernToUse).insertMany(documents);
+				collection.withWriteConcern(writeConcernToUse).insertMany(documents, options);
 			}
 
 			return null;

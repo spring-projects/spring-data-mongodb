@@ -86,6 +86,7 @@ import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 
 import com.mongodb.WriteConcern;
+import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
@@ -93,6 +94,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Tomasz Forys
  */
 @ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class ReactiveMongoTemplateTests {
@@ -537,13 +539,58 @@ public class ReactiveMongoTemplateTests {
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
-		ObjectId id = new ObjectId();
-		Person person = new Person(id, "Amol");
-		person.setAge(28);
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
 
-		template.insertAll(Arrays.asList(person, person)) //
+		template.insertAll(Arrays.asList(first, second, uniquePerson)) //
 				.as(StepVerifier::create) //
 				.verifyError(DataIntegrityViolationException.class);
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class).block();
+		assertThat(found).isNull();
+	}
+
+	@Test
+	void storeCorrectObjectsOnInsertAllWithInsertManyOptionsAndUniqueViolation() {
+
+		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		ObjectId duplicatedId = new ObjectId();
+		Person first = new Person(duplicatedId, "Amol");
+		first.setAge(28);
+		Person second = new Person(duplicatedId, "Bmol");
+		first.setAge(29);
+		Person uniquePerson = new Person("Cmol", 30);
+
+		template.insertAll(Arrays.asList(first, second, uniquePerson), new InsertManyOptions().ordered(false)) //
+				.as(StepVerifier::create) //
+				.verifyError(DataIntegrityViolationException.class);
+
+		Query query = new Query(where("firstName").is(uniquePerson.getFirstName()));
+		Person found = template.findOne(query, Person.class).block();
+		assertThat(found).isNotNull();
+		assertThat(found.getAge()).isEqualTo(30);
+	}
+
+	@Test
+	void testNullInsertManyOptionsValidation() {
+
+		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		Person person = new Person("Amol", 30);
+
+		template.insertAll(Arrays.asList(person), null) //
+				.as(StepVerifier::create) //
+				.verifyErrorSatisfies(error ->
+						assertThat(error).isInstanceOf(IllegalArgumentException.class)
+								.hasMessage("InsertManyOptions must not be null"));
 	}
 
 	@Test // DATAMONGO-1444

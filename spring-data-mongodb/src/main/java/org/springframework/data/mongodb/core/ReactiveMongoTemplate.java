@@ -156,6 +156,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
+ * @author Tomasz Forys
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -1211,11 +1212,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass, InsertManyOptions options) {
+		return insertAll(batchToSave, getCollectionName(entityClass), options);
+	}
+
+	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName) {
+		return insertAll(batchToSave, collectionName, new InsertManyOptions());
+	}
+
+	@Override
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName, InsertManyOptions options) {
 
 		Assert.notNull(batchToSave, "Batch to insert must not be null");
 
-		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
+		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName, options));
 	}
 
 	@Override
@@ -1268,17 +1279,32 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public <T> Flux<T> insert(Collection<? extends T> batchToSave, Class<?> entityClass) {
-		return doInsertBatch(getCollectionName(entityClass), batchToSave, this.mongoConverter);
+		return insert(batchToSave, getCollectionName(entityClass));
 	}
 
 	@Override
 	public <T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName) {
-		return doInsertBatch(collectionName, batchToSave, this.mongoConverter);
+		return insert(batchToSave, collectionName, new InsertManyOptions());
+	}
+
+	@Override
+	public <T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName, InsertManyOptions options) {
+		return doInsertBatch(collectionName, batchToSave, this.mongoConverter, options);
+	}
+
+	@Override
+	public <T> Flux<T> insertAll(Collection<? extends T> objectsToSave, InsertManyOptions options) {
+		return doInsertAll(objectsToSave, this.mongoConverter, options);
+	}
+
+	@Override
+	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave, InsertManyOptions options) {
+		return Flux.from(objectsToSave).flatMap(collection -> insertAll(collection, options));
 	}
 
 	@Override
 	public <T> Flux<T> insertAll(Collection<? extends T> objectsToSave) {
-		return doInsertAll(objectsToSave, this.mongoConverter);
+		return doInsertAll(objectsToSave, this.mongoConverter, new InsertManyOptions());
 	}
 
 	@Override
@@ -1286,7 +1312,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return Flux.from(objectsToSave).flatMap(this::insertAll);
 	}
 
-	protected <T> Flux<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<Object> writer) {
+	protected <T> Flux<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<Object> writer, InsertManyOptions insertManyOptions) {
 
 		Map<String, List<T>> elementsByCollection = new HashMap<>();
 
@@ -1299,13 +1325,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 
 		return Flux.fromIterable(elementsByCollection.keySet())
-				.flatMap(collectionName -> doInsertBatch(collectionName, elementsByCollection.get(collectionName), writer));
+				.flatMap(collectionName -> doInsertBatch(collectionName, elementsByCollection.get(collectionName), writer, insertManyOptions));
 	}
 
 	protected <T> Flux<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
-			MongoWriter<Object> writer) {
+			MongoWriter<Object> writer, InsertManyOptions options) {
 
 		Assert.notNull(writer, "MongoWriter must not be null");
+		Assert.notNull(options, "InsertManyOptions must not be null");
 
 		Mono<List<Tuple2<AdaptibleEntity<T>, Document>>> prepareDocuments = Flux.fromIterable(batchToSave)
 				.flatMap(uninitialized -> {
@@ -1331,7 +1358,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			List<Document> documents = tuples.stream().map(Tuple2::getT2).collect(Collectors.toList());
 
-			return insertDocumentList(collectionName, documents).thenMany(Flux.fromIterable(tuples));
+			return insertDocumentList(collectionName, documents, options).thenMany(Flux.fromIterable(tuples));
 		});
 
 		return insertDocuments.flatMap(tuple -> {
@@ -1468,7 +1495,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return Flux.from(execute).last().map(success -> document.getId());
 	}
 
-	protected Flux<ObjectId> insertDocumentList(String collectionName, List<Document> dbDocList) {
+	protected Flux<ObjectId> insertDocumentList(String collectionName, List<Document> dbDocList, InsertManyOptions options) {
 
 		if (dbDocList.isEmpty()) {
 			return Flux.empty();
@@ -1489,7 +1516,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			documents.addAll(toDocuments(dbDocList));
 
-			return collectionToUse.insertMany(documents);
+			return collectionToUse.insertMany(documents, options);
 
 		}).flatMap(s -> {
 

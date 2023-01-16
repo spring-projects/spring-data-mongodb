@@ -142,6 +142,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael J. Simons
  * @author Roman Puchkovskiy
  * @author Yadhukrishna S Pai
+ * @author Tomasz Forys
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -2186,7 +2187,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Collection<Person> saved = template.insertAll(Arrays.asList(entity1, entity2));
 
 		verify(afterSaveCallback, times(2)).onAfterSave(any(), any(), anyString());
-		assertThat(saved.iterator().next().getId()).isEqualTo("after-save");
+		assertThat(saved).hasSize(2);
+		assertThat(saved).map(e -> e.getId()).containsExactly("after-save", "after-save");
 	}
 
 	@Test // DATAMONGO-2479

@@ -50,6 +50,7 @@ import org.springframework.util.ClassUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.ClientSession;
@@ -68,6 +69,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Mathieu Ouellet
+ * @author Tomasz Forys
  * @since 2.0
  * @see Flux
  * @see Mono
@@ -1147,6 +1149,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	<T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName);
 
 	/**
+	 * Insert a batch of objects into the specified collection in a single batch write to the database with additional
+	 * insert options.
+	 *
+	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
+	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects.
+	 */
+	<T> Flux<T> insert(Collection<? extends T> batchToSave, String collectionName, InsertManyOptions options);
+	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
 	 *
@@ -1156,6 +1168,52 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} for the given objects.
 	 */
 	<T> Flux<T> insertAll(Collection<? extends T> objectsToSave);
+
+	/**
+	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
+	 * class with additional insert options.
+	 *
+	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the saved objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} for the given objects.
+	 */
+	<T> Flux<T> insertAll(Collection<? extends T> objectsToSave, InsertManyOptions options);
+
+	/**
+	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
+	 * class with additional insert options.
+	 *
+	 * @param objectsToSave the publisher which provides objects to save. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects.
+	 */
+	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave, InsertManyOptions options);
+
+	/**
+	 * Insert a Collection of objects into a collection in a single batch write to the database with additional
+	 * insert options.
+	 *
+	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects.
+	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
+	 *           {@link #getCollectionName(Class) derived} for the type.
+	 */
+	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, Class<?> entityClass, InsertManyOptions options);
+
+	/**
+	 * Insert objects into the specified collection in a single batch write to the database with additional insert
+	 * options.
+	 *
+	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
+	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
+	 * @param options options for insert many operation. Must not be {@literal null}.
+	 * @return the inserted objects.
+	 */
+	<T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> batchToSave, String collectionName, InsertManyOptions options);
 
 	/**
 	 * Insert the object into the collection for the entity type of the object to save. <br />
