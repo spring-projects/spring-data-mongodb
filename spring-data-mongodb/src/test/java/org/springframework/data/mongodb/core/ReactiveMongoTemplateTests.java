@@ -15,13 +15,34 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.WriteConcern;
-import com.mongodb.client.model.InsertManyOptions;
-import com.mongodb.reactivestreams.client.MongoClient;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
@@ -63,31 +84,10 @@ import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
-import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static java.util.List.of;
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.model.InsertManyOptions;
+import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -546,7 +546,7 @@ public class ReactiveMongoTemplateTests {
 		first.setAge(29);
 		Person uniquePerson = new Person("Cmol", 30);
 
-		template.insertAll(of(first, second, uniquePerson)) //
+		template.insertAll(Arrays.asList(first, second, uniquePerson)) //
 				.as(StepVerifier::create) //
 				.verifyError(DataIntegrityViolationException.class);
 
@@ -568,7 +568,7 @@ public class ReactiveMongoTemplateTests {
 		first.setAge(29);
 		Person uniquePerson = new Person("Cmol", 30);
 
-		template.insertAll(of(first, second, uniquePerson), new InsertManyOptions().ordered(false)) //
+		template.insertAll(Arrays.asList(first, second, uniquePerson), new InsertManyOptions().ordered(false)) //
 				.as(StepVerifier::create) //
 				.verifyError(DataIntegrityViolationException.class);
 
@@ -586,7 +586,7 @@ public class ReactiveMongoTemplateTests {
 
 		Person person = new Person("Amol", 30);
 
-		template.insertAll(of(person), null) //
+		template.insertAll(Arrays.asList(person), null) //
 				.as(StepVerifier::create) //
 				.verifyErrorSatisfies(error ->
 						assertThat(error).isInstanceOf(IllegalArgumentException.class)

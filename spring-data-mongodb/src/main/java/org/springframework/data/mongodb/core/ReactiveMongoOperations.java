@@ -15,16 +15,17 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.ReadPreference;
-import com.mongodb.client.model.InsertManyOptions;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.ClientSession;
-import com.mongodb.reactivestreams.client.MongoCollection;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -46,12 +47,14 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import java.util.Collection;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.ReadPreference;
+import com.mongodb.client.model.InsertManyOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.ClientSession;
+import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
  * Interface that specifies a basic set of MongoDB operations executed in a reactive way.
