@@ -10,13 +10,13 @@ This section provides some basic introduction to Spring and Document databases. 
 [[get-started:first-steps:spring]]
 == Learning Spring
 
-Spring Data uses Spring framework's https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html[core] functionality, including:
+Spring Data uses Spring framework's link:{springDocsUrl}/core.html[core] functionality, including:
 
-* https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#beans[IoC] container
-* https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#validation[type conversion system]
-* https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#expressions[expression language]
-* https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/integration.html#jmx[JMX integration]
-* https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/data-access.html#dao-exceptions[DAO exception hierarchy].
+* link:{springDocsUrl}/core.html#beans[IoC] container
+* link:{springDocsUrl}/core.html#validation[type conversion system]
+* link:{springDocsUrl}/core.html#expressions[expression language]
+* link:{springDocsUrl}/integration.html#jmx[JMX integration]
+* link:{springDocsUrl}/data-access.html#dao-exceptions[DAO exception hierarchy].
 
 While you need not know the Spring APIs, understanding the concepts behind them is important. At a minimum, the idea behind Inversion of Control (IoC) should be familiar, and you should be familiar with whatever IoC container you choose to use.
 

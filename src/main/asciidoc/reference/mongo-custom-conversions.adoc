@@ -40,7 +40,7 @@ The snippet above is handy for providing simple type hints. To gain more fine-gr
 
 The `MappingMongoConverter` checks to see if any Spring converters can handle a specific class before attempting to map the object itself. To 'hijack' the normal mapping strategies of the `MappingMongoConverter`, perhaps for increased performance or other custom mapping needs, you first need to create an implementation of the Spring `Converter` interface and then register it with the `MappingConverter`.
 
-NOTE: For more information on the Spring type conversion service, see the reference docs https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#validation[here].
+NOTE: For more information on the Spring type conversion service, see the reference docs link:{springDocsUrl}/core.html#validation[here].
 
 [[mongo.custom-converters.writer]]
 === Saving by Using a Registered Spring Converter
