@@ -38,6 +38,7 @@ import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingSt
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.Account;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +49,7 @@ import org.springframework.stereotype.Component;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Ryan Tenney
+ * @author Tomasz Forys
  */
 public class MappingMongoConverterParserIntegrationTests {
 
@@ -59,6 +61,22 @@ public class MappingMongoConverterParserIntegrationTests {
 		loadValidConfiguration();
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
+	}
+
+	@Test
+	void allowsToOverrideAutoIndexCreation() {
+
+		loadValidConfiguration();
+		MongoMappingContext mongoMappingContext = factory.getBean("autoIndexCreationConverter.mongoMappingContext", MongoMappingContext.class);
+		assertThat(mongoMappingContext.isAutoIndexCreation()).isTrue();
+	}
+
+	@Test
+	void testDefaultValueForAutoIndexCreation() {
+
+		loadValidConfiguration();
+		MongoMappingContext mongoMappingContext = factory.getBean("converter.mongoMappingContext", MongoMappingContext.class);
+		assertThat(mongoMappingContext.isAutoIndexCreation()).isFalse();
 	}
 
 	@Test // DATAMONGO-725

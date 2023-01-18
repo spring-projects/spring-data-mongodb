@@ -76,6 +76,7 @@ import org.w3c.dom.Element;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Zied Yaich
+ * @author Tomasz Forys
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -102,7 +103,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
-		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, id);
+		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, id, autoIndexCreationEnabled);
 
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
@@ -282,10 +283,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<>();
 			List<Element> converterElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
 
-			if (converterElements != null) {
-				for (Element listenerElement : converterElements) {
-					converterBeans.add(parseConverter(listenerElement, parserContext));
-				}
+			for (Element listenerElement : converterElements) {
+				converterBeans.add(parseConverter(listenerElement, parserContext));
 			}
 
 			// Scan for Converter and GenericConverter beans in the given base-package
