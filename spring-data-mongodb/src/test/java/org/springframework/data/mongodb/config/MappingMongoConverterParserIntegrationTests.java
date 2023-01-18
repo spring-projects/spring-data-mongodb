@@ -66,8 +66,8 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	void allowsToOverrideAutoIndexCreation() {
 
-		loadConfiguration("namespace/converter-auto-index-creation.xml");
-		MappingMongoConverter converter = factory.getBean("converter", MappingMongoConverter.class);
+		loadValidConfiguration();
+		MappingMongoConverter converter = factory.getBean("autoIndexCreationConverter", MappingMongoConverter.class);
 		assertThat(converter.getMappingContext()).isInstanceOf(MongoMappingContext.class);
 		MongoMappingContext mongoMappingContext = (MongoMappingContext) converter.getMappingContext();
 		assertThat(mongoMappingContext.isAutoIndexCreation()).isTrue();
