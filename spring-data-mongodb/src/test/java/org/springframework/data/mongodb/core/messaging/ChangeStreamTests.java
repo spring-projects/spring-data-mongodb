@@ -72,6 +72,7 @@ import org.junitpioneer.jupiter.RepeatFailedTest;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Myroslav Kosinskyi
+ * @author Tomasz Forys
  */
 @ExtendWith({ MongoTemplateExtension.class })
 @EnableIfReplicaSetAvailable
