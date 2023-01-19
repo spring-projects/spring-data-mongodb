@@ -42,6 +42,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
@@ -702,6 +703,7 @@ class ChangeStreamTests {
 	}
 
 	@Test // GH-4187
+	@Disabled("Field fullDocumentBeforeChange on $changeStream introduced on version 6.0")
 	@EnableIfMongoServerVersion(isLessThan = "6.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
 
