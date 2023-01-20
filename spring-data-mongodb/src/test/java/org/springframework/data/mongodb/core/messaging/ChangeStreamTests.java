@@ -704,8 +704,7 @@ class ChangeStreamTests {
 	}
 
 	@Test // GH-4187
-	@Disabled("Field fullDocumentBeforeChange on $changeStream introduced on version 6.0")
-	@EnableIfMongoServerVersion(isLessThan = "6.0")
+	@EnableIfMongoServerVersion(isLessThan = "6.0", isGreaterThanEqual = "5.0")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
