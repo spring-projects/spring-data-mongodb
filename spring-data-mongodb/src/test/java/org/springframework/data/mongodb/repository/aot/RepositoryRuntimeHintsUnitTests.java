@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the original author or authors.
+ * Copyright 2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot;
+package org.springframework.data.mongodb.repository.aot;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -28,27 +28,17 @@ import org.springframework.data.mongodb.repository.support.ReactiveQuerydslMongo
 import com.mongodb.client.MongoClient;
 
 /**
+ * Unit tests for {@link RepositoryRuntimeHints}.
+ *
  * @author Christoph Strobl
  */
-class MongoRuntimeHintsUnitTests {
-
-	@Test // GH-4244
-	void doesNotRegisterTypesForQuerydslIntegrationWhenQuerydslNotPresent() {
-
-		RuntimeHints runtimeHints = new RuntimeHints();
-		new MongoRuntimeHints().registerHints(runtimeHints, new HidingClassLoader("com.querydsl"));
-
-		assertThat(runtimeHints)
-				.matches(RuntimeHintsPredicates.reflection().onType(QuerydslMongoPredicateExecutor.class).negate()
-						.and(RuntimeHintsPredicates.reflection().onType(ReactiveQuerydslMongoPredicateExecutor.class).negate()));
-
-	}
+class RepositoryRuntimeHintsUnitTests {
 
 	@Test // GH-4244
 	void registersTypesForQuerydslIntegration() {
 
 		RuntimeHints runtimeHints = new RuntimeHints();
-		new MongoRuntimeHints().registerHints(runtimeHints, null);
+		new RepositoryRuntimeHints().registerHints(runtimeHints, null);
 
 		assertThat(runtimeHints).matches(RuntimeHintsPredicates.reflection().onType(QuerydslMongoPredicateExecutor.class)
 				.and(RuntimeHintsPredicates.reflection().onType(ReactiveQuerydslMongoPredicateExecutor.class)));
@@ -58,7 +48,7 @@ class MongoRuntimeHintsUnitTests {
 	void onlyRegistersReactiveTypesForQuerydslIntegrationWhenNoSyncClientPresent() {
 
 		RuntimeHints runtimeHints = new RuntimeHints();
-		new MongoRuntimeHints().registerHints(runtimeHints, HidingClassLoader.hide(MongoClient.class));
+		new RepositoryRuntimeHints().registerHints(runtimeHints, HidingClassLoader.hide(MongoClient.class));
 
 		assertThat(runtimeHints).matches(RuntimeHintsPredicates.reflection().onType(QuerydslMongoPredicateExecutor.class)
 				.negate().and(RuntimeHintsPredicates.reflection().onType(ReactiveQuerydslMongoPredicateExecutor.class)));
@@ -69,7 +59,7 @@ class MongoRuntimeHintsUnitTests {
 	void doesNotRegistersReactiveTypesForQuerydslIntegrationWhenReactorNotPresent() {
 
 		RuntimeHints runtimeHints = new RuntimeHints();
-		new MongoRuntimeHints().registerHints(runtimeHints, new HidingClassLoader("reactor.core"));
+		new RepositoryRuntimeHints().registerHints(runtimeHints, new HidingClassLoader("reactor.core"));
 
 		assertThat(runtimeHints).matches(RuntimeHintsPredicates.reflection().onType(QuerydslMongoPredicateExecutor.class)
 				.and(RuntimeHintsPredicates.reflection().onType(ReactiveQuerydslMongoPredicateExecutor.class).negate()));
