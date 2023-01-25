@@ -1569,14 +1569,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						deferredFilter = Mono
 								.from(
 										collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
-								.zipWith(replacement)
-								//.defaultIfEmpty(replacement)
+								.switchIfEmpty(replacement)
 								.map(it -> {
-									if(it.getT1() == null) {
-										return updateContext.applyShardKey(entity, filter, it.getT2());
-									} else {
-										return updateContext.applyShardKey(entity, filter, it.getT1());
-									}
+									return updateContext.applyShardKey(entity, filter, it);
 								});
 					}
 				} else {
