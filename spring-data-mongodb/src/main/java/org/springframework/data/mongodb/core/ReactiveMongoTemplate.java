@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.convert.DefaultReactiveDbRefResolver;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -201,6 +202,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
 	private CountExecution countExecution = this::doExactCount;
+	private DefaultReactiveDbRefResolver dbRefResolver;
+
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -3033,14 +3036,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
 
-			T entity = reader.read(type, document);
-
-			if (entity == null) {
-				throw new MappingException(String.format("EntityReader %s returned null", reader));
-			}
-
-			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
-			return maybeCallAfterConvert(entity, document, collectionName);
+			return ReactiveValueResolver.prepareDbRefResolution(Mono.just(document), new DefaultReactiveDbRefResolver(getMongoDatabaseFactory()))
+					.map(it -> {
+						T entity = reader.read(type, it);
+						if (entity == null) {
+							throw new MappingException(String.format("EntityReader %s returned null", reader));
+						}
+						maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
+						return entity;
+					}).flatMap(it -> maybeCallAfterConvert(it, document, collectionName));
 		}
 	}
 
@@ -3073,15 +3077,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Class<T> returnType = projection.getMappedType().getType();
 			maybeEmitEvent(new AfterLoadEvent<>(document, returnType, collectionName));
 
-			Object entity = reader.project(projection, document);
+			dbRefResolver = new DefaultReactiveDbRefResolver(getMongoDatabaseFactory());
+			return ReactiveValueResolver.prepareDbRefResolution(Mono.just(document), dbRefResolver)
+					.map(it -> {
+						Object entity = reader.project(projection, document);
 
-			if (entity == null) {
-				throw new MappingException(String.format("EntityReader %s returned null", reader));
-			}
+						if (entity == null) {
+							throw new MappingException(String.format("EntityReader %s returned null", reader));
+						}
 
-			T castEntity = (T) entity;
-			maybeEmitEvent(new AfterConvertEvent<>(document, castEntity, collectionName));
-			return maybeCallAfterConvert(castEntity, document, collectionName);
+						T castEntity = (T) entity;
+						maybeEmitEvent(new AfterConvertEvent<>(document, castEntity, collectionName));
+						return castEntity;
+					})
+					.flatMap(it -> maybeCallAfterConvert(it, document, collectionName));
 		}
 	}
 

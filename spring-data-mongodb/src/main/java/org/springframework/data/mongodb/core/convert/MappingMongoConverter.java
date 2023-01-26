@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import javax.print.Doc;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
