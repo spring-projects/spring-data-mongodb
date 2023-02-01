@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
@@ -44,6 +45,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Rocco Lagrotteria
+ * @author Matin Kanani
  */
 class ParameterBindingJsonReaderUnitTests {
 
@@ -113,6 +115,12 @@ class ParameterBindingJsonReaderUnitTests {
 
 		Document target = parse("{ 'reference' : { $ref : 'reference', $id : ?0 }}", "kohlin");
 		assertThat(target).isEqualTo(Document.parse("{ 'reference' : { $ref : 'reference', $id : 'kohlin' }}"));
+	}
+
+	@Test
+	void bindValueToObjectIdHex() {
+		Document target = parse("{ 'id' : ObjectId(?0) }", "573a1391f29313caabcd9688");
+		assertThat(target).isEqualTo(new Document("id", new ObjectId("573a1391f29313caabcd9688")));
 	}
 
 	@Test

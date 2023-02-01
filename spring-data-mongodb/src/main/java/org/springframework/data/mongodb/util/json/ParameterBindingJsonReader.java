@@ -59,6 +59,7 @@ import org.springframework.util.ObjectUtils;
  * @author Brendon Puntin
  * @author Christoph Strobl
  * @author Rocco Lagrotteria
+ * @author Matin Kanani
  * @since 2.2
  */
 public class ParameterBindingJsonReader extends AbstractBsonReader {
@@ -1425,7 +1426,11 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		// Spring Data Customization START
 
 		if (patternToken.getType() == JsonTokenType.STRING || patternToken.getType() == JsonTokenType.UNQUOTED_STRING) {
-			return bindableValueFor(patternToken).getValue().toString();
+			Object foundedBindableObject = bindableValueFor(patternToken).getValue();
+			if (foundedBindableObject == null) {
+				throw new JsonParseException("JSON reader expected a value for '%s', but found null.", patternToken.getValue());
+			}
+			return foundedBindableObject.toString();
 		}
 
 		throw new JsonParseException("JSON reader expected a string but found '%s'.", patternToken.getValue());
