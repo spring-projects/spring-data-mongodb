@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddF
 import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation.LookupOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.MergeOperation.MergeOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
@@ -665,16 +666,21 @@ public class Aggregation {
 		return new LookupOperation(from, localField, foreignField, as);
 	}
 
-	public static LookupOperation lookup(String from, String localField, String foreignField, String as, List<AggregationOperation> aggregationOperations) {
-		return lookup(field(from), field(localField), field(foreignField), field(as), null, new AggregationPipeline(aggregationOperations));
-	}
-
-	public static LookupOperation lookup(String from, String localField, String foreignField, String as, List<LookupOperation.Let.ExpressionVariable> letExpressionVars, List<AggregationOperation> aggregationOperations) {
-		return lookup(field(from), field(localField), field(foreignField), field(as), new LookupOperation.Let(letExpressionVars), new AggregationPipeline(aggregationOperations));
-	}
-
-	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as, LookupOperation.Let let, AggregationPipeline pipeline) {
-		return new LookupOperation(from, localField, foreignField, as, let, pipeline);
+	/**
+	 * Entrypoint for creating {@link LookupOperation $lookup} using a fluent builder API.
+	 * <pre class="code">
+	 * Aggregation.lookup().from("restaurants")
+	 * 	.localField("restaurant_name")
+	 * 	.foreignField("name")
+	 * 	.let(newVariable("orders_drink").forField("drink"))
+	 * 	.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
+	 * 	.as("matches")
+	 * </pre>
+	 * @return new instance of {@link LookupOperationBuilder}.
+	 * @since 4.1
+	 */
+	public static LookupOperationBuilder lookup() {
+		return new LookupOperationBuilder();
 	}
 
 	/**

@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -1518,12 +1519,12 @@ public class AggregationTests {
 		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
-	@Test
+	@Test // GH-3322
 	void shouldLookupPeopleCorrectlyWithPipeline() {
 		createUsersWithReferencedPersons();
 
 		TypedAggregation<User> agg = newAggregation(User.class, //
-				lookup("person", "_id", "firstname", "linkedPerson", List.of(match(where("firstname").is("u1")))), //
+				lookup().from("person").localField("_id").foreignField("firstname").pipeline(match(where("firstname").is("u1"))).as("linkedPerson"), //
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
@@ -1536,18 +1537,13 @@ public class AggregationTests {
 		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
-	@Test
+	@Test // GH-3322
 	void shouldLookupPeopleCorrectlyWithPipelineAndLet() {
 		createUsersWithReferencedPersons();
 
 		TypedAggregation<User> agg = newAggregation(User.class, //
-				lookup(
-						"person",
-						"_id",
-						"firstname",
-						"linkedPerson",
-						List.of(new LookupOperation.Let.ExpressionVariable("personFirstname", "firstname")),
-						List.of(match(where("firstname").is("u1")))),
+				lookup().from("person").localField("_id").foreignField("firstname").let(Let.ExpressionVariable.newVariable("the_id").forField("_id")).pipeline(
+						match(ctx -> new Document("$expr", new Document("$eq", List.of("$$the_id", "u1"))))).as("linkedPerson"),
 				sort(ASC, "id"));
 
 		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
@@ -1561,7 +1557,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1326
-	void shouldGroupByAndLookupPeopleCorectly() {
+	void shouldGroupByAndLookupPeopleCorrectly() {
 
 		createUsersWithReferencedPersons();
 
