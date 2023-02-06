@@ -64,6 +64,7 @@ class QueryUtils {
 			combinedSort.putAll((Document) invocation.proceed());
 			return combinedSort;
 		});
+		factory.setInterfaces(new Class[0]);
 
 		return (Query) factory.getProxy(query.getClass().getClassLoader());
 	}
@@ -113,7 +114,7 @@ class QueryUtils {
 		if(parameters.isEmpty()) {
 			return -1;
 		}
-		
+
 		int i = 0;
 		for(Class<?> parameterType : parameters) {
 			if(ClassUtils.isAssignable(type, parameterType)) {

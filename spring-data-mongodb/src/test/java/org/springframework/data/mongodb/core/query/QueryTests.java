@@ -342,7 +342,10 @@ class QueryTests {
 		source.limit(10);
 		source.setSortObject(new Document("_id", 1));
 
-		Query target = Query.of((Query) new ProxyFactory(source).getProxy());
+		ProxyFactory proxyFactory = new ProxyFactory(source);
+		proxyFactory.setInterfaces(new Class[0]);
+
+		Query target = Query.of((Query) proxyFactory.getProxy());
 
 		compareQueries(target, source);
 	}

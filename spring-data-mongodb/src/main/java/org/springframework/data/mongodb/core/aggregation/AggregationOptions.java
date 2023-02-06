@@ -19,10 +19,15 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.ReadConcernAware;
+import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
@@ -39,7 +44,7 @@ import org.springframework.util.Assert;
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
  */
-public class AggregationOptions {
+public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware {
 
 	private static final String BATCH_SIZE = "batchSize";
 	private static final String CURSOR = "cursor";
@@ -56,6 +61,10 @@ public class AggregationOptions {
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
 	private final Optional<Object> hint;
+
+	private Optional<ReadConcern> readConcern;
+
+	private Optional<ReadPreference> readPreference;
 	private Duration maxTime = Duration.ZERO;
 	private ResultOptions resultOptions = ResultOptions.READ;
 	private DomainTypeMapping domainTypeMapping = DomainTypeMapping.RELAXED;
@@ -123,6 +132,8 @@ public class AggregationOptions {
 		this.collation = Optional.ofNullable(collation);
 		this.comment = Optional.ofNullable(comment);
 		this.hint = Optional.ofNullable(hint);
+		this.readConcern = Optional.empty();
+		this.readPreference = Optional.empty();
 	}
 
 	/**
@@ -268,6 +279,26 @@ public class AggregationOptions {
 		return hint;
 	}
 
+	@Override
+	public boolean hasReadConcern() {
+		return readConcern.isPresent();
+	}
+
+	@Override
+	public ReadConcern getReadConcern() {
+		return readConcern.orElse(null);
+	}
+
+	@Override
+	public boolean hasReadPreference() {
+		return readPreference.isPresent();
+	}
+
+	@Override
+	public ReadPreference getReadPreference() {
+		return readPreference.orElse(null);
+	}
+
 	/**
 	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
 	 * @since 3.0
@@ -385,6 +416,8 @@ public class AggregationOptions {
 		private @Nullable Collation collation;
 		private @Nullable String comment;
 		private @Nullable Object hint;
+		private @Nullable ReadConcern readConcern;
+		private @Nullable ReadPreference readPreference;
 		private @Nullable Duration maxTime;
 		private @Nullable ResultOptions resultOptions;
 		private @Nullable DomainTypeMapping domainTypeMapping;
@@ -491,6 +524,32 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Define a {@link ReadConcern} to apply to the aggregation.
+		 *
+		 * @param readConcern can be {@literal null}.
+		 * @return this.
+		 * @since 4.1
+		 */
+		public Builder readConcern(@Nullable ReadConcern readConcern) {
+
+			this.readConcern = readConcern;
+			return this;
+		}
+
+		/**
+		 * Define a {@link ReadPreference} to apply to the aggregation.
+		 *
+		 * @param readPreference can be {@literal null}.
+		 * @return this.
+		 * @since 4.1
+		 */
+		public Builder readPreference(@Nullable ReadPreference readPreference) {
+
+			this.readPreference = readPreference;
+			return this;
+		}
+
+		/**
 		 * Set the time limit for processing.
 		 *
 		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
@@ -572,6 +631,12 @@ public class AggregationOptions {
 			}
 			if (domainTypeMapping != null) {
 				options.domainTypeMapping = domainTypeMapping;
+			}
+			if (readConcern != null) {
+				options.readConcern = Optional.of(readConcern);
+			}
+			if (readPreference != null) {
+				options.readPreference = Optional.of(readPreference);
 			}
 
 			return options;

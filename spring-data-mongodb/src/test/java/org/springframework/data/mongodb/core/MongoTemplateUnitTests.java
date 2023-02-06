@@ -108,6 +108,7 @@ import org.springframework.util.CollectionUtils;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
@@ -120,16 +121,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.MapReduceAction;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.TimeSeriesGranularity;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -182,6 +174,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.estimatedDocumentCount(any())).thenReturn(1L);
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
+		when(collection.withReadConcern(any())).thenReturn(collection);
 		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(updateResult);
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
@@ -478,6 +471,34 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, never()).withReadPreference(any());
 	}
 
+	@Test // GH-4277
+	void aggregateShouldHonorOptionsReadConcernWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readConcern(ReadConcern.SNAPSHOT).build();
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4277
+	void aggregateShouldHonorOptionsReadPreferenceWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readPreference(ReadPreference.secondary()).build();
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
+	@Test // GH-4277
+	void aggregateStreamShouldHonorOptionsReadPreferenceWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readPreference(ReadPreference.secondary()).build();
+		template.aggregateStream(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1",
+				Wrapper.class);
+
+		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
 	@Test // DATAMONGO-2153
 	void aggregateShouldHonorOptionsComment() {
 
@@ -553,6 +574,19 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.setReadPreference(ReadPreference.secondary());
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
+		template.geoNear(query, Wrapper.class);
+
+		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadPreferenceFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+
+		Query inner = new Query();
+		inner.withReadPreference(ReadPreference.secondary());
+		query.query(inner);
 		template.geoNear(query, Wrapper.class);
 
 		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
@@ -802,6 +836,24 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(findIterable).batchSize(1234);
 	}
 
+	@Test // GH-4277
+	void findShouldUseReadConcernWhenPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}").withReadConcern(ReadConcern.SNAPSHOT),
+				AutogenerateableId.class);
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4277
+	void findShouldUseReadPreferenceWhenPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}").withReadPreference(ReadPreference.secondary()),
+				AutogenerateableId.class);
+
+		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
 	@Test // DATAMONGO-1518
 	void executeQueryShouldUseCollationWhenPresent() {
 
@@ -1048,7 +1100,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				PersonProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
@@ -1057,7 +1110,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
+				PersonProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
@@ -1066,7 +1120,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				PersonSpELProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
@@ -1075,7 +1130,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				Jedi.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
@@ -1084,7 +1140,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
+				Jedi.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
@@ -1093,7 +1150,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				Person.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
@@ -1102,7 +1160,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				PersonExtended.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));

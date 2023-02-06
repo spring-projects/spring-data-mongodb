@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.CollectionPreparerSupport.CollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
@@ -66,6 +67,7 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Builder;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -83,7 +85,6 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
-import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -141,7 +142,8 @@ import com.mongodb.client.result.UpdateResult;
  * @author Bartłomiej Mazur
  * @author Michael Krog
  */
-public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
+public class MongoTemplate
+		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, ReadPreferenceAware {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
@@ -293,6 +295,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.readPreference = readPreference;
 	}
 
+	@Override
+	public boolean hasReadPreference() {
+		return this.readPreference != null;
+	}
+
+	@Override
+	public ReadPreference getReadPreference() {
+		return this.readPreference;
+	}
+
 	/**
 	 * Configure whether lifecycle events such as {@link AfterLoadEvent}, {@link BeforeSaveEvent}, etc. should be
 	 * published or whether emission should be suppressed. Enabled by default.
@@ -363,10 +375,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (enabled) {
 
-			this.countExecution = (collectionName, filter, options) -> {
+			this.countExecution = (collectionPreparer, collectionName, filter, options) -> {
 
 				if (!estimationFilter.test(filter, options)) {
-					return doExactCount(collectionName, filter, options);
+					return doExactCount(collectionPreparer, collectionName, filter, options);
 				}
 
 				EstimatedDocumentCountOptions estimatedDocumentCountOptions = new EstimatedDocumentCountOptions();
@@ -374,7 +386,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					estimatedDocumentCountOptions.maxTime(options.getMaxTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
 				}
 
-				return doEstimatedCount(collectionName, estimatedDocumentCountOptions);
+				return doEstimatedCount(collectionPreparer, collectionName, estimatedDocumentCountOptions);
 			};
 		} else {
 			this.countExecution = this::doExactCount;
@@ -443,8 +455,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
 			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
 
+			CollectionPreparerDelegate readPreference = createDelegate(query);
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
-					col -> col.find(mappedQuery, Document.class).projection(mappedFields));
+					col -> readPreference.prepare(col).find(mappedQuery, Document.class).projection(mappedFields));
 
 			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator,
 					new ProjectingReadCallback<>(mongoConverter, projection, collectionName)).stream();
@@ -517,7 +530,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
-		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject, null),
+		this.executeQueryInternal(new FindCallback(createDelegate(query), queryObject, fieldsObject, null),
 				preparer != null ? preparer : CursorPreparer.NO_OP_PREPARER, documentCallbackHandler, collectionName);
 	}
 
@@ -765,7 +778,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
 
-			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(),
+			return doFindOne(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
 					new QueryCursorPreparer(query, entityClass), entityClass);
 		} else {
 			query.limit(1);
@@ -797,7 +810,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedQuery = queryContext.getMappedQuery(entityClass, this::getPersistentEntity);
 
 		return execute(collectionName,
-				new ExistsCallback(mappedQuery, queryContext.getCollation(entityClass).orElse(null)));
+				new ExistsCallback(createDelegate(query), mappedQuery, queryContext.getCollation(entityClass).orElse(null)));
 	}
 
 	// Find methods that take a Query to express the query and that return a List of objects.
@@ -814,7 +827,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
 
-		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
+		return doFind(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
 				new QueryCursorPreparer(query, entityClass));
 	}
 
@@ -834,7 +847,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		String idKey = operations.getIdPropertyName(entityClass);
 
-		return doFindOne(collectionName, new Document(idKey, id), new Document(), entityClass);
+		return doFindOne(CollectionPreparer.identity(), collectionName, new Document(idKey, id), new Document(),
+				entityClass);
 	}
 
 	@Override
@@ -867,10 +881,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						serializeToJsonSafely(mappedQuery), field, collectionName));
 			}
 
-			QueryCursorPreparer preparer = new QueryCursorPreparer(query, entityClass);
-			if (preparer.hasReadPreference()) {
-				collection = collection.withReadPreference(preparer.getReadPreference());
-			}
+			collection = createDelegate(query).prepare(collection);
 
 			DistinctIterable<T> iterable = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 			distinctQueryContext.applyCollation(entityClass, iterable::collation);
@@ -920,8 +931,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		String collection = StringUtils.hasText(collectionName) ? collectionName : getCollectionName(domainType);
 		String distanceField = operations.nearQueryDistanceFieldName(domainType);
 
+		Builder optionsBuilder = AggregationOptions.builder().collation(near.getCollation());
+		Query query = near.getQuery();
+
+		if (query != null && query.hasReadPreference()) {
+			optionsBuilder.readPreference(query.getReadPreference());
+		}
+
 		Aggregation $geoNear = TypedAggregation.newAggregation(domainType, Aggregation.geoNear(near, distanceField))
-				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+				.withOptions(optionsBuilder.build());
 
 		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
 		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, domainType);
@@ -986,7 +1004,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			operations.forType(entityClass).getCollation(query).ifPresent(optionsToUse::collation);
 		}
 
-		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
+		return doFindAndModify(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
 	}
 
@@ -1008,6 +1026,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
 		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
+		CollectionPreparerDelegate collectionPreparer = createDelegate(query);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedSort = queryContext.getMappedSort(entity);
@@ -1018,7 +1037,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
-		T saved = doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
+		T saved = doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort,
 				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, projection);
 
 		if (saved != null) {
@@ -1046,7 +1065,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(entityClass, "EntityClass must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
 
-		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
+		return doFindAndRemove(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), operations.forType(entityClass).getCollation(query).orElse(null),
 				entityClass);
 	}
@@ -1078,17 +1097,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		CountOptions options = countContext.getCountOptions(entityClass);
 		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
-		return doCount(collectionName, mappedQuery, options);
+		CollectionPreparerDelegate readPreference = createDelegate(query);
+		return doCount(readPreference, collectionName, mappedQuery, options);
 	}
 
-	protected long doCount(String collectionName, Document filter, CountOptions options) {
+	protected long doCount(CollectionPreparer collectionPreparer, String collectionName, Document filter,
+			CountOptions options) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
 					.debug(String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
 		}
 
-		return countExecution.countDocuments(collectionName, filter, options);
+		return countExecution.countDocuments(collectionPreparer, collectionName, filter, options);
 	}
 
 	/*
@@ -1097,11 +1118,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public long estimatedCount(String collectionName) {
-		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
+		return doEstimatedCount(CollectionPreparerDelegate.of(this), collectionName, new EstimatedDocumentCountOptions());
 	}
 
-	protected long doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
-		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
+	protected long doEstimatedCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			String collectionName,
+			EstimatedDocumentCountOptions options) {
+		return execute(collectionName,
+				collection -> collectionPreparer.prepare(collection).estimatedDocumentCount(options));
 	}
 
 	@Override
@@ -1112,12 +1136,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		CountOptions options = countContext.getCountOptions(entityClass);
 		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
-		return doExactCount(collectionName, mappedQuery, options);
+		return doExactCount(createDelegate(query), collectionName, mappedQuery, options);
 	}
 
-	protected long doExactCount(String collectionName, Document filter, CountOptions options) {
-		return execute(collectionName,
-				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
+	protected long doExactCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+			Document filter, CountOptions options) {
+		return execute(collectionName, collection -> collectionPreparer.prepare(collection)
+				.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
 	protected boolean countCanBeEstimated(Document filter, CountOptions options) {
@@ -1177,8 +1202,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
 
-		if (this.readPreference != null) {
-			collection = collection.withReadPreference(readPreference);
+		if (this.readPreference != null && this.readPreference != collection.getReadPreference()) {
+			return collection.withReadPreference(readPreference);
 		}
 
 		return collection;
@@ -1754,7 +1779,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(
-				new FindCallback(new Document(), new Document(),
+				new FindCallback(CollectionPreparer.identity(), new Document(), new Document(),
 						operations.forType(entityClass).getCollation().map(Collation::toMongoCollation).orElse(null)),
 				CursorPreparer.NO_OP_PREPARER, new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName),
 				collectionName);
@@ -1812,7 +1837,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
-		MongoCollection<Document> inputCollection = getAndPrepareCollection(doGetDatabase(), inputCollectionName);
+		CollectionPreparerDelegate readPreference = createDelegate(query);
+		MongoCollection<Document> inputCollection = readPreference
+				.prepare(getAndPrepareCollection(doGetDatabase(), inputCollectionName));
 
 		// MapReduceOp
 		MapReduceIterable<Document> mapReduce = inputCollection.mapReduce(mapFunc, reduceFunc, Document.class);
@@ -1977,6 +2004,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (!CollectionUtils.isEmpty(result)) {
 
 			Query byIdInQuery = operations.getByIdInQuery(result);
+			if (query.hasReadPreference()) {
+				byIdInQuery.withReadPreference(query.getReadPreference());
+			}
 
 			remove(byIdInQuery, entityClass, collectionName);
 		}
@@ -2032,7 +2062,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(collectionName, collection -> {
 
 			List<Document> rawResult = new ArrayList<>();
-
+			CollectionPreparerDelegate delegate = CollectionPreparerDelegate.of(options);
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation<?>) aggregation).getInputType()
 					: null;
 
@@ -2040,7 +2070,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					() -> operations.forType(domainType) //
 							.getCollation());
 
-			AggregateIterable<Document> aggregateIterable = collection.aggregate(pipeline, Document.class) //
+			AggregateIterable<Document> aggregateIterable = delegate.prepare(collection).aggregate(pipeline, Document.class) //
 					.collation(collation.map(Collation::toMongoCollation).orElse(null)) //
 					.allowDiskUse(options.isAllowDiskUse());
 
@@ -2103,7 +2133,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return execute(collectionName, (CollectionCallback<Stream<O>>) collection -> {
 
-			AggregateIterable<Document> cursor = collection.aggregate(pipeline, Document.class) //
+			CollectionPreparerDelegate delegate = CollectionPreparerDelegate.of(options);
+
+			AggregateIterable<Document> cursor = delegate.prepare(collection).aggregate(pipeline, Document.class) //
 					.allowDiskUse(options.isAllowDiskUse());
 
 			if (options.getCursorBatchSize() != null) {
@@ -2350,8 +2382,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return the converted object or {@literal null} if none exists.
 	 */
 	@Nullable
-	protected <T> T doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass) {
-		return doFindOne(collectionName, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
+	protected <T> T doFindOne(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, Class<T> entityClass) {
+		return doFindOne(collectionPreparer, collectionName, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
 	}
 
 	/**
@@ -2368,8 +2401,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Nullable
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindOne(String collectionName, Document query, Document fields, CursorPreparer preparer,
-			Class<T> entityClass) {
+	protected <T> T doFindOne(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, CursorPreparer preparer, Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2382,7 +2415,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
 		}
 
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, preparer),
+		return executeFindOneInternal(new FindOneCallback(collectionPreparer, mappedQuery, mappedFields, preparer),
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
@@ -2396,8 +2429,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the List of converted objects.
 	 */
-	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass) {
-		return doFind(collectionName, query, fields, entityClass, null,
+	protected <T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, Class<T> entityClass) {
+		return doFind(collectionPreparer, collectionName, query, fields, entityClass, null,
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName));
 	}
 
@@ -2414,14 +2448,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *          (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
-	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
-			CursorPreparer preparer) {
-		return doFind(collectionName, query, fields, entityClass, preparer,
+	protected <T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, Class<T> entityClass, CursorPreparer preparer) {
+		return doFind(collectionPreparer, collectionName, query, fields, entityClass, preparer,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName));
 	}
 
-	protected <S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> entityClass,
-			@Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
+	protected <S, T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, Class<S> entityClass, @Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2434,7 +2468,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName));
 		}
 
-		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null),
+		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null),
 				preparer != null ? preparer : CursorPreparer.NO_OP_PREPARER, objectCallback, collectionName);
 	}
 
@@ -2444,8 +2478,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @since 2.0
 	 */
-	<S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> sourceClass,
-			Class<T> targetClass, CursorPreparer preparer) {
+	<S, T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query, Document fields,
+			Class<S> sourceClass, Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
@@ -2459,7 +2493,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName));
 		}
 
-		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer,
+		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null), preparer,
 				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
 	}
 
@@ -2533,8 +2567,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return the List of converted objects.
 	 */
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindAndRemove(String collectionName, Document query, Document fields, Document sort,
-			@Nullable Collation collation, Class<T> entityClass) {
+	protected <T> T doFindAndRemove(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
@@ -2545,14 +2579,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		return executeFindOneInternal(
-				new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort, collation),
+		return executeFindOneInternal(new FindAndRemoveCallback(collectionPreparer,
+				queryMapper.getMappedObject(query, entity), fields, sort, collation),
 				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindAndModify(String collectionName, Document query, Document fields, Document sort,
-			Class<T> entityClass, UpdateDefinition update, @Nullable FindAndModifyOptions options) {
+	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			Document fields, Document sort, Class<T> entityClass, UpdateDefinition update,
+			@Nullable FindAndModifyOptions options) {
 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
@@ -2577,7 +2612,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindOneInternal(
-				new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate,
+				new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
 						update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
 				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
@@ -2598,14 +2633,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 */
 	@Nullable
-	protected <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
-			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
-			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
+	protected <T> T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
+			Document mappedFields, Document mappedSort, @Nullable com.mongodb.client.model.Collation collation,
+			Class<?> entityType, Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
-		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
-				options, projection);
+		return doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort, collation,
+				entityType, replacement, options, projection);
+	}
+
+	CollectionPreparerDelegate createDelegate(Query query) {
+		return CollectionPreparerDelegate.of(query);
 	}
 
 	/**
@@ -2625,9 +2664,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @since 3.4
 	 */
 	@Nullable
-	private <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
-			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
-			Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
+	private <T> T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
+			Document mappedFields, Document mappedSort, @Nullable com.mongodb.client.model.Collation collation,
+			Class<?> entityType, Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
@@ -2638,9 +2677,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
 
-		return executeFindOneInternal(
-				new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
-				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
+		return executeFindOneInternal(new FindAndReplaceCallback(collectionPreparer, mappedQuery, mappedFields, mappedSort,
+				replacement, collation, options), new ProjectingReadCallback<>(mongoConverter, projection, collectionName),
+				collectionName);
 	}
 
 	/**
@@ -2810,12 +2849,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private static class FindOneCallback implements CollectionCallback<Document> {
 
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Optional<Document> fields;
 		private final CursorPreparer cursorPreparer;
 
-		FindOneCallback(Document query, Document fields, CursorPreparer preparer) {
+		FindOneCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
+				CursorPreparer preparer) {
 
+			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.fields = Optional.of(fields).filter(it -> !ObjectUtils.isEmpty(fields));
 			this.cursorPreparer = preparer;
@@ -2824,7 +2866,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
-			FindIterable<Document> iterable = cursorPreparer.initiateFind(collection, col -> col.find(query, Document.class));
+			FindIterable<Document> iterable = cursorPreparer.initiateFind(collection,
+					col -> collectionPreparer.prepare(col).find(query, Document.class));
 
 			if (LOGGER.isDebugEnabled()) {
 
@@ -2851,15 +2894,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private static class FindCallback implements CollectionCallback<FindIterable<Document>> {
 
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final @Nullable com.mongodb.client.model.Collation collation;
 
-		public FindCallback(Document query, Document fields, @Nullable com.mongodb.client.model.Collation collation) {
+		public FindCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields,
+				@Nullable com.mongodb.client.model.Collation collation) {
 
 			Assert.notNull(query, "Query must not be null");
 			Assert.notNull(fields, "Fields must not be null");
 
+			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.fields = fields;
 			this.collation = collation;
@@ -2869,7 +2916,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		public FindIterable<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
-			FindIterable<Document> findIterable = collection.find(query, Document.class).projection(fields);
+			FindIterable<Document> findIterable = collectionPreparer.prepare(collection).find(query, Document.class)
+					.projection(fields);
 
 			if (collation != null) {
 				findIterable = findIterable.collation(collation);
@@ -2887,11 +2935,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private class ExistsCallback implements CollectionCallback<Boolean> {
 
+		private final CollectionPreparer collectionPreparer;
 		private final Document mappedQuery;
 		private final com.mongodb.client.model.Collation collation;
 
-		ExistsCallback(Document mappedQuery, com.mongodb.client.model.Collation collation) {
+		ExistsCallback(CollectionPreparer collectionPreparer, Document mappedQuery,
+				com.mongodb.client.model.Collation collation) {
 
+			this.collectionPreparer = collectionPreparer;
 			this.mappedQuery = mappedQuery;
 			this.collation = collation;
 		}
@@ -2899,7 +2950,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Override
 		public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
-			return doCount(collection.getNamespace().getCollectionName(), mappedQuery,
+			return doCount(collectionPreparer, collection.getNamespace().getCollectionName(), mappedQuery,
 					new CountOptions().limit(1).collation(collation)) > 0;
 		}
 	}
@@ -2912,12 +2963,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private static class FindAndRemoveCallback implements CollectionCallback<Document> {
 
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
 		private final Optional<Collation> collation;
 
-		FindAndRemoveCallback(Document query, Document fields, Document sort, @Nullable Collation collation) {
+		FindAndRemoveCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields, Document sort,
+				@Nullable Collation collation) {
+			this.collectionPreparer = collectionPreparer;
 
 			this.query = query;
 			this.fields = fields;
@@ -2931,12 +2986,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			FindOneAndDeleteOptions opts = new FindOneAndDeleteOptions().sort(sort).projection(fields);
 			collation.map(Collation::toMongoCollation).ifPresent(opts::collation);
 
-			return collection.findOneAndDelete(query, opts);
+			return collectionPreparer.prepare(collection).findOneAndDelete(query, opts);
 		}
 	}
 
 	private static class FindAndModifyCallback implements CollectionCallback<Document> {
 
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
@@ -2944,9 +3000,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
-		FindAndModifyCallback(Document query, Document fields, Document sort, Object update, List<Document> arrayFilters,
-				FindAndModifyOptions options) {
+		FindAndModifyCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields, Document sort,
+				Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
 
+			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.fields = fields;
 			this.sort = sort;
@@ -2975,9 +3033,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			if (update instanceof Document) {
-				return collection.findOneAndUpdate(query, (Document) update, opts);
+				return collectionPreparer.prepare(collection).findOneAndUpdate(query, (Document) update, opts);
 			} else if (update instanceof List) {
-				return collection.findOneAndUpdate(query, (List<Document>) update, opts);
+				return collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, opts);
 			}
 
 			throw new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update));
@@ -2993,6 +3051,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private static class FindAndReplaceCallback implements CollectionCallback<Document> {
 
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
@@ -3000,9 +3059,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final @Nullable com.mongodb.client.model.Collation collation;
 		private final FindAndReplaceOptions options;
 
-		FindAndReplaceCallback(Document query, Document fields, Document sort, Document update,
-				@Nullable com.mongodb.client.model.Collation collation, FindAndReplaceOptions options) {
-
+		FindAndReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields, Document sort,
+				Document update, @Nullable com.mongodb.client.model.Collation collation, FindAndReplaceOptions options) {
+			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.fields = fields;
 			this.sort = sort;
@@ -3027,7 +3087,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				opts.returnDocument(ReturnDocument.AFTER);
 			}
 
-			return collection.findOneAndReplace(query, update, opts);
+			return collectionPreparer.prepare(collection).findOneAndReplace(query, update, opts);
 		}
 	}
 
@@ -3209,11 +3269,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return cursorToUse;
 		}
 
-		@Override
-		public ReadPreference getReadPreference() {
-			return query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS) ? ReadPreference.primaryPreferred()
-					: null;
-		}
 	}
 
 	/**
@@ -3399,6 +3454,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@FunctionalInterface
 	interface CountExecution {
-		long countDocuments(String collection, Document filter, CountOptions options);
+		long countDocuments(CollectionPreparer collectionPreparer, String collection, Document filter,
+				CountOptions options);
 	}
 }

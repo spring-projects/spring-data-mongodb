@@ -536,6 +536,11 @@ public final class NearQuery {
 		return this;
 	}
 
+	@Nullable
+	public Query getQuery() {
+		return query;
+	}
+
 	/**
 	 * @return the number of elements to skip.
 	 */
