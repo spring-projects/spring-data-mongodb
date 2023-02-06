@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -168,7 +167,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();
 
-			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
+			return template.doFind(template.createDelegate(query), getCollectionName(), queryObject, fieldsObject, domainType,
+					returnType,
 					getCursorPreparer(query, preparer));
 		}
 
