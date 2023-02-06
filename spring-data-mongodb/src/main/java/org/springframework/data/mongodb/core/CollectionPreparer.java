@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.bson.Document;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.MongoCollection;
@@ -26,14 +25,14 @@ import com.mongodb.client.MongoCollection;
  * @author Mark Paluch
  * @since 4.1
  */
-public interface CollectionPreparer {
+public interface CollectionPreparer<T> {
 
 	/**
 	 * Returns a preparer that always returns its input collection.
 	 *
 	 * @return a preparer that always returns its input collection.
 	 */
-	static CollectionPreparer identity() {
+	static <T> CollectionPreparer<T> identity() {
 		return it -> it;
 	}
 
@@ -43,7 +42,7 @@ public interface CollectionPreparer {
 	 * @param collection the collection to prepare.
 	 * @return the prepared collection.
 	 */
-	MongoCollection<Document> prepare(MongoCollection<Document> collection);
+	T prepare(T collection);
 
 	/**
 	 * Returns a composed {@code CollectionPreparer} that first applies this preparer to the collection, and then applies
@@ -54,7 +53,7 @@ public interface CollectionPreparer {
 	 * @return a composed {@code CollectionPreparer} that first applies this preparer and then applies the {@code after}
 	 *         preparer.
 	 */
-	default CollectionPreparer andThen(CollectionPreparer after) {
+	default CollectionPreparer<T> andThen(CollectionPreparer<T> after) {
 		Assert.notNull(after, "After CollectionPreparer must not be null");
 		return c -> after.prepare(prepare(c));
 	}

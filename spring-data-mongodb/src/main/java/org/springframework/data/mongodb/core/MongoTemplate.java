@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.CollectionPreparerSupport.CollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
@@ -1120,7 +1121,8 @@ public class MongoTemplate
 		return doEstimatedCount(CollectionPreparerDelegate.of(this), collectionName, new EstimatedDocumentCountOptions());
 	}
 
-	protected long doEstimatedCount(CollectionPreparer collectionPreparer, String collectionName,
+	protected long doEstimatedCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			String collectionName,
 			EstimatedDocumentCountOptions options) {
 		return execute(collectionName,
 				collection -> collectionPreparer.prepare(collection).estimatedDocumentCount(options));
@@ -1137,11 +1139,10 @@ public class MongoTemplate
 		return doExactCount(createDelegate(query), collectionName, mappedQuery, options);
 	}
 
-	protected long doExactCount(CollectionPreparer collectionPreparer, String collectionName, Document filter,
-			CountOptions options) {
-		return execute(collectionName,
-				collection -> collectionPreparer.prepare(collection).countDocuments(CountQuery.of(filter).toQueryDocument(),
-						options));
+	protected long doExactCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+			Document filter, CountOptions options) {
+		return execute(collectionName, collection -> collectionPreparer.prepare(collection)
+				.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
 	protected boolean countCanBeEstimated(Document filter, CountOptions options) {
@@ -1202,7 +1203,7 @@ public class MongoTemplate
 	protected MongoCollection<Document> prepareCollection(MongoCollection<Document> collection) {
 
 		if (this.readPreference != null && this.readPreference != collection.getReadPreference()) {
-			collection = collection.withReadPreference(readPreference);
+			return collection.withReadPreference(readPreference);
 		}
 
 		return collection;
@@ -2401,8 +2402,7 @@ public class MongoTemplate
 	@Nullable
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindOne(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, CursorPreparer preparer,
-			Class<T> entityClass) {
+			Document fields, CursorPreparer preparer, Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2449,15 +2449,13 @@ public class MongoTemplate
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Class<T> entityClass,
-			CursorPreparer preparer) {
+			Document fields, Class<T> entityClass, CursorPreparer preparer) {
 		return doFind(collectionPreparer, collectionName, query, fields, entityClass, preparer,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName));
 	}
 
 	protected <S, T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Class<S> entityClass,
-			@Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
+			Document fields, Class<S> entityClass, @Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2481,8 +2479,7 @@ public class MongoTemplate
 	 * @since 2.0
 	 */
 	<S, T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query, Document fields,
-			Class<S> sourceClass,
-			Class<T> targetClass, CursorPreparer preparer) {
+			Class<S> sourceClass, Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
@@ -2571,8 +2568,7 @@ public class MongoTemplate
 	 */
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindAndRemove(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Document sort,
-			@Nullable Collation collation, Class<T> entityClass) {
+			Document fields, Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
@@ -2583,16 +2579,15 @@ public class MongoTemplate
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		return executeFindOneInternal(
-				new FindAndRemoveCallback(collectionPreparer, queryMapper.getMappedObject(query, entity), fields, sort,
-						collation),
+		return executeFindOneInternal(new FindAndRemoveCallback(collectionPreparer,
+				queryMapper.getMappedObject(query, entity), fields, sort, collation),
 				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Document sort,
-			Class<T> entityClass, UpdateDefinition update, @Nullable FindAndModifyOptions options) {
+			Document fields, Document sort, Class<T> entityClass, UpdateDefinition update,
+			@Nullable FindAndModifyOptions options) {
 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
@@ -2639,15 +2634,13 @@ public class MongoTemplate
 	 */
 	@Nullable
 	protected <T> T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
-			Document mappedFields,
-			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
-			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
+			Document mappedFields, Document mappedSort, @Nullable com.mongodb.client.model.Collation collation,
+			Class<?> entityType, Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort, collation,
-				entityType, replacement,
-				options, projection);
+				entityType, replacement, options, projection);
 	}
 
 	CollectionPreparerDelegate createDelegate(Query query) {
@@ -2672,9 +2665,8 @@ public class MongoTemplate
 	 */
 	@Nullable
 	private <T> T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
-			Document mappedFields,
-			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
-			Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
+			Document mappedFields, Document mappedSort, @Nullable com.mongodb.client.model.Collation collation,
+			Class<?> entityType, Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
@@ -2685,10 +2677,9 @@ public class MongoTemplate
 							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
 
-		return executeFindOneInternal(
-				new FindAndReplaceCallback(collectionPreparer, mappedQuery, mappedFields, mappedSort, replacement, collation,
-						options),
-				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
+		return executeFindOneInternal(new FindAndReplaceCallback(collectionPreparer, mappedQuery, mappedFields, mappedSort,
+				replacement, collation, options), new ProjectingReadCallback<>(mongoConverter, projection, collectionName),
+				collectionName);
 	}
 
 	/**
@@ -2858,12 +2849,13 @@ public class MongoTemplate
 	 */
 	private static class FindOneCallback implements CollectionCallback<Document> {
 
-		private final CollectionPreparer collectionPreparer;
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Optional<Document> fields;
 		private final CursorPreparer cursorPreparer;
 
-		FindOneCallback(CollectionPreparer collectionPreparer, Document query, Document fields, CursorPreparer preparer) {
+		FindOneCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
+				CursorPreparer preparer) {
 
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
@@ -2902,12 +2894,13 @@ public class MongoTemplate
 	 */
 	private static class FindCallback implements CollectionCallback<FindIterable<Document>> {
 
-		private final CollectionPreparer collectionPreparer;
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final @Nullable com.mongodb.client.model.Collation collation;
 
-		public FindCallback(CollectionPreparer collectionPreparer, Document query, Document fields,
+		public FindCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields,
 				@Nullable com.mongodb.client.model.Collation collation) {
 
 			Assert.notNull(query, "Query must not be null");
@@ -2970,13 +2963,14 @@ public class MongoTemplate
 	 */
 	private static class FindAndRemoveCallback implements CollectionCallback<Document> {
 
-		private final CollectionPreparer collectionPreparer;
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
 		private final Optional<Collation> collation;
 
-		FindAndRemoveCallback(CollectionPreparer collectionPreparer, Document query, Document fields, Document sort,
+		FindAndRemoveCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields, Document sort,
 				@Nullable Collation collation) {
 			this.collectionPreparer = collectionPreparer;
 
@@ -2998,7 +2992,7 @@ public class MongoTemplate
 
 	private static class FindAndModifyCallback implements CollectionCallback<Document> {
 
-		private final CollectionPreparer collectionPreparer;
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
@@ -3006,7 +3000,8 @@ public class MongoTemplate
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
-		FindAndModifyCallback(CollectionPreparer collectionPreparer, Document query, Document fields, Document sort,
+		FindAndModifyCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields, Document sort,
 				Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
 
 			this.collectionPreparer = collectionPreparer;
@@ -3056,7 +3051,7 @@ public class MongoTemplate
 	 */
 	private static class FindAndReplaceCallback implements CollectionCallback<Document> {
 
-		private final CollectionPreparer collectionPreparer;
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
@@ -3064,7 +3059,8 @@ public class MongoTemplate
 		private final @Nullable com.mongodb.client.model.Collation collation;
 		private final FindAndReplaceOptions options;
 
-		FindAndReplaceCallback(CollectionPreparer collectionPreparer, Document query, Document fields, Document sort,
+		FindAndReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
+				Document fields, Document sort,
 				Document update, @Nullable com.mongodb.client.model.Collation collation, FindAndReplaceOptions options) {
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;

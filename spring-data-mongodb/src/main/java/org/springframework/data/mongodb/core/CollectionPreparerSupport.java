@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.bson.Document;
 
@@ -24,43 +26,31 @@ import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoCollection;
 
 /**
- * Delegate to apply {@link ReadConcern} and {@link ReadPreference} settings upon {@link CollectionPreparer preparing a
- * collection}.
+ * Support class for delegate implementations to apply {@link ReadConcern} and {@link ReadPreference} settings upon
+ * {@link CollectionPreparer preparing a collection}.
  *
  * @author Mark Paluch
  * @since 4.1
  */
-class CollectionPreparerDelegate implements ReadConcernAware, ReadPreferenceAware, CollectionPreparer {
+class CollectionPreparerSupport implements ReadConcernAware, ReadPreferenceAware {
 
-	List<Object> sources;
+	final List<Object> sources;
 
-	private CollectionPreparerDelegate(List<Object> sources) {
+	private CollectionPreparerSupport(List<Object> sources) {
 		this.sources = sources;
 	}
 
-	public static CollectionPreparerDelegate of(ReadPreferenceAware... awares) {
-		return of((Object[]) awares);
-	}
+	<T> T doPrepare(T collection, Function<T, ReadConcern> concernAccessor, BiFunction<T, ReadConcern, T> concernFunction,
+			Function<T, ReadPreference> preferenceAccessor, BiFunction<T, ReadPreference, T> preferenceFunction) {
 
-	public static CollectionPreparerDelegate of(Object... mixedAwares) {
-
-		if (mixedAwares.length == 1 && mixedAwares[0] instanceof CollectionPreparerDelegate) {
-			return (CollectionPreparerDelegate) mixedAwares[0];
-		}
-		return new CollectionPreparerDelegate(List.of(mixedAwares));
-	}
-
-	@Override
-	public MongoCollection<Document> prepare(MongoCollection<Document> collection) {
-
-		MongoCollection<Document> collectionToUse = collection;
+		T collectionToUse = collection;
 
 		for (Object source : sources) {
 			if (source instanceof ReadConcernAware rca && rca.hasReadConcern()) {
 
 				ReadConcern concern = rca.getReadConcern();
-				if (collection.getReadConcern() != concern) {
-					collectionToUse = collectionToUse.withReadConcern(concern);
+				if (concernAccessor.apply(collectionToUse) != concern) {
+					collectionToUse = concernFunction.apply(collectionToUse, concern);
 				}
 				break;
 			}
@@ -70,8 +60,8 @@ class CollectionPreparerDelegate implements ReadConcernAware, ReadPreferenceAwar
 			if (source instanceof ReadPreferenceAware rpa && rpa.hasReadPreference()) {
 
 				ReadPreference preference = rpa.getReadPreference();
-				if (collection.getReadPreference() != preference) {
-					collectionToUse = collectionToUse.withReadPreference(preference);
+				if (preferenceAccessor.apply(collectionToUse) != preference) {
+					collectionToUse = preferenceFunction.apply(collectionToUse, preference);
 				}
 				break;
 			}
@@ -126,6 +116,33 @@ class CollectionPreparerDelegate implements ReadConcernAware, ReadPreferenceAwar
 		}
 
 		return null;
+	}
+
+	static class CollectionPreparerDelegate extends CollectionPreparerSupport
+			implements CollectionPreparer<MongoCollection<Document>> {
+
+		private CollectionPreparerDelegate(List<Object> sources) {
+			super(sources);
+		}
+
+		public static CollectionPreparerDelegate of(ReadPreferenceAware... awares) {
+			return of((Object[]) awares);
+		}
+
+		public static CollectionPreparerDelegate of(Object... mixedAwares) {
+
+			if (mixedAwares.length == 1 && mixedAwares[0] instanceof CollectionPreparerDelegate) {
+				return (CollectionPreparerDelegate) mixedAwares[0];
+			}
+			return new CollectionPreparerDelegate(List.of(mixedAwares));
+		}
+
+		@Override
+		public MongoCollection<Document> prepare(MongoCollection<Document> collection) {
+			return doPrepare(collection, MongoCollection::getReadConcern, MongoCollection::withReadConcern,
+					MongoCollection::getReadPreference, MongoCollection::withReadPreference);
+		}
+
 	}
 
 }
