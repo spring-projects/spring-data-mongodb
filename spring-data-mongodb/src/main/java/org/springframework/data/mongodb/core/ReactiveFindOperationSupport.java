@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveCollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -67,8 +68,8 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		private final String collection;
 		private final Query query;
 
-		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType,
-				String collection, Query query) {
+		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, String collection,
+				Query query) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -169,8 +170,8 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();
 
-			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
-					preparer != null ? preparer : getCursorPreparer(query));
+			return template.doFind(ReactiveCollectionPreparerDelegate.of(query), getCollectionName(), queryObject,
+					fieldsObject, domainType, returnType, preparer != null ? preparer : getCursorPreparer(query));
 		}
 
 		@SuppressWarnings("unchecked")

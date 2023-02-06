@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -34,7 +35,7 @@ import com.mongodb.client.MongoCollection;
  */
 class CollectionPreparerSupport implements ReadConcernAware, ReadPreferenceAware {
 
-	final List<Object> sources;
+	private final List<Object> sources;
 
 	private CollectionPreparerSupport(List<Object> sources) {
 		this.sources = sources;
@@ -134,13 +135,46 @@ class CollectionPreparerSupport implements ReadConcernAware, ReadPreferenceAware
 			if (mixedAwares.length == 1 && mixedAwares[0] instanceof CollectionPreparerDelegate) {
 				return (CollectionPreparerDelegate) mixedAwares[0];
 			}
-			return new CollectionPreparerDelegate(List.of(mixedAwares));
+
+			return new CollectionPreparerDelegate(Arrays.asList(mixedAwares));
 		}
 
 		@Override
 		public MongoCollection<Document> prepare(MongoCollection<Document> collection) {
 			return doPrepare(collection, MongoCollection::getReadConcern, MongoCollection::withReadConcern,
 					MongoCollection::getReadPreference, MongoCollection::withReadPreference);
+		}
+
+	}
+
+	static class ReactiveCollectionPreparerDelegate extends CollectionPreparerSupport
+			implements CollectionPreparer<com.mongodb.reactivestreams.client.MongoCollection<Document>> {
+
+		private ReactiveCollectionPreparerDelegate(List<Object> sources) {
+			super(sources);
+		}
+
+		public static ReactiveCollectionPreparerDelegate of(ReadPreferenceAware... awares) {
+			return of((Object[]) awares);
+		}
+
+		public static ReactiveCollectionPreparerDelegate of(Object... mixedAwares) {
+
+			if (mixedAwares.length == 1 && mixedAwares[0] instanceof CollectionPreparerDelegate) {
+				return (ReactiveCollectionPreparerDelegate) mixedAwares[0];
+			}
+
+			return new ReactiveCollectionPreparerDelegate(Arrays.asList(mixedAwares));
+		}
+
+		@Override
+		public com.mongodb.reactivestreams.client.MongoCollection<Document> prepare(
+				com.mongodb.reactivestreams.client.MongoCollection<Document> collection) {
+			return doPrepare(collection, //
+					com.mongodb.reactivestreams.client.MongoCollection::getReadConcern,
+					com.mongodb.reactivestreams.client.MongoCollection::withReadConcern,
+					com.mongodb.reactivestreams.client.MongoCollection::getReadPreference,
+					com.mongodb.reactivestreams.client.MongoCollection::withReadPreference);
 		}
 
 	}
