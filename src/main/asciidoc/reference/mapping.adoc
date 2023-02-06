@@ -69,7 +69,7 @@ When querying and updating `MongoTemplate` will use the converter to handle conv
 == Data Mapping and Type Conversion
 
 This section explains how types are mapped to and from a MongoDB representation. Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
-In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion. See <<mapping-explicit-converters>> for further details.
+In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion. See <<mongo.custom-converters>> for further details.
 
 The following provides samples of each available type conversion:
 
