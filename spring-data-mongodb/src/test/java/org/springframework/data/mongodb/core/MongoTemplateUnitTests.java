@@ -108,6 +108,7 @@ import org.springframework.util.CollectionUtils;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
@@ -173,6 +174,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.estimatedDocumentCount(any())).thenReturn(1L);
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
+		when(collection.withReadConcern(any())).thenReturn(collection);
 		when(collection.withReadPreference(any())).thenReturn(collection);
 		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(updateResult);
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
@@ -467,6 +469,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
 		verify(collection, never()).withReadPreference(any());
+	}
+
+	@Test // GH-4277
+	void aggregateShouldHonorOptionsReadConcernWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readConcern(ReadConcern.SNAPSHOT).build();
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
 	}
 
 	@Test // GH-4277
@@ -823,6 +834,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.find(query, Person.class);
 
 		verify(findIterable).batchSize(1234);
+	}
+
+	@Test // GH-4277
+	void findShouldUseReadConcernWhenPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}").withReadConcern(ReadConcern.SNAPSHOT),
+				AutogenerateableId.class);
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
 	}
 
 	@Test // GH-4277

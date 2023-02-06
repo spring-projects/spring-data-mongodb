@@ -34,12 +34,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 
 /**
@@ -52,7 +54,7 @@ import com.mongodb.ReadPreference;
  * @author Mark Paluch
  * @author Anton Barkan
  */
-public class Query implements ReadPreferenceAware {
+public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
@@ -62,6 +64,7 @@ public class Query implements ReadPreferenceAware {
 	private Sort sort = Sort.unsorted();
 	private long skip;
 	private int limit;
+	private @Nullable ReadConcern readConcern;
 	private @Nullable ReadPreference readPreference;
 
 	private @Nullable String hint;
@@ -167,17 +170,41 @@ public class Query implements ReadPreferenceAware {
 	}
 
 	/**
+	 * Configures the query to use the given {@link ReadConcern} when being executed.
+	 *
+	 * @param readConcern must not be {@literal null}.
+	 * @return this.
+	 * @since 3.1
+	 */
+	public Query withReadConcern(ReadConcern readConcern) {
+
+		Assert.notNull(readConcern, "ReadConcern must not be null");
+		this.readConcern = readConcern;
+		return this;
+	}
+
+	/**
 	 * Configures the query to use the given {@link ReadPreference} when being executed.
 	 *
 	 * @param readPreference must not be {@literal null}.
 	 * @return this.
-	 * @since 3.1
+	 * @since 4.1
 	 */
 	public Query withReadPreference(ReadPreference readPreference) {
 
 		Assert.notNull(readPreference, "ReadPreference must not be null");
 		this.readPreference = readPreference;
 		return this;
+	}
+
+	@Override
+	public boolean hasReadConcern() {
+		return this.readConcern != null;
+	}
+
+	@Override
+	public ReadConcern getReadConcern() {
+		return this.readConcern;
 	}
 
 	@Override

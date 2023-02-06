@@ -19,12 +19,14 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 
 /**
@@ -42,7 +44,7 @@ import com.mongodb.ReadPreference;
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
  */
-public class AggregationOptions implements ReadPreferenceAware {
+public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware {
 
 	private static final String BATCH_SIZE = "batchSize";
 	private static final String CURSOR = "cursor";
@@ -59,6 +61,8 @@ public class AggregationOptions implements ReadPreferenceAware {
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
 	private final Optional<Object> hint;
+
+	private Optional<ReadConcern> readConcern;
 
 	private Optional<ReadPreference> readPreference;
 	private Duration maxTime = Duration.ZERO;
@@ -128,6 +132,7 @@ public class AggregationOptions implements ReadPreferenceAware {
 		this.collation = Optional.ofNullable(collation);
 		this.comment = Optional.ofNullable(comment);
 		this.hint = Optional.ofNullable(hint);
+		this.readConcern = Optional.empty();
 		this.readPreference = Optional.empty();
 	}
 
@@ -275,6 +280,16 @@ public class AggregationOptions implements ReadPreferenceAware {
 	}
 
 	@Override
+	public boolean hasReadConcern() {
+		return readConcern.isPresent();
+	}
+
+	@Override
+	public ReadConcern getReadConcern() {
+		return readConcern.orElse(null);
+	}
+
+	@Override
 	public boolean hasReadPreference() {
 		return readPreference.isPresent();
 	}
@@ -401,6 +416,7 @@ public class AggregationOptions implements ReadPreferenceAware {
 		private @Nullable Collation collation;
 		private @Nullable String comment;
 		private @Nullable Object hint;
+		private @Nullable ReadConcern readConcern;
 		private @Nullable ReadPreference readPreference;
 		private @Nullable Duration maxTime;
 		private @Nullable ResultOptions resultOptions;
@@ -508,6 +524,19 @@ public class AggregationOptions implements ReadPreferenceAware {
 		}
 
 		/**
+		 * Define a {@link ReadConcern} to apply to the aggregation.
+		 *
+		 * @param readConcern can be {@literal null}.
+		 * @return this.
+		 * @since 4.1
+		 */
+		public Builder readConcern(@Nullable ReadConcern readConcern) {
+
+			this.readConcern = readConcern;
+			return this;
+		}
+
+		/**
 		 * Define a {@link ReadPreference} to apply to the aggregation.
 		 *
 		 * @param readPreference can be {@literal null}.
@@ -602,6 +631,9 @@ public class AggregationOptions implements ReadPreferenceAware {
 			}
 			if (domainTypeMapping != null) {
 				options.domainTypeMapping = domainTypeMapping;
+			}
+			if (readConcern != null) {
+				options.readConcern = Optional.of(readConcern);
 			}
 			if (readPreference != null) {
 				options.readPreference = Optional.of(readPreference);

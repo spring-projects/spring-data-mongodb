@@ -454,7 +454,7 @@ public class MongoTemplate
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
 			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
 
-			ReadPreferenceDelegate readPreference = createDelegate(query);
+			CollectionPreparerDelegate readPreference = createDelegate(query);
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
 					col -> readPreference.prepare(col).find(mappedQuery, Document.class).projection(mappedFields));
 
@@ -1025,7 +1025,7 @@ public class MongoTemplate
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
 		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
-		ReadPreferenceDelegate collectionPreparer = createDelegate(query);
+		CollectionPreparerDelegate collectionPreparer = createDelegate(query);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedSort = queryContext.getMappedSort(entity);
@@ -1096,7 +1096,7 @@ public class MongoTemplate
 		CountOptions options = countContext.getCountOptions(entityClass);
 		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
-		ReadPreferenceDelegate readPreference = createDelegate(query);
+		CollectionPreparerDelegate readPreference = createDelegate(query);
 		return doCount(readPreference, collectionName, mappedQuery, options);
 	}
 
@@ -1117,7 +1117,7 @@ public class MongoTemplate
 	 */
 	@Override
 	public long estimatedCount(String collectionName) {
-		return doEstimatedCount(ReadPreferenceDelegate.of(this), collectionName, new EstimatedDocumentCountOptions());
+		return doEstimatedCount(CollectionPreparerDelegate.of(this), collectionName, new EstimatedDocumentCountOptions());
 	}
 
 	protected long doEstimatedCount(CollectionPreparer collectionPreparer, String collectionName,
@@ -1836,7 +1836,7 @@ public class MongoTemplate
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
-		ReadPreferenceDelegate readPreference = createDelegate(query);
+		CollectionPreparerDelegate readPreference = createDelegate(query);
 		MongoCollection<Document> inputCollection = readPreference
 				.prepare(getAndPrepareCollection(doGetDatabase(), inputCollectionName));
 
@@ -2061,7 +2061,7 @@ public class MongoTemplate
 		return execute(collectionName, collection -> {
 
 			List<Document> rawResult = new ArrayList<>();
-			ReadPreferenceDelegate delegate = ReadPreferenceDelegate.of(options);
+			CollectionPreparerDelegate delegate = CollectionPreparerDelegate.of(options);
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation<?>) aggregation).getInputType()
 					: null;
 
@@ -2132,7 +2132,8 @@ public class MongoTemplate
 
 		return execute(collectionName, (CollectionCallback<Stream<O>>) collection -> {
 
-			ReadPreferenceDelegate delegate = ReadPreferenceDelegate.of(options);
+			CollectionPreparerDelegate delegate = CollectionPreparerDelegate.of(options);
+
 			AggregateIterable<Document> cursor = delegate.prepare(collection).aggregate(pipeline, Document.class) //
 					.allowDiskUse(options.isAllowDiskUse());
 
@@ -2649,8 +2650,8 @@ public class MongoTemplate
 				options, projection);
 	}
 
-	ReadPreferenceDelegate createDelegate(Query query) {
-		return ReadPreferenceDelegate.of(query);
+	CollectionPreparerDelegate createDelegate(Query query) {
+		return CollectionPreparerDelegate.of(query);
 	}
 
 	/**
