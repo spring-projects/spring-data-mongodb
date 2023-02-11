@@ -23,52 +23,35 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.bson.BsonArray;
 import org.bson.BsonBinary;
-import org.bson.BsonDocument;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.Binary;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.CollectionFactory;
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.convert.PropertyValueConverterFactory;
-import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.convert.MongoValueConverter;
-import org.springframework.data.mongodb.core.mapping.Encrypted;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.encryption.ExplicitlyEncrypted;
+import org.springframework.data.mongodb.core.encryption.EncryptingConverter;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.fle.FLETests.Config;
-import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ConnectionString;
@@ -80,7 +63,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
-import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
@@ -177,6 +159,7 @@ public class FLETests {
 	}
 
 	@Test
+	@Disabled("for now - takes to long ")
 	void altKeyDetection(@Autowired ClientEncryption clientEncryption) throws InterruptedException {
 
 		BsonBinary user1key = clientEncryption.createDataKey("local",
@@ -296,24 +279,24 @@ public class FLETests {
 		String id;
 		String name;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
 		String ssn;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "mySuperSecretKey") //
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "mySuperSecretKey") //
 		String wallet;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
 		Address address;
 
 		AddressWithEncryptedZip encryptedZip;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<String> listOfString;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<Address> listOfComplex;
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/name") //
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/name") //
 		String viaAltKeyNameField;
 	}
 
@@ -327,202 +310,12 @@ public class FLETests {
 	@Setter
 	static class AddressWithEncryptedZip extends Address {
 
-		@EncryptedField(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) String zip;
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) String zip;
 
 		@Override
 		public String toString() {
 			return "AddressWithEncryptedZip{" + "zip='" + zip + '\'' + ", city='" + getCity() + '\'' + ", street='"
 					+ getStreet() + '\'' + '}';
-		}
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	@Encrypted
-	@ValueConverter(EncryptingConverter.class)
-	@interface EncryptedField {
-
-		@AliasFor(annotation = Encrypted.class, value = "algorithm")
-		String algorithm() default "";
-
-		String altKeyName() default "";
-	}
-
-	static class EncryptingConverter implements MongoValueConverter<Object, Object> {
-
-		private ClientEncryption clientEncryption;
-		private BsonBinary dataKeyId; // should be provided from outside.
-
-		public EncryptingConverter(ClientEncryption clientEncryption) {
-
-			this.clientEncryption = clientEncryption;
-			this.dataKeyId = clientEncryption.createDataKey("local",
-					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey")));
-		}
-
-		@Nullable
-		@Override
-		public Object read(Object value, MongoConversionContext context) {
-
-			ManualEncryptionContext encryptionContext = buildEncryptionContext(context);
-			Object decrypted = encryptionContext.decrypt(value, clientEncryption);
-			return decrypted instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) decrypted) : decrypted;
-		}
-
-		@Nullable
-		@Override
-		public BsonBinary write(Object value, MongoConversionContext context) {
-
-			ManualEncryptionContext encryptionContext = buildEncryptionContext(context);
-			return encryptionContext.encrypt(value, clientEncryption);
-		}
-
-		ManualEncryptionContext buildEncryptionContext(MongoConversionContext context) {
-			return new ManualEncryptionContext(context, this.dataKeyId);
-		}
-	}
-
-	static class ManualEncryptionContext {
-
-		MongoConversionContext context;
-		MongoPersistentProperty persistentProperty;
-		BsonBinary dataKeyId;
-		Lazy<Encrypted> encryption;
-
-		public ManualEncryptionContext(MongoConversionContext context, BsonBinary dataKeyId) {
-			this.context = context;
-			this.persistentProperty = context.getProperty();
-			this.dataKeyId = dataKeyId;
-			this.encryption = Lazy.of(() -> persistentProperty.findAnnotation(Encrypted.class));
-		}
-
-		BsonBinary encrypt(Object value, ClientEncryption clientEncryption) {
-
-			// TODO: check - encryption.get().keyId()
-
-			EncryptOptions encryptOptions = new EncryptOptions(encryption.get().algorithm());
-
-			EncryptedField annotation = persistentProperty.findAnnotation(EncryptedField.class);
-			if (annotation != null && !annotation.altKeyName().isBlank()) {
-				if (annotation.altKeyName().startsWith("/")) {
-					String fieldName = annotation.altKeyName().replace("/", "");
-					Object altKeyNameValue = context.getValue(fieldName);
-					encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
-				} else {
-					encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
-				}
-			} else {
-				encryptOptions = encryptOptions.keyId(this.dataKeyId);
-			}
-
-			System.out.println(
-					"encrypting with: " + (StringUtils.hasText(encryptOptions.getKeyAltName()) ? encryptOptions.getKeyAltName()
-							: encryptOptions.getKeyId()));
-
-			if (!persistentProperty.isEntity()) {
-
-				if (persistentProperty.isCollectionLike()) {
-					return clientEncryption.encrypt(collectionLikeToBsonValue(value), encryptOptions);
-				}
-				return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
-			}
-			if (persistentProperty.isCollectionLike()) {
-				return clientEncryption.encrypt(collectionLikeToBsonValue(value), encryptOptions);
-			}
-
-			Object write = context.write(value);
-			if (write instanceof Document doc) {
-				return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
-			}
-			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
-		}
-
-		public BsonValue collectionLikeToBsonValue(Object value) {
-
-			if (persistentProperty.isCollectionLike()) {
-
-				BsonArray bsonArray = new BsonArray();
-				if (!persistentProperty.isEntity()) {
-					if (value instanceof Collection values) {
-						values.forEach(it -> bsonArray.add(BsonUtils.simpleToBsonValue(it)));
-					} else if (ObjectUtils.isArray(value)) {
-						for (Object o : ObjectUtils.toObjectArray(value)) {
-							bsonArray.add(BsonUtils.simpleToBsonValue(o));
-						}
-					}
-					return bsonArray;
-				} else {
-					if (value instanceof Collection values) {
-						values.forEach(it -> {
-							Document write = (Document) context.write(it, persistentProperty.getTypeInformation());
-							bsonArray.add(write.toBsonDocument());
-						});
-					} else if (ObjectUtils.isArray(value)) {
-						for (Object o : ObjectUtils.toObjectArray(value)) {
-							Document write = (Document) context.write(0, persistentProperty.getTypeInformation());
-							bsonArray.add(write.toBsonDocument());
-						}
-					}
-					return bsonArray;
-				}
-			}
-
-			if (!persistentProperty.isEntity()) {
-				if (persistentProperty.isCollectionLike()) {
-
-					if (persistentProperty.isEntity()) {
-
-					}
-				}
-			}
-
-			return null;
-		}
-
-		public Object decrypt(Object value, ClientEncryption clientEncryption) {
-
-			// this was a hack to avoid the 60 sec timeout of the key cache
-			// ClientEncryptionSettings settings = (ClientEncryptionSettings) new DirectFieldAccessor(clientEncryption)
-			// .getPropertyValue("options");
-			// clientEncryption = ClientEncryptions.create(settings);
-
-			Object result = value;
-			if (value instanceof Binary binary) {
-				result = clientEncryption.decrypt(new BsonBinary(binary.getType(), binary.getData()));
-			}
-			if (value instanceof BsonBinary binary) {
-				result = clientEncryption.decrypt(binary);
-			}
-
-			// in case the driver has auto decryption (aka .bypassAutoEncryption(true)) active
-			// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
-			if (value == result) {
-				return result;
-			}
-
-			if (persistentProperty.isCollectionLike() && result instanceof Iterable<?> iterable) {
-				if (!persistentProperty.isEntity()) {
-					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
-					iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
-					return collection;
-				} else {
-					Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
-					iterable.forEach(it -> {
-						collection.add(context.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
-					});
-					return collection;
-				}
-			}
-
-			if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
-				return BsonUtils.toJavaType(bsonValue);
-			}
-
-			if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
-				return context.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
-			}
-
-			return result;
 		}
 	}
 }
