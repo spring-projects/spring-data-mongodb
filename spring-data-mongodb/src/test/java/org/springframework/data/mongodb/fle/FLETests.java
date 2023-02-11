@@ -47,7 +47,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.encryption.ExplicitlyEncrypted;
-import org.springframework.data.mongodb.core.encryption.EncryptingConverter;
+import org.springframework.data.mongodb.core.encryption.ClientEncryptionConverter;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.fle.FLETests.Config;
 import org.springframework.test.context.ContextConfiguration;
@@ -232,8 +232,8 @@ public class FLETests {
 		}
 
 		@Bean
-		EncryptingConverter encryptingConverter(ClientEncryption clientEncryption) {
-			return new EncryptingConverter(clientEncryption);
+		ClientEncryptionConverter encryptingConverter(ClientEncryption clientEncryption) {
+			return new ClientEncryptionConverter(clientEncryption, null);
 		}
 
 		@Bean

@@ -15,28 +15,11 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import org.springframework.data.mongodb.core.convert.MongoConversionContext;
-import org.springframework.data.mongodb.core.convert.MongoValueConverter;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * @author Christoph Strobl
- * @since 4.1
  */
-public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
-
-	@Override
-	default S read(Object value, MongoConversionContext context) {
-		return decrypt(value, buildEncryptionContext(context));
-	}
-
-	@Override
-	default T write(Object value, MongoConversionContext context) {
-		return encrypt(value, buildEncryptionContext(context));
-	}
-
-	S decrypt(Object value, EncryptionContext context);
-
-	T encrypt(Object value, EncryptionContext context);
-
-	EncryptionContext buildEncryptionContext(MongoConversionContext context);
+public interface KeyIdProvider<T> {
+	T getKeyId(MongoPersistentProperty property);
 }

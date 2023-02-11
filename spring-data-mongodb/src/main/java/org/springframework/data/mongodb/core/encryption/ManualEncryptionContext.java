@@ -54,18 +54,18 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2023/02
  */
-public class ManualEncryptionContext {
+public class ManualEncryptionContext implements EncryptionContext {
 
 	MongoConversionContext context;
 	MongoPersistentProperty persistentProperty;
-	BsonBinary dataKeyId;
+	KeyIdProvider<BsonBinary> keyIdProvider;
 	Lazy<Encrypted> encryption;
 
-	public ManualEncryptionContext(MongoConversionContext context, BsonBinary dataKeyId) {
+	public ManualEncryptionContext(MongoConversionContext context, KeyIdProvider<BsonBinary> keyIdProvider) {
 		this.context = context;
 		this.persistentProperty = context.getProperty();
-		this.dataKeyId = dataKeyId;
 		this.encryption = Lazy.of(() -> persistentProperty.findAnnotation(Encrypted.class));
+		this.keyIdProvider = keyIdProvider;
 	}
 
 	BsonBinary encrypt(Object value, ClientEncryption clientEncryption) {
@@ -84,7 +84,7 @@ public class ManualEncryptionContext {
 				encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
 			}
 		} else {
-			encryptOptions = encryptOptions.keyId(this.dataKeyId);
+			encryptOptions = encryptOptions.keyId(keyIdProvider.getKeyId(persistentProperty));
 		}
 
 		System.out.println(
@@ -195,5 +195,10 @@ public class ManualEncryptionContext {
 		}
 
 		return result;
+	}
+
+	@Override
+	public MongoPersistentProperty getProperty() {
+		return context.getProperty();
 	}
 }
