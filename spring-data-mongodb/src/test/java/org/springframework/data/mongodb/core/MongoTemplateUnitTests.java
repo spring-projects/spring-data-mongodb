@@ -51,7 +51,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -122,16 +121,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.MapReduceAction;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.TimeSeriesGranularity;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -2479,8 +2469,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	 */
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
-		MongoTemplate template = spy(this.template);
-		lenient().when(template.getDb()).thenThrow(new MongoException("Error!"));
+		when(template.getMongoDatabaseFactory().getMongoDatabase()).thenThrow(new MongoException("Error"));
 		return template;
 	}
 

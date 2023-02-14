@@ -28,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -43,8 +42,6 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 class SimpleReactiveMongoRepositoryUnitTests {
 
 	private SimpleReactiveMongoRepository<Object, String> repository;
-	@Mock Mono mono;
-	@Mock Flux flux;
 	@Mock ReactiveMongoOperations mongoOperations;
 	@Mock MongoEntityInformation<Object, String> entityInformation;
 
@@ -56,7 +53,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // DATAMONGO-1854
 	void shouldAddDefaultCollationToCountForExampleIfPresent() {
 
-		when(mongoOperations.count(any(), any(), any())).thenReturn(mono);
+		when(mongoOperations.count(any(), any(), any())).thenReturn(Mono.empty());
 
 		Collation collation = Collation.of("en_US");
 
@@ -72,7 +69,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // DATAMONGO-1854
 	void shouldAddDefaultCollationToExistsForExampleIfPresent() {
 
-		when(mongoOperations.exists(any(), any(), any())).thenReturn(mono);
+		when(mongoOperations.exists(any(), any(), any())).thenReturn(Mono.empty());
 
 		Collation collation = Collation.of("en_US");
 
@@ -88,7 +85,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // DATAMONGO-1854
 	void shouldAddDefaultCollationToFindForExampleIfPresent() {
 
-		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
+		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.empty());
 
 		Collation collation = Collation.of("en_US");
 
@@ -104,7 +101,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // DATAMONGO-1854
 	void shouldAddDefaultCollationToFindWithSortForExampleIfPresent() {
 
-		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
+		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.empty());
 
 		Collation collation = Collation.of("en_US");
 
@@ -120,7 +117,8 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // DATAMONGO-1854
 	void shouldAddDefaultCollationToFindOneForExampleIfPresent() {
 
-		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
+		when(entityInformation.getCollectionName()).thenReturn("testdummy");
+		doReturn(Flux.empty()).when(mongoOperations).find(any(Query.class), eq(TestDummy.class), eq("testdummy"));
 
 		Collation collation = Collation.of("en_US");
 
