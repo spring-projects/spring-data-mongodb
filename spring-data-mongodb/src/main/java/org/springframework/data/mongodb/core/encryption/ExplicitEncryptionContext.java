@@ -15,29 +15,20 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import org.bson.BsonBinary;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
-import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  * @since 4.1
  */
-public class ManualEncryptionContext implements EncryptionContext {
+class ExplicitEncryptionContext implements EncryptionContext {
 
 	private final MongoConversionContext conversionContext;
-	private final MongoPersistentProperty persistentProperty;
-	private final EncryptionKeyProvider encryptionKeyProvider;
-	private final Lazy<Encrypted> encryption;
 
-	public ManualEncryptionContext(MongoConversionContext conversionContext, EncryptionKeyProvider encryptionKeyProvider) {
+	public ExplicitEncryptionContext(MongoConversionContext conversionContext) {
 		this.conversionContext = conversionContext;
-		this.persistentProperty = conversionContext.getProperty();
-		this.encryption = Lazy.of(() -> persistentProperty.findAnnotation(Encrypted.class));
-		this.encryptionKeyProvider = encryptionKeyProvider;
 	}
 
 	@Override

@@ -48,9 +48,9 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.encryption.ClientEncryptionConverter;
-import org.springframework.data.mongodb.core.encryption.ClientEncryptionProvider;
+import org.springframework.data.mongodb.core.encryption.MongoClientEncryption;
 import org.springframework.data.mongodb.core.encryption.EncryptionKey;
-import org.springframework.data.mongodb.core.encryption.EncryptionKeyProvider;
+import org.springframework.data.mongodb.core.encryption.EncryptionKeyResolver;
 import org.springframework.data.mongodb.core.encryption.ExplicitlyEncrypted;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.fle.FLETests.Config;
@@ -178,12 +178,12 @@ public class FLETests {
 	}
 
 	@Test
-	void altKeyDetection(@Autowired ClientEncryptionProvider clientEncryptionProvider) throws InterruptedException {
+	void altKeyDetection(@Autowired MongoClientEncryption mongoClientEncryption) throws InterruptedException {
 
-		BsonBinary user1key = clientEncryptionProvider.getClientEncryption().createDataKey("local",
+		BsonBinary user1key = mongoClientEncryption.getClientEncryption().createDataKey("local",
 				new DataKeyOptions().keyAltNames(Collections.singletonList("user-1")));
 
-		BsonBinary user2key = clientEncryptionProvider.getClientEncryption().createDataKey("local",
+		BsonBinary user2key = mongoClientEncryption.getClientEncryption().createDataKey("local",
 				new DataKeyOptions().keyAltNames(Collections.singletonList("user-2")));
 
 		Person p1 = new Person();
@@ -214,13 +214,13 @@ public class FLETests {
 		// System.out.println(template.query(Person.class).matching(where("id").is(p1.id)).firstValue());
 		// System.out.println(template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
 
-		DeleteResult deleteResult = clientEncryptionProvider.getClientEncryption().deleteKey(user2key);
-		clientEncryptionProvider.getClientEncryption().getKeys().forEach(System.out::println);
+		DeleteResult deleteResult = mongoClientEncryption.getClientEncryption().deleteKey(user2key);
+		mongoClientEncryption.getClientEncryption().getKeys().forEach(System.out::println);
 		System.out.println("deleteResult: " + deleteResult);
 
 		// System.out.println("---- waiting for cache timeout ----");
 		// TimeUnit.SECONDS.sleep(90);
-		clientEncryptionProvider.refresh();
+		mongoClientEncryption.refresh();
 
 		assertThat(template.query(Person.class).matching(where("id").is(p1.id)).firstValue()).isEqualTo(p1);
 
@@ -251,22 +251,33 @@ public class FLETests {
 		}
 
 		@Bean
-		ClientEncryptionConverter encryptingConverter(ClientEncryptionProvider clientEncryptionProvider) {
+		ClientEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
 
-			Lazy<BsonBinary> dataKey = Lazy.of(() -> clientEncryptionProvider.getClientEncryption().createDataKey("local",
+			Lazy<BsonBinary> dataKey = Lazy.of(() -> mongoClientEncryption.getClientEncryption().createDataKey("local",
 					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
 
-			return new ClientEncryptionConverter(clientEncryptionProvider,
-					EncryptionKeyProvider.annotationBasedKeyProvider(() -> EncryptionKey.keyId(dataKey.get())));
+			return new ClientEncryptionConverter(mongoClientEncryption,
+					EncryptionKeyResolver.annotationBased((ctx) -> EncryptionKey.keyId(dataKey.get())));
 		}
 
 		@Bean
-		ClientEncryptionProvider clientEncryption(ClientEncryptionSettings encryptionSettings) {
-			return ClientEncryptionProvider.caching(() -> ClientEncryptions.create(encryptionSettings));
+		MongoClientEncryption clientEncryption(ClientEncryptionSettings encryptionSettings) {
+			return MongoClientEncryption.caching(() -> ClientEncryptions.create(encryptionSettings));
 		}
 
 		@Bean
 		ClientEncryptionSettings encryptionSettings(MongoClient mongoClient) {
+
+			MongoNamespace keyVaultNamespace = new MongoNamespace("encryption.testKeyVault");
+			MongoCollection<Document> keyVaultCollection = mongoClient.getDatabase(keyVaultNamespace.getDatabaseName())
+					.getCollection(keyVaultNamespace.getCollectionName());
+			keyVaultCollection.drop();
+			// Ensure that two data keys cannot share the same keyAltName.
+			keyVaultCollection.createIndex(Indexes.ascending("keyAltNames"),
+					new IndexOptions().unique(true).partialFilterExpression(Filters.exists("keyAltNames")));
+
+			MongoCollection<Document> collection = mongoClient.getDatabase(getDatabaseName()).getCollection("test");
+			collection.drop(); // Clear old data
 
 			final byte[] localMasterKey = new byte[96];
 			new SecureRandom().nextBytes(localMasterKey);
@@ -279,17 +290,6 @@ public class FLETests {
 					});
 				}
 			};
-
-			MongoNamespace keyVaultNamespace = new MongoNamespace("encryption.testKeyVault");
-			MongoCollection<Document> keyVaultCollection = mongoClient.getDatabase(keyVaultNamespace.getDatabaseName())
-					.getCollection(keyVaultNamespace.getCollectionName());
-			keyVaultCollection.drop();
-			// Ensure that two data keys cannot share the same keyAltName.
-			keyVaultCollection.createIndex(Indexes.ascending("keyAltNames"),
-					new IndexOptions().unique(true).partialFilterExpression(Filters.exists("keyAltNames")));
-
-			MongoCollection<Document> collection = mongoClient.getDatabase(getDatabaseName()).getCollection("test");
-			collection.drop(); // Clear old data
 
 			// Create the ClientEncryption instance
 			ClientEncryptionSettings clientEncryptionSettings = ClientEncryptionSettings.builder()
