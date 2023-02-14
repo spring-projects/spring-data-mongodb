@@ -28,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -120,7 +119,11 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // DATAMONGO-1854
 	void shouldAddDefaultCollationToFindOneForExampleIfPresent() {
 
-		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
+		when(entityInformation.getCollectionName()).thenReturn("testdummy");
+		doReturn(flux).when(mongoOperations).find(any(Query.class), eq(TestDummy.class), eq("testdummy"));
+		when(flux.buffer(anyInt())).thenReturn(flux);
+		when(flux.map(any())).thenReturn(flux);
+		when(flux.next()).thenReturn(mono);
 
 		Collation collation = Collation.of("en_US");
 
