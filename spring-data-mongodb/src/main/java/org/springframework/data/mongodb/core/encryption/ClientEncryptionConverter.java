@@ -15,17 +15,24 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import java.util.Collection;
 import java.util.Collections;
 
+import com.mongodb.client.model.vault.EncryptOptions;
+import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonValue;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.vault.ClientEncryption;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
@@ -56,14 +63,6 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 		return decrypted instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) decrypted) : decrypted;
 	}
 
-	@Nullable
-	@Override
-	public BsonBinary write(Object value, MongoConversionContext context) {
-
-		ManualEncryptionContext encryptionContext = buildEncryptionContext(context);
-		return encryptionContext.encrypt(value, clientEncryption);
-	}
-
 	@Override
 	public Object decrypt(Object value, EncryptionContext context) {
 		return null;
@@ -71,6 +70,75 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 
 	@Override
 	public Object encrypt(Object value, EncryptionContext context) {
+
+		MongoPersistentProperty persistentProperty = context.getProperty();
+		EncryptOptions encryptOptions = new EncryptOptions(context.getAlgorithm());
+
+		ExplicitlyEncrypted annotation = persistentProperty.findAnnotation(ExplicitlyEncrypted.class);
+		if (annotation != null && !annotation.altKeyName().isBlank()) {
+			if (annotation.altKeyName().startsWith("/")) {
+				String fieldName = annotation.altKeyName().replace("/", "");
+				Object altKeyNameValue = context.lookupValue(fieldName);
+				encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
+			} else {
+				encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
+			}
+		} else {
+			encryptOptions = encryptOptions.keyId(keyIdProvider.getKeyId(persistentProperty));
+		}
+
+		System.out.println(
+				"encrypting with: " + (StringUtils.hasText(encryptOptions.getKeyAltName()) ? encryptOptions.getKeyAltName()
+						: encryptOptions.getKeyId()));
+
+		if (!persistentProperty.isEntity()) {
+
+			if (persistentProperty.isCollectionLike()) {
+				return clientEncryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+			}
+			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
+		}
+		if (persistentProperty.isCollectionLike()) {
+			return clientEncryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+		}
+
+		Object write = context.getConversionContext().write(value);
+		if (write instanceof Document doc) {
+			return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
+		}
+		return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
+	}
+
+	public BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property, EncryptionContext context) {
+
+		if (property.isCollectionLike()) {
+
+			BsonArray bsonArray = new BsonArray();
+			if (!property.isEntity()) {
+				if (value instanceof Collection values) {
+					values.forEach(it -> bsonArray.add(BsonUtils.simpleToBsonValue(it)));
+				} else if (ObjectUtils.isArray(value)) {
+					for (Object o : ObjectUtils.toObjectArray(value)) {
+						bsonArray.add(BsonUtils.simpleToBsonValue(o));
+					}
+				}
+				return bsonArray;
+			} else {
+				if (value instanceof Collection values) {
+					values.forEach(it -> {
+						Document write = (Document) context.getConversionContext().write(it, property.getTypeInformation());
+						bsonArray.add(write.toBsonDocument());
+					});
+				} else if (ObjectUtils.isArray(value)) {
+					for (Object o : ObjectUtils.toObjectArray(value)) {
+						Document write = (Document) context.getConversionContext().write(o, property.getTypeInformation());
+						bsonArray.add(write.toBsonDocument());
+					}
+				}
+				return bsonArray;
+			}
+		}
+
 		return null;
 	}
 

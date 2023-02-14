@@ -1,27 +1,11 @@
 /*
- * Copyright 2023. the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  * Copyright 2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,23 +31,24 @@ import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.Lazy;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
- * @since 2023/02
+ * @since 4.1
  */
 public class ManualEncryptionContext implements EncryptionContext {
 
-	MongoConversionContext context;
-	MongoPersistentProperty persistentProperty;
-	KeyIdProvider<BsonBinary> keyIdProvider;
-	Lazy<Encrypted> encryption;
+	private final MongoConversionContext conversionContext;
+	private final MongoPersistentProperty persistentProperty;
+	private final KeyIdProvider<BsonBinary> keyIdProvider;
+	private final Lazy<Encrypted> encryption;
 
-	public ManualEncryptionContext(MongoConversionContext context, KeyIdProvider<BsonBinary> keyIdProvider) {
-		this.context = context;
-		this.persistentProperty = context.getProperty();
+	public ManualEncryptionContext(MongoConversionContext conversionContext, KeyIdProvider<BsonBinary> keyIdProvider) {
+		this.conversionContext = conversionContext;
+		this.persistentProperty = conversionContext.getProperty();
 		this.encryption = Lazy.of(() -> persistentProperty.findAnnotation(Encrypted.class));
 		this.keyIdProvider = keyIdProvider;
 	}
@@ -78,7 +63,7 @@ public class ManualEncryptionContext implements EncryptionContext {
 		if (annotation != null && !annotation.altKeyName().isBlank()) {
 			if (annotation.altKeyName().startsWith("/")) {
 				String fieldName = annotation.altKeyName().replace("/", "");
-				Object altKeyNameValue = context.getValue(fieldName);
+				Object altKeyNameValue = conversionContext.getValue(fieldName);
 				encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
 			} else {
 				encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
@@ -102,7 +87,7 @@ public class ManualEncryptionContext implements EncryptionContext {
 			return clientEncryption.encrypt(collectionLikeToBsonValue(value), encryptOptions);
 		}
 
-		Object write = context.write(value);
+		Object write = conversionContext.write(value);
 		if (write instanceof Document doc) {
 			return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
 		}
@@ -126,12 +111,12 @@ public class ManualEncryptionContext implements EncryptionContext {
 			} else {
 				if (value instanceof Collection values) {
 					values.forEach(it -> {
-						Document write = (Document) context.write(it, persistentProperty.getTypeInformation());
+						Document write = (Document) conversionContext.write(it, persistentProperty.getTypeInformation());
 						bsonArray.add(write.toBsonDocument());
 					});
 				} else if (ObjectUtils.isArray(value)) {
 					for (Object o : ObjectUtils.toObjectArray(value)) {
-						Document write = (Document) context.write(0, persistentProperty.getTypeInformation());
+						Document write = (Document) conversionContext.write(0, persistentProperty.getTypeInformation());
 						bsonArray.add(write.toBsonDocument());
 					}
 				}
@@ -180,7 +165,7 @@ public class ManualEncryptionContext implements EncryptionContext {
 			} else {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 				iterable.forEach(it -> {
-					collection.add(context.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
+					collection.add(conversionContext.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
 				});
 				return collection;
 			}
@@ -191,7 +176,7 @@ public class ManualEncryptionContext implements EncryptionContext {
 		}
 
 		if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
-			return context.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
+			return conversionContext.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
 		}
 
 		return result;
@@ -199,6 +184,17 @@ public class ManualEncryptionContext implements EncryptionContext {
 
 	@Override
 	public MongoPersistentProperty getProperty() {
-		return context.getProperty();
+		return conversionContext.getProperty();
+	}
+
+	@Nullable
+	@Override
+	public Object lookupValue(String path) {
+		return conversionContext.getValue(path);
+	}
+
+	@Override
+	public MongoConversionContext getConversionContext() {
+		return conversionContext;
 	}
 }

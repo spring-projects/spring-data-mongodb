@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import org.springframework.data.convert.ValueConversionContext;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -42,5 +44,16 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 			throw new IllegalStateException("Not an encrypted property");
 		}
 		return annotation.keyId();
+	}
+
+	@Nullable
+	default Object lookupValue(String path) {
+		return getConversionContext().getValue(path);
+	}
+
+	MongoConversionContext getConversionContext();
+
+	default Object convertToMongoType(Object value) {
+		return getConversionContext().write(value);
 	}
 }
