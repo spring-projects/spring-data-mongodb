@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.encryption;
 
 import java.util.function.Supplier;
 
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -27,24 +26,34 @@ public interface EncryptionKeyProvider {
 
 	EncryptionKey getKey(EncryptionContext encryptionContext);
 
+	static EncryptionKeyProvider annotationBasedKeyProvider() {
+		return annotationBasedKeyProvider(() -> {
+			throw new IllegalStateException("No Encryption key found");
+		});
+	}
+
 	static EncryptionKeyProvider annotationBasedKeyProvider(Supplier<EncryptionKey> fallback) {
 
 		return ((encryptionContext) -> {
 
-			ExplicitlyEncrypted annotation = encryptionContext.getProperty().findAnnotation(ExplicitlyEncrypted.class);
-			if (annotation != null && !annotation.altKeyName().isBlank()) {
-				if (annotation.altKeyName().startsWith("/")) {
-					String fieldName = annotation.altKeyName().replace("/", "");
-					return new EncryptionKey.AltKeyName(encryptionContext.lookupValue(fieldName).toString());
-				} else {
-					return new EncryptionKey.AltKeyName(annotation.altKeyName());
+			if (encryptionContext.isExplicitlyEncrypted()) {
+
+				ExplicitlyEncrypted annotation = encryptionContext.getProperty().findAnnotation(ExplicitlyEncrypted.class);
+				if (StringUtils.hasText(annotation.altKeyName())) {
+					String altKeyName = annotation.altKeyName();
+					if (altKeyName.startsWith("/")) {
+						String fieldName = altKeyName.replace("/", "");
+						return new EncryptionKey.AltKeyName(encryptionContext.lookupValue(fieldName).toString());
+					} else {
+						return new EncryptionKey.AltKeyName(altKeyName);
+					}
 				}
 			}
-			if (encryptionContext.getKeyId() != null && !ObjectUtils.isEmpty(encryptionContext.getKeyId())) {
-				// TODO: resolve the hash
-				// return EncryptionKey.keyId()
-				throw new IllegalStateException();
-			}
+			// if (encryptionContext.getKeyId() != null && !ObjectUtils.isEmpty(encryptionContext.getKeyId())) {
+			// // TODO: resolve the hash
+			// // return EncryptionKey.keyId()
+			// throw new IllegalStateException();
+			// }
 			return fallback.get();
 		});
 	}

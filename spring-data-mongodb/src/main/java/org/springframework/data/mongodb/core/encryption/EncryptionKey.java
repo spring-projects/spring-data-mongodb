@@ -23,7 +23,8 @@ import org.bson.BsonBinary;
  */
 public interface EncryptionKey {
 
-	Object key();
+	Object value();
+
 	Type type();
 
 	static KeyId keyId(BsonBinary key) {
@@ -34,11 +35,7 @@ public interface EncryptionKey {
 		return new AltKeyName(altKeyName);
 	}
 
-	enum Type {
-		ID, ALT
-	}
-
-	record KeyId(BsonBinary key) implements EncryptionKey {
+	record KeyId(BsonBinary value) implements EncryptionKey {
 
 		@Override
 		public Type type() {
@@ -46,11 +43,15 @@ public interface EncryptionKey {
 		}
 	}
 
-	record AltKeyName(String key) implements EncryptionKey {
+	record AltKeyName(String value) implements EncryptionKey {
 
 		@Override
 		public Type type() {
 			return Type.ALT;
 		}
+	}
+
+	enum Type {
+		ID, ALT
 	}
 }

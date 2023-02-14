@@ -109,24 +109,11 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 		MongoPersistentProperty persistentProperty = context.getProperty();
 		EncryptOptions encryptOptions = new EncryptOptions(context.getAlgorithm());
 
-		// ExplicitlyEncrypted annotation = persistentProperty.findAnnotation(ExplicitlyEncrypted.class);
-		// if (annotation != null && !annotation.altKeyName().isBlank()) {
-		// if (annotation.altKeyName().startsWith("/")) {
-		// String fieldName = annotation.altKeyName().replace("/", "");
-		// Object altKeyNameValue = context.lookupValue(fieldName);
-		// encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
-		// } else {
-		// encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
-		// }
-		// } else {
-		// encryptOptions = encryptOptions.keyId(encryptionKeyProvider.getKey(persistentProperty, context));
-		// }
-
 		EncryptionKey key = keyProvider.getKey(context);
 		if (Type.ALT.equals(key.type())) {
-			encryptOptions = encryptOptions.keyAltName(key.key().toString());
+			encryptOptions = encryptOptions.keyAltName(key.value().toString());
 		} else {
-			encryptOptions = encryptOptions.keyId((BsonBinary) key.key());
+			encryptOptions = encryptOptions.keyId((BsonBinary) key.value());
 		}
 		if (!persistentProperty.isEntity()) {
 

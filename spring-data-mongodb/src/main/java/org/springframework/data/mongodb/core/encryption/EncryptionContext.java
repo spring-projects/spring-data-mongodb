@@ -27,29 +27,15 @@ import org.springframework.lang.Nullable;
 public interface EncryptionContext extends ValueConversionContext<MongoPersistentProperty> {
 
 	default String getAlgorithm() {
-		Encrypted annotation = getProperty().findAnnotation(Encrypted.class);
+		Encrypted annotation = lookupEncryptedAnnotation();
 		if (annotation == null) {
-			annotation = getProperty().getOwner().findAnnotation(Encrypted.class);
-			if (annotation == null) {
-				throw new IllegalStateException("Not an encrypted property");
-			}
+			throw new IllegalStateException("No algorithm defined for property " + getProperty().getName());
 		}
 		return annotation.algorithm();
 	}
 
 	default boolean isExplicitlyEncrypted() {
 		return getProperty().isAnnotationPresent(ExplicitlyEncrypted.class);
-	}
-
-	default Object getKeyId() {
-		Encrypted annotation = getProperty().findAnnotation(Encrypted.class);
-		if (annotation == null) {
-			annotation = getProperty().getOwner().findAnnotation(Encrypted.class);
-			if (annotation == null) {
-				throw new IllegalStateException("Not an encrypted property");
-			}
-		}
-		return annotation.keyId();
 	}
 
 	@Nullable
@@ -59,6 +45,13 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 
 	default Object convertToMongoType(Object value) {
 		return getSourceContext().write(value);
+	}
+
+	default Encrypted lookupEncryptedAnnotation() {
+
+		// TODO: having the path present here would really be helpful to inherit the algorithm
+		Encrypted annotation = getProperty().findAnnotation(Encrypted.class);
+		return annotation != null ? annotation : getProperty().getOwner().findAnnotation(Encrypted.class);
 	}
 
 	MongoConversionContext getSourceContext();

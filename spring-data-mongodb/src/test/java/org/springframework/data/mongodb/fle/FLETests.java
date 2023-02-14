@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.fle;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.Data;
@@ -43,6 +44,8 @@ import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.encryption.ClientEncryptionConverter;
 import org.springframework.data.mongodb.core.encryption.ClientEncryptionProvider;
@@ -157,11 +160,24 @@ public class FLETests {
 		});
 		System.out.println("updated: " + savedDocument.toJson());
 		assertThat(savedDocument.get("ssn")).isInstanceOf(Binary.class);
-
 	}
 
 	@Test
-	// @Disabled("for now - takes to long ")
+	void aggregationWithMatch() {
+
+		Person person = new Person();
+		person.id = "id-1";
+		person.name = "p1-name";
+		person.ssn = "mySecretSSN";
+
+		template.save(person);
+
+		AggregationResults<Person> aggregationResults = template.aggregateAndReturn(Person.class)
+				.by(newAggregation(Person.class, Aggregation.match(where("ssn").is(person.ssn)))).all();
+		assertThat(aggregationResults.getMappedResults()).containsExactly(person);
+	}
+
+	@Test
 	void altKeyDetection(@Autowired ClientEncryptionProvider clientEncryptionProvider) throws InterruptedException {
 
 		BsonBinary user1key = clientEncryptionProvider.getClientEncryption().createDataKey("local",
@@ -240,7 +256,8 @@ public class FLETests {
 			Lazy<BsonBinary> dataKey = Lazy.of(() -> clientEncryptionProvider.getClientEncryption().createDataKey("local",
 					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
 
-			return new ClientEncryptionConverter(clientEncryptionProvider, EncryptionKeyProvider.annotationBasedKeyProvider(() -> EncryptionKey.keyId(dataKey.get())));
+			return new ClientEncryptionConverter(clientEncryptionProvider,
+					EncryptionKeyProvider.annotationBasedKeyProvider(() -> EncryptionKey.keyId(dataKey.get())));
 		}
 
 		@Bean
