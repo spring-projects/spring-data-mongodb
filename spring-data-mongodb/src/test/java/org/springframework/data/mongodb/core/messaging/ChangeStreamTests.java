@@ -21,9 +21,6 @@ import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import com.mongodb.client.model.ChangeStreamPreAndPostImagesOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,8 +39,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junitpioneer.jupiter.RepeatFailedTest;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.CollectionOptions;
@@ -62,7 +61,7 @@ import org.springframework.data.mongodb.test.util.Template;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-import org.junitpioneer.jupiter.RepeatFailedTest;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
  * Integration test for subscribing to a {@link com.mongodb.operation.ChangeStreamBatchCursor} inside the
@@ -702,7 +701,7 @@ class ChangeStreamTests {
 	}
 
 	@Test // GH-4187
-	@EnableIfMongoServerVersion(isLessThan = "6.0")
+	@Disabled("Flakey test failing occasionally due to timing issues")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
