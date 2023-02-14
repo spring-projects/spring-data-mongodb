@@ -17,12 +17,16 @@ package org.springframework.data.mongodb.core.encryption;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 import com.mongodb.client.model.vault.EncryptOptions;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
+import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.types.Binary;
+import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -39,16 +43,20 @@ import org.springframework.util.StringUtils;
  */
 public class ClientEncryptionConverter implements EncryptingConverter<Object, Object> {
 
-	private ClientEncryption clientEncryption;
+	private Supplier<ClientEncryption> clientEncryption;
 	private final KeyIdProvider<BsonBinary> keyIdProvider;
 
 	public ClientEncryptionConverter(ClientEncryption clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
+		this(() -> clientEncryption, keyIdProvider);
+	}
+
+	public ClientEncryptionConverter(Supplier<ClientEncryption> clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
 
 		this.clientEncryption = clientEncryption;
 		if (keyIdProvider != null) {
 			this.keyIdProvider = keyIdProvider;
 		} else {
-			Lazy<BsonBinary> dataKey = Lazy.of(() -> clientEncryption.createDataKey("local",
+			Lazy<BsonBinary> dataKey = Lazy.of(() -> clientEncryption.get().createDataKey("local",
 					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
 			this.keyIdProvider = (ctx) -> dataKey.get();
 		}
@@ -58,14 +66,51 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 	@Override
 	public Object read(Object value, MongoConversionContext context) {
 
-		ManualEncryptionContext encryptionContext = buildEncryptionContext(context);
-		Object decrypted = encryptionContext.decrypt(value, clientEncryption);
+		Object decrypted = EncryptingConverter.super.read(value, context);
 		return decrypted instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) decrypted) : decrypted;
 	}
 
 	@Override
 	public Object decrypt(Object value, EncryptionContext context) {
-		return null;
+
+		Object result = value;
+		if (value instanceof Binary binary) {
+			result = clientEncryption.get().decrypt(new BsonBinary(binary.getType(), binary.getData()));
+		}
+		if (value instanceof BsonBinary binary) {
+			result = clientEncryption.get().decrypt(binary);
+		}
+
+		// in case the driver has auto decryption (aka .bypassAutoEncryption(true)) active
+		// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
+		if (value == result) {
+			return result;
+		}
+
+		MongoPersistentProperty persistentProperty = context.getProperty();
+		if (context.getProperty().isCollectionLike() && result instanceof Iterable<?> iterable) {
+			if (!persistentProperty.isEntity()) {
+				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
+				iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
+				return collection;
+			} else {
+				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
+				iterable.forEach(it -> {
+					collection.add(context.getConversionContext().read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
+				});
+				return collection;
+			}
+		}
+
+		if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
+			return BsonUtils.toJavaType(bsonValue);
+		}
+
+		if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
+			return context.getConversionContext().read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
+		}
+
+		return result;
 	}
 
 	@Override
@@ -94,19 +139,19 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 		if (!persistentProperty.isEntity()) {
 
 			if (persistentProperty.isCollectionLike()) {
-				return clientEncryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+				return clientEncryption.get().encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
 			}
-			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
+			return clientEncryption.get().encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
 		}
 		if (persistentProperty.isCollectionLike()) {
-			return clientEncryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+			return clientEncryption.get().encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
 		}
 
 		Object write = context.getConversionContext().write(value);
 		if (write instanceof Document doc) {
-			return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
+			return clientEncryption.get().encrypt(doc.toBsonDocument(), encryptOptions);
 		}
-		return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
+		return clientEncryption.get().encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
 	}
 
 	public BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property, EncryptionContext context) {
