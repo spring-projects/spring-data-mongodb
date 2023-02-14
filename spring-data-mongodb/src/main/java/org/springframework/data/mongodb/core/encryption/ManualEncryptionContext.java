@@ -30,14 +30,14 @@ public class ManualEncryptionContext implements EncryptionContext {
 
 	private final MongoConversionContext conversionContext;
 	private final MongoPersistentProperty persistentProperty;
-	private final KeyIdProvider<BsonBinary> keyIdProvider;
+	private final EncryptionKeyProvider encryptionKeyProvider;
 	private final Lazy<Encrypted> encryption;
 
-	public ManualEncryptionContext(MongoConversionContext conversionContext, KeyIdProvider<BsonBinary> keyIdProvider) {
+	public ManualEncryptionContext(MongoConversionContext conversionContext, EncryptionKeyProvider encryptionKeyProvider) {
 		this.conversionContext = conversionContext;
 		this.persistentProperty = conversionContext.getProperty();
 		this.encryption = Lazy.of(() -> persistentProperty.findAnnotation(Encrypted.class));
-		this.keyIdProvider = keyIdProvider;
+		this.encryptionKeyProvider = encryptionKeyProvider;
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.encryption.EncryptionKey.Type;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
@@ -39,16 +40,16 @@ import com.mongodb.client.vault.ClientEncryption;
 public class ClientEncryptionConverter implements EncryptingConverter<Object, Object> {
 
 	private ClientEncryptionProvider clientEncryption;
-	private final KeyIdProvider<BsonBinary> keyIdProvider;
+	private final EncryptionKeyProvider keyProvider;
 
-	public ClientEncryptionConverter(ClientEncryption clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
-		this(ClientEncryptionProvider.just(clientEncryption), keyIdProvider);
+	public ClientEncryptionConverter(ClientEncryption clientEncryption, EncryptionKeyProvider keyProvider) {
+		this(ClientEncryptionProvider.just(clientEncryption), keyProvider);
 	}
 
-	public ClientEncryptionConverter(ClientEncryptionProvider clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
+	public ClientEncryptionConverter(ClientEncryptionProvider clientEncryption, EncryptionKeyProvider keyProvider) {
 
 		this.clientEncryption = clientEncryption;
-		this.keyIdProvider = keyIdProvider;
+		this.keyProvider = keyProvider;
 	}
 
 	@Nullable
@@ -108,30 +109,34 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 		MongoPersistentProperty persistentProperty = context.getProperty();
 		EncryptOptions encryptOptions = new EncryptOptions(context.getAlgorithm());
 
-		ExplicitlyEncrypted annotation = persistentProperty.findAnnotation(ExplicitlyEncrypted.class);
-		if (annotation != null && !annotation.altKeyName().isBlank()) {
-			if (annotation.altKeyName().startsWith("/")) {
-				String fieldName = annotation.altKeyName().replace("/", "");
-				Object altKeyNameValue = context.lookupValue(fieldName);
-				encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
-			} else {
-				encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
-			}
-		} else {
-			encryptOptions = encryptOptions.keyId(keyIdProvider.getKeyId(persistentProperty));
-		}
+		// ExplicitlyEncrypted annotation = persistentProperty.findAnnotation(ExplicitlyEncrypted.class);
+		// if (annotation != null && !annotation.altKeyName().isBlank()) {
+		// if (annotation.altKeyName().startsWith("/")) {
+		// String fieldName = annotation.altKeyName().replace("/", "");
+		// Object altKeyNameValue = context.lookupValue(fieldName);
+		// encryptOptions = encryptOptions.keyAltName(altKeyNameValue.toString());
+		// } else {
+		// encryptOptions = encryptOptions.keyAltName(annotation.altKeyName());
+		// }
+		// } else {
+		// encryptOptions = encryptOptions.keyId(encryptionKeyProvider.getKey(persistentProperty, context));
+		// }
 
+		EncryptionKey key = keyProvider.getKey(context);
+		if (Type.ALT.equals(key.type())) {
+			encryptOptions = encryptOptions.keyAltName(key.key().toString());
+		} else {
+			encryptOptions = encryptOptions.keyId((BsonBinary) key.key());
+		}
 		if (!persistentProperty.isEntity()) {
 
 			if (persistentProperty.isCollectionLike()) {
-				return clientEncryption
-						.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+				return clientEncryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
 			}
 			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
 		}
 		if (persistentProperty.isCollectionLike()) {
-			return clientEncryption
-					.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+			return clientEncryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
 		}
 
 		Object write = context.getSourceContext().write(value);
@@ -176,6 +181,6 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 	}
 
 	public ManualEncryptionContext buildEncryptionContext(MongoConversionContext context) {
-		return new ManualEncryptionContext(context, this.keyIdProvider);
+		return new ManualEncryptionContext(context, this.keyProvider);
 	}
 }
