@@ -28,8 +28,11 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 
 	default String getAlgorithm() {
 		Encrypted annotation = getProperty().findAnnotation(Encrypted.class);
-		if(annotation == null) {
-			throw new IllegalStateException("Not an encrypted property");
+		if (annotation == null) {
+			annotation = getProperty().getOwner().findAnnotation(Encrypted.class);
+			if (annotation == null) {
+				throw new IllegalStateException("Not an encrypted property");
+			}
 		}
 		return annotation.algorithm();
 	}
@@ -40,20 +43,23 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 
 	default Object getKeyId() {
 		Encrypted annotation = getProperty().findAnnotation(Encrypted.class);
-		if(annotation == null) {
-			throw new IllegalStateException("Not an encrypted property");
+		if (annotation == null) {
+			annotation = getProperty().getOwner().findAnnotation(Encrypted.class);
+			if (annotation == null) {
+				throw new IllegalStateException("Not an encrypted property");
+			}
 		}
 		return annotation.keyId();
 	}
 
 	@Nullable
 	default Object lookupValue(String path) {
-		return getConversionContext().getValue(path);
+		return getSourceContext().getValue(path);
 	}
-
-	MongoConversionContext getConversionContext();
 
 	default Object convertToMongoType(Object value) {
-		return getConversionContext().write(value);
+		return getSourceContext().write(value);
 	}
+
+	MongoConversionContext getSourceContext();
 }

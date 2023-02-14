@@ -29,12 +29,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.types.Binary;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,10 +44,12 @@ import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.encryption.ExplicitlyEncrypted;
 import org.springframework.data.mongodb.core.encryption.ClientEncryptionConverter;
+import org.springframework.data.mongodb.core.encryption.ClientEncryptionProvider;
+import org.springframework.data.mongodb.core.encryption.ExplicitlyEncrypted;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.fle.FLETests.Config;
+import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -64,7 +64,6 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
 /**
@@ -148,7 +147,8 @@ public class FLETests {
 		});
 		System.out.println("saved: " + savedDocument.toJson());
 
-		template.update(Person.class).matching(where("id").is(person.id)).apply(Update.update("ssn", "secret-value")).first();
+		template.update(Person.class).matching(where("id").is(person.id)).apply(Update.update("ssn", "secret-value"))
+				.first();
 
 		savedDocument = template.execute(Person.class, collection -> {
 			return collection.find(new Document()).first();
@@ -159,13 +159,13 @@ public class FLETests {
 	}
 
 	@Test
-	@Disabled("for now - takes to long ")
-	void altKeyDetection(@Autowired ClientEncryption clientEncryption) throws InterruptedException {
+	// @Disabled("for now - takes to long ")
+	void altKeyDetection(@Autowired ClientEncryptionProvider clientEncryptionProvider) throws InterruptedException {
 
-		BsonBinary user1key = clientEncryption.createDataKey("local",
+		BsonBinary user1key = clientEncryptionProvider.getClientEncryption().createDataKey("local",
 				new DataKeyOptions().keyAltNames(Collections.singletonList("user-1")));
 
-		BsonBinary user2key = clientEncryption.createDataKey("local",
+		BsonBinary user2key = clientEncryptionProvider.getClientEncryption().createDataKey("local",
 				new DataKeyOptions().keyAltNames(Collections.singletonList("user-2")));
 
 		Person p1 = new Person();
@@ -196,12 +196,13 @@ public class FLETests {
 		// System.out.println(template.query(Person.class).matching(where("id").is(p1.id)).firstValue());
 		// System.out.println(template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
 
-		DeleteResult deleteResult = clientEncryption.deleteKey(user2key);
-		clientEncryption.getKeys().forEach(System.out::println);
+		DeleteResult deleteResult = clientEncryptionProvider.getClientEncryption().deleteKey(user2key);
+		clientEncryptionProvider.getClientEncryption().getKeys().forEach(System.out::println);
 		System.out.println("deleteResult: " + deleteResult);
 
-		System.out.println("---- waiting for cache timeout ----");
-		TimeUnit.SECONDS.sleep(90);
+		// System.out.println("---- waiting for cache timeout ----");
+		// TimeUnit.SECONDS.sleep(90);
+		clientEncryptionProvider.refresh();
 
 		assertThat(template.query(Person.class).matching(where("id").is(p1.id)).firstValue()).isEqualTo(p1);
 
@@ -232,12 +233,21 @@ public class FLETests {
 		}
 
 		@Bean
-		ClientEncryptionConverter encryptingConverter(ClientEncryption clientEncryption) {
-			return new ClientEncryptionConverter(clientEncryption, null);
+		ClientEncryptionConverter encryptingConverter(ClientEncryptionProvider encryptionProvider) {
+
+			Lazy<BsonBinary> dataKey = Lazy.of(() -> encryptionProvider.getClientEncryption().createDataKey("local",
+					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
+
+			return new ClientEncryptionConverter(encryptionProvider, (ctx) -> dataKey.get());
 		}
 
 		@Bean
-		ClientEncryption clientEncryption(MongoClient mongoClient) {
+		ClientEncryptionProvider clientEncryption(ClientEncryptionSettings encryptionSettings) {
+			return ClientEncryptionProvider.caching(() -> ClientEncryptions.create(encryptionSettings));
+		}
+
+		@Bean
+		ClientEncryptionSettings encryptionSettings(MongoClient mongoClient) {
 
 			final byte[] localMasterKey = new byte[96];
 			new SecureRandom().nextBytes(localMasterKey);
@@ -267,8 +277,7 @@ public class FLETests {
 					.keyVaultMongoClientSettings(
 							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build())
 					.keyVaultNamespace(keyVaultNamespace.getFullName()).kmsProviders(kmsProviders).build();
-			ClientEncryption clientEncryption = ClientEncryptions.create(clientEncryptionSettings);
-			return clientEncryption;
+			return clientEncryptionSettings;
 		}
 	}
 

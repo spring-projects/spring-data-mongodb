@@ -34,7 +34,7 @@ public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
 		return encrypt(value, buildEncryptionContext(context));
 	}
 
-	S decrypt(Object value, EncryptionContext context);
+	S decrypt(Object encryptedValue, EncryptionContext context);
 
 	T encrypt(Object value, EncryptionContext context);
 

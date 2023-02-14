@@ -16,10 +16,7 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.function.Supplier;
 
-import com.mongodb.client.model.vault.EncryptOptions;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
@@ -30,36 +27,28 @@ import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
-
-import com.mongodb.client.model.vault.DataKeyOptions;
-import com.mongodb.client.vault.ClientEncryption;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
+
+import com.mongodb.client.model.vault.EncryptOptions;
+import com.mongodb.client.vault.ClientEncryption;
 
 /**
  * @author Christoph Strobl
  */
 public class ClientEncryptionConverter implements EncryptingConverter<Object, Object> {
 
-	private Supplier<ClientEncryption> clientEncryption;
+	private ClientEncryptionProvider clientEncryption;
 	private final KeyIdProvider<BsonBinary> keyIdProvider;
 
 	public ClientEncryptionConverter(ClientEncryption clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
-		this(() -> clientEncryption, keyIdProvider);
+		this(ClientEncryptionProvider.just(clientEncryption), keyIdProvider);
 	}
 
-	public ClientEncryptionConverter(Supplier<ClientEncryption> clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
+	public ClientEncryptionConverter(ClientEncryptionProvider clientEncryption, KeyIdProvider<BsonBinary> keyIdProvider) {
 
 		this.clientEncryption = clientEncryption;
-		if (keyIdProvider != null) {
-			this.keyIdProvider = keyIdProvider;
-		} else {
-			Lazy<BsonBinary> dataKey = Lazy.of(() -> clientEncryption.get().createDataKey("local",
-					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
-			this.keyIdProvider = (ctx) -> dataKey.get();
-		}
+		this.keyIdProvider = keyIdProvider;
 	}
 
 	@Nullable
@@ -71,24 +60,22 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 	}
 
 	@Override
-	public Object decrypt(Object value, EncryptionContext context) {
+	public Object decrypt(Object encryptedValue, EncryptionContext context) {
 
-		Object result = value;
-		if (value instanceof Binary binary) {
-			result = clientEncryption.get().decrypt(new BsonBinary(binary.getType(), binary.getData()));
-		}
-		if (value instanceof BsonBinary binary) {
-			result = clientEncryption.get().decrypt(binary);
-		}
+		Object decryptedValue = encryptedValue;
+		if (encryptedValue instanceof Binary || encryptedValue instanceof BsonBinary) {
 
-		// in case the driver has auto decryption (aka .bypassAutoEncryption(true)) active
-		// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
-		if (value == result) {
-			return result;
+			decryptedValue = clientEncryption.decrypt((BsonBinary) BsonUtils.simpleToBsonValue(encryptedValue));
+			// in case the driver has auto decryption (aka .bypassAutoEncryption(true)) active
+			// https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionExplicitEncryptionOnlyTour.java
+			if (encryptedValue == decryptedValue) {
+				return decryptedValue;
+			}
 		}
 
 		MongoPersistentProperty persistentProperty = context.getProperty();
-		if (context.getProperty().isCollectionLike() && result instanceof Iterable<?> iterable) {
+
+		if (context.getProperty().isCollectionLike() && decryptedValue instanceof Iterable<?> iterable) {
 			if (!persistentProperty.isEntity()) {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 				iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
@@ -96,21 +83,23 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 			} else {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 				iterable.forEach(it -> {
-					collection.add(context.getConversionContext().read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
+					collection.add(context.getSourceContext().read(BsonUtils.toJavaType((BsonValue) it),
+							persistentProperty.getActualType()));
 				});
 				return collection;
 			}
 		}
 
-		if (!persistentProperty.isEntity() && result instanceof BsonValue bsonValue) {
+		if (!persistentProperty.isEntity() && decryptedValue instanceof BsonValue bsonValue) {
 			return BsonUtils.toJavaType(bsonValue);
 		}
 
-		if (persistentProperty.isEntity() && result instanceof BsonDocument bsonDocument) {
-			return context.getConversionContext().read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation());
+		if (persistentProperty.isEntity() && decryptedValue instanceof BsonDocument bsonDocument) {
+			return context.getSourceContext().read(BsonUtils.toJavaType(bsonDocument),
+					persistentProperty.getTypeInformation());
 		}
 
-		return result;
+		return decryptedValue;
 	}
 
 	@Override
@@ -132,29 +121,28 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 			encryptOptions = encryptOptions.keyId(keyIdProvider.getKeyId(persistentProperty));
 		}
 
-		System.out.println(
-				"encrypting with: " + (StringUtils.hasText(encryptOptions.getKeyAltName()) ? encryptOptions.getKeyAltName()
-						: encryptOptions.getKeyId()));
-
 		if (!persistentProperty.isEntity()) {
 
 			if (persistentProperty.isCollectionLike()) {
-				return clientEncryption.get().encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+				return clientEncryption
+						.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
 			}
-			return clientEncryption.get().encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
+			return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptOptions);
 		}
 		if (persistentProperty.isCollectionLike()) {
-			return clientEncryption.get().encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
+			return clientEncryption
+					.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptOptions);
 		}
 
-		Object write = context.getConversionContext().write(value);
+		Object write = context.getSourceContext().write(value);
 		if (write instanceof Document doc) {
-			return clientEncryption.get().encrypt(doc.toBsonDocument(), encryptOptions);
+			return clientEncryption.encrypt(doc.toBsonDocument(), encryptOptions);
 		}
-		return clientEncryption.get().encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
+		return clientEncryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptOptions);
 	}
 
-	public BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property, EncryptionContext context) {
+	public BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property,
+			EncryptionContext context) {
 
 		if (property.isCollectionLike()) {
 
@@ -171,12 +159,12 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 			} else {
 				if (value instanceof Collection values) {
 					values.forEach(it -> {
-						Document write = (Document) context.getConversionContext().write(it, property.getTypeInformation());
+						Document write = (Document) context.getSourceContext().write(it, property.getTypeInformation());
 						bsonArray.add(write.toBsonDocument());
 					});
 				} else if (ObjectUtils.isArray(value)) {
 					for (Object o : ObjectUtils.toObjectArray(value)) {
-						Document write = (Document) context.getConversionContext().write(o, property.getTypeInformation());
+						Document write = (Document) context.getSourceContext().write(o, property.getTypeInformation());
 						bsonArray.add(write.toBsonDocument());
 					}
 				}
