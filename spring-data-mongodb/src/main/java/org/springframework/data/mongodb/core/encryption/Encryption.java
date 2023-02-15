@@ -16,13 +16,28 @@
 package org.springframework.data.mongodb.core.encryption;
 
 /**
+ * Component responsible for en-/decrypting values.
+ *
  * @author Christoph Strobl
  * @since 4.1
  */
 public interface Encryption<S, T> {
 
+	/**
+	 * Encrypt the given value.
+	 *
+	 * @param value must not be {@literal null}.
+	 * @param options must not be {@literal null}.
+	 * @return the encrypted value.
+	 */
 	T encrypt(S value, EncryptionOptions options);
 
+	/**
+	 * Decrypt the given value.
+	 *
+	 * @param value must not be {@literal null}.
+	 * @return the decrypted value.
+	 */
 	S decrypt(T value);
 
 }

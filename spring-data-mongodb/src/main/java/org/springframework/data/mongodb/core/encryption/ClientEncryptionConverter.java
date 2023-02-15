@@ -87,7 +87,7 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 			} else {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 				iterable.forEach(it -> {
-					collection.add(context.getSourceContext().read(BsonUtils.toJavaType((BsonValue) it),
+					collection.add(context.getValueConversionContext().read(BsonUtils.toJavaType((BsonValue) it),
 							persistentProperty.getActualType()));
 				});
 				return collection;
@@ -99,7 +99,7 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 		}
 
 		if (persistentProperty.isEntity() && decryptedValue instanceof BsonDocument bsonDocument) {
-			return context.getSourceContext().read(BsonUtils.toJavaType(bsonDocument),
+			return context.getValueConversionContext().read(BsonUtils.toJavaType(bsonDocument),
 					persistentProperty.getTypeInformation());
 		}
 
@@ -131,7 +131,7 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 					encryptionOptions);
 		}
 
-		Object write = context.getSourceContext().write(value);
+		Object write = context.getValueConversionContext().write(value);
 		if (write instanceof Document doc) {
 			return encryptionProvider.encrypt(doc.toBsonDocument(), encryptionOptions);
 		}
@@ -141,35 +141,30 @@ public class ClientEncryptionConverter implements EncryptingConverter<Object, Ob
 	public BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property,
 			EncryptionContext context) {
 
-		if (property.isCollectionLike()) {
-
-			BsonArray bsonArray = new BsonArray();
-			if (!property.isEntity()) {
-				if (value instanceof Collection values) {
-					values.forEach(it -> bsonArray.add(BsonUtils.simpleToBsonValue(it)));
-				} else if (ObjectUtils.isArray(value)) {
-					for (Object o : ObjectUtils.toObjectArray(value)) {
-						bsonArray.add(BsonUtils.simpleToBsonValue(o));
-					}
+		BsonArray bsonArray = new BsonArray();
+		if (!property.isEntity()) {
+			if (value instanceof Collection values) {
+				values.forEach(it -> bsonArray.add(BsonUtils.simpleToBsonValue(it)));
+			} else if (ObjectUtils.isArray(value)) {
+				for (Object o : ObjectUtils.toObjectArray(value)) {
+					bsonArray.add(BsonUtils.simpleToBsonValue(o));
 				}
-				return bsonArray;
-			} else {
-				if (value instanceof Collection values) {
-					values.forEach(it -> {
-						Document write = (Document) context.getSourceContext().write(it, property.getTypeInformation());
-						bsonArray.add(write.toBsonDocument());
-					});
-				} else if (ObjectUtils.isArray(value)) {
-					for (Object o : ObjectUtils.toObjectArray(value)) {
-						Document write = (Document) context.getSourceContext().write(o, property.getTypeInformation());
-						bsonArray.add(write.toBsonDocument());
-					}
-				}
-				return bsonArray;
 			}
+			return bsonArray;
+		} else {
+			if (value instanceof Collection values) {
+				values.forEach(it -> {
+					Document write = (Document) context.getValueConversionContext().write(it, property.getTypeInformation());
+					bsonArray.add(write.toBsonDocument());
+				});
+			} else if (ObjectUtils.isArray(value)) {
+				for (Object o : ObjectUtils.toObjectArray(value)) {
+					Document write = (Document) context.getValueConversionContext().write(o, property.getTypeInformation());
+					bsonArray.add(write.toBsonDocument());
+				}
+			}
+			return bsonArray;
 		}
-
-		return null;
 	}
 
 	public EncryptionContext buildEncryptionContext(MongoConversionContext context) {

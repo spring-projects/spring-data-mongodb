@@ -20,6 +20,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 
 /**
+ * Default {@link EncryptionContext} implementation.
+ * 
  * @author Christoph Strobl
  * @since 4.1
  */
@@ -43,7 +45,7 @@ class ExplicitEncryptionContext implements EncryptionContext {
 	}
 
 	@Override
-	public MongoConversionContext getSourceContext() {
+	public MongoConversionContext getValueConversionContext() {
 		return conversionContext;
 	}
 }

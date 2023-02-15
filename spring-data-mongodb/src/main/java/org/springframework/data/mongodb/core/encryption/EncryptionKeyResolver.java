@@ -15,30 +15,44 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import java.util.function.Function;
-
 import org.springframework.util.StringUtils;
 
 /**
+ * Interface to obtain a {@link EncryptionKey Data Encryption Key} that is valid in a given {@link EncryptionContext
+ * context}.
+ * <p>
+ * Use the {@link #annotationBased(EncryptionKeyResolver) based} variant which will first try to resolve a potential
+ * {@link ExplicitlyEncrypted#altKeyName() Key Alternate Name} from annotations before calling the fallback resolver.
+ * 
  * @author Christoph Strobl
+ * @since 4.1
+ * @see EncryptionKey
  */
+@FunctionalInterface
 public interface EncryptionKeyResolver {
 
+	/**
+	 * Get the {@link EncryptionKey Data Encryption Key}.
+	 *
+	 * @param encryptionContext the current {@link EncryptionContext context}.
+	 * @return never {@literal null}.
+	 */
 	EncryptionKey getKey(EncryptionContext encryptionContext);
 
-	static EncryptionKeyResolver annotationBased() {
-		return annotationBased((ctx) -> {
-			throw new IllegalStateException("No Encryption key found");
-		});
-	}
-
-	static EncryptionKeyResolver annotationBased(Function<EncryptionContext, EncryptionKey> fallback) {
+	/**
+	 * Obtain an {@link EncryptionKeyResolver} that evaluates {@link ExplicitlyEncrypted#altKeyName()} and only calls the
+	 * fallback {@link EncryptionKeyResolver resolver} if no {@literal Key Alternate Name} is present.
+	 * 
+	 * @param fallback must not be {@literal null}.
+	 * @return new instance of {@link EncryptionKeyResolver}.
+	 */
+	static EncryptionKeyResolver annotationBased(EncryptionKeyResolver fallback) {
 
 		return ((encryptionContext) -> {
 
 			ExplicitlyEncrypted annotation = encryptionContext.getProperty().findAnnotation(ExplicitlyEncrypted.class);
 			if (annotation == null || !StringUtils.hasText(annotation.altKeyName())) {
-				return fallback.apply(encryptionContext);
+				return fallback.getKey(encryptionContext);
 			}
 
 			String altKeyName = annotation.altKeyName();

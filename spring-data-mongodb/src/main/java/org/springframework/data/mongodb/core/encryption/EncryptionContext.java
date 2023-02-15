@@ -26,19 +26,43 @@ import org.springframework.lang.Nullable;
  */
 public interface EncryptionContext extends ValueConversionContext<MongoPersistentProperty> {
 
+	/**
+	 * @return {@literal true} if the {@link ExplicitlyEncrypted} annotation is present.
+	 */
 	default boolean isExplicitlyEncrypted() {
 		return getProperty().isAnnotationPresent(ExplicitlyEncrypted.class);
 	}
 
+	/**
+	 * Lookup the value for a given path within the current context.
+	 *
+	 * @param path the path/property name to resolve the current value for.
+	 * @return can be {@literal null}.
+	 */
 	@Nullable
 	default Object lookupValue(String path) {
-		return getSourceContext().getValue(path);
+		return getValueConversionContext().getValue(path);
 	}
 
+	/**
+	 * Shortcut for converting a given {@literal value} into its store representation using the root
+	 * {@link ValueConversionContext}.
+	 * 
+	 * @param value
+	 * @return
+	 */
 	default Object convertToMongoType(Object value) {
-		return getSourceContext().write(value);
+		return getValueConversionContext().write(value);
 	}
 
+	/**
+	 * Search for the {@link Encrypted} annotation on both the {@link org.springframework.data.mapping.PersistentProperty
+	 * property} as well as the {@link org.springframework.data.mapping.PersistentEntity entity} and return the first
+	 * found
+	 * 
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
 	default Encrypted lookupEncryptedAnnotation() {
 
 		// TODO: having the path present here would really be helpful to inherit the algorithm
@@ -46,5 +70,8 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 		return annotation != null ? annotation : getProperty().getOwner().findAnnotation(Encrypted.class);
 	}
 
-	MongoConversionContext getSourceContext();
+	/**
+	 * @return the {@link ValueConversionContext}.
+	 */
+	MongoConversionContext getValueConversionContext();
 }

@@ -36,9 +36,30 @@ public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
 		return encrypt(value, buildEncryptionContext(context));
 	}
 
+	/**
+	 * Decrypt the given encrypted source value within the given {@link EncryptionContext context}.
+	 * 
+	 * @param encryptedValue the encrypted source.
+	 * @param context the context to operate in.
+	 * @return never {@literal null}.
+	 */
 	S decrypt(Object encryptedValue, EncryptionContext context);
 
+	/**
+	 * Encrypt the given raw source value within the given {@link EncryptionContext context}.
+	 *
+	 * @param value the encrypted source.
+	 * @param context the context to operate in.
+	 * @return never {@literal null}.
+	 */
 	T encrypt(Object value, EncryptionContext context);
 
+	/**
+	 * Obtain the {@link EncryptionContext} for a given {@link MongoConversionContext value conversion context}.
+	 *
+	 * @param context the current MongoDB specific {@link org.springframework.data.convert.ValueConversionContext}.
+	 * @return the {@link EncryptionContext} to operate in.
+	 * @see org.springframework.data.convert.ValueConversionContext
+	 */
 	EncryptionContext buildEncryptionContext(MongoConversionContext context);
 }

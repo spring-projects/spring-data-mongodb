@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.encryption;
 import org.springframework.lang.Nullable;
 
 /**
+ * Options, like the {@link #algorithm()}, to apply when encrypting values.
+ *
  * @author Christoph Strobl
  * @since 4.1
  */

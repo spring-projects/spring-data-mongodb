@@ -21,11 +21,14 @@ import java.util.function.Supplier;
 import org.bson.BsonBinary;
 import org.bson.BsonValue;
 import org.springframework.data.mongodb.core.encryption.EncryptionKey.Type;
+import org.springframework.util.Assert;
 
 import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.vault.ClientEncryption;
 
 /**
+ * {@link ClientEncryption} based {@link Encryption} implementation.
+ *
  * @author Christoph Strobl
  * @since 4.1
  */
@@ -35,31 +38,61 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 	private final AtomicReference<ClientEncryption> cached;
 
 	private MongoClientEncryption(Supplier<ClientEncryption> source) {
+
 		this.source = source;
 		this.cached = new AtomicReference<>(source.get());
 	}
 
+	/**
+	 * The caching {@link MongoClientEncryption} variant caches and reuses the {@link ClientEncryption} obtained from the
+	 * {@link Supplier} until explicitly {@link #refresh() refreshed}.
+	 * 
+	 * @param clientEncryption must not be {@literal null} nor emit {@literal null}.
+	 * @return new instance of {@link MongoClientEncryption}.
+	 */
 	public static MongoClientEncryption caching(Supplier<ClientEncryption> clientEncryption) {
 		return new MongoClientEncryption(clientEncryption);
 	}
 
+	/**
+	 * Create a new {@link MongoClientEncryption} instance for the given {@link ClientEncryption}.
+	 *
+	 * @param clientEncryption must not be {@literal null}.
+	 * @return new instance of {@link MongoClientEncryption}.
+	 */
 	public static MongoClientEncryption just(ClientEncryption clientEncryption) {
-		return new MongoClientEncryption(() -> clientEncryption);
+
+		Assert.notNull(clientEncryption, "ClientEncryption must not be null");
+
+		return new MongoClientEncryption(() -> clientEncryption) {
+			@Override
+			public boolean refresh() {
+				return false;
+			}
+		};
 	}
 
+	/**
+	 * @return {@literal true} if refreshed, {@literal false} otherwise.
+	 */
 	public boolean refresh() {
 		cached.set(source.get());
 		return true;
 	}
 
-	void shutdown() {
+	/**
+	 * {@link ClientEncryption#close() Shutdown} the underlying {@link ClientEncryption}.
+	 */
+	public void shutdown() {
 		getClientEncryption().close();
 	}
 
+	@Override
 	public BsonValue decrypt(BsonBinary value) {
 		return getClientEncryption().decrypt(value);
 	}
 
+	@Override
 	public BsonBinary encrypt(BsonValue value, EncryptionOptions options) {
 
 		EncryptOptions encryptOptions = new EncryptOptions(options.algorithm());
