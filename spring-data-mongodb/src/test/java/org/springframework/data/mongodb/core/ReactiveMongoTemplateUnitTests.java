@@ -387,7 +387,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
 				PersonProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
@@ -396,7 +396,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document("bar", 1), Person.class,
 				PersonProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("bar", 1)));
@@ -405,7 +405,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
 				PersonSpELProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
@@ -414,7 +414,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
 				Jedi.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
@@ -423,7 +423,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document("bar", 1), Person.class,
 				Jedi.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("bar", 1)));
@@ -432,7 +432,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
 				Person.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
@@ -441,7 +441,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
-		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
 				PersonExtended.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());

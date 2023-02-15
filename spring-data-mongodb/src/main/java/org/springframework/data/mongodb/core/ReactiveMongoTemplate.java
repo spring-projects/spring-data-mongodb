@@ -147,9 +147,18 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * extract results. This class executes BSON queries or updates, initiating iteration over {@link FindPublisher} and
  * catching MongoDB exceptions and translating them to the generic, more informative exception hierarchy defined in the
  * org.springframework.dao package. Can be used within a service implementation via direct instantiation with a
- * {@link SimpleReactiveMongoDatabaseFactory} reference, or get prepared in an application context and given to services
- * as bean reference. Note: The {@link SimpleReactiveMongoDatabaseFactory} should always be configured as a bean in the
- * application context, in the first case given to the service directly, in the second case to the prepared template.
+ * {@link ReactiveMongoDatabaseFactory} reference, or get prepared in an application context and given to services as
+ * bean reference.
+ * <p>
+ * Note: The {@link ReactiveMongoDatabaseFactory} should always be configured as a bean in the application context, in
+ * the first case given to the service directly, in the second case to the prepared template.
+ * <h3>{@link ReadPreference} and {@link com.mongodb.ReadConcern}</h3>
+ * <p>
+ * {@code ReadPreference} and {@code ReadConcern} are generally considered from {@link Query} and
+ * {@link AggregationOptions} objects for the action to be executed on a particular {@link MongoCollection}.
+ * <p>
+ * You can also set the default {@link #setReadPreference(ReadPreference) ReadPreference} on the template level to
+ * generally apply a {@link ReadPreference}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -756,7 +765,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<T> findOne(Query query, Class<T> entityClass, String collectionName) {
 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
-			return doFindOne(ReactiveCollectionPreparerDelegate.of(query), collectionName, query.getQueryObject(),
+			return doFindOne(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
 					query.getFieldsObject(), entityClass, new QueryFindPublisherPreparer(query, entityClass));
 		}
 
@@ -812,7 +821,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return findAll(entityClass, collectionName);
 		}
 
-		return doFind(ReactiveCollectionPreparerDelegate.of(query), collectionName, query.getQueryObject(),
+		return doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
 				query.getFieldsObject(), entityClass, new QueryFindPublisherPreparer(query, entityClass));
 	}
 
@@ -826,7 +835,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		String idKey = operations.getIdPropertyName(entityClass);
 
-		return doFindOne(CollectionPreparer.identity(), collectionName, new Document(idKey, id), null, entityClass,
+		return doFindOne(collectionName, CollectionPreparer.identity(), new Document(idKey, id), null, entityClass,
 				(Collation) null);
 	}
 
@@ -1030,7 +1039,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			operations.forType(entityClass).getCollation(query).ifPresent(optionsToUse::collation);
 		}
 
-		return doFindAndModify(ReactiveCollectionPreparerDelegate.of(query), collectionName, query.getQueryObject(),
+		return doFindAndModify(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
 				query.getFieldsObject(), getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
 	}
 
@@ -1073,7 +1082,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 								mapped.getCollection()));
 			}).flatMap(it -> {
 
-				Mono<T> afterFindAndReplace = doFindAndReplace(collectionPreparer, it.getCollection(), mappedQuery,
+				Mono<T> afterFindAndReplace = doFindAndReplace(it.getCollection(), collectionPreparer, mappedQuery,
 						mappedFields, mappedSort, queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(),
 						options, projection);
 				return afterFindAndReplace.flatMap(saved -> {
@@ -1093,7 +1102,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<T> findAndRemove(Query query, Class<T> entityClass, String collectionName) {
 
 		operations.forType(entityClass).getCollation(query);
-		return doFindAndRemove(ReactiveCollectionPreparerDelegate.of(query), collectionName, query.getQueryObject(),
+		return doFindAndRemove(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
 				query.getFieldsObject(), getMappedSortObject(query, entityClass),
 				operations.forType(entityClass).getCollation(query).orElse(null), entityClass);
 	}
@@ -1886,7 +1895,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					collectionName);
 		}
 
-		return doFind(collectionPreparer, collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
+		return doFind(collectionName, collectionPreparer, query.getQueryObject(), query.getFieldsObject(), entityClass,
 				new TailingQueryFindPublisherPreparer(query, entityClass));
 	}
 
@@ -2144,17 +2153,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * The query document is specified as a standard {@link Document} and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collation can be {@literal null}.
 	 * @return the {@link List} of converted objects.
 	 */
-	protected <T> Mono<T> doFindOne(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document query, @Nullable Document fields, Class<T> entityClass,
-			@Nullable Collation collation) {
+	protected <T> Mono<T> doFindOne(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, @Nullable Document fields,
+			Class<T> entityClass, @Nullable Collation collation) {
 
-		return doFindOne(collectionPreparer, collectionName, query, fields, entityClass,
+		return doFindOne(collectionName, collectionPreparer, query, fields, entityClass,
 				findPublisher -> collation != null ? findPublisher.collation(collation.toMongoCollation()) : findPublisher);
 	}
 
@@ -2163,6 +2173,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * The query document is specified as a standard {@link Document} and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
@@ -2170,9 +2181,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @return the {@link List} of converted objects.
 	 * @since 2.2
 	 */
-	protected <T> Mono<T> doFindOne(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document query, @Nullable Document fields, Class<T> entityClass,
-			FindPublisherPreparer preparer) {
+	protected <T> Mono<T> doFindOne(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, @Nullable Document fields,
+			Class<T> entityClass, FindPublisherPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2195,14 +2206,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the List of converted objects.
 	 */
-	protected <T> Flux<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+	protected <T> Flux<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			Document query, Document fields, Class<T> entityClass) {
-		return doFind(collectionPreparer, collectionName, query, fields, entityClass, null,
+		return doFind(collectionName, collectionPreparer, query, fields, entityClass, null,
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName));
 	}
 
@@ -2212,6 +2224,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
@@ -2219,15 +2232,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *          the result set, (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
-	protected <T> Flux<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+	protected <T> Flux<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			Document query, Document fields, Class<T> entityClass, FindPublisherPreparer preparer) {
-		return doFind(collectionPreparer, collectionName, query, fields, entityClass, preparer,
+		return doFind(collectionName, collectionPreparer, query, fields, entityClass, preparer,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName));
 	}
 
-	protected <S, T> Flux<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document query, Document fields, Class<S> entityClass,
-			@Nullable FindPublisherPreparer preparer, DocumentCallback<T> objectCallback) {
+	protected <S, T> Flux<T> doFind(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
+			Class<S> entityClass, @Nullable FindPublisherPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2250,7 +2263,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @since 2.0
 	 */
-	<S, T> Flux<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+	<S, T> Flux<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			Document query, Document fields, Class<S> sourceClass, Class<T> targetClass, FindPublisherPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
@@ -2283,15 +2296,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * The first document that matches the query is returned and also removed from the collection in the database. <br />
 	 * The query document is specified as a standard Document and so is the fields specification.
 	 *
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query the query document that specifies the criteria used to find a record
-	 * @param collation collation
+	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
+	 * @param query the query document that specifies the criteria used to find a record.
+	 * @param collation collation.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the List of converted objects.
 	 */
-	protected <T> Mono<T> doFindAndRemove(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document query, Document fields, Document sort, @Nullable Collation collation,
-			Class<T> entityClass) {
+	protected <T> Mono<T> doFindAndRemove(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields, Document sort,
+			@Nullable Collation collation, Class<T> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
@@ -2305,9 +2319,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
-	protected <T> Mono<T> doFindAndModify(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document query, Document fields, Document sort, Class<T> entityClass,
-			UpdateDefinition update, FindAndModifyOptions options) {
+	protected <T> Mono<T> doFindAndModify(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields, Document sort,
+			Class<T> entityClass, UpdateDefinition update, FindAndModifyOptions options) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		UpdateContext updateContext = queryOperations.updateSingleContext(update, query, false);
@@ -2337,6 +2351,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * Customize this part for findAndReplace.
 	 *
 	 * @param collectionName The name of the collection to perform the operation in.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param mappedQuery the query to look up documents.
 	 * @param mappedFields the fields to project the result to.
 	 * @param mappedSort the sort to be applied when executing the query.
@@ -2349,14 +2364,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 * @since 2.1
 	 */
-	protected <T> Mono<T> doFindAndReplace(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document mappedQuery, Document mappedFields, Document mappedSort,
-			com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
+	protected <T> Mono<T> doFindAndReplace(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document mappedQuery, Document mappedFields,
+			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
 			FindAndReplaceOptions options, Class<T> resultType) {
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
-		return doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort, collation,
+		return doFindAndReplace(collectionName, collectionPreparer, mappedQuery, mappedFields, mappedSort, collation,
 				entityType, replacement, options, projection);
 	}
 
@@ -2364,6 +2379,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * Customize this part for findAndReplace.
 	 *
 	 * @param collectionName The name of the collection to perform the operation in.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param mappedQuery the query to look up documents.
 	 * @param mappedFields the fields to project the result to.
 	 * @param mappedSort the sort to be applied when executing the query.
@@ -2376,9 +2392,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 * @since 3.4
 	 */
-	private <T> Mono<T> doFindAndReplace(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName, Document mappedQuery, Document mappedFields, Document mappedSort,
-			com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
+	private <T> Mono<T> doFindAndReplace(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document mappedQuery, Document mappedFields,
+			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
 			FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		return Mono.defer(() -> {
