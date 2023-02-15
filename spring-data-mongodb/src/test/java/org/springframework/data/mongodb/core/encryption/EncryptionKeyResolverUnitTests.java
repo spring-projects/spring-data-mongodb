@@ -22,9 +22,11 @@ import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
 import lombok.Data;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.function.Function;
 
 import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +34,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  * @author Christoph Strobl
@@ -99,6 +103,35 @@ class EncryptionKeyResolverUnitTests {
 		assertThat(key).isEqualTo(EncryptionKey.altKeyName("born-to-be-wild"));
 	}
 
+	@Test // GH-4284
+	void readsKeyIdFromEncryptedAnnotationIfNoBetterCandidateAvailable() {
+
+		EncryptionContext ctx = prepareEncryptionContext(
+				AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType.class,
+				AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType::getKeyIdFromDomainType);
+
+		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+
+		assertThat(key).isEqualTo(EncryptionKey.keyId(
+				new BsonBinary(BsonBinarySubType.UUID_STANDARD, Base64.getDecoder().decode("xKVup8B1Q+CkHaVRx+qa+g=="))));
+	}
+
+	@Test // GH-4284
+	void ignoresKeyIdFromEncryptedAnnotationWhenBetterCandidateAvailable() {
+
+		EncryptionContext ctx = prepareEncryptionContext(KeyIdFromSpel.class, KeyIdFromSpel::getKeyIdFromDomainType);
+
+		StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
+		evaluationContext.setVariable("myKeyId", "xKVup8B1Q+CkHaVRx+qa+g==");
+
+		when(ctx.getEvaluationContext(any())).thenReturn(evaluationContext);
+
+		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+
+		assertThat(key).isEqualTo(EncryptionKey.keyId(
+				new BsonBinary(BsonBinarySubType.UUID_STANDARD, Base64.getDecoder().decode("xKVup8B1Q+CkHaVRx+qa+g=="))));
+	}
+
 	private <T> EncryptionContext prepareEncryptionContext(Class<T> type, Function<T, ?> property) {
 
 		EncryptionContext encryptionContext = mock(EncryptionContext.class);
@@ -120,6 +153,26 @@ class EncryptionKeyResolverUnitTests {
 		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/notAnnotated") //
 		String algorithmAndAltKeyNameFromPropertyValue;
 	}
+
+	@Data
+	@Encrypted(keyId = "xKVup8B1Q+CkHaVRx+qa+g==")
+	class AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType {
+
+		@ExplicitlyEncrypted //
+		String keyIdFromDomainType;
+
+		@ExplicitlyEncrypted(altKeyName = "sec-key-name") //
+		String altKeyNameFromPropertyIgnoringKeyIdFromDomainType;
+	}
+
+	@Data
+	@Encrypted(keyId = "#{#myKeyId}")
+	class KeyIdFromSpel {
+
+		@ExplicitlyEncrypted //
+		String keyIdFromDomainType;
+	}
+
 	//
 	// @Data
 	// class AnnotatedWithExplicitlyEncrypted {

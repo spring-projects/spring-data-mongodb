@@ -15,12 +15,17 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.function.Supplier;
+
 import org.bson.conversions.Bson;
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.model.PropertyValueProvider;
+import org.springframework.data.mapping.model.SpELContext;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
 
 /**
@@ -35,11 +40,19 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	private final MongoPersistentProperty persistentProperty;
 	private final MongoConverter mongoConverter;
 
+	@Nullable
+	private final SpELContext spELContext;
+
 	public MongoConversionContext(PropertyValueProvider<?> accessor, MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
+		this(accessor, persistentProperty, mongoConverter, null);
+	}
+
+	public MongoConversionContext(PropertyValueProvider<?> accessor, MongoPersistentProperty persistentProperty, MongoConverter mongoConverter, SpELContext spELContext) {
 
 		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
+		this.spELContext = spELContext;
 	}
 
 	@Override
@@ -60,5 +73,10 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
 		return value instanceof Bson ? mongoConverter.read(target.getType(), (Bson) value)
 				: ValueConversionContext.super.read(value, target);
+	}
+
+	@Nullable
+	public SpELContext getSpELContext() {
+		return spELContext;
 	}
 }

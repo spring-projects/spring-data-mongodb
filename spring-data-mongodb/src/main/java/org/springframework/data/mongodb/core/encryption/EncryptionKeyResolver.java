@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import org.bson.BsonBinary;
+import org.bson.types.Binary;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
+import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -52,7 +57,23 @@ public interface EncryptionKeyResolver {
 
 			ExplicitlyEncrypted annotation = encryptionContext.getProperty().findAnnotation(ExplicitlyEncrypted.class);
 			if (annotation == null || !StringUtils.hasText(annotation.altKeyName())) {
-				return fallback.getKey(encryptionContext);
+
+				Encrypted encrypted = encryptionContext.getProperty().getOwner().findAnnotation(Encrypted.class);
+				if (encrypted == null) {
+					return fallback.getKey(encryptionContext);
+				}
+
+				Object o = EncryptionUtils.resolveKeyId(encrypted.keyId()[0],
+						() -> encryptionContext.getEvaluationContext(new Object()));
+				if (o instanceof BsonBinary binary) {
+					return EncryptionKey.keyId(binary);
+				}
+				if (o instanceof Binary binary) {
+					return EncryptionKey.keyId((BsonBinary) BsonUtils.simpleToBsonValue(binary));
+				}
+				if (o instanceof String string) {
+					return EncryptionKey.altKeyName(string);
+				}
 			}
 
 			String altKeyName = annotation.altKeyName();

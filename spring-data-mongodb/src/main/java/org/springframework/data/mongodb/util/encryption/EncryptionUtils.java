@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.util.encryption;
 
+import java.util.Base64;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -67,7 +68,7 @@ public final class EncryptionUtils {
 					new BsonBinary(UUID.fromString(potentialKeyId.toString())).getData());
 		} catch (IllegalArgumentException e) {
 
-			return new Binary(BsonBinarySubType.UUID_STANDARD, Base64Utils.decodeFromString(potentialKeyId.toString()));
+			return new Binary(BsonBinarySubType.UUID_STANDARD, Base64.getDecoder().decode(potentialKeyId.toString()));
 		}
 	}
 }

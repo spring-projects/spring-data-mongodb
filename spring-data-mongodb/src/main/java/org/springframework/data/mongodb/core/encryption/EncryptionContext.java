@@ -19,6 +19,7 @@ import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
 
 /**
@@ -74,4 +75,8 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 	 * @return the {@link ValueConversionContext}.
 	 */
 	MongoConversionContext getValueConversionContext();
+
+	default EvaluationContext getEvaluationContext(Object source) {
+		return getValueConversionContext().getSpELContext().getEvaluationContext(source);
+	}
 }
