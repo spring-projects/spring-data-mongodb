@@ -27,6 +27,8 @@ import com.mongodb.ReadPreference;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 2.2
+ * @see org.springframework.data.mongodb.core.query.Query
+ * @see org.springframework.data.mongodb.core.aggregation.AggregationOptions
  */
 public interface ReadPreferenceAware {
 

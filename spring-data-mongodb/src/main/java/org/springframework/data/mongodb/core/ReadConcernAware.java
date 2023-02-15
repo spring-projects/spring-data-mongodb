@@ -26,6 +26,8 @@ import com.mongodb.ReadConcern;
  *
  * @author Mark Paluch
  * @since 4.1
+ * @see org.springframework.data.mongodb.core.query.Query
+ * @see org.springframework.data.mongodb.core.aggregation.AggregationOptions
  */
 public interface ReadConcernAware {
 

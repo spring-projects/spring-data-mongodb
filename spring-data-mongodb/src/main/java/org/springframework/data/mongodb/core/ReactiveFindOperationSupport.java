@@ -170,7 +170,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();
 
-			return template.doFind(ReactiveCollectionPreparerDelegate.of(query), getCollectionName(), queryObject,
+			return template.doFind(getCollectionName(), ReactiveCollectionPreparerDelegate.of(query), queryObject,
 					fieldsObject, domainType, returnType, preparer != null ? preparer : getCursorPreparer(query));
 		}
 

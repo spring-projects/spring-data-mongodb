@@ -113,7 +113,23 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
- * Primary implementation of {@link MongoOperations}.
+ * Primary implementation of {@link MongoOperations}. It simplifies the use of imperative MongoDB usage and helps to
+ * avoid common errors. It executes core MongoDB workflow, leaving application code to provide {@link Document} and
+ * extract results. This class executes BSON queries or updates, initiating iteration over {@link FindIterable} and
+ * catching MongoDB exceptions and translating them to the generic, more informative exception hierarchy defined in the
+ * org.springframework.dao package. Can be used within a service implementation via direct instantiation with a
+ * {@link MongoDatabaseFactory} reference, or get prepared in an application context and given to services as bean
+ * reference.
+ * <p>
+ * Note: The {@link MongoDatabaseFactory} should always be configured as a bean in the application context, in the first
+ * case given to the service directly, in the second case to the prepared template.
+ * <h3>{@link ReadPreference} and {@link com.mongodb.ReadConcern}</h3>
+ * <p>
+ * {@code ReadPreference} and {@code ReadConcern} are generally considered from {@link Query} and
+ * {@link AggregationOptions} objects for the action to be executed on a particular {@link MongoCollection}.
+ * <p>
+ * You can also set the default {@link #setReadPreference(ReadPreference) ReadPreference} on the template level to
+ * generally apply a {@link ReadPreference}.
  *
  * @author Thomas Risberg
  * @author Graeme Rocher
@@ -778,7 +794,7 @@ public class MongoTemplate
 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
 
-			return doFindOne(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
+			return doFindOne(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
 					new QueryCursorPreparer(query, entityClass), entityClass);
 		} else {
 			query.limit(1);
@@ -827,7 +843,7 @@ public class MongoTemplate
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
 
-		return doFind(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
+		return doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(), entityClass,
 				new QueryCursorPreparer(query, entityClass));
 	}
 
@@ -847,7 +863,7 @@ public class MongoTemplate
 
 		String idKey = operations.getIdPropertyName(entityClass);
 
-		return doFindOne(CollectionPreparer.identity(), collectionName, new Document(idKey, id), new Document(),
+		return doFindOne(collectionName, CollectionPreparer.identity(), new Document(idKey, id), new Document(),
 				entityClass);
 	}
 
@@ -1122,8 +1138,7 @@ public class MongoTemplate
 	}
 
 	protected long doEstimatedCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			String collectionName,
-			EstimatedDocumentCountOptions options) {
+			String collectionName, EstimatedDocumentCountOptions options) {
 		return execute(collectionName,
 				collection -> collectionPreparer.prepare(collection).estimatedDocumentCount(options));
 	}
@@ -2376,15 +2391,16 @@ public class MongoTemplate
 	 * The query document is specified as a standard {@link Document} and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the converted object or {@literal null} if none exists.
 	 */
 	@Nullable
-	protected <T> T doFindOne(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Class<T> entityClass) {
-		return doFindOne(collectionPreparer, collectionName, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
+	protected <T> T doFindOne(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			Document query, Document fields, Class<T> entityClass) {
+		return doFindOne(collectionName, collectionPreparer, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
 	}
 
 	/**
@@ -2392,17 +2408,18 @@ public class MongoTemplate
 	 * The query document is specified as a standard {@link Document} and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
-	 * @param entityClass the parameterized type of the returned list.
 	 * @param preparer the preparer used to modify the cursor on execution.
+	 * @param entityClass the parameterized type of the returned list.
 	 * @return the converted object or {@literal null} if none exists.
 	 * @since 2.2
 	 */
 	@Nullable
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindOne(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, CursorPreparer preparer, Class<T> entityClass) {
+	protected <T> T doFindOne(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			Document query, Document fields, CursorPreparer preparer, Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2424,14 +2441,15 @@ public class MongoTemplate
 	 * query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the List of converted objects.
 	 */
-	protected <T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Class<T> entityClass) {
-		return doFind(collectionPreparer, collectionName, query, fields, entityClass, null,
+	protected <T> List<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			Document query, Document fields, Class<T> entityClass) {
+		return doFind(collectionName, collectionPreparer, query, fields, entityClass, null,
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName));
 	}
 
@@ -2441,6 +2459,7 @@ public class MongoTemplate
 	 * specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param collectionPreparer the preparer to prepare the collection for the actual use.
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
@@ -2448,14 +2467,15 @@ public class MongoTemplate
 	 *          (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
-	protected <T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Class<T> entityClass, CursorPreparer preparer) {
-		return doFind(collectionPreparer, collectionName, query, fields, entityClass, preparer,
+	protected <T> List<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			Document query, Document fields, Class<T> entityClass, CursorPreparer preparer) {
+		return doFind(collectionName, collectionPreparer, query, fields, entityClass, preparer,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName));
 	}
 
-	protected <S, T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Class<S> entityClass, @Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
+	protected <S, T> List<T> doFind(String collectionName,
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
+			Class<S> entityClass, @Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
@@ -2478,8 +2498,8 @@ public class MongoTemplate
 	 *
 	 * @since 2.0
 	 */
-	<S, T> List<T> doFind(CollectionPreparer collectionPreparer, String collectionName, Document query, Document fields,
-			Class<S> sourceClass, Class<T> targetClass, CursorPreparer preparer) {
+	<S, T> List<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+			Document query, Document fields, Class<S> sourceClass, Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
@@ -2900,8 +2920,7 @@ public class MongoTemplate
 		private final @Nullable com.mongodb.client.model.Collation collation;
 
 		public FindCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields,
-				@Nullable com.mongodb.client.model.Collation collation) {
+				Document fields, @Nullable com.mongodb.client.model.Collation collation) {
 
 			Assert.notNull(query, "Query must not be null");
 			Assert.notNull(fields, "Fields must not be null");
@@ -2970,8 +2989,7 @@ public class MongoTemplate
 		private final Optional<Collation> collation;
 
 		FindAndRemoveCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort,
-				@Nullable Collation collation) {
+				Document fields, Document sort, @Nullable Collation collation) {
 			this.collectionPreparer = collectionPreparer;
 
 			this.query = query;
@@ -3001,8 +3019,7 @@ public class MongoTemplate
 		private final FindAndModifyOptions options;
 
 		FindAndModifyCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort,
-				Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
+				Document fields, Document sort, Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
 
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
@@ -3060,8 +3077,8 @@ public class MongoTemplate
 		private final FindAndReplaceOptions options;
 
 		FindAndReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort,
-				Document update, @Nullable com.mongodb.client.model.Collation collation, FindAndReplaceOptions options) {
+				Document fields, Document sort, Document update, @Nullable com.mongodb.client.model.Collation collation,
+				FindAndReplaceOptions options) {
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.fields = fields;
