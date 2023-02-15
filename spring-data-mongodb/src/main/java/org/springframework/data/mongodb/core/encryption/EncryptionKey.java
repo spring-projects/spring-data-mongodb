@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import org.bson.BsonBinary;
+import org.springframework.util.ObjectUtils;
 
 /**
  * The {@link EncryptionKey} represents a {@literal Data Encryption Key} reference that can be either direct via the
@@ -65,6 +66,25 @@ public interface EncryptionKey {
 		public Type type() {
 			return Type.ID;
 		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			KeyId that = (KeyId) o;
+			return ObjectUtils.nullSafeEquals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(value);
+		}
 	}
 
 	/**
@@ -75,6 +95,25 @@ public interface EncryptionKey {
 		@Override
 		public Type type() {
 			return Type.ALT;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+
+			AltKeyName that = (AltKeyName) o;
+			return ObjectUtils.nullSafeEquals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(value);
 		}
 	}
 

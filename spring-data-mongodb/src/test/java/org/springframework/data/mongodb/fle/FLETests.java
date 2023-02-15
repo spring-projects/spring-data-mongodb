@@ -47,7 +47,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.encryption.ClientEncryptionConverter;
+import org.springframework.data.mongodb.core.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.encryption.MongoClientEncryption;
 import org.springframework.data.mongodb.core.encryption.EncryptionKey;
 import org.springframework.data.mongodb.core.encryption.EncryptionKeyResolver;
@@ -251,12 +251,12 @@ public class FLETests {
 		}
 
 		@Bean
-		ClientEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
+		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
 
 			Lazy<BsonBinary> dataKey = Lazy.of(() -> mongoClientEncryption.getClientEncryption().createDataKey("local",
 					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
 
-			return new ClientEncryptionConverter(mongoClientEncryption,
+			return new MongoEncryptionConverter(mongoClientEncryption,
 					EncryptionKeyResolver.annotationBased((ctx) -> EncryptionKey.keyId(dataKey.get())));
 		}
 

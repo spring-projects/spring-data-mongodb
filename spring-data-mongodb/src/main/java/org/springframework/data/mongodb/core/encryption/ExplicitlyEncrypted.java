@@ -85,8 +85,8 @@ public @interface ExplicitlyEncrypted {
 	/**
 	 * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.
 	 *
-	 * @return the configured {@link EncryptingConverter}. A {@link ClientEncryptionConverter} by default.
+	 * @return the configured {@link EncryptingConverter}. A {@link MongoEncryptionConverter} by default.
 	 */
 	@AliasFor(annotation = ValueConverter.class, value = "value")
-	Class<? extends PropertyValueConverter> value() default ClientEncryptionConverter.class;
+	Class<? extends PropertyValueConverter> value() default MongoEncryptionConverter.class;
 }
