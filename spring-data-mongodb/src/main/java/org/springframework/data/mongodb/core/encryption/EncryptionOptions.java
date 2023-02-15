@@ -32,8 +32,10 @@ public class EncryptionOptions {
 		this.algorithm = algorithm;
 	}
 
-	public void setKey(EncryptionKey key) {
+	public EncryptionOptions setKey(EncryptionKey key) {
+
 		this.key = key;
+		return this;
 	}
 
 	public EncryptionKey key() {
