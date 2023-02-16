@@ -59,6 +59,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
@@ -382,6 +383,28 @@ public class ReactiveMongoTemplateUnitTests {
 		template.geoNear(query, AutogenerateableId.class).subscribe();
 
 		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadPreferenceFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadPreference(ReadPreference.secondary());
+
+		template.geoNear(query, Wrapper.class).subscribe();
+
+		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadConcernFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadConcern(ReadConcern.SNAPSHOT);
+
+		template.geoNear(query, Wrapper.class).subscribe();
+
+		verify(collection).withReadConcern(eq(ReadConcern.SNAPSHOT));
 	}
 
 	@Test // DATAMONGO-1719

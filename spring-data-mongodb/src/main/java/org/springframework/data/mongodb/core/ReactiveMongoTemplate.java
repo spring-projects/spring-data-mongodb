@@ -81,6 +81,7 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Builder;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
@@ -998,8 +999,19 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
 
+		Builder optionsBuilder = AggregationOptions.builder();
+		if (near.hasReadPreference()) {
+			optionsBuilder.readPreference(near.getReadPreference());
+		}
+
+		if(near.hasReadConcern()) {
+			optionsBuilder.readConcern(near.getReadConcern());
+		}
+
+		optionsBuilder.collation(near.getCollation());
+
 		Aggregation $geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, distanceField))
-				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+				.withOptions(optionsBuilder.build());
 
 		return aggregate($geoNear, collection, Document.class) //
 				.concatMap(callback::doWith);

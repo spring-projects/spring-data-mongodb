@@ -948,10 +948,13 @@ public class MongoTemplate
 		String distanceField = operations.nearQueryDistanceFieldName(domainType);
 
 		Builder optionsBuilder = AggregationOptions.builder().collation(near.getCollation());
-		Query query = near.getQuery();
 
-		if (query != null && query.hasReadPreference()) {
-			optionsBuilder.readPreference(query.getReadPreference());
+		if (near.hasReadPreference()) {
+			optionsBuilder.readPreference(near.getReadPreference());
+		}
+
+		if(near.hasReadConcern()) {
+			optionsBuilder.readConcern(near.getReadConcern());
 		}
 
 		Aggregation $geoNear = TypedAggregation.newAggregation(domainType, Aggregation.geoNear(near, distanceField))

@@ -583,13 +583,22 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void geoNearShouldHonorReadPreferenceFromQuery() {
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadPreference(ReadPreference.secondary());
 
-		Query inner = new Query();
-		inner.withReadPreference(ReadPreference.secondary());
-		query.query(inner);
 		template.geoNear(query, Wrapper.class);
 
 		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadConcernFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadConcern(ReadConcern.SNAPSHOT);
+
+		template.geoNear(query, Wrapper.class);
+
+		verify(collection).withReadConcern(eq(ReadConcern.SNAPSHOT));
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264
