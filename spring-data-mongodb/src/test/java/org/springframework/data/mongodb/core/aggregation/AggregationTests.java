@@ -1520,6 +1520,7 @@ public class AggregationTests {
 	}
 
 	@Test // GH-3322
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
 	void shouldLookupPeopleCorrectlyWithPipeline() {
 		createUsersWithReferencedPersons();
 
@@ -1538,6 +1539,7 @@ public class AggregationTests {
 	}
 
 	@Test // GH-3322
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
 	void shouldLookupPeopleCorrectlyWithPipelineAndLet() {
 		createUsersWithReferencedPersons();
 
