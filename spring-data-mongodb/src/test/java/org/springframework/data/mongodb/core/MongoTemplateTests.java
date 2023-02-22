@@ -2526,6 +2526,26 @@ public class MongoTemplateTests {
 		assertThat(projection.getName()).isEqualTo("Walter");
 	}
 
+	@Test // GH-4300
+	public void findAndReplaceShouldAllowNativeDomainTypesAndReturnAProjection() {
+
+		MyPerson person = new MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person);
+
+		MyPerson previous = template.findAndReplace(query(where("name").is("Walter")),
+				new org.bson.Document("name", "Heisenberg"), FindAndReplaceOptions.options(), org.bson.Document.class,
+				"myPerson", MyPerson.class);
+
+		assertThat(previous).isNotNull();
+		assertThat(previous.getAddress()).isEqualTo(person.address);
+
+		org.bson.Document loaded = template.execute(MyPerson.class, collection -> {
+			return collection.find(new org.bson.Document("name", "Heisenberg")).first();
+		});
+		assertThat(loaded.get("_id")).isEqualTo(new ObjectId(person.id));
+	}
+
 	@Test // DATAMONGO-407
 	public void updatesShouldRetainTypeInformationEvenForCollections() {
 
