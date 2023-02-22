@@ -729,6 +729,32 @@ public class ReactiveMongoTemplateTests {
 				}).verifyComplete();
 	}
 
+	@Test // GH-4300
+	public void findAndReplaceShouldAllowNativeDomainTypesAndReturnAProjection() {
+
+		MongoTemplateTests.MyPerson person = new MongoTemplateTests.MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		template
+				.findAndReplace(query(where("name").is("Walter")), new org.bson.Document("name", "Heisenberg"),
+						FindAndReplaceOptions.options(), org.bson.Document.class, "myPerson", MongoTemplateTests.MyPerson.class)
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getAddress()).isEqualTo(person.address);
+				}).verifyComplete();
+
+		template.execute(MongoTemplateTests.MyPerson.class, collection -> {
+			return collection.find(new org.bson.Document("name", "Heisenberg")).first();
+		}).as(StepVerifier::create) //
+				.consumeNextWith(loaded -> {
+					assertThat(loaded.get("_id")).isEqualTo(new ObjectId(person.id));
+				}).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1827
 	void findAndReplaceShouldReplaceObjectReturingNew() {
 

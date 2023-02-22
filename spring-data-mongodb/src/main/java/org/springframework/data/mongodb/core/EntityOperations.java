@@ -283,6 +283,10 @@ class EntityOperations {
 	 * @see EntityProjectionIntrospector#introspect(Class, Class)
 	 */
 	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType, Class<D> entityType) {
+
+		if (!queryMapper.getMappingContext().hasPersistentEntityFor(entityType)) {
+			return (EntityProjection) EntityProjection.nonProjecting(resultType);
+		}
 		return introspector.introspect(resultType, entityType);
 	}
 

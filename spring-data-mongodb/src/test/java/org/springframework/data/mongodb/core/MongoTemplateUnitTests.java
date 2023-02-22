@@ -2312,6 +2312,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").toString());
 	}
 
+	@Test // GH-4300
+	void findAndReplaceAllowsDocumentSourceType() {
+
+		template.findAndReplace(new Query(), new Document("spring", "data"), FindAndReplaceOptions.options().upsert(),
+				Document.class, "coll-1", Person.class);
+
+		verify(db).getCollection(eq("coll-1"), eq(Document.class));
+		verify(collection).findOneAndReplace((Bson) any(Bson.class), eq(new Document("spring", "data")),
+				any(FindOneAndReplaceOptions.class));
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
