@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the original author or authors.
+ * Copyright 2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.fle;
+package org.springframework.data.mongodb.core.encryption;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
@@ -30,7 +30,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import org.assertj.core.api.Assertions;
 import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.types.Binary;
@@ -47,13 +50,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.encryption.MongoEncryptionConverter;
-import org.springframework.data.mongodb.core.encryption.MongoClientEncryption;
-import org.springframework.data.mongodb.core.encryption.EncryptionKey;
-import org.springframework.data.mongodb.core.encryption.EncryptionKeyResolver;
-import org.springframework.data.mongodb.core.encryption.ExplicitlyEncrypted;
+import org.springframework.data.mongodb.core.encryption.EncryptionTests.Config;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.fle.FLETests.Config;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -68,7 +66,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
-import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.vault.ClientEncryptions;
 
 /**
@@ -76,90 +73,225 @@ import com.mongodb.client.vault.ClientEncryptions;
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = Config.class)
-public class FLETests {
+public class EncryptionTests {
 
 	@Autowired MongoTemplate template;
 
-	@Test
-	void manualEnAndDecryption() {
+	@Test // GH-4284
+	void enDeCryptSimpleValue() {
 
-		Person person = new Person();
-		person.id = "id-1";
-		person.name = "p1-name";
-		person.ssn = "mySecretSSN"; // determinisitc encryption (queryable)
-		person.wallet = "myEvenMoreSecretStuff"; // random encryption (non queryable)
+		Person source = new Person();
+		source.id = "id-1";
+		source.ssn = "mySecretSSN";
 
-		// nested full document encryption
-		person.address = new Address();
-		person.address.city = "NYC";
-		person.address.street = "4th Ave.";
+		template.save(source);
 
-		person.encryptedZip = new AddressWithEncryptedZip();
-		person.encryptedZip.city = "Boston";
-		person.encryptedZip.street = "central square";
-		person.encryptedZip.zip = "1234567890";
-
-		person.listOfString = Arrays.asList("spring", "data", "mongodb");
-
-		Address partOfList = new Address();
-		partOfList.city = "SFO";
-		partOfList.street = "---";
-		person.listOfComplex = Collections.singletonList(partOfList);
-
-		template.save(person);
-
-		System.out.println("source: " + person);
-
-		Document savedDocument = template.execute(Person.class, collection -> {
-			return collection.find(new Document()).first();
-		});
-
-		// ssn should look like "ssn": {"$binary": {"base64": "...
-		System.out.println("saved: " + savedDocument.toJson());
-		assertThat(savedDocument.get("ssn")).isInstanceOf(Binary.class);
-		assertThat(savedDocument.get("wallet")).isInstanceOf(Binary.class);
-		assertThat(savedDocument.get("encryptedZip")).isInstanceOf(Document.class);
-		assertThat(savedDocument.get("encryptedZip", Document.class).get("zip")).isInstanceOf(Binary.class);
-		assertThat(savedDocument.get("address")).isInstanceOf(Binary.class);
-		assertThat(savedDocument.get("listOfString")).isInstanceOf(Binary.class);
-		assertThat(savedDocument.get("listOfComplex")).isInstanceOf(Binary.class);
-
-		// count should be 1 using a deterministic algorithm
-		long queryCount = template.query(Person.class).matching(where("ssn").is(person.ssn)).count();
-		System.out.println("query(count): " + queryCount);
-		assertThat(queryCount).isOne();
-
-		Person bySsn = template.query(Person.class).matching(where("ssn").is(person.ssn)).firstValue();
-		System.out.println("queryable: " + bySsn);
-		assertThat(bySsn).isEqualTo(person);
-
-		Person byWallet = template.query(Person.class).matching(where("wallet").is(person.wallet)).firstValue();
-		System.out.println("not-queryable: " + byWallet);
-		assertThat(byWallet).isNull();
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
 	}
 
-	@Test
-	void theUpdateStuff() {
+	@Test // GH-4284
+	void enDeCryptComplexValue() {
 
-		Person person = new Person();
-		person.id = "id-1";
-		person.name = "p1-name";
+		Person source = new Person();
+		source.id = "id-1";
+		source.address = new Address();
+		source.address.city = "NYC";
+		source.address.street = "4th Ave.";
 
-		template.save(person);
+		template.save(source);
 
-		Document savedDocument = template.execute(Person.class, collection -> {
-			return collection.find(new Document()).first();
-		});
-		System.out.println("saved: " + savedDocument.toJson());
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("address")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
+	}
 
-		template.update(Person.class).matching(where("id").is(person.id)).apply(Update.update("ssn", "secret-value"))
+	@Test // GH-4284
+	void enDeCryptValueWithinComplexOne() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.encryptedZip = new AddressWithEncryptedZip();
+		source.encryptedZip.city = "Boston";
+		source.encryptedZip.street = "central square";
+		source.encryptedZip.zip = "1234567890";
+
+		template.save(source);
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> {
+					assertThat(it.get("encryptedZip")).isInstanceOf(Document.class);
+					assertThat(it.get("encryptedZip", Document.class).get("city")).isInstanceOf(String.class);
+					assertThat(it.get("encryptedZip", Document.class).get("street")).isInstanceOf(String.class);
+					assertThat(it.get("encryptedZip", Document.class).get("zip")).isInstanceOf(Binary.class);
+				}) //
+				.loadedIsEqualToSource();
+	}
+
+	@Test // GH-4284
+	void enDeCryptListOfSimpleValue() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.listOfString = Arrays.asList("spring", "data", "mongodb");
+
+		template.save(source);
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("listOfString")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
+	}
+
+	@Test // GH-4284
+	void enDeCryptListOfComplexValue() {
+
+		Person source = new Person();
+		source.id = "id-1";
+
+		Address address = new Address();
+		address.city = "SFO";
+		address.street = "---";
+
+		source.listOfComplex = Collections.singletonList(address);
+
+		template.save(source);
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("listOfComplex")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
+	}
+
+	@Test // GH-4284
+	void enDeCryptMapOfSimpleValues() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.mapOfString = Map.of("k1", "v1", "k2", "v2");
+
+		template.save(source);
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("mapOfString")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
+	}
+
+	@Test // GH-4284
+	void enDeCryptMapOfComplexValues() {
+
+		Person source = new Person();
+		source.id = "id-1";
+
+		Address address1 = new Address();
+		address1.city = "SFO";
+		address1.street = "---";
+
+		Address address2 = new Address();
+		address2.city = "NYC";
+		address2.street = "---";
+
+		source.mapOfComplex = Map.of("a1", address1, "a2", address2);
+
+		template.save(source);
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("mapOfComplex")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
+	}
+
+	@Test // GH-4284
+	void canQueryDeterministicallyEncrypted() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.ssn = "mySecretSSN";
+
+		template.save(source);
+
+		Person loaded = template.query(Person.class).matching(where("ssn").is(source.ssn)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4284
+	void cannotQueryRandomlyEncrypted() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.wallet = "secret-wallet-id";
+
+		template.save(source);
+
+		Person loaded = template.query(Person.class).matching(where("wallet").is(source.wallet)).firstValue();
+		assertThat(loaded).isNull();
+	}
+
+	@Test // GH-4284
+	void updateSimpleTypeEncryptedFieldWithNewValue() {
+
+		Person source = new Person();
+		source.id = "id-1";
+
+		template.save(source);
+
+		template.update(Person.class).matching(where("id").is(source.id)).apply(Update.update("ssn", "secret-value"))
 				.first();
 
-		savedDocument = template.execute(Person.class, collection -> {
-			return collection.find(new Document()).first();
-		});
-		System.out.println("updated: " + savedDocument.toJson());
-		assertThat(savedDocument.get("ssn")).isInstanceOf(Binary.class);
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
+				.loadedMatches(it -> assertThat(it.getSsn()).isEqualTo("secret-value"));
+	}
+
+	@Test // GH-4284
+	void updateComplexTypeEncryptedFieldWithNewValue() {
+
+		Person source = new Person();
+		source.id = "id-1";
+
+		template.save(source);
+
+		Address address = new Address();
+		address.city = "SFO";
+		address.street = "---";
+
+		template.update(Person.class).matching(where("id").is(source.id)).apply(Update.update("address", address)).first();
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("address")).isInstanceOf(Binary.class)) //
+				.loadedMatches(it -> assertThat(it.getAddress()).isEqualTo(address));
+	}
+
+	@Test // GH-4284
+	void updateEncryptedFieldInNestedElementWithNewValue() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.encryptedZip = new AddressWithEncryptedZip();
+		source.encryptedZip.city = "Boston";
+		source.encryptedZip.street = "central square";
+
+		template.save(source);
+
+		template.update(Person.class).matching(where("id").is(source.id)).apply(Update.update("encryptedZip.zip", "179"))
+				.first();
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> {
+					assertThat(it.get("encryptedZip")).isInstanceOf(Document.class);
+					assertThat(it.get("encryptedZip", Document.class).get("city")).isInstanceOf(String.class);
+					assertThat(it.get("encryptedZip", Document.class).get("street")).isInstanceOf(String.class);
+					assertThat(it.get("encryptedZip", Document.class).get("zip")).isInstanceOf(Binary.class);
+				}) //
+				.loadedMatches(it -> assertThat(it.getEncryptedZip().getZip()).isEqualTo("179"));
 	}
 
 	@Test
@@ -211,21 +343,74 @@ public class FLETests {
 			return null;
 		});
 
-		// System.out.println(template.query(Person.class).matching(where("id").is(p1.id)).firstValue());
-		// System.out.println(template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
+		// remove the key and invalidate encrypted data
+		mongoClientEncryption.getClientEncryption().deleteKey(user2key);
 
-		DeleteResult deleteResult = mongoClientEncryption.getClientEncryption().deleteKey(user2key);
-		mongoClientEncryption.getClientEncryption().getKeys().forEach(System.out::println);
-		System.out.println("deleteResult: " + deleteResult);
-
-		// System.out.println("---- waiting for cache timeout ----");
-		// TimeUnit.SECONDS.sleep(90);
+		// clear the 60 second key cache within the mongo client
 		mongoClientEncryption.refresh();
 
 		assertThat(template.query(Person.class).matching(where("id").is(p1.id)).firstValue()).isEqualTo(p1);
 
 		assertThatExceptionOfType(PermissionDeniedDataAccessException.class)
 				.isThrownBy(() -> template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
+	}
+
+	<T> SaveAndLoadAssert<T> verifyThat(T source) {
+		return new SaveAndLoadAssert<>(source);
+	}
+
+	class SaveAndLoadAssert<T> {
+
+		T source;
+		Function<T, ?> idProvider;
+
+		SaveAndLoadAssert(T source) {
+			this.source = source;
+		}
+
+		SaveAndLoadAssert<T> identifiedBy(Function<T, ?> idProvider) {
+			this.idProvider = idProvider;
+			return this;
+		}
+
+		SaveAndLoadAssert<T> wasSavedAs(Document expected) {
+			return wasSavedMatching(it -> Assertions.assertThat(it).isEqualTo(expected));
+		}
+
+		SaveAndLoadAssert<T> wasSavedMatching(Consumer<Document> saved) {
+			EncryptionTests.this.assertSaved(source, idProvider, saved);
+			return this;
+		}
+
+		SaveAndLoadAssert<T> loadedMatches(Consumer<T> expected) {
+			EncryptionTests.this.assertLoaded(source, idProvider, expected);
+			return this;
+		}
+
+		SaveAndLoadAssert<T> loadedIsEqualToSource() {
+			return loadedIsEqualTo(source);
+		}
+
+		SaveAndLoadAssert<T> loadedIsEqualTo(T expected) {
+			return loadedMatches(it -> Assertions.assertThat(it).isEqualTo(expected));
+		}
+
+	}
+
+	<T> void assertSaved(T source, Function<T, ?> idProvider, Consumer<Document> dbValue) {
+
+		Document savedDocument = template.execute(Person.class, collection -> {
+			return collection.find(new Document("_id", idProvider.apply(source))).first();
+		});
+		dbValue.accept(savedDocument);
+	}
+
+	<T> void assertLoaded(T source, Function<T, ?> idProvider, Consumer<T> loadedValue) {
+
+		T loaded = template.query((Class<T>) source.getClass()).matching(where("id").is(idProvider.apply(source)))
+				.firstValue();
+
+		loadedValue.accept(loaded);
 	}
 
 	@Configuration
@@ -326,6 +511,12 @@ public class FLETests {
 
 		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/name") //
 		String viaAltKeyNameField;
+
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		Map<String, String> mapOfString;
+
+		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		Map<String, Address> mapOfComplex;
 	}
 
 	@Data

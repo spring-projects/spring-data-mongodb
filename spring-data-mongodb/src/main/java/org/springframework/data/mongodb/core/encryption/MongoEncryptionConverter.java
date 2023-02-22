@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -95,6 +96,10 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		}
 
 		if (!persistentProperty.isEntity() && decryptedValue instanceof BsonValue bsonValue) {
+			if (persistentProperty.isMap() && persistentProperty.getType() != Document.class) {
+				return new LinkedHashMap<>((Document) BsonUtils.toJavaType(bsonValue));
+
+			}
 			return BsonUtils.toJavaType(bsonValue);
 		}
 
@@ -123,13 +128,19 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			if (persistentProperty.isCollectionLike()) {
 				return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 			}
+			if (persistentProperty.isMap()) {
+				Object convertedMap = context.getValueConversionContext().write(value, persistentProperty.getTypeInformation());
+				if (convertedMap instanceof Document document) {
+					return encryption.encrypt(document.toBsonDocument(), encryptionOptions);
+				}
+			}
 			return encryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptionOptions);
 		}
 		if (persistentProperty.isCollectionLike()) {
 			return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 		}
 
-		Object write = context.getValueConversionContext().write(value);
+		Object write = context.getValueConversionContext().write(value, persistentProperty.getTypeInformation());
 		if (write instanceof Document doc) {
 			return encryption.encrypt(doc.toBsonDocument(), encryptionOptions);
 		}

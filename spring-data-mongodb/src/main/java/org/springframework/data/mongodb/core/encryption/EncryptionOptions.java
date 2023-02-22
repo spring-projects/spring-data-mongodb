@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Options, like the {@link #algorithm()}, to apply when encrypting values.
@@ -44,5 +45,36 @@ public class EncryptionOptions {
 
 	public String algorithm() {
 		return algorithm;
+	}
+
+	@Override
+	public String toString() {
+		return "EncryptionOptions{" + "algorithm='" + algorithm + '\'' + ", key=" + key + '}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		EncryptionOptions that = (EncryptionOptions) o;
+
+		if (!ObjectUtils.nullSafeEquals(algorithm, that.algorithm)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(key, that.key);
+	}
+
+	@Override
+	public int hashCode() {
+
+		int result = ObjectUtils.nullSafeHashCode(algorithm);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(key);
+		return result;
 	}
 }

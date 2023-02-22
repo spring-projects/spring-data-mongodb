@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -68,6 +69,18 @@ public interface EncryptionKey {
 		}
 
 		@Override
+		public String toString() {
+
+			if (BsonBinarySubType.isUuid(value.getType())) {
+				String representation = value.asUuid().toString();
+				if (representation.length() > 6) {
+					return String.format("KeyId('%s***')", representation.substring(0, 6));
+				}
+			}
+			return "KeyId('***')";
+		}
+
+		@Override
 		public boolean equals(Object o) {
 
 			if (this == o) {
@@ -95,6 +108,15 @@ public interface EncryptionKey {
 		@Override
 		public Type type() {
 			return Type.ALT;
+		}
+
+		@Override
+		public String toString() {
+
+			if (value().length() <= 3) {
+				return "AltKeyName('***')";
+			}
+			return String.format("AltKeyName('%s***')", value.substring(0, 3));
 		}
 
 		@Override

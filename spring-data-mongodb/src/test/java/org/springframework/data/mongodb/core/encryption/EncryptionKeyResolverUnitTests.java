@@ -172,35 +172,4 @@ class EncryptionKeyResolverUnitTests {
 		@ExplicitlyEncrypted //
 		String keyIdFromDomainType;
 	}
-
-	//
-	// @Data
-	// class AnnotatedWithExplicitlyEncrypted {
-	//
-	// String notAnnotated;
-	//
-	// @ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
-	// String algorithm;
-	//
-	// @ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "sec-key-name") //
-	// String algorithmAndAltKeyName;
-	//
-	// @ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/notAnnotated") //
-	// String algorithmAndAltKeyNameFromPropertyValue;
-	// }
-	//
-	// @Data
-	// @Encrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random)
-	// class AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType {
-	//
-	// @ExplicitlyEncrypted //
-	// String algorithmFromDomainType;
-	//
-	// @ExplicitlyEncrypted(altKeyName = "sec-key-name") //
-	// String algorithmFromDomainTypeAndAltKeyNameFromProperty;
-	//
-	// @ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
-	// String algorithmFromProperty;
-	// }
-
 }
