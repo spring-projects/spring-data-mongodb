@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Represents one single operation in an aggregation pipeline.
@@ -63,6 +64,6 @@ public interface AggregationOperation {
 	 * @since 3.0.2
 	 */
 	default String getOperator() {
-		return toDocument(Aggregation.DEFAULT_CONTEXT).keySet().iterator().next();
+		return CollectionUtils.lastElement(toPipelineStages(Aggregation.DEFAULT_CONTEXT)).keySet().iterator().next();
 	}
 }
