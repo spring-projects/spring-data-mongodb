@@ -23,9 +23,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Scroll;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Box;
@@ -115,7 +117,27 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByAgeLessThan(int age, Sort sort);
 
 	/**
-	 * Returns a page of {@link Person}s with a lastname mathing the given one (*-wildcards supported).
+	 * Returns a scroll of {@link Person}s with a lastname matching the given one (*-wildcards supported).
+	 *
+	 * @param lastname
+	 * @param scrollPosition
+	 * @return
+	 */
+	Scroll<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
+			KeysetScrollPosition scrollPosition);
+
+	/**
+	 * Returns a scroll of {@link Person}s applying projections with a lastname matching the given one (*-wildcards
+	 * supported).
+	 *
+	 * @param lastname
+	 * @param pageable
+	 * @return
+	 */
+	Scroll<PersonSummaryDto> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
+
+	/**
+	 * Returns a page of {@link Person}s with a lastname matching the given one (*-wildcards supported).
 	 *
 	 * @param lastname
 	 * @param pageable
@@ -429,7 +451,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Update("{ '$inc' : { 'visits' : ?1 } }")
 	int updateAllByLastname(String lastname, int increment);
 
-	@Update( pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+	@Update(pipeline = { "{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }" })
 	void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment);
 
 	@Update("{ '$inc' : { 'visits' : ?#{[1]} } }")

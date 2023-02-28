@@ -335,8 +335,8 @@ public class MongoQueryMethod extends QueryMethod {
 	public String getAnnotatedCollation() {
 
 		return doFindAnnotation(Collation.class).map(Collation::value) //
-						.orElseThrow(() -> new IllegalStateException(
-								"Expected to find @Collation annotation but did not; Make sure to check hasAnnotatedCollation() before."));
+				.orElseThrow(() -> new IllegalStateException(
+						"Expected to find @Collation annotation but did not; Make sure to check hasAnnotatedCollation() before."));
 	}
 
 	/**
@@ -420,7 +420,8 @@ public class MongoQueryMethod extends QueryMethod {
 
 		if (isModifyingQuery()) {
 
-			if (isCollectionQuery() || isSliceQuery() || isPageQuery() || isGeoNearQuery() || !isNumericOrVoidReturnValue()) { //
+			if (isCollectionQuery() || isScrollQuery() || isSliceQuery() || isPageQuery() || isGeoNearQuery()
+					|| !isNumericOrVoidReturnValue()) { //
 				throw new IllegalStateException(
 						String.format("Update method may be void or return a numeric value (the number of updated documents)."
 								+ "Offending method: %s", method));

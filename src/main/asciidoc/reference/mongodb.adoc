@@ -1289,6 +1289,7 @@ The `Query` class has some additional methods that provide options for the query
 * `Query` *limit* `(int limit)` used to limit the size of the returned results to the provided limit (used for paging)
 * `Query` *skip* `(int skip)` used to skip the provided number of documents in the results (used for paging)
 * `Query` *with* `(Sort sort)` used to provide sort definition for the results
+* `Query` *with* `(ScrollPosition position)` used to provide a scroll position (Offset- or Keyset-based pagination) to start or resume a `Scroll`
 
 [[mongo-template.querying.field-selection]]
 ==== Selecting fields

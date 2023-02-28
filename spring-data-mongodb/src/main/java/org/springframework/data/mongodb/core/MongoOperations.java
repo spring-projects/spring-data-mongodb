@@ -23,6 +23,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Scroll;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -319,7 +321,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param options additional settings to apply when creating the view. Can be {@literal null}.
 	 * @since 4.0
 	 */
-	MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline, @Nullable ViewOptions options);
+	MongoCollection<Document> createView(String name, Class<?> source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options);
 
 	/**
 	 * Create a view with the provided name. The view content is defined by the {@link AggregationPipeline pipeline} on
@@ -331,7 +334,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param options additional settings to apply when creating the view. Can be {@literal null}.
 	 * @since 4.0
 	 */
-	MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline, @Nullable ViewOptions options);
+	MongoCollection<Document> createView(String name, String source, AggregationPipeline pipeline,
+			@Nullable ViewOptions options);
 
 	/**
 	 * A set of collection names.
@@ -803,6 +807,45 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
 
 	/**
+	 * Query for a scroll window of objects of type T from the specified collection. <br />
+	 * Make sure to either set {@link Query#skip(long)} or {@link Query#with(KeysetScrollPosition)} along with
+	 * {@link Query#limit(int)} to limit large query results for efficient scrolling. <br />
+	 * Result objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}.
+	 * Unless configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
+	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
+	 * to map objects since the test for class type is done in the client and not on the server.
+	 *
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
+	 *          specification. Must not be {@literal null}.
+	 * @param entityType the parametrized type of the returned list.
+	 * @return the converted scroll.
+	 * @since 4.1
+	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
+	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
+	 */
+	<T> Scroll<T> scroll(Query query, Class<T> entityType);
+
+	/**
+	 * Query for a scroll of objects of type T from the specified collection. <br />
+	 * Make sure to either set {@link Query#skip(long)} or {@link Query#with(KeysetScrollPosition)} along with
+	 * {@link Query#limit(int)} to limit large query results for efficient scrolling. <br />
+	 * Result objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}.
+	 * Unless configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
+	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
+	 * to map objects since the test for class type is done in the client and not on the server.
+	 *
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
+	 *          specification. Must not be {@literal null}.
+	 * @param entityType the parametrized type of the returned list.
+	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @return the converted scroll.
+	 * @since 4.1
+	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
+	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
+	 */
+	<T> Scroll<T> scroll(Query query, Class<T> entityType, String collectionName);
+
+	/**
 	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be
 	 * derived from the given target class as well.
 	 *
@@ -1175,7 +1218,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the count of matching documents.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
-	 * 	  {@link #getCollectionName(Class) derived} from the given type.
+	 *           {@link #getCollectionName(Class) derived} from the given type.
 	 * @see #exactCount(Query, Class)
 	 * @see #estimatedCount(Class)
 	 */

@@ -30,7 +30,10 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -64,6 +67,8 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	private Sort sort = Sort.unsorted();
 	private long skip;
 	private int limit;
+
+	private KeysetScrollPosition keysetScrollPosition;
 	private @Nullable ReadConcern readConcern;
 	private @Nullable ReadPreference readPreference;
 
@@ -256,6 +261,67 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	/**
+	 * Sets the given cursor position on the {@link Query} instance. Will transparently set {@code skip}.
+	 *
+	 * @param position must not be {@literal null}.
+	 * @return this.
+	 */
+	public Query with(ScrollPosition position) {
+
+		Assert.notNull(position, "ScrollPosition must not be null");
+
+		if (position instanceof OffsetScrollPosition offset) {
+			return with(offset);
+		}
+
+		if (position instanceof KeysetScrollPosition keyset) {
+			return with(keyset);
+		}
+
+		throw new IllegalArgumentException(String.format("ScrollPosition %s not supported", position));
+	}
+
+	/**
+	 * Sets the given cursor position on the {@link Query} instance. Will transparently set {@code skip}.
+	 *
+	 * @param position must not be {@literal null}.
+	 * @return this.
+	 */
+	public Query with(OffsetScrollPosition position) {
+
+		Assert.notNull(position, "ScrollPosition must not be null");
+
+		this.skip = position.getOffset();
+		this.keysetScrollPosition = null;
+		return this;
+	}
+
+	/**
+	 * Sets the given cursor position on the {@link Query} instance. Will transparently reset {@code skip}.
+	 *
+	 * @param position must not be {@literal null}.
+	 * @return this.
+	 */
+	public Query with(KeysetScrollPosition position) {
+
+		Assert.notNull(position, "ScrollPosition must not be null");
+
+		this.skip = 0;
+		this.keysetScrollPosition = position;
+
+		return this;
+	}
+
+	public boolean hasKeyset() {
+		return keysetScrollPosition != null;
+	}
+
+	@Nullable
+	public KeysetScrollPosition getKeyset() {
+		return keysetScrollPosition;
+	}
+
+	/**
 	 * Adds a {@link Sort} to the {@link Query} instance.
 	 *
 	 * @param sort must not be {@literal null}.
@@ -385,10 +451,21 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	/**
+	 * Returns whether the query is {@link #limit(int) limited}.
+	 *
+	 * @return {@code true} if the query is limited; {@code false} otherwise.
+	 * @since 4.1
+	 */
+	public boolean isLimited() {
+		return this.limit > 0;
+	}
+
+	/**
 	 * Get the maximum number of documents to be return. {@literal Zero} or a {@literal negative} value indicates no
 	 * limit.
 	 *
 	 * @return number of documents to return.
+	 * @see #isLimited()
 	 */
 	public int getLimit() {
 		return this.limit;
@@ -688,4 +765,5 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	public static boolean isRestrictedTypeKey(String key) {
 		return RESTRICTED_TYPES_KEY.equals(key);
 	}
+
 }

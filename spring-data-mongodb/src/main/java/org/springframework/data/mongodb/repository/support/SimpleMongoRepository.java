@@ -32,6 +32,8 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -361,17 +363,17 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	class FluentQueryByExample<S, T> extends FetchableFluentQuerySupport<Example<S>, T> {
 
 		FluentQueryByExample(Example<S> example, Class<T> resultType) {
-			this(example, Sort.unsorted(), resultType, Collections.emptyList());
+			this(example, Sort.unsorted(), 0, resultType, Collections.emptyList());
 		}
 
-		FluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
-			super(example, sort, resultType, fieldsToInclude);
+		FluentQueryByExample(Example<S> example, Sort sort, int limit, Class<T> resultType, List<String> fieldsToInclude) {
+			super(example, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
-		protected <R> FluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, Class<R> resultType,
+		protected <R> FluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, int limit, Class<R> resultType,
 				List<String> fieldsToInclude) {
-			return new FluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
+			return new FluentQueryByExample<>(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
@@ -387,6 +389,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		@Override
 		public List<T> all() {
 			return createQuery().all();
+		}
+
+		@Override
+		public Scroll<T> scroll(ScrollPosition scrollPosition) {
+			return createQuery().scroll(scrollPosition);
 		}
 
 		@Override
@@ -426,6 +433,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			if (getSort().isSorted()) {
 				query.with(getSort());
 			}
+
+			query.limit(getLimit());
 
 			if (!getFieldsToInclude().isEmpty()) {
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));

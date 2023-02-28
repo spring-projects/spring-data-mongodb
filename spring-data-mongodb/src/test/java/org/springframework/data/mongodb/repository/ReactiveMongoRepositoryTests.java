@@ -29,24 +29,29 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Circle;
@@ -285,6 +290,36 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		cappedRepository.findDtoProjectionByKey("value").as(StepVerifier::create).expectNextCount(1).thenCancel().verify();
 	}
 
+	@Test // GH-4308
+	void appliesScrollingCorrectly() {
+
+		Scroll<Person> scroll = repository
+				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", KeysetScrollPosition.initial()).block();
+
+		assertThat(scroll).hasSize(2);
+		assertThat(scroll).containsSequence(alicia, boyd);
+		assertThat(scroll.isLast()).isFalse();
+
+		Scroll<Person> nextScroll = repository
+				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", scroll.lastPosition()).block();
+
+		assertThat(nextScroll).hasSize(2);
+		assertThat(nextScroll).containsSequence(carter, dave);
+		assertThat(nextScroll.isLast()).isFalse();
+	}
+
+	@Test // GH-4308
+	void appliesScrollingWithProjectionCorrectly() {
+
+		repository
+				.findCursorProjectionByLastnameLike("*", PageRequest.of(0, 2, Sort.by(Direction.ASC, "firstname", "lastname"))) //
+				.flatMapIterable(Function.identity()) //
+				.as(StepVerifier::create) //
+				.expectNext(new PersonSummaryDto(alicia.getFirstname(), alicia.getLastname())) //
+				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
 	@Test // DATAMONGO-1444
 	@DirtiesState
 	void findsPeopleByLocationWithinCircle() {
@@ -433,6 +468,27 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
 					assertThat(actual).containsExactlyInAnyOrder(dave, carter);
+				}).verifyComplete();
+	}
+
+	@Test // GH-4308
+	void shouldScrollWithId() {
+
+		List<Scroll<Person>> capture = new ArrayList<>();
+		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial())) //
+				.as(StepVerifier::create) //
+				.recordWith(() -> capture).assertNext(actual -> {
+					assertThat(actual).hasSize(2).containsExactly(boyd, carter);
+				}).verifyComplete();
+
+		Scroll<Person> scroll = capture.get(0);
+
+		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(scroll.lastPosition())) //
+				.as(StepVerifier::create) //
+				.recordWith(() -> capture).assertNext(actual -> {
+					assertThat(actual).containsOnly(dave);
 				}).verifyComplete();
 	}
 
@@ -711,6 +767,11 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 
 		@Query("{ lastname: { $in: ?0 }, age: { $gt : ?1 } }")
 		Flux<Person> findStringQuery(Flux<String> lastname, Mono<Integer> age);
+
+		Mono<Scroll<Person>> findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc(String lastname,
+				ScrollPosition scrollPosition);
+
+		Mono<Scroll<PersonSummaryDto>> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
 
 		Flux<Person> findByLocationWithin(Circle circle);
 

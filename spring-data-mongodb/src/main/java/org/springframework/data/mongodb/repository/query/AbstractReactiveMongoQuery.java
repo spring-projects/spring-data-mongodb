@@ -203,6 +203,9 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).tail();
 		} else if (method.isCollectionQuery()) {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).all();
+		} else if (method.isScrollQuery()) {
+			return (q, t, c) -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort()))
+					.scroll(accessor.getScrollPosition());
 		} else if (isCountQuery()) {
 			return (q, t, c) -> operation.matching(q).count();
 		} else if (isExistsQuery()) {

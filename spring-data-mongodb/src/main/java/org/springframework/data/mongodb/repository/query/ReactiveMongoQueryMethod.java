@@ -66,7 +66,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		super(method, metadata, projectionFactory, mappingContext);
 
 		this.method = method;
-		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
+		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery() || isScrollQuery())
 				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
 	}
 
@@ -136,7 +136,16 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
 			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
 					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
-					|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
+							|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
+
+			if (hasParameterOfType(method, Sort.class)) {
+				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter;"
+						+ " Use sorting capabilities on Pageable instead; Offending method: %s", method));
+			}
+
+			if (isScrollQuery()) {
+				return;
+			}
 
 			if (singleWrapperWithWrappedPageableResult) {
 				throw new InvalidDataAccessApiUsageException(
@@ -148,11 +157,6 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 				throw new IllegalStateException(String.format(
 						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type; Offending method: %s",
 						method.toString()));
-			}
-
-			if (hasParameterOfType(method, Sort.class)) {
-				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter;"
-						+ " Use sorting capabilities on Pageable instead; Offending method: %s", method));
 			}
 		}
 
