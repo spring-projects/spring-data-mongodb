@@ -15,9 +15,18 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 /**
  * @author Oliver Gierke
  */
+@EqualsAndHashCode
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class PersonSummaryDto {
 
 	String firstname;

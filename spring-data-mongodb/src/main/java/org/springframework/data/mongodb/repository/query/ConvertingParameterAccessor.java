@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -69,6 +70,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	public PotentiallyConvertingIterator iterator() {
 		return new ConvertingIterator(delegate.iterator());
+	}
+
+	@Override
+	public ScrollPosition getScrollPosition() {
+		return delegate.getScrollPosition();
 	}
 
 	public Pageable getPageable() {
@@ -197,7 +203,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 		if (source instanceof Iterable) {
 
-			if(source instanceof Collection) {
+			if (source instanceof Collection) {
 				return new ArrayList<>((Collection<?>) source);
 			}
 

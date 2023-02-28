@@ -24,9 +24,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -90,6 +91,10 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 		return createQuery().flatMapMany(it -> find.matching(it).all());
 	}
 
+	Mono<Scroll<K>> scroll(ScrollPosition scrollPosition) {
+		return createQuery().flatMap(it -> find.matching(it).scroll(scrollPosition));
+	}
+
 	/**
 	 * Fetch all matching query results as page.
 	 *
@@ -97,8 +102,8 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	 */
 	Mono<Page<K>> fetchPage(Pageable pageable) {
 
-		Mono<List<K>> content = createQuery().map(it -> it.with(pageable))
-						     .flatMapMany(it -> find.matching(it).all()).collectList();
+		Mono<List<K>> content = createQuery().map(it -> it.with(pageable)).flatMapMany(it -> find.matching(it).all())
+				.collectList();
 
 		return content.flatMap(it -> ReactivePageableExecutionUtils.getPage(it, pageable, fetchCount()));
 	}

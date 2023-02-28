@@ -24,16 +24,7 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
-import org.bson.BSONObject;
-import org.bson.BsonBinary;
-import org.bson.BsonBoolean;
-import org.bson.BsonDouble;
-import org.bson.BsonInt32;
-import org.bson.BsonInt64;
-import org.bson.BsonObjectId;
-import org.bson.BsonString;
-import org.bson.BsonValue;
-import org.bson.Document;
+import org.bson.*;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
@@ -489,7 +480,7 @@ public class BsonUtils {
 	}
 
 	/**
-	 * Resolve a the value for a given key. If the given {@link Bson} value contains the key the value is immediately
+	 * Resolve the value for a given key. If the given {@link Bson} value contains the key the value is immediately
 	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
 	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
 	 * (wrong) type, {@literal null} is returned.
@@ -501,8 +492,22 @@ public class BsonUtils {
 	 */
 	@Nullable
 	public static Object resolveValue(Bson bson, String key) {
+		return resolveValue(asMap(bson), key);
+	}
 
-		Map<String, Object> source = asMap(bson);
+	/**
+	 * Resolve the value for a given key. If the given {@link Map} value contains the key the value is immediately
+	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
+	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
+	 * (wrong) type, {@literal null} is returned.
+	 *
+	 * @param source the source to inspect. Must not be {@literal null}.
+	 * @param key the key to lookup. Must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 * @since 4.1
+	 */
+	@Nullable
+	public static Object resolveValue(Map<String, Object> source, String key) {
 
 		if (source.containsKey(key) || !key.contains(".")) {
 			return source.get(key);

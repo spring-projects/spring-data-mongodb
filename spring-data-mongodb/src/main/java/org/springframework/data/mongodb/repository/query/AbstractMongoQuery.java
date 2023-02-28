@@ -167,6 +167,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {
 			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort())).all();
+		} else if (method.isScrollQuery()) {
+			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort()))
+					.scroll(accessor.getScrollPosition());
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operation, accessor.getPageable());
 		} else if (isCountQuery()) {

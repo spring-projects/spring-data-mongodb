@@ -38,17 +38,11 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatcher;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -206,6 +200,29 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result.isFirst()).isFalse();
 		assertThat(result.isLast()).isFalse();
 		assertThat(result).contains(dave, stefan);
+	}
+
+	@Test // GH-4308
+	void appliesScrollPositionCorrectly() {
+
+		Scroll<Person> page = repository.findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
+				KeysetScrollPosition.initial());
+
+		assertThat(page.isLast()).isFalse();
+		assertThat(page.size()).isEqualTo(2);
+		assertThat(page).contains(carter);
+	}
+
+	@Test // GH-4308
+	void appliesScrollPositionWithProjectionCorrectly() {
+
+		Scroll<PersonSummaryDto> page = repository.findCursorProjectionByLastnameLike("*a*",
+				PageRequest.of(0, 2, Sort.by(Direction.ASC, "lastname", "firstname")));
+
+		assertThat(page.isLast()).isFalse();
+		assertThat(page.size()).isEqualTo(2);
+
+		assertThat(page).element(0).isEqualTo(new PersonSummaryDto(carter.getFirstname(), carter.getLastname()));
 	}
 
 	@Test
@@ -936,6 +953,21 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id)))).contains(dave, carter);
 	}
 
+	@Test // DATAMONGO-969
+	void shouldScrollPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
+
+		Scroll<Person> scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial()));
+
+		assertThat(scroll).containsExactly(boyd, carter);
+
+		ScrollPosition resumeFrom = scroll.lastPosition();
+		scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(resumeFrom));
+
+		assertThat(scroll).containsOnly(dave);
+	}
+
 	@Test // DATAMONGO-1030
 	void executesSingleEntityQueryWithProjectionCorrectly() {
 
@@ -1140,6 +1172,33 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 		List<Person> result = repository.findAll(Example.of(sample));
 		assertThat(result).hasSize(2);
+	}
+
+	@Test // GH-4308
+	void scrollByExampleShouldReturnCorrectResult() {
+
+		Person sample = new Person();
+		sample.setLastname("M");
+
+		// needed to tweak stuff a bit since some field are automatically set - so we need to undo this
+		ReflectionTestUtils.setField(sample, "id", null);
+		ReflectionTestUtils.setField(sample, "createdAt", null);
+		ReflectionTestUtils.setField(sample, "email", null);
+
+		Scroll<Person> result = repository.findBy(
+				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial()));
+
+		assertThat(result).containsOnly(dave, leroi);
+		assertThat(result.hasNext()).isTrue();
+
+		ScrollPosition position = result.lastPosition();
+		result = repository.findBy(
+				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(position));
+
+		assertThat(result).containsOnly(oliver);
+		assertThat(result.hasNext()).isFalse();
 	}
 
 	@Test // DATAMONGO-1425

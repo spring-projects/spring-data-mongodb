@@ -21,6 +21,7 @@ import java.util.Iterator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -70,6 +71,11 @@ class StubParameterAccessor implements MongoParameterAccessor {
 				this.colllation = Collation.class.cast(value);
 			}
 		}
+	}
+
+	@Override
+	public ScrollPosition getScrollPosition() {
+		return null;
 	}
 
 	public Pageable getPageable() {

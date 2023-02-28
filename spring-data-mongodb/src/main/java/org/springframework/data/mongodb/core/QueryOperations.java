@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -776,7 +777,7 @@ class QueryOperations {
 
 			Document filterWithShardKey = new Document(filter);
 			getMappedShardKeyFields(domainType)
-					.forEach(key -> filterWithShardKey.putIfAbsent(key, BsonUtils.resolveValue(shardKeySource, key)));
+					.forEach(key -> filterWithShardKey.putIfAbsent(key, BsonUtils.resolveValue((Bson) shardKeySource, key)));
 
 			return filterWithShardKey;
 		}

@@ -20,6 +20,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -124,12 +126,24 @@ public interface ExecutableFindOperation {
 		Stream<T> stream();
 
 		/**
-		 * Get the number of matching elements.
-		 * <br />
-		 * This method uses an {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions) aggregation
-		 * execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees shard,
-		 * session and transaction compliance. In case an inaccurate count satisfies the applications needs use
-		 * {@link MongoOperations#estimatedCount(String)} for empty queries instead.
+		 * Return a scroll of elements either starting or resuming at
+		 * {@link org.springframework.data.domain.ScrollPosition}.
+		 *
+		 * @param scrollPosition the scroll position.
+		 * @return a scroll of the resulting elements.
+		 * @since 4.1
+		 * @see org.springframework.data.domain.OffsetScrollPosition
+		 * @see org.springframework.data.domain.KeysetScrollPosition
+		 */
+		Scroll<T> scroll(ScrollPosition scrollPosition);
+
+		/**
+		 * Get the number of matching elements. <br />
+		 * This method uses an
+		 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+		 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but
+		 * guarantees shard, session and transaction compliance. In case an inaccurate count satisfies the applications
+		 * needs use {@link MongoOperations#estimatedCount(String)} for empty queries instead.
 		 *
 		 * @return total number of matching elements.
 		 */

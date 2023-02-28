@@ -22,10 +22,11 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -75,8 +76,7 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 */
-	public SpringDataMongodbQuery(MongoOperations operations, Class<? extends T> type,
-			String collectionName) {
+	public SpringDataMongodbQuery(MongoOperations operations, Class<? extends T> type, String collectionName) {
 		this(operations, type, type, collectionName, it -> {});
 	}
 
@@ -130,6 +130,17 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 			};
 		} catch (RuntimeException e) {
 			return handleException(e, new EmptyCloseableIterator<>());
+		}
+	}
+
+	public Scroll<T> scroll(ScrollPosition scrollPosition) {
+
+		try {
+			return find.matching(createQuery()).scroll(scrollPosition);
+		} catch (RuntimeException e) {
+			return handleException(e, Scroll.from(Collections.emptyList(), value -> {
+				throw new UnsupportedOperationException();
+			}));
 		}
 	}
 

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,6 +45,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.projection.ProjectionFactory;
@@ -454,6 +456,9 @@ class EntityOperations {
 		 * @since 2.1.2
 		 */
 		boolean isNew();
+
+		Map<String, Object> extractKeys(Document sortObject);
+
 	}
 
 	/**
@@ -475,7 +480,7 @@ class EntityOperations {
 		T populateIdIfNecessary(@Nullable Object id);
 
 		/**
-		 * Initializes the version property of the of the current entity if available.
+		 * Initializes the version property of the current entity if available.
 		 *
 		 * @return the entity with the version property updated if available.
 		 */
@@ -566,6 +571,19 @@ class EntityOperations {
 		@Override
 		public boolean isNew() {
 			return map.get(ID_FIELD) != null;
+		}
+
+		@Override
+		public Map<String, Object> extractKeys(Document sortObject) {
+
+			Map<String, Object> keyset = new LinkedHashMap<>();
+			keyset.put(ID_FIELD, getId());
+
+			for (String key : sortObject.keySet()) {
+				keyset.put(key, BsonUtils.resolveValue(map, key));
+			}
+
+			return keyset;
 		}
 	}
 
@@ -700,6 +718,22 @@ class EntityOperations {
 		@Override
 		public boolean isNew() {
 			return entity.isNew(propertyAccessor.getBean());
+		}
+
+		@Override
+		public Map<String, Object> extractKeys(Document sortObject) {
+
+			Map<String, Object> keyset = new LinkedHashMap<>();
+			keyset.put(entity.getRequiredIdProperty().getName(), getId());
+
+			for (String key : sortObject.keySet()) {
+
+				// TODO: make this work for nested properties
+				MongoPersistentProperty persistentProperty = entity.getRequiredPersistentProperty(key);
+				keyset.put(key, propertyAccessor.getProperty(persistentProperty));
+			}
+
+			return keyset;
 		}
 	}
 

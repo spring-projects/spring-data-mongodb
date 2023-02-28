@@ -34,6 +34,8 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -404,17 +406,18 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	class ReactiveFluentQueryByExample<S, T> extends ReactiveFluentQuerySupport<Example<S>, T> {
 
 		ReactiveFluentQueryByExample(Example<S> example, Class<T> resultType) {
-			this(example, Sort.unsorted(), resultType, Collections.emptyList());
+			this(example, Sort.unsorted(), 0, resultType, Collections.emptyList());
 		}
 
-		ReactiveFluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
-			super(example, sort, resultType, fieldsToInclude);
+		ReactiveFluentQueryByExample(Example<S> example, Sort sort, int limit, Class<T> resultType,
+				List<String> fieldsToInclude) {
+			super(example, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
-		protected <R> ReactiveFluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, Class<R> resultType,
-				List<String> fieldsToInclude) {
-			return new ReactiveFluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
+		protected <R> ReactiveFluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, int limit,
+				Class<R> resultType, List<String> fieldsToInclude) {
+			return new ReactiveFluentQueryByExample<>(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
@@ -430,6 +433,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		@Override
 		public Flux<T> all() {
 			return createQuery().all();
+		}
+
+		@Override
+		public Mono<Scroll<T>> scroll(ScrollPosition scrollPosition) {
+			return createQuery().scroll(scrollPosition);
 		}
 
 		@Override
@@ -464,6 +472,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 			if (getSort().isSorted()) {
 				query.with(getSort());
 			}
+
+			query.limit(getLimit());
 
 			if (!getFieldsToInclude().isEmpty()) {
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));

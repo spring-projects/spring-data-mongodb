@@ -44,6 +44,8 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.domain.OffsetScrollPosition;
+import org.springframework.data.domain.Scroll;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -64,6 +66,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
+import org.springframework.data.mongodb.core.ScrollUtils.KeySetCursorQuery;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -847,6 +850,48 @@ public class MongoTemplate
 				new QueryCursorPreparer(query, entityClass));
 	}
 
+	@Override
+	public <T> Scroll<T> scroll(Query query, Class<T> entityType) {
+
+		Assert.notNull(entityType, "Entity type must not be null");
+
+		return scroll(query, entityType, getCollectionName(entityType));
+	}
+
+	@Override
+	public <T> Scroll<T> scroll(Query query, Class<T> entityType, String collectionName) {
+		return doScroll(query, entityType, entityType, collectionName);
+	}
+
+	<T> Scroll<T> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
+
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(collectionName, "CollectionName must not be null");
+		Assert.notNull(sourceClass, "Entity type must not be null");
+		Assert.notNull(targetClass, "Target type must not be null");
+
+		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(mongoConverter, targetClass, collectionName);
+		int limit = query.isLimited() ? query.getLimit() + 1 : Integer.MAX_VALUE;
+
+		if (query.hasKeyset()) {
+
+			KeySetCursorQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
+					operations.getIdPropertyName(sourceClass));
+
+			List<T> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
+					keysetPaginationQuery.fields(), sourceClass,
+					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback);
+
+			return ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), result, operations);
+		}
+
+		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
+				sourceClass, new QueryCursorPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass),
+				callback);
+
+		return ScrollUtils.createWindow(result, query.getLimit(), OffsetScrollPosition.positionFunction(query.getSkip()));
+	}
+
 	@Nullable
 	@Override
 	public <T> T findById(Object id, Class<T> entityClass) {
@@ -953,7 +998,7 @@ public class MongoTemplate
 			optionsBuilder.readPreference(near.getReadPreference());
 		}
 
-		if(near.hasReadConcern()) {
+		if (near.hasReadConcern()) {
 			optionsBuilder.readConcern(near.getReadConcern());
 		}
 
@@ -2837,13 +2882,24 @@ public class MongoTemplate
 		return converter;
 	}
 
-	private Document getMappedSortObject(Query query, Class<?> type) {
+	@Nullable
+	private Document getMappedSortObject(@Nullable Query query, Class<?> type) {
 
-		if (query == null || ObjectUtils.isEmpty(query.getSortObject())) {
+		if (query == null) {
 			return null;
 		}
 
-		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
+		return getMappedSortObject(query.getSortObject(), type);
+	}
+
+	@Nullable
+	private Document getMappedSortObject(Document sortObject, Class<?> type) {
+
+		if (ObjectUtils.isEmpty(sortObject)) {
+			return null;
+		}
+
+		return queryMapper.getMappedSort(sortObject, mappingContext.getPersistentEntity(type));
 	}
 
 	/**
@@ -3206,11 +3262,23 @@ public class MongoTemplate
 	class QueryCursorPreparer implements CursorPreparer {
 
 		private final Query query;
+
+		private final Document sortObject;
+
+		private final int limit;
+
+		private final long skip;
 		private final @Nullable Class<?> type;
 
 		QueryCursorPreparer(Query query, @Nullable Class<?> type) {
+			this(query, query.getSortObject(), query.getLimit(), query.getSkip(), type);
+		}
 
+		QueryCursorPreparer(Query query, Document sortObject, int limit, long skip, @Nullable Class<?> type) {
 			this.query = query;
+			this.sortObject = sortObject;
+			this.limit = limit;
+			this.skip = skip;
 			this.type = type;
 		}
 
@@ -3225,20 +3293,20 @@ public class MongoTemplate
 
 			Meta meta = query.getMeta();
 			HintFunction hintFunction = HintFunction.from(query.getHint());
-			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& hintFunction.isEmpty() && !meta.hasValues() && query.getCollation().isEmpty()) {
+			if (skip <= 0 && limit <= 0 && ObjectUtils.isEmpty(sortObject) && hintFunction.isEmpty() && !meta.hasValues()
+					&& query.getCollation().isEmpty()) {
 				return cursorToUse;
 			}
 
 			try {
-				if (query.getSkip() > 0) {
-					cursorToUse = cursorToUse.skip((int) query.getSkip());
+				if (skip > 0) {
+					cursorToUse = cursorToUse.skip((int) skip);
 				}
-				if (query.getLimit() > 0) {
-					cursorToUse = cursorToUse.limit(query.getLimit());
+				if (limit > 0) {
+					cursorToUse = cursorToUse.limit(limit);
 				}
-				if (!ObjectUtils.isEmpty(query.getSortObject())) {
-					Document sort = type != null ? getMappedSortObject(query, type) : query.getSortObject();
+				if (!ObjectUtils.isEmpty(sortObject)) {
+					Document sort = type != null ? getMappedSortObject(sortObject, type) : sortObject;
 					cursorToUse = cursorToUse.sort(sort);
 				}
 
