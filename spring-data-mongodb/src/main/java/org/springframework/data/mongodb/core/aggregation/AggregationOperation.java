@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -30,30 +29,24 @@ import org.springframework.util.CollectionUtils;
  * @author Christoph Strobl
  * @since 1.3
  */
-public interface AggregationOperation {
+public interface AggregationOperation extends MultiOperationAggregationStage {
 
 	/**
-	 * Turns the {@link AggregationOperation} into a {@link Document} by using the given
-	 * {@link AggregationOperationContext}.
-	 *
 	 * @param context the {@link AggregationOperationContext} to operate within. Must not be {@literal null}.
-	 * @return the Document
-	 * @deprecated since 2.2 in favor of {@link #toPipelineStages(AggregationOperationContext)}.
+	 * @return
 	 */
-	@Deprecated
+	@Override
 	Document toDocument(AggregationOperationContext context);
 
 	/**
-	 * Turns the {@link AggregationOperation} into list of {@link Document stages} by using the given
-	 * {@link AggregationOperationContext}. This allows a single {@link AggregationOptions} to add additional stages for
-	 * eg. {@code $sort} or {@code $limit}.
+	 * More the exception than the default.
 	 *
 	 * @param context the {@link AggregationOperationContext} to operate within. Must not be {@literal null}.
-	 * @return the pipeline stages to run through. Never {@literal null}.
-	 * @since 2.2
+	 * @return never {@literal null}.
 	 */
+	@Override
 	default List<Document> toPipelineStages(AggregationOperationContext context) {
-		return Collections.singletonList(toDocument(context));
+		return List.of(toDocument(context));
 	}
 
 	/**

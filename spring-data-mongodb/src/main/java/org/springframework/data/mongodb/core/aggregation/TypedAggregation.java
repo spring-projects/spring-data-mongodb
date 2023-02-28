@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.util.Assert;
@@ -24,6 +25,7 @@ import org.springframework.util.Assert;
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class TypedAggregation<I> extends Aggregation {
 
@@ -40,12 +42,23 @@ public class TypedAggregation<I> extends Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link TypedAggregation} from the given {@link AggregationStage stages}.
+	 *
+	 * @param inputType must not be {@literal null}.
+	 * @param stages must not be {@literal null} or empty.
+	 * @since 4.1
+	 */
+	public TypedAggregation(Class<I> inputType, AggregationStage... stages) {
+		this(inputType, Arrays.asList(stages));
+	}
+
+	/**
 	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
 	 *
 	 * @param inputType must not be {@literal null}.
 	 * @param operations must not be {@literal null} or empty.
 	 */
-	public TypedAggregation(Class<I> inputType, List<AggregationOperation> operations) {
+	public TypedAggregation(Class<I> inputType, List<? extends AggregationStage> operations) {
 		this(inputType, operations, DEFAULT_OPTIONS);
 	}
 
@@ -57,7 +70,7 @@ public class TypedAggregation<I> extends Aggregation {
 	 * @param operations must not be {@literal null} or empty.
 	 * @param options must not be {@literal null}.
 	 */
-	public TypedAggregation(Class<I> inputType, List<AggregationOperation> operations, AggregationOptions options) {
+	public TypedAggregation(Class<I> inputType, List<? extends AggregationStage> operations, AggregationOptions options) {
 
 		super(operations, options);
 
@@ -77,6 +90,6 @@ public class TypedAggregation<I> extends Aggregation {
 	public TypedAggregation<I> withOptions(AggregationOptions options) {
 
 		Assert.notNull(options, "AggregationOptions must not be null");
-		return new TypedAggregation<I>(inputType, pipeline.getOperations(), options);
+		return new TypedAggregation<>(inputType, pipeline.getStages(), options);
 	}
 }

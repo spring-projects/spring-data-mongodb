@@ -102,12 +102,12 @@ public class Aggregation {
 	private final AggregationOptions options;
 
 	/**
-	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 * Creates a new {@link Aggregation} from the given {@link AggregationStage}s.
 	 *
 	 * @param operations must not be {@literal null} or empty.
 	 */
-	public static Aggregation newAggregation(List<? extends AggregationOperation> operations) {
-		return newAggregation(operations.toArray(new AggregationOperation[operations.size()]));
+	public static Aggregation newAggregation(List<? extends AggregationStage> operations) {
+		return newAggregation(operations.toArray(AggregationStage[]::new));
 	}
 
 	/**
@@ -117,6 +117,16 @@ public class Aggregation {
 	 */
 	public static Aggregation newAggregation(AggregationOperation... operations) {
 		return new Aggregation(operations);
+	}
+
+	/**
+	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 *
+	 * @param stages must not be {@literal null} or empty.
+	 * @since 4.1
+	 */
+	public static Aggregation newAggregation(AggregationStage... stages) {
+		return new Aggregation(stages);
 	}
 
 	/**
@@ -131,6 +141,17 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link AggregationUpdate} from the given {@link AggregationOperation}s.
+	 *
+	 * @param operations can be {@literal empty} but must not be {@literal null}.
+	 * @return new instance of {@link AggregationUpdate}.
+	 * @since 4.1
+	 */
+	public static AggregationUpdate newUpdate(AggregationStage... operations) {
+		return AggregationUpdate.updateFrom(Arrays.asList(operations));
+	}
+
+	/**
 	 * Returns a copy of this {@link Aggregation} with the given {@link AggregationOptions} set. Note that options are
 	 * supported in MongoDB version 2.6+.
 	 *
@@ -141,7 +162,7 @@ public class Aggregation {
 	public Aggregation withOptions(AggregationOptions options) {
 
 		Assert.notNull(options, "AggregationOptions must not be null");
-		return new Aggregation(this.pipeline.getOperations(), options);
+		return new Aggregation(this.pipeline.getStages(), options);
 	}
 
 	/**
@@ -150,8 +171,8 @@ public class Aggregation {
 	 * @param type must not be {@literal null}.
 	 * @param operations must not be {@literal null} or empty.
 	 */
-	public static <T> TypedAggregation<T> newAggregation(Class<T> type, List<? extends AggregationOperation> operations) {
-		return newAggregation(type, operations.toArray(new AggregationOperation[operations.size()]));
+	public static <T> TypedAggregation<T> newAggregation(Class<T> type, List<? extends AggregationStage> operations) {
+		return newAggregation(type, operations.toArray(AggregationStage[]::new));
 	}
 
 	/**
@@ -165,12 +186,32 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link TypedAggregation} for the given type and {@link AggregationOperation}s.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @param stages must not be {@literal null} or empty.
+	 * @since 4.1
+	 */
+	public static <T> TypedAggregation<T> newAggregation(Class<T> type, AggregationStage... stages) {
+		return new TypedAggregation<>(type, stages);
+	}
+
+	/**
 	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
 	 *
 	 * @param aggregationOperations must not be {@literal null} or empty.
 	 */
 	protected Aggregation(AggregationOperation... aggregationOperations) {
 		this(asAggregationList(aggregationOperations));
+	}
+
+	/**
+	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 *
+	 * @param aggregationOperations must not be {@literal null} or empty.
+	 */
+	protected Aggregation(AggregationStage... aggregationOperations) {
+		this(Arrays.asList(aggregationOperations));
 	}
 
 	/**
@@ -189,7 +230,7 @@ public class Aggregation {
 	 *
 	 * @param aggregationOperations must not be {@literal null} or empty.
 	 */
-	protected Aggregation(List<AggregationOperation> aggregationOperations) {
+	protected Aggregation(List<? extends AggregationStage> aggregationOperations) {
 		this(aggregationOperations, DEFAULT_OPTIONS);
 	}
 
@@ -199,7 +240,7 @@ public class Aggregation {
 	 * @param aggregationOperations must not be {@literal null}.
 	 * @param options must not be {@literal null} or empty.
 	 */
-	protected Aggregation(List<AggregationOperation> aggregationOperations, AggregationOptions options) {
+	protected Aggregation(List<? extends AggregationStage> aggregationOperations, AggregationOptions options) {
 
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null");
 		Assert.notNull(options, "AggregationOptions must not be null");
@@ -639,6 +680,17 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link FacetOperationBuilder} given {@link Aggregation}.
+	 *
+	 * @param stages the sub-pipeline, must not be {@literal null}.
+	 * @return new instance of {@link FacetOperation}.
+	 * @since 4.1
+	 */
+	public static FacetOperationBuilder facet(AggregationStage... stages) {
+		return facet().and(stages);
+	}
+
+	/**
 	 * Creates a new {@link LookupOperation}.
 	 *
 	 * @param from must not be {@literal null}.
@@ -668,14 +720,14 @@ public class Aggregation {
 
 	/**
 	 * Entrypoint for creating {@link LookupOperation $lookup} using a fluent builder API.
+	 * 
 	 * <pre class="code">
-	 * Aggregation.lookup().from("restaurants")
-	 * 	.localField("restaurant_name")
-	 * 	.foreignField("name")
-	 * 	.let(newVariable("orders_drink").forField("drink"))
-	 * 	.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
-	 * 	.as("matches")
+	 * Aggregation.lookup().from("restaurants").localField("restaurant_name").foreignField("name")
+	 * 		.let(newVariable("orders_drink").forField("drink"))
+	 * 		.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
+	 * 		.as("matches")
 	 * </pre>
+	 * 
 	 * @return new instance of {@link LookupOperationBuilder}.
 	 * @since 4.1
 	 */

@@ -78,6 +78,23 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		return new FacetOperationBuilder(facets, Arrays.asList(operations));
 	}
 
+	/**
+	 * Creates a new {@link FacetOperationBuilder} to append a new facet using {@literal operations}. <br />
+	 * {@link FacetOperationBuilder} takes a pipeline of {@link AggregationStage stages} to categorize documents into a
+	 * single facet.
+	 *
+	 * @param stages must not be {@literal null} or empty.
+	 * @return
+	 * @since 4.1
+	 */
+	public FacetOperationBuilder and(AggregationStage... stages) {
+
+		Assert.notNull(stages, "Stages must not be null");
+		Assert.notEmpty(stages, "Stages must not be empty");
+
+		return new FacetOperationBuilder(facets, Arrays.asList(stages));
+	}
+
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return new Document(getOperator(), facets.toDocument(context));
@@ -102,11 +119,11 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	public static class FacetOperationBuilder {
 
 		private final Facets current;
-		private final List<AggregationOperation> operations;
+		private final List<AggregationStage> operations;
 
-		private FacetOperationBuilder(Facets current, List<AggregationOperation> operations) {
+		private FacetOperationBuilder(Facets current, List<? extends AggregationStage> operations) {
 			this.current = current;
-			this.operations = operations;
+			this.operations = new ArrayList<>(operations);
 		}
 
 		/**
@@ -176,7 +193,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		 * @param operations must not be {@literal null}.
 		 * @return the new {@link Facets}.
 		 */
-		Facets and(String fieldName, List<AggregationOperation> operations) {
+		Facets and(String fieldName, List<? extends AggregationStage> operations) {
 
 			Assert.hasText(fieldName, "FieldName must not be null or empty");
 			Assert.notNull(operations, "AggregationOperations must not be null");
@@ -197,21 +214,21 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	private static class Facet {
 
 		private final ExposedField exposedField;
-		private final List<AggregationOperation> operations;
+		private final List<AggregationStage> stages;
 
 		/**
 		 * Creates a new {@link Facet} given {@link ExposedField} and {@link AggregationOperation} pipeline.
 		 *
 		 * @param exposedField must not be {@literal null}.
-		 * @param operations must not be {@literal null}.
+		 * @param stages must not be {@literal null}.
 		 */
-		Facet(ExposedField exposedField, List<AggregationOperation> operations) {
+		Facet(ExposedField exposedField, List<? extends AggregationStage> stages) {
 
 			Assert.notNull(exposedField, "ExposedField must not be null");
-			Assert.notNull(operations, "AggregationOperations must not be null");
+			Assert.notNull(stages, "AggregationOperations must not be null");
 
 			this.exposedField = exposedField;
-			this.operations = operations;
+			this.stages = new ArrayList<>(stages);
 		}
 
 		ExposedField getExposedField() {
@@ -219,7 +236,7 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 		}
 
 		protected List<Document> toDocuments(AggregationOperationContext context) {
-			return AggregationOperationRenderer.toDocument(operations, context);
+			return AggregationOperationRenderer.toDocument(stages, context);
 		}
 	}
 }

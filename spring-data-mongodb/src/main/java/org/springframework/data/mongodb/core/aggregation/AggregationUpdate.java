@@ -25,7 +25,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -71,7 +70,8 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @see <a href="https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline">MongoDB
+ * @see <a href=
+ *      "https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline">MongoDB
  *      Reference Documentation</a>
  * @since 3.0
  */
@@ -92,11 +92,11 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 *
 	 * @param pipeline must not be {@literal null}.
 	 */
-	protected AggregationUpdate(List<AggregationOperation> pipeline) {
+	protected AggregationUpdate(List<? extends AggregationStage> pipeline) {
 
 		super(pipeline);
 
-		for (AggregationOperation operation : pipeline) {
+		for (AggregationStage operation : pipeline) {
 			if (operation instanceof FieldsExposingAggregationOperation) {
 				((FieldsExposingAggregationOperation) operation).getFields().forEach(it -> {
 					keysTouched.add(it.getName());
@@ -121,6 +121,16 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 */
 	public static AggregationUpdate from(List<AggregationOperation> pipeline) {
 		return new AggregationUpdate(pipeline);
+	}
+
+	/**
+	 * Create a new AggregationUpdate from the given {@link AggregationStage stages}.
+	 *
+	 * @return new instance of {@link AggregationUpdate}.
+	 * @since 4.1
+	 */
+	public static AggregationUpdate updateFrom(List<? extends AggregationStage> stages) {
+		return new AggregationUpdate(stages);
 	}
 
 	/**
