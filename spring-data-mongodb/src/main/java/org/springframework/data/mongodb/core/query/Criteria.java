@@ -37,6 +37,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
@@ -145,6 +146,37 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public static Criteria matchingDocumentStructure(MongoJsonSchema schema) {
 		return new Criteria().andDocumentStructureMatches(schema);
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} matching a documents against the given {@link MongoExpression
+	 * expression}.
+	 * <p>
+	 * The {@link MongoExpression expression} can be either something that directly renders to the store native
+	 * representation like
+	 *
+	 * <pre class="code">
+	 * expr(() -> Document.parse("{ $gt : [ '$spent', '$budget'] }")))
+	 * </pre>
+	 * 
+	 * or an {@link org.springframework.data.mongodb.core.aggregation.AggregationExpression} which will be subject to
+	 * context (domain type) specific field mapping.
+	 *
+	 * <pre class="code">
+	 * expr(valueOf("amountSpent").greaterThan("budget"))
+	 * </pre>
+	 * 
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link Criteria}.
+	 * @since 4.1
+	 */
+	public static Criteria expr(MongoExpression expression) {
+
+		Assert.notNull(expression, "Expression must not be null");
+
+		Criteria criteria = new Criteria();
+		criteria.criteria.put("$expr", expression);
+		return criteria;
 	}
 
 	/**

@@ -41,6 +41,9 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoExpression;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -558,6 +561,13 @@ public class QueryMapper {
 
 		if (source instanceof Example) {
 			return exampleMapper.getMappedExample((Example<?>) source, entity);
+		}
+
+		if(source instanceof MongoExpression exr) {
+			if(source instanceof AggregationExpression age) {
+				return age.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
+			}
+			return exr.toDocument();
 		}
 
 		if (source instanceof List) {
