@@ -978,6 +978,28 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
+	@Test // GH-3218
+	void updateUsesHintStringFromQuery() {
+
+		template.updateFirst(new Query().withHint("index-1"), new Update().set("spring", "data"), Human.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-1");
+	}
+
+	@Test // GH-3218
+	void updateUsesHintDocumentFromQuery() {
+
+		template.updateFirst(new Query().withHint("{ name : 1 }"), new Update().set("spring", "data"), Human.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHint()).isEqualTo(new Document("name", 1));
+	}
+
 	@Test // DATAMONGO-1518
 	void replaceOneShouldUseCollationWhenPresent() {
 

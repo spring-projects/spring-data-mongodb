@@ -350,7 +350,28 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
+	}
 
+	@Test // GH-3218
+	void updateUsesHintStringFromQuery() {
+
+		template.updateFirst(new Query().withHint("index-1"), new Update().set("spring", "data"), Person.class).subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-1");
+	}
+
+	@Test // GH-3218
+	void updateUsesHintDocumentFromQuery() {
+
+		template.updateFirst(new Query().withHint("{ firstname : 1 }"), new Update().set("spring", "data"), Person.class).subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHint()).isEqualTo(new Document("firstname", 1));
 	}
 
 	@Test // DATAMONGO-1518
