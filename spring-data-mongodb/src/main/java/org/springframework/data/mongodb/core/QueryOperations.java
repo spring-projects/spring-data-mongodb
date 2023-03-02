@@ -715,6 +715,7 @@ class QueryOperations {
 						.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
 			}
 
+			HintFunction.from(getQuery().getHint()).ifPresent(codecRegistryProvider, options::hintString, options::hint);
 			applyCollation(domainType, options::collation);
 
 			if (callback != null) {

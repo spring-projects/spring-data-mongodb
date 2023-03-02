@@ -922,6 +922,7 @@ Most methods return the `Update` object to provide a fluent style for the API.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
 
 WARNING: `updateFirst` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
+NOTE: Index hints for the update operation can be provided via `Query.withHint(...)`.
 
 [[mongodb-template-update.update]]
 ==== Methods in the `Update` Class

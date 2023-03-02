@@ -27,6 +27,7 @@ import org.springframework.util.StringUtils;
  * Function object to apply a query hint. Can be an index name or a BSON document.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.1
  */
 class HintFunction {
@@ -65,6 +66,23 @@ class HintFunction {
 	 */
 	public boolean isPresent() {
 		return (hint instanceof String hintString && StringUtils.hasText(hintString)) || hint instanceof Bson;
+	}
+
+	/**
+	 * Apply the hint to consumers depending on the hint format if {@link #isPresent() present}.
+	 *
+	 * @param registryProvider
+	 * @param stringConsumer
+	 * @param bsonConsumer
+	 * @param <R>
+	 */
+	public <R> void ifPresent(@Nullable CodecRegistryProvider registryProvider, Function<String, R> stringConsumer,
+			Function<Bson, R> bsonConsumer) {
+
+		if (!isPresent()) {
+			return;
+		}
+		apply(registryProvider, stringConsumer, bsonConsumer);
 	}
 
 	/**
