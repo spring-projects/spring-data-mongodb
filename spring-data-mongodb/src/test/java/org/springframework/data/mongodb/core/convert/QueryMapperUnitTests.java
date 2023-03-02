@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationExpressionCriteria.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
@@ -43,8 +44,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.Expr;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
@@ -1459,6 +1462,51 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", "value"), context.getPersistentEntity(WithPropertyValueConverter.class));
 		assertThat(mappedObject).isEqualTo(new org.bson.Document("text", "eulav"));
+	}
+
+	@Test // GH-2750
+	void mapsAggregationExpression() {
+
+		Query query = query(whereExpr(ComparisonOperators.valueOf("field").greaterThan("budget")));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$foo', '$budget'] } }");
+	}
+
+	@Test // GH-2750
+	void unwrapsAggregationExpressionExprObjectWrappedInExpressionCriteria() {
+
+		Query query = query(whereExpr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$foo', '$budget'] } }");
+	}
+
+	@Test // GH-2750
+	void mapsMongoExpressionToFieldsIfItsAnAggregationExpression() {
+
+		Query query = query(expr(ComparisonOperators.valueOf("field").greaterThan("budget")));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$foo', '$budget'] } }");
+	}
+
+	@Test // GH-2750
+	void usageOfMongoExpressionOnCriteriaDoesNotUnwrapAnExprAggregationExpression() {
+
+		Query query = query(expr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $expr : { $gt : [ '$foo', '$budget'] } } }");
+	}
+
+	@Test // GH-2750
+	void usesMongoExpressionDocumentAsIsIfItIsNotAnAggregationExpression() {
+
+		Query query = query(expr(() -> org.bson.Document.parse("{ $gt : [ '$field', '$budget'] }")));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$field', '$budget'] } }");
 	}
 
 	class WithDeepArrayNesting {

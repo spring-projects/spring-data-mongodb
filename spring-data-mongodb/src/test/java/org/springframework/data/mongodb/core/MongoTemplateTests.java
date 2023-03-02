@@ -68,6 +68,7 @@ import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.aggregation.StringOperators;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
@@ -3837,6 +3838,23 @@ public class MongoTemplateTests {
 		assertThat(target.values).containsExactly("spring");
 	}
 
+	@Test // GH-2750
+	void shouldExecuteQueryWithExpression() {
+
+		TypeWithFieldAnnotation source1 = new TypeWithFieldAnnotation();
+		source1.emailAddress = "spring.data@pivotal.com";
+
+		TypeWithFieldAnnotation source2 = new TypeWithFieldAnnotation();
+		source2.emailAddress = "spring.data@vmware.com";
+
+		template.insertAll(List.of(source1, source2));
+
+		TypeWithFieldAnnotation loaded = template.query(TypeWithFieldAnnotation.class)
+				.matching(expr(StringOperators.valueOf("emailAddress").regexFind(".*@vmware.com$", "i"))).firstValue();
+
+		assertThat(loaded).isEqualTo(source2);
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -4158,6 +4176,7 @@ public class MongoTemplateTests {
 		@Field(write = Field.Write.ALWAYS) String lastname;
 	}
 
+	@EqualsAndHashCode
 	static class TypeWithFieldAnnotation {
 
 		@Id ObjectId id;
