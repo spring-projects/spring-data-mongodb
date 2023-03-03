@@ -19,6 +19,7 @@ import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -46,7 +47,6 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.util.RegexFlags;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -1394,7 +1394,7 @@ public class Criteria implements CriteriaDefinition {
 
 			Assert.hasText(bitmask, "Bitmask must not be null");
 
-			target.criteria.put(operator, new Binary(Base64Utils.decodeFromString(bitmask)));
+			target.criteria.put(operator, new Binary(Base64.getDecoder().decode(bitmask)));
 			return target;
 		}
 
