@@ -23,6 +23,7 @@
 		<java-module-name>spring.data.mongodb</java-module-name>
 		<project.root>${basedir}/..</project.root>
 		<multithreadedtc>1.01</multithreadedtc>
+		<archunit.version>1.0.1</archunit.version>
 	</properties>
 
 	<dependencies>
@@ -250,9 +251,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>de.schauderhaft.degraph</groupId>
-			<artifactId>degraph-check</artifactId>
-			<version>0.1.4</version>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit</artifactId>
+			<version>${archunit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
