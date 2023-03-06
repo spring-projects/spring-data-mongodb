@@ -158,14 +158,14 @@ public class Criteria implements CriteriaDefinition {
 	 * <pre class="code">
 	 * expr(() -> Document.parse("{ $gt : [ '$spent', '$budget'] }")))
 	 * </pre>
-	 * 
+	 *
 	 * or an {@link org.springframework.data.mongodb.core.aggregation.AggregationExpression} which will be subject to
 	 * context (domain type) specific field mapping.
 	 *
 	 * <pre class="code">
 	 * expr(valueOf("amountSpent").greaterThan("budget"))
 	 * </pre>
-	 * 
+	 *
 	 * @param expression must not be {@literal null}.
 	 * @return new instance of {@link Criteria}.
 	 * @since 4.1
@@ -211,8 +211,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using {@literal null} equality comparison which matches documents that either contain the item
-	 * field whose value is {@literal null} or that do not contain the item field.
-	 * <br />
+	 * field whose value is {@literal null} or that do not contain the item field. <br />
 	 * Use {@link #isNullValue()} to only query for documents that contain the field whose value is equal to
 	 * {@link org.bson.BsonType#NULL}. <br />
 	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
@@ -228,10 +227,9 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using a {@link org.bson.BsonType} comparison which matches only documents that contain the item
-	 * field whose value is equal to {@link org.bson.BsonType#NULL}.
-	 * <br />
-	 * Use {@link #isNull()} to query for documents that contain the field with a {@literal null} value or do not contain the
-	 * field at all. <br />
+	 * field whose value is equal to {@link org.bson.BsonType#NULL}. <br />
+	 * Use {@link #isNull()} to query for documents that contain the field with a {@literal null} value or do not contain
+	 * the field at all. <br />
 	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
 	 *
 	 * @return this.
@@ -659,8 +657,8 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a geo-spatial criterion using a {@literal $maxDistance} operation, for use with {@literal $near} or
 	 * {@literal $nearSphere}.
 	 * <p>
-	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation
-	 * (legacy vs. geoJson) as well as the target operation.
+	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation (legacy
+	 * vs. geoJson) as well as the target operation.
 	 *
 	 * @param maxDistance radians or meters
 	 * @return this.
@@ -682,8 +680,8 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a geospatial criterion using a {@literal $minDistance} operation, for use with {@literal $near} or
 	 * {@literal $nearSphere}.
 	 * <p>
-	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation
-	 * (legacy vs. geoJson) as well as the target operation.
+	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation (legacy
+	 * vs. geoJson) as well as the target operation.
 	 *
 	 * @param minDistance radians or meters
 	 * @return this.

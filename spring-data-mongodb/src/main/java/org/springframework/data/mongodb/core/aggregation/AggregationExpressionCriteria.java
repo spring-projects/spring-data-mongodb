@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.Expr;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.lang.Nullable;
 
 /**
  * A {@link CriteriaDefinition criteria} to use {@code $expr} within a
@@ -52,7 +51,6 @@ public class AggregationExpressionCriteria implements CriteriaDefinition {
 		return new Document(getKey(), expression);
 	}
 
-	@Nullable
 	@Override
 	public String getKey() {
 		return "$expr";
