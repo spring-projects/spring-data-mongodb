@@ -3108,7 +3108,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			HintFunction hintFunction = HintFunction.from(query.getHint());
 			Meta meta = query.getMeta();
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& !hintFunction.isPresent() && !meta.hasValues()) {
+					&& hintFunction.isEmpty() && !meta.hasValues()) {
 				return findPublisherToUse;
 			}
 

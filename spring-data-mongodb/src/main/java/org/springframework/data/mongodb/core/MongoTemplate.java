@@ -3226,7 +3226,7 @@ public class MongoTemplate
 			Meta meta = query.getMeta();
 			HintFunction hintFunction = HintFunction.from(query.getHint());
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
-					&& !hintFunction.isPresent() && !meta.hasValues() && !query.getCollation().isPresent()) {
+					&& hintFunction.isEmpty() && !meta.hasValues() && query.getCollation().isEmpty()) {
 				return cursorToUse;
 			}
 

@@ -69,6 +69,15 @@ class HintFunction {
 	}
 
 	/**
+	 * If a hint is not present, returns {@code true}, otherwise {@code false}.
+	 *
+	 * @return {@code true} if a hint is not present, otherwise {@code false}.
+	 */
+	public boolean isEmpty() {
+		return !isPresent();
+	}
+
+	/**
 	 * Apply the hint to consumers depending on the hint format if {@link #isPresent() present}.
 	 *
 	 * @param registryProvider
@@ -79,7 +88,7 @@ class HintFunction {
 	public <R> void ifPresent(@Nullable CodecRegistryProvider registryProvider, Function<String, R> stringConsumer,
 			Function<Bson, R> bsonConsumer) {
 
-		if (!isPresent()) {
+		if (isEmpty()) {
 			return;
 		}
 		apply(registryProvider, stringConsumer, bsonConsumer);
@@ -97,7 +106,7 @@ class HintFunction {
 	public <R> R apply(@Nullable CodecRegistryProvider registryProvider, Function<String, R> stringConsumer,
 			Function<Bson, R> bsonConsumer) {
 
-		if (!isPresent()) {
+		if (isEmpty()) {
 			throw new IllegalStateException("No hint present");
 		}
 
