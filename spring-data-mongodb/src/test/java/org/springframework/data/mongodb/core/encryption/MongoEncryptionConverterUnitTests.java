@@ -40,6 +40,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
+import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 
@@ -125,7 +127,7 @@ class MongoEncryptionConverterUnitTests {
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class,
 				Type::getNestedFullyEncrypted);
 		when(conversionContext.getProperty()).thenReturn(property);
-		doReturn(convertedValue).when(conversionContext).write(any(), eq(property.getTypeInformation()));
+		doReturn(convertedValue).when(conversionContext).write(any(), eq(property.getTypeInformation().getType()));
 
 		ArgumentCaptor<String> path = ArgumentCaptor.forClass(String.class);
 		when(conversionContext.getValue(path.capture())).thenReturn("(ツ)");
@@ -158,7 +160,7 @@ class MongoEncryptionConverterUnitTests {
 
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class, Type::getListOfComplex);
 		when(conversionContext.getProperty()).thenReturn(property);
-		doReturn(convertedValue1, convertedValue2).when(conversionContext).write(any(), eq(property.getTypeInformation()));
+		doReturn(convertedValue1, convertedValue2).when(conversionContext).write(any(), eq(property.getTypeInformation().getType()));
 
 		JustATypeWithAnUnencryptedField source1 = new JustATypeWithAnUnencryptedField();
 		source1.unencryptedValue = "nested-unencrypted-1";
@@ -178,7 +180,7 @@ class MongoEncryptionConverterUnitTests {
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class, Type::getMapOfString);
 		when(conversionContext.getProperty()).thenReturn(property);
 		doReturn(new Document("k1", "v1").append("k2", "v2")).when(conversionContext).write(any(),
-				eq(property.getTypeInformation()));
+				eq(property.getTypeInformation().getType()));
 
 		converter.write(Map.of("k1", "v1", "k2", "v2"), conversionContext);
 
@@ -195,7 +197,7 @@ class MongoEncryptionConverterUnitTests {
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class, Type::getMapOfComplex);
 		when(conversionContext.getProperty()).thenReturn(property);
 		doReturn(new Document("k1", convertedValue1).append("k2", convertedValue2)).when(conversionContext).write(any(),
-				eq(property.getTypeInformation()));
+				eq(property.getTypeInformation().getType()));
 
 		JustATypeWithAnUnencryptedField source1 = new JustATypeWithAnUnencryptedField();
 		source1.unencryptedValue = "nested-unencrypted-1";

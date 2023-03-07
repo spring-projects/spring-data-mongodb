@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.encryption;
+package org.springframework.data.mongodb.core.convert.encryption;
 
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
@@ -45,7 +48,22 @@ class ExplicitEncryptionContext implements EncryptionContext {
 	}
 
 	@Override
-	public MongoConversionContext getValueConversionContext() {
-		return conversionContext;
+	public Object convertToMongoType(Object value) {
+		return conversionContext.write(value);
+	}
+
+	@Override
+	public EvaluationContext getEvaluationContext(Object source) {
+		return conversionContext.getSpELContext().getEvaluationContext(source);
+	}
+
+	@Override
+	public <T> T read(@Nullable Object value, @NonNull Class<T> target) {
+		return conversionContext.read(value, target);
+	}
+
+	@Override
+	public <T> T write(@Nullable Object value, @NonNull Class<T> target) {
+		return conversionContext.write(value, target);
 	}
 }

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.encryption;
+package org.springframework.data.mongodb.core.convert.encryption;
 
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoValueConverter;
+import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 
 /**
  * A specialized {@link MongoValueConverter} for {@literal en-/decrypting} properties.

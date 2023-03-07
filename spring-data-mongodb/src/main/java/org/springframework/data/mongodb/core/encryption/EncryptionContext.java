@@ -16,23 +16,52 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import org.springframework.data.convert.ValueConversionContext;
-import org.springframework.data.mongodb.core.convert.MongoConversionContext;
-import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  */
-public interface EncryptionContext extends ValueConversionContext<MongoPersistentProperty> {
+public interface EncryptionContext {
 
 	/**
-	 * @return {@literal true} if the {@link ExplicitlyEncrypted} annotation is present.
+	 * Returns the {@link MongoPersistentProperty} to be handled.
+	 *
+	 * @return will never be {@literal null}.
 	 */
-	default boolean isExplicitlyEncrypted() {
-		return getProperty().isAnnotationPresent(ExplicitlyEncrypted.class);
-	}
+	MongoPersistentProperty getProperty();
+
+	/**
+	 * Shortcut for converting a given {@literal value} into its store representation using the root
+	 * {@link ValueConversionContext}.
+	 *
+	 * @param value
+	 * @return
+	 */
+	Object convertToMongoType(Object value);
+
+	/**
+	 * Reads the value as an instance of {@link Class type}.
+	 *
+	 * @param value {@link Object value} to be read; can be {@literal null}.
+	 * @param target {@link Class type} of value to be read; must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
+	 */
+	<T> T read(@Nullable Object value, @NonNull Class<T> target);
+
+	/**
+	 * Write the value as an instance of {@link Class type}.
+	 *
+	 * @param value {@link Object value} to write; can be {@literal null}.
+	 * @param target {@link Class type} of value to be written; must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 * @throws IllegalStateException if value cannot be written as an instance of {@link Class type}.
+	 */
+	@Nullable
+	<T> T write(@Nullable Object value, @NonNull Class<T> target);
 
 	/**
 	 * Lookup the value for a given path within the current context.
@@ -41,42 +70,8 @@ public interface EncryptionContext extends ValueConversionContext<MongoPersisten
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	default Object lookupValue(String path) {
-		return getValueConversionContext().getValue(path);
-	}
+	Object lookupValue(String path);
 
-	/**
-	 * Shortcut for converting a given {@literal value} into its store representation using the root
-	 * {@link ValueConversionContext}.
-	 * 
-	 * @param value
-	 * @return
-	 */
-	default Object convertToMongoType(Object value) {
-		return getValueConversionContext().write(value);
-	}
+	EvaluationContext getEvaluationContext(Object source);
 
-	/**
-	 * Search for the {@link Encrypted} annotation on both the {@link org.springframework.data.mapping.PersistentProperty
-	 * property} as well as the {@link org.springframework.data.mapping.PersistentEntity entity} and return the first
-	 * found
-	 * 
-	 * @return can be {@literal null}.
-	 */
-	@Nullable
-	default Encrypted lookupEncryptedAnnotation() {
-
-		// TODO: having the path present here would really be helpful to inherit the algorithm
-		Encrypted annotation = getProperty().findAnnotation(Encrypted.class);
-		return annotation != null ? annotation : getProperty().getOwner().findAnnotation(Encrypted.class);
-	}
-
-	/**
-	 * @return the {@link ValueConversionContext}.
-	 */
-	MongoConversionContext getValueConversionContext();
-
-	default EvaluationContext getEvaluationContext(Object source) {
-		return getValueConversionContext().getSpELContext().getEvaluationContext(source);
-	}
 }

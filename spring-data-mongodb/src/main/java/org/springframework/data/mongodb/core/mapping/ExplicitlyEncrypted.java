@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.encryption;
+package org.springframework.data.mongodb.core.mapping;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,7 +23,8 @@ import java.lang.annotation.Target;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Encrypted;
+import org.springframework.data.mongodb.core.convert.encryption.EncryptingConverter;
+import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 
 /**
  * {@link ExplicitlyEncrypted} is a {@link ElementType#FIELD field} level {@link ValueConverter} annotation that

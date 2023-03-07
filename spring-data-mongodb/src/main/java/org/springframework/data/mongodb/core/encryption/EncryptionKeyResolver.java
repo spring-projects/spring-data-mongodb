@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.encryption;
 import org.bson.BsonBinary;
 import org.bson.types.Binary;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.util.StringUtils;

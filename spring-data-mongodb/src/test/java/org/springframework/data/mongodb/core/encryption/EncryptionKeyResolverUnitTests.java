@@ -35,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.encryption;
+package org.springframework.data.mongodb.core.convert.encryption;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -28,6 +28,11 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.encryption.Encryption;
+import org.springframework.data.mongodb.core.encryption.EncryptionContext;
+import org.springframework.data.mongodb.core.encryption.EncryptionKeyResolver;
+import org.springframework.data.mongodb.core.encryption.EncryptionOptions;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
@@ -65,8 +70,8 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		if (encryptedValue instanceof Binary || encryptedValue instanceof BsonBinary) {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Decrypting %s.%s.", context.getProperty().getOwner().getName(),
-						context.getProperty().getName()));
+				LOGGER.debug(String.format("Decrypting %s.%s.",  getProperty(context).getOwner().getName(),
+						getProperty(context).getName()));
 			}
 
 			decryptedValue = encryption.decrypt((BsonBinary) BsonUtils.simpleToBsonValue(encryptedValue));
@@ -78,9 +83,9 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			}
 		}
 
-		MongoPersistentProperty persistentProperty = context.getProperty();
+		MongoPersistentProperty persistentProperty =  getProperty(context);
 
-		if (context.getProperty().isCollectionLike() && decryptedValue instanceof Iterable<?> iterable) {
+		if (getProperty(context).isCollectionLike() && decryptedValue instanceof Iterable<?> iterable) {
 			if (!persistentProperty.isEntity()) {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 				iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
@@ -88,7 +93,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			} else {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), 10);
 				iterable.forEach(it -> {
-					collection.add(context.getValueConversionContext().read(BsonUtils.toJavaType((BsonValue) it),
+					collection.add(context.read(BsonUtils.toJavaType((BsonValue) it),
 							persistentProperty.getActualType()));
 				});
 				return collection;
@@ -104,23 +109,33 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		}
 
 		if (persistentProperty.isEntity() && decryptedValue instanceof BsonDocument bsonDocument) {
-			return context.getValueConversionContext().read(BsonUtils.toJavaType(bsonDocument),
-					persistentProperty.getTypeInformation());
+			return context.read(BsonUtils.toJavaType(bsonDocument),
+					persistentProperty.getTypeInformation().getType());
 		}
 
 		return decryptedValue;
+	}
+
+	private MongoPersistentProperty getProperty(EncryptionContext context) {
+		return context.getProperty();
 	}
 
 	@Override
 	public Object encrypt(Object value, EncryptionContext context) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Encrypting %s.%s.", context.getProperty().getOwner().getName(),
-					context.getProperty().getName()));
+			LOGGER.debug(String.format("Encrypting %s.%s.", getProperty(context).getOwner().getName(),
+					getProperty(context).getName()));
 		}
 
-		MongoPersistentProperty persistentProperty = context.getProperty();
-		EncryptionOptions encryptionOptions = new EncryptionOptions(context.lookupEncryptedAnnotation().algorithm());
+		MongoPersistentProperty persistentProperty =  getProperty(context);
+
+		Encrypted annotation = persistentProperty.findAnnotation(Encrypted.class);
+		if(annotation == null) {
+			annotation = persistentProperty.getOwner().findAnnotation(Encrypted.class);
+		}
+
+		EncryptionOptions encryptionOptions = new EncryptionOptions(annotation.algorithm());
 		encryptionOptions.setKey(keyResolver.getKey(context));
 
 		if (!persistentProperty.isEntity()) {
@@ -129,7 +144,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 				return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 			}
 			if (persistentProperty.isMap()) {
-				Object convertedMap = context.getValueConversionContext().write(value, persistentProperty.getTypeInformation());
+				Object convertedMap = context.write(value, persistentProperty.getTypeInformation().getType());
 				if (convertedMap instanceof Document document) {
 					return encryption.encrypt(document.toBsonDocument(), encryptionOptions);
 				}
@@ -140,7 +155,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 		}
 
-		Object write = context.getValueConversionContext().write(value, persistentProperty.getTypeInformation());
+		Object write = context.write(value, persistentProperty.getTypeInformation().getType());
 		if (write instanceof Document doc) {
 			return encryption.encrypt(doc.toBsonDocument(), encryptionOptions);
 		}
@@ -163,12 +178,12 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		} else {
 			if (value instanceof Collection values) {
 				values.forEach(it -> {
-					Document write = (Document) context.getValueConversionContext().write(it, property.getTypeInformation());
+					Document write = (Document) context.write(it, property.getTypeInformation().getType());
 					bsonArray.add(write.toBsonDocument());
 				});
 			} else if (ObjectUtils.isArray(value)) {
 				for (Object o : ObjectUtils.toObjectArray(value)) {
-					Document write = (Document) context.getValueConversionContext().write(o, property.getTypeInformation());
+					Document write = (Document) context.write(o, property.getTypeInformation().getType());
 					bsonArray.add(write.toBsonDocument());
 				}
 			}
