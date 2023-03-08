@@ -649,9 +649,32 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
+		if (value instanceof DBRef dbref) {
+			accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
+			return;
+		}
 
-		accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
+		/*
+		 * The value might be a pre resolved full document (eg. resulting from an aggregation $lookup).
+		 * In this case we try to map that object to the target type without an additional step ($dbref resolution server roundtrip)
+		 * in between.
+		 */
+		if (value instanceof Document document) {
+			if(property.isMap()) {
+				if(document.isEmpty() || document.values().iterator().next() instanceof DBRef) {
+					accessor.setProperty(property, dbRefResolver.resolveDbRef(property, null, callback, handler));
+				} else {
+					accessor.setProperty(property, readMap(context, document, property.getTypeInformation()));
+				}
+			} else {
+				accessor.setProperty(property, read(property.getActualType(), document));
+			}
+		} else if (value instanceof Collection<?> collection && collection.size() > 0
+				&& collection.iterator().next() instanceof Document) {
+			accessor.setProperty(property, readCollectionOrArray(context, collection, property.getTypeInformation()));
+		} else {
+			accessor.setProperty(property, dbRefResolver.resolveDbRef(property, null, callback, handler));
+		}
 	}
 
 	@Nullable
