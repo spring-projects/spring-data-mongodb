@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,6 +111,98 @@ public class MappingMongoConverterTests {
 		verify(dbRefResolver).bulkFetch(any());
 	}
 
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedReferences() {
+
+		Document sampleSource = new Document("_id", "sample-1").append("value", "one");
+		Document source = new Document("_id", "id-1").append("sample", sampleSource);
+
+		WithSingleValueDbRef read = converter.read(WithSingleValueDbRef.class, source);
+
+		assertThat(read.sample).isEqualTo(converter.read(Sample.class, sampleSource));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedListOfReferences() {
+
+		Document sample1Source = new Document("_id", "sample-1").append("value", "one");
+		Document sample2Source = new Document("_id", "sample-2").append("value", "two");
+		Document source = new Document("_id", "id-1").append("lazyList", List.of(sample1Source, sample2Source));
+
+		WithLazyDBRef read = converter.read(WithLazyDBRef.class, source);
+
+		assertThat(read.lazyList).containsExactly(converter.read(Sample.class, sample1Source),
+				converter.read(Sample.class, sample2Source));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedMapOfReferences() {
+
+		Document sample1Source = new Document("_id", "sample-1").append("value", "one");
+		Document sample2Source = new Document("_id", "sample-2").append("value", "two");
+		Document source = new Document("_id", "id-1").append("sampleMap",
+				new Document("s1", sample1Source).append("s2", sample2Source));
+
+		WithMapValueDbRef read = converter.read(WithMapValueDbRef.class, source);
+
+		assertThat(read.sampleMap) //
+				.containsEntry("s1", converter.read(Sample.class, sample1Source)) //
+				.containsEntry("s2", converter.read(Sample.class, sample2Source));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedMapOfLazyReferences() {
+
+		Document sample1Source = new Document("_id", "sample-1").append("value", "one");
+		Document sample2Source = new Document("_id", "sample-2").append("value", "two");
+		Document source = new Document("_id", "id-1").append("sampleMapLazy",
+				new Document("s1", sample1Source).append("s2", sample2Source));
+
+		WithMapValueDbRef read = converter.read(WithMapValueDbRef.class, source);
+
+		assertThat(read.sampleMapLazy) //
+				.containsEntry("s1", converter.read(Sample.class, sample1Source)) //
+				.containsEntry("s2", converter.read(Sample.class, sample2Source));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void resolvesLazyDBRefMapOnAccess() {
+
+		client.getDatabase(DATABASE).getCollection("samples")
+				.insertMany(Arrays.asList(new Document("_id", "sample-1").append("value", "one"),
+						new Document("_id", "sample-2").append("value", "two")));
+
+		Document source = new Document("_id", "id-1").append("sampleMapLazy",
+				new Document("s1", new com.mongodb.DBRef("samples", "sample-1")).append("s2",
+						new com.mongodb.DBRef("samples", "sample-2")));
+
+		WithMapValueDbRef target = converter.read(WithMapValueDbRef.class, source);
+
+		verify(dbRefResolver).resolveDbRef(any(), isNull(), any(), any());
+
+		assertThat(target.sampleMapLazy).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.getSampleMapLazy()).containsEntry("s1", new Sample("sample-1", "one")).containsEntry("s2",
+				new Sample("sample-2", "two"));
+
+		verify(dbRefResolver).bulkFetch(any());
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedLazyReferences() {
+
+		Document sampleSource = new Document("_id", "sample-1").append("value", "one");
+		Document source = new Document("_id", "id-1").append("sampleLazy", sampleSource);
+
+		WithSingleValueDbRef read = converter.read(WithSingleValueDbRef.class, source);
+
+		assertThat(read.sampleLazy).isEqualTo(converter.read(Sample.class, sampleSource));
+		verifyNoInteractions(dbRefResolver);
+	}
+
 	@Test // DATAMONGO-2004
 	void resolvesLazyDBRefConstructorArgOnAccess() {
 
@@ -162,6 +255,31 @@ public class MappingMongoConverterTests {
 		List<Sample> getLazyList() {
 			return lazyList;
 		}
+	}
+
+	@Data
+	public static class WithSingleValueDbRef {
+
+		@Id //
+		String id;
+
+		@DBRef //
+		Sample sample;
+
+		@DBRef(lazy = true) //
+		Sample sampleLazy;
+	}
+
+	@Data
+	public static class WithMapValueDbRef {
+
+		@Id String id;
+
+		@DBRef //
+		Map<String, Sample> sampleMap;
+
+		@DBRef(lazy = true) //
+		Map<String, Sample> sampleMapLazy;
 	}
 
 	public static class WithLazyDBRefAsConstructorArg {
