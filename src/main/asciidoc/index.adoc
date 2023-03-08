@@ -32,6 +32,7 @@ include::{spring-data-commons-docs}/auditing.adoc[leveloffset=+1]
 include::reference/mongo-auditing.adoc[leveloffset=+1]
 include::reference/mapping.adoc[leveloffset=+1]
 include::reference/sharding.adoc[leveloffset=+1]
+include::reference/mongo-encryption.adoc[leveloffset=+1]
 include::reference/kotlin.adoc[leveloffset=+1]
 include::reference/jmx.adoc[leveloffset=+1]
 
