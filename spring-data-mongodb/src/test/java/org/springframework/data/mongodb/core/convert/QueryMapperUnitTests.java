@@ -1453,12 +1453,21 @@ public class QueryMapperUnitTests {
 		assertThat(mappedQuery.get("_id"))
 				.isEqualTo(org.bson.Document.parse("{ $in: [ {$oid: \"5b8bedceb1e0bfc07b008828\" } ]}"));
 	}
-	
+
 	@Test // GH-3596
 	void considersValueConverterWhenPresent() {
 
 		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", "value"), context.getPersistentEntity(WithPropertyValueConverter.class));
 		assertThat(mappedObject).isEqualTo(new org.bson.Document("text", "eulav"));
+	}
+
+	@Test // GH-4080
+	void convertsListOfValuesForPropertyThatHasValueConverterButIsNotCollectionLikeOneByOne() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("text").in("spring", "data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : { $in : ['gnirps', 'atad'] } }");
 	}
 
 	class WithDeepArrayNesting {
@@ -1739,9 +1748,9 @@ public class QueryMapperUnitTests {
 	static class MyAddress {
 		private String street;
 	}
-	
+
 	static class WithPropertyValueConverter {
-		
+
 		@ValueConverter(ReversingValueConverter.class)
 		String text;
 	}
