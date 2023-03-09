@@ -1509,6 +1509,15 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$field', '$budget'] } }");
 	}
 
+	@Test // GH-4080
+	void convertsListOfValuesForPropertyThatHasValueConverterButIsNotCollectionLikeOneByOne() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("text").in("spring", "data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : { $in : ['gnirps', 'atad'] } }");
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
