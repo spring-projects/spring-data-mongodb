@@ -51,16 +51,7 @@ import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.Exp
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoId;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.TextScore;
-import org.springframework.data.mongodb.core.mapping.Unwrapped;
+import org.springframework.data.mongodb.core.mapping.*;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1456,7 +1447,7 @@ public class QueryMapperUnitTests {
 		assertThat(mappedQuery.get("_id"))
 				.isEqualTo(org.bson.Document.parse("{ $in: [ {$oid: \"5b8bedceb1e0bfc07b008828\" } ]}"));
 	}
-	
+
 	@Test // GH-3596
 	void considersValueConverterWhenPresent() {
 
@@ -1507,6 +1498,15 @@ public class QueryMapperUnitTests {
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$field', '$budget'] } }");
+	}
+
+	@Test // GH-4080
+	void convertsListOfValuesForPropertyThatHasValueConverterButIsNotCollectionLikeOneByOne() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("text").in("spring", "data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : { $in : ['gnirps', 'atad'] } }");
 	}
 
 	class WithDeepArrayNesting {
@@ -1787,9 +1787,9 @@ public class QueryMapperUnitTests {
 	static class MyAddress {
 		private String street;
 	}
-	
+
 	static class WithPropertyValueConverter {
-		
+
 		@ValueConverter(ReversingValueConverter.class)
 		String text;
 	}
