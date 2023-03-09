@@ -27,10 +27,11 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -438,9 +439,18 @@ public class QueryMapper {
 
 		if (documentField.getProperty() != null
 				&& converter.getCustomConversions().getPropertyValueConversions().hasValueConverter(documentField.getProperty())) {
-			return converter.getCustomConversions().getPropertyValueConversions()
-					.getValueConverter(documentField.getProperty())
-					.write(value, new MongoConversionContext(documentField.getProperty(), converter));
+
+			MongoConversionContext conversionContext = new MongoConversionContext(documentField.getProperty(), converter);
+			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = converter
+					.getCustomConversions().getPropertyValueConversions().getValueConverter(documentField.getProperty());
+
+			/* might be an $in clause with multiple entries */
+			if (!documentField.getProperty().isCollectionLike() && sourceValue instanceof Collection<?>) {
+				Collection<?> collection = (Collection<?>) sourceValue;
+				return collection.stream().map(it -> valueConverter.write(it, conversionContext)).collect(Collectors.toList());
+			}
+
+			return valueConverter.write(value, conversionContext);
 		}
 
 		if (documentField.isIdField() && !documentField.isAssociation()) {
