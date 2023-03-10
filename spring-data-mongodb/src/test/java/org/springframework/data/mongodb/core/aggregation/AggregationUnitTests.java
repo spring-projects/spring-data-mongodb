@@ -29,6 +29,7 @@ import java.util.Map;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperationUnitTests.BookWithFieldAnnotation;
@@ -628,6 +629,28 @@ public class AggregationUnitTests {
 		AggregationOperation stage = stage(Aggregates.project(Projections.fields(Projections.include("name"))));
 		Document target = newAggregation(stage).toDocument("col-1", DEFAULT_CONTEXT);
 		assertThat(extractPipelineElement(target, 0, "$project")).containsKey("name");
+	}
+	
+	@Test // GH-3917
+	void inheritedFieldsExposingContextShouldNotFailOnUnknownFieldReferenceForRelaxedRootContext() {
+
+		List<AggregationOperation> aggregationOperations = new ArrayList<>();
+
+		GroupOperation groupOperation = Aggregation.group("_id", "label_name");
+		aggregationOperations.add(groupOperation);
+
+		ProjectionOperation projectionOperation = Aggregation.project("label_name").andExclude("_id");
+		aggregationOperations.add(projectionOperation);
+
+		Sort sort = Sort.by(Sort.Direction.DESC, "serial_number");
+		SortOperation sortOperation = new SortOperation(sort).and(Sort.Direction.DESC, "label_name");
+		aggregationOperations.add(sortOperation);
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		QueryMapper queryMapper = new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
+		
+		List<Document> documents = newAggregation(City.class, aggregationOperations).toPipeline(new RelaxedTypeBasedAggregationOperationContext(City.class, mappingContext, queryMapper));
+		assertThat(documents.get(2)).isEqualTo("{ $sort : { 'serial_number' : -1, 'label_name' : -1 } }");
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {
