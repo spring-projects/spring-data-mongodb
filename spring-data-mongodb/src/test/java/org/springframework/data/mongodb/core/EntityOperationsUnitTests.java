@@ -17,10 +17,14 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
+import java.util.Map;
 
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
@@ -61,6 +65,57 @@ class EntityOperationsUnitTests {
 		assertThat(initAdaptibleEntity(new DomainTypeWithIdProperty()).populateIdIfNecessary(null)).isNotNull();
 	}
 
+	@Test // GH-4308
+	void shouldExtractKeysFromEntity() {
+
+		WithNestedDocument object = new WithNestedDocument("foo");
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1));
+
+		assertThat(keys).containsEntry("id", "foo");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromDocument() {
+
+		Document object = new Document("id", "foo");
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1));
+
+		assertThat(keys).containsEntry("id", "foo");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromNestedEntity() {
+
+		WithNestedDocument object = new WithNestedDocument("foo", new WithNestedDocument("bar"), null);
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("nested.id", 1));
+
+		assertThat(keys).containsEntry("nested.id", "bar");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromNestedEntityDocument() {
+
+		WithNestedDocument object = new WithNestedDocument("foo", new WithNestedDocument("bar"),
+				new Document("john", "doe"));
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1));
+
+		assertThat(keys).containsEntry("document.john", "doe");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromNestedDocument() {
+
+		Document object = new Document("document", new Document("john", "doe"));
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1));
+
+		assertThat(keys).containsEntry("document.john", "doe");
+	}
+
 	<T> EntityOperations.AdaptibleEntity<T> initAdaptibleEntity(T source) {
 		return operations.forEntity(source, conversionService);
 	}
@@ -79,5 +134,20 @@ class EntityOperationsUnitTests {
 	@TimeSeries(timeField = "time", metaField = "foo")
 	static class InvalidMetaField {
 		Instant time;
+	}
+
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class WithNestedDocument {
+
+		String id;
+
+		WithNestedDocument nested;
+
+		Document document;
+
+		public WithNestedDocument(String id) {
+			this.id = id;
+		}
 	}
 }

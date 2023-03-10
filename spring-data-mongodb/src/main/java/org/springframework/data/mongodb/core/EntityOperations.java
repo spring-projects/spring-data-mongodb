@@ -124,7 +124,7 @@ class EntityOperations {
 			return new SimpleMappedEntity((Map<String, Object>) entity);
 		}
 
-		return MappedEntity.of(entity, context);
+		return MappedEntity.of(entity, context, this);
 	}
 
 	/**
@@ -148,7 +148,7 @@ class EntityOperations {
 			return new SimpleMappedEntity((Map<String, Object>) entity);
 		}
 
-		return AdaptibleMappedEntity.of(entity, context, conversionService);
+		return AdaptibleMappedEntity.of(entity, context, conversionService, this);
 	}
 
 	/**
@@ -387,6 +387,16 @@ class EntityOperations {
 		Object getId();
 
 		/**
+		 * Returns the property value for {@code key}.
+		 *
+		 * @param key
+		 * @return
+		 * @since 4.1
+		 */
+		@Nullable
+		Object getPropertyValue(String key);
+
+		/**
 		 * Returns the {@link Query} to find the entity by its identifier.
 		 *
 		 * @return
@@ -457,6 +467,11 @@ class EntityOperations {
 		 */
 		boolean isNew();
 
+		/**
+		 * @param sortObject
+		 * @return
+		 * @since 3.1
+		 */
 		Map<String, Object> extractKeys(Document sortObject);
 
 	}
@@ -518,7 +533,12 @@ class EntityOperations {
 
 		@Override
 		public Object getId() {
-			return map.get(ID_FIELD);
+			return getPropertyValue(ID_FIELD);
+		}
+
+		@Override
+		public Object getPropertyValue(String key) {
+			return map.get(key);
 		}
 
 		@Override
@@ -613,23 +633,26 @@ class EntityOperations {
 		private final MongoPersistentEntity<?> entity;
 		private final IdentifierAccessor idAccessor;
 		private final PersistentPropertyAccessor<T> propertyAccessor;
+		private final EntityOperations entityOperations;
 
 		protected MappedEntity(MongoPersistentEntity<?> entity, IdentifierAccessor idAccessor,
-				PersistentPropertyAccessor<T> propertyAccessor) {
+				PersistentPropertyAccessor<T> propertyAccessor, EntityOperations entityOperations) {
 
 			this.entity = entity;
 			this.idAccessor = idAccessor;
 			this.propertyAccessor = propertyAccessor;
+			this.entityOperations = entityOperations;
 		}
 
 		private static <T> MappedEntity<T> of(T bean,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
+				EntityOperations entityOperations) {
 
 			MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(bean.getClass());
 			IdentifierAccessor identifierAccessor = entity.getIdentifierAccessor(bean);
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
-			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor);
+			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor, entityOperations);
 		}
 
 		@Override
@@ -640,6 +663,11 @@ class EntityOperations {
 		@Override
 		public Object getId() {
 			return idAccessor.getRequiredIdentifier();
+		}
+
+		@Override
+		public Object getPropertyValue(String key) {
+			return propertyAccessor.getProperty(entity.getRequiredPersistentProperty(key));
 		}
 
 		@Override
@@ -728,12 +756,37 @@ class EntityOperations {
 
 			for (String key : sortObject.keySet()) {
 
-				// TODO: make this work for nested properties
-				MongoPersistentProperty persistentProperty = entity.getRequiredPersistentProperty(key);
-				keyset.put(key, propertyAccessor.getProperty(persistentProperty));
+				if (key.indexOf('.') != -1) {
+
+					// follow the path across nested levels.
+					// TODO: We should have a MongoDB-specific property path abstraction to allow diving into Document.
+					keyset.put(key, getNestedPropertyValue(key));
+				} else {
+					keyset.put(key, getPropertyValue(key));
+				}
 			}
 
 			return keyset;
+		}
+
+		@Nullable
+		private Object getNestedPropertyValue(String key) {
+
+			String[] segments = key.split("\\.");
+			Entity<?> currentEntity = this;
+			Object currentValue = null;
+
+			for (int i = 0; i < segments.length; i++) {
+
+				String segment = segments[i];
+				currentValue = currentEntity.getPropertyValue(segment);
+
+				if (i < segments.length - 1) {
+					currentEntity = entityOperations.forEntity(currentValue);
+				}
+			}
+
+			return currentValue;
 		}
 	}
 
@@ -744,9 +797,9 @@ class EntityOperations {
 		private final IdentifierAccessor identifierAccessor;
 
 		private AdaptibleMappedEntity(MongoPersistentEntity<?> entity, IdentifierAccessor identifierAccessor,
-				ConvertingPropertyAccessor<T> propertyAccessor) {
+				ConvertingPropertyAccessor<T> propertyAccessor, EntityOperations entityOperations) {
 
-			super(entity, identifierAccessor, propertyAccessor);
+			super(entity, identifierAccessor, propertyAccessor, entityOperations);
 
 			this.entity = entity;
 			this.propertyAccessor = propertyAccessor;
@@ -755,14 +808,14 @@ class EntityOperations {
 
 		private static <T> AdaptibleEntity<T> of(T bean,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-				ConversionService conversionService) {
+				ConversionService conversionService, EntityOperations entityOperations) {
 
 			MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(bean.getClass());
 			IdentifierAccessor identifierAccessor = entity.getIdentifierAccessor(bean);
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
 			return new AdaptibleMappedEntity<>(entity, identifierAccessor,
-					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService));
+					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), entityOperations);
 		}
 
 		@Nullable
