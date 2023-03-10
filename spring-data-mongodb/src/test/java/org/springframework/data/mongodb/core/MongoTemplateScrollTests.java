@@ -18,18 +18,23 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.OffsetScrollPosition;
@@ -69,7 +74,6 @@ class MongoTemplateScrollTests {
 
 		cfg.configureMappingContext(it -> {
 			it.autocreateIndex(false);
-			it.initialEntitySet(AuditablePerson.class);
 		});
 
 		cfg.configureApplicationContext(it -> {
@@ -87,6 +91,39 @@ class MongoTemplateScrollTests {
 	@BeforeEach
 	void setUp() {
 		template.remove(Person.class).all();
+		template.remove(WithNestedDocument.class).all();
+	}
+
+	@Test
+	void shouldUseKeysetScrollingWithNestedSort() {
+
+		WithNestedDocument john20 = new WithNestedDocument(null, "John", 120, new WithNestedDocument("John", 20),
+				new Document("name", "bar"));
+		WithNestedDocument john40 = new WithNestedDocument(null, "John", 140, new WithNestedDocument("John", 40),
+				new Document("name", "baz"));
+		WithNestedDocument john41 = new WithNestedDocument(null, "John", 141, new WithNestedDocument("John", 41),
+				new Document("name", "foo"));
+
+		template.insertAll(Arrays.asList(john20, john40, john41));
+
+		Query q = new Query(where("name").regex("J.*")).with(Sort.by("nested.name", "nested.age", "document.name"))
+				.limit(2);
+		q.with(KeysetScrollPosition.initial());
+
+		Scroll<WithNestedDocument> scroll = template.scroll(q, WithNestedDocument.class);
+
+		assertThat(scroll.hasNext()).isTrue();
+		assertThat(scroll.isLast()).isFalse();
+		assertThat(scroll).hasSize(2);
+		assertThat(scroll).containsOnly(john20, john40);
+
+		scroll = template.scroll(q.with(scroll.lastPosition()), WithNestedDocument.class);
+
+		assertThat(scroll.hasNext()).isFalse();
+		assertThat(scroll.isLast()).isTrue();
+		assertThat(scroll).hasSize(1);
+		assertThat(scroll).containsOnly(john41);
+
 	}
 
 	@ParameterizedTest // GH-4308
@@ -143,5 +180,33 @@ class MongoTemplateScrollTests {
 	static Document toDocument(Person person) {
 		return new Document("_class", person.getClass().getName()).append("_id", person.getId()).append("active", true)
 				.append("firstName", person.getFirstName()).append("age", person.getAge());
+	}
+
+	@NoArgsConstructor
+	@Data
+	class WithNestedDocument {
+
+		String id;
+		String name;
+
+		int age;
+
+		WithNestedDocument nested;
+
+		Document document;
+
+		public WithNestedDocument(String name, int age) {
+			this.name = name;
+			this.age = age;
+		}
+
+		@PersistenceCreator
+		public WithNestedDocument(String id, String name, int age, WithNestedDocument nested, Document document) {
+			this.id = id;
+			this.name = name;
+			this.age = age;
+			this.nested = nested;
+			this.document = document;
+		}
 	}
 }
