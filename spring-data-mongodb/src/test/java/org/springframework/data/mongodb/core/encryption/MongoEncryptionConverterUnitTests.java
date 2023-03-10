@@ -127,7 +127,7 @@ class MongoEncryptionConverterUnitTests {
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class,
 				Type::getNestedFullyEncrypted);
 		when(conversionContext.getProperty()).thenReturn(property);
-		doReturn(convertedValue).when(conversionContext).write(any(), eq(property.getTypeInformation().getType()));
+		doReturn(convertedValue).when(conversionContext).write(any(), eq(property.getTypeInformation()));
 
 		ArgumentCaptor<String> path = ArgumentCaptor.forClass(String.class);
 		when(conversionContext.getValue(path.capture())).thenReturn("(ツ)");
@@ -160,7 +160,7 @@ class MongoEncryptionConverterUnitTests {
 
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class, Type::getListOfComplex);
 		when(conversionContext.getProperty()).thenReturn(property);
-		doReturn(convertedValue1, convertedValue2).when(conversionContext).write(any(), eq(property.getTypeInformation().getType()));
+		doReturn(convertedValue1, convertedValue2).when(conversionContext).write(any(), eq(property.getTypeInformation()));
 
 		JustATypeWithAnUnencryptedField source1 = new JustATypeWithAnUnencryptedField();
 		source1.unencryptedValue = "nested-unencrypted-1";
@@ -180,7 +180,7 @@ class MongoEncryptionConverterUnitTests {
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class, Type::getMapOfString);
 		when(conversionContext.getProperty()).thenReturn(property);
 		doReturn(new Document("k1", "v1").append("k2", "v2")).when(conversionContext).write(any(),
-				eq(property.getTypeInformation().getType()));
+				eq(property.getTypeInformation()));
 
 		converter.write(Map.of("k1", "v1", "k2", "v2"), conversionContext);
 
@@ -197,7 +197,7 @@ class MongoEncryptionConverterUnitTests {
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyFor(Type.class, Type::getMapOfComplex);
 		when(conversionContext.getProperty()).thenReturn(property);
 		doReturn(new Document("k1", convertedValue1).append("k2", convertedValue2)).when(conversionContext).write(any(),
-				eq(property.getTypeInformation().getType()));
+				eq(property.getTypeInformation()));
 
 		JustATypeWithAnUnencryptedField source1 = new JustATypeWithAnUnencryptedField();
 		source1.unencryptedValue = "nested-unencrypted-1";

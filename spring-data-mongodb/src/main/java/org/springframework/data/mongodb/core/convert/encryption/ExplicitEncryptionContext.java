@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert.encryption;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -58,12 +59,12 @@ class ExplicitEncryptionContext implements EncryptionContext {
 	}
 
 	@Override
-	public <T> T read(@Nullable Object value, @NonNull Class<T> target) {
+	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
 		return conversionContext.read(value, target);
 	}
 
 	@Override
-	public <T> T write(@Nullable Object value, @NonNull Class<T> target) {
+	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
 		return conversionContext.write(value, target);
 	}
 }

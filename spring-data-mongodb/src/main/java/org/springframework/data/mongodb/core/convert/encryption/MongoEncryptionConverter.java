@@ -144,7 +144,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 				return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 			}
 			if (persistentProperty.isMap()) {
-				Object convertedMap = context.write(value, persistentProperty.getTypeInformation().getType());
+				Object convertedMap = context.write(value);
 				if (convertedMap instanceof Document document) {
 					return encryption.encrypt(document.toBsonDocument(), encryptionOptions);
 				}
@@ -155,7 +155,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 		}
 
-		Object write = context.write(value, persistentProperty.getTypeInformation().getType());
+		Object write = context.write(value);
 		if (write instanceof Document doc) {
 			return encryption.encrypt(doc.toBsonDocument(), encryptionOptions);
 		}
@@ -178,12 +178,12 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		} else {
 			if (value instanceof Collection values) {
 				values.forEach(it -> {
-					Document write = (Document) context.write(it, property.getTypeInformation().getType());
+					Document write = (Document) context.write(it, property.getTypeInformation());
 					bsonArray.add(write.toBsonDocument());
 				});
 			} else if (ObjectUtils.isArray(value)) {
 				for (Object o : ObjectUtils.toObjectArray(value)) {
-					Document write = (Document) context.write(o, property.getTypeInformation().getType());
+					Document write = (Document) context.write(o, property.getTypeInformation());
 					bsonArray.add(write.toBsonDocument());
 				}
 			}
