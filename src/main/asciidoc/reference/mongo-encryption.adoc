@@ -2,7 +2,7 @@
 = Client Side Field Level Encryption (CSFLE)
 
 Client Side Encryption is a feature that encrypts data in your application before it is sent to MongoDB.
-Please make sure to read the https://www.mongodb.com/docs/manual/core/csfle/[MongoDB Documentation] to learn more about its capabilities and restrictions.
+We recommend you get familiar with the concepts, ideally from the https://www.mongodb.com/docs/manual/core/csfle/[MongoDB Documentation] to learn more about its capabilities and restrictions before you continue applying Encryption through Spring Data.
 
 [NOTE]
 ====
@@ -49,39 +49,42 @@ MongoClientSettingsBuilderCustomizer customizer(MappingContext mappingContext) {
 [[mongo.encryption.explicit]]
 == Explicit Encryption
 
-Explicit encryption uses the MongoDB driver's encryption library (`org.mongodb:mongodb-crypt`) to perform en-/decryption tasks.
-The `@ExplicitlyEncrypted` annotation is a combination of the `@Encrypted` annotation used for <<mongo.jsonSchema.encrypted-fields,JSON Schema creation>> and a <<mongo.property-converters, Property Converter>>.
-In other words, `@ExplicitlyEncrypted` uses existing building blocks and combines them to provide simplified support for explicit encryption.
+Explicit encryption uses the MongoDB driver's encryption library (`org.mongodb:mongodb-crypt`) to perform encryption and decryption tasks.
+The `@ExplicitEncrypted` annotation is a combination of the `@Encrypted` annotation used for <<mongo.jsonSchema.encrypted-fields,JSON Schema creation>> and a <<mongo.property-converters, Property Converter>>.
+In other words, `@ExplicitEncrypted` uses existing building blocks to combine them for simplified explicit encryption support.
 
 [NOTE]
 ====
-Fields annotated with `@ExplicitlyEncrypted` are always encrypted entirely as outlined in below.
+Fields annotated with `@ExplicitEncrypted` are always encrypted as whole.
+Consider the following example:
 
 [source,java]
 ----
-@ExplicitlyEncrypted(...)
-String simpleValue; <1>
+@ExplicitEncrypted(…)
+String simpleValue;        <1>
 
-@ExplicitlyEncrypted(...)
-Address address; <2>
+@ExplicitEncrypted(…)
+Address address;           <2>
 
-@ExplicitlyEncrypted(...)
-List<...> list; <3>
+@ExplicitEncrypted(…)
+List<...> list;            <3>
 
-@ExplicitlyEncrypted(...)
-Map<..., ...> mapOfString; <3>
+@ExplicitEncrypted(…)
+Map<..., ...> mapOfString; <4>
 ----
-<1> Encrypts the value of the simple type eg. a `String` if not `null`.
-<2> Encrypts the entire `Address` object and all its nested fields. To only encrypt parts of the `Address`, like `Address#street` the `street` field needs to be annotated.
-<3> `Collection` like fields are encrypted entirely and not a value by value basis.
-<4> `Map` like fields are encrypted entirely and not on a key/value basis.
+
+<1> Encrypts the value of the simple type such as a `String` if not `null`.
+<2> Encrypts the entire `Address` object and all its nested fields as `Document`.
+To only encrypt parts of the `Address`, like `Address#street` the `street` field within `Address` needs to be annotated with `@ExplicitEncrypted`.
+<3> ``Collection``-like fields are encrypted as single value and not per entry.
+<4> ``Map``-like fields are encrypted as single value and not as a key/value entry.
 ====
 
-Depending on the encryption algorithm MongoDB supports certain operations on an encrypted field using its https://www.mongodb.com/docs/manual/core/queryable-encryption/[Queryable Encryption] feature.
-To pick a certain algorithm use `@ExplicitlyEncrypted(algorithm = ... )` and choose the required one via `EncryptionAlgorithms`.
+Depending on the encryption algorithm, MongoDB supports certain operations on an encrypted field using its https://www.mongodb.com/docs/manual/core/queryable-encryption/[Queryable Encryption] feature.
+To pick a certain algorithm use `@ExplicitEncrypted(algorithm)`, see `EncryptionAlgorithms` for algorithm constants.
 Please read the https://www.mongodb.com/docs/manual/core/csfle/fundamentals/encryption-algorithms[Encryption Types] manual for more information on algorithms and their usage.
 
-To perform the actual encryption we do also need a Data Encryption Key (DEK).
+To perform the actual encryption we require a Data Encryption Key (DEK).
 Please refer to the https://www.mongodb.com/docs/manual/core/csfle/quick-start/#create-a-data-encryption-key[MongoDB Documentation] for more information on how to set up key management and create a Data Encryption Key.
 The DEK can be referenced directly via its `id` or a defined _alternative name_.
 The `@EncryptedField` annotation only allows referencing a DEK via an alternative name.
@@ -91,33 +94,38 @@ It is possible to provide an `EncryptionKeyResolver`, which will be discussed la
 ====
 [source,java]
 ----
-@EncryptedField(algorithm = ..., altKeyName = "secret-key") <1>
+@EncryptedField(algorithm=…, altKeyName = "secret-key") <1>
 String ssn;
 ----
 
 [source,java]
 ----
-@EncryptedField(algorithm = ..., altKeyName = "/name") <2>
+@EncryptedField(algorithm=…, altKeyName = "/name")      <2>
 String ssn;
 ----
+
 <1> Use the DEK stored with the alternative name `secret-key`.
-<2> Uses a field reference that will read the actual field value and use that for key lookup. Always requires the full document to be present for save operations. Fields cannot be used in queries/aggregations.
+<2> Uses a field reference that will read the actual field value and use that for key lookup.
+Always requires the full document to be present for save operations.
+Fields cannot be used in queries/aggregations.
 ====
 
-By default the `@ExplicitlyEncrypted(value=...)` attribute will reference a `MongoEncryptionConverter`.
+By default, the `@ExplicitEncrypted(value=…)` attribute references a `MongoEncryptionConverter`.
 It is possible to change the default implementation and exchange it with any `PropertyValueConverter` implementation by providing the according type reference.
 To learn more about custom `PropertyValueConverters` and the required configuration, please refer to the <<mongo.property-converters>> section.
 
 [[mongo.encryption.explicit-setup]]
 === MongoEncryptionConverter Setup
 
-The default `MongoEncryptionConverter` needs to be registered within the `ApplicationContext`.
-To do so we need to 1st setup the `Bean` and 2nd use a `BeanFactoryAwarePropertyValueConverterFactory` in the converter configuration.
-The converter itself needs to know about the actual `Encryption` that is capable of en-/decrypting `BsonValue` to/from `BsonBinary` as well as a `EncryptionKeyResolver`.
-`MongoClientEncryption` is the default implementation delegating en-/decryption to `com.mongodb.client.vault.ClientEncryption`.
-The `EncryptionKeyResolver` provides the DEK to be used for encrypting the field.
-Since the `@ExplicitlyEncrypted` annotation does not need to specify an alt key name the `EncryptionKeyResolver` receives the current `EncryptionContext` that provides access to the field for dynamic DEK resolution.
-`EncryptionKeyResolver.annotationBased(...)` offers an implementation that will lookup values from the `@ExplicitlyEncrypted` annotation before falling back to the context based resolution.
+The converter setup for `MongoEncryptionConverter` requires a few steps as several components are involved.
+The bean setup consists of the following:
+
+1. The `ClientEncryption` engine
+2. A `MongoEncryptionConverter` instance configured with `ClientEncryption` and a `EncryptionKeyResolver`.
+3. A `PropertyValueConverterFactory` that uses the registered `MongoEncryptionConverter` bean.
+
+A side effect of using annotated key resolution is that the `@ExplicitEncrypted` annotation does not need to specify an alt key name.
+The `EncryptionKeyResolver` uses an `EncryptionContext` providing access to the property allowing for dynamic DEK resolution.
 
 .Sample MongoEncryptionConverter Configuration
 ====
@@ -125,32 +133,38 @@ Since the `@ExplicitlyEncrypted` annotation does not need to specify an alt key 
 ----
 class Config extends AbstractMongoClientConfiguration {
 
-    // ...
-
     @Autowired ApplicationContext appContext;
 
-	@Bean
-	MongoEncryptionConverter encryptingConverter() {
+    @Bean
+    ClientEncryption clientEncryption() {                                                            <1>
+        ClientEncryptionSettings encryptionSettings = ClientEncryptionSettings.builder();
+        // …
 
-	    ClientEncryptionSettings encryptionSettings = ClientEncryptionSettings.builder()
-            // ...
+        return ClientEncryptions.create(encryptionSettings);
+    }
 
-	    Encryption<BsonValue, BsonBinary> encryption = MongoClientEncryption.just(ClientEncryptions.create(encryptionSettings)) <1>
-	    EncryptionKeyResolver keyResolver = EncryptionKeyResolver.annotationBased((ctx) -> ...); <2>
+    @Bean
+    MongoEncryptionConverter encryptingConverter(ClientEncryption clientEncryption) {
 
-		return new MongoEncryptionConverter(encryption, keyResolver); <3>
-	}
+        Encryption<BsonValue, BsonBinary> encryption = MongoClientEncryption.just(clientEncryption);
+        EncryptionKeyResolver keyResolver = EncryptionKeyResolver.annotated((ctx) -> …);             <2>
+
+        return new MongoEncryptionConverter(encryption, keyResolver);                                <3>
+    }
 
     @Override
     protected void configureConverters(MongoConverterConfigurationAdapter adapter) {
 
-    	adapter
-    	    .registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(appContext)); <4>
+        adapter
+            .registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(appContext)); <4>
     }
 }
 ----
-<1> Set up a `com.mongodb.client.vault.ClientEncryption` specific `Encryption` engine.
-<2> Read the `EncryptionKey` from annotations on the field.
+
+<1> Set up a `Encryption` engine using `com.mongodb.client.vault.ClientEncryption`.
+The instance is stateful and must be closed after usage.
+Spring takes care of this because `ClientEncryption` is ``Closeable``.
+<2> Set up an annotation-based `EncryptionKeyResolver` to determine the `EncryptionKey` from annotations.
 <3> Create the `MongoEncryptionConverter`.
-<4> Enable for a `PropertyValueConverter` within the `BeanFactory`.
+<4> Enable for a `PropertyValueConverter` lookup from the `BeanFactory`.
 ====

@@ -24,6 +24,8 @@ import org.bson.UuidRepresentation;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for {@link EncryptionKey}.
+ *
  * @author Christoph Strobl
  */
 class EncryptionKeyUnitTests {
@@ -40,9 +42,9 @@ class EncryptionKeyUnitTests {
 	@Test // GH-4284
 	void altKeyNameToStringDoesNotRevealEntireKey() {
 
-		assertThat(EncryptionKey.altKeyName("s").toString()).contains("***");
-		assertThat(EncryptionKey.altKeyName("su").toString()).contains("***");
-		assertThat(EncryptionKey.altKeyName("sup").toString()).contains("***");
-		assertThat(EncryptionKey.altKeyName("super-secret-key").toString()).contains("sup***");
+		assertThat(EncryptionKey.keyAltName("s").toString()).contains("***");
+		assertThat(EncryptionKey.keyAltName("su").toString()).contains("***");
+		assertThat(EncryptionKey.keyAltName("sup").toString()).contains("***");
+		assertThat(EncryptionKey.keyAltName("super-secret-key").toString()).contains("sup***");
 	}
 }

@@ -18,18 +18,20 @@ package org.springframework.data.mongodb.core.encryption;
 import org.bson.BsonBinary;
 import org.bson.types.Binary;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
-import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
  * Interface to obtain a {@link EncryptionKey Data Encryption Key} that is valid in a given {@link EncryptionContext
  * context}.
  * <p>
- * Use the {@link #annotationBased(EncryptionKeyResolver) based} variant which will first try to resolve a potential
- * {@link ExplicitlyEncrypted#altKeyName() Key Alternate Name} from annotations before calling the fallback resolver.
- * 
+ * Use the {@link #annotated(EncryptionKeyResolver) based} variant which will first try to resolve a potential
+ * {@link ExplicitEncrypted#keyAltName() Key Alternate Name} from annotations before calling the fallback resolver.
+ *
  * @author Christoph Strobl
  * @since 4.1
  * @see EncryptionKey
@@ -46,20 +48,23 @@ public interface EncryptionKeyResolver {
 	EncryptionKey getKey(EncryptionContext encryptionContext);
 
 	/**
-	 * Obtain an {@link EncryptionKeyResolver} that evaluates {@link ExplicitlyEncrypted#altKeyName()} and only calls the
+	 * Obtain an {@link EncryptionKeyResolver} that evaluates {@link ExplicitEncrypted#keyAltName()} and only calls the
 	 * fallback {@link EncryptionKeyResolver resolver} if no {@literal Key Alternate Name} is present.
-	 * 
+	 *
 	 * @param fallback must not be {@literal null}.
 	 * @return new instance of {@link EncryptionKeyResolver}.
 	 */
-	static EncryptionKeyResolver annotationBased(EncryptionKeyResolver fallback) {
+	static EncryptionKeyResolver annotated(EncryptionKeyResolver fallback) {
+
+		Assert.notNull(fallback, "Fallback EncryptionKeyResolver must not be nul");
 
 		return ((encryptionContext) -> {
 
-			ExplicitlyEncrypted annotation = encryptionContext.getProperty().findAnnotation(ExplicitlyEncrypted.class);
-			if (annotation == null || !StringUtils.hasText(annotation.altKeyName())) {
+			MongoPersistentProperty property = encryptionContext.getProperty();
+			ExplicitEncrypted annotation = property.findAnnotation(ExplicitEncrypted.class);
+			if (annotation == null || !StringUtils.hasText(annotation.keyAltName())) {
 
-				Encrypted encrypted = encryptionContext.getProperty().getOwner().findAnnotation(Encrypted.class);
+				Encrypted encrypted = property.getOwner().findAnnotation(Encrypted.class);
 				if (encrypted == null) {
 					return fallback.getKey(encryptionContext);
 				}
@@ -73,19 +78,22 @@ public interface EncryptionKeyResolver {
 					return EncryptionKey.keyId((BsonBinary) BsonUtils.simpleToBsonValue(binary));
 				}
 				if (o instanceof String string) {
-					return EncryptionKey.altKeyName(string);
+					return EncryptionKey.keyAltName(string);
 				}
+
+				throw new IllegalStateException(String.format("Cannot determine encryption key for %s.%s using key type %s",
+						property.getOwner().getName(), property.getName(), o == null ? "null" : o.getClass().getName()));
 			}
 
-			String altKeyName = annotation.altKeyName();
-			if (altKeyName.startsWith("/")) {
-				Object fieldValue = encryptionContext.lookupValue(altKeyName.replace("/", ""));
+			String keyAltName = annotation.keyAltName();
+			if (keyAltName.startsWith("/")) {
+				Object fieldValue = encryptionContext.lookupValue(keyAltName.replace("/", ""));
 				if (fieldValue == null) {
-					throw new IllegalStateException(String.format("Key Alternative Name for %s was null", altKeyName));
+					throw new IllegalStateException(String.format("Key Alternative Name for %s was null", keyAltName));
 				}
-				return new EncryptionKey.AltKeyName(fieldValue.toString());
+				return new KeyAltName(fieldValue.toString());
 			} else {
-				return new EncryptionKey.AltKeyName(altKeyName);
+				return new KeyAltName(keyAltName);
 			}
 		});
 	}
