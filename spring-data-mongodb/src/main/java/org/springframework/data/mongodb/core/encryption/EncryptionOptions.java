@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -27,16 +27,15 @@ import org.springframework.util.ObjectUtils;
 public class EncryptionOptions {
 
 	private final String algorithm;
-	private @Nullable EncryptionKey key;
+	private final EncryptionKey key;
 
-	public EncryptionOptions(String algorithm) {
-		this.algorithm = algorithm;
-	}
+	public EncryptionOptions(String algorithm, EncryptionKey key) {
 
-	public EncryptionOptions setKey(EncryptionKey key) {
+		Assert.hasText(algorithm, "Algorithm must not be empty");
+		Assert.notNull(key, "EncryptionKey must not be empty");
 
 		this.key = key;
-		return this;
+		this.algorithm = algorithm;
 	}
 
 	public EncryptionKey key() {
@@ -45,11 +44,6 @@ public class EncryptionOptions {
 
 	public String algorithm() {
 		return algorithm;
-	}
-
-	@Override
-	public String toString() {
-		return "EncryptionOptions{" + "algorithm='" + algorithm + '\'' + ", key=" + key + '}';
 	}
 
 	@Override
@@ -76,5 +70,10 @@ public class EncryptionOptions {
 		int result = ObjectUtils.nullSafeHashCode(algorithm);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(key);
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "EncryptionOptions{" + "algorithm='" + algorithm + '\'' + ", key=" + key + '}';
 	}
 }

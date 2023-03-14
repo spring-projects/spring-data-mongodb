@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
@@ -23,7 +22,10 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Context to encapsulate encryption for a specific {@link MongoPersistentProperty}.
+ *
  * @author Christoph Strobl
+ * @since 4.1
  */
 public interface EncryptionContext {
 
@@ -36,7 +38,7 @@ public interface EncryptionContext {
 
 	/**
 	 * Shortcut for converting a given {@literal value} into its store representation using the root
-	 * {@link ValueConversionContext}.
+	 * {@code ValueConversionContext}.
 	 *
 	 * @param value
 	 * @return

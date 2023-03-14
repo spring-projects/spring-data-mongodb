@@ -30,8 +30,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.assertj.core.api.Assertions;
 import org.bson.BsonBinary;
@@ -39,6 +41,7 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +55,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.encryption.EncryptionTests.Config;
-import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
@@ -68,6 +71,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
+import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
 /**
@@ -80,7 +84,7 @@ public class EncryptionTests {
 	@Autowired MongoTemplate template;
 
 	@Test // GH-4284
-	void enDeCryptSimpleValue() {
+	void encryptAndDecryptSimpleValue() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -95,7 +99,7 @@ public class EncryptionTests {
 	}
 
 	@Test // GH-4284
-	void enDeCryptComplexValue() {
+	void encryptAndDecryptComplexValue() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -112,7 +116,7 @@ public class EncryptionTests {
 	}
 
 	@Test // GH-4284
-	void enDeCryptValueWithinComplexOne() {
+	void encryptAndDecryptValueWithinComplexOne() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -135,7 +139,7 @@ public class EncryptionTests {
 	}
 
 	@Test // GH-4284
-	void enDeCryptListOfSimpleValue() {
+	void encryptAndDecryptListOfSimpleValue() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -150,7 +154,7 @@ public class EncryptionTests {
 	}
 
 	@Test // GH-4284
-	void enDeCryptListOfComplexValue() {
+	void encryptAndDecryptListOfComplexValue() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -170,7 +174,7 @@ public class EncryptionTests {
 	}
 
 	@Test // GH-4284
-	void enDeCryptMapOfSimpleValues() {
+	void encryptAndDecryptMapOfSimpleValues() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -185,7 +189,7 @@ public class EncryptionTests {
 	}
 
 	@Test // GH-4284
-	void enDeCryptMapOfComplexValues() {
+	void encryptAndDecryptMapOfComplexValues() {
 
 		Person source = new Person();
 		source.id = "id-1";
@@ -312,7 +316,7 @@ public class EncryptionTests {
 	}
 
 	@Test
-	void altKeyDetection(@Autowired MongoClientEncryption mongoClientEncryption) throws InterruptedException {
+	void altKeyDetection(@Autowired CachingMongoClientEncryption mongoClientEncryption) throws InterruptedException {
 
 		BsonBinary user1key = mongoClientEncryption.getClientEncryption().createDataKey("local",
 				new DataKeyOptions().keyAltNames(Collections.singletonList("user-1")));
@@ -349,7 +353,7 @@ public class EncryptionTests {
 		mongoClientEncryption.getClientEncryption().deleteKey(user2key);
 
 		// clear the 60 second key cache within the mongo client
-		mongoClientEncryption.refresh();
+		mongoClientEncryption.destroy();
 
 		assertThat(template.query(Person.class).matching(where("id").is(p1.id)).firstValue()).isEqualTo(p1);
 
@@ -444,12 +448,12 @@ public class EncryptionTests {
 					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
 
 			return new MongoEncryptionConverter(mongoClientEncryption,
-					EncryptionKeyResolver.annotationBased((ctx) -> EncryptionKey.keyId(dataKey.get())));
+					EncryptionKeyResolver.annotated((ctx) -> EncryptionKey.keyId(dataKey.get())));
 		}
 
 		@Bean
-		MongoClientEncryption clientEncryption(ClientEncryptionSettings encryptionSettings) {
-			return MongoClientEncryption.caching(() -> ClientEncryptions.create(encryptionSettings));
+		CachingMongoClientEncryption clientEncryption(ClientEncryptionSettings encryptionSettings) {
+			return new CachingMongoClientEncryption(() -> ClientEncryptions.create(encryptionSettings));
 		}
 
 		@Bean
@@ -468,9 +472,9 @@ public class EncryptionTests {
 
 			final byte[] localMasterKey = new byte[96];
 			new SecureRandom().nextBytes(localMasterKey);
-			Map<String, Map<String, Object>> kmsProviders = new HashMap<String, Map<String, Object>>() {
+			Map<String, Map<String, Object>> kmsProviders = new HashMap<>() {
 				{
-					put("local", new HashMap<String, Object>() {
+					put("local", new HashMap<>() {
 						{
 							put("key", localMasterKey);
 						}
@@ -485,6 +489,36 @@ public class EncryptionTests {
 					.keyVaultNamespace(keyVaultNamespace.getFullName()).kmsProviders(kmsProviders).build();
 			return clientEncryptionSettings;
 		}
+
+	}
+
+	static class CachingMongoClientEncryption extends MongoClientEncryption implements DisposableBean {
+
+		static final AtomicReference<ClientEncryption> cache = new AtomicReference<>();
+
+		CachingMongoClientEncryption(Supplier<ClientEncryption> source) {
+			super(() -> {
+
+				if (cache.get() != null) {
+					return cache.get();
+				}
+
+				ClientEncryption clientEncryption = source.get();
+				cache.set(clientEncryption);
+
+				return clientEncryption;
+			});
+		}
+
+		@Override
+		public void destroy() {
+
+			ClientEncryption clientEncryption = cache.get();
+			if (clientEncryption != null) {
+				clientEncryption.close();
+				cache.set(null);
+			}
+		}
 	}
 
 	@Data
@@ -494,30 +528,30 @@ public class EncryptionTests {
 		String id;
 		String name;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
 		String ssn;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "mySuperSecretKey") //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "mySuperSecretKey") //
 		String wallet;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
 		Address address;
 
 		AddressWithEncryptedZip encryptedZip;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<String> listOfString;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<Address> listOfComplex;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/name") //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "/name") //
 		String viaAltKeyNameField;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		Map<String, String> mapOfString;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		Map<String, Address> mapOfComplex;
 	}
 
@@ -531,7 +565,7 @@ public class EncryptionTests {
 	@Setter
 	static class AddressWithEncryptedZip extends Address {
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) String zip;
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) String zip;
 
 		@Override
 		public String toString() {

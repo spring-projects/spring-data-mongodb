@@ -35,11 +35,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
-import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
+ * Unit tests for {@link EncryptionKeyResolver}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +67,7 @@ class EncryptionKeyResolverUnitTests {
 		EncryptionContext ctx = prepareEncryptionContext(AnnotatedWithExplicitlyEncrypted.class,
 				AnnotatedWithExplicitlyEncrypted::getNotAnnotated);
 
-		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+		EncryptionKey key = EncryptionKeyResolver.annotated(fallbackKeyResolver).getKey(ctx);
 
 		assertThat(key).isSameAs(defaultEncryptionKey);
 	}
@@ -76,7 +78,7 @@ class EncryptionKeyResolverUnitTests {
 		EncryptionContext ctx = prepareEncryptionContext(AnnotatedWithExplicitlyEncrypted.class,
 				AnnotatedWithExplicitlyEncrypted::getAlgorithm);
 
-		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+		EncryptionKey key = EncryptionKeyResolver.annotated(fallbackKeyResolver).getKey(ctx);
 
 		assertThat(key).isSameAs(defaultEncryptionKey);
 	}
@@ -87,9 +89,9 @@ class EncryptionKeyResolverUnitTests {
 		EncryptionContext ctx = prepareEncryptionContext(AnnotatedWithExplicitlyEncrypted.class,
 				AnnotatedWithExplicitlyEncrypted::getAlgorithmAndAltKeyName);
 
-		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+		EncryptionKey key = EncryptionKeyResolver.annotated(fallbackKeyResolver).getKey(ctx);
 
-		assertThat(key).isEqualTo(EncryptionKey.altKeyName("sec-key-name"));
+		assertThat(key).isEqualTo(EncryptionKey.keyAltName("sec-key-name"));
 	}
 
 	@Test // GH-4284
@@ -99,9 +101,9 @@ class EncryptionKeyResolverUnitTests {
 				AnnotatedWithExplicitlyEncrypted::getAlgorithmAndAltKeyNameFromPropertyValue);
 		when(ctx.lookupValue(eq("notAnnotated"))).thenReturn("born-to-be-wild");
 
-		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+		EncryptionKey key = EncryptionKeyResolver.annotated(fallbackKeyResolver).getKey(ctx);
 
-		assertThat(key).isEqualTo(EncryptionKey.altKeyName("born-to-be-wild"));
+		assertThat(key).isEqualTo(EncryptionKey.keyAltName("born-to-be-wild"));
 	}
 
 	@Test // GH-4284
@@ -111,7 +113,7 @@ class EncryptionKeyResolverUnitTests {
 				AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType.class,
 				AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType::getKeyIdFromDomainType);
 
-		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+		EncryptionKey key = EncryptionKeyResolver.annotated(fallbackKeyResolver).getKey(ctx);
 
 		assertThat(key).isEqualTo(EncryptionKey.keyId(
 				new BsonBinary(BsonBinarySubType.UUID_STANDARD, Base64.getDecoder().decode("xKVup8B1Q+CkHaVRx+qa+g=="))));
@@ -127,7 +129,7 @@ class EncryptionKeyResolverUnitTests {
 
 		when(ctx.getEvaluationContext(any())).thenReturn(evaluationContext);
 
-		EncryptionKey key = EncryptionKeyResolver.annotationBased(fallbackKeyResolver).getKey(ctx);
+		EncryptionKey key = EncryptionKeyResolver.annotated(fallbackKeyResolver).getKey(ctx);
 
 		assertThat(key).isEqualTo(EncryptionKey.keyId(
 				new BsonBinary(BsonBinarySubType.UUID_STANDARD, Base64.getDecoder().decode("xKVup8B1Q+CkHaVRx+qa+g=="))));
@@ -145,13 +147,13 @@ class EncryptionKeyResolverUnitTests {
 
 		String notAnnotated;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		String algorithm;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "sec-key-name") //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "sec-key-name") //
 		String algorithmAndAltKeyName;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/notAnnotated") //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "/notAnnotated") //
 		String algorithmAndAltKeyNameFromPropertyValue;
 	}
 
@@ -159,10 +161,10 @@ class EncryptionKeyResolverUnitTests {
 	@Encrypted(keyId = "xKVup8B1Q+CkHaVRx+qa+g==")
 	class AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType {
 
-		@ExplicitlyEncrypted //
+		@ExplicitEncrypted //
 		String keyIdFromDomainType;
 
-		@ExplicitlyEncrypted(altKeyName = "sec-key-name") //
+		@ExplicitEncrypted(keyAltName = "sec-key-name") //
 		String altKeyNameFromPropertyIgnoringKeyIdFromDomainType;
 	}
 
@@ -170,7 +172,7 @@ class EncryptionKeyResolverUnitTests {
 	@Encrypted(keyId = "#{#myKeyId}")
 	class KeyIdFromSpel {
 
-		@ExplicitlyEncrypted //
+		@ExplicitEncrypted //
 		String keyIdFromDomainType;
 	}
 }

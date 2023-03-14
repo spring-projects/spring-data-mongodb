@@ -20,7 +20,7 @@ import org.springframework.data.mongodb.core.convert.MongoValueConverter;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 
 /**
- * A specialized {@link MongoValueConverter} for {@literal en-/decrypting} properties.
+ * A specialized {@link MongoValueConverter} for {@literal encryptiong} and {@literal decrypting} properties.
  *
  * @author Christoph Strobl
  * @since 4.1
@@ -32,19 +32,19 @@ public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
 		return decrypt(value, buildEncryptionContext(context));
 	}
 
-	@Override
-	default T write(Object value, MongoConversionContext context) {
-		return encrypt(value, buildEncryptionContext(context));
-	}
-
 	/**
 	 * Decrypt the given encrypted source value within the given {@link EncryptionContext context}.
-	 * 
+	 *
 	 * @param encryptedValue the encrypted source.
 	 * @param context the context to operate in.
 	 * @return never {@literal null}.
 	 */
 	S decrypt(Object encryptedValue, EncryptionContext context);
+
+	@Override
+	default T write(Object value, MongoConversionContext context) {
+		return encrypt(value, buildEncryptionContext(context));
+	}
 
 	/**
 	 * Encrypt the given raw source value within the given {@link EncryptionContext context}.

@@ -17,16 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -39,7 +30,6 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -51,16 +41,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.TypeMapper;
-import org.springframework.data.mapping.AccessOptions;
-import org.springframework.data.mapping.Association;
-import org.springframework.data.mapping.InstanceCreatorMetadata;
-import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.Parameter;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.mapping.PersistentPropertyPathAccessor;
+import org.springframework.data.mapping.*;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -902,7 +883,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (conversions.hasValueConverter(prop)) {
 			accessor.put(prop, conversions.getPropertyValueConversions().getValueConverter(prop).write(obj,
-					new MongoConversionContext(new PropertyValueProvider<MongoPersistentProperty>() {
+					new MongoConversionContext(new PropertyValueProvider<>() {
 						@Nullable
 						@Override
 						public <T> T getPropertyValue(MongoPersistentProperty property) {
@@ -1245,7 +1226,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (conversions.hasValueConverter(property)) {
 			accessor.put(property, conversions.getPropertyValueConversions().getValueConverter(property).write(value,
-					new MongoConversionContext(new PropertyValueProvider<MongoPersistentProperty>() {
+					new MongoConversionContext(new PropertyValueProvider<>() {
 						@Nullable
 						@Override
 						public <T> T getPropertyValue(MongoPersistentProperty property) {

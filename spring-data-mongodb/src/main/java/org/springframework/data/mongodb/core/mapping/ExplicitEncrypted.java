@@ -27,13 +27,13 @@ import org.springframework.data.mongodb.core.convert.encryption.EncryptingConver
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 
 /**
- * {@link ExplicitlyEncrypted} is a {@link ElementType#FIELD field} level {@link ValueConverter} annotation that
- * indicates the target element is subject to encryption during the mapping process, in which a given domain type is
- * converted into the store specific format.
+ * {@link ExplicitEncrypted} is a {@link ElementType#FIELD field} level {@link ValueConverter} annotation that indicates
+ * the target element is subject to encryption during the mapping process, in which a given domain type is converted
+ * into the store specific format.
  * <p>
  * The {@link #value()} attribute, defines the bean type to look up within the
  * {@link org.springframework.context.ApplicationContext} to obtain the {@link EncryptingConverter} responsible for the
- * actual {@literal en-/decryption} while {@link #algorithm()} and {@link #altKeyName()} can be used to define aspects
+ * actual {@literal en-/decryption} while {@link #algorithm()} and {@link #keyAltName()} can be used to define aspects
  * of the encryption process.
  *
  * <pre class="code">
@@ -41,11 +41,11 @@ import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionC
  * 	private ObjectId id;
  * 	private String name;
  *
- * 	&#64;ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "secred-key-alternative-name") //
+ * 	&#64;ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "secred-key-alternative-name") //
  * 	private String ssn;
  * }
  * </pre>
- * 
+ *
  * @author Christoph Strobl
  * @since 4.1
  * @see ValueConverter
@@ -54,7 +54,7 @@ import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionC
 @Target(ElementType.FIELD)
 @Encrypted
 @ValueConverter
-public @interface ExplicitlyEncrypted {
+public @interface ExplicitEncrypted {
 
 	/**
 	 * Define the algorithm to use.
@@ -66,6 +66,7 @@ public @interface ExplicitlyEncrypted {
 	 * objects and arrays as well as the query limitations that come with each of them.
 	 *
 	 * @return the string representation of the encryption algorithm to use.
+	 * @see org.springframework.data.mongodb.core.EncryptionAlgorithms
 	 */
 	@AliasFor(annotation = Encrypted.class, value = "algorithm")
 	String algorithm() default "";
@@ -78,10 +79,10 @@ public @interface ExplicitlyEncrypted {
 	 * It is possible to use the {@literal "/"} character as a prefix to access a particular field value in the same
 	 * domain type. In this case {@code "/name"} references the value of the {@literal name} field. Please note that
 	 * update operations will require the full object to resolve those values.
-	 * 
+	 *
 	 * @return the {@literal Key Alternate Name} if set or an empty {@link String}.
 	 */
-	String altKeyName() default "";
+	String keyAltName() default "";
 
 	/**
 	 * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.

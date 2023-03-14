@@ -15,29 +15,40 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-/**
- * Component responsible for encrypting and decrypting values.
- *
- * @author Christoph Strobl
- * @since 4.1
- */
-public interface Encryption<S, T> {
+import org.springframework.util.ObjectUtils;
 
-	/**
-	 * Encrypt the given value.
-	 *
-	 * @param value must not be {@literal null}.
-	 * @param options must not be {@literal null}.
-	 * @return the encrypted value.
-	 */
-	T encrypt(S value, EncryptionOptions options);
+record KeyAltName(String value) implements EncryptionKey {
 
-	/**
-	 * Decrypt the given value.
-	 *
-	 * @param value must not be {@literal null}.
-	 * @return the decrypted value.
-	 */
-	S decrypt(T value);
+	@Override
+	public Type type() {
+		return Type.ALT;
+	}
 
+	@Override
+	public String toString() {
+
+		if (value().length() <= 3) {
+			return "KeyAltName('***')";
+		}
+		return String.format("KeyAltName('%s***')", value.substring(0, 3));
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		KeyAltName that = (KeyAltName) o;
+		return ObjectUtils.nullSafeEquals(value, that.value);
+	}
+
+	@Override
+	public int hashCode() {
+		return ObjectUtils.nullSafeHashCode(value);
+	}
 }

@@ -33,6 +33,8 @@ import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.vault.ClientEncryption;
 
 /**
+ * Unit tests for {@link MongoClientEncryption}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +57,7 @@ class MongoClientEncryptionUnitTests {
 
 		MongoClientEncryption mce = MongoClientEncryption.just(clientEncryption);
 		mce.encrypt(new BsonBinary(new byte[0]),
-				new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Random).setKey(EncryptionKey.altKeyName("sec-key-name")));
+				new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Random, EncryptionKey.keyAltName("sec-key-name")));
 
 		ArgumentCaptor<EncryptOptions> options = ArgumentCaptor.forClass(EncryptOptions.class);
 		verify(clientEncryption).encrypt(any(), options.capture());
@@ -64,22 +66,11 @@ class MongoClientEncryptionUnitTests {
 	}
 
 	@Test // GH-4284
-	void refreshHasNoEffectForFixedClientEncryption() {
-
-		MongoClientEncryption mce = MongoClientEncryption.just(clientEncryption);
-		mce.decrypt(new BsonBinary(new byte[0]));
-
-		assertThat(mce.getClientEncryption()).isSameAs(clientEncryption);
-		assertThat(mce.refresh()).isFalse();
-		assertThat(mce.getClientEncryption()).isSameAs(clientEncryption);
-	}
-
-	@Test // GH-4284
 	void refreshObtainsNextInstanceFromSupplier() {
 
 		ClientEncryption next = mock(ClientEncryption.class);
 
-		MongoClientEncryption mce = MongoClientEncryption.caching(new Supplier<>() {
+		MongoClientEncryption mce = new MongoClientEncryption(new Supplier<>() {
 
 			int counter = 0;
 
@@ -90,7 +81,6 @@ class MongoClientEncryptionUnitTests {
 		});
 
 		assertThat(mce.getClientEncryption()).isSameAs(clientEncryption);
-		assertThat(mce.refresh()).isTrue();
 		assertThat(mce.getClientEncryption()).isSameAs(next);
 	}
 }

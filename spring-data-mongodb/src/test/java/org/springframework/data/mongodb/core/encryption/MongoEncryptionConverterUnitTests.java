@@ -41,7 +41,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
-import org.springframework.data.mongodb.core.mapping.ExplicitlyEncrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 
@@ -72,10 +72,10 @@ class MongoEncryptionConverterUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
-		when(fallbackKeyResolver.getKey(any())).thenReturn(EncryptionKey.altKeyName("default"));
+		when(fallbackKeyResolver.getKey(any())).thenReturn(EncryptionKey.keyAltName("default"));
 		when(encryption.encrypt(valueToBeEncrypted.capture(), encryptionOptions.capture()))
 				.thenReturn(new BsonBinary(new byte[0]));
-		keyResolver = EncryptionKeyResolver.annotationBased(fallbackKeyResolver);
+		keyResolver = EncryptionKeyResolver.annotated(fallbackKeyResolver);
 		converter = new MongoEncryptionConverter(encryption, keyResolver);
 	}
 
@@ -89,7 +89,7 @@ class MongoEncryptionConverterUnitTests {
 
 		assertThat(valueToBeEncrypted.getValue()).isEqualTo(new BsonString("foo"));
 		assertThat(encryptionOptions.getValue()).isEqualTo(
-				new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic).setKey(EncryptionKey.altKeyName("default")));
+				new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, EncryptionKey.keyAltName("default")));
 	}
 
 	@Test // GH-4284
@@ -101,7 +101,7 @@ class MongoEncryptionConverterUnitTests {
 		converter.write("foo", conversionContext);
 
 		assertThat(encryptionOptions.getValue()).isEqualTo(
-				new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Random).setKey(EncryptionKey.altKeyName("sec-key-name")));
+				new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Random, EncryptionKey.keyAltName("sec-key-name")));
 	}
 
 	@Test // GH-4284
@@ -117,7 +117,7 @@ class MongoEncryptionConverterUnitTests {
 		assertThat(path.getValue()).isEqualTo("notAnnotated");
 
 		assertThat(encryptionOptions.getValue())
-				.isEqualTo(new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Random).setKey(EncryptionKey.altKeyName("(ツ)")));
+				.isEqualTo(new EncryptionOptions(AEAD_AES_256_CBC_HMAC_SHA_512_Random, EncryptionKey.keyAltName("(ツ)")));
 	}
 
 	@Test // GH-4284
@@ -216,33 +216,33 @@ class MongoEncryptionConverterUnitTests {
 
 		String notAnnotated;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
 		String stringValueWithAlgorithmOnly;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "sec-key-name") //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "sec-key-name") //
 		String stringValueWithAlgorithmAndAltKeyName;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, altKeyName = "/notAnnotated") //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "/notAnnotated") //
 		String stringValueWithAlgorithmAndAltKeyNameFromPropertyValue;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // full document must be random
 		JustATypeWithAnUnencryptedField nestedFullyEncrypted;
 
 		NestedWithEncryptedField nestedWithEncryptedField;
 
 		// Client-Side Field Level Encryption does not support encrypting individual array elements
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		List<String> listOfString;
 
 		// Client-Side Field Level Encryption does not support encrypting individual array elements
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) // lists must be random
 		List<JustATypeWithAnUnencryptedField> listOfComplex;
 
 		// just as it was a domain type encrypt the entire thing here
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		Map<String, String> mapOfString;
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		Map<String, JustATypeWithAnUnencryptedField> mapOfComplex;
 
 		RecordWithEncryptedValue recordWithEncryptedValue;
@@ -257,10 +257,10 @@ class MongoEncryptionConverterUnitTests {
 
 	static class NestedWithEncryptedField extends JustATypeWithAnUnencryptedField {
 
-		@ExplicitlyEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic) //
 		String encryptedValue;
 	}
 
-	record RecordWithEncryptedValue(@ExplicitlyEncrypted String value) {
+	record RecordWithEncryptedValue(@ExplicitEncrypted String value) {
 	}
 }

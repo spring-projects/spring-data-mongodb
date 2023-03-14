@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.bson.BsonBinary;
@@ -35,23 +34,9 @@ import com.mongodb.client.vault.ClientEncryption;
 public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> {
 
 	private final Supplier<ClientEncryption> source;
-	private final AtomicReference<ClientEncryption> cached;
 
-	private MongoClientEncryption(Supplier<ClientEncryption> source) {
-
+	MongoClientEncryption(Supplier<ClientEncryption> source) {
 		this.source = source;
-		this.cached = new AtomicReference<>(source.get());
-	}
-
-	/**
-	 * The caching {@link MongoClientEncryption} variant caches and reuses the {@link ClientEncryption} obtained from the
-	 * {@link Supplier} until explicitly {@link #refresh() refreshed}.
-	 * 
-	 * @param clientEncryption must not be {@literal null} nor emit {@literal null}.
-	 * @return new instance of {@link MongoClientEncryption}.
-	 */
-	public static MongoClientEncryption caching(Supplier<ClientEncryption> clientEncryption) {
-		return new MongoClientEncryption(clientEncryption);
 	}
 
 	/**
@@ -64,27 +49,7 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 
 		Assert.notNull(clientEncryption, "ClientEncryption must not be null");
 
-		return new MongoClientEncryption(() -> clientEncryption) {
-			@Override
-			public boolean refresh() {
-				return false;
-			}
-		};
-	}
-
-	/**
-	 * @return {@literal true} if refreshed, {@literal false} otherwise.
-	 */
-	public boolean refresh() {
-		cached.set(source.get());
-		return true;
-	}
-
-	/**
-	 * {@link ClientEncryption#close() Shutdown} the underlying {@link ClientEncryption}.
-	 */
-	public void shutdown() {
-		getClientEncryption().close();
+		return new MongoClientEncryption(() -> clientEncryption);
 	}
 
 	@Override
@@ -107,7 +72,7 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 	}
 
 	public ClientEncryption getClientEncryption() {
-		return cached.get();
+		return source.get();
 	}
 
 }
