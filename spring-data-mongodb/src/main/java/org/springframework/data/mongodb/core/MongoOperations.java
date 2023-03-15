@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -807,7 +807,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Query for a scroll window of objects of type T from the specified collection. <br />
+	 * Query for a window window of objects of type T from the specified collection. <br />
 	 * Make sure to either set {@link Query#skip(long)} or {@link Query#with(KeysetScrollPosition)} along with
 	 * {@link Query#limit(int)} to limit large query results for efficient scrolling. <br />
 	 * Result objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}.
@@ -817,16 +817,17 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
-	 * @param entityType the parametrized type of the returned list.
-	 * @return the converted scroll.
+	 * @param entityType the parametrized type of the returned window.
+	 * @return the converted window.
+	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid position.
 	 * @since 4.1
 	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
 	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
 	 */
-	<T> Scroll<T> scroll(Query query, Class<T> entityType);
+	<T> Window<T> scroll(Query query, Class<T> entityType);
 
 	/**
-	 * Query for a scroll of objects of type T from the specified collection. <br />
+	 * Query for a window of objects of type T from the specified collection. <br />
 	 * Make sure to either set {@link Query#skip(long)} or {@link Query#with(KeysetScrollPosition)} along with
 	 * {@link Query#limit(int)} to limit large query results for efficient scrolling. <br />
 	 * Result objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}.
@@ -836,14 +837,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
-	 * @param entityType the parametrized type of the returned list.
+	 * @param entityType the parametrized type of the returned window.
 	 * @param collectionName name of the collection to retrieve the objects from.
-	 * @return the converted scroll.
+	 * @return the converted window.
+	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid position.
 	 * @since 4.1
 	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
 	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
 	 */
-	<T> Scroll<T> scroll(Query query, Class<T> entityType, String collectionName);
+	<T> Window<T> scroll(Query query, Class<T> entityType, String collectionName);
 
 	/**
 	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be

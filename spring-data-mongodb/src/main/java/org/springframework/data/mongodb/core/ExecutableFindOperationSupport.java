@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -141,7 +141,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public Scroll<T> scroll(ScrollPosition scrollPosition) {
+		public Window<T> scroll(ScrollPosition scrollPosition) {
 			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
 		}
 

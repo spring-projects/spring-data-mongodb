@@ -59,7 +59,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.domain.OffsetScrollPosition;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metric;
@@ -80,7 +80,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
-import org.springframework.data.mongodb.core.ScrollUtils.KeySetCursorQuery;
+import org.springframework.data.mongodb.core.ScrollUtils.KeySetScrollQuery;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -830,7 +830,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public <T> Mono<Scroll<T>> scroll(Query query, Class<T> entityType) {
+	public <T> Mono<Window<T>> scroll(Query query, Class<T> entityType) {
 
 		Assert.notNull(entityType, "Entity type must not be null");
 
@@ -838,11 +838,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public <T> Mono<Scroll<T>> scroll(Query query, Class<T> entityType, String collectionName) {
+	public <T> Mono<Window<T>> scroll(Query query, Class<T> entityType, String collectionName) {
 		return doScroll(query, entityType, entityType, collectionName);
 	}
 
-	<T> Mono<Scroll<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
+	<T> Mono<Window<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
@@ -853,7 +853,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (query.hasKeyset()) {
 
-			KeySetCursorQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
+			KeySetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
 					operations.getIdPropertyName(sourceClass));
 
 			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),

@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -471,6 +472,7 @@ class EntityOperations {
 		 * @param sortObject
 		 * @return
 		 * @since 3.1
+		 * @throws IllegalStateException if a sort key yields {@literal null}.
 		 */
 		Map<String, Object> extractKeys(Document sortObject);
 
@@ -600,7 +602,14 @@ class EntityOperations {
 			keyset.put(ID_FIELD, getId());
 
 			for (String key : sortObject.keySet()) {
-				keyset.put(key, BsonUtils.resolveValue(map, key));
+				Object value = BsonUtils.resolveValue(map, key);
+
+				if (value == null) {
+					throw new IllegalStateException(
+							String.format("Cannot extract value for key %s because its value is null", key));
+				}
+
+				keyset.put(key, value);
 			}
 
 			return keyset;
@@ -756,14 +765,22 @@ class EntityOperations {
 
 			for (String key : sortObject.keySet()) {
 
+				Object value;
 				if (key.indexOf('.') != -1) {
 
 					// follow the path across nested levels.
 					// TODO: We should have a MongoDB-specific property path abstraction to allow diving into Document.
-					keyset.put(key, getNestedPropertyValue(key));
+					value = getNestedPropertyValue(key);
 				} else {
-					keyset.put(key, getPropertyValue(key));
+					value = getPropertyValue(key);
 				}
+
+				if (value == null) {
+					throw new IllegalStateException(
+							String.format("Cannot extract value for key %s because its value is null", key));
+				}
+
+				keyset.put(key, value);
 			}
 
 			return keyset;
@@ -774,7 +791,7 @@ class EntityOperations {
 
 			String[] segments = key.split("\\.");
 			Entity<?> currentEntity = this;
-			Object currentValue = null;
+			Object currentValue = BsonNull.VALUE;
 
 			for (int i = 0; i < segments.length; i++) {
 
@@ -786,7 +803,7 @@ class EntityOperations {
 				}
 			}
 
-			return currentValue;
+			return currentValue != null ? currentValue : BsonNull.VALUE;
 		}
 	}
 

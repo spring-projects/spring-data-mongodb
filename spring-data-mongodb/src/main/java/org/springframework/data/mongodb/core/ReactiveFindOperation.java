@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -98,7 +98,7 @@ public interface ReactiveFindOperation {
 		 * @see org.springframework.data.domain.OffsetScrollPosition
 		 * @see org.springframework.data.domain.KeysetScrollPosition
 		 */
-		Mono<Scroll<T>> scroll(ScrollPosition scrollPosition);
+		Mono<Window<T>> scroll(ScrollPosition scrollPosition);
 
 		/**
 		 * Get all matching elements using a {@link com.mongodb.CursorType#TailableAwait tailable cursor}. The stream will

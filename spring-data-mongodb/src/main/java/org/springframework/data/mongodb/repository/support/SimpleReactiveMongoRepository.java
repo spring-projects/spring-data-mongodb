@@ -34,7 +34,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
@@ -436,7 +436,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		}
 
 		@Override
-		public Mono<Scroll<T>> scroll(ScrollPosition scrollPosition) {
+		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
 			return createQuery().scroll(scrollPosition);
 		}
 

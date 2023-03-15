@@ -35,7 +35,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.OffsetScrollPosition;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
- * Integration tests for {@link Scroll} queries.
+ * Integration tests for {@link Window} queries.
  *
  * @author Mark Paluch
  */
@@ -100,14 +100,14 @@ class ReactiveMongoTemplateScrollTests {
 		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age")).limit(2);
 		q.with(scrollPosition);
 
-		Scroll<T> scroll = template.scroll(q, resultType, "person").block(Duration.ofSeconds(10));
+		Window<T> scroll = template.scroll(q, resultType, "person").block(Duration.ofSeconds(10));
 
 		assertThat(scroll.hasNext()).isTrue();
 		assertThat(scroll.isLast()).isFalse();
 		assertThat(scroll).hasSize(2);
 		assertThat(scroll).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
 
-		scroll = template.scroll(q.limit(3).with(scroll.lastPosition()), resultType, "person")
+		scroll = template.scroll(q.limit(3).with(scroll.positionAt(scroll.size() - 1)), resultType, "person")
 				.block(Duration.ofSeconds(10));
 
 		assertThat(scroll.hasNext()).isTrue();
@@ -116,7 +116,7 @@ class ReactiveMongoTemplateScrollTests {
 		assertThat(scroll).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
 		assertThat(scroll).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
 
-		scroll = template.scroll(q.limit(1).with(scroll.lastPosition()), resultType, "person")
+		scroll = template.scroll(q.limit(1).with(scroll.positionAt(scroll.size() - 1)), resultType, "person")
 				.block(Duration.ofSeconds(10));
 
 		assertThat(scroll.hasNext()).isFalse();
