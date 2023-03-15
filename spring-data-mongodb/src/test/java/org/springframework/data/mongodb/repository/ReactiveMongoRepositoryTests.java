@@ -50,10 +50,10 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Scroll;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -293,15 +293,15 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 	@Test // GH-4308
 	void appliesScrollingCorrectly() {
 
-		Scroll<Person> scroll = repository
+		Window<Person> scroll = repository
 				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", KeysetScrollPosition.initial()).block();
 
 		assertThat(scroll).hasSize(2);
 		assertThat(scroll).containsSequence(alicia, boyd);
 		assertThat(scroll.isLast()).isFalse();
 
-		Scroll<Person> nextScroll = repository
-				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", scroll.lastPosition()).block();
+		Window<Person> nextScroll = repository
+				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", scroll.positionAt(scroll.size() - 1)).block();
 
 		assertThat(nextScroll).hasSize(2);
 		assertThat(nextScroll).containsSequence(carter, dave);
@@ -474,7 +474,7 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 	@Test // GH-4308
 	void shouldScrollWithId() {
 
-		List<Scroll<Person>> capture = new ArrayList<>();
+		List<Window<Person>> capture = new ArrayList<>();
 		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
 				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial())) //
 				.as(StepVerifier::create) //
@@ -482,10 +482,10 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 					assertThat(actual).hasSize(2).containsExactly(boyd, carter);
 				}).verifyComplete();
 
-		Scroll<Person> scroll = capture.get(0);
+		Window<Person> scroll = capture.get(0);
 
 		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
-				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(scroll.lastPosition())) //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(scroll.positionAt(scroll.size() - 1))) //
 				.as(StepVerifier::create) //
 				.recordWith(() -> capture).assertNext(actual -> {
 					assertThat(actual).containsOnly(dave);
@@ -768,10 +768,10 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		@Query("{ lastname: { $in: ?0 }, age: { $gt : ?1 } }")
 		Flux<Person> findStringQuery(Flux<String> lastname, Mono<Integer> age);
 
-		Mono<Scroll<Person>> findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc(String lastname,
+		Mono<Window<Person>> findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc(String lastname,
 				ScrollPosition scrollPosition);
 
-		Mono<Scroll<PersonSummaryDto>> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
+		Mono<Window<PersonSummaryDto>> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
 
 		Flux<Person> findByLocationWithin(Circle circle);
 

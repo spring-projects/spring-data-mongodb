@@ -20,17 +20,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
+import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.Scroll;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
- * Utilities to run scroll queries and create {@link Scroll} results.
+ * Utilities to run scroll queries and create {@link Window} results.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.1
  */
 class ScrollUtils {
@@ -42,7 +44,7 @@ class ScrollUtils {
 	 * @param idPropertyName
 	 * @return
 	 */
-	static KeySetCursorQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
+	static KeySetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
 
 		Document sortObject = query.isSorted() ? query.getSortObject() : new Document();
 		sortObject.put(idPropertyName, 1);
@@ -84,6 +86,9 @@ class ScrollUtils {
 					Object o = keysetValues.get(sortSegment);
 
 					if (j >= i) { // tail segment
+						if(o instanceof BsonNull) {
+							throw new IllegalStateException("Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
+						}
 						sortConstraint.put(sortSegment, new Document(sortOrder == 1 ? "$gt" : "$lt", o));
 						break;
 					}
@@ -104,10 +109,10 @@ class ScrollUtils {
 			queryObject.put("$or", or);
 		}
 
-		return new KeySetCursorQuery(queryObject, fieldsObject, sortObject);
+		return new KeySetScrollQuery(queryObject, fieldsObject, sortObject);
 	}
 
-	static <T> Scroll<T> createWindow(Document sortObject, int limit, List<T> result, EntityOperations operations) {
+	static <T> Window<T> createWindow(Document sortObject, int limit, List<T> result, EntityOperations operations) {
 
 		IntFunction<KeysetScrollPosition> positionFunction = value -> {
 
@@ -121,8 +126,8 @@ class ScrollUtils {
 		return createWindow(result, limit, positionFunction);
 	}
 
-	static <T> Scroll<T> createWindow(List<T> result, int limit, IntFunction<? extends ScrollPosition> positionFunction) {
-		return Scroll.from(getSubList(result, limit), positionFunction, hasMoreElements(result, limit));
+	static <T> Window<T> createWindow(List<T> result, int limit, IntFunction<? extends ScrollPosition> positionFunction) {
+		return Window.from(getSubList(result, limit), positionFunction, hasMoreElements(result, limit));
 	}
 
 	static boolean hasMoreElements(List<?> result, int limit) {
@@ -138,7 +143,7 @@ class ScrollUtils {
 		return result;
 	}
 
-	record KeySetCursorQuery(Document query, Document fields, Document sort) {
+	record KeySetScrollQuery(Document query, Document fields, Document sort) {
 
 	}
 

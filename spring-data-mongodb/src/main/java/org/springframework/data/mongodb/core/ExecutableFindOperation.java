@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -126,16 +126,17 @@ public interface ExecutableFindOperation {
 		Stream<T> stream();
 
 		/**
-		 * Return a scroll of elements either starting or resuming at
+		 * Return a window of elements either starting or resuming at
 		 * {@link org.springframework.data.domain.ScrollPosition}.
 		 *
 		 * @param scrollPosition the scroll position.
-		 * @return a scroll of the resulting elements.
+		 * @return a window of the resulting elements.
+		 * @throws IllegalStateException if a potential {@literal KeysetScrollPosition} contains an invalid position.
 		 * @since 4.1
 		 * @see org.springframework.data.domain.OffsetScrollPosition
 		 * @see org.springframework.data.domain.KeysetScrollPosition
 		 */
-		Scroll<T> scroll(ScrollPosition scrollPosition);
+		Window<T> scroll(ScrollPosition scrollPosition);
 
 		/**
 		 * Get the number of matching elements. <br />

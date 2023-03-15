@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveCollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -140,7 +140,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		}
 
 		@Override
-		public Mono<Scroll<T>> scroll(ScrollPosition scrollPosition) {
+		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
 			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
 		}
 

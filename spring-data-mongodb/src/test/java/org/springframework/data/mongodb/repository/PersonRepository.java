@@ -23,11 +23,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Box;
@@ -123,8 +123,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @param scrollPosition
 	 * @return
 	 */
-	Scroll<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
-			KeysetScrollPosition scrollPosition);
+	Window<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
+			ScrollPosition scrollPosition);
 
 	/**
 	 * Returns a scroll of {@link Person}s applying projections with a lastname matching the given one (*-wildcards
@@ -134,7 +134,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @param pageable
 	 * @return
 	 */
-	Scroll<PersonSummaryDto> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
+	Window<PersonSummaryDto> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
 
 	/**
 	 * Returns a page of {@link Person}s with a lastname matching the given one (*-wildcards supported).

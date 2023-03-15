@@ -26,7 +26,7 @@ import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -477,15 +477,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
 	 * @param entityType the parametrized type of the returned list.
-	 * @return {@link Mono} emitting the converted scroll.
+	 * @return {@link Mono} emitting the converted window.
+	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid position.
 	 * @since 4.1
 	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
 	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
 	 */
-	<T> Mono<Scroll<T>> scroll(Query query, Class<T> entityType);
+	<T> Mono<Window<T>> scroll(Query query, Class<T> entityType);
 
 	/**
-	 * Query for a scroll of objects of type T from the specified collection. <br />
+	 * Query for a window of objects of type T from the specified collection. <br />
 	 * Make sure to either set {@link Query#skip(long)} or {@link Query#with(KeysetScrollPosition)} along with
 	 * {@link Query#limit(int)} to limit large query results for efficient scrolling. <br />
 	 * Result objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}.
@@ -497,12 +498,13 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          specification. Must not be {@literal null}.
 	 * @param entityType the parametrized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from.
-	 * @return {@link Mono} emitting the converted scroll window.
+	 * @return {@link Mono} emitting the converted window.
+	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid position.
 	 * @since 4.1
 	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
 	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
 	 */
-	<T> Mono<Scroll<T>> scroll(Query query, Class<T> entityType, String collectionName);
+	<T> Mono<Window<T>> scroll(Query query, Class<T> entityType, String collectionName);
 
 	/**
 	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be

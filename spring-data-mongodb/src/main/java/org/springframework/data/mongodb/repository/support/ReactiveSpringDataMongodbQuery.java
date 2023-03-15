@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
@@ -91,7 +91,7 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 		return createQuery().flatMapMany(it -> find.matching(it).all());
 	}
 
-	Mono<Scroll<K>> scroll(ScrollPosition scrollPosition) {
+	Mono<Window<K>> scroll(ScrollPosition scrollPosition) {
 		return createQuery().flatMap(it -> find.matching(it).scroll(scrollPosition));
 	}
 

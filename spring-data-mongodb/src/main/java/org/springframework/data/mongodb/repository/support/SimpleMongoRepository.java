@@ -32,7 +32,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
@@ -392,7 +392,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 
 		@Override
-		public Scroll<T> scroll(ScrollPosition scrollPosition) {
+		public Window<T> scroll(ScrollPosition scrollPosition) {
 			return createQuery().scroll(scrollPosition);
 		}
 

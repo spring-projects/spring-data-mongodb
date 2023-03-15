@@ -25,7 +25,7 @@ import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Scroll;
+import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -133,12 +133,12 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		}
 	}
 
-	public Scroll<T> scroll(ScrollPosition scrollPosition) {
+	public Window<T> scroll(ScrollPosition scrollPosition) {
 
 		try {
 			return find.matching(createQuery()).scroll(scrollPosition);
 		} catch (RuntimeException e) {
-			return handleException(e, Scroll.from(Collections.emptyList(), value -> {
+			return handleException(e, Window.from(Collections.emptyList(), value -> {
 				throw new UnsupportedOperationException();
 			}));
 		}

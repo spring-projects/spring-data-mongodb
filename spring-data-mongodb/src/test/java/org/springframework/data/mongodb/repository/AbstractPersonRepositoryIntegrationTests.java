@@ -205,7 +205,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	@Test // GH-4308
 	void appliesScrollPositionCorrectly() {
 
-		Scroll<Person> page = repository.findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
+		Window<Person> page = repository.findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
 				KeysetScrollPosition.initial());
 
 		assertThat(page.isLast()).isFalse();
@@ -216,7 +216,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	@Test // GH-4308
 	void appliesScrollPositionWithProjectionCorrectly() {
 
-		Scroll<PersonSummaryDto> page = repository.findCursorProjectionByLastnameLike("*a*",
+		Window<PersonSummaryDto> page = repository.findCursorProjectionByLastnameLike("*a*",
 				PageRequest.of(0, 2, Sort.by(Direction.ASC, "lastname", "firstname")));
 
 		assertThat(page.isLast()).isFalse();
@@ -956,12 +956,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	@Test // DATAMONGO-969
 	void shouldScrollPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
 
-		Scroll<Person> scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
+		Window<Person> scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
 				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial()));
 
 		assertThat(scroll).containsExactly(boyd, carter);
 
-		ScrollPosition resumeFrom = scroll.lastPosition();
+		ScrollPosition resumeFrom = scroll.positionAt(scroll.size() - 1);
 		scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
 				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(resumeFrom));
 
@@ -1185,14 +1185,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		Scroll<Person> result = repository.findBy(
+		Window<Person> result = repository.findBy(
 				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
 				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial()));
 
 		assertThat(result).containsOnly(dave, leroi);
 		assertThat(result.hasNext()).isTrue();
 
-		ScrollPosition position = result.lastPosition();
+		ScrollPosition position = result.positionAt(result.size() - 1);
 		result = repository.findBy(
 				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
 				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(position));
