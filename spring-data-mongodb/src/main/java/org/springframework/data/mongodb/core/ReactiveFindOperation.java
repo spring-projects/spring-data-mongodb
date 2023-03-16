@@ -18,8 +18,9 @@ package org.springframework.data.mongodb.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.springframework.data.domain.Window;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -91,6 +92,10 @@ public interface ReactiveFindOperation {
 
 		/**
 		 * Return a scroll of elements either starting or resuming at {@link ScrollPosition}.
+		 * <p>
+		 * When using {@link KeysetScrollPosition}, make sure to use non-nullable
+		 * {@link org.springframework.data.domain.Sort sort properties} as MongoDB does not support criteria to reconstruct
+		 * a query result from absent document fields or {@code null} values through {@code $gt/$lt} operators.
 		 *
 		 * @param scrollPosition the scroll position.
 		 * @return a scroll of the resulting elements.
