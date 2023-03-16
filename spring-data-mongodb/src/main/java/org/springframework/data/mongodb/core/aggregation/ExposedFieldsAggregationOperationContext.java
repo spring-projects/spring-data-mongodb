@@ -96,23 +96,13 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 			return exposedField;
 		}
 
-		if(rootContext instanceof RelaxedTypeBasedAggregationOperationContext) {
-			return new DirectFieldReference(new ExposedField(new Field() {
-				@Override
-				public String getName() {
-					return name;
-				}
+		if (rootContext instanceof RelaxedTypeBasedAggregationOperationContext) {
 
-				@Override
-				public String getTarget() {
-					return field != null ? field.getTarget() : name;
-				}
+			if (field != null) {
+				return new DirectFieldReference(new ExposedField(field, true));
+			}
 
-				@Override
-				public boolean isAliased() {
-					return true;
-				}
-			}, true));
+			return new DirectFieldReference(new ExposedField(name, true));
 		}
 
 		throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));

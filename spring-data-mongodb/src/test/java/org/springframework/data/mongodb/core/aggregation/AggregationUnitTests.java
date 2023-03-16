@@ -601,7 +601,7 @@ public class AggregationUnitTests {
 				new RelaxedTypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
 						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
 
-		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : \"$_id\" }"));
+		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : 1 }"));
 	}
 
 	@Test // GH-3898
@@ -630,7 +630,7 @@ public class AggregationUnitTests {
 		Document target = newAggregation(stage).toDocument("col-1", DEFAULT_CONTEXT);
 		assertThat(extractPipelineElement(target, 0, "$project")).containsKey("name");
 	}
-	
+
 	@Test // GH-3917
 	void inheritedFieldsExposingContextShouldNotFailOnUnknownFieldReferenceForRelaxedRootContext() {
 
@@ -648,7 +648,7 @@ public class AggregationUnitTests {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		QueryMapper queryMapper = new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
-		
+
 		List<Document> documents = newAggregation(City.class, aggregationOperations).toPipeline(new RelaxedTypeBasedAggregationOperationContext(City.class, mappingContext, queryMapper));
 		assertThat(documents.get(2)).isEqualTo("{ $sort : { 'serial_number' : -1, 'label_name' : -1 } }");
 	}
