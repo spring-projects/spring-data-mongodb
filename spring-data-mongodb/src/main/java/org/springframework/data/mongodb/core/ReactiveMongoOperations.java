@@ -473,12 +473,17 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Unless configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
+	 * <p>
+	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
+	 * sort properties} as MongoDB does not support criteria to reconstruct a query result from absent document fields or
+	 * {@code null} values through {@code $gt/$lt} operators.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
 	 * @param entityType the parametrized type of the returned list.
 	 * @return {@link Mono} emitting the converted window.
-	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid position.
+	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid
+	 *           position.
 	 * @since 4.1
 	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
 	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
@@ -493,13 +498,18 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Unless configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
+	 * <p>
+	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
+	 * sort properties} as MongoDB does not support criteria to reconstruct a query result from absent document fields or
+	 * {@code null} values through {@code $gt/$lt} operators.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
 	 * @param entityType the parametrized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from.
 	 * @return {@link Mono} emitting the converted window.
-	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid position.
+	 * @throws IllegalStateException if a potential {@link Query#getKeyset() KeysetScrollPosition} contains an invalid
+	 *           position.
 	 * @since 4.1
 	 * @see Query#with(org.springframework.data.domain.OffsetScrollPosition)
 	 * @see Query#with(org.springframework.data.domain.KeysetScrollPosition)
