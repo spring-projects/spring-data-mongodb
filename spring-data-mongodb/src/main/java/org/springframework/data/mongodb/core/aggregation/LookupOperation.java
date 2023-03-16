@@ -230,12 +230,23 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		AsBuilder pipeline(AggregationPipeline pipeline);
 
 		/**
-		 * Specifies the {@link AggregationPipeline#getOperations() stages} that determine the resulting documents.
+		 * Specifies the {@link AggregationPipeline#getStages() stages} that determine the resulting documents.
 		 *
 		 * @param stages must not be {@literal null} can be empty.
 		 * @return never {@literal null}.
 		 */
 		default AsBuilder pipeline(AggregationOperation... stages) {
+			return pipeline(AggregationPipeline.of(stages));
+		}
+
+		/**
+		 * Specifies the {@link AggregationPipeline#getStages() stages} that determine the resulting documents.
+		 *
+		 * @param stages must not be {@literal null} can be empty.
+		 * @return never {@literal null}.
+		 * @since 4.1
+		 */
+		default AsBuilder pipeline(AggregationStage... stages) {
 			return pipeline(AggregationPipeline.of(stages));
 		}
 

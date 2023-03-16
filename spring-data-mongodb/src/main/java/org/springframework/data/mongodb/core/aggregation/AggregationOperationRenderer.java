@@ -45,15 +45,19 @@ class AggregationOperationRenderer {
 	 * @param rootContext must not be {@literal null}.
 	 * @return the {@link List} of {@link Document}.
 	 */
-	static List<Document> toDocument(List<AggregationOperation> operations, AggregationOperationContext rootContext) {
+	static List<Document> toDocument(List<? extends AggregationStage> operations, AggregationOperationContext rootContext) {
 
 		List<Document> operationDocuments = new ArrayList<Document>(operations.size());
 
 		AggregationOperationContext contextToUse = rootContext;
 
-		for (AggregationOperation operation : operations) {
+		for (AggregationStage operation : operations) {
 
-			operationDocuments.addAll(operation.toPipelineStages(contextToUse));
+			if(operation instanceof MultiOperationAggregationStage mops) {
+				operationDocuments.addAll(mops.toPipelineStages(contextToUse));
+			} else {
+				operationDocuments.add(operation.toDocument(contextToUse));
+			}
 
 			if (operation instanceof FieldsExposingAggregationOperation) {
 

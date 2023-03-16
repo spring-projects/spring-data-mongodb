@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationStage;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
@@ -109,14 +110,14 @@ abstract class AggregationUtils {
 	 * @param accessor
 	 * @param targetType
 	 */
-	static void appendSortIfPresent(List<AggregationOperation> aggregationPipeline, ConvertingParameterAccessor accessor,
+	static void appendSortIfPresent(List<? extends AggregationStage> aggregationPipeline, ConvertingParameterAccessor accessor,
 			Class<?> targetType) {
 
 		if (accessor.getSort().isUnsorted()) {
 			return;
 		}
 
-		aggregationPipeline.add(ctx -> {
+		((List<AggregationStage>) aggregationPipeline).add(ctx -> {
 
 			Document sort = new Document();
 			for (Order order : accessor.getSort()) {
@@ -134,7 +135,7 @@ abstract class AggregationUtils {
 	 * @param aggregationPipeline
 	 * @param accessor
 	 */
-	static void appendLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
+	static void appendLimitAndOffsetIfPresent(List<? extends AggregationStage> aggregationPipeline,
 			ConvertingParameterAccessor accessor) {
 		appendLimitAndOffsetIfPresent(aggregationPipeline, accessor, LongUnaryOperator.identity(),
 				IntUnaryOperator.identity());
@@ -150,7 +151,7 @@ abstract class AggregationUtils {
 	 * @param limitOperator
 	 * @since 3.3
 	 */
-	static void appendLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
+	static void appendLimitAndOffsetIfPresent(List<? extends AggregationStage> aggregationPipeline,
 			ConvertingParameterAccessor accessor, LongUnaryOperator offsetOperator, IntUnaryOperator limitOperator) {
 
 		Pageable pageable = accessor.getPageable();
@@ -159,10 +160,10 @@ abstract class AggregationUtils {
 		}
 
 		if (pageable.getOffset() > 0) {
-			aggregationPipeline.add(Aggregation.skip(offsetOperator.applyAsLong(pageable.getOffset())));
+			((List<AggregationStage>) aggregationPipeline).add(Aggregation.skip(offsetOperator.applyAsLong(pageable.getOffset())));
 		}
 
-		aggregationPipeline.add(Aggregation.limit(limitOperator.applyAsInt(pageable.getPageSize())));
+		((List<AggregationStage>) aggregationPipeline).add(Aggregation.limit(limitOperator.applyAsInt(pageable.getPageSize())));
 	}
 
 	/**

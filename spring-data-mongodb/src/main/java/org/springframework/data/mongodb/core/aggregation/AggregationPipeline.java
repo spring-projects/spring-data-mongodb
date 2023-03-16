@@ -23,9 +23,10 @@ import java.util.function.Predicate;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
- * The {@link AggregationPipeline} holds the collection of {@link AggregationOperation aggregation stages}.
+ * The {@link AggregationPipeline} holds the collection of {@link AggregationStage aggregation stages}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -33,9 +34,20 @@ import org.springframework.util.Assert;
  */
 public class AggregationPipeline {
 
-	private final List<AggregationOperation> pipeline;
+	private final List<AggregationStage> pipeline;
 
 	public static AggregationPipeline of(AggregationOperation... stages) {
+		return new AggregationPipeline(Arrays.asList(stages));
+	}
+
+	/**
+	 * Create a new {@link AggregationPipeline} out of the given {@link AggregationStage stages}.
+	 *
+	 * @param stages the pipeline stages.
+	 * @return new instance of {@link AggregationPipeline}.
+	 * @since 4.1
+	 */
+	public static AggregationPipeline of(AggregationStage... stages) {
 		return new AggregationPipeline(Arrays.asList(stages));
 	}
 
@@ -49,12 +61,12 @@ public class AggregationPipeline {
 	/**
 	 * Create a new pipeline with given {@link AggregationOperation stages}.
 	 *
-	 * @param aggregationOperations must not be {@literal null}.
+	 * @param aggregationStages must not be {@literal null}.
 	 */
-	public AggregationPipeline(List<AggregationOperation> aggregationOperations) {
+	public AggregationPipeline(List<? extends AggregationStage> aggregationStages) {
 
-		Assert.notNull(aggregationOperations, "AggregationOperations must not be null");
-		pipeline = new ArrayList<>(aggregationOperations);
+		Assert.notNull(aggregationStages, "AggregationStages must not be null");
+		pipeline = new ArrayList<>(aggregationStages);
 	}
 
 	/**
@@ -64,10 +76,21 @@ public class AggregationPipeline {
 	 * @return this.
 	 */
 	public AggregationPipeline add(AggregationOperation aggregationOperation) {
+		return add((AggregationStage) aggregationOperation);
+	}
 
-		Assert.notNull(aggregationOperation, "AggregationOperation must not be null");
+	/**
+	 * Append the given {@link AggregationOperation stage} to the pipeline.
+	 *
+	 * @param stage must not be {@literal null}.
+	 * @return this.
+	 * @since 4.1
+	 */
+	public AggregationPipeline add(AggregationStage stage) {
 
-		pipeline.add(aggregationOperation);
+		Assert.notNull(stage, "AggregationOperation must not be null");
+
+		pipeline.add(stage);
 		return this;
 	}
 
@@ -76,7 +99,17 @@ public class AggregationPipeline {
 	 *
 	 * @return never {@literal null}.
 	 */
-	public List<AggregationOperation> getOperations() {
+	public List<AggregationStage> getOperations() {
+		return getStages();
+	}
+
+	/**
+	 * Get the list of {@link AggregationOperation aggregation stages}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	public List<AggregationStage> getStages() {
 		return Collections.unmodifiableList(pipeline);
 	}
 
@@ -95,14 +128,14 @@ public class AggregationPipeline {
 			return false;
 		}
 
-		AggregationOperation operation = pipeline.get(pipeline.size() - 1);
+		AggregationStage operation = pipeline.get(pipeline.size() - 1);
 		return isOut(operation) || isMerge(operation);
 	}
 
 	void verify() {
 
 		// check $out/$merge is the last operation if it exists
-		for (AggregationOperation operation : pipeline) {
+		for (AggregationStage operation : pipeline) {
 
 			if (isOut(operation) && !isLast(operation)) {
 				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline");
@@ -134,13 +167,13 @@ public class AggregationPipeline {
 		return pipeline.isEmpty();
 	}
 
-	private boolean containsOperation(Predicate<AggregationOperation> predicate) {
+	private boolean containsOperation(Predicate<AggregationStage> predicate) {
 
 		if (isEmpty()) {
 			return false;
 		}
 
-		for (AggregationOperation element : pipeline) {
+		for (AggregationStage element : pipeline) {
 			if (predicate.test(element)) {
 				return true;
 			}
@@ -149,19 +182,29 @@ public class AggregationPipeline {
 		return false;
 	}
 
-	private boolean isLast(AggregationOperation aggregationOperation) {
+	private boolean isLast(AggregationStage aggregationOperation) {
 		return pipeline.indexOf(aggregationOperation) == pipeline.size() - 1;
 	}
 
-	private static boolean isUnionWith(AggregationOperation operator) {
-		return operator instanceof UnionWithOperation || operator.getOperator().equals("$unionWith");
+	private static boolean isUnionWith(AggregationStage stage) {
+		return isSpecificStage(stage, UnionWithOperation.class, "$unionWith");
 	}
 
-	private static boolean isMerge(AggregationOperation operator) {
-		return operator instanceof MergeOperation || operator.getOperator().equals("$merge");
+	private static boolean isMerge(AggregationStage stage) {
+		return isSpecificStage(stage, MergeOperation.class, "$merge");
 	}
 
-	private static boolean isOut(AggregationOperation operator) {
-		return operator instanceof OutOperation || operator.getOperator().equals("$out");
+	private static boolean isOut(AggregationStage stage) {
+		return isSpecificStage(stage, OutOperation.class, "$out");
+	}
+
+	private static boolean isSpecificStage(AggregationStage stage, Class<?> type, String operator) {
+		if (ClassUtils.isAssignable(type, stage.getClass())) {
+			return true;
+		}
+		if (stage instanceof AggregationOperation operation) {
+			return operation.getOperator().equals(operator);
+		}
+		return stage.toDocument(Aggregation.DEFAULT_CONTEXT).keySet().iterator().next().equals(operator);
 	}
 }
