@@ -23,6 +23,7 @@ import java.util.function.IntFunction;
 import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.KeysetScrollPosition.Direction;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
@@ -46,6 +47,10 @@ class ScrollUtils {
 	 */
 	static KeySetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
 
+		KeysetScrollPosition keyset = query.getKeyset();
+		Map<String, Object> keysetValues = keyset.getKeys();
+		Document queryObject = query.getQueryObject();
+
 		Document sortObject = query.isSorted() ? query.getSortObject() : new Document();
 		sortObject.put(idPropertyName, 1);
 
@@ -57,13 +62,7 @@ class ScrollUtils {
 			}
 		}
 
-		Document queryObject = query.getQueryObject();
-
 		List<Document> or = (List<Document>) queryObject.getOrDefault("$or", new ArrayList<>());
-
-		// TODO: reverse scrolling
-		Map<String, Object> keysetValues = query.getKeyset().getKeys();
-		Document keysetSort = new Document();
 		List<String> sortKeys = new ArrayList<>(sortObject.keySet());
 
 		if (!keysetValues.isEmpty() && !keysetValues.keySet().containsAll(sortKeys)) {
@@ -86,10 +85,11 @@ class ScrollUtils {
 					Object o = keysetValues.get(sortSegment);
 
 					if (j >= i) { // tail segment
-						if(o instanceof BsonNull) {
-							throw new IllegalStateException("Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
+						if (o instanceof BsonNull) {
+							throw new IllegalStateException(
+									"Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
 						}
-						sortConstraint.put(sortSegment, new Document(sortOrder == 1 ? "$gt" : "$lt", o));
+						sortConstraint.put(sortSegment, new Document(getComparator(sortOrder, keyset.getDirection()), o));
 						break;
 					}
 
@@ -102,14 +102,23 @@ class ScrollUtils {
 			}
 		}
 
-		if (!keysetSort.isEmpty()) {
-			or.add(keysetSort);
-		}
 		if (!or.isEmpty()) {
 			queryObject.put("$or", or);
 		}
 
 		return new KeySetScrollQuery(queryObject, fieldsObject, sortObject);
+	}
+
+	private static String getComparator(int sortOrder, Direction direction) {
+
+		// use gte/lte to include the object at the cursor/keyset so that
+		// we can include it in the result to check whether there is a next object.
+		// It needs to be filtered out later on.
+		if (direction == Direction.Backward) {
+			return sortOrder == 0 ? "$gte" : "$lte";
+		}
+
+		return sortOrder == 1 ? "$gt" : "$lt";
 	}
 
 	static <T> Window<T> createWindow(Document sortObject, int limit, List<T> result, EntityOperations operations) {

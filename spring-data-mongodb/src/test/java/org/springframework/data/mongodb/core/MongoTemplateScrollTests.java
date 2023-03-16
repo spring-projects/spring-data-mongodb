@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,6 +37,7 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.KeysetScrollPosition.Direction;
 import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
@@ -118,7 +119,7 @@ class MongoTemplateScrollTests {
 		assertThat(scroll).hasSize(2);
 		assertThat(scroll).containsOnly(john20, john40);
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size()-1)), WithNestedDocument.class);
+		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)), WithNestedDocument.class);
 
 		assertThat(scroll.hasNext()).isFalse();
 		assertThat(scroll.isLast()).isTrue();
@@ -143,6 +144,19 @@ class MongoTemplateScrollTests {
 				new Document("name", "foo"));
 
 		template.insertAll(Arrays.asList(john20, john40, john41, john42, john43, john44));
+	}
+
+	@Test // GH-4308
+	void shouldAllowReverseSort() {
+
+		WithNestedDocument john20 = new WithNestedDocument(null, "John", 120, new WithNestedDocument("John", 20),
+				new Document("name", "bar"));
+		WithNestedDocument john40 = new WithNestedDocument(null, "John", 140, new WithNestedDocument("John", 40),
+				new Document("name", "baz"));
+		WithNestedDocument john41 = new WithNestedDocument(null, "John", 141, new WithNestedDocument("John", 41),
+				new Document("name", "foo"));
+
+		template.insertAll(Arrays.asList(john20, john40, john41));
 
 		Query q = new Query(where("name").regex("J.*")).with(Sort.by("nested.name", "nested.age", "document.name"))
 				.limit(2);
@@ -155,11 +169,22 @@ class MongoTemplateScrollTests {
 		assertThat(scroll).hasSize(2);
 		assertThat(scroll).containsOnly(john20, john40);
 
-		ScrollPosition startAfter = scroll.positionAt(scroll.size()-1);
+		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)), WithNestedDocument.class);
 
-		assertThatExceptionOfType(IllegalStateException.class)
-				.isThrownBy(() -> template.scroll(q.with(startAfter), WithNestedDocument.class))
-				.withMessageContaining("document.name");
+		assertThat(scroll.hasNext()).isFalse();
+		assertThat(scroll.isLast()).isTrue();
+		assertThat(scroll).hasSize(1);
+		assertThat(scroll).containsOnly(john41);
+
+		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) scroll.positionAt(0);
+		KeysetScrollPosition reversePosition = KeysetScrollPosition.of(scrollPosition.getKeys(), Direction.Backward);
+
+		scroll = template.scroll(q.with(reversePosition), WithNestedDocument.class);
+
+		assertThat(scroll.hasNext()).isTrue();
+		assertThat(scroll.isLast()).isFalse();
+		assertThat(scroll).hasSize(2);
+		assertThat(scroll).containsOnly(john20, john40);
 	}
 
 	@ParameterizedTest // GH-4308
@@ -185,7 +210,7 @@ class MongoTemplateScrollTests {
 		assertThat(scroll).hasSize(2);
 		assertThat(scroll).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size()-1)).limit(3), resultType, "person");
+		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)).limit(3), resultType, "person");
 
 		assertThat(scroll.hasNext()).isTrue();
 		assertThat(scroll.isLast()).isFalse();
@@ -193,7 +218,7 @@ class MongoTemplateScrollTests {
 		assertThat(scroll).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
 		assertThat(scroll).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size()-1)).limit(1), resultType, "person");
+		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)).limit(1), resultType, "person");
 
 		assertThat(scroll.hasNext()).isFalse();
 		assertThat(scroll.isLast()).isTrue();
