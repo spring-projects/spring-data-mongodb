@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -70,16 +69,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
-import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -117,16 +107,7 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.DistinctIterable;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
+import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -2836,13 +2817,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
 			FindIterable<Document> iterable = cursorPreparer.initiateFind(collection, col -> col.find(query, Document.class));
-
-			if (LOGGER.isDebugEnabled()) {
-
-				LOGGER.debug(String.format("findOne using query: %s fields: %s in db.collection: %s",
-						serializeToJsonSafely(query), serializeToJsonSafely(fields.orElseGet(Document::new)),
-						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a"));
-			}
 
 			if (fields.isPresent()) {
 				iterable = iterable.projection(fields.get());
