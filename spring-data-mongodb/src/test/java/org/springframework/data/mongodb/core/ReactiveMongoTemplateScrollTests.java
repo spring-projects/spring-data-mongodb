@@ -18,6 +18,10 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Field;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -49,6 +53,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * Integration tests for {@link Window} queries.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @ExtendWith(MongoClientExtension.class)
 class ReactiveMongoTemplateScrollTests {
@@ -78,6 +83,11 @@ class ReactiveMongoTemplateScrollTests {
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
+
+		template.remove(WithRenamedField.class).all() //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@ParameterizedTest // GH-4308
@@ -100,29 +110,59 @@ class ReactiveMongoTemplateScrollTests {
 		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age")).limit(2);
 		q.with(scrollPosition);
 
-		Window<T> scroll = template.scroll(q, resultType, "person").block(Duration.ofSeconds(10));
+		Window<T> window = template.scroll(q, resultType, "person").block(Duration.ofSeconds(10));
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(2);
-		assertThat(scroll).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
 
-		scroll = template.scroll(q.limit(3).with(scroll.positionAt(scroll.size() - 1)), resultType, "person")
+		window = template.scroll(q.limit(3).with(window.positionAt(window.size() - 1)), resultType, "person")
 				.block(Duration.ofSeconds(10));
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(3);
-		assertThat(scroll).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
-		assertThat(scroll).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(3);
+		assertThat(window).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
+		assertThat(window).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
 
-		scroll = template.scroll(q.limit(1).with(scroll.positionAt(scroll.size() - 1)), resultType, "person")
+		window = template.scroll(q.limit(1).with(window.positionAt(window.size() - 1)), resultType, "person")
 				.block(Duration.ofSeconds(10));
 
-		assertThat(scroll.hasNext()).isFalse();
-		assertThat(scroll.isLast()).isTrue();
-		assertThat(scroll).hasSize(1);
-		assertThat(scroll).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+		assertThat(window).hasSize(1);
+		assertThat(window).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
+	}
+
+	@ParameterizedTest // GH-4308
+	@MethodSource("renamedFieldProjectTargets")
+	<T> void scrollThroughResultsWithRenamedField(Class<T> resultType, Function<WithRenamedField, T> assertionConverter) {
+
+		WithRenamedField one = new WithRenamedField("id-1", "v1", null);
+		WithRenamedField two = new WithRenamedField("id-2", "v2", null);
+		WithRenamedField three = new WithRenamedField("id-3", "v3", null);
+
+		template.insertAll(Arrays.asList(one, two, three)).as(StepVerifier::create).expectNextCount(3).verifyComplete();
+
+		Query q = new Query(where("value").regex("v.*")).with(Sort.by(Sort.Direction.DESC, "value")).limit(2);
+		q.with(KeysetScrollPosition.initial());
+
+		Window<T> window = template.query(WithRenamedField.class).as(resultType).matching(q)
+				.scroll(KeysetScrollPosition.initial()).block(Duration.ofSeconds(10));
+
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(assertionConverter.apply(three), assertionConverter.apply(two));
+
+		window = template.query(WithRenamedField.class).as(resultType).matching(q)
+				.scroll(window.positionAt(window.size() - 1)).block(Duration.ofSeconds(10));
+
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+		assertThat(window).hasSize(1);
+		assertThat(window).containsOnly(assertionConverter.apply(one));
 	}
 
 	static Stream<Arguments> positions() {
@@ -130,6 +170,17 @@ class ReactiveMongoTemplateScrollTests {
 		return Stream.of(args(KeysetScrollPosition.initial(), Person.class, Function.identity()), //
 				args(KeysetScrollPosition.initial(), Document.class, MongoTemplateScrollTests::toDocument), //
 				args(OffsetScrollPosition.initial(), Person.class, Function.identity()));
+	}
+
+	static Stream<Arguments> renamedFieldProjectTargets() {
+		return Stream.of(Arguments.of(WithRenamedField.class, Function.identity()),
+				Arguments.of(Document.class, new Function<WithRenamedField, Document>() {
+					@Override
+					public Document apply(WithRenamedField withRenamedField) {
+						return new Document("_id", withRenamedField.getId()).append("_val", withRenamedField.getValue())
+								.append("_class", WithRenamedField.class.getName());
+					}
+				}));
 	}
 
 	private static <T> Arguments args(ScrollPosition scrollPosition, Class<T> resultType,
@@ -140,5 +191,17 @@ class ReactiveMongoTemplateScrollTests {
 	static Document toDocument(Person person) {
 		return new Document("_class", person.getClass().getName()).append("_id", person.getId()).append("active", true)
 				.append("firstName", person.getFirstName()).append("age", person.getAge());
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class WithRenamedField {
+
+		String id;
+
+		@Field("_val") String value;
+
+		MongoTemplateScrollTests.WithRenamedField nested;
 	}
 }

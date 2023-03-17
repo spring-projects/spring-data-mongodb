@@ -18,10 +18,13 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -44,10 +47,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplateTests.PersonWithIdPropertyOfTypeUUIDListener;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.MongoClient;
 
@@ -90,10 +96,22 @@ class MongoTemplateScrollTests {
 		});
 	});
 
+	private static int compareProxies(PersonInterfaceProjection actual, PersonInterfaceProjection expected) {
+		if (actual.getAge() != expected.getAge()) {
+			return -1;
+		}
+		if (!ObjectUtils.nullSafeEquals(actual.getFirstName(), expected.getFirstName())) {
+			return -1;
+		}
+
+		return 0;
+	}
+
 	@BeforeEach
 	void setUp() {
 		template.remove(Person.class).all();
 		template.remove(WithNestedDocument.class).all();
+		template.remove(WithRenamedField.class).all();
 	}
 
 	@Test // GH-4308
@@ -112,19 +130,19 @@ class MongoTemplateScrollTests {
 				.limit(2);
 		q.with(KeysetScrollPosition.initial());
 
-		Window<WithNestedDocument> scroll = template.scroll(q, WithNestedDocument.class);
+		Window<WithNestedDocument> window = template.scroll(q, WithNestedDocument.class);
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(2);
-		assertThat(scroll).containsOnly(john20, john40);
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(john20, john40);
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)), WithNestedDocument.class);
+		window = template.scroll(q.with(window.positionAt(window.size() - 1)), WithNestedDocument.class);
 
-		assertThat(scroll.hasNext()).isFalse();
-		assertThat(scroll.isLast()).isTrue();
-		assertThat(scroll).hasSize(1);
-		assertThat(scroll).containsOnly(john41);
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+		assertThat(window).hasSize(1);
+		assertThat(window).containsOnly(john41);
 	}
 
 	@Test // GH-4308
@@ -162,35 +180,35 @@ class MongoTemplateScrollTests {
 				.limit(2);
 		q.with(KeysetScrollPosition.initial());
 
-		Window<WithNestedDocument> scroll = template.scroll(q, WithNestedDocument.class);
+		Window<WithNestedDocument> window = template.scroll(q, WithNestedDocument.class);
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(2);
-		assertThat(scroll).containsOnly(john20, john40);
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(john20, john40);
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)), WithNestedDocument.class);
+		window = template.scroll(q.with(window.positionAt(window.size() - 1)), WithNestedDocument.class);
 
-		assertThat(scroll.hasNext()).isFalse();
-		assertThat(scroll.isLast()).isTrue();
-		assertThat(scroll).hasSize(1);
-		assertThat(scroll).containsOnly(john41);
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+		assertThat(window).hasSize(1);
+		assertThat(window).containsOnly(john41);
 
-		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) scroll.positionAt(0);
+		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(0);
 		KeysetScrollPosition reversePosition = KeysetScrollPosition.of(scrollPosition.getKeys(), Direction.Backward);
 
-		scroll = template.scroll(q.with(reversePosition), WithNestedDocument.class);
+		window = template.scroll(q.with(reversePosition), WithNestedDocument.class);
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(2);
-		assertThat(scroll).containsOnly(john20, john40);
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(john20, john40);
 	}
 
 	@ParameterizedTest // GH-4308
 	@MethodSource("positions")
 	public <T> void shouldApplyCursoringCorrectly(ScrollPosition scrollPosition, Class<T> resultType,
-			Function<Person, T> assertionConverter) {
+			Function<Person, T> assertionConverter, @Nullable Comparator<T> comparator) {
 
 		Person john20 = new Person("John", 20);
 		Person john40_1 = new Person("John", 40);
@@ -201,46 +219,174 @@ class MongoTemplateScrollTests {
 
 		template.insertAll(Arrays.asList(john20, john40_1, john40_2, jane_20, jane_40, jane_42));
 		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age")).limit(2);
-		q.with(scrollPosition);
 
-		Window<T> scroll = template.scroll(q, resultType, "person");
+		Window<T> window = template.query(Person.class).inCollection("person").as(resultType).matching(q)
+				.scroll(scrollPosition);
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(2);
-		assertThat(scroll).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertWindow(window, comparator).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)).limit(3), resultType, "person");
+		window = template.query(Person.class).inCollection("person").as(resultType).matching(q.limit(3))
+				.scroll(window.positionAt(window.size() - 1));
 
-		assertThat(scroll.hasNext()).isTrue();
-		assertThat(scroll.isLast()).isFalse();
-		assertThat(scroll).hasSize(3);
-		assertThat(scroll).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
-		assertThat(scroll).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(3);
+		assertWindow(window, comparator).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
+		assertWindow(window, comparator).containsAnyOf(assertionConverter.apply(john40_1),
+				assertionConverter.apply(john40_2));
 
-		scroll = template.scroll(q.with(scroll.positionAt(scroll.size() - 1)).limit(1), resultType, "person");
+		window = template.query(Person.class).inCollection("person").as(resultType).matching(q.limit(1))
+				.scroll(window.positionAt(window.size() - 1));
 
-		assertThat(scroll.hasNext()).isFalse();
-		assertThat(scroll.isLast()).isTrue();
-		assertThat(scroll).hasSize(1);
-		assertThat(scroll).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+		assertThat(window).hasSize(1);
+		assertWindow(window, comparator).containsAnyOf(assertionConverter.apply(john40_1),
+				assertionConverter.apply(john40_2));
+	}
+
+	@ParameterizedTest // GH-4308
+	@MethodSource("renamedFieldProjectTargets")
+	<T> void scrollThroughResultsWithRenamedField(Class<T> resultType, Function<WithRenamedField, T> assertionConverter) {
+
+		WithRenamedField one = new WithRenamedField("id-1", "v1", null);
+		WithRenamedField two = new WithRenamedField("id-2", "v2", null);
+		WithRenamedField three = new WithRenamedField("id-3", "v3", null);
+
+		template.insertAll(Arrays.asList(one, two, three));
+
+		Query q = new Query(where("value").regex("v.*")).with(Sort.by(Sort.Direction.DESC, "value")).limit(2);
+		q.with(KeysetScrollPosition.initial());
+
+		Window<T> window = template.query(WithRenamedField.class).as(resultType).matching(q)
+				.scroll(KeysetScrollPosition.initial());
+
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(assertionConverter.apply(three), assertionConverter.apply(two));
+
+		window = template.query(WithRenamedField.class).as(resultType).matching(q)
+				.scroll(window.positionAt(window.size() - 1));
+
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+		assertThat(window).hasSize(1);
+		assertThat(window).containsOnly(assertionConverter.apply(one));
 	}
 
 	static Stream<Arguments> positions() {
 
 		return Stream.of(args(KeysetScrollPosition.initial(), Person.class, Function.identity()), //
 				args(KeysetScrollPosition.initial(), Document.class, MongoTemplateScrollTests::toDocument), //
-				args(OffsetScrollPosition.initial(), Person.class, Function.identity()));
+				args(OffsetScrollPosition.initial(), Person.class, Function.identity()), //
+				args(OffsetScrollPosition.initial(), PersonDtoProjection.class,
+						MongoTemplateScrollTests::toPersonDtoProjection), //
+				args(OffsetScrollPosition.initial(), PersonInterfaceProjection.class,
+						MongoTemplateScrollTests::toPersonInterfaceProjection, MongoTemplateScrollTests::compareProxies));
+	}
+
+	static Stream<Arguments> renamedFieldProjectTargets() {
+		return Stream.of(Arguments.of(WithRenamedField.class, Function.identity()),
+				Arguments.of(Document.class, new Function<WithRenamedField, Document>() {
+					@Override
+					public Document apply(WithRenamedField withRenamedField) {
+						return new Document("_id", withRenamedField.getId()).append("_val", withRenamedField.getValue())
+								.append("_class", WithRenamedField.class.getName());
+					}
+				}));
+	}
+
+	static <T> org.assertj.core.api.IterableAssert<T> assertWindow(Window<T> window, @Nullable Comparator<T> comparator) {
+		return comparator != null ? assertThat(window).usingElementComparator(comparator) : assertThat(window);
 	}
 
 	private static <T> Arguments args(ScrollPosition scrollPosition, Class<T> resultType,
 			Function<Person, T> assertionConverter) {
-		return Arguments.of(scrollPosition, resultType, assertionConverter);
+		return args(scrollPosition, resultType, assertionConverter, null);
+	}
+
+	private static <T> Arguments args(ScrollPosition scrollPosition, Class<T> resultType,
+			Function<Person, T> assertionConverter, @Nullable Comparator<T> comparator) {
+		return Arguments.of(scrollPosition, resultType, assertionConverter, comparator);
 	}
 
 	static Document toDocument(Person person) {
+
 		return new Document("_class", person.getClass().getName()).append("_id", person.getId()).append("active", true)
 				.append("firstName", person.getFirstName()).append("age", person.getAge());
+	}
+
+	static PersonDtoProjection toPersonDtoProjection(Person person) {
+
+		PersonDtoProjection dto = new PersonDtoProjection();
+		dto.firstName = person.getFirstName();
+		dto.age = person.getAge();
+		return dto;
+	}
+
+	static PersonInterfaceProjection toPersonInterfaceProjection(Person person) {
+
+		return new PersonInterfaceProjectionImpl(person);
+	}
+
+	@Data
+	static class PersonDtoProjection {
+		String firstName;
+		int age;
+	}
+
+	interface PersonInterfaceProjection {
+		String getFirstName();
+
+		int getAge();
+	}
+
+	static class PersonInterfaceProjectionImpl implements PersonInterfaceProjection {
+
+		final Person delegate;
+
+		public PersonInterfaceProjectionImpl(Person delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public String getFirstName() {
+			return delegate.getFirstName();
+		}
+
+		@Override
+		public int getAge() {
+			return delegate.getAge();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o instanceof Proxy) {
+				return true;
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(delegate);
+		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class WithRenamedField {
+
+		String id;
+
+		@Field("_val") String value;
+
+		WithRenamedField nested;
 	}
 
 	@NoArgsConstructor
@@ -248,6 +394,7 @@ class MongoTemplateScrollTests {
 	class WithNestedDocument {
 
 		String id;
+
 		String name;
 
 		int age;

@@ -33,11 +33,13 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 
 /**
  * Unit tests for {@link EntityOperations}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 class EntityOperationsUnitTests {
 
@@ -70,7 +72,8 @@ class EntityOperationsUnitTests {
 
 		WithNestedDocument object = new WithNestedDocument("foo");
 
-		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1));
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1),
+				WithNestedDocument.class);
 
 		assertThat(keys).containsEntry("id", "foo");
 	}
@@ -80,7 +83,7 @@ class EntityOperationsUnitTests {
 
 		Document object = new Document("id", "foo");
 
-		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1));
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1), Document.class);
 
 		assertThat(keys).containsEntry("id", "foo");
 	}
@@ -90,7 +93,8 @@ class EntityOperationsUnitTests {
 
 		WithNestedDocument object = new WithNestedDocument("foo", new WithNestedDocument("bar"), null);
 
-		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("nested.id", 1));
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("nested.id", 1),
+				WithNestedDocument.class);
 
 		assertThat(keys).containsEntry("nested.id", "bar");
 	}
@@ -101,7 +105,8 @@ class EntityOperationsUnitTests {
 		WithNestedDocument object = new WithNestedDocument("foo", new WithNestedDocument("bar"),
 				new Document("john", "doe"));
 
-		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1));
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1),
+				WithNestedDocument.class);
 
 		assertThat(keys).containsEntry("document.john", "doe");
 	}
@@ -111,9 +116,30 @@ class EntityOperationsUnitTests {
 
 		Document object = new Document("document", new Document("john", "doe"));
 
-		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1));
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1),
+				Document.class);
 
 		assertThat(keys).containsEntry("document.john", "doe");
+	}
+
+	@Test // GH-4308
+	void shouldExtractIdPropertyNameFromRawDocument() {
+
+		Document object = new Document("_id", "id-1").append("value", "val");
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("value", 1), DomainTypeWithIdProperty.class);
+
+		assertThat(keys).containsEntry("id", "id-1");
+	}
+
+	@Test // GH-4308
+	void shouldExtractValuesFromProxy() {
+
+		ProjectionInterface source = new SpelAwareProxyProjectionFactory().createProjection(ProjectionInterface.class, new Document("_id", "id-1").append("value", "val"));
+
+		Map<String, Object> keys = operations.forEntity(source).extractKeys(new Document("value", 1), DomainTypeWithIdProperty.class);
+
+		assertThat(keys).isEqualTo(new Document("id", "id-1").append("value", "val"));
 	}
 
 	<T> EntityOperations.AdaptibleEntity<T> initAdaptibleEntity(T source) {
@@ -149,5 +175,9 @@ class EntityOperationsUnitTests {
 		public WithNestedDocument(String id) {
 			this.id = id;
 		}
+	}
+
+	interface ProjectionInterface {
+		String getValue();
 	}
 }

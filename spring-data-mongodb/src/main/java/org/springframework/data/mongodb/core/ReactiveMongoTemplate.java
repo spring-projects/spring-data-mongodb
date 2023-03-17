@@ -849,6 +849,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(sourceClass, "Entity type must not be null");
 		Assert.notNull(targetClass, "Target type must not be null");
 
+		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
+		ProjectingReadCallback<?,T> callback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
 		int limit = query.isLimited() ? query.getLimit() + 1 : Integer.MAX_VALUE;
 
 		if (query.hasKeyset()) {
@@ -857,15 +859,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					operations.getIdPropertyName(sourceClass));
 
 			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
-					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), targetClass,
-					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass)).collectList();
+					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
+					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback).collectList();
 
-			return result.map(it -> ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), it, operations));
+			return result.map(it -> ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), it, sourceClass, operations));
 		}
 
 		Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
-				query.getFieldsObject(), targetClass,
-				new QueryFindPublisherPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass))
+				query.getFieldsObject(), sourceClass,
+				new QueryFindPublisherPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass), callback)
 						.collectList();
 
 		return result.map(
