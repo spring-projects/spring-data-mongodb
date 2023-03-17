@@ -2892,13 +2892,6 @@ public class MongoTemplate
 			FindIterable<Document> iterable = cursorPreparer.initiateFind(collection,
 					col -> collectionPreparer.prepare(col).find(query, Document.class));
 
-			if (LOGGER.isDebugEnabled()) {
-
-				LOGGER.debug(String.format("findOne using query: %s fields: %s in db.collection: %s",
-						serializeToJsonSafely(query), serializeToJsonSafely(fields.orElseGet(Document::new)),
-						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a"));
-			}
-
 			if (fields.isPresent()) {
 				iterable = iterable.projection(fields.get());
 			}
