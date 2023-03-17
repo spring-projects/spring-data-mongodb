@@ -121,14 +121,15 @@ class ScrollUtils {
 		return sortOrder == 1 ? "$gt" : "$lt";
 	}
 
-	static <T> Window<T> createWindow(Document sortObject, int limit, List<T> result, EntityOperations operations) {
+	static <T> Window<T> createWindow(Document sortObject, int limit, List<T> result, Class<?> sourceType,
+			EntityOperations operations) {
 
 		IntFunction<KeysetScrollPosition> positionFunction = value -> {
 
 			T last = result.get(value);
 			Entity<T> entity = operations.forEntity(last);
 
-			Map<String, Object> keys = entity.extractKeys(sortObject);
+			Map<String, Object> keys = entity.extractKeys(sortObject, sourceType);
 			return KeysetScrollPosition.of(keys);
 		};
 

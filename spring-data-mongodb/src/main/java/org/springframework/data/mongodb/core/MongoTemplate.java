@@ -870,7 +870,8 @@ public class MongoTemplate
 		Assert.notNull(sourceClass, "Entity type must not be null");
 		Assert.notNull(targetClass, "Target type must not be null");
 
-		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(mongoConverter, targetClass, collectionName);
+		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
+		ProjectingReadCallback<?,T> callback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
 		int limit = query.isLimited() ? query.getLimit() + 1 : Integer.MAX_VALUE;
 
 		if (query.hasKeyset()) {
@@ -882,7 +883,7 @@ public class MongoTemplate
 					keysetPaginationQuery.fields(), sourceClass,
 					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback);
 
-			return ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), result, operations);
+			return ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), result, sourceClass, operations);
 		}
 
 		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
