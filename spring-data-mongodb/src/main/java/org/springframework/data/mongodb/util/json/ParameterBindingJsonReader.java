@@ -20,6 +20,8 @@ import static java.lang.String.*;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeParseException;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -27,7 +29,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +43,6 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -957,7 +957,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 		verifyToken(JsonTokenType.RIGHT_PAREN);
 
-		byte[] bytes = Base64Utils.decodeFromString(bytesToken.getValue(String.class));
+		byte[] bytes = Base64.getDecoder().decode(bytesToken.getValue(String.class));
 		return new BsonBinary(subTypeToken.getValue(Integer.class).byteValue(), bytes);
 	}
 
@@ -1080,28 +1080,14 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		verifyToken(JsonTokenType.RIGHT_PAREN);
-		String[] patterns = { "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ssz", "yyyy-MM-dd'T'HH:mm:ss.SSSz" };
+		
+		String dateTimeString = token.getValue(String.class);
 
-		SimpleDateFormat format = new SimpleDateFormat(patterns[0], Locale.ENGLISH);
-		ParsePosition pos = new ParsePosition(0);
-		String s = token.getValue(String.class);
-
-		if (s.endsWith("Z")) {
-			s = s.substring(0, s.length() - 1) + "GMT-00:00";
+		try {
+			return DateTimeFormatter.parse(dateTimeString);
+		} catch (DateTimeParseException e) {
+			throw new JsonParseException("Failed to parse string as a date: " + dateTimeString, e);
 		}
-
-		for (final String pattern : patterns) {
-			format.applyPattern(pattern);
-			format.setLenient(true);
-			pos.setIndex(0);
-
-			Date date = format.parse(s, pos);
-
-			if (date != null && pos.getIndex() == s.length()) {
-				return date.getTime();
-			}
-		}
-		throw new JsonParseException("Invalid date format.");
 	}
 
 	private BsonBinary visitHexDataConstructor() {
@@ -1219,7 +1205,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				byte type;
 				if (firstNestedKey.equals("base64")) {
 					verifyToken(JsonTokenType.COLON);
-					data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+					data = Base64.getDecoder().decode(readStringFromExtendedJson());
 					verifyToken(JsonTokenType.COMMA);
 					verifyString("subType");
 					verifyToken(JsonTokenType.COLON);
@@ -1230,7 +1216,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					verifyToken(JsonTokenType.COMMA);
 					verifyString("base64");
 					verifyToken(JsonTokenType.COLON);
-					data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+					data = Base64.getDecoder().decode(readStringFromExtendedJson());
 				} else {
 					throw new JsonParseException("Unexpected key for $binary: " + firstNestedKey);
 				}
@@ -1258,7 +1244,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			byte type;
 
 			if (firstKey.equals("$binary")) {
-				data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+				data = Base64.getDecoder().decode(readStringFromExtendedJson());
 				verifyToken(JsonTokenType.COMMA);
 				verifyString("$type");
 				verifyToken(JsonTokenType.COLON);
@@ -1268,7 +1254,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				verifyToken(JsonTokenType.COMMA);
 				verifyString("$binary");
 				verifyToken(JsonTokenType.COLON);
-				data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+				data = Base64.getDecoder().decode(readStringFromExtendedJson());
 			}
 			verifyToken(JsonTokenType.END_OBJECT);
 

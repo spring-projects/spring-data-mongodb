@@ -211,6 +211,38 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + time + " } } } "));
 	}
 
+	@Test // GH-3750
+	public void shouldParseISODate() {
+
+		String json = "{ 'value' : ISODate(\"1970-01-01T00:00:00Z\") }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isZero();
+	}
+
+	@Test // GH-3750
+	public void shouldParseISODateWith24HourTimeSpecification() {
+
+		String json = "{ 'value' : ISODate(\"2013-10-04T12:07:30.443Z\") }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isEqualTo(1380888450443L);
+	}
+
+	@Test // GH-3750
+	public void shouldParse$date() {
+
+		String json = "{ 'value' : { \"$date\" : \"2015-04-16T14:55:57.626Z\" } }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isEqualTo(1429196157626L);
+	}
+
+	@Test // GH-3750
+	public void shouldParse$dateWithTimeOffset() {
+
+		String json = "{ 'value' :{ \"$date\" : \"2015-04-16T16:55:57.626+02:00\" } }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isEqualTo(1429196157626L);
+	}
+
 	@Test // DATAMONGO-2418
 	void shouldNotAccessSpElEvaluationContextWhenNoSpElPresentInBindableTarget() {
 
@@ -485,7 +517,6 @@ class ParameterBindingJsonReaderUnitTests {
 		Document target = parse("{ 'parent' : null }");
 		assertThat(target).isEqualTo(new Document("parent", null));
 	}
-
 
 	@Test // GH-4089
 	void retainsSpelArgumentTypeViaArgumentIndex() {
