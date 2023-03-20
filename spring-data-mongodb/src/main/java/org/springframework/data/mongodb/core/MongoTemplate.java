@@ -66,7 +66,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
-import org.springframework.data.mongodb.core.ScrollUtils.KeySetScrollQuery;
+import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollQuery;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -876,14 +876,14 @@ public class MongoTemplate
 
 		if (query.hasKeyset()) {
 
-			KeySetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
+			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
 					operations.getIdPropertyName(sourceClass));
 
 			List<T> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
 					keysetPaginationQuery.fields(), sourceClass,
 					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback);
 
-			return ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), result, sourceClass, operations);
+			return ScrollUtils.createWindow(query, result, sourceClass, operations);
 		}
 
 		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),

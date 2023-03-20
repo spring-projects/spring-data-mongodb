@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
@@ -45,84 +46,24 @@ class ScrollUtils {
 	 * @param idPropertyName
 	 * @return
 	 */
-	static KeySetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
+	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
 
 		KeysetScrollPosition keyset = query.getKeyset();
-		Map<String, Object> keysetValues = keyset.getKeys();
-		Document queryObject = query.getQueryObject();
+		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
+		Document sortObject = director.getSortObject(idPropertyName, query);
+		Document fieldsObject = director.getFieldsObject(query.getFieldsObject(), sortObject);
+		Document queryObject = director.createQuery(keyset, query.getQueryObject(), sortObject);
 
-		Document sortObject = query.isSorted() ? query.getSortObject() : new Document();
-		sortObject.put(idPropertyName, 1);
-
-		// make sure we can extract the keyset
-		Document fieldsObject = query.getFieldsObject();
-		if (!fieldsObject.isEmpty()) {
-			for (String field : sortObject.keySet()) {
-				fieldsObject.put(field, 1);
-			}
-		}
-
-		List<Document> or = (List<Document>) queryObject.getOrDefault("$or", new ArrayList<>());
-		List<String> sortKeys = new ArrayList<>(sortObject.keySet());
-
-		if (!keysetValues.isEmpty() && !keysetValues.keySet().containsAll(sortKeys)) {
-			throw new IllegalStateException("KeysetScrollPosition does not contain all keyset values");
-		}
-
-		// first query doesn't come with a keyset
-		if (!keysetValues.isEmpty()) {
-
-			// build matrix query for keyset paging that contains sort^2 queries
-			// reflecting a query that follows sort order semantics starting from the last returned keyset
-			for (int i = 0; i < sortKeys.size(); i++) {
-
-				Document sortConstraint = new Document();
-
-				for (int j = 0; j < sortKeys.size(); j++) {
-
-					String sortSegment = sortKeys.get(j);
-					int sortOrder = sortObject.getInteger(sortSegment);
-					Object o = keysetValues.get(sortSegment);
-
-					if (j >= i) { // tail segment
-						if (o instanceof BsonNull) {
-							throw new IllegalStateException(
-									"Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
-						}
-						sortConstraint.put(sortSegment, new Document(getComparator(sortOrder, keyset.getDirection()), o));
-						break;
-					}
-
-					sortConstraint.put(sortSegment, o);
-				}
-
-				if (!sortConstraint.isEmpty()) {
-					or.add(sortConstraint);
-				}
-			}
-		}
-
-		if (!or.isEmpty()) {
-			queryObject.put("$or", or);
-		}
-
-		return new KeySetScrollQuery(queryObject, fieldsObject, sortObject);
+		return new KeysetScrollQuery(queryObject, fieldsObject, sortObject);
 	}
 
-	private static String getComparator(int sortOrder, Direction direction) {
+	static <T> Window<T> createWindow(Query query, List<T> result, Class<?> sourceType, EntityOperations operations) {
 
-		// use gte/lte to include the object at the cursor/keyset so that
-		// we can include it in the result to check whether there is a next object.
-		// It needs to be filtered out later on.
-		if (direction == Direction.Backward) {
-			return sortOrder == 0 ? "$gte" : "$lte";
-		}
+		Document sortObject = query.getSortObject();
+		KeysetScrollPosition keyset = query.getKeyset();
+		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
 
-		return sortOrder == 1 ? "$gt" : "$lt";
-	}
-
-	static <T> Window<T> createWindow(Document sortObject, int limit, List<T> result, Class<?> sourceType,
-			EntityOperations operations) {
+		director.postPostProcessResults(result);
 
 		IntFunction<KeysetScrollPosition> positionFunction = value -> {
 
@@ -133,7 +74,7 @@ class ScrollUtils {
 			return KeysetScrollPosition.of(keys);
 		};
 
-		return createWindow(result, limit, positionFunction);
+		return createWindow(result, query.getLimit(), positionFunction);
 	}
 
 	static <T> Window<T> createWindow(List<T> result, int limit, IntFunction<? extends ScrollPosition> positionFunction) {
@@ -153,8 +94,145 @@ class ScrollUtils {
 		return result;
 	}
 
-	record KeySetScrollQuery(Document query, Document fields, Document sort) {
+	record KeysetScrollQuery(Document query, Document fields, Document sort) {
 
+	}
+
+	/**
+	 * Director for keyset scrolling.
+	 */
+	static class KeysetScrollDirector {
+
+		private static final KeysetScrollDirector forward = new KeysetScrollDirector();
+		private static final KeysetScrollDirector reverse = new ReverseKeysetScrollDirector();
+
+		/**
+		 * Factory method to obtain the right {@link KeysetScrollDirector}.
+		 *
+		 * @param direction
+		 * @return
+		 */
+		public static KeysetScrollDirector of(KeysetScrollPosition.Direction direction) {
+			return direction == Direction.Forward ? forward : reverse;
+		}
+
+		public Document getSortObject(String idPropertyName, Query query) {
+
+			Document sortObject = query.isSorted() ? query.getSortObject() : new Document();
+			sortObject.put(idPropertyName, 1);
+
+			return sortObject;
+		}
+
+		public Document getFieldsObject(Document fieldsObject, Document sortObject) {
+
+			// make sure we can extract the keyset
+			if (!fieldsObject.isEmpty()) {
+				for (String field : sortObject.keySet()) {
+					fieldsObject.put(field, 1);
+				}
+			}
+
+			return fieldsObject;
+		}
+
+		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject) {
+
+			Map<String, Object> keysetValues = keyset.getKeys();
+			List<Document> or = (List<Document>) queryObject.getOrDefault("$or", new ArrayList<>());
+			List<String> sortKeys = new ArrayList<>(sortObject.keySet());
+
+			// first query doesn't come with a keyset
+			if (keysetValues.isEmpty()) {
+				return queryObject;
+			}
+
+			if (!keysetValues.keySet().containsAll(sortKeys)) {
+				throw new IllegalStateException("KeysetScrollPosition does not contain all keyset values");
+			}
+
+			// build matrix query for keyset paging that contains sort^2 queries
+			// reflecting a query that follows sort order semantics starting from the last returned keyset
+			for (int i = 0; i < sortKeys.size(); i++) {
+
+				Document sortConstraint = new Document();
+
+				for (int j = 0; j < sortKeys.size(); j++) {
+
+					String sortSegment = sortKeys.get(j);
+					int sortOrder = sortObject.getInteger(sortSegment);
+					Object o = keysetValues.get(sortSegment);
+
+					if (j >= i) { // tail segment
+						if (o instanceof BsonNull) {
+							throw new IllegalStateException(
+									"Cannot resume from KeysetScrollPosition. Offending key: '%s' is 'null'".formatted(sortSegment));
+						}
+						sortConstraint.put(sortSegment, new Document(getComparator(sortOrder), o));
+						break;
+					}
+
+					sortConstraint.put(sortSegment, o);
+				}
+
+				if (!sortConstraint.isEmpty()) {
+					or.add(sortConstraint);
+				}
+			}
+
+			if (!or.isEmpty()) {
+				queryObject.put("$or", or);
+			}
+
+			return queryObject;
+		}
+
+		public <T> void postPostProcessResults(List<T> result) {
+
+		}
+
+		protected String getComparator(int sortOrder) {
+			return sortOrder == 1 ? "$gt" : "$lt";
+		}
+	}
+
+	/**
+	 * Reverse scrolling director variant applying {@link KeysetScrollPosition.Direction#Backward}. In reverse scrolling,
+	 * we need to flip directions for the actual query so that we do not get everything from the top position and apply
+	 * the limit but rather flip the sort direction, apply the limit and then reverse the result to restore the actual
+	 * sort order.
+	 */
+	private static class ReverseKeysetScrollDirector extends KeysetScrollDirector {
+
+		@Override
+		public Document getSortObject(String idPropertyName, Query query) {
+
+			Document sortObject = super.getSortObject(idPropertyName, query);
+
+			// flip sort direction for backward scrolling
+
+			for (String field : sortObject.keySet()) {
+				sortObject.put(field, sortObject.getInteger(field) == 1 ? -1 : 1);
+			}
+
+			return sortObject;
+		}
+
+		@Override
+		protected String getComparator(int sortOrder) {
+
+			// use gte/lte to include the object at the cursor/keyset so that
+			// we can include it in the result to check whether there is a next object.
+			// It needs to be filtered out later on.
+			return sortOrder == 1 ? "$gte" : "$lte";
+		}
+
+		@Override
+		public <T> void postPostProcessResults(List<T> result) {
+			// flip direction of the result list as we need to accomodate for the flipped sort order for proper offset
+			// querying.
+			Collections.reverse(result);
+		}
 	}
 
 }

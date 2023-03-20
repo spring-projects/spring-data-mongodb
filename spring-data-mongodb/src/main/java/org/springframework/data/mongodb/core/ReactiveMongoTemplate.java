@@ -80,7 +80,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
-import org.springframework.data.mongodb.core.ScrollUtils.KeySetScrollQuery;
+import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollQuery;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -855,14 +855,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (query.hasKeyset()) {
 
-			KeySetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
+			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
 					operations.getIdPropertyName(sourceClass));
 
 			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
 					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
 					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback).collectList();
 
-			return result.map(it -> ScrollUtils.createWindow(query.getSortObject(), query.getLimit(), it, sourceClass, operations));
+			return result.map(it -> ScrollUtils.createWindow(query, it, sourceClass, operations));
 		}
 
 		Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),

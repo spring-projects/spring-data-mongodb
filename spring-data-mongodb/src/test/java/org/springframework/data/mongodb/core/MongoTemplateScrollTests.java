@@ -167,42 +167,32 @@ class MongoTemplateScrollTests {
 	@Test // GH-4308
 	void shouldAllowReverseSort() {
 
-		WithNestedDocument john20 = new WithNestedDocument(null, "John", 120, new WithNestedDocument("John", 20),
-				new Document("name", "bar"));
-		WithNestedDocument john40 = new WithNestedDocument(null, "John", 140, new WithNestedDocument("John", 40),
-				new Document("name", "baz"));
-		WithNestedDocument john41 = new WithNestedDocument(null, "John", 141, new WithNestedDocument("John", 41),
-				new Document("name", "foo"));
+		Person jane_20 = new Person("Jane", 20);
+		Person jane_40 = new Person("Jane", 40);
+		Person jane_42 = new Person("Jane", 42);
+		Person john20 = new Person("John", 20);
+		Person john40_1 = new Person("John", 40);
+		Person john40_2 = new Person("John", 40);
 
-		template.insertAll(Arrays.asList(john20, john40, john41));
+		template.insertAll(Arrays.asList(john20, john40_1, john40_2, jane_20, jane_40, jane_42));
+		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age"));
+		q.with(KeysetScrollPosition.initial()).limit(6);
 
-		Query q = new Query(where("name").regex("J.*")).with(Sort.by("nested.name", "nested.age", "document.name"))
-				.limit(2);
-		q.with(KeysetScrollPosition.initial());
-
-		Window<WithNestedDocument> window = template.scroll(q, WithNestedDocument.class);
-
-		assertThat(window.hasNext()).isTrue();
-		assertThat(window.isLast()).isFalse();
-		assertThat(window).hasSize(2);
-		assertThat(window).containsOnly(john20, john40);
-
-		window = template.scroll(q.with(window.positionAt(window.size() - 1)), WithNestedDocument.class);
+		Window<Person> window = template.scroll(q, Person.class);
 
 		assertThat(window.hasNext()).isFalse();
 		assertThat(window.isLast()).isTrue();
-		assertThat(window).hasSize(1);
-		assertThat(window).containsOnly(john41);
+		assertThat(window).hasSize(6);
 
-		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(0);
+		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(window.size() - 1);
 		KeysetScrollPosition reversePosition = KeysetScrollPosition.of(scrollPosition.getKeys(), Direction.Backward);
 
-		window = template.scroll(q.with(reversePosition), WithNestedDocument.class);
+		window = template.scroll(q.with(reversePosition).limit(2), Person.class);
 
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(john20, john40_1);
 		assertThat(window.hasNext()).isTrue();
 		assertThat(window.isLast()).isFalse();
-		assertThat(window).hasSize(2);
-		assertThat(window).containsOnly(john20, john40);
 	}
 
 	@ParameterizedTest // GH-4308
