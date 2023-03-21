@@ -243,6 +243,14 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(value.getTime()).isEqualTo(1429196157626L);
 	}
 
+	@Test // GH-4282
+	public void shouldReturnNullAsSuch() {
+
+		String json = "{ 'value' : ObjectId(?0) }";
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> parse(json, new Object[] { null }))
+				.withMessageContaining("hexString");
+	}
+
 	@Test // DATAMONGO-2418
 	void shouldNotAccessSpElEvaluationContextWhenNoSpElPresentInBindableTarget() {
 
