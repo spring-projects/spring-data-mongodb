@@ -297,6 +297,25 @@ lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
 
+[[mongodb.repositories.queries.hint]]
+=== Repository Index Hints
+
+The `@Hint` annotation allows to override MongoDB's default index selection and forces the database to use the specified index instead.
+
+.Example of index hints
+====
+[source,java]
+----
+@Hint("lastname-idx") <1>
+List<Person> findByLastname(String lastname);
+
+@Query(value = "{ 'firstname' : ?0 }", hint="firstname-idx") <2>
+List<Person> findByFirstname(String firstname);
+----
+<1> Use the index with name `lastname-idx`.
+<2> The `@Query` annotation defines the `hint` alias which is equivalent to explicitly adding the `@Hint` annotation.
+====
+
 [[mongodb.repositories.queries.update]]
 === Repository Update Methods
 

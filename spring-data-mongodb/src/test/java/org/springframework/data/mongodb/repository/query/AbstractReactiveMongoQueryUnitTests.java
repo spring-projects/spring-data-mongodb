@@ -18,6 +18,15 @@ package org.springframework.data.mongodb.repository.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.result.UpdateResult;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpdate;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.Hint;
+import org.springframework.data.mongodb.repository.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -71,6 +80,9 @@ class AbstractReactiveMongoQueryUnitTests {
 
 	@Mock ReactiveFind<?> executableFind;
 	@Mock FindWithQuery<?> withQueryMock;
+	@Mock ReactiveUpdate executableUpdate;
+	@Mock UpdateWithQuery updateWithQuery;
+	@Mock TerminatingUpdate terminatingUpdate;
 
 	@BeforeEach
 	void setUp() {
@@ -91,6 +103,11 @@ class AbstractReactiveMongoQueryUnitTests {
 		doReturn(Flux.empty()).when(withQueryMock).all();
 		doReturn(Mono.empty()).when(withQueryMock).first();
 		doReturn(Mono.empty()).when(withQueryMock).one();
+
+		doReturn(executableUpdate).when(mongoOperationsMock).update(any());
+		doReturn(executableUpdate).when(executableUpdate).inCollection(anyString());
+		doReturn(updateWithQuery).when(executableUpdate).matching(any(Query.class));
+		doReturn(terminatingUpdate).when(updateWithQuery).apply(any(UpdateDefinition.class));
 	}
 
 	@Test // DATAMONGO-1854
@@ -223,6 +240,29 @@ class AbstractReactiveMongoQueryUnitTests {
 				.contains(Collation.of("en_US").toDocument());
 	}
 
+	@Test // GH-3230
+	void findShouldApplyHint() {
+
+		createQueryForMethod("findWithHintByFirstname", String.class).executeBlocking(new Object[] { "Jasna" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getHint()).isEqualTo("idx-fn");
+	}
+
+	@Test // GH-3230
+	void updateShouldApplyHint() {
+
+		when(terminatingUpdate.all()).thenReturn(Mono.just(mock(UpdateResult.class)));
+
+		createQueryForMethod("findAndIncreaseVisitsByLastname", String.class, int.class) //
+				.executeBlocking(new Object[] { "dalinar", 100 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(executableUpdate).matching(captor.capture());
+		assertThat(captor.getValue().getHint()).isEqualTo("idx-ln");
+	}
+
 	private ReactiveMongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -291,6 +331,11 @@ class AbstractReactiveMongoQueryUnitTests {
 			isLimitingQuery = limitingQuery;
 			return this;
 		}
+
+		@Override
+		protected Mono<CodecRegistry> getCodecRegistry() {
+			return Mono.just(MongoClientSettings.getDefaultCodecRegistry());
+		}
 	}
 
 	private interface Repo extends ReactiveMongoRepository<Person, Long> {
@@ -315,5 +360,12 @@ class AbstractReactiveMongoQueryUnitTests {
 
 		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
 		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
+
+		@Hint("idx-ln")
+		@Update("{ '$inc' : { 'visits' : ?1 } }")
+		void findAndIncreaseVisitsByLastname(String lastname, int value);
+
+		@Hint("idx-fn")
+		void findWithHintByFirstname(String firstname);
 	}
 }

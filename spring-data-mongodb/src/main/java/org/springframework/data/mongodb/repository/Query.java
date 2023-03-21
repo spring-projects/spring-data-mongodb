@@ -39,13 +39,14 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
+@Hint
 public @interface Query {
 
 	/**
 	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
 	 * method name then.
 	 *
-	 * @return empty {@link String}	by default.
+	 * @return empty {@link String} by default.
 	 */
 	String value() default "";
 
@@ -53,7 +54,7 @@ public @interface Query {
 	 * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
 	 * domain object returned.
 	 *
-	 * @return empty {@link String}	by default.
+	 * @return empty {@link String} by default.
 	 */
 	String fields() default "";
 
@@ -129,4 +130,21 @@ public @interface Query {
 	 */
 	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
+
+	/**
+	 * The name of the index to use. <br />
+	 * {@code @Query(value = "...", hint = "lastname-idx")} can be used as shortcut for:
+	 *
+	 * <pre class="code">
+	 * &#64;Query(...)
+	 * &#64;Hint("lastname-idx")
+	 * List&lt;User&gt; findAllByLastname(String collation);
+	 * </pre>
+	 *
+	 * @return the index name.
+	 * @since 4.1
+	 * @see Hint#indexName()
+	 */
+	@AliasFor(annotation = Hint.class, attribute = "indexName")
+	String hint() default "";
 }
