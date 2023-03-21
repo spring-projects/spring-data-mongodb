@@ -209,6 +209,13 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + time + " } } } "));
 	}
 
+	@Test // GH-4282
+	public void shouldReturnNullAsSuch() {
+
+		String json = "{ 'value' : ObjectId(?0) }";
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> parse(json, new Object[] { null }));
+	}
+
 	@Test // DATAMONGO-2418
 	void shouldNotAccessSpElEvaluationContextWhenNoSpElPresentInBindableTarget() {
 
