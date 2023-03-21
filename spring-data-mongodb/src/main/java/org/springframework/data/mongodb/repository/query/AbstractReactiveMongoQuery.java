@@ -160,6 +160,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			applyQueryMetaAttributesWhenPresent(query);
 			query = applyAnnotatedDefaultSortIfPresent(query);
 			query = applyAnnotatedCollationIfPresent(query, accessor);
+			query = applyHintIfPresent(query);
 
 			FindWithQuery<?> find = typeToRead == null //
 					? findOperationWithProjection //
@@ -267,6 +268,21 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
 				accessor, getQueryMethod().getParameters(), expressionParser, evaluationContextProvider);
+	}
+
+	/**
+	 * If present apply the hint from the {@link org.springframework.data.mongodb.repository.Hint} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	Query applyHintIfPresent(Query query) {
+
+		if(!method.hasAnnotatedHint()) {
+			return query;
+		}
+		return query.withHint(method.getAnnotatedHint());
 	}
 
 	/**

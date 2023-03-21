@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import lombok.Value;
 import org.reactivestreams.Publisher;
+import org.springframework.data.mongodb.repository.Hint;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -173,6 +174,13 @@ public class ReactiveStringBasedAggregationUnitTests {
 		verify(operations).execute(any());
 	}
 
+	@Test // GH-3230
+	void aggregatePicksUpHintFromAnnotation() {
+
+		AggregationInvocation invocation = executeAggregation("withHint");
+		assertThat(hintOf(invocation)).isEqualTo("idx");
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class<?>[size]);
@@ -216,6 +224,12 @@ public class ReactiveStringBasedAggregationUnitTests {
 				: null;
 	}
 
+	@Nullable
+	private Object hintOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getHintObject().orElse(null)
+				: null;
+	}
+
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
 		return invocation.getTargetType();
 	}
@@ -243,6 +257,10 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		Mono<PersonAggregate> aggregateWithCollation(Collation collation);
+
+		@Hint("idx")
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		String withHint();
 	}
 
 	static class PersonAggregate {

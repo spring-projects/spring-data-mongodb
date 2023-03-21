@@ -58,6 +58,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
@@ -260,6 +261,13 @@ public class StringBasedAggregationUnitTests {
 				.withMessageContaining("Page");
 	}
 
+	@Test // GH-3230
+	void aggregatePicksUpHintFromAnnotation() {
+
+		AggregationInvocation invocation = executeAggregation("withHint");
+		assertThat(hintOf(invocation)).isEqualTo("idx");
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -299,6 +307,12 @@ public class StringBasedAggregationUnitTests {
 	@Nullable
 	private Collation collationOf(AggregationInvocation invocation) {
 		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getCollation().orElse(null)
+				: null;
+	}
+
+	@Nullable
+	private Object hintOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getHintObject().orElse(null)
 				: null;
 	}
 
@@ -350,6 +364,10 @@ public class StringBasedAggregationUnitTests {
 
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
 		String simpleReturnType();
+
+		@Hint("idx")
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		String withHint();
 	}
 
 	private interface UnsupportedRepository extends Repository<Person, Long> {

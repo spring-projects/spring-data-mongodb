@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Tailable;
@@ -360,6 +361,27 @@ public class MongoQueryMethod extends QueryMethod {
 	public String[] getAnnotatedAggregation() {
 		return findAnnotatedAggregation().orElseThrow(() -> new IllegalStateException(
 				"Expected to find @Aggregation annotation but did not; Make sure to check hasAnnotatedAggregation() before."));
+	}
+
+	/**
+	 * @return {@literal true} if the {@link Hint} annotation is present and the index name is not empty.
+	 * @since 4.1
+	 */
+	public boolean hasAnnotatedHint() {
+		return StringUtils.hasText(getAnnotatedHint());
+	}
+
+	/**
+	 * Returns the aggregation pipeline declared via a {@link Hint} annotation.
+	 *
+	 * @return the index name (might be empty) or {@literal null} if not present.
+	 * @since 4.1
+	 */
+	@Nullable
+	public String getAnnotatedHint() {
+
+		Optional<Hint> hint = doFindAnnotation(Hint.class);
+		return hint.map(Hint::indexName).orElse(null);
 	}
 
 	private Optional<String[]> findAnnotatedAggregation() {

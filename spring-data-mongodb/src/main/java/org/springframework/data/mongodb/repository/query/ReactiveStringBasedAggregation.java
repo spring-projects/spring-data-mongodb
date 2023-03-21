@@ -128,6 +128,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
+		AggregationUtils.applyHint(builder, method);
 
 		return builder.build();
 	}

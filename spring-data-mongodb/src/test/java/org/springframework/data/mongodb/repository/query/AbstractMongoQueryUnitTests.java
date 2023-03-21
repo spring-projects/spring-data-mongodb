@@ -61,6 +61,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Update;
@@ -458,7 +459,7 @@ class AbstractMongoQueryUnitTests {
 	void updateExecutionCallsUpdateAllCorrectly() {
 
 		when(terminatingUpdate.all()).thenReturn(updateResultMock);
-		
+
 		createQueryForMethod("findAndIncreaseVisitsByLastname", String.class, int.class) //
 				.execute(new Object[] { "dalinar", 100 });
 
@@ -467,6 +468,29 @@ class AbstractMongoQueryUnitTests {
 		verify(terminatingUpdate).all();
 
 		assertThat(update.getValue().getUpdateObject()).isEqualTo(Document.parse("{ '$inc' : { 'visits' : 100 } }"));
+	}
+
+	@Test // GH-3230
+	void findShouldApplyHint() {
+
+		createQueryForMethod("findWithHintByFirstname", String.class).execute(new Object[] { "Jasna" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getHint()).isEqualTo("idx-fn");
+	}
+
+	@Test // GH-3230
+	void updateShouldApplyHint() {
+
+		when(terminatingUpdate.all()).thenReturn(updateResultMock);
+
+		createQueryForMethod("findAndIncreaseVisitsByLastname", String.class, int.class) //
+				.execute(new Object[] { "dalinar", 100 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(executableUpdate).matching(captor.capture());
+		assertThat(captor.getValue().getHint()).isEqualTo("idx-ln");
 	}
 
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
@@ -584,8 +608,12 @@ class AbstractMongoQueryUnitTests {
 		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
 		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
 
+		@Hint("idx-ln")
 		@Update("{ '$inc' : { 'visits' : ?1 } }")
 		void findAndIncreaseVisitsByLastname(String lastname, int value);
+
+		@Hint("idx-fn")
+		void findWithHintByFirstname(String firstname);
 	}
 
 	// DATAMONGO-1872

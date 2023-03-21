@@ -103,6 +103,21 @@ abstract class AggregationUtils {
 	}
 
 	/**
+	 * If present apply the hint from the {@link org.springframework.data.mongodb.repository.Hint} annotation.
+	 *
+	 * @param builder must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	static AggregationOptions.Builder applyHint(AggregationOptions.Builder builder, MongoQueryMethod queryMethod) {
+
+		if(!queryMethod.hasAnnotatedHint()) {
+			return builder;
+		}
+		return builder.hint(queryMethod.getAnnotatedHint());
+	}
+
+	/**
 	 * Append {@code $sort} aggregation stage if {@link ConvertingParameterAccessor#getSort()} is present.
 	 *
 	 * @param aggregationPipeline
