@@ -1412,7 +1412,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		// Spring Data Customization START
 
 		if (patternToken.getType() == JsonTokenType.STRING || patternToken.getType() == JsonTokenType.UNQUOTED_STRING) {
-			return bindableValueFor(patternToken).getValue().toString();
+			Object value = bindableValueFor(patternToken).getValue();
+			return value != null ? value.toString() : null;
 		}
 
 		throw new JsonParseException("JSON reader expected a string but found '%s'.", patternToken.getValue());
