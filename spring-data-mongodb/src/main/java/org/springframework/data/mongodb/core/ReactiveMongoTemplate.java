@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.ReactiveBulkOperationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -477,6 +479,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> entityClass) {
 		return new DefaultReactiveIndexOperations(this, getCollectionName(entityClass), this.queryMapper, entityClass);
+	}
+
+	@Override
+	public ReactiveBulkOperations bulkOps(BulkMode bulkMode, String collectionName) {
+		return bulkOps(bulkMode, null, collectionName);
+	}
+
+	@Override
+	public ReactiveBulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass) {
+		return bulkOps(bulkMode, entityClass, getCollectionName(entityClass));
+	}
+
+	@Override
+	public ReactiveBulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName) {
+
+		Assert.notNull(mode, "BulkMode must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
+
+		DefaultReactiveBulkOperations operations = new DefaultReactiveBulkOperations(this, collectionName,
+				new ReactiveBulkOperationContext(mode, Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper,
+						eventPublisher, entityCallbacks));
+
+		operations.setDefaultWriteConcern(writeConcern);
+
+		return operations;
 	}
 
 	@Override
