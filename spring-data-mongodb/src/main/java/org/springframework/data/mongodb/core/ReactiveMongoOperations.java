@@ -29,6 +29,7 @@ import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -1746,6 +1747,40 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	@Deprecated
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options);
+
+	/**
+	 * Returns a new {@link ReactiveBulkOperations} for the given collection. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, etc. is not available for {@literal update} or
+	 * {@literal remove} operations in bulk mode due to the lack of domain type information. Use
+	 * {@link #bulkOps(BulkMode, Class, String)} to get full type specific support.
+	 *
+	 * @param mode the {@link BulkMode} to use for bulk operations, must not be {@literal null}.
+	 * @param collectionName the name of the collection to work on, must not be {@literal null} or empty.
+	 * @return {@link ReactiveBulkOperations} on the named collection
+	 * @since 4.1
+	 */
+	ReactiveBulkOperations bulkOps(BulkMode mode, String collectionName);
+
+	/**
+	 * Returns a new {@link ReactiveBulkOperations} for the given entity type.
+	 *
+	 * @param mode the {@link BulkMode} to use for bulk operations, must not be {@literal null}.
+	 * @param entityClass the name of the entity class, must not be {@literal null}.
+	 * @return {@link ReactiveBulkOperations} on the named collection associated of the given entity class.
+	 * @since 4.1
+	 */
+	ReactiveBulkOperations bulkOps(BulkMode mode, Class<?> entityClass);
+
+	/**
+	 * Returns a new {@link ReactiveBulkOperations} for the given entity type and collection name.
+	 *
+	 * @param mode the {@link BulkMode} to use for bulk operations, must not be {@literal null}.
+	 * @param entityType the name of the entity class. Can be {@literal null}.
+	 * @param collectionName the name of the collection to work on, must not be {@literal null} or empty.
+	 * @return {@link ReactiveBulkOperations} on the named collection associated with the given entity class.
+	 * @since 4.1
+	 */
+	ReactiveBulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName);
 
 	/**
 	 * Returns the underlying {@link MongoConverter}.
