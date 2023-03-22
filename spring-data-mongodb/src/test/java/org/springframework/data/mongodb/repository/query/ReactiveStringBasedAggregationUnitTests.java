@@ -79,6 +79,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 	private static final String RAW_SORT_STRING = "{ '$sort' : { 'lastname' : -1 } }";
 	private static final String RAW_GROUP_BY_LASTNAME_STRING = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$firstname' } } }";
+	private static final String RAW_OUT = "{ '$out' : 'authors' }";
 	private static final String GROUP_BY_LASTNAME_STRING_WITH_PARAMETER_PLACEHOLDER = "{ '$group': { '_id' : '$lastname', names : { '$addToSet' : '$?0' } } }";
 	private static final String GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$?#{[0]}' } } }";
 
@@ -196,6 +197,22 @@ public class ReactiveStringBasedAggregationUnitTests {
 		return new AggregationInvocation(aggregationCaptor.getValue(), targetTypeCaptor.getValue(), result);
 	}
 
+	@Test // GH-4088
+	void aggregateWithVoidReturnTypeSkipsResultOnOutStage() {
+
+		AggregationInvocation invocation = executeAggregation("outSkipResult");
+
+		assertThat(skipResultsOf(invocation)).isTrue();
+	}
+
+	@Test // GH-4088
+	void aggregateWithOutStageDoesNotSkipResults() {
+
+		AggregationInvocation invocation = executeAggregation("outDoNotSkipResult");
+
+		assertThat(skipResultsOf(invocation)).isFalse();
+	}
+
 	private ReactiveStringBasedAggregation createAggregationForMethod(String name, Class<?>... parameters) {
 
 		Method method = ClassUtils.getMethod(SampleRepository.class, name, parameters);
@@ -230,6 +247,11 @@ public class ReactiveStringBasedAggregationUnitTests {
 				: null;
 	}
 
+	private Boolean skipResultsOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults()
+				: false;
+	}
+
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
 		return invocation.getTargetType();
 	}
@@ -261,6 +283,12 @@ public class ReactiveStringBasedAggregationUnitTests {
 		@Hint("idx")
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
 		String withHint();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
+		Flux<Person> outDoNotSkipResult();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
+		Mono<Void> outSkipResult();
 	}
 
 	static class PersonAggregate {

@@ -37,6 +37,12 @@ public interface PersonRepository extends CrudRepository<Person, String> {
 
   @Aggregation("{ '$project': { '_id' : '$lastname' } }")
   List<String> findAllLastnames();                                                 <9>
+
+  @Aggregation(pipeline = {
+		  "{ $group : { _id : '$author', books: { $push: '$title' } } }",
+		  "{ $out : 'authors' }"
+  })
+  void groupAndOutSkippingOutput();                                                <10>
 }
 ----
 [source,java]
@@ -75,6 +81,7 @@ Therefore, the `Sort` properties are mapped against the methods return type `Per
 To gain more control, you might consider `AggregationResult` as method return type as shown in <7>.
 <8> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
 <9> Like in <6>, a single value can be directly obtained from multiple result ``Document``s.
+<10> Skips the output of the `$out` stage when return type is `void`.
 ====
 
 In some scenarios, aggregations might require additional options, such as a maximum run time, additional log comments, or the permission to temporarily write data to disk.

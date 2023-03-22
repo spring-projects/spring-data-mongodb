@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
@@ -125,7 +126,7 @@ abstract class AggregationUtils {
 	 * @param accessor
 	 * @param targetType
 	 */
-	static void appendSortIfPresent(List<AggregationOperation> aggregationPipeline, ConvertingParameterAccessor accessor,
+	static void appendSortIfPresent(AggregationPipeline aggregationPipeline, ConvertingParameterAccessor accessor,
 			Class<?> targetType) {
 
 		if (accessor.getSort().isUnsorted()) {
@@ -150,7 +151,7 @@ abstract class AggregationUtils {
 	 * @param aggregationPipeline
 	 * @param accessor
 	 */
-	static void appendLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
+	static void appendLimitAndOffsetIfPresent(AggregationPipeline aggregationPipeline,
 			ConvertingParameterAccessor accessor) {
 		appendLimitAndOffsetIfPresent(aggregationPipeline, accessor, LongUnaryOperator.identity(),
 				IntUnaryOperator.identity());
@@ -166,7 +167,7 @@ abstract class AggregationUtils {
 	 * @param limitOperator
 	 * @since 3.3
 	 */
-	static void appendLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
+	static void appendLimitAndOffsetIfPresent(AggregationPipeline aggregationPipeline,
 			ConvertingParameterAccessor accessor, LongUnaryOperator offsetOperator, IntUnaryOperator limitOperator) {
 
 		Pageable pageable = accessor.getPageable();
