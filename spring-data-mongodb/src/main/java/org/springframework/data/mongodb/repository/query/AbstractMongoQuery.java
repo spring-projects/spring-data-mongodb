@@ -127,6 +127,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param accessor for providing invocation arguments. Never {@literal null}.
 	 * @param typeToRead the desired component target type. Can be {@literal null}.
 	 */
+	@Nullable
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {
 

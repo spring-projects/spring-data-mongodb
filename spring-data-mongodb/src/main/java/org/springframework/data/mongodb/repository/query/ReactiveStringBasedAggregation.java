@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
+import org.springframework.data.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -81,7 +83,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 			Class<?> sourceType = method.getDomainClass();
 			Class<?> targetType = typeToRead;
 
-			List<AggregationOperation> pipeline = it;
+			AggregationPipeline pipeline = new AggregationPipeline(it);
 
 			AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
 			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
@@ -93,10 +95,13 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 				targetType = Document.class;
 			}
 
-			AggregationOptions options = computeOptions(method, accessor);
-			TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline, options);
+			AggregationOptions options = computeOptions(method, accessor, pipeline);
+			TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline.getOperations(), options);
 
 			Flux<?> flux = reactiveMongoOperations.aggregate(aggregation, targetType);
+			if(ReflectionUtils.isVoid(typeToRead)) {
+				return flux.then();
+			}
 
 			if (isSimpleReturnType && !isRawReturnType) {
 				flux = flux.handle((item, sink) -> {
@@ -121,13 +126,16 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 		return parseAggregationPipeline(getQueryMethod().getAnnotatedAggregation(), accessor);
 	}
 
-	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
+	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor, AggregationPipeline pipeline) {
 
 		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
 
 		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
+		if(ReflectionUtils.isVoid(method.getReturnType().getComponentType().getType()) && pipeline.isOutOrMerge()) {
+			builder.skipOutput();
+		}
 
 		return builder.build();
 	}
