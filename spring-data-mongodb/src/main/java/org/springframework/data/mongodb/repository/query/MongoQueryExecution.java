@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -55,6 +56,7 @@ import com.mongodb.client.result.DeleteResult;
 @FunctionalInterface
 interface MongoQueryExecution {
 
+	@Nullable
 	Object execute(Query query);
 
 	/**

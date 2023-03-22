@@ -29,6 +29,8 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Builder;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -36,8 +38,12 @@ import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link AbstractMongoQuery} implementation to run string-based aggregations using
@@ -84,13 +90,14 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#doExecute(org.springframework.data.mongodb.repository.query.MongoQueryMethod, org.springframework.data.repository.query.ResultProcessor, org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, java.lang.Class)
 	 */
 	@Override
+	@Nullable
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
 		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
 
-		List<AggregationOperation> pipeline = computePipeline(method, accessor);
+		AggregationPipeline pipeline = computePipeline(method, accessor);
 		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
 
 		if (method.isSliceQuery()) {
@@ -111,8 +118,8 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 			targetType = method.getReturnType().getRequiredActualType().getRequiredComponentType().getType();
 		}
 
-		AggregationOptions options = computeOptions(method, accessor);
-		TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline, options);
+		AggregationOptions options = computeOptions(method, accessor, pipeline);
+		TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline.getOperations(), options);
 
 		if (method.isStreamQuery()) {
 
@@ -126,6 +133,9 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		}
 
 		AggregationResults<Object> result = (AggregationResults<Object>) mongoOperations.aggregate(aggregation, targetType);
+		if(ReflectionUtils.isVoid(typeToRead)) {
+			return null;
+		}
 
 		if (isRawAggregationResult) {
 			return result;
@@ -167,17 +177,21 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		return MongoSimpleTypes.HOLDER.isSimpleType(targetType);
 	}
 
-	List<AggregationOperation> computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
-		return parseAggregationPipeline(method.getAnnotatedAggregation(), accessor);
+	AggregationPipeline computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
+		return new AggregationPipeline(parseAggregationPipeline(method.getAnnotatedAggregation(), accessor));
 	}
 
-	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
+	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor, AggregationPipeline pipeline) {
 
 		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
 
 		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
+
+		if(ReflectionUtils.isVoid(method.getReturnType().getType()) && pipeline.isOutOrMerge()) {
+			builder.skipOutput();
+		}
 
 		return builder.build();
 	}

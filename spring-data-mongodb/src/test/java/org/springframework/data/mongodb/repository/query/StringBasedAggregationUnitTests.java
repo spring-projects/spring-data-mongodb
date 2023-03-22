@@ -91,6 +91,7 @@ public class StringBasedAggregationUnitTests {
 
 	private static final String RAW_SORT_STRING = "{ '$sort' : { 'lastname' : -1 } }";
 	private static final String RAW_GROUP_BY_LASTNAME_STRING = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$firstname' } } }";
+	private static final String RAW_OUT = "{ '$out' : 'authors' }";
 	private static final String GROUP_BY_LASTNAME_STRING_WITH_PARAMETER_PLACEHOLDER = "{ '$group': { '_id' : '$lastname', names : { '$addToSet' : '$?0' } } }";
 	private static final String GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$?#{[0]}' } } }";
 
@@ -260,6 +261,22 @@ public class StringBasedAggregationUnitTests {
 				.withMessageContaining("Page");
 	}
 
+	@Test // GH-4088
+	void aggregateWithVoidReturnTypeSkipsResultOnOutStage() {
+
+		AggregationInvocation invocation = executeAggregation("outSkipResult");
+
+		assertThat(skipResultsOf(invocation)).isTrue();
+	}
+
+	@Test // GH-4088
+	void aggregateWithOutStageDoesNotSkipResults() {
+
+		AggregationInvocation invocation = executeAggregation("outDoNotSkipResult");
+
+		assertThat(skipResultsOf(invocation)).isFalse();
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -300,6 +317,11 @@ public class StringBasedAggregationUnitTests {
 	private Collation collationOf(AggregationInvocation invocation) {
 		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getCollation().orElse(null)
 				: null;
+	}
+
+	private Boolean skipResultsOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults()
+				: false;
 	}
 
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
@@ -350,6 +372,12 @@ public class StringBasedAggregationUnitTests {
 
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
 		String simpleReturnType();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
+		List<Person> outDoNotSkipResult();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
+		void outSkipResult();
 	}
 
 	private interface UnsupportedRepository extends Repository<Person, Long> {
