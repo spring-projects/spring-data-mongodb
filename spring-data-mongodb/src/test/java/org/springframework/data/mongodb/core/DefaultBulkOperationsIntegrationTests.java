@@ -21,20 +21,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import com.mongodb.bulk.BulkWriteResult;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -135,13 +142,14 @@ public class DefaultBulkOperationsIntegrationTests {
 				});
 	}
 
-	@Test // DATAMONGO-934
-	public void upsertDoesUpdate() {
+	@ParameterizedTest // DATAMONGO-934, GH-3872
+	@MethodSource("upsertArguments")
+	void upsertDoesUpdate(UpdateDefinition update) {
 
 		insertSomeDocuments();
 
 		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
-				upsert(where("value", "value1"), set("value", "value2")).//
+				upsert(where("value", "value1"), update).//
 				execute();
 
 		assertThat(result).isNotNull();
@@ -152,11 +160,12 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(result.getUpserts().size()).isZero();
 	}
 
-	@Test // DATAMONGO-934
-	public void upsertDoesInsert() {
+	@ParameterizedTest // DATAMONGO-934, GH-3872
+	@MethodSource("upsertArguments")
+	void upsertDoesInsert(UpdateDefinition update) {
 
 		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
-				upsert(where("_id", "1"), set("value", "v1")).//
+				upsert(where("_id", "1"), update).//
 				execute();
 
 		assertThat(result).isNotNull();
@@ -171,9 +180,35 @@ public class DefaultBulkOperationsIntegrationTests {
 		testUpdate(BulkMode.ORDERED, false, 2);
 	}
 
+	@Test // GH-3872
+	public void updateOneWithAggregation() {
+
+		insertSomeDocuments();
+
+		BulkOperations bulkOps = createBulkOps(BulkMode.ORDERED);
+		bulkOps.updateOne(where("value", "value1"), AggregationUpdate.update().set("value").toValue("value3"));
+		BulkWriteResult result = bulkOps.execute();
+
+		assertThat(result.getModifiedCount()).isEqualTo(1);
+		assertThat(operations.<Long>execute(COLLECTION_NAME, collection -> collection.countDocuments(new org.bson.Document("value", "value3")))).isOne();
+	}
+
 	@Test // DATAMONGO-934
 	public void updateMultiOrdered() {
 		testUpdate(BulkMode.ORDERED, true, 4);
+	}
+
+	@Test // GH-3872
+	public void updateMultiWithAggregation() {
+
+		insertSomeDocuments();
+
+		BulkOperations bulkOps = createBulkOps(BulkMode.ORDERED);
+		bulkOps.updateMulti(where("value", "value1"), AggregationUpdate.update().set("value").toValue("value3"));
+		BulkWriteResult result = bulkOps.execute();
+
+		assertThat(result.getModifiedCount()).isEqualTo(2);
+		assertThat(operations.<Long>execute(COLLECTION_NAME, collection -> collection.countDocuments(new org.bson.Document("value", "value3")))).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-934
@@ -353,6 +388,10 @@ public class DefaultBulkOperationsIntegrationTests {
 		coll.insertOne(rawDoc("2", "value1"));
 		coll.insertOne(rawDoc("3", "value2"));
 		coll.insertOne(rawDoc("4", "value2"));
+	}
+
+	private static Stream<Arguments> upsertArguments() {
+		return Stream.of(Arguments.of(set("value", "value2")), Arguments.of(AggregationUpdate.update().set("value").toValue("value2")));
 	}
 
 	private static BaseDoc newDoc(String id) {
