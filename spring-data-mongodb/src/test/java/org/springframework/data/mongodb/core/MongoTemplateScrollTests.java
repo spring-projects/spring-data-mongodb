@@ -184,10 +184,17 @@ class MongoTemplateScrollTests {
 		assertThat(window.isLast()).isTrue();
 		assertThat(window).hasSize(6);
 
-		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(window.size() - 1);
+		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(window.size() - 2);
 		KeysetScrollPosition reversePosition = KeysetScrollPosition.of(scrollPosition.getKeys(), Direction.Backward);
 
 		window = template.scroll(q.with(reversePosition).limit(2), Person.class);
+
+		assertThat(window).hasSize(2);
+		assertThat(window).containsOnly(jane_42, john20);
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+
+		window = template.scroll(q.with(window.positionAt(0)).limit(2), Person.class);
 
 		assertThat(window).hasSize(2);
 		assertThat(window).containsOnly(john20, john40_1);

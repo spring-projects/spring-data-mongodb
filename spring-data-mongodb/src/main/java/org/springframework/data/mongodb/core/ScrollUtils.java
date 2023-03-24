@@ -63,18 +63,18 @@ class ScrollUtils {
 		KeysetScrollPosition keyset = query.getKeyset();
 		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
 
-		director.postPostProcessResults(result);
+		List<T> resultsToUse = director.postPostProcessResults(result, query.getLimit());
 
 		IntFunction<KeysetScrollPosition> positionFunction = value -> {
 
-			T last = result.get(value);
+			T last = resultsToUse.get(value);
 			Entity<T> entity = operations.forEntity(last);
 
 			Map<String, Object> keys = entity.extractKeys(sortObject, sourceType);
 			return KeysetScrollPosition.of(keys);
 		};
 
-		return createWindow(result, query.getLimit(), positionFunction);
+		return Window.from(resultsToUse, positionFunction, hasMoreElements(result, query.getLimit()));
 	}
 
 	static <T> Window<T> createWindow(List<T> result, int limit, IntFunction<? extends ScrollPosition> positionFunction) {
@@ -187,13 +187,14 @@ class ScrollUtils {
 			return queryObject;
 		}
 
-		public <T> void postPostProcessResults(List<T> result) {
-
-		}
-
 		protected String getComparator(int sortOrder) {
 			return sortOrder == 1 ? "$gt" : "$lt";
 		}
+
+		protected <T> List<T> postPostProcessResults(List<T> list, int limit) {
+			return getFirst(limit, list);
+		}
+
 	}
 
 	/**
@@ -219,20 +220,48 @@ class ScrollUtils {
 		}
 
 		@Override
-		protected String getComparator(int sortOrder) {
+		public <T> List<T> postPostProcessResults(List<T> list, int limit) {
 
-			// use gte/lte to include the object at the cursor/keyset so that
-			// we can include it in the result to check whether there is a next object.
-			// It needs to be filtered out later on.
-			return sortOrder == 1 ? "$gte" : "$lte";
-		}
-
-		@Override
-		public <T> void postPostProcessResults(List<T> result) {
 			// flip direction of the result list as we need to accomodate for the flipped sort order for proper offset
 			// querying.
-			Collections.reverse(result);
+			Collections.reverse(list);
+
+			return getLast(limit, list);
 		}
+
 	}
 
+	/**
+	 * Return the first {@code count} items from the list.
+	 *
+	 * @param count
+	 * @param list
+	 * @return
+	 * @param <T>
+	 */
+	static <T> List<T> getFirst(int count, List<T> list) {
+
+		if (count > 0 && list.size() > count) {
+			return list.subList(0, count);
+		}
+
+		return list;
+	}
+
+	/**
+	 * Return the last {@code count} items from the list.
+	 *
+	 * @param count
+	 * @param list
+	 * @return
+	 * @param <T>
+	 */
+	static <T> List<T> getLast(int count, List<T> list) {
+
+		if (count > 0 && list.size() > count) {
+			return list.subList(list.size() - (count), list.size());
+		}
+
+		return list;
+	}
 }
