@@ -2147,7 +2147,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 *
 	 * @since 3.4.3
 	 */
-	interface ConversionContext {
+	protected interface ConversionContext {
 
 		/**
 		 * Converts a source object into {@link TypeInformation target}.
