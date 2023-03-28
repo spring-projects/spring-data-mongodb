@@ -119,6 +119,10 @@ abstract class IndexConverters {
 				ops.wildcardProjection(indexOptions.get("wildcardProjection", Document.class));
 			}
 
+			if (indexOptions.containsKey("hidden")) {
+				ops = ops.hidden((Boolean) indexOptions.get("hidden"));
+			}
+
 			return ops;
 		};
 	}

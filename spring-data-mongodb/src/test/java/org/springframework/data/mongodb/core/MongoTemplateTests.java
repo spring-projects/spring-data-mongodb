@@ -324,7 +324,7 @@ public class MongoTemplateTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique());
+		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique().hidden());
 
 		MongoCollection<org.bson.Document> coll = template.getCollection(template.getCollectionName(Person.class));
 		List<org.bson.Document> indexInfo = new ArrayList<>();
@@ -350,6 +350,7 @@ public class MongoTemplateTests {
 		IndexInfo ii = indexInfoList.get(1);
 		assertThat(ii.isUnique()).isTrue();
 		assertThat(ii.isSparse()).isFalse();
+		assertThat(ii.isHidden()).isTrue();
 
 		List<IndexField> indexFields = ii.getIndexFields();
 		IndexField field = indexFields.get(0);
