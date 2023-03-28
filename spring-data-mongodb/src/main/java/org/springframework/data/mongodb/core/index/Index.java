@@ -42,6 +42,7 @@ public class Index implements IndexDefinition {
 	private boolean unique = false;
 	private boolean sparse = false;
 	private boolean background = false;
+	private boolean hidden = false;
 	private long expire = -1;
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
@@ -95,6 +96,18 @@ public class Index implements IndexDefinition {
 	public Index background() {
 
 		this.background = true;
+		return this;
+	}
+
+	/**
+	 * Hidden indexes are not visible to the query planner and cannot be used to support a query.
+	 *
+	 * @return this.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-hidden/">https://www.mongodb.com/docs/manual/core/index-hidden/</a>
+	 */
+	public Index hidden() {
+		this.hidden = true;
 		return this;
 	}
 
@@ -194,6 +207,9 @@ public class Index implements IndexDefinition {
 		}
 		if (background) {
 			document.put("background", true);
+		}
+		if (hidden) {
+			document.put("hidden", true);
 		}
 		if (expire >= 0) {
 			document.put("expireAfterSeconds", expire);
