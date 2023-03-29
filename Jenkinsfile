@@ -18,69 +18,7 @@ pipeline {
 	}
 
 	stages {
-		stage("Docker images") {
-			parallel {
-				stage('Publish JDK (Java 17) + MongoDB 4.4') {
-					when {
-						anyOf {
-							changeset "ci/openjdk17-mongodb-4.4/**"
-							changeset "ci/pipeline.properties"
-						}
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.4.4.version']} ci/openjdk17-mongodb-4.4/")
-							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK (Java 17) + MongoDB 5.0') {
-					when {
-						anyOf {
-							changeset "ci/openjdk17-mongodb-5.0/**"
-							changeset "ci/pipeline.properties"
-						}
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.5.0.version']} ci/openjdk17-mongodb-5.0/")
-							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK (Java 17) + MongoDB 6.0') {
-					when {
-						anyOf {
-							changeset "ci/openjdk17-mongodb-6.0/**"
-							changeset "ci/pipeline.properties"
-						}
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-with-mongodb-6.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.6.0.version']} ci/openjdk17-mongodb-6.0/")
-							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
-								image.push()
-							}
-						}
-					}
-				}
-			}
-		}
-
-		stage("test: baseline (Java 17)") {
+		stage("test: baseline (main)") {
 			when {
 				beforeAgent(true)
 				anyOf {
@@ -119,7 +57,7 @@ pipeline {
 			}
 			parallel {
 
-				stage("test: MongoDB 5.0 (Java 17)") {
+				stage("test: MongoDB 5.0 (main)") {
 					agent {
 						label 'data'
 					}
@@ -141,7 +79,7 @@ pipeline {
 					}
 				}
 
-				stage("test: MongoDB 6.0 (Java 17)") {
+				stage("test: MongoDB 6.0 (main)") {
 					agent {
 						label 'data'
 					}
@@ -152,6 +90,28 @@ pipeline {
 					steps {
 						script {
 							docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-6.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+								sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+								sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+								sh 'sleep 10'
+								sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+								sh 'sleep 15'
+								sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+							}
+						}
+					}
+				}
+
+				stage("test: MongoDB 6.0 (next)") {
+					agent {
+						label 'data'
+					}
+					options { timeout(time: 30, unit: 'MINUTES') }
+					environment {
+						ARTIFACTORY = credentials("${p['artifactory.credentials']}")
+					}
+					steps {
+						script {
+							docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-6.0:${p['java.next.tag']}").inside(p['docker.java.inside.basic']) {
 								sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 								sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 								sh 'sleep 10'
