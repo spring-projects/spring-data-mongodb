@@ -90,7 +90,14 @@ public final class LazyLoadingProxyFactory {
 				.getProxyClass(LazyLoadingProxy.class.getClassLoader());
 	}
 
-	private ProxyFactory prepareProxyFactory(Class<?> propertyType, Supplier<LazyLoadingInterceptor> interceptor) {
+	/**
+	 * Create the {@link ProxyFactory} for the given type, already adding required additional interfaces.
+	 *
+	 * @param propertyType the type to proxy
+	 * @return the proxy type.
+	 * @since 4.0.5
+	 */
+	public static ProxyFactory prepareFactory(Class<?> propertyType) {
 
 		ProxyFactory proxyFactory = new ProxyFactory();
 
@@ -100,6 +107,13 @@ public final class LazyLoadingProxyFactory {
 
 		proxyFactory.addInterface(LazyLoadingProxy.class);
 		proxyFactory.addInterface(propertyType);
+
+		return proxyFactory;
+	}
+
+	private ProxyFactory prepareProxyFactory(Class<?> propertyType, Supplier<LazyLoadingInterceptor> interceptor) {
+
+		ProxyFactory proxyFactory = prepareFactory(propertyType);
 		proxyFactory.addAdvice(interceptor.get());
 
 		return proxyFactory;
