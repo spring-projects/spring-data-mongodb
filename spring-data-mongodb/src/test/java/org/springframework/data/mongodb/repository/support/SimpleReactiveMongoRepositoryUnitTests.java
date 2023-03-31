@@ -121,6 +121,9 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	void shouldAddDefaultCollationToFindOneForExampleIfPresent() {
 
 		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
+		when(flux.buffer(anyInt())).thenReturn(flux);
+		when(flux.map(any())).thenReturn(flux);
+		when(flux.next()).thenReturn(mono);
 
 		Collation collation = Collation.of("en_US");
 
