@@ -2443,7 +2443,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
-	private static class PropertyTranslatingPropertyAccessor<T> implements PersistentPropertyPathAccessor<T> {
+	private static class PropertyTranslatingPropertyAccessor<T> implements PersistentPropertyAccessor<T> {
 
 		private final PersistentPropertyAccessor<T> delegate;
 		private final PersistentPropertyTranslator propertyTranslator;
@@ -2460,7 +2460,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		@Override
-		public void setProperty(PersistentProperty property, @Nullable Object value) {
+		public void setProperty(PersistentProperty<?> property, @Nullable Object value) {
 			delegate.setProperty(translate(property), value);
 		}
 
@@ -2472,23 +2472,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@Override
 		public T getBean() {
 			return delegate.getBean();
-		}
-
-		@Override
-		public void setProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path, Object value,
-				AccessOptions.SetOptions options) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Object getProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path,
-				AccessOptions.GetOptions context) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void setProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path, Object value) {
-			throw new UnsupportedOperationException();
 		}
 
 		private MongoPersistentProperty translate(PersistentProperty<?> property) {
