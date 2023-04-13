@@ -105,6 +105,7 @@ public class Index implements IndexDefinition {
 	 * @return this.
 	 * @see <a href=
 	 *      "https://www.mongodb.com/docs/manual/core/index-hidden/">https://www.mongodb.com/docs/manual/core/index-hidden/</a>
+	 * @since 4.1
 	 */
 	public Index hidden() {
 		this.hidden = true;

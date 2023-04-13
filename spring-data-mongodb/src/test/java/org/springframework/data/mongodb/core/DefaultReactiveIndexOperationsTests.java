@@ -164,6 +164,34 @@ public class DefaultReactiveIndexOperationsTests {
 				.verifyComplete();
 	}
 
+	@Test // GH-4348
+	void indexShouldNotBeHiddenByDefault() {
+
+		IndexDefinition index = new Index().named("my-index").on("a", Direction.ASC);
+
+		indexOps.ensureIndex(index).then().as(StepVerifier::create).verifyComplete();
+
+		indexOps.getIndexInfo().filter(this.indexByName("my-index")).as(StepVerifier::create) //
+				.consumeNextWith(indexInfo -> {
+					assertThat(indexInfo.isHidden()).isFalse();
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // GH-4348
+	void shouldCreateHiddenIndex() {
+
+		IndexDefinition index = new Index().named("my-hidden-index").on("a", Direction.ASC).hidden();
+
+		indexOps.ensureIndex(index).then().as(StepVerifier::create).verifyComplete();
+
+		indexOps.getIndexInfo().filter(this.indexByName("my-hidden-index")).as(StepVerifier::create) //
+				.consumeNextWith(indexInfo -> {
+					assertThat(indexInfo.isHidden()).isTrue();
+				}) //
+				.verifyComplete();
+	}
+
 	Predicate<IndexInfo> indexByName(String name) {
 		return indexInfo -> indexInfo.getName().equals(name);
 	}

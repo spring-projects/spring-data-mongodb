@@ -31,7 +31,7 @@ import org.springframework.data.domain.Sort.Direction;
  * @author Christoph Strobl
  * @author Stefan Tirea
  */
-public class IndexInfoUnitTests {
+class IndexInfoUnitTests {
 
 	static final String ID_INDEX = "{ \"v\" : 2, \"key\" : { \"_id\" : 1 }, \"name\" : \"_id_\", \"ns\" : \"db.collection\" }";
 	static final String INDEX_WITH_PARTIAL_FILTER = "{ \"v\" : 2, \"key\" : { \"k3y\" : 1 }, \"name\" : \"partial-filter-index\", \"ns\" : \"db.collection\", \"partialFilterExpression\" : { \"quantity\" : { \"$gte\" : 10 } } }";
@@ -39,9 +39,19 @@ public class IndexInfoUnitTests {
 	static final String HASHED_INDEX = "{ \"v\" : 2, \"key\" : { \"score\" : \"hashed\" }, \"name\" : \"score_hashed\", \"ns\" : \"db.collection\" }";
 	static final String WILDCARD_INDEX = "{ \"v\" : 2, \"key\" : { \"$**\" : 1 }, \"name\" : \"$**_1\", \"wildcardProjection\" : { \"fieldA\" : 0, \"fieldB.fieldC\" : 0 } }";
 	static final String INDEX_WITH_COLLATION = "{ \"v\" : 2, \"key\" : { \"_id\" : 1 }, \"name\" : \"projectName\", \"collation\": { \"locale\": \"en_US\", \"strength\": 2 } }";
+	static final String HIDDEN_INDEX = """
+				{
+			      "v" : 2,
+			      "key" : {
+			         "borough" : 1
+			      },
+			      "name" : "borough_1",
+			      "hidden" : true
+			   }
+			""";
 
 	@Test
-	public void isIndexForFieldsCorrectly() {
+	void isIndexForFieldsCorrectly() {
 
 		IndexField fooField = IndexField.create("foo", Direction.ASC);
 		IndexField barField = IndexField.create("bar", Direction.DESC);
@@ -51,29 +61,29 @@ public class IndexInfoUnitTests {
 	}
 
 	@Test // DATAMONGO-2170
-	public void partialFilterExpressionShouldBeNullIfNotSetInSource() {
+	void partialFilterExpressionShouldBeNullIfNotSetInSource() {
 		assertThat(getIndexInfo(ID_INDEX).getPartialFilterExpression()).isNull();
 	}
 
 	@Test // DATAMONGO-2170
-	public void partialFilterExpressionShouldMatchSource() {
+	void partialFilterExpressionShouldMatchSource() {
 
 		assertThat(Document.parse(getIndexInfo(INDEX_WITH_PARTIAL_FILTER).getPartialFilterExpression()))
 				.isEqualTo(Document.parse("{ \"quantity\" : { \"$gte\" : 10 } }"));
 	}
 
 	@Test // DATAMONGO-2081
-	public void expireAfterIsParsedCorrectly() {
+	void expireAfterIsParsedCorrectly() {
 		assertThat(getIndexInfo(INDEX_WITH_EXPIRATION_TIME).getExpireAfter()).contains(Duration.ofHours(1));
 	}
 
 	@Test // DATAMONGO-2081
-	public void expireAfterIsEmptyIfNotSet() {
+	void expireAfterIsEmptyIfNotSet() {
 		assertThat(getIndexInfo(ID_INDEX).getExpireAfter()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1183
-	public void readsHashedIndexCorrectly() {
+	void readsHashedIndexCorrectly() {
 		assertThat(getIndexInfo(HASHED_INDEX).getIndexFields()).containsExactly(IndexField.hashed("score"));
 	}
 
@@ -83,20 +93,27 @@ public class IndexInfoUnitTests {
 	}
 
 	@Test // GH-3225
-	public void identifiesWildcardIndexCorrectly() {
+	void identifiesWildcardIndexCorrectly() {
 		assertThat(getIndexInfo(WILDCARD_INDEX).isWildcard()).isTrue();
 	}
 
 	@Test // GH-3225
-	public void readsWildcardIndexProjectionCorrectly() {
+	void readsWildcardIndexProjectionCorrectly() {
 		assertThat(getIndexInfo(WILDCARD_INDEX).getWildcardProjection())
 				.contains(new Document("fieldA", 0).append("fieldB.fieldC", 0));
 	}
 
 	@Test // GH-3002
-	public void collationParsedCorrectly() {
+	void collationParsedCorrectly() {
 		assertThat(getIndexInfo(INDEX_WITH_COLLATION).getCollation())
 				.contains(Document.parse("{ \"locale\": \"en_US\", \"strength\": 2 }"));
+	}
+
+	@Test // GH-4348
+	void hiddenInfoSetCorrectly() {
+
+		assertThat(getIndexInfo(ID_INDEX).isHidden()).isFalse();
+		assertThat(getIndexInfo(HIDDEN_INDEX).isHidden()).isTrue();
 	}
 
 	private static IndexInfo getIndexInfo(String documentJson) {

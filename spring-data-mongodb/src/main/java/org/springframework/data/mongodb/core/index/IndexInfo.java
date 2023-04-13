@@ -129,14 +129,15 @@ public class IndexInfo {
 
 		String name = sourceDocument.get("name").toString();
 
-		boolean unique = sourceDocument.containsKey("unique") ? (Boolean) sourceDocument.get("unique") : false;
-		boolean sparse = sourceDocument.containsKey("sparse") ? (Boolean) sourceDocument.get("sparse") : false;
-		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
+		boolean unique = sourceDocument.get("unique", false);
+		boolean sparse = sourceDocument.get("sparse", false);
+		boolean hidden = sourceDocument.getBoolean("hidden", false);
+		String language = sourceDocument.containsKey("default_language") ? sourceDocument.getString("default_language")
 				: "";
 
 		String partialFilter = extractPartialFilterString(sourceDocument);
 
-		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
+		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language, hidden);
 		info.partialFilterExpression = partialFilter;
 		info.collation = sourceDocument.get("collation", Document.class);
 
@@ -149,8 +150,6 @@ public class IndexInfo {
 		if (sourceDocument.containsKey("wildcardProjection")) {
 			info.wildcardProjection = sourceDocument.get("wildcardProjection", Document.class);
 		}
-
-		boolean hidden = sourceDocument.containsKey("hidden") ? (Boolean) sourceDocument.get("hidden") : false;
 
 		return info;
 	}
