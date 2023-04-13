@@ -111,9 +111,10 @@ abstract class AggregationUtils {
 	 */
 	static AggregationOptions.Builder applyHint(AggregationOptions.Builder builder, MongoQueryMethod queryMethod) {
 
-		if(!queryMethod.hasAnnotatedHint()) {
+		if (!queryMethod.hasAnnotatedHint()) {
 			return builder;
 		}
+
 		return builder.hint(queryMethod.getAnnotatedHint());
 	}
 

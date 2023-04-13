@@ -368,20 +368,19 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 4.1
 	 */
 	public boolean hasAnnotatedHint() {
-		return StringUtils.hasText(getAnnotatedHint());
+		return doFindAnnotation(Hint.class).map(Hint::indexName).filter(StringUtils::hasText).isPresent();
 	}
 
 	/**
 	 * Returns the aggregation pipeline declared via a {@link Hint} annotation.
 	 *
-	 * @return the index name (might be empty) or {@literal null} if not present.
+	 * @return the index name (might be empty).
+	 * @throws IllegalStateException if the method is not annotated with {@link Hint}
 	 * @since 4.1
 	 */
-	@Nullable
 	public String getAnnotatedHint() {
-
-		Optional<Hint> hint = doFindAnnotation(Hint.class);
-		return hint.map(Hint::indexName).orElse(null);
+		return doFindAnnotation(Hint.class).map(Hint::indexName).orElseThrow(() -> new IllegalStateException(
+				"Expected to find @Hint annotation but did not; Make sure to check hasAnnotatedHint() before."));
 	}
 
 	private Optional<String[]> findAnnotatedAggregation() {

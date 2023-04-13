@@ -26,7 +26,7 @@ import org.springframework.core.annotation.AliasFor;
 /**
  * Annotation to declare index hints for repository query, update and aggregate operations. The index is specified by
  * its name.
- * 
+ *
  * @author Christoph Strobl
  * @since 4.1
  */
@@ -35,12 +35,18 @@ import org.springframework.core.annotation.AliasFor;
 @Documented
 public @interface Hint {
 
+	/**
+	 * The name of the index to use. In case of an {@literal aggregation} the index is evaluated against the initial
+	 * collection or view.
+	 *
+	 * @return the index name.
+	 */
 	String value() default "";
 
 	/**
 	 * The name of the index to use. In case of an {@literal aggregation} the index is evaluated against the initial
-	 * collection or view. Specify the index either by the index name.
-	 * 
+	 * collection or view.
+	 *
 	 * @return the index name.
 	 */
 	@AliasFor("value")

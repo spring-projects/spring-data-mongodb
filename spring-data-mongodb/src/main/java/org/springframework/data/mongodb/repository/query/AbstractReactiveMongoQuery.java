@@ -279,9 +279,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 */
 	Query applyHintIfPresent(Query query) {
 
-		if(!method.hasAnnotatedHint()) {
+		if (!method.hasAnnotatedHint()) {
 			return query;
 		}
+
 		return query.withHint(method.getAnnotatedHint());
 	}
 
