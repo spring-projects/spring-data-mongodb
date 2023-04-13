@@ -22,6 +22,7 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
@@ -153,6 +155,20 @@ public class DefaultIndexOperations implements IndexOperations {
 			return null;
 		});
 
+	}
+
+	@Override
+	public void alterIndex(String name, org.springframework.data.mongodb.core.index.IndexOptions options) {
+
+		Document indexOptions = new Document("name", name);
+		indexOptions.putAll(options.toDocument());
+
+		Document result = mongoOperations
+				.execute(db -> db.runCommand(new Document("collMod", collectionName).append("index", indexOptions)));
+
+		if(NumberUtils.convertNumberToTargetClass(result.get("ok", (Number) 0), Integer.class) != 1) {
+			throw new UncategorizedMongoDbException("Index '%s' could not be modified. Response was %s".formatted(name, result.toJson()), null);
+		}
 	}
 
 	public void dropAllIndexes() {

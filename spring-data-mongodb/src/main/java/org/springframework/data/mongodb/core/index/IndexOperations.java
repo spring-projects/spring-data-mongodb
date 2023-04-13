@@ -38,6 +38,14 @@ public interface IndexOperations {
 	/**
 	 * Drops an index from this collection.
 	 *
+	 * @param name name of index to hide.
+	 * @since 4.1
+	 */
+	void alterIndex(String name, IndexOptions options);
+
+	/**
+	 * Drops an index from this collection.
+	 *
 	 * @param name name of index to drop
 	 */
 	void dropIndex(String name);

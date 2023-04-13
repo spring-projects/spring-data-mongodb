@@ -36,6 +36,15 @@ public interface ReactiveIndexOperations {
 	Mono<String> ensureIndex(IndexDefinition indexDefinition);
 
 	/**
+	 * Alters the index with given {@literal name}.
+	 *
+	 * @param name name of index to hide.
+	 * @param
+	 * @since 4.1
+	 */
+	Mono<Void> alterIndex(String name, IndexOptions options);
+
+	/**
 	 * Drops an index from this collection.
 	 *
 	 * @param name name of index to drop

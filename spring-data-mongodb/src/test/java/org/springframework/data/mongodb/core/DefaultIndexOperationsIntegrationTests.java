@@ -197,6 +197,16 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(info.isHidden()).isTrue();
 	}
 
+	@Test // GH-4348
+	void alterIndexShouldAllowHiding() {
+
+		collection.createIndex(new Document("a", 1), new IndexOptions().name("my-index"));
+
+		indexOps.alterIndex("my-index", org.springframework.data.mongodb.core.index.IndexOptions.hidden());
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "my-index");
+		assertThat(info.isHidden()).isTrue();
+	}
+
 	private IndexInfo findAndReturnIndexInfo(org.bson.Document keys) {
 		return findAndReturnIndexInfo(indexOps.getIndexInfo(), keys);
 	}

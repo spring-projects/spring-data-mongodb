@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 
 import com.mongodb.client.model.IndexOptions;
 
@@ -102,6 +104,22 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
 
 		}).next();
+	}
+
+	@Override
+	public Mono<Void> alterIndex(String name, org.springframework.data.mongodb.core.index.IndexOptions options) {
+
+		return mongoOperations.execute(db -> {
+			Document indexOptions = new Document("name", name);
+			indexOptions.putAll(options.toDocument());
+
+			return Flux.from(db.runCommand(new Document("collMod", collectionName).append("index", indexOptions)))
+					.doOnNext(result -> {
+						if(NumberUtils.convertNumberToTargetClass(result.get("ok", (Number) 0), Integer.class) != 1) {
+							throw new UncategorizedMongoDbException("Index '%s' could not be modified. Response was %s".formatted(name, result.toJson()), null);
+						}
+					});
+		}).then();
 	}
 
 	@Nullable
