@@ -74,7 +74,7 @@ public class LazyLoadingProxyAotProcessor {
 					} else {
 
 						Class<?> proxyClass = LazyLoadingProxyFactory.resolveProxyType(field.getType(),
-								() -> LazyLoadingInterceptor.none());
+								LazyLoadingInterceptor::none);
 
 						// see: spring-projects/spring-framework/issues/29309
 						generationContext.getRuntimeHints().reflection().registerType(proxyClass,

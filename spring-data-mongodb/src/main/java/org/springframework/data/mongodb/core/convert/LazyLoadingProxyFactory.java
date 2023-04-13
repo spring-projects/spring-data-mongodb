@@ -72,7 +72,7 @@ public final class LazyLoadingProxyFactory {
 	/**
 	 * Predict the proxy target type. This will advice the infrastructure to resolve as many pieces as possible in a
 	 * potential AOT scenario without necessarily resolving the entire object.
-	 * 
+	 *
 	 * @param propertyType the type to proxy
 	 * @param interceptor the interceptor to be added.
 	 * @return the proxy type.
@@ -93,20 +93,20 @@ public final class LazyLoadingProxyFactory {
 	/**
 	 * Create the {@link ProxyFactory} for the given type, already adding required additional interfaces.
 	 *
-	 * @param propertyType the type to proxy
-	 * @return the proxy type.
+	 * @param targetType the type to proxy.
+	 * @return the prepared {@link ProxyFactory}.
 	 * @since 4.0.5
 	 */
-	public static ProxyFactory prepareFactory(Class<?> propertyType) {
+	public static ProxyFactory prepareFactory(Class<?> targetType) {
 
 		ProxyFactory proxyFactory = new ProxyFactory();
 
-		for (Class<?> type : propertyType.getInterfaces()) {
+		for (Class<?> type : targetType.getInterfaces()) {
 			proxyFactory.addInterface(type);
 		}
 
 		proxyFactory.addInterface(LazyLoadingProxy.class);
-		proxyFactory.addInterface(propertyType);
+		proxyFactory.addInterface(targetType);
 
 		return proxyFactory;
 	}

@@ -29,6 +29,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.javapoet.ClassName;
 
 /**
+ * Unit tests for {@link LazyLoadingProxyAotProcessor}.
+ *
  * @author Christoph Strobl
  */
 class LazyLoadingProxyAotProcessorUnitTests {
