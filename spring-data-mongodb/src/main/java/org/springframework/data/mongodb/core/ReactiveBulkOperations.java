@@ -15,21 +15,29 @@
  */
 package org.springframework.data.mongodb.core;
 
+import reactor.core.publisher.Mono;
+
 import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.util.Pair;
 
 import com.mongodb.bulk.BulkWriteResult;
-import reactor.core.publisher.Mono;
 
 /**
  * Bulk operations for insert/update/remove actions on a collection. Bulk operations are available since MongoDB 2.6 and
  * make use of low level bulk commands on the protocol level. This interface defines a fluent API to add multiple single
  * operations or list of similar operations in sequence which can then eventually be executed by calling
  * {@link #execute()}.
+ *
+ * <pre class="code">
+ * ReactiveMongoOperations ops = …;
+ *
+ * ops.bulkOps(BulkMode.UNORDERED, Person.class)
+ * 				.insert(newPerson)
+ * 				.updateOne(where("firstname").is("Joe"), Update.update("lastname", "Doe"))
+ * 				.execute();
+ * </pre>
  * <p>
  * Bulk operations are issued as one batch that pulls together all insert, update, and delete operations. Operations
  * that require individual operation results such as optimistic locking (using {@code @Version}) are not supported and

@@ -31,9 +31,9 @@ import com.mongodb.bulk.BulkWriteResult;
  * {@link #execute()}.
  *
  * <pre class="code">
- * MongoTemplate template = …;
+ * MongoOperations ops = …;
  *
- * template.bulkOps(BulkMode.UNORDERED, Person.class)
+ * ops.bulkOps(BulkMode.UNORDERED, Person.class)
  * 				.insert(newPerson)
  * 				.updateOne(where("firstname").is("Joe"), Update.update("lastname", "Doe"))
  * 				.execute();

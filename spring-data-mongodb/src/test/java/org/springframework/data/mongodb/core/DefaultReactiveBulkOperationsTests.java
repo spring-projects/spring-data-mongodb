@@ -51,6 +51,8 @@ import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 
 /**
+ * Tests for {@link DefaultReactiveBulkOperations}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoTemplateExtension.class)
@@ -74,7 +76,7 @@ class DefaultReactiveBulkOperationsTests {
 				.execute().as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result.getInsertedCount()).isEqualTo(2);
-				});
+				}).verifyComplete();
 	}
 
 	@Test // GH-2821
@@ -98,7 +100,7 @@ class DefaultReactiveBulkOperationsTests {
 				.execute().as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result.getInsertedCount()).isEqualTo(2);
-				});
+				}).verifyComplete();
 	}
 
 	@Test // GH-2821

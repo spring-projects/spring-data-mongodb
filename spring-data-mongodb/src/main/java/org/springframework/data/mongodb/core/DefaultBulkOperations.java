@@ -21,32 +21,24 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.BulkOperationException;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
-import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -55,7 +47,16 @@ import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.BulkWriteOptions;
+import com.mongodb.client.model.DeleteManyModel;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.UpdateManyModel;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.WriteModel;
 
 /**
  * Default implementation for {@link BulkOperations}.
@@ -71,7 +72,7 @@ import com.mongodb.client.model.*;
  * @author Jacob Botuck
  * @since 1.9
  */
-class DefaultBulkOperations implements BulkOperations {
+class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperations {
 
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
@@ -93,6 +94,7 @@ class DefaultBulkOperations implements BulkOperations {
 	DefaultBulkOperations(MongoOperations mongoOperations, String collectionName,
 			BulkOperationContext bulkOperationContext) {
 
+		super(collectionName);
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 		Assert.hasText(collectionName, "CollectionName must not be null nor empty");
 		Assert.notNull(bulkOperationContext, "BulkOperationContext must not be null");
@@ -135,7 +137,6 @@ class DefaultBulkOperations implements BulkOperations {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public BulkOperations updateOne(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -157,7 +158,6 @@ class DefaultBulkOperations implements BulkOperations {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public BulkOperations updateMulti(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -326,61 +326,24 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	private WriteModel<Document> mapWriteModel(Object source, WriteModel<Document> writeModel) {
-
-		if (writeModel instanceof UpdateOneModel<Document> model) {
-
-			if (source instanceof AggregationUpdate aggregationUpdate) {
-
-				List<Document> pipeline = mapUpdatePipeline(aggregationUpdate);
-				return new UpdateOneModel<>(getMappedQuery(model.getFilter()), pipeline, model.getOptions());
-			}
-
-			return new UpdateOneModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
-					model.getOptions());
-		}
-
-		if (writeModel instanceof UpdateManyModel<Document> model) {
-
-			if (source instanceof AggregationUpdate aggregationUpdate) {
-
-				List<Document> pipeline = mapUpdatePipeline(aggregationUpdate);
-				return new UpdateManyModel<>(getMappedQuery(model.getFilter()), pipeline, model.getOptions());
-			}
-
-			return new UpdateManyModel<>(getMappedQuery(model.getFilter()), getMappedUpdate(model.getUpdate()),
-					model.getOptions());
-		}
-
-		if (writeModel instanceof DeleteOneModel<Document> model) {
-			return new DeleteOneModel<>(getMappedQuery(model.getFilter()), model.getOptions());
-		}
-
-		if (writeModel instanceof DeleteManyModel<Document> model) {
-			return new DeleteManyModel<>(getMappedQuery(model.getFilter()), model.getOptions());
-		}
-
-		return writeModel;
+	@Override
+	protected void maybeEmitEvent(ApplicationEvent event) {
+		bulkOperationContext.publishEvent(event);
 	}
 
-	private List<Document> mapUpdatePipeline(AggregationUpdate source) {
-
-		Class<?> type = bulkOperationContext.entity().isPresent()
-				? bulkOperationContext.entity().map(PersistentEntity::getType).get()
-				: Object.class;
-		AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type,
-				bulkOperationContext.updateMapper().getMappingContext(), bulkOperationContext.queryMapper());
-
-		return new AggregationUtil(bulkOperationContext.queryMapper(),
-				bulkOperationContext.queryMapper().getMappingContext()).createPipeline(source, context);
+	@Override
+	protected UpdateMapper updateMapper() {
+		return bulkOperationContext.updateMapper();
 	}
 
-	private Bson getMappedUpdate(Bson update) {
-		return bulkOperationContext.updateMapper().getMappedObject(update, bulkOperationContext.entity());
+	@Override
+	protected QueryMapper queryMapper() {
+		return bulkOperationContext.queryMapper();
 	}
 
-	private Bson getMappedQuery(Bson query) {
-		return bulkOperationContext.queryMapper().getMappedObject(query, bulkOperationContext.entity());
+	@Override
+	protected Optional<? extends MongoPersistentEntity<?>> entity() {
+		return bulkOperationContext.entity();
 	}
 
 	private Document getMappedObject(Object source) {
@@ -399,32 +362,6 @@ class DefaultBulkOperations implements BulkOperations {
 		models.add(new SourceAwareWriteModelHolder(source, model));
 	}
 
-	private void maybeEmitBeforeSaveEvent(SourceAwareWriteModelHolder holder) {
-
-		if (holder.model() instanceof InsertOneModel) {
-
-			Document target = ((InsertOneModel<Document>) holder.model()).getDocument();
-			maybeEmitEvent(new BeforeSaveEvent<>(holder.source(), target, collectionName));
-		} else if (holder.model() instanceof ReplaceOneModel) {
-
-			Document target = ((ReplaceOneModel<Document>) holder.model()).getReplacement();
-			maybeEmitEvent(new BeforeSaveEvent<>(holder.source(), target, collectionName));
-		}
-	}
-
-	private void maybeEmitAfterSaveEvent(SourceAwareWriteModelHolder holder) {
-
-		if (holder.model() instanceof InsertOneModel) {
-
-			Document target = ((InsertOneModel<Document>) holder.model()).getDocument();
-			maybeEmitEvent(new AfterSaveEvent<>(holder.source(), target, collectionName));
-		} else if (holder.model() instanceof ReplaceOneModel) {
-
-			Document target = ((ReplaceOneModel<Document>) holder.model()).getReplacement();
-			maybeEmitEvent(new AfterSaveEvent<>(holder.source(), target, collectionName));
-		}
-	}
-
 	private void maybeInvokeAfterSaveCallback(SourceAwareWriteModelHolder holder) {
 
 		if (holder.model() instanceof InsertOneModel) {
@@ -438,7 +375,7 @@ class DefaultBulkOperations implements BulkOperations {
 		}
 	}
 
-	private void maybeEmitEvent(MongoMappingEvent<?> event) {
+	private void publishEvent(MongoMappingEvent<?> event) {
 		bulkOperationContext.publishEvent(event);
 	}
 
@@ -454,43 +391,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return bulkOperationContext.callback(AfterSaveCallback.class, value, mappedDocument, collectionName);
 	}
 
-	private static BulkWriteOptions getBulkWriteOptions(BulkMode bulkMode) {
-
-		BulkWriteOptions options = new BulkWriteOptions();
-
-		switch (bulkMode) {
-			case ORDERED:
-				return options.ordered(true);
-			case UNORDERED:
-				return options.ordered(false);
-		}
-
-		throw new IllegalStateException("BulkMode was null");
-	}
-
-	/**
-	 * @param filterQuery The {@link Query} to read a potential {@link Collation} from. Must not be {@literal null}.
-	 * @param update The {@link Update} to apply
-	 * @param upsert flag to indicate if document should be upserted.
-	 * @return new instance of {@link UpdateOptions}.
-	 */
-	private static UpdateOptions computeUpdateOptions(Query filterQuery, UpdateDefinition update, boolean upsert) {
-
-		UpdateOptions options = new UpdateOptions();
-		options.upsert(upsert);
-
-		if (update.hasArrayFilters()) {
-			List<Document> list = new ArrayList<>(update.getArrayFilters().size());
-			for (ArrayFilter arrayFilter : update.getArrayFilters()) {
-				list.add(arrayFilter.asDocument());
-			}
-			options.arrayFilters(list);
-		}
-
-		filterQuery.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
-		return options;
-	}
-
 	/**
 	 * {@link BulkOperationContext} holds information about {@link BulkMode} the entity in use as well as references to
 	 * {@link QueryMapper} and {@link UpdateMapper}.
@@ -502,12 +402,12 @@ class DefaultBulkOperations implements BulkOperations {
 			QueryMapper queryMapper, UpdateMapper updateMapper, @Nullable ApplicationEventPublisher eventPublisher,
 			@Nullable EntityCallbacks entityCallbacks) {
 
-		public boolean skipEventPublishing() {
-			return eventPublisher == null;
-		}
-
 		public boolean skipEntityCallbacks() {
 			return entityCallbacks == null;
+		}
+
+		public boolean skipEventPublishing() {
+			return eventPublisher == null;
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -541,13 +441,4 @@ class DefaultBulkOperations implements BulkOperations {
 		}
 	}
 
-	/**
-	 * Value object chaining together an actual source with its {@link WriteModel} representation.
-	 *
-	 * @author Christoph Strobl
-	 * @since 2.2
-	 */
-	record SourceAwareWriteModelHolder(Object source, WriteModel<Document> model) {
-
-	}
 }

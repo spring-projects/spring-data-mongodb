@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.ReactiveBulkOperationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -74,7 +72,9 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveCollectionPreparerDelegate;
+import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.ReactiveBulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
@@ -482,31 +482,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public ReactiveBulkOperations bulkOps(BulkMode bulkMode, String collectionName) {
-		return bulkOps(bulkMode, null, collectionName);
-	}
-
-	@Override
-	public ReactiveBulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass) {
-		return bulkOps(bulkMode, entityClass, getCollectionName(entityClass));
-	}
-
-	@Override
-	public ReactiveBulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName) {
-
-		Assert.notNull(mode, "BulkMode must not be null");
-		Assert.hasText(collectionName, "Collection name must not be null or empty");
-
-		DefaultReactiveBulkOperations operations = new DefaultReactiveBulkOperations(this, collectionName,
-				new ReactiveBulkOperationContext(mode, Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper,
-						eventPublisher, entityCallbacks));
-
-		operations.setDefaultWriteConcern(writeConcern);
-
-		return operations;
-	}
-
-	@Override
 	public String getCollectionName(Class<?> entityClass) {
 		return operations.determineCollectionName(entityClass);
 	}
@@ -763,7 +738,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<Void> dropCollection(Class<T> entityClass) {
 		return dropCollection(getCollectionName(entityClass));
 	}
-
 	@Override
 	public Mono<Void> dropCollection(String collectionName) {
 
@@ -772,6 +746,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				LOGGER.debug("Dropped collection [" + collectionName + "]");
 			}
 		}).then();
+	}
+
+	@Override
+	public ReactiveBulkOperations bulkOps(BulkMode mode, String collectionName) {
+		return bulkOps(mode, null, collectionName);
+	}
+
+	@Override
+	public ReactiveBulkOperations bulkOps(BulkMode mode, Class<?> entityClass) {
+		return bulkOps(mode, entityClass, getCollectionName(entityClass));
+	}
+
+	@Override
+	public ReactiveBulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName) {
+
+		Assert.notNull(mode, "BulkMode must not be null");
+		Assert.hasText(collectionName, "Collection name must not be null or empty");
+
+		DefaultReactiveBulkOperations operations = new DefaultReactiveBulkOperations(this, collectionName,
+				new ReactiveBulkOperationContext(mode, Optional.ofNullable(getPersistentEntity(entityType)), queryMapper,
+						updateMapper, eventPublisher, entityCallbacks));
+
+		operations.setDefaultWriteConcern(writeConcern);
+
+		return operations;
 	}
 
 	@Override
