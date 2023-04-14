@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
-import org.springframework.data.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,12 +26,15 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.util.ReflectionUtils;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.util.ClassUtils;
 
@@ -70,10 +71,6 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#doExecute(org.springframework.data.mongodb.repository.query.ReactiveMongoQueryMethod, org.springframework.data.repository.query.ResultProcessor, org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, java.lang.Class)
-	 */
 	@Override
 	protected Publisher<Object> doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
@@ -99,7 +96,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 			TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline.getOperations(), options);
 
 			Flux<?> flux = reactiveMongoOperations.aggregate(aggregation, targetType);
-			if(ReflectionUtils.isVoid(typeToRead)) {
+			if (ReflectionUtils.isVoid(typeToRead)) {
 				return flux.then();
 			}
 
@@ -126,60 +123,46 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 		return parseAggregationPipeline(getQueryMethod().getAnnotatedAggregation(), accessor);
 	}
 
-	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor, AggregationPipeline pipeline) {
+	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor,
+			AggregationPipeline pipeline) {
 
 		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
 
 		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
-		if(ReflectionUtils.isVoid(method.getReturnType().getComponentType().getType()) && pipeline.isOutOrMerge()) {
+
+		TypeInformation<?> returnType = method.getReturnType();
+		if (returnType.getComponentType() != null) {
+			returnType = returnType.getRequiredComponentType();
+		}
+		if (ReflectionUtils.isVoid(returnType.getType()) && pipeline.isOutOrMerge()) {
 			builder.skipOutput();
 		}
 
 		return builder.build();
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
 	@Override
 	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 		throw new UnsupportedOperationException("No query support for aggregation");
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isCountQuery()
-	 */
 	@Override
 	protected boolean isCountQuery() {
 		return false;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isExistsQuery()
-	 */
 	@Override
 	protected boolean isExistsQuery() {
 		return false;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isDeleteQuery()
-	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return false;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isLimiting()
-	 */
 	@Override
 	protected boolean isLimiting() {
 		return false;

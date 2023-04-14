@@ -21,16 +21,13 @@ import java.util.function.LongUnaryOperator;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
-import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Builder;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -42,8 +39,6 @@ import org.springframework.data.util.ReflectionUtils;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 
 /**
  * {@link AbstractMongoQuery} implementation to run string-based aggregations using
@@ -66,8 +61,8 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionParser
-	 * @param evaluationContextProvider
+	 * @param expressionParser must not be {@literal null}.
+	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
@@ -85,10 +80,6 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#doExecute(org.springframework.data.mongodb.repository.query.MongoQueryMethod, org.springframework.data.repository.query.ResultProcessor, org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, java.lang.Class)
-	 */
 	@Override
 	@Nullable
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
@@ -133,7 +124,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		}
 
 		AggregationResults<Object> result = (AggregationResults<Object>) mongoOperations.aggregate(aggregation, targetType);
-		if(ReflectionUtils.isVoid(typeToRead)) {
+		if (ReflectionUtils.isVoid(typeToRead)) {
 			return null;
 		}
 
@@ -181,7 +172,8 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		return new AggregationPipeline(parseAggregationPipeline(method.getAnnotatedAggregation(), accessor));
 	}
 
-	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor, AggregationPipeline pipeline) {
+	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor,
+			AggregationPipeline pipeline) {
 
 		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
 
@@ -189,53 +181,33 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
 
-		if(ReflectionUtils.isVoid(method.getReturnType().getType()) && pipeline.isOutOrMerge()) {
+		if (ReflectionUtils.isVoid(method.getReturnType().getType()) && pipeline.isOutOrMerge()) {
 			builder.skipOutput();
 		}
 
 		return builder.build();
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 		throw new UnsupportedOperationException("No query support for aggregation");
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
-	 */
 	@Override
 	protected boolean isCountQuery() {
 		return false;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isExistsQuery()
-	 */
 	@Override
 	protected boolean isExistsQuery() {
 		return false;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
-	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return false;
 	}
 
-	/*
-	 * (non-Javascript)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
-	 */
 	@Override
 	protected boolean isLimiting() {
 		return false;
