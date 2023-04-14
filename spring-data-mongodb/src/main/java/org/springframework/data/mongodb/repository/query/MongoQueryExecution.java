@@ -293,7 +293,6 @@ interface MongoQueryExecution {
 	final class UpdateExecution implements MongoQueryExecution {
 
 		private final ExecutableUpdate<?> updateOps;
-		private final MongoQueryMethod method;
 		private Supplier<UpdateDefinition> updateDefinitionSupplier;
 		private final MongoParameterAccessor accessor;
 
@@ -301,7 +300,6 @@ interface MongoQueryExecution {
 				MongoParameterAccessor accessor) {
 
 			this.updateOps = updateOps;
-			this.method = method;
 			this.updateDefinitionSupplier = updateSupplier;
 			this.accessor = accessor;
 		}
