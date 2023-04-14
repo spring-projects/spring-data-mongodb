@@ -29,6 +29,15 @@ import com.mongodb.bulk.BulkWriteResult;
  * make use of low level bulk commands on the protocol level. This interface defines a fluent API to add multiple single
  * operations or list of similar operations in sequence which can then eventually be executed by calling
  * {@link #execute()}.
+ *
+ * <pre class="code">
+ * MongoTemplate template = …;
+ *
+ * template.bulkOps(BulkMode.UNORDERED, Person.class)
+ * 				.insert(newPerson)
+ * 				.updateOne(where("firstname").is("Joe"), Update.update("lastname", "Doe"))
+ * 				.execute();
+ * </pre>
  * <p>
  * Bulk operations are issued as one batch that pulls together all insert, update, and delete operations. Operations
  * that require individual operation results such as optimistic locking (using {@code @Version}) are not supported and
@@ -96,7 +105,7 @@ public interface BulkOperations {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateOne(List<Pair<Query, Update>> updates);
+	BulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates);
 
 	/**
 	 * Add a single update to the bulk operation. For the update request, all matching documents are updated.
@@ -125,7 +134,7 @@ public interface BulkOperations {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateMulti(List<Pair<Query, Update>> updates);
+	BulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates);
 
 	/**
 	 * Add a single upsert to the bulk operation. An upsert is an update if the set of matching documents is not empty,
@@ -180,7 +189,7 @@ public interface BulkOperations {
 	 *
 	 * @param query Update criteria.
 	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
 	 */
 	default BulkOperations replaceOne(Query query, Object replacement) {
@@ -193,7 +202,7 @@ public interface BulkOperations {
 	 * @param query Update criteria.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
-	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
 	 */
 	BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options);

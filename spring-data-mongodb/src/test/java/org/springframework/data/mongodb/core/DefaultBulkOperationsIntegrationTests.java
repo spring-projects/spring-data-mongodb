@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.mongodb.bulk.BulkWriteResult;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +48,7 @@ import org.springframework.data.util.Pair;
 
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -295,7 +295,7 @@ public class DefaultBulkOperationsIntegrationTests {
 	public void mixedBulkOrderedWithList() {
 
 		List<BaseDoc> inserts = Arrays.asList(newDoc("1", "v1"), newDoc("2", "v2"), newDoc("3", "v2"));
-		List<Pair<Query, Update>> updates = Arrays.asList(Pair.of(where("value", "v2"), set("value", "v3")));
+		List<Pair<Query, UpdateDefinition>> updates = Arrays.asList(Pair.of(where("value", "v2"), set("value", "v3")));
 		List<Query> removes = Arrays.asList(where("_id", "1"));
 
 		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED, BaseDoc.class).insert(inserts)
@@ -329,7 +329,7 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		insertSomeDocuments();
 
-		List<Pair<Query, Update>> updates = new ArrayList<Pair<Query, Update>>();
+		List<Pair<Query, UpdateDefinition>> updates = new ArrayList<>();
 		updates.add(Pair.of(where("value", "value1"), set("value", "value3")));
 		updates.add(Pair.of(where("value", "value2"), set("value", "value4")));
 
