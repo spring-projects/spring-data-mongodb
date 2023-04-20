@@ -352,8 +352,14 @@ Also shown in the preceding example is a `LoggingEventListener`, which logs `Mon
 
 NOTE: `AbstractMongoClientConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
 
-
 The `base-package` property tells it where to scan for classes annotated with the `@org.springframework.data.mongodb.core.mapping.Document` annotation.
+
+[TIP]
+====
+If you want to rely on https://spring.io/projects/spring-boot[Spring Boot] to bootstrap Data MongoDB, but still want to override certain aspects of the configuration, you may want to expose beans of that type.
+For custom conversions you may eg. choose to register a bean of type `MongoCustomConversions` that will be picked up the by the Boot infrastructure.
+To learn more about this please make sure to read the Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#data.nosql.mongodb[Reference Documentation].
+====
 
 [[mapping-usage]]
 == Metadata-based Mapping
