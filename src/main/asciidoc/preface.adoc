@@ -59,6 +59,11 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 |Driver Version
 |Server Version
 
+|2023.0
+|4.1.x
+|4.9.x
+|6.0.x
+
 |2022.0
 |4.0.x
 |4.7.x
