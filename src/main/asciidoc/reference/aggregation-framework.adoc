@@ -52,11 +52,58 @@ List<OutputType> mappedResult = results.getMappedResults();
 Note that, if you provide an input class as the first parameter to the `newAggregation` method, the `MongoTemplate` derives the name of the input collection from this class. Otherwise, if you do not not specify an input class, you must provide the name of the input collection explicitly. If both an input class and an input collection are provided, the latter takes precedence.
 
 [[mongo.aggregation.supported-aggregation-operations]]
-=== Supported Aggregation Operations
+=== Supported Aggregation Operations & Stages
 
-The MongoDB Aggregation Framework provides the following types of aggregation operations:
+The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
 
-* Pipeline Aggregation Operators
+==== Aggregation Stages
+
+* addFields - `AddFieldsOperation`
+* bucket / bucketAuto - `BucketOperation` / `BucketAutoOperation`
+* count - `CountOperation`
+* densify - `DensifyOperation`
+* facet - `FacetOperation`
+* geoNear - `GeoNearOperation`
+* graphLookup - `GraphLookupOperation`
+* group - `GroupOperation`
+* limit - `LimitOperation`
+* lookup - `LookupOperation`
+* match - `MatchOperation`
+* merge - `MergeOperation`
+* project - `ProjectionOperation`
+* redact - `RedactOperation`
+* replaceRoot - `ReplaceRootOperation`
+* sample - `SampleOperation`
+* set - `SetOperation`
+* setWindowFields - `SetWindowFieldsOperation`
+* skip - `SkipOperation`
+* sort / sortByCount - `SortOperation` / `SortByCountOperation`
+* unionWith - `UnionWithOperation`
+* unset - `UnsetOperation`
+* unwind - `UnwindOperation`
+
+[TIP]
+====
+Unsupported aggregation stages (like https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/[$search] for MongoDB Atlas) can be provided by implementing either `AggregationOperation`.
+`Aggregation.stage` is a shortcut for registering a pipeline stage by providing its JSON or `Bson` representation.
+
+[source,java]
+----
+Aggregation.stage("""
+    { $search : {
+        "near": {
+          "path": "released",
+          "origin": { "$date": { "$numberLong": "..." } } ,
+          "pivot": 7
+        }
+      }
+    }
+""");
+----
+====
+
+==== Aggregation Operators
+
 * Group/Accumulator Aggregation Operators
 * Boolean Aggregation Operators
 * Comparison Aggregation Operators
@@ -70,14 +117,11 @@ The MongoDB Aggregation Framework provides the following types of aggregation op
 * Object Aggregation Operators
 * Script Aggregation Operators
 
-At the time of this writing, we provide support for the following Aggregation Operations in Spring Data MongoDB:
+At the time of this writing, we provide support for the following Aggregation Operators in Spring Data MongoDB:
 
-.Aggregation Operations currently supported by Spring Data MongoDB
+.Aggregation Operators currently supported by Spring Data MongoDB
 [cols="2*"]
 |===
-| Pipeline Aggregation Operators
-| `bucket`, `bucketAuto`, `count`, `facet`, `geoNear`, `graphLookup`, `group`, `limit`, `lookup`, `match`, `project`, `rand`, `replaceRoot`, `skip`, `sort`, `unwind`
-
 | Set Aggregation Operators
 | `setEquals`, `setIntersection`, `setUnion`, `setDifference`, `setIsSubset`, `anyElementTrue`, `allElementsTrue`
 
@@ -125,26 +169,6 @@ At the time of this writing, we provide support for the following Aggregation Op
 +++*+++ The operation is mapped or added by Spring Data MongoDB.
 
 Note that the aggregation operations not listed here are currently not supported by Spring Data MongoDB. Comparison aggregation operators are expressed as `Criteria` expressions.
-
-[TIP]
-====
-Unsupported aggregation operations/operators (like https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/[$search] for MongoDB Atlas) can be provided by implementing either `AggregationOperation` or `AggregationExpression`.
-`Aggregation.stage` is a shortcut for registering a pipeline stage by providing its JSON or `Bson` representation.
-
-[source,java]
-----
-Aggregation.stage("""
-    { $search : {
-        "near": {
-          "path": "released",
-          "origin": { "$date": { "$numberLong": "..." } } ,
-          "pivot": 7
-        }
-      }
-    }
-""");
-----
-====
 
 [[mongo.aggregation.projection]]
 === Projection Expressions
