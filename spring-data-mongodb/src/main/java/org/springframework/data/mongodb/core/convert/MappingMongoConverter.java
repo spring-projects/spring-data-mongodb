@@ -2313,8 +2313,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (source instanceof Collection<?> collection) {
 
 				Class<?> rawType = typeHint.getType();
-				if (!Object.class.equals(rawType)) {
+				if (!Object.class.equals(rawType) && !String.class.equals(rawType)) {
+
 					if (!rawType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawType)) {
+
 						throw new MappingException(
 								String.format(INCOMPATIBLE_TYPES, source, source.getClass(), rawType, getPath()));
 					}
@@ -2341,11 +2343,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (source instanceof DBRef dbRef) {
 				return (S) dbRefConverter.convert(context, dbRef, typeHint);
-			}
-
-			if (source instanceof Collection) {
-				throw new MappingException(
-						String.format(INCOMPATIBLE_TYPES, source, BasicDBList.class, typeHint.getType(), getPath()));
 			}
 
 			if (BsonUtils.supportsBson(source)) {
