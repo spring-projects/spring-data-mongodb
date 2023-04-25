@@ -2858,6 +2858,14 @@ class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Cyclic.class, source).cycle.value).isEqualTo("v2");
 	}
 
+	@Test // GH-4371
+	void shouldConvertTypesToStringTargetType() {
+
+		org.bson.Document source = org.bson.Document.parse("{\n" + "  city : [\"Gotham\", \"Metropolis\"]\n" + "}\n");
+
+		assertThat(converter.read(Address.class, source).city).isEqualTo("Gotham,Metropolis");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
