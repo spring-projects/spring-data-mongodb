@@ -146,10 +146,10 @@ class ReactiveMongoTemplateScrollTests {
 		template.insertAll(Arrays.asList(one, two, three)).as(StepVerifier::create).expectNextCount(3).verifyComplete();
 
 		Query q = new Query(where("value").regex("v.*")).with(Sort.by(Sort.Direction.DESC, "value")).limit(2);
-		q.with(KeysetScrollPosition.initial());
+		q.with(ScrollPosition.keyset());
 
 		Window<T> window = template.query(WithRenamedField.class).as(resultType).matching(q)
-				.scroll(KeysetScrollPosition.initial()).block(Duration.ofSeconds(10));
+				.scroll(ScrollPosition.keyset()).block(Duration.ofSeconds(10));
 
 		assertThat(window.hasNext()).isTrue();
 		assertThat(window.isLast()).isFalse();
@@ -167,9 +167,9 @@ class ReactiveMongoTemplateScrollTests {
 
 	static Stream<Arguments> positions() {
 
-		return Stream.of(args(KeysetScrollPosition.initial(), Person.class, Function.identity()), //
-				args(KeysetScrollPosition.initial(), Document.class, MongoTemplateScrollTests::toDocument), //
-				args(OffsetScrollPosition.initial(), Person.class, Function.identity()));
+		return Stream.of(args(ScrollPosition.keyset(), Person.class, Function.identity()), //
+				args(ScrollPosition.keyset(), Document.class, MongoTemplateScrollTests::toDocument), //
+				args(ScrollPosition.offset(), Person.class, Function.identity()));
 	}
 
 	static Stream<Arguments> renamedFieldProjectTargets() {

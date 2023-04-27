@@ -40,8 +40,6 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.KeysetScrollPosition.Direction;
-import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -128,7 +126,7 @@ class MongoTemplateScrollTests {
 
 		Query q = new Query(where("name").regex("J.*")).with(Sort.by("nested.name", "nested.age", "document.name"))
 				.limit(2);
-		q.with(KeysetScrollPosition.initial());
+		q.with(ScrollPosition.keyset());
 
 		Window<WithNestedDocument> window = template.scroll(q, WithNestedDocument.class);
 
@@ -176,7 +174,7 @@ class MongoTemplateScrollTests {
 
 		template.insertAll(Arrays.asList(john20, john40_1, john40_2, jane_20, jane_40, jane_42));
 		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age"));
-		q.with(KeysetScrollPosition.initial()).limit(6);
+		q.with(ScrollPosition.keyset()).limit(6);
 
 		Window<Person> window = template.scroll(q, Person.class);
 
@@ -185,9 +183,7 @@ class MongoTemplateScrollTests {
 		assertThat(window).hasSize(6);
 
 		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(window.size() - 2);
-		KeysetScrollPosition reversePosition = KeysetScrollPosition.of(scrollPosition.getKeys(), Direction.Backward);
-
-		window = template.scroll(q.with(reversePosition).limit(2), Person.class);
+		window = template.scroll(q.with(scrollPosition.backward()).limit(2), Person.class);
 
 		assertThat(window).hasSize(2);
 		assertThat(window).containsOnly(jane_42, john20);
@@ -256,10 +252,10 @@ class MongoTemplateScrollTests {
 		template.insertAll(Arrays.asList(one, two, three));
 
 		Query q = new Query(where("value").regex("v.*")).with(Sort.by(Sort.Direction.DESC, "value")).limit(2);
-		q.with(KeysetScrollPosition.initial());
+		q.with(ScrollPosition.keyset());
 
 		Window<T> window = template.query(WithRenamedField.class).as(resultType).matching(q)
-				.scroll(KeysetScrollPosition.initial());
+				.scroll(ScrollPosition.keyset());
 
 		assertThat(window.hasNext()).isTrue();
 		assertThat(window.isLast()).isFalse();
@@ -277,12 +273,12 @@ class MongoTemplateScrollTests {
 
 	static Stream<Arguments> positions() {
 
-		return Stream.of(args(KeysetScrollPosition.initial(), Person.class, Function.identity()), //
-				args(KeysetScrollPosition.initial(), Document.class, MongoTemplateScrollTests::toDocument), //
-				args(OffsetScrollPosition.initial(), Person.class, Function.identity()), //
-				args(OffsetScrollPosition.initial(), PersonDtoProjection.class,
+		return Stream.of(args(ScrollPosition.keyset(), Person.class, Function.identity()), //
+				args(ScrollPosition.keyset(), Document.class, MongoTemplateScrollTests::toDocument), //
+				args(ScrollPosition.offset(), Person.class, Function.identity()), //
+				args(ScrollPosition.offset(), PersonDtoProjection.class,
 						MongoTemplateScrollTests::toPersonDtoProjection), //
-				args(OffsetScrollPosition.initial(), PersonInterfaceProjection.class,
+				args(ScrollPosition.offset(), PersonInterfaceProjection.class,
 						MongoTemplateScrollTests::toPersonInterfaceProjection, MongoTemplateScrollTests::compareProxies));
 	}
 

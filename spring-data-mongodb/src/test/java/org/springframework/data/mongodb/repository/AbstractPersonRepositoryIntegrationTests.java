@@ -206,7 +206,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	void appliesScrollPositionCorrectly() {
 
 		Window<Person> page = repository.findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
-				KeysetScrollPosition.initial());
+				ScrollPosition.keyset());
 
 		assertThat(page.isLast()).isFalse();
 		assertThat(page.size()).isEqualTo(2);
@@ -957,7 +957,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	void shouldScrollPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
 
 		Window<Person> scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
-				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial()));
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(ScrollPosition.keyset()));
 
 		assertThat(scroll).containsExactly(boyd, carter);
 
@@ -1187,7 +1187,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 		Window<Person> result = repository.findBy(
 				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
-				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial()));
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(ScrollPosition.keyset()));
 
 		assertThat(result).containsOnly(dave, leroi);
 		assertThat(result.hasNext()).isTrue();

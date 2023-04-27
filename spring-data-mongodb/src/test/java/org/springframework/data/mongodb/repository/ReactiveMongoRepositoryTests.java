@@ -16,11 +16,12 @@
 package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThat;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
-import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,7 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
@@ -69,6 +69,8 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesState;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension.ProvidesState;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
@@ -294,7 +296,7 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 	void appliesScrollingCorrectly() {
 
 		Window<Person> scroll = repository
-				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", KeysetScrollPosition.initial()).block();
+				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", ScrollPosition.keyset()).block();
 
 		assertThat(scroll).hasSize(2);
 		assertThat(scroll).containsSequence(alicia, boyd);
@@ -476,7 +478,7 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 
 		List<Window<Person>> capture = new ArrayList<>();
 		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
-				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(KeysetScrollPosition.initial())) //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(ScrollPosition.keyset())) //
 				.as(StepVerifier::create) //
 				.recordWith(() -> capture).assertNext(actual -> {
 					assertThat(actual).hasSize(2).containsExactly(boyd, carter);

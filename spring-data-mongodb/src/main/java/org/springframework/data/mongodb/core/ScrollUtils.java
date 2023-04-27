@@ -24,8 +24,8 @@ import java.util.function.IntFunction;
 import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.KeysetScrollPosition.Direction;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
 import org.springframework.data.mongodb.core.query.Query;
@@ -65,13 +65,13 @@ class ScrollUtils {
 
 		List<T> resultsToUse = director.postPostProcessResults(result, query.getLimit());
 
-		IntFunction<KeysetScrollPosition> positionFunction = value -> {
+		IntFunction<ScrollPosition> positionFunction = value -> {
 
 			T last = resultsToUse.get(value);
 			Entity<T> entity = operations.forEntity(last);
 
 			Map<String, Object> keys = entity.extractKeys(sortObject, sourceType);
-			return KeysetScrollPosition.of(keys);
+			return ScrollPosition.forward(keys);
 		};
 
 		return Window.from(resultsToUse, positionFunction, hasMoreElements(result, query.getLimit()));
@@ -103,8 +103,8 @@ class ScrollUtils {
 	 */
 	static class KeysetScrollDirector {
 
-		private static final KeysetScrollDirector forward = new KeysetScrollDirector();
-		private static final KeysetScrollDirector reverse = new ReverseKeysetScrollDirector();
+		private static final KeysetScrollDirector FORWARD = new KeysetScrollDirector();
+		private static final KeysetScrollDirector REVERSE = new ReverseKeysetScrollDirector();
 
 		/**
 		 * Factory method to obtain the right {@link KeysetScrollDirector}.
@@ -112,8 +112,8 @@ class ScrollUtils {
 		 * @param direction
 		 * @return
 		 */
-		public static KeysetScrollDirector of(KeysetScrollPosition.Direction direction) {
-			return direction == Direction.Forward ? forward : reverse;
+		public static KeysetScrollDirector of(ScrollPosition.Direction direction) {
+			return direction == Direction.FORWARD ? FORWARD : REVERSE;
 		}
 
 		public Document getSortObject(String idPropertyName, Query query) {
@@ -259,7 +259,7 @@ class ScrollUtils {
 	static <T> List<T> getLast(int count, List<T> list) {
 
 		if (count > 0 && list.size() > count) {
-			return list.subList(list.size() - (count), list.size());
+			return list.subList(list.size() - count, list.size());
 		}
 
 		return list;
