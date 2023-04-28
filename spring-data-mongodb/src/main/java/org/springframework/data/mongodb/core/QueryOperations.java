@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -66,6 +67,7 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link QueryOperations} centralizes common operations required before an operation is actually ready to be executed.
@@ -567,6 +569,16 @@ class QueryOperations {
 			if (query.getSkip() > 0) {
 				options.skip((int) query.getSkip());
 			}
+
+			if(query.getMeta().hasValues()) {
+				if(query.getMeta().getMaxTimeMsec() != null && query.getMeta().getMaxTimeMsec() > 0) {
+					options.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+				}
+				if(StringUtils.hasText(query.getMeta().getComment())) {
+					options.comment(query.getMeta().getComment());
+				}
+			}
+
 			if (StringUtils.hasText(query.getHint())) {
 
 				String hint = query.getHint();

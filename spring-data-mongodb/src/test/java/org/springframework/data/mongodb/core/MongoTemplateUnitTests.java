@@ -2300,6 +2300,26 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).countDocuments(any(Document.class), any());
 	}
 
+	@Test // GH-4374
+	void countConsidersMaxTimeMs() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").maxTimeMsec(5000), Human.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getMaxTime(TimeUnit.MILLISECONDS)).isEqualTo(5000);
+	}
+
+	@Test // GH-4374
+	void countPassesOnComment() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").comment("rocks!"), Human.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getComment()).isEqualTo(BsonUtils.simpleToBsonValue("rocks!"));
+	}
+
 	@Test // GH-3984
 	void templatePassesOnTimeSeriesOptionsWhenNoTypeGiven() {
 
