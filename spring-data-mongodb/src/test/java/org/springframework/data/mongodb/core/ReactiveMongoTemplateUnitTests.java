@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.util.BsonUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -1454,6 +1455,26 @@ public class ReactiveMongoTemplateUnitTests {
 		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }"), Person.class).subscribe();
 
 		verify(collection).countDocuments(any(Document.class), any());
+	}
+
+	@Test // GH-4374
+	void countConsidersMaxTimeMs() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").maxTimeMsec(5000), Person.class).subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getMaxTime(TimeUnit.MILLISECONDS)).isEqualTo(5000);
+	}
+
+	@Test // GH-4374
+	void countPassesOnComment() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").comment("rocks!"), Person.class).subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getComment()).isEqualTo(BsonUtils.simpleToBsonValue("rocks!"));
 	}
 
 	@Test // GH-2911
