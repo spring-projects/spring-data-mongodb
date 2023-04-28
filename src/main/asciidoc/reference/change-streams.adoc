@@ -25,16 +25,16 @@ The following example shows how to use Change Streams with `MessageListener` ins
 [source,java]
 ----
 MessageListenerContainer container = new DefaultMessageListenerContainer(template);
-container.start();                                                                                        <1>
+container.start();                                                                                              <1>
 
-MessageListener<ChangeStreamDocument<Document>, User> listener = System.out::println;                     <2>
-ChangeStreamRequestOptions options = new ChangeStreamRequestOptions("user", ChangeStreamOptions.empty()); <3>
+MessageListener<ChangeStreamDocument<Document>, User> listener = System.out::println;                           <2>
+ChangeStreamRequestOptions options = new ChangeStreamRequestOptions("db", "user", ChangeStreamOptions.empty()); <3>
 
-Subscription subscription = container.register(new ChangeStreamRequest<>(listener, options), User.class); <4>
+Subscription subscription = container.register(new ChangeStreamRequest<>(listener, options), User.class);       <4>
 
 // ...
 
-container.stop();                                                                                         <5>
+container.stop();                                                                                               <5>
 ----
 <1> Starting the container initializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
 <2> Define the listener called when a `Message` is received. The `Message#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
