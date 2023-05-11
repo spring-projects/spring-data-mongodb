@@ -272,7 +272,8 @@ public class MongoQueryMethodUnitTests {
 	void queryCreationForUpdateMethodFailsOnInvalidReturnType() throws Exception {
 
 		assertThatExceptionOfType(IllegalStateException.class) //
-				.isThrownBy(() -> queryMethod(InvalidUpdateMethodRepo.class, "findAndIncrementVisitsByFirstname", String.class).verify()) //
+				.isThrownBy(() -> queryMethod(InvalidUpdateMethodRepo.class, "findAndIncrementVisitsByFirstname", String.class)
+						.verify()) //
 				.withMessageContaining("Update") //
 				.withMessageContaining("numeric") //
 				.withMessageContaining("findAndIncrementVisitsByFirstname");
