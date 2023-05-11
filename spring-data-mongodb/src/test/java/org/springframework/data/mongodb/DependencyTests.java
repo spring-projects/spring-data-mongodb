@@ -15,12 +15,16 @@
  */
 package org.springframework.data.mongodb;
 
-import static de.schauderhaft.degraph.check.JCheck.*;
-import static org.hamcrest.MatcherAssert.*;
-
-import de.schauderhaft.degraph.configuration.NamedPattern;
-
-import org.junit.jupiter.api.Disabled;
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.library.dependencies.SliceAssignment;
+import com.tngtech.archunit.library.dependencies.SliceIdentifier;
+import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,49 +33,138 @@ import org.junit.jupiter.api.Test;
  * @author Jens Schauder
  * @author Oliver Gierke
  */
-@Disabled("Needs to be tansitioned to ArchUnit")
 class DependencyTests {
 
 	@Test
-	void noInternalPackageCycles() {
+	void cycleFree() {
 
-		assertThat(classpath() //
-				.noJars() //
-				.including("org.springframework.data.mongodb.**") //
-				.filterClasspath("*target/classes") //
-				.printOnFailure("degraph.graphml"), //
-				violationFree() //
-		);
+		JavaClasses importedClasses = new ClassFileImporter() //
+				.withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS) //
+				.withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_JARS) // we just analyze the code of this module.
+				.importPackages("org.springframework.data.mongodb").that( //
+						onlySpringData() //
+				);
+
+		ArchRule rule = SlicesRuleDefinition.slices() //
+				.matching("org.springframework.data.mongodb.(**)") //
+				.should() //
+				.beFreeOfCycles();
+
+		rule.check(importedClasses);
 	}
 
 	@Test
-	void onlyConfigMayUseRepository() {
+	void acrossModules() {
 
-		assertThat(classpath() //
-				.including("org.springframework.data.**") //
-				.filterClasspath("*target/classes") //
-				.printOnFailure("onlyConfigMayUseRepository.graphml") //
-				.withSlicing("slices", //
-						"**.(config).**", //
-						new NamedPattern("**.cdi.**", "config"), //
-						"**.(repository).**", //
-						new NamedPattern("**", "other"))
-				.allow("config", "repository", "other"), //
-				violationFree() //
-		);
+		JavaClasses importedClasses = new ClassFileImporter().withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+				.importPackages( //
+						"org.springframework.data.mongodb", // Spring Data Relational
+						"org.springframework.data" // Spring Data Commons
+				).that(onlySpringData());
+
+		ArchRule rule = SlicesRuleDefinition.slices() //
+				.assignedFrom(subModuleSlicing()) //
+				.should().beFreeOfCycles();
+
+		rule.check(importedClasses);
 	}
 
 	@Test
-	void commonsInternaly() {
+		// GH-1058
+	void testGetFirstPackagePart() {
 
-		assertThat(classpath() //
-				.noJars() //
-				.including("org.springframework.data.**") //
-				.excluding("org.springframework.data.mongodb.**") //
-				.filterClasspath("*target/classes") //
-				.printTo("commons.graphml"), //
-				violationFree() //
-		);
+		SoftAssertions.assertSoftly(softly -> {
+			softly.assertThat(getFirstPackagePart("a.b.c")).isEqualTo("a");
+			softly.assertThat(getFirstPackagePart("a")).isEqualTo("a");
+		});
 	}
 
+	@Test
+		// GH-1058
+	void testSubModule() {
+
+		SoftAssertions.assertSoftly(softly -> {
+			softly.assertThat(subModule("a.b", "a.b.c.d")).isEqualTo("c");
+			softly.assertThat(subModule("a.b", "a.b.c")).isEqualTo("c");
+			softly.assertThat(subModule("a.b", "a.b")).isEqualTo("");
+		});
+	}
+
+	private DescribedPredicate<JavaClass> onlySpringData() {
+
+		return new DescribedPredicate<>("Spring Data Classes") {
+			@Override
+			public boolean test(JavaClass input) {
+				return input.getPackageName().startsWith("org.springframework.data");
+			}
+		};
+	}
+
+	private DescribedPredicate<JavaClass> ignore(Class<?> type) {
+
+		return new DescribedPredicate<>("ignored class " + type.getName()) {
+			@Override
+			public boolean test(JavaClass input) {
+				return !input.getFullName().startsWith(type.getName());
+			}
+		};
+	}
+
+	private DescribedPredicate<JavaClass> ignorePackage(String type) {
+
+		return new DescribedPredicate<>("ignored class " + type) {
+			@Override
+			public boolean test(JavaClass input) {
+				return !input.getPackageName().equals(type);
+			}
+		};
+	}
+
+	private String getFirstPackagePart(String subpackage) {
+
+		int index = subpackage.indexOf(".");
+		if (index < 0) {
+			return subpackage;
+		}
+		return subpackage.substring(0, index);
+	}
+
+	private String subModule(String basePackage, String packageName) {
+
+		if (packageName.startsWith(basePackage) && packageName.length() > basePackage.length()) {
+
+			final int index = basePackage.length() + 1;
+			String subpackage = packageName.substring(index);
+			return getFirstPackagePart(subpackage);
+		}
+		return "";
+	}
+
+	private SliceAssignment subModuleSlicing() {
+		return new SliceAssignment() {
+
+			@Override
+			public SliceIdentifier getIdentifierOf(JavaClass javaClass) {
+
+				String packageName = javaClass.getPackageName();
+
+				String subModule = subModule("org.springframework.data.mongodb", packageName);
+				if (!subModule.isEmpty()) {
+					return SliceIdentifier.of(subModule);
+				}
+
+				subModule = subModule("org.springframework.data", packageName);
+				if (!subModule.isEmpty()) {
+					return SliceIdentifier.of(subModule);
+				}
+
+				return SliceIdentifier.ignore();
+			}
+
+			@Override
+			public String getDescription() {
+				return "Submodule";
+			}
+		};
+	}
 }
