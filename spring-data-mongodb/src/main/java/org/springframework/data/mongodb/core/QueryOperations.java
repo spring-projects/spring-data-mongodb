@@ -53,6 +53,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.ShardKey;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
@@ -67,7 +68,6 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link QueryOperations} centralizes common operations required before an operation is actually ready to be executed.
@@ -390,7 +390,7 @@ class QueryOperations {
 
 			for (Entry<String, Object> entry : fields.entrySet()) {
 
-				if (entry.getValue() instanceof MongoExpression) {
+				if (entry.getValue()instanceof MongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
@@ -566,16 +566,20 @@ class QueryOperations {
 			if (query.getLimit() > 0) {
 				options.limit(query.getLimit());
 			}
+
 			if (query.getSkip() > 0) {
 				options.skip((int) query.getSkip());
 			}
 
-			if(query.getMeta().hasValues()) {
-				if(query.getMeta().getMaxTimeMsec() != null && query.getMeta().getMaxTimeMsec() > 0) {
-					options.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+			Meta meta = query.getMeta();
+			if (meta.hasValues()) {
+
+				if (meta.hasMaxTime()) {
+					options.maxTime(meta.getRequiredMaxTimeMsec(), TimeUnit.MILLISECONDS);
 				}
-				if(StringUtils.hasText(query.getMeta().getComment())) {
-					options.comment(query.getMeta().getComment());
+
+				if (meta.hasComment()) {
+					options.comment(meta.getComment());
 				}
 			}
 

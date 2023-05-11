@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.repository.query;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
@@ -25,7 +24,6 @@ import org.bson.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -37,7 +35,6 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Aggregation}
@@ -84,7 +81,7 @@ abstract class AggregationUtils {
 
 		Meta meta = queryMethod.getQueryMetaAttributes();
 
-		if (StringUtils.hasText(meta.getComment())) {
+		if (meta.hasComment()) {
 			builder.comment(meta.getComment());
 		}
 
@@ -92,8 +89,8 @@ abstract class AggregationUtils {
 			builder.cursorBatchSize(meta.getCursorBatchSize());
 		}
 
-		if (meta.getMaxTimeMsec() != null && meta.getMaxTimeMsec() > 0) {
-			builder.maxTime(Duration.ofMillis(meta.getMaxTimeMsec()));
+		if (meta.hasMaxTime()) {
+			builder.maxTime(Duration.ofMillis(meta.getRequiredMaxTimeMsec()));
 		}
 
 		if (meta.getAllowDiskUse() != null) {
