@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -149,11 +150,14 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
 
+		MongoPersistentProperty property = getPropertyFor(path);
+
 		if (!isReference(path)) {
+			if(property != null && property.hasExplicitWriteTarget()) {
+				return converter.convertToMongoType(constant.getConstant(), TypeInformation.of(property.getFieldType()));
+			}
 			return super.convert(path, constant);
 		}
-
-		MongoPersistentProperty property = getPropertyFor(path);
 
 		if (property.isDocumentReference()) {
 			return converter.toDocumentPointer(constant.getConstant(), property).getPointer();

@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.QAddress;
@@ -244,6 +245,15 @@ public class SpringDataMongodbSerializerUnitTests {
 		Predicate predicate = QPerson.person.spiritAnimal.id.eq("007");
 
 		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal' : '007' }"));
+	}
+
+	@Test // GH-4359
+	void parsesValueToExplicitTargetFieldType() {
+
+		ObjectId oid = new ObjectId();
+		Predicate predicate = QWithCustomTargetTypeProperty.withCustomTargetTypeProperty.customFieldType.eq(oid.toHexString());
+
+		assertThat(serializer.handle(predicate)).isEqualTo(new Document("customFieldType", oid));
 	}
 
 	class Address {
