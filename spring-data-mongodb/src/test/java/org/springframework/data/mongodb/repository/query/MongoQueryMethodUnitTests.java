@@ -274,7 +274,8 @@ public class MongoQueryMethodUnitTests {
 	void queryCreationForUpdateMethodFailsOnInvalidReturnType() throws Exception {
 
 		assertThatExceptionOfType(IllegalStateException.class) //
-				.isThrownBy(() -> queryMethod(InvalidUpdateMethodRepo.class, "findAndIncrementVisitsByFirstname", String.class).verify()) //
+				.isThrownBy(() -> queryMethod(InvalidUpdateMethodRepo.class, "findAndIncrementVisitsByFirstname", String.class)
+						.verify()) //
 				.withMessageContaining("Update") //
 				.withMessageContaining("numeric") //
 				.withMessageContaining("findAndIncrementVisitsByFirstname");
@@ -283,7 +284,8 @@ public class MongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void readsCollationFromAtCollationAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtCollationByFirstname", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtCollationByFirstname",
+				String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
@@ -292,7 +294,8 @@ public class MongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void readsCollationFromAtQueryAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtQueryByFirstname", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtQueryByFirstname",
+				String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
@@ -301,7 +304,8 @@ public class MongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void annotatedCollationClashSelectsAtCollationAnnotationValue() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class,
+				"findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");

@@ -1927,7 +1927,7 @@ public class MongoTemplate
 		if (query.getLimit() > 0 && mapReduceOptions != null && mapReduceOptions.getLimit() == null) {
 			mapReduce = mapReduce.limit(query.getLimit());
 		}
-		if (query.getMeta().getMaxTimeMsec() != null) {
+		if (query.getMeta().hasMaxTime()) {
 			mapReduce = mapReduce.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 		}
 
@@ -3326,12 +3326,12 @@ public class MongoTemplate
 
 				if (meta.hasValues()) {
 
-					if (StringUtils.hasText(meta.getComment())) {
-						cursorToUse = cursorToUse.comment(meta.getComment());
+					if (meta.hasComment()) {
+						cursorToUse = cursorToUse.comment(meta.getRequiredComment());
 					}
 
-					if (meta.getMaxTimeMsec() != null) {
-						cursorToUse = cursorToUse.maxTime(meta.getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+					if (meta.hasMaxTime()) {
+						cursorToUse = cursorToUse.maxTime(meta.getRequiredMaxTimeMsec(), TimeUnit.MILLISECONDS);
 					}
 
 					if (meta.getCursorBatchSize() != null) {

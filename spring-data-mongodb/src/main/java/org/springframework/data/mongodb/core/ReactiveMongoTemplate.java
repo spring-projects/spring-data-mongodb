@@ -2078,8 +2078,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				publisher.sort(mappedSort);
 			}
 
-			if (filterQuery.getMeta().getMaxTimeMsec() != null) {
-				publisher.maxTime(filterQuery.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+			Meta meta = filterQuery.getMeta();
+			if (meta.hasMaxTime()) {
+				publisher.maxTime(meta.getRequiredMaxTimeMsec(), TimeUnit.MILLISECONDS);
 			}
 
 			if (filterQuery.getLimit() > 0 || (options.getLimit() != null)) {
@@ -3222,12 +3223,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 				if (meta.hasValues()) {
 
-					if (StringUtils.hasText(meta.getComment())) {
-						findPublisherToUse = findPublisherToUse.comment(meta.getComment());
+					if (meta.hasComment()) {
+						findPublisherToUse = findPublisherToUse.comment(meta.getRequiredComment());
 					}
 
-					if (meta.getMaxTimeMsec() != null) {
-						findPublisherToUse = findPublisherToUse.maxTime(meta.getMaxTimeMsec(), TimeUnit.MILLISECONDS);
+					if (meta.hasMaxTime()) {
+						findPublisherToUse = findPublisherToUse.maxTime(meta.getRequiredMaxTimeMsec(), TimeUnit.MILLISECONDS);
 					}
 
 					if (meta.getCursorBatchSize() != null) {
