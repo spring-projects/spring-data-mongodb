@@ -1571,6 +1571,39 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return newDocument;
 	}
 
+	@Nullable
+	@Override
+	public Object convertToMongoType(@Nullable Object obj, MongoPersistentProperty property) {
+
+		PersistentPropertyAccessor accessor = new MapPersistentPropertyAccessor();
+		accessor.setProperty(property, obj);
+
+		Document newDocument = new Document();
+		DocumentAccessor dbObjectAccessor = new DocumentAccessor(newDocument);
+
+		if (property.isIdProperty() || !property.isWritable()) {
+			return obj;
+		}
+		if (property.isAssociation()) {
+
+			writeAssociation(property.getRequiredAssociation(), accessor, dbObjectAccessor);
+			return dbObjectAccessor.get(property);
+		}
+
+		Object value = obj;
+
+		if (value == null) {
+			if (property.writeNullValues()) {
+				dbObjectAccessor.put(property, null);
+			}
+		} else if (!conversions.isSimpleType(value.getClass())) {
+			writePropertyInternal(value, dbObjectAccessor, property, accessor);
+		} else {
+			writeSimpleInternal(value, newDocument, property, accessor);
+		}
+		return dbObjectAccessor.get(property);
+	}
+
 	// TODO: hide in 4.0
 	public List<Object> maybeConvertList(Iterable<?> source, @Nullable TypeInformation<?> typeInformation) {
 

@@ -10,6 +10,10 @@
 	<appender name="no-op" class="ch.qos.logback.core.helpers.NOPAppender" />
 
 	<!--
+	<logger name="org.mongodb.driver.protocol" level="DEBUG" />
+	-->
+
+	<!--
 	<logger name="org.springframework" level="debug" />
 	 -->
 

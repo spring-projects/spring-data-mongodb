@@ -36,9 +36,11 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.DBRef;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Custom {@link ParameterAccessor} that uses a {@link MongoWriter} to serialize parameters into Mongo format.
@@ -91,7 +93,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	public Object getBindableValue(int index) {
-		return getConvertedValue(delegate.getBindableValue(index), null);
+		return getConvertedValue(delegate.getBindableValue(index), (TypeInformation<?>) null);
 	}
 
 	@Override
@@ -127,6 +129,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	@Nullable
 	private Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
 		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
+	}
+
+
+	public Object getConvertedValue(Object value, MongoPersistentProperty property) {
+		return writer.convertToMongoType(value, property);
 	}
 
 	public boolean hasBindableNullValue() {

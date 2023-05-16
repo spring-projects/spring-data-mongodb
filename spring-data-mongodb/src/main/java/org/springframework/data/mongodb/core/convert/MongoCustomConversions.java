@@ -42,12 +42,15 @@ import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.PropertyValueConverterRegistrar;
 import org.springframework.data.convert.SimplePropertyValueConversions;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * Value object to capture custom conversion. {@link MongoCustomConversions} also act as factory for
@@ -331,9 +334,40 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				svc.init();
 			}
 
+			// Move to data-commons?
+			PropertyValueConversions pvc = new PropertyValueConversions() {
+
+				@Override
+				public boolean hasValueConverter(PersistentProperty<?> property) {
+					return propertyValueConversions.hasValueConverter(property);
+				}
+
+				@Override
+				public <DV, SV, P extends PersistentProperty<P>, VCC extends ValueConversionContext<P>> PropertyValueConverter<DV, SV, VCC> getValueConverter(
+						P property) {
+
+					return new PropertyValueConverter<DV, SV, VCC>() {
+
+						@Nullable
+						@Override
+						public DV read(SV value, VCC context) {
+							return (DV) propertyValueConversions.getValueConverter(property).read(value, context);
+						}
+
+						@Nullable
+						@Override
+						public SV write(DV value, VCC context) {
+							if (ClassUtils.isAssignable(property.getType(), value.getClass())) {
+								return (SV) propertyValueConversions.getValueConverter(property).write(value, context);
+							}
+							return (SV) value;
+						}
+					};
+				}
+			};
+
 			if (!useNativeDriverJavaTimeCodecs) {
-				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true,
-						this.propertyValueConversions);
+				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true, pvc);
 			}
 
 			/*
@@ -358,7 +392,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				}
 
 				return true;
-			}, this.propertyValueConversions);
+			}, pvc);
 		}
 
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {

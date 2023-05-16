@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.ReversingValueConverter;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -77,6 +79,9 @@ public class Person extends Contact {
 	User unwrappedUser;
 
 	@DocumentReference User spiritAnimal;
+
+	@ValueConverter(ReversingValueConverter.class)
+	String nickName;
 
 	int visits;
 
@@ -323,6 +328,14 @@ public class Person extends Contact {
 
 	public void setSpiritAnimal(User spiritAnimal) {
 		this.spiritAnimal = spiritAnimal;
+	}
+
+	public String getNickName() {
+		return nickName;
+	}
+
+	public void setNickName(String nickName) {
+		this.nickName = nickName;
 	}
 
 	@Override

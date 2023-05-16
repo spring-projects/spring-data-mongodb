@@ -1637,4 +1637,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(repository.findById(dave.getId()).map(Person::getShippingAddresses))
 				.contains(Collections.singleton(address));
 	}
+
+	@Test // GH-4346
+	@DirtiesState
+	void findCreatingRegexWithValueConverterWorks() {
+
+		Person bart = new Person("bart", "simpson");
+		bart.setNickName("bartman");
+
+		operations.save(bart);
+
+		List<Person> result = repository.findByNickNameContains("artma");
+
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getId().equals(bart.getId()));
+	}
 }

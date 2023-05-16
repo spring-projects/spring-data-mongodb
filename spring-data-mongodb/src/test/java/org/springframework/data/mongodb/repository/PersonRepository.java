@@ -465,4 +465,5 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findBySpiritAnimal(User user);
 
+	List<Person> findByNickNameContains(String nickName);
 }

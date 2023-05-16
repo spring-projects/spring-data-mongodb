@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.convert;
+package org.springframework.data.mongodb;
 
+import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.convert.MongoValueConverter;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  */
-class ReversingValueConverter implements MongoValueConverter<String, String> {
+public class ReversingValueConverter implements MongoValueConverter<String, String> {
 
 	@Nullable
 	@Override

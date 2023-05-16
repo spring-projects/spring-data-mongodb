@@ -59,6 +59,11 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	@Nullable
 	Object convertToMongoType(@Nullable Object obj, @Nullable TypeInformation<?> typeInformation);
 
+	@Nullable
+	default Object convertToMongoType(@Nullable Object obj, MongoPersistentProperty property) {
+		return convertToMongoType(obj, property.getTypeInformation());
+	}
+
 	default Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity<?> entity) {
 		return convertToMongoType(obj, entity.getTypeInformation());
 	}

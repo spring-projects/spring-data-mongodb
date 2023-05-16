@@ -29,6 +29,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
@@ -40,7 +41,9 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoValueConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -57,6 +60,7 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.Nullable;
 
 /**
  * Unit test for {@link MongoQueryCreator}.
@@ -658,6 +662,16 @@ class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery()).isEqualTo(query(where("location").nearSphere(point).maxDistance(1000.0D)));
 	}
 
+	@Test // GH-4346
+	void likeQueriesShouldApplyPropertyValueConverterWhenCreatingRegex() {
+
+		PartTree tree = new PartTree("findByTextStartingWith", WithValueConverter.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "spring"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query).isEqualTo(query(where("text").regex("^gnirps")));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -692,5 +706,35 @@ class MongoQueryCreatorUnitTests {
 		String street;
 
 		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) Point geo;
+	}
+
+	static class WithValueConverter {
+
+		@ValueConverter(ReversingValueConverter.class)
+		String text;
+	}
+
+	static class ReversingValueConverter implements MongoValueConverter<String, String> {
+
+		@Nullable
+		@Override
+		public String read(@Nullable String value, MongoConversionContext context) {
+			return reverse(value);
+		}
+
+		@Nullable
+		@Override
+		public String write(@Nullable String value, MongoConversionContext context) {
+			return reverse(value);
+		}
+
+		private String reverse(String source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			return new StringBuilder(source).reverse().toString();
+		}
 	}
 }

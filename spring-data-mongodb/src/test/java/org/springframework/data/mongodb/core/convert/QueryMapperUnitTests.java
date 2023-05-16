@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.bson.BsonRegularExpression;
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
@@ -42,6 +43,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.ReversingValueConverter;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
@@ -1453,6 +1455,15 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", "value"), context.getPersistentEntity(WithPropertyValueConverter.class));
 		assertThat(mappedObject).isEqualTo(new org.bson.Document("text", "eulav"));
+	}
+
+	@Test // GH-4346
+	void ignoresValueConverterForNonMatchingType() {
+
+		org.bson.Document source = new org.bson.Document("text", new BsonRegularExpression("value"));
+		org.bson.Document mappedObject = mapper.getMappedObject(source, context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo(source);
 	}
 
 	@Test // GH-2750

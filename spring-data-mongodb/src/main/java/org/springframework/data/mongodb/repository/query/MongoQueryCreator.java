@@ -68,7 +68,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 
-	private final MongoParameterAccessor accessor;
+	private final ConvertingParameterAccessor accessor;
 	private final MappingContext<?, MongoPersistentProperty> context;
 	private final boolean isGeoNearQuery;
 
@@ -343,6 +343,17 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 			throw new IllegalArgumentException(String.format(
 					"Argument for creating $regex pattern for property '%s' must not be null", part.getProperty().getSegment()));
+		}
+
+		try {
+			PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = context.getPersistentPropertyPath(part.getProperty());
+			MongoPersistentProperty leafProperty = persistentPropertyPath.getLeafProperty();/// maybe a call back here
+			if (leafProperty != null) {
+				Object convertedValue = accessor.getConvertedValue(value.toString(), leafProperty);
+				return criteria.regex(toLikeRegex(convertedValue.toString(), part), toRegexOptions(part));
+			}
+		} catch (Exception ex) {
+			System.err.print(ex);
 		}
 
 		return criteria.regex(toLikeRegex(value.toString(), part), toRegexOptions(part));
