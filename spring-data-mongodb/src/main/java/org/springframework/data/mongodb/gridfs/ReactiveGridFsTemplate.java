@@ -27,7 +27,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
-
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -37,6 +36,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -61,9 +61,8 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSUploadPublisher;
  */
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
 
-	private final ReactiveMongoDatabaseFactory dbFactory;
 	private final DataBufferFactory dataBufferFactory;
-	private final @Nullable String bucket;
+	private Mono<GridFSBucket> bucketSupplier;
 
 	/**
 	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link ReactiveMongoDatabaseFactory} and
@@ -100,15 +99,27 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 */
 	public ReactiveGridFsTemplate(DataBufferFactory dataBufferFactory, ReactiveMongoDatabaseFactory dbFactory,
 			MongoConverter converter, @Nullable String bucket) {
+		this(converter, Mono.defer(Lazy.of(() -> doGetBucket(dbFactory, bucket))), dataBufferFactory);
+	}
+
+	/**
+	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link MongoConverter}, {@link Mono} emitting a
+	 * {@link ReactiveMongoDatabaseFactory} and {@link DataBufferFactory}.
+	 * 
+	 * @param converter must not be {@literal null}.
+	 * @param gridFSBucket must not be {@literal null}.
+	 * @param dataBufferFactory must not be {@literal null}.
+	 * @since 4.2
+	 */
+	public ReactiveGridFsTemplate(MongoConverter converter, Mono<GridFSBucket> gridFSBucket,
+			DataBufferFactory dataBufferFactory) {
 
 		super(converter);
 
 		Assert.notNull(dataBufferFactory, "DataBufferFactory must not be null");
-		Assert.notNull(dbFactory, "ReactiveMongoDatabaseFactory must not be null");
 
+		this.bucketSupplier = gridFSBucket;
 		this.dataBufferFactory = dataBufferFactory;
-		this.dbFactory = dbFactory;
-		this.bucket = bucket;
 	}
 
 	@Override
@@ -247,9 +258,13 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return doGetBucket().flatMapMany(callback::doInBucket);
 	}
 
-	protected Mono<GridFSBucket> doGetBucket() {
+	static Mono<GridFSBucket> doGetBucket(ReactiveMongoDatabaseFactory dbFactory, @Nullable String bucket) {
 		return dbFactory.getMongoDatabase()
 				.map(db -> bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket));
+	}
+
+	protected Mono<GridFSBucket> doGetBucket() {
+		return bucketSupplier;
 	}
 
 	/**
