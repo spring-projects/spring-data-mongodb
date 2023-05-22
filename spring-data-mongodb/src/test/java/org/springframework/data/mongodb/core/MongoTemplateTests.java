@@ -39,13 +39,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -67,6 +65,8 @@ import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
@@ -1785,6 +1785,30 @@ public class MongoTemplateTests {
 
 		assertThat(result).hasSize(1);
 		assertThat(result.get(0).date).isNotNull();
+	}
+
+	@Test // GH-4390
+	void nativeDriverDateTimeCodecShouldBeApplied/*when configured*/() {
+
+		MongoTestTemplate ops = new MongoTestTemplate(cfg -> {
+			cfg.configureConversion(conversion -> {
+				conversion.customConversions(
+						MongoCustomConversions.create(MongoConverterConfigurationAdapter::useNativeDriverJavaTimeCodecs));
+			});
+		});
+
+		TypeWithDate source = new TypeWithDate();
+		source.id = "id-1";
+		source.date = Date.from(Instant.now());
+
+		ops.save(source);
+
+		Object dbDate = ops.execute(TypeWithDate.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first().get("date"));
+
+		TypeWithDate target = ops.findOne(query(where("date").is(source.date)), TypeWithDate.class);
+
+		assertThat(target.date).isEqualTo(source.date).isEqualTo(dbDate);
 	}
 
 	@Test // DATAMONGO-540
