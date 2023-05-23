@@ -104,11 +104,23 @@
 			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-kotlin-sync</artifactId>
+			<version>${mongo}</version>
+			<optional>true</optional>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-reactivestreams</artifactId>
 			<version>${mongo.reactivestreams}</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-kotlin-coroutine</artifactId>
+			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
 
