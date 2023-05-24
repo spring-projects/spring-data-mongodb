@@ -25,12 +25,8 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -119,6 +115,21 @@ class FilterExpressionUnitTests {
 				"}");
 
 		assertThat($filter).isEqualTo(new Document(expected));
+	}
+
+	@Test // GH-4394
+	void filterShouldAcceptExpression() {
+
+		Document $filter = ArrayOperators.arrayOf(ObjectOperators.valueOf("data.metadata").toArray()).filter().as("item")
+				.by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		Document expected = Document.parse("{ $filter : {" + //
+				"input: { $objectToArray: \"$data.metadata\" }," + //
+				"as: \"item\"," + //
+				"cond: { $gt: [ \"$$item.price\", \"$field-1\" ] }" + //
+				"}}");
+
+		assertThat($filter).isEqualTo(expected);
 	}
 
 	private Document extractFilterOperatorFromDocument(Document source) {
