@@ -214,6 +214,10 @@ public class ArrayOperators {
 				return Filter.filter(fieldReference);
 			}
 
+			if(usesExpression()) {
+				return Filter.filter(expression);
+			}
+
 			Assert.state(values != null, "Values must not be null");
 			return Filter.filter(new ArrayList<>(values));
 		}
@@ -650,6 +654,19 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Set the {@link AggregationExpression} resolving to an arry to apply the {@code $filter} to.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 4.2
+		 */
+		public static AsBuilder filter(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Field must not be null");
+			return new FilterExpressionBuilder().filter(expression);
+		}
+
+		/**
 		 * Set the {@literal values} to apply the {@code $filter} to.
 		 *
 		 * @param values must not be {@literal null}.
@@ -681,7 +698,13 @@ public class ArrayOperators {
 		}
 
 		private Object getMappedInput(AggregationOperationContext context) {
-			return input instanceof Field field ? context.getReference(field).toString() : input;
+			if(input instanceof Field field) {
+				return context.getReference(field).toString();
+			}
+			if(input instanceof AggregationExpression expression) {
+				return expression.toDocument(context);
+			}
+			return input;
 		}
 
 		private Object getMappedCondition(AggregationOperationContext context) {
@@ -715,6 +738,15 @@ public class ArrayOperators {
 			 * @return
 			 */
 			AsBuilder filter(Field field);
+
+			/**
+			 * Set the {@link AggregationExpression} resolving to an array to apply the {@code $filter} to.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 * @since 4.2
+			 */
+			AsBuilder filter(AggregationExpression expression);
 		}
 
 		/**
@@ -794,6 +826,14 @@ public class ArrayOperators {
 
 				Assert.notNull(field, "Field must not be null");
 				filter.input = field;
+				return this;
+			}
+
+			@Override
+			public AsBuilder filter(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null");
+				filter.input = expression;
 				return this;
 			}
 
