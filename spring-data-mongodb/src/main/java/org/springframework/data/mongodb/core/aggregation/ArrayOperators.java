@@ -79,7 +79,7 @@ public class ArrayOperators {
 
 		private final @Nullable String fieldReference;
 		private final @Nullable AggregationExpression expression;
-		private final @Nullable Collection values;
+		private final @Nullable Collection<?> values;
 
 		/**
 		 * Creates new {@link ArrayOperatorFactory} for given {@literal fieldReference}.
@@ -214,6 +214,10 @@ public class ArrayOperators {
 				return Filter.filter(fieldReference);
 			}
 
+			if (usesExpression()) {
+				return Filter.filter(expression);
+			}
+
 			Assert.state(values != null, "Values must not be null");
 			return Filter.filter(new ArrayList<>(values));
 		}
@@ -317,7 +321,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort order}.
+		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort
+		 * order}.
 		 *
 		 * @return new instance of {@link SortArray}.
 		 * @since 4.0
@@ -397,8 +402,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that return the last element in the given array.
-		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+		 * Creates new {@link AggregationExpression} that return the last element in the given array. <strong>NOTE:</strong>
+		 * Requires MongoDB 4.4 or later.
 		 *
 		 * @return new instance of {@link Last}.
 		 * @since 3.4
@@ -650,6 +655,19 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Set the {@link AggregationExpression} resolving to an arry to apply the {@code $filter} to.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 4.2
+		 */
+		public static AsBuilder filter(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Field must not be null");
+			return new FilterExpressionBuilder().filter(expression);
+		}
+
+		/**
 		 * Set the {@literal values} to apply the {@code $filter} to.
 		 *
 		 * @param values must not be {@literal null}.
@@ -681,7 +699,16 @@ public class ArrayOperators {
 		}
 
 		private Object getMappedInput(AggregationOperationContext context) {
-			return input instanceof Field field ? context.getReference(field).toString() : input;
+
+			if (input instanceof Field field) {
+				return context.getReference(field).toString();
+			}
+
+			if (input instanceof AggregationExpression expression) {
+				return expression.toDocument(context);
+			}
+
+			return input;
 		}
 
 		private Object getMappedCondition(AggregationOperationContext context) {
@@ -715,6 +742,15 @@ public class ArrayOperators {
 			 * @return
 			 */
 			AsBuilder filter(Field field);
+
+			/**
+			 * Set the {@link AggregationExpression} resolving to an array to apply the {@code $filter} to.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 * @since 4.1.1
+			 */
+			AsBuilder filter(AggregationExpression expression);
 		}
 
 		/**
@@ -794,6 +830,14 @@ public class ArrayOperators {
 
 				Assert.notNull(field, "Field must not be null");
 				filter.input = field;
+				return this;
+			}
+
+			@Override
+			public AsBuilder filter(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null");
+				filter.input = expression;
 				return this;
 			}
 
@@ -1333,7 +1377,7 @@ public class ArrayOperators {
 							Assert.notNull(expressions, "PropertyExpressions must not be null");
 
 							return new Reduce(Fields.field(fieldReference), initialValue,
-									Arrays.<AggregationExpression>asList(expressions));
+									Arrays.<AggregationExpression> asList(expressions));
 						}
 					};
 				}
@@ -1690,7 +1734,7 @@ public class ArrayOperators {
 	 * @author Christoph Strobl
 	 * @author Shashank Sharma
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
 	 * @since 2.2
 	 */
 	public static class In extends AbstractAggregationExpression {
@@ -1779,7 +1823,7 @@ public class ArrayOperators {
 	 *
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
 	 * @since 2.1
 	 */
 	public static class ArrayToObject extends AbstractAggregationExpression {
@@ -1976,7 +2020,7 @@ public class ArrayOperators {
 
 		/**
 		 * Set the order to put elements in.
-		 * 
+		 *
 		 * @param sort must not be {@literal null}.
 		 * @return new instance of {@link SortArray}.
 		 */
