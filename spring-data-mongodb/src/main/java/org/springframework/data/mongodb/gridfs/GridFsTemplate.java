@@ -87,11 +87,14 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		this.bucket = bucket;
 	}
 
+	@Override
 	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata) {
 		return store(content, filename, contentType, toDocument(metadata));
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T store(GridFsObject<T, InputStream> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
@@ -110,6 +113,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return upload.getFileId();
 	}
 
+	@Override
 	public GridFSFindIterable find(Query query) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -130,10 +134,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return iterable;
 	}
 
+	@Override
 	public GridFSFile findOne(Query query) {
 		return find(query).first();
 	}
 
+	@Override
 	public void delete(Query query) {
 
 		for (GridFSFile gridFSFile : find(query)) {
@@ -141,10 +147,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		}
 	}
 
+	@Override
 	public ClassLoader getClassLoader() {
 		return dbFactory.getClass().getClassLoader();
 	}
 
+	@Override
 	public GridFsResource getResource(String location) {
 
 		return Optional.ofNullable(findOne(query(whereFilename().is(location)))) //
@@ -152,6 +160,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 				.orElseGet(() -> GridFsResource.absent(location));
 	}
 
+	@Override
 	public GridFsResource getResource(GridFSFile file) {
 
 		Assert.notNull(file, "GridFSFile must not be null");
@@ -159,6 +168,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}
 
+	@Override
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
@@ -183,6 +193,8 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	}
 
 	private GridFSBucket getGridFs() {
+
+		Assert.notNull(dbFactory, "MongoDatabaseFactory must not be null");
 
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
