@@ -3,7 +3,6 @@
 
 MongoDB supports storing binary files inside its filesystem, GridFS. Spring Data MongoDB provides a `GridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate`, to let you interact with the filesystem. You can set up a `GridFsTemplate` instance by handing it a `MongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
 
-
 ====
 .Java
 [source,java,role="primary"]
@@ -82,7 +81,7 @@ class GridFsClient {
 
   @Test
   public void findFilesInGridFs() {
-    GridFSFindIterable result = operations.find(query(whereFilename().is("filename.txt")))
+    GridFSFindIterable result = operations.find(query(whereFilename().is("filename.txt")));
   }
 }
 ----
@@ -110,3 +109,7 @@ class GridFsClient {
 ====
 
 `GridFsOperations` extends `ResourcePatternResolver` and lets the `GridFsTemplate` (for example) to be plugged into an `ApplicationContext` to read Spring Config files from MongoDB database.
+
+NOTE: By default, `GridFsTemplate` obtains `GridFSBucket` once upon the first GridFS interaction.
+After that, the Template instance reuses the cached bucket.
+To use different buckets, from the same Template instance use the constructor accepting `Supplier<GridFSBucket>`.

@@ -62,11 +62,16 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSUploadPublisher;
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
 
 	private final DataBufferFactory dataBufferFactory;
-	private Mono<GridFSBucket> bucketSupplier;
+	private final Mono<GridFSBucket> bucketSupplier;
 
 	/**
 	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link ReactiveMongoDatabaseFactory} and
 	 * {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from
+	 * {@link ReactiveMongoDatabaseFactory#getMongoDatabase() MongoDatabase}. Use
+	 * {@link #ReactiveGridFsTemplate(MongoConverter, Mono, DataBufferFactory)} if you want to use different buckets from
+	 * the same Template instance.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
@@ -78,10 +83,15 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	/**
 	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link ReactiveMongoDatabaseFactory} and
 	 * {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from
+	 * {@link ReactiveMongoDatabaseFactory#getMongoDatabase() MongoDatabase}. Use
+	 * {@link #ReactiveGridFsTemplate(MongoConverter, Mono, DataBufferFactory)} if you want to use different buckets from
+	 * the same Template instance.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
-	 * @param bucket
+	 * @param bucket can be {@literal null}.
 	 */
 	public ReactiveGridFsTemplate(ReactiveMongoDatabaseFactory dbFactory, MongoConverter converter,
 			@Nullable String bucket) {
@@ -91,11 +101,16 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	/**
 	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link DataBufferFactory},
 	 * {@link ReactiveMongoDatabaseFactory} and {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from
+	 * {@link ReactiveMongoDatabaseFactory#getMongoDatabase() MongoDatabase}. Use
+	 * {@link #ReactiveGridFsTemplate(MongoConverter, Mono, DataBufferFactory)} if you want to use different buckets from
+	 * the same Template instance.
 	 *
 	 * @param dataBufferFactory must not be {@literal null}.
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
-	 * @param bucket
+	 * @param bucket can be {@literal null}.
 	 */
 	public ReactiveGridFsTemplate(DataBufferFactory dataBufferFactory, ReactiveMongoDatabaseFactory dbFactory,
 			MongoConverter converter, @Nullable String bucket) {
@@ -105,7 +120,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	/**
 	 * Creates a new {@link ReactiveGridFsTemplate} using the given {@link MongoConverter}, {@link Mono} emitting a
 	 * {@link ReactiveMongoDatabaseFactory} and {@link DataBufferFactory}.
-	 * 
+	 *
 	 * @param converter must not be {@literal null}.
 	 * @param gridFSBucket must not be {@literal null}.
 	 * @param dataBufferFactory must not be {@literal null}.
@@ -116,6 +131,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		super(converter);
 
+		Assert.notNull(gridFSBucket, "GridFSBucket Mono must not be null");
 		Assert.notNull(dataBufferFactory, "DataBufferFactory must not be null");
 
 		this.bucketSupplier = gridFSBucket;
@@ -128,6 +144,8 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return store(content, filename, contentType, toDocument(metadata));
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public <T> Mono<T> store(GridFsObject<T, Publisher<DataBuffer>> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
@@ -258,13 +276,16 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return doGetBucket().flatMapMany(callback::doInBucket);
 	}
 
-	static Mono<GridFSBucket> doGetBucket(ReactiveMongoDatabaseFactory dbFactory, @Nullable String bucket) {
-		return dbFactory.getMongoDatabase()
-				.map(db -> bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket));
-	}
-
 	protected Mono<GridFSBucket> doGetBucket() {
 		return bucketSupplier;
+	}
+
+	private static Mono<GridFSBucket> doGetBucket(ReactiveMongoDatabaseFactory dbFactory, @Nullable String bucket) {
+
+		Assert.notNull(dbFactory, "ReactiveMongoDatabaseFactory must not be null");
+
+		return dbFactory.getMongoDatabase()
+				.map(db -> bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket));
 	}
 
 	/**
@@ -289,6 +310,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 			this.sortObject = sortObject;
 		}
 
+		@Override
 		public GridFSFindPublisher doInBucket(GridFSBucket bucket) {
 
 			GridFSFindPublisher findPublisher = bucket.find(queryObject).sort(sortObject);
@@ -326,21 +348,8 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		}
 	}
 
-	private static class UploadCallback implements ReactiveBucketCallback<Void> {
-
-		private final BsonValue fileId;
-		private final String filename;
-		private final Publisher<ByteBuffer> source;
-		private final GridFSUploadOptions uploadOptions;
-
-		public UploadCallback(BsonValue fileId, String filename, Publisher<ByteBuffer> source,
-				GridFSUploadOptions uploadOptions) {
-
-			this.fileId = fileId;
-			this.filename = filename;
-			this.source = source;
-			this.uploadOptions = uploadOptions;
-		}
+	private record UploadCallback(BsonValue fileId, String filename, Publisher<ByteBuffer> source,
+			GridFSUploadOptions uploadOptions) implements ReactiveBucketCallback<Void> {
 
 		@Override
 		public GridFSUploadPublisher<Void> doInBucket(GridFSBucket bucket) {
@@ -348,19 +357,8 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		}
 	}
 
-	private static class AutoIdCreatingUploadCallback implements ReactiveBucketCallback<ObjectId> {
-
-		private final String filename;
-		private final Publisher<ByteBuffer> source;
-		private final GridFSUploadOptions uploadOptions;
-
-		public AutoIdCreatingUploadCallback(String filename, Publisher<ByteBuffer> source,
-				GridFSUploadOptions uploadOptions) {
-
-			this.filename = filename;
-			this.source = source;
-			this.uploadOptions = uploadOptions;
-		}
+	private record AutoIdCreatingUploadCallback(String filename, Publisher<ByteBuffer> source,
+			GridFSUploadOptions uploadOptions) implements ReactiveBucketCallback<ObjectId> {
 
 		@Override
 		public GridFSUploadPublisher<ObjectId> doInBucket(GridFSBucket bucket) {
@@ -368,13 +366,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		}
 	}
 
-	private static class DeleteCallback implements ReactiveBucketCallback<Void> {
-
-		private final BsonValue id;
-
-		public DeleteCallback(BsonValue id) {
-			this.id = id;
-		}
+	private record DeleteCallback(BsonValue id) implements ReactiveBucketCallback<Void> {
 
 		@Override
 		public Publisher<Void> doInBucket(GridFSBucket bucket) {

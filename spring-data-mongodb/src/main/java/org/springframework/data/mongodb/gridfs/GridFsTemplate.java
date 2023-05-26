@@ -58,10 +58,14 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  */
 public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOperations, ResourcePatternResolver {
 
-	private Supplier<GridFSBucket> bucketSupplier;
+	private final Supplier<GridFSBucket> bucketSupplier;
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from {@link MongoDatabaseFactory#getMongoDatabase()
+	 * MongoDatabase}. Use {@link #GridFsTemplate(MongoConverter, Supplier)} if you want to use different buckets from the
+	 * same Template instance.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
@@ -72,6 +76,10 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from {@link MongoDatabaseFactory#getMongoDatabase()
+	 * MongoDatabase}. Use {@link #GridFsTemplate(MongoConverter, Supplier)} if you want to use different buckets from the
+	 * same Template instance.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
@@ -93,14 +101,19 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 		super(converter);
 
+		Assert.notNull(gridFSBucket, "GridFSBucket supplier must not be null");
+
 		this.bucketSupplier = gridFSBucket;
 	}
 
+	@Override
 	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata) {
 		return store(content, filename, contentType, toDocument(metadata));
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T store(GridFsObject<T, InputStream> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
@@ -119,6 +132,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return upload.getFileId();
 	}
 
+	@Override
 	public GridFSFindIterable find(Query query) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -139,10 +153,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return iterable;
 	}
 
+	@Override
 	public GridFSFile findOne(Query query) {
 		return find(query).first();
 	}
 
+	@Override
 	public void delete(Query query) {
 
 		for (GridFSFile gridFSFile : find(query)) {
@@ -150,10 +166,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		}
 	}
 
+	@Override
 	public ClassLoader getClassLoader() {
-		return this.getClassLoader();
+		return null;
 	}
 
+	@Override
 	public GridFsResource getResource(String location) {
 
 		return Optional.ofNullable(findOne(query(whereFilename().is(location)))) //
@@ -161,6 +179,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 				.orElseGet(() -> GridFsResource.absent(location));
 	}
 
+	@Override
 	public GridFsResource getResource(GridFSFile file) {
 
 		Assert.notNull(file, "GridFSFile must not be null");
@@ -168,6 +187,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}
 
+	@Override
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
@@ -191,11 +211,13 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return new GridFsResource[] { getResource(locationPattern) };
 	}
 
-	GridFSBucket getGridFs() {
+	private GridFSBucket getGridFs() {
 		return this.bucketSupplier.get();
 	}
 
 	private static GridFSBucket getGridFs(MongoDatabaseFactory dbFactory, @Nullable String bucket) {
+
+		Assert.notNull(dbFactory, "MongoDatabaseFactory must not be null");
 
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
