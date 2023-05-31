@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -232,6 +233,53 @@ public class MongoTemplateDbRefTests {
 		assertThat(target.getValue()).containsExactlyInAnyOrder(one, two);
 	}
 
+	@Test // GH-2191
+	void shouldAllowToSliceCollectionOfDbRefs() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		JustSomeType two = new JustSomeType();
+		two.value = "two";
+
+		template.insertAll(Arrays.asList(one, two));
+
+		WithCollectionDbRef source = new WithCollectionDbRef();
+		source.refs = Arrays.asList(one, two);
+
+		template.save(source);
+
+		Query theQuery = query(where("id").is(source.id));
+		theQuery.fields().slice("refs", 1, 1);
+
+		WithCollectionDbRef target = template.findOne(theQuery, WithCollectionDbRef.class);
+		assertThat(target.getRefs()).containsExactly(two);
+	}
+
+	@Test // GH-2191
+	void shouldAllowToSliceCollectionOfLazyDbRefs() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		JustSomeType two = new JustSomeType();
+		two.value = "two";
+
+		template.insertAll(Arrays.asList(one, two));
+
+		WithCollectionDbRef source = new WithCollectionDbRef();
+		source.lazyrefs = Arrays.asList(one, two);
+
+		template.save(source);
+
+		Query theQuery = query(where("id").is(source.id));
+		theQuery.fields().slice("lazyrefs", 1, 1);
+
+		WithCollectionDbRef target = template.findOne(theQuery, WithCollectionDbRef.class);
+		LazyLoadingTestUtils.assertProxyIsResolved(target.lazyrefs, false);
+		assertThat(target.getLazyrefs()).containsExactly(two);
+	}
+
 	@Data
 	@Document("cycle-with-different-type-root")
 	static class RefCycleLoadingIntoDifferentTypeRoot {
@@ -262,6 +310,16 @@ public class MongoTemplateDbRefTests {
 
 		@MongoId String id;
 		String value;
+	}
+
+	@Data
+	static class WithCollectionDbRef {
+
+		@Id String id;
+
+		@DBRef List<JustSomeType> refs;
+
+		@DBRef(lazy = true) List<JustSomeType> lazyrefs;
 	}
 
 	@Data
