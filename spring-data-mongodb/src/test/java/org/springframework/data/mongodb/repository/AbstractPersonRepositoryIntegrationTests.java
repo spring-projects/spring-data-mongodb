@@ -213,6 +213,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(page).contains(carter);
 	}
 
+	@Test // GH-4397
+	void appliesLimitToScrollingCorrectly() {
+
+		Window<Person> page = repository.findByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
+				ScrollPosition.keyset(), Limit.of(2));
+
+		assertThat(page.isLast()).isFalse();
+		assertThat(page.size()).isEqualTo(2);
+		assertThat(page).contains(carter);
+	}
+
 	@Test // GH-4308
 	void appliesScrollPositionWithProjectionCorrectly() {
 
@@ -234,6 +245,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(page.isLast()).isFalse();
 		assertThat(page.getNumberOfElements()).isEqualTo(2);
 		assertThat(page).contains(carter, stefan);
+	}
+
+	@Test // GH-4397
+	void executesFinderCorrectlyWithSortAndLimit() {
+
+		List<Person> page = repository.findByLastnameLike("*a*", Sort.by(Direction.ASC, "lastname", "firstname"), Limit.of(2));
+
+		assertThat(page).containsExactly(carter, stefan);
 	}
 
 	@Test
