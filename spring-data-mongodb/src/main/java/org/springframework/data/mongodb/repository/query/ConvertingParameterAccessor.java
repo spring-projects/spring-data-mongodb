@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.ScrollPosition;
@@ -115,6 +116,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	@Override
 	public UpdateDefinition getUpdate() {
 		return delegate.getUpdate();
+	}
+
+	@Override
+	public Limit getLimit() {
+		return delegate.getLimit();
 	}
 
 	/**

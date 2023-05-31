@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -493,6 +494,30 @@ class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getHint()).isEqualTo("idx-ln");
 	}
 
+	@Test // GH-4397
+	void limitShouldBeAppliedToQuery() {
+
+		createQueryForMethod("findWithLimit", String.class, Limit.class).execute(new Object[] { "dalinar", Limit.of(42) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+
+		assertThat(captor.getValue().getLimit()).isEqualTo(42);
+	}
+
+	@Test // GH-4397
+	void sortAndLimitShouldBeAppliedToQuery() {
+
+		createQueryForMethod("findWithSortAndLimit", String.class, Sort.class, Limit.class)
+				.execute(new Object[] { "dalinar", Sort.by("fn"), Limit.of(42) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+
+		assertThat(captor.getValue().getLimit()).isEqualTo(42);
+		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("fn", 1));
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -614,6 +639,10 @@ class AbstractMongoQueryUnitTests {
 
 		@Hint("idx-fn")
 		void findWithHintByFirstname(String firstname);
+
+		List<Person> findWithLimit(String firstname, Limit limit);
+
+		List<Person> findWithSortAndLimit(String firstname, Sort sort, Limit limit);
 	}
 
 	// DATAMONGO-1872

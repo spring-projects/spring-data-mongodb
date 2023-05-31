@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -126,6 +127,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	Window<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
 			ScrollPosition scrollPosition);
 
+	Window<Person> findByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
+			ScrollPosition scrollPosition, Limit limit);
+
 	/**
 	 * Returns a scroll of {@link Person}s applying projections with a lastname matching the given one (*-wildcards
 	 * supported).
@@ -144,6 +148,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	Page<Person> findByLastnameLike(String lastname, Pageable pageable);
+
+	List<Person> findByLastnameLike(String lastname, Sort sort, Limit limit);
 
 	@Query("{ 'lastname' : { '$regex' : '?0', '$options' : 'i'}}")
 	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);
