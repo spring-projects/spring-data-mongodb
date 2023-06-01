@@ -34,6 +34,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import org.bson.BsonUndefined;
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -2841,6 +2842,13 @@ class MappingMongoConverterUnitTests {
 				""");
 
 		assertThat(converter.read(Address.class, source).city).isEqualTo("Gotham,Metropolis");
+	}
+
+	@Test // GH-2350
+	void shouldConvertBsonUndefinedToNull() {
+
+		org.bson.Document source = new org.bson.Document("s", "hallway drive").append("city", new BsonUndefined());
+		assertThat(converter.read(Address.class, source).city).isNull();
 	}
 
 	static class GenericType<T> {

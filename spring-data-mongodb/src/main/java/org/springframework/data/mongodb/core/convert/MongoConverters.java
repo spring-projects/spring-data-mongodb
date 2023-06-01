@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.bson.BsonReader;
 import org.bson.BsonTimestamp;
+import org.bson.BsonUndefined;
 import org.bson.BsonWriter;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -104,6 +105,7 @@ abstract class MongoConverters {
 		converters.add(BinaryToByteArrayConverter.INSTANCE);
 		converters.add(BsonTimestampToInstantConverter.INSTANCE);
 
+		converters.add(reading(BsonUndefined.class, Object.class, it -> null));
 		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
 
 		return converters;
