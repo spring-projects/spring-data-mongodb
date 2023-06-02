@@ -34,6 +34,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.PropertyConfig;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
@@ -73,6 +74,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;
+	PropertyConfig<?, ?> propertyConfig;
+
+	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
+		this(property, owner, simpleTypeHolder, fieldNamingStrategy, null);
+	}
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
@@ -83,11 +90,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @param fieldNamingStrategy can be {@literal null}.
 	 */
 	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
-			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy, @Nullable PropertyConfig<?,?> propertyConfig) {
 
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
+		this.propertyConfig = propertyConfig;
 
 		if (isIdProperty() && hasExplicitFieldName()) {
 
@@ -115,6 +123,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			return true;
 		}
 
+		if(propertyConfig != null && propertyConfig.isId()) {
+			return true;
+		}
+
 		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
 		// but still we need to check if there happens to be an explicit name set
 		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName()) && !hasExplicitFieldName();
@@ -131,6 +143,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @return
 	 */
 	public String getFieldName() {
+
+		if(propertyConfig != null && StringUtils.hasText(propertyConfig.getTargetName())) {
+			return propertyConfig.getTargetName();
+		}
 
 		if (isIdProperty()) {
 

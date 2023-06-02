@@ -31,7 +31,9 @@ import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.EntityConfig;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
@@ -72,6 +74,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final @Nullable Expression collationExpression;
 
 	private final ShardKey shardKey;
+	private EntityConfig entityConfig;
+
+	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
+		this(typeInformation, null);
+	}
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -79,12 +86,18 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 *
 	 * @param typeInformation must not be {@literal null}.
 	 */
-	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
+	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation, EntityConfig<T> config) {
 
 		super(typeInformation, MongoPersistentPropertyComparator.INSTANCE);
 
+		this.entityConfig = config;
+
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
+		if (config != null) {
+			fallback = config.collectionNameOrDefault(() -> MongoCollectionUtils.getPreferredCollectionName(rawType));
+
+		}
 
 		if (this.isAnnotationPresent(Document.class)) {
 			Document document = this.getRequiredAnnotation(Document.class);
@@ -249,6 +262,12 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		Assert.notNull(property, "MongoPersistentProperty must not be null");
 
+		if (entityConfig != null) {
+			if (entityConfig.isIdProperty(property)) {
+				return property;
+			}
+		}
+
 		if (!property.isIdProperty()) {
 			return null;
 		}
@@ -341,6 +360,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	}
 
 	@Override
+	public EntityInstantiator getInstanceCreator() {
+		return this.entityConfig != null ? this.entityConfig.getInstantiator() : null;
+	}
+
+	@Override
 	public Collection<Object> getEncryptionKeyIds() {
 
 		Encrypted encrypted = findAnnotation(Encrypted.class);
@@ -398,9 +422,9 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			if (persistentProperty.isDbReference() && persistentProperty.getDBRef().lazy()) {
 				if (persistentProperty.isArray() || Modifier.isFinal(persistentProperty.getActualType().getModifiers())) {
-					throw new MappingException(String.format(
-							"Invalid lazy DBRef property for %s; Found %s which must not be an array nor a final class",
-							persistentProperty.getField(), persistentProperty.getActualType()));
+					throw new MappingException(
+							String.format("Invalid lazy DBRef property for %s; Found %s which must not be an array nor a final class",
+									persistentProperty.getField(), persistentProperty.getActualType()));
 				}
 			}
 		}

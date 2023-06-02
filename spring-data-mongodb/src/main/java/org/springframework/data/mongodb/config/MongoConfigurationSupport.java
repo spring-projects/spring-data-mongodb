@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.bson.UuidRepresentation;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -34,7 +35,10 @@ import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MappingConfig;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.MappingRuleCustomizer;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -87,8 +91,14 @@ public abstract class MongoConfigurationSupport {
 		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setAutoIndexCreation(autoIndexCreation());
+		mappingContext.setMappingConfig(mappingConfig());
 
 		return mappingContext;
+	}
+
+	@Nullable
+	public MappingConfig mappingConfig() {
+		return null;
 	}
 
 	/**

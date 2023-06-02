@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import java.util.Collection;
 
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.data.mapping.model.MutablePersistentEntity;
 import org.springframework.lang.Nullable;
 
@@ -111,4 +112,8 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 	 */
 	@Nullable
 	Collection<Object> getEncryptionKeyIds();
+
+	default EntityInstantiator getInstanceCreator() {
+		return null;
+	}
 }

@@ -487,7 +487,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				&& instanceCreatorMetadata.hasParameters() ? getParameterProvider(context, entity, documentAccessor, evaluator)
 						: NoOpParameterValueProvider.INSTANCE;
 
-		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
+		EntityInstantiator instantiator  = entity.getInstanceCreator();
+		if(instantiator != null) {
+			provider = new ParameterValueProvider() {
+				@Nullable
+				public Object getParameterValue(Parameter parameter) {
+					String name = parameter.getName();
+					if (name == null) {
+						throw new IllegalArgumentException(String.format("Parameter %s does not have a name", parameter));
+					} else {
+						return documentAccessor.get(entity.getRequiredPersistentProperty(name));
+					}
+				}
+			};
+		} else {
+			instantiator = instantiators.getInstantiatorFor(entity);
+		}
 		S instance = instantiator.createInstance(entity, provider);
 
 		if (entity.requiresPropertyPopulation()) {

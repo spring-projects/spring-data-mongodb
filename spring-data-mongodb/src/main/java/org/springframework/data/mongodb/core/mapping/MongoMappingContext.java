@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.util.AbstractMap;
+import java.util.function.Consumer;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -26,6 +27,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.MappingRuleCustomizer;
 import org.springframework.data.util.NullableWrapperConverters;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -45,6 +47,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private boolean autoIndexCreation = false;
+	private MappingConfig mappingConfig;
 
 	@Nullable
 	private ApplicationContext applicationContext;
@@ -67,6 +70,14 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
 	}
 
+	public void setMappingConfig(MappingConfig mappingConfig) {
+		this.mappingConfig = mappingConfig;
+	}
+
+	public void mappingRules(Consumer<MappingRuleCustomizer> customizer) {
+		setMappingConfig(MappingConfig.mappingRules(customizer));
+	}
+
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 
@@ -80,12 +91,12 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	@Override
 	public MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder) {
-		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy, mappingConfig != null ? mappingConfig.getEntityConfig(owner.getType()).propertyConfigMap.get(property.getName()) : null);
 	}
 
 	@Override
 	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-		return new BasicMongoPersistentEntity<>(typeInformation);
+		return new BasicMongoPersistentEntity<>(typeInformation, mappingConfig != null ? mappingConfig.getEntityConfig(typeInformation.getType()) : null);
 	}
 
 	@Override

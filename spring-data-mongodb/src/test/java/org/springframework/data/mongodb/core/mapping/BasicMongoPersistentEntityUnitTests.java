@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.mapping.MappingConfig.EntityConfig.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,18 +27,21 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import lombok.Data;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.EntityConfig;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.PropertyConfig;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link BasicMongoPersistentEntity}.
@@ -299,6 +303,31 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	static <T> BasicMongoPersistentEntity<T> entityOf(Class<T> type) {
 		return new BasicMongoPersistentEntity<>(ClassTypeInformation.from(type));
+	}
+
+	@Data
+	class Sample {
+
+		String name;
+		String value;
+	}
+
+	@Test
+	void testProgrammaticMetadata() {
+
+		doReturn("value").when(propertyMock).getName();
+
+		EntityConfig<Sample> entityConfig = configure(Sample.class) //
+				.namespace("my-collection") //
+				.define(Sample::getValue, PropertyConfig::useAsId)
+				.define(Sample::getName, property -> property.mappedName("n-a-m-e"));
+
+		BasicMongoPersistentEntity<Sample> entity = new BasicMongoPersistentEntity<>(TypeInformation.of(Sample.class), entityConfig);
+		entity.addPersistentProperty(propertyMock);
+
+		MongoPersistentProperty idProperty = entity.getIdProperty();
+		assertThat(idProperty).isSameAs(propertyMock);
+		assertThat(entity.getCollection()).isEqualTo("my-collection");
 	}
 
 	@Document("contacts")

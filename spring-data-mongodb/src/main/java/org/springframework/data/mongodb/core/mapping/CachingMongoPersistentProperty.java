@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.MappingConfig.PropertyConfig;
 import org.springframework.lang.Nullable;
 
 /**
@@ -47,8 +48,8 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	 * @param fieldNamingStrategy can be {@literal null}.
 	 */
 	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
-			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
-		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy, PropertyConfig config) {
+		super(property, owner, simpleTypeHolder, fieldNamingStrategy, config);
 	}
 
 	@Override
