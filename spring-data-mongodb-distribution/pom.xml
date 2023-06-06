@@ -80,15 +80,4 @@
 
 	</build>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-plugins-release</id>
-			<url>https://repo.spring.io/plugins-release</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>spring-plugins-snapshot</id>
-			<url>https://repo.spring.io/libs-snapshot</url>
-		</pluginRepository>
-	</pluginRepositories>
-
 </project>
