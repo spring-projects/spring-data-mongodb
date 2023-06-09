@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -77,6 +78,29 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	 * @throws IllegalArgumentException if the context does not expose a field with the given name
 	 */
 	FieldReference getReference(String name);
+
+	/**
+	 * Obtain the target field name for a given field/type combination.
+	 * 
+	 * @param type The type containing the field.
+	 * @param field The property/field name
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	default String getMappedFieldName(Class<?> type, String field) {
+		return field;
+	}
+
+	/**
+	 * Obtain the collection name for a given {@link Class type} combination.
+	 *
+	 * @param type
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	default String getCollection(Class<?> type) {
+		return MongoCollectionUtils.getPreferredCollectionName(type);
+	}
 
 	/**
 	 * Returns the {@link Fields} exposed by the type. May be a {@literal class} or an {@literal interface}. The default
