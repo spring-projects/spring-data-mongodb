@@ -22,6 +22,7 @@ import java.util.Arrays;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -34,7 +35,7 @@ public class GraphLookupOperationUnitTests {
 
 	@Test // DATAMONGO-1551
 	public void rejectsNullFromCollection() {
-		assertThatIllegalArgumentException().isThrownBy(() -> GraphLookupOperation.builder().from(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> GraphLookupOperation.builder().from((String) null));
 	}
 
 	@Test // DATAMONGO-1551
@@ -157,5 +158,60 @@ public class GraphLookupOperationUnitTests {
 		Document document = graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(document).containsEntry("$graphLookup.depthField", "foo.bar");
+	}
+
+	@Test // GH-4379
+	void unmappedLookupWithFromExtractedFromType() {
+
+		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
+				.from(Employee.class) //
+				.startWith(LiteralOperators.Literal.asLiteral("hello")) //
+				.connectFrom("manager") //
+				.connectTo("name") //
+				.as("reportingHierarchy");
+
+		assertThat(graphLookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("""
+				{ $graphLookup:
+					{
+						from: "employee",
+						startWith : { $literal : "hello" },
+						connectFromField: "manager",
+						connectToField: "name",
+						as: "reportingHierarchy"
+					}
+				}}
+				""");
+	}
+
+	@Test // GH-4379
+	void mappedLookupWithFromExtractedFromType() {
+
+		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
+				.from(Employee.class) //
+				.startWith(LiteralOperators.Literal.asLiteral("hello")) //
+				.connectFrom("manager") //
+				.connectTo("name") //
+				.as("reportingHierarchy");
+
+		assertThat(graphLookupOperation.toDocument(AggregationTestUtils.strict(Employee.class).ctx())).isEqualTo("""
+				{ $graphLookup:
+					{
+						from: "employees",
+						startWith : { $literal : "hello" },
+						connectFromField: "reportsTo",
+						connectToField: "name",
+						as: "reportingHierarchy"
+					}
+				}}
+				""");
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document("employees")
+	static class Employee {
+
+		String id;
+
+		@Field("reportsTo")
+		String manager;
 	}
 }
