@@ -1451,9 +1451,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result.get(0).getId().equals(bart.getId()));
 	}
 
-	@Test // GH-3395
+	@Test // GH-3395, GH-4404
 	void caseInSensitiveInClause() {
+
 		assertThat(repository.findByLastnameIgnoreCaseIn("bEAuFoRd", "maTTheWs")).hasSize(3);
+
+		repository.save(new Person("the-first", "The First"));
+		repository.save(new Person("the-first-one", "The First One"));
+		repository.save(new Person("the-second", "The Second"));
+
+		assertThat(repository.findByLastnameIgnoreCaseIn("tHE fIRsT")).hasSize(1);
 	}
 
 	@Test // GH-3395

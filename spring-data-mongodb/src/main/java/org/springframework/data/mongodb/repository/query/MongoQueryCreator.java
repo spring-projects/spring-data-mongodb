@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.bson.BsonRegularExpression;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -406,7 +406,18 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		Streamable<?> streamable = asStreamable(iterator.next());
 		if (!isSimpleComparisionPossible(part)) {
-			streamable = streamable.map(MongoRegexCreator.INSTANCE::toCaseInsensitiveMatch);
+
+			MatchMode matchMode = toMatchMode(part.getType());
+			String regexOptions = toRegexOptions(part);
+
+			streamable = streamable.map(it -> {
+				if (it instanceof String) {
+
+					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression((String) it, matchMode),
+							regexOptions);
+				}
+				return it;
+			});
 		}
 
 		return streamable.toList();
@@ -498,6 +509,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return MatchMode.REGEX;
 			case NEGATING_SIMPLE_PROPERTY:
 			case SIMPLE_PROPERTY:
+			case IN:
 				return MatchMode.EXACT;
 			default:
 				return MatchMode.DEFAULT;
