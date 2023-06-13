@@ -19,9 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -101,18 +100,94 @@ public class MongoTemplateMappingTests {
 		assertThat(template1.findOne(query(where("id").is(source.id)), WithOpenMongoGeoJson.class)).isEqualTo(source);
 	}
 
-	@Data
 	static class WithMongoGeoJson {
 
 		@Id String id;
 		MultiPolygon multiPolygon;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public MultiPolygon getMultiPolygon() {
+			return this.multiPolygon;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setMultiPolygon(MultiPolygon multiPolygon) {
+			this.multiPolygon = multiPolygon;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithMongoGeoJson that = (WithMongoGeoJson) o;
+			return Objects.equals(id, that.id) && Objects.equals(multiPolygon, that.multiPolygon);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, multiPolygon);
+		}
+
+		public String toString() {
+			return "MongoTemplateMappingTests.WithMongoGeoJson(id=" + this.getId() + ", multiPolygon="
+					+ this.getMultiPolygon() + ")";
+		}
 	}
 
-	@Data
 	static class WithOpenMongoGeoJson {
 
 		@Id String id;
 		Geometry geometry;
+
+		public WithOpenMongoGeoJson() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Geometry getGeometry() {
+			return this.geometry;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setGeometry(Geometry geometry) {
+			this.geometry = geometry;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithOpenMongoGeoJson that = (WithOpenMongoGeoJson) o;
+			return Objects.equals(id, that.id) && Objects.equals(geometry, that.geometry);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, geometry);
+		}
+
+		public String toString() {
+			return "MongoTemplateMappingTests.WithOpenMongoGeoJson(id=" + this.getId() + ", geometry=" + this.getGeometry()
+					+ ")";
+		}
 	}
 
 	private void addAndRetrievePerson(MongoTemplate template) {

@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Data;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
@@ -29,7 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
-
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -116,9 +114,23 @@ public class DefaultReactiveIndexOperationsUnitTests {
 				new QueryMapper(template.getConverter()), type);
 	}
 
-	@Data
 	static class Jedi {
+
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String toString() {
+			return "DefaultReactiveIndexOperationsUnitTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")

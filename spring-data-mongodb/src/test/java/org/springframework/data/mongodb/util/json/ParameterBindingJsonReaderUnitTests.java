@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.util.json;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -625,16 +622,46 @@ class ParameterBindingJsonReaderUnitTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	public static class DummySecurityObject {
+
 		DummyWithId principal;
+
+		public DummySecurityObject(DummyWithId principal) {
+			this.principal = principal;
+		}
+
+		public DummyWithId getPrincipal() {
+			return this.principal;
+		}
+
+		public void setPrincipal(DummyWithId principal) {
+			this.principal = principal;
+		}
+
+		public String toString() {
+			return "ParameterBindingJsonReaderUnitTests.DummySecurityObject(principal=" + this.getPrincipal() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	public static class DummyWithId {
+
 		String id;
+
+		public DummyWithId(String id) {
+			this.id = id;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String toString() {
+			return "ParameterBindingJsonReaderUnitTests.DummyWithId(id=" + this.getId() + ")";
+		}
 	}
 
 }

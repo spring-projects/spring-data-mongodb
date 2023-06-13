@@ -19,9 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Value;
-import org.reactivestreams.Publisher;
-import org.springframework.data.mongodb.repository.Hint;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -51,6 +48,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
@@ -295,11 +293,33 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 	}
 
-	@Value
-	static class AggregationInvocation {
+	static final class AggregationInvocation {
 
-		TypedAggregation<?> aggregation;
-		Class<?> targetType;
-		Object result;
+		private final TypedAggregation<?> aggregation;
+		private final Class<?> targetType;
+		private final Object result;
+
+		public AggregationInvocation(TypedAggregation<?> aggregation, Class<?> targetType, Object result) {
+			this.aggregation = aggregation;
+			this.targetType = targetType;
+			this.result = result;
+		}
+
+		public TypedAggregation<?> getAggregation() {
+			return this.aggregation;
+		}
+
+		public Class<?> getTargetType() {
+			return this.targetType;
+		}
+
+		public Object getResult() {
+			return this.result;
+		}
+
+		public String toString() {
+			return "ReactiveStringBasedAggregationUnitTests.AggregationInvocation(aggregation=" + this.getAggregation()
+					+ ", targetType=" + this.getTargetType() + ", result=" + this.getResult() + ")";
+		}
 	}
 }

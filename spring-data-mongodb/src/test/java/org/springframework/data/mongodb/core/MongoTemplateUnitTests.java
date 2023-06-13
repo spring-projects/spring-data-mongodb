@@ -19,10 +19,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -2476,14 +2473,52 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		}
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Person {
 
 		@Id String id;
 		String firstname;
+
+		public Person() {
+		}
+
+		public Person(String id, String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname);
+		}
 	}
 
 	static class PersonExtended extends Person {
@@ -2506,15 +2541,29 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		String getName();
 	}
 
-	@Data
 	static class Human {
 		@Id String id;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
 	}
 
-	@Data
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	class Wrapper {

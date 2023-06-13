@@ -19,10 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -257,7 +254,6 @@ public class MappingMongoConverterTests {
 		}
 	}
 
-	@Data
 	public static class WithSingleValueDbRef {
 
 		@Id //
@@ -268,9 +264,37 @@ public class MappingMongoConverterTests {
 
 		@DBRef(lazy = true) //
 		Sample sampleLazy;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Sample getSample() {
+			return this.sample;
+		}
+
+		public Sample getSampleLazy() {
+			return this.sampleLazy;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setSample(Sample sample) {
+			this.sample = sample;
+		}
+
+		public void setSampleLazy(Sample sampleLazy) {
+			this.sampleLazy = sampleLazy;
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.WithSingleValueDbRef(id=" + this.getId() + ", sample=" + this.getSample()
+					+ ", sampleLazy=" + this.getSampleLazy() + ")";
+		}
 	}
 
-	@Data
 	public static class WithMapValueDbRef {
 
 		@Id String id;
@@ -280,6 +304,35 @@ public class MappingMongoConverterTests {
 
 		@DBRef(lazy = true) //
 		Map<String, Sample> sampleMapLazy;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Map<String, Sample> getSampleMap() {
+			return this.sampleMap;
+		}
+
+		public Map<String, Sample> getSampleMapLazy() {
+			return this.sampleMapLazy;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setSampleMap(Map<String, Sample> sampleMap) {
+			this.sampleMap = sampleMap;
+		}
+
+		public void setSampleMapLazy(Map<String, Sample> sampleMapLazy) {
+			this.sampleMapLazy = sampleMapLazy;
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.WithMapValueDbRef(id=" + this.getId() + ", sampleMap=" + this.getSampleMap()
+					+ ", sampleMapLazy=" + this.getSampleMapLazy() + ")";
+		}
 	}
 
 	public static class WithLazyDBRefAsConstructorArg {
@@ -298,22 +351,63 @@ public class MappingMongoConverterTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Sample {
 
 		@Id String id;
 		String value;
+
+		public Sample(String id, String value) {
+
+			this.id = id;
+			this.value = value;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sample sample = (Sample) o;
+			return Objects.equals(id, sample.id) && Objects.equals(value, sample.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.Sample(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	static class WithJavaTimeTypes {
 
 		@Id String id;
 		LocalDate localDate;
 		LocalTime localTime;
 		LocalDateTime localDateTime;
+
+		public WithJavaTimeTypes() {}
 
 		static WithJavaTimeTypes withJavaTimeTypes(Instant instant) {
 
@@ -329,6 +423,61 @@ public class MappingMongoConverterTests {
 		Document toDocument() {
 			return new Document("_id", id).append("localDate", localDate).append("localTime", localTime)
 					.append("localDateTime", localDateTime);
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public LocalDate getLocalDate() {
+			return this.localDate;
+		}
+
+		public LocalTime getLocalTime() {
+			return this.localTime;
+		}
+
+		public LocalDateTime getLocalDateTime() {
+			return this.localDateTime;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setLocalDate(LocalDate localDate) {
+			this.localDate = localDate;
+		}
+
+		public void setLocalTime(LocalTime localTime) {
+			this.localTime = localTime;
+		}
+
+		public void setLocalDateTime(LocalDateTime localDateTime) {
+			this.localDateTime = localDateTime;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithJavaTimeTypes that = (WithJavaTimeTypes) o;
+			return Objects.equals(id, that.id) && Objects.equals(localDate, that.localDate)
+					&& Objects.equals(localTime, that.localTime) && Objects.equals(localDateTime, that.localDateTime);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, localDate, localTime, localDateTime);
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.WithJavaTimeTypes(id=" + this.getId() + ", localDate=" + this.getLocalDate()
+					+ ", localTime=" + this.getLocalTime() + ", localDateTime=" + this.getLocalDateTime() + ")";
 		}
 	}
 }

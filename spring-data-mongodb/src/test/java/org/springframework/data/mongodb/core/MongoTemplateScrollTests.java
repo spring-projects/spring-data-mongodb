@@ -18,13 +18,10 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -276,8 +273,7 @@ class MongoTemplateScrollTests {
 		return Stream.of(args(ScrollPosition.keyset(), Person.class, Function.identity()), //
 				args(ScrollPosition.keyset(), Document.class, MongoTemplateScrollTests::toDocument), //
 				args(ScrollPosition.offset(), Person.class, Function.identity()), //
-				args(ScrollPosition.offset(), PersonDtoProjection.class,
-						MongoTemplateScrollTests::toPersonDtoProjection), //
+				args(ScrollPosition.offset(), PersonDtoProjection.class, MongoTemplateScrollTests::toPersonDtoProjection), //
 				args(ScrollPosition.offset(), PersonInterfaceProjection.class,
 						MongoTemplateScrollTests::toPersonInterfaceProjection, MongoTemplateScrollTests::compareProxies));
 	}
@@ -326,10 +322,48 @@ class MongoTemplateScrollTests {
 		return new PersonInterfaceProjectionImpl(person);
 	}
 
-	@Data
 	static class PersonDtoProjection {
+
 		String firstName;
 		int age;
+
+		public String getFirstName() {
+			return this.firstName;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public void setFirstName(String firstName) {
+			this.firstName = firstName;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			PersonDtoProjection that = (PersonDtoProjection) o;
+			return age == that.age && Objects.equals(firstName, that.firstName);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(firstName, age);
+		}
+
+		public String toString() {
+			return "MongoTemplateScrollTests.PersonDtoProjection(firstName=" + this.getFirstName() + ", age=" + this.getAge()
+					+ ")";
+		}
 	}
 
 	interface PersonInterfaceProjection {
@@ -370,9 +404,6 @@ class MongoTemplateScrollTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class WithRenamedField {
 
 		String id;
@@ -380,10 +411,62 @@ class MongoTemplateScrollTests {
 		@Field("_val") String value;
 
 		WithRenamedField nested;
+
+		public WithRenamedField(String id, String value, WithRenamedField nested) {
+			this.id = id;
+			this.value = value;
+			this.nested = nested;
+		}
+
+		public WithRenamedField() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public WithRenamedField getNested() {
+			return this.nested;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public void setNested(WithRenamedField nested) {
+			this.nested = nested;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithRenamedField that = (WithRenamedField) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value) && Objects.equals(nested, that.nested);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, nested);
+		}
+
+		public String toString() {
+			return "MongoTemplateScrollTests.WithRenamedField(id=" + this.getId() + ", value=" + this.getValue() + ", nested="
+					+ this.getNested() + ")";
+		}
 	}
 
-	@NoArgsConstructor
-	@Data
 	class WithNestedDocument {
 
 		String id;
@@ -408,6 +491,71 @@ class MongoTemplateScrollTests {
 			this.age = age;
 			this.nested = nested;
 			this.document = document;
+		}
+
+		public WithNestedDocument() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public WithNestedDocument getNested() {
+			return this.nested;
+		}
+
+		public Document getDocument() {
+			return this.document;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		public void setNested(WithNestedDocument nested) {
+			this.nested = nested;
+		}
+
+		public void setDocument(Document document) {
+			this.document = document;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithNestedDocument that = (WithNestedDocument) o;
+			return age == that.age && Objects.equals(id, that.id) && Objects.equals(name, that.name)
+					&& Objects.equals(nested, that.nested) && Objects.equals(document, that.document);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, age, nested, document);
+		}
+
+		public String toString() {
+			return "MongoTemplateScrollTests.WithNestedDocument(id=" + this.getId() + ", name=" + this.getName() + ", age="
+					+ this.getAge() + ", nested=" + this.getNested() + ", document=" + this.getDocument() + ")";
 		}
 	}
 }

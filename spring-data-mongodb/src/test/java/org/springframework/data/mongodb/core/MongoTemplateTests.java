@@ -20,14 +20,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.With;
-
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -3953,7 +3945,6 @@ public class MongoTemplateTests {
 
 	}
 
-	@Data
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
@@ -3971,10 +3962,74 @@ public class MongoTemplateTests {
 
 		@Field("lazy_db_ref_map") // DATAMONGO-1194
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<Sample> getDbRefAnnotatedList() {
+			return this.dbRefAnnotatedList;
+		}
+
+		public Sample getDbRefProperty() {
+			return this.dbRefProperty;
+		}
+
+		public List<Sample> getLazyDbRefAnnotatedList() {
+			return this.lazyDbRefAnnotatedList;
+		}
+
+		public Map<String, Sample> getLazyDbRefAnnotatedMap() {
+			return this.lazyDbRefAnnotatedMap;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setDbRefAnnotatedList(List<Sample> dbRefAnnotatedList) {
+			this.dbRefAnnotatedList = dbRefAnnotatedList;
+		}
+
+		public void setDbRefProperty(Sample dbRefProperty) {
+			this.dbRefProperty = dbRefProperty;
+		}
+
+		public void setLazyDbRefAnnotatedList(List<Sample> lazyDbRefAnnotatedList) {
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+		}
+
+		public void setLazyDbRefAnnotatedMap(Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			DocumentWithDBRefCollection that = (DocumentWithDBRefCollection) o;
+			return Objects.equals(id, that.id) && Objects.equals(dbRefAnnotatedList, that.dbRefAnnotatedList)
+					&& Objects.equals(dbRefProperty, that.dbRefProperty)
+					&& Objects.equals(lazyDbRefAnnotatedList, that.lazyDbRefAnnotatedList)
+					&& Objects.equals(lazyDbRefAnnotatedMap, that.lazyDbRefAnnotatedMap);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, dbRefAnnotatedList, dbRefProperty, lazyDbRefAnnotatedList, lazyDbRefAnnotatedMap);
+		}
+
+		public String toString() {
+			return "MongoTemplateTests.DocumentWithDBRefCollection(id=" + this.getId() + ", dbRefAnnotatedList="
+					+ this.getDbRefAnnotatedList() + ", dbRefProperty=" + this.getDbRefProperty() + ", lazyDbRefAnnotatedList="
+					+ this.getLazyDbRefAnnotatedList() + ", lazyDbRefAnnotatedMap=" + this.getLazyDbRefAnnotatedMap() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class DocumentWithLazyDBRefsAndConstructorCreation {
 
 		@Id public String id;
@@ -3987,9 +4042,54 @@ public class MongoTemplateTests {
 
 		@Field("lazy_db_ref_map") @org.springframework.data.mongodb.core.mapping.DBRef(
 				lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+
+		public DocumentWithLazyDBRefsAndConstructorCreation(String id, Sample lazyDbRefProperty,
+				List<Sample> lazyDbRefAnnotatedList, Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.id = id;
+			this.lazyDbRefProperty = lazyDbRefProperty;
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Sample getLazyDbRefProperty() {
+			return this.lazyDbRefProperty;
+		}
+
+		public List<Sample> getLazyDbRefAnnotatedList() {
+			return this.lazyDbRefAnnotatedList;
+		}
+
+		public Map<String, Sample> getLazyDbRefAnnotatedMap() {
+			return this.lazyDbRefAnnotatedMap;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setLazyDbRefProperty(Sample lazyDbRefProperty) {
+			this.lazyDbRefProperty = lazyDbRefProperty;
+		}
+
+		public void setLazyDbRefAnnotatedList(List<Sample> lazyDbRefAnnotatedList) {
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+		}
+
+		public void setLazyDbRefAnnotatedMap(Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		public String toString() {
+			return "MongoTemplateTests.DocumentWithLazyDBRefsAndConstructorCreation(id=" + this.getId()
+					+ ", lazyDbRefProperty=" + this.getLazyDbRefProperty() + ", lazyDbRefAnnotatedList="
+					+ this.getLazyDbRefAnnotatedList() + ", lazyDbRefAnnotatedMap=" + this.getLazyDbRefAnnotatedMap() + ")";
+		}
 	}
 
-	@EqualsAndHashCode
 	static class DocumentWithCollection {
 
 		@Id String id;
@@ -3997,6 +4097,23 @@ public class MongoTemplateTests {
 
 		DocumentWithCollection(List<Model> models) {
 			this.models = models;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			DocumentWithCollection that = (DocumentWithCollection) o;
+			return Objects.equals(id, that.id) && Objects.equals(models, that.models);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, models);
 		}
 	}
 
@@ -4011,11 +4128,27 @@ public class MongoTemplateTests {
 		List<Sample> samples;
 	}
 
-	@EqualsAndHashCode
 	static class DocumentWithNestedTypeHavingStringIdProperty {
 
 		@Id String id;
 		Sample sample;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			DocumentWithNestedTypeHavingStringIdProperty that = (DocumentWithNestedTypeHavingStringIdProperty) o;
+			return Objects.equals(id, that.id) && Objects.equals(sample, that.sample);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, sample);
+		}
 	}
 
 	static class DocumentWithMultipleCollections {
@@ -4049,7 +4182,6 @@ public class MongoTemplateTests {
 		String id();
 	}
 
-	@EqualsAndHashCode
 	static class ModelA implements Model {
 
 		@Id String id;
@@ -4067,6 +4199,23 @@ public class MongoTemplateTests {
 		@Override
 		public String id() {
 			return id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ModelA modelA = (ModelA) o;
+			return Objects.equals(id, modelA.id) && Objects.equals(value, modelA.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
 		}
 	}
 
@@ -4087,8 +4236,6 @@ public class MongoTemplateTests {
 		@Id MyId id;
 	}
 
-	@EqualsAndHashCode
-	@NoArgsConstructor
 	static class Sample {
 
 		@Id String id;
@@ -4097,6 +4244,25 @@ public class MongoTemplateTests {
 		public Sample(String id, String field) {
 			this.id = id;
 			this.field = field;
+		}
+
+		public Sample() {}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sample sample = (Sample) o;
+			return Objects.equals(id, sample.id) && Objects.equals(field, sample.field);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, field);
 		}
 	}
 
@@ -4134,17 +4300,62 @@ public class MongoTemplateTests {
 		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	public static class MyPerson {
 
 		String id;
 		String name;
 		Address address;
 
+		public MyPerson() {}
+
 		public MyPerson(String name) {
 			this.name = name;
+		}
+
+		public MyPerson(String id, String name, Address address) {
+			this.id = id;
+			this.name = name;
+			this.address = address;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Address getAddress() {
+			return address;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+			MyPerson myPerson = (MyPerson) o;
+			return Objects.equals(id, myPerson.id) && Objects.equals(name, myPerson.name)
+					&& Objects.equals(address, myPerson.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, address);
 		}
 	}
 
@@ -4201,11 +4412,27 @@ public class MongoTemplateTests {
 		@Field(write = Field.Write.ALWAYS) String lastname;
 	}
 
-	@EqualsAndHashCode
 	static class TypeWithFieldAnnotation {
 
 		@Id ObjectId id;
 		@Field("email") String emailAddress;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			TypeWithFieldAnnotation that = (TypeWithFieldAnnotation) o;
+			return Objects.equals(id, that.id) && Objects.equals(emailAddress, that.emailAddress);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, emailAddress);
+		}
 	}
 
 	static class TypeWithDate {
@@ -4246,7 +4473,6 @@ public class MongoTemplateTests {
 		}
 	}
 
-	@EqualsAndHashCode
 	public static class SomeContent {
 
 		String id;
@@ -4260,7 +4486,6 @@ public class MongoTemplateTests {
 
 		public void setText(String text) {
 			this.text = text;
-
 		}
 
 		public String getId() {
@@ -4269,6 +4494,24 @@ public class MongoTemplateTests {
 
 		public String getText() {
 			return text;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SomeContent that = (SomeContent) o;
+			return Objects.equals(id, that.id) && Objects.equals(text, that.text) && Objects.equals(name, that.name)
+					&& Objects.equals(dbrefMessage, that.dbrefMessage);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, text, name, dbrefMessage);
 		}
 	}
 
@@ -4300,11 +4543,28 @@ public class MongoTemplateTests {
 		GeoJsonPoint point;
 	}
 
-	@Data
 	static class WithObjectTypeProperty {
 
 		@Id String id;
 		Object value;
+
+		public WithObjectTypeProperty() {}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
 	}
 
 	static class PersonWithIdPropertyOfTypeUUIDListener
@@ -4377,32 +4637,112 @@ public class MongoTemplateTests {
 	}
 
 	// DATAMONGO-1992
-
-	@AllArgsConstructor
-	@With
 	static class ImmutableVersioned {
 
 		final @Id String id;
 		final @Version Long version;
 
 		public ImmutableVersioned() {
-			id = null;
-			version = null;
+			this(null, null);
+		}
+
+		public ImmutableVersioned(String id, Long version) {
+			this.id = id;
+			this.version = version;
+		}
+
+		ImmutableVersioned withVersion(Long version) {
+			return new ImmutableVersioned(id, version);
+		}
+
+		ImmutableVersioned withId(String id) {
+			return new ImmutableVersioned(id, version);
 		}
 	}
 
-	@Value
-	@With
 	static class ImmutableAudited {
-		@Id String id;
-		@LastModifiedDate Instant modified;
+
+		final @Id String id;
+		final @LastModifiedDate Instant modified;
+
+		ImmutableAudited(String id, Instant modified) {
+			this.id = id;
+			this.modified = modified;
+		}
+
+		ImmutableAudited withId(String id) {
+			return new ImmutableAudited(id, modified);
+		}
+
+		ImmutableAudited withModified(Instant modified) {
+			return new ImmutableAudited(id, modified);
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public Instant getModified() {
+			return modified;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ImmutableAudited that = (ImmutableAudited) o;
+			return Objects.equals(id, that.id) && Objects.equals(modified, that.modified);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, modified);
+		}
 	}
 
-	@Data
 	static class RawStringId {
 
 		@MongoId String id;
 		String value;
+
+		public RawStringId() {}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			RawStringId that = (RawStringId) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
 	}
 
 	static class Outer {
@@ -4417,7 +4757,6 @@ public class MongoTemplateTests {
 		String value;
 	}
 
-	@Data
 	static class WithIdAndFieldAnnotation {
 
 		@Id //
@@ -4425,23 +4764,72 @@ public class MongoTemplateTests {
 		String id;
 		String value;
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
 	}
 
-	@Data
 	static class WithSubdocument {
 
 		@Id //
 		@Field(name = "_id") //
 		String id;
 		SubdocumentWithWriteNull subdocument;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public SubdocumentWithWriteNull getSubdocument() {
+			return subdocument;
+		}
+
+		public void setSubdocument(SubdocumentWithWriteNull subdocument) {
+			this.subdocument = subdocument;
+		}
 	}
 
-	@Data
-	@RequiredArgsConstructor
 	static class SubdocumentWithWriteNull {
 
 		final String firstname, lastname;
 
 		@Field(write = Field.Write.ALWAYS) String nickname;
+
+		public SubdocumentWithWriteNull(String firstname, String lastname) {
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
+
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public String getLastname() {
+			return lastname;
+		}
+
+		public String getNickname() {
+			return nickname;
+		}
+
+		public void setNickname(String nickname) {
+			this.nickname = nickname;
+		}
 	}
 }

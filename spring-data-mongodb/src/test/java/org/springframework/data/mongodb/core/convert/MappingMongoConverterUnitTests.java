@@ -20,11 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
@@ -2834,7 +2829,7 @@ class MappingMongoConverterUnitTests {
 
 	@Test // GH-4371
 	void shouldConvertTypesToStringTargetType() {
-		
+
 		org.bson.Document source = org.bson.Document.parse("""
 				{
 				  city : ["Gotham", "Metropolis"]
@@ -2880,11 +2875,35 @@ class MappingMongoConverterUnitTests {
 
 	}
 
-	@EqualsAndHashCode
-	@Getter
 	static class Address implements InterfaceType {
+
 		@Field("s") String street;
 		String city;
+
+		public String getStreet() {
+			return street;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(street, address.street) && Objects.equals(city, address.city);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(street, city);
+		}
 	}
 
 	interface Contact {
@@ -3254,11 +3273,13 @@ class MappingMongoConverterUnitTests {
 		Map<String, Long> map;
 	}
 
-	@RequiredArgsConstructor
 	static class WithArrayInConstructor {
 
 		final String[] array;
 
+		public WithArrayInConstructor(String[] array) {
+			this.array = array;
+		}
 	}
 
 	static class WithArrays {
@@ -3325,18 +3346,37 @@ class MappingMongoConverterUnitTests {
 		}
 	}
 
-	@RequiredArgsConstructor
 	static class ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod {
 
 		final @Id String id;
 		String value;
+
+		public ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod(String id) {
+			this.id = id;
+		}
 	}
 
 	// DATAMONGO-2135
-
-	@EqualsAndHashCode // equality check by fields
 	static class SomeItem {
+
 		String itemKey;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SomeItem someItem = (SomeItem) o;
+			return Objects.equals(itemKey, someItem.itemKey);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(itemKey);
+		}
 	}
 
 	static class Order {
@@ -3396,7 +3436,6 @@ class MappingMongoConverterUnitTests {
 		@Unwrapped.Empty EmbeddableType embeddableValue;
 	}
 
-	@EqualsAndHashCode
 	static class EmbeddableType {
 
 		String stringValue;
@@ -3409,6 +3448,26 @@ class MappingMongoConverterUnitTests {
 		String transientValue;
 
 		Address address;
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			EmbeddableType that = (EmbeddableType) o;
+			return Objects.equals(stringValue, that.stringValue) && Objects.equals(listValue, that.listValue)
+					&& Objects.equals(atFieldAnnotatedValue, that.atFieldAnnotatedValue)
+					&& Objects.equals(transientValue, that.transientValue) && Objects.equals(address, that.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(stringValue, listValue, atFieldAnnotatedValue, transientValue, address);
+		}
 	}
 
 	static class ReturningAfterConvertCallback implements AfterConvertCallback<Person> {
@@ -3483,7 +3542,6 @@ class MappingMongoConverterUnitTests {
 		TypeImplementingMap typeImplementingMap;
 	}
 
-	@EqualsAndHashCode
 	static class TypeImplementingMap implements Map<String, String> {
 
 		String val1;
@@ -3556,6 +3614,23 @@ class MappingMongoConverterUnitTests {
 		@Override
 		public Set<Entry<String, String>> entrySet() {
 			return null;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			TypeImplementingMap that = (TypeImplementingMap) o;
+			return val2 == that.val2 && Objects.equals(val1, that.val1);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(val1, val2);
 		}
 	}
 
@@ -3654,22 +3729,39 @@ class MappingMongoConverterUnitTests {
 		String getName();
 	}
 
-	@lombok.Value
 	static class AuthorOnly {
 
-		AuthorNameOnly author;
+		final AuthorNameOnly author;
+
+		public AuthorOnly(AuthorNameOnly author) {
+			this.author = author;
+		}
+
+		public AuthorNameOnly getAuthor() {
+			return author;
+		}
 	}
 
-	@lombok.Value
 	static class AuthorNameOnly {
 
-		String firstName;
+		final String firstName;
 
-		String lastName;
+		final String lastName;
 
+		public AuthorNameOnly(String firstName, String lastName) {
+			this.firstName = firstName;
+			this.lastName = lastName;
+		}
+
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public String getLastName() {
+			return lastName;
+		}
 	}
 
-	@Data
 	static class Book {
 
 		@Id String id;
@@ -3678,9 +3770,31 @@ class MappingMongoConverterUnitTests {
 
 		Author author = new Author();
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
 	}
 
-	@Data
 	static class Author {
 
 		@Id String id;
@@ -3689,14 +3803,78 @@ class MappingMongoConverterUnitTests {
 
 		String lastName;
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(String firstName) {
+			this.firstName = firstName;
+		}
+
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(String lastName) {
+			this.lastName = lastName;
+		}
 	}
 
-	@Data
 	static class Cyclic {
 
 		@Id String id;
 		String value;
 		Cyclic cycle;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public Cyclic getCycle() {
+			return cycle;
+		}
+
+		public void setCycle(Cyclic cycle) {
+			this.cycle = cycle;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Cyclic cyclic = (Cyclic) o;
+			return Objects.equals(id, cyclic.id) && Objects.equals(value, cyclic.value)
+					&& Objects.equals(cycle, cyclic.cycle);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, cycle);
+		}
 	}
 
 }

@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.EqualsAndHashCode;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -308,7 +308,6 @@ public class ReactiveMongoTemplateUpdateTests {
 		}
 	}
 
-	@EqualsAndHashCode
 	static class Book {
 
 		@Id Integer id;
@@ -316,6 +315,24 @@ public class ReactiveMongoTemplateUpdateTests {
 		String isbn;
 		Author author;
 		@Field("copies") Collection<Warehouse> stock;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Book book = (Book) o;
+			return Objects.equals(id, book.id) && Objects.equals(title, book.title) && Objects.equals(isbn, book.isbn)
+					&& Objects.equals(author, book.author) && Objects.equals(stock, book.stock);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, title, isbn, author, stock);
+		}
 	}
 
 	static class Author {

@@ -20,11 +20,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -177,17 +175,57 @@ public class MongoTemplateTransactionTests {
 		return assertion;
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
 	static class Assassin implements Persistable<String> {
 
 		@Id String id;
 		String name;
 
+		public Assassin(String id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
 		@Override
 		public boolean isNew() {
 			return id == null;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Assassin assassin = (Assassin) o;
+			return Objects.equals(id, assassin.id) && Objects.equals(name, assassin.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name);
+		}
+
+		public String toString() {
+			return "MongoTemplateTransactionTests.Assassin(id=" + this.getId() + ", name=" + this.getName() + ")";
 		}
 	}
 }

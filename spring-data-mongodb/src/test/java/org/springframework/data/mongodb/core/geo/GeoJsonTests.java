@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -593,18 +591,58 @@ public class GeoJsonTests {
 		GeoJsonGeometryCollection geoJsonGeometryCollection;
 	}
 
-	@Data
 	@Document("geo-json-shapes")
 	static class ConcreteGeoJson {
+
 		String id;
 		GeoJsonPolygon shape;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public GeoJsonPolygon getShape() {
+			return this.shape;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setShape(GeoJsonPolygon shape) {
+			this.shape = shape;
+		}
+
+		public String toString() {
+			return "GeoJsonTests.ConcreteGeoJson(id=" + this.getId() + ", shape=" + this.getShape() + ")";
+		}
 	}
 
-	@Data
 	@Document("geo-json-shapes")
 	static class OpenGeoJson {
+
 		String id;
 		GeoJson shape;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public GeoJson getShape() {
+			return this.shape;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setShape(GeoJson shape) {
+			this.shape = shape;
+		}
+
+		public String toString() {
+			return "GeoJsonTests.OpenGeoJson(id=" + this.getId() + ", shape=" + this.getShape() + ")";
+		}
 	}
 
 }

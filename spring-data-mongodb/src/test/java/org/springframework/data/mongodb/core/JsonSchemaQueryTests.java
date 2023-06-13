@@ -20,8 +20,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 
-import lombok.Data;
 import reactor.test.StepVerifier;
+
+import java.util.Objects;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -216,25 +217,136 @@ public class JsonSchemaQueryTests {
 				template.getCollectionName(Person.class))).hasSize(2);
 	}
 
-	@Data
 	static class Person {
 
 		@Id String id;
 
-		@Field("full_name") String name;
+		@Field("full_name") //
+		String name;
 		Gender gender;
 		Address address;
 		Object value;
 
 		boolean alive;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public Gender getGender() {
+			return this.gender;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public Object getValue() {
+			return this.value;
+		}
+
+		public boolean isAlive() {
+			return this.alive;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setGender(Gender gender) {
+			this.gender = gender;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
+		public void setAlive(boolean alive) {
+			this.alive = alive;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return alive == person.alive && Objects.equals(id, person.id) && Objects.equals(name, person.name)
+					&& gender == person.gender && Objects.equals(address, person.address) && Objects.equals(value, person.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, gender, address, value, alive);
+		}
+
+		public String toString() {
+			return "JsonSchemaQueryTests.Person(id=" + this.getId() + ", name=" + this.getName() + ", gender="
+					+ this.getGender() + ", address=" + this.getAddress() + ", value=" + this.getValue() + ", alive="
+					+ this.isAlive() + ")";
+		}
 	}
 
-	@Data
 	static class Address {
 
 		String city;
 
-		@Field("str") String street;
+		@Field("str") //
+		String street;
+
+		public String getCity() {
+			return this.city;
+		}
+
+		public String getStreet() {
+			return this.street;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(city, address.city) && Objects.equals(street, address.street);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(city, street);
+		}
+
+		public String toString() {
+			return "JsonSchemaQueryTests.Address(city=" + this.getCity() + ", street=" + this.getStreet() + ")";
+		}
 	}
 
 	static enum Gender {

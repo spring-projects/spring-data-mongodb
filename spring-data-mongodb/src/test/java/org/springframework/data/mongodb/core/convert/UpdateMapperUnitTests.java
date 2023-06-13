@@ -19,10 +19,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,8 +44,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -1669,20 +1663,38 @@ class UpdateMapperUnitTests {
 
 	}
 
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class SomeInterfaceImpl extends SomeAbstractType implements SomeInterfaceType {
 
 		String value;
+
+		public SomeInterfaceImpl() {}
+
+		public SomeInterfaceImpl(String value) {
+			this.value = value;
+		}
 	}
 
-	@Data
 	static class TypeWithFieldNameThatCannotBeDecapitalized {
 
 		@Id protected String id;
 
 		@Field("AValue") private Long aValue = 0L;
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Long getaValue() {
+			return aValue;
+		}
+
+		public void setaValue(Long aValue) {
+			this.aValue = aValue;
+		}
 	}
 
 	static class WrapperAroundWithUnwrapped {
@@ -1748,20 +1760,52 @@ class UpdateMapperUnitTests {
 		@DocumentReference private List<Sample> samples;
 	}
 
-	@Data
 	private static class TestData {
+
 		@Id private String id;
 		private TestInnerData testInnerData;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public TestInnerData getTestInnerData() {
+			return testInnerData;
+		}
+
+		public void setTestInnerData(TestInnerData testInnerData) {
+			this.testInnerData = testInnerData;
+		}
 	}
 
-	@Data
 	private static class TestInnerData {
+
 		private Map<Integer, TestValue> testMap;
+
+		public Map<Integer, TestValue> getTestMap() {
+			return testMap;
+		}
+
+		public void setTestMap(Map<Integer, TestValue> testMap) {
+			this.testMap = testMap;
+		}
 	}
 
-	@Data
 	private static class TestValue {
+
 		private int intValue;
+
+		public int getIntValue() {
+			return intValue;
+		}
+
+		public void setIntValue(int intValue) {
+			this.intValue = intValue;
+		}
 	}
 
 	static class WithPropertyValueConverter {

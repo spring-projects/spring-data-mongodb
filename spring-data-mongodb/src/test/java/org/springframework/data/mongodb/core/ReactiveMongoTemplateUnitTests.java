@@ -20,10 +20,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.util.BsonUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -36,6 +32,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -93,6 +90,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -1615,14 +1613,55 @@ public class ReactiveMongoTemplateUnitTests {
 		}).when(findPublisher).subscribe(any());
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Person {
 
 		@Id String id;
 		String firstname;
+
+		public Person() {}
+
+		public Person(String id, String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateUnitTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname() + ")";
+		}
 	}
 
 	class Wrapper {
@@ -1645,10 +1684,40 @@ public class ReactiveMongoTemplateUnitTests {
 		String getName();
 	}
 
-	@Data
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Jedi jedi = (Jedi) o;
+			return Objects.equals(name, jedi.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateUnitTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")

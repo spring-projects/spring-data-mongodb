@@ -21,8 +21,6 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import lombok.Data;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -2247,30 +2245,121 @@ public class ProjectionOperationUnitTests {
 		return (Document) fromProjectClause.get(field);
 	}
 
-	@Data
 	static class Book {
+
 		String title;
 		Author author;
+
+		public Book() {}
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public Author getAuthor() {
+			return this.author;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.Book(title=" + this.getTitle() + ", author=" + this.getAuthor() + ")";
+		}
 	}
 
-	@Data
 	static class BookWithFieldAnnotation {
 
 		@Field("ti_t_le") String title;
 		Author author;
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public Author getAuthor() {
+			return this.author;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.BookWithFieldAnnotation(title=" + this.getTitle() + ", author="
+					+ this.getAuthor() + ")";
+		}
 	}
 
-	@Data
 	static class BookRenamed {
+
 		@Field("ti_tl_e") String title;
 		Author author;
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public Author getAuthor() {
+			return this.author;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.BookRenamed(title=" + this.getTitle() + ", author=" + this.getAuthor() + ")";
+		}
 	}
 
-	@Data
 	static class Author {
+
 		String first;
 		String last;
 		String middle;
+
+		public String getFirst() {
+			return this.first;
+		}
+
+		public String getLast() {
+			return this.last;
+		}
+
+		public String getMiddle() {
+			return this.middle;
+		}
+
+		public void setFirst(String first) {
+			this.first = first;
+		}
+
+		public void setLast(String last) {
+			this.last = last;
+		}
+
+		public void setMiddle(String middle) {
+			this.middle = middle;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.Author(first=" + this.getFirst() + ", last=" + this.getLast() + ", middle="
+					+ this.getMiddle() + ")";
+		}
 	}
 
 	interface ProjectionInterface {

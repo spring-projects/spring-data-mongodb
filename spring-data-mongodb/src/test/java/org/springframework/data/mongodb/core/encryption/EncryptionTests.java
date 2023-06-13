@@ -20,16 +20,13 @@ import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -521,7 +518,6 @@ public class EncryptionTests {
 		}
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document("test")
 	static class Person {
 
@@ -553,16 +549,171 @@ public class EncryptionTests {
 
 		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		Map<String, Address> mapOfComplex;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public String getSsn() {
+			return this.ssn;
+		}
+
+		public String getWallet() {
+			return this.wallet;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public AddressWithEncryptedZip getEncryptedZip() {
+			return this.encryptedZip;
+		}
+
+		public List<String> getListOfString() {
+			return this.listOfString;
+		}
+
+		public List<Address> getListOfComplex() {
+			return this.listOfComplex;
+		}
+
+		public String getViaAltKeyNameField() {
+			return this.viaAltKeyNameField;
+		}
+
+		public Map<String, String> getMapOfString() {
+			return this.mapOfString;
+		}
+
+		public Map<String, Address> getMapOfComplex() {
+			return this.mapOfComplex;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setSsn(String ssn) {
+			this.ssn = ssn;
+		}
+
+		public void setWallet(String wallet) {
+			this.wallet = wallet;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		public void setEncryptedZip(AddressWithEncryptedZip encryptedZip) {
+			this.encryptedZip = encryptedZip;
+		}
+
+		public void setListOfString(List<String> listOfString) {
+			this.listOfString = listOfString;
+		}
+
+		public void setListOfComplex(List<Address> listOfComplex) {
+			this.listOfComplex = listOfComplex;
+		}
+
+		public void setViaAltKeyNameField(String viaAltKeyNameField) {
+			this.viaAltKeyNameField = viaAltKeyNameField;
+		}
+
+		public void setMapOfString(Map<String, String> mapOfString) {
+			this.mapOfString = mapOfString;
+		}
+
+		public void setMapOfComplex(Map<String, Address> mapOfComplex) {
+			this.mapOfComplex = mapOfComplex;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(name, person.name) && Objects.equals(ssn, person.ssn)
+					&& Objects.equals(wallet, person.wallet) && Objects.equals(address, person.address)
+					&& Objects.equals(encryptedZip, person.encryptedZip) && Objects.equals(listOfString, person.listOfString)
+					&& Objects.equals(listOfComplex, person.listOfComplex)
+					&& Objects.equals(viaAltKeyNameField, person.viaAltKeyNameField)
+					&& Objects.equals(mapOfString, person.mapOfString) && Objects.equals(mapOfComplex, person.mapOfComplex);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, ssn, wallet, address, encryptedZip, listOfString, listOfComplex, viaAltKeyNameField,
+					mapOfString, mapOfComplex);
+		}
+
+		public String toString() {
+			return "EncryptionTests.Person(id=" + this.getId() + ", name=" + this.getName() + ", ssn=" + this.getSsn()
+					+ ", wallet=" + this.getWallet() + ", address=" + this.getAddress() + ", encryptedZip="
+					+ this.getEncryptedZip() + ", listOfString=" + this.getListOfString() + ", listOfComplex="
+					+ this.getListOfComplex() + ", viaAltKeyNameField=" + this.getViaAltKeyNameField() + ", mapOfString="
+					+ this.getMapOfString() + ", mapOfComplex=" + this.getMapOfComplex() + ")";
+		}
 	}
 
-	@Data
 	static class Address {
 		String city;
 		String street;
+
+		public Address() {}
+
+		public String getCity() {
+			return this.city;
+		}
+
+		public String getStreet() {
+			return this.street;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(city, address.city) && Objects.equals(street, address.street);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(city, street);
+		}
+
+		public String toString() {
+			return "EncryptionTests.Address(city=" + this.getCity() + ", street=" + this.getStreet() + ")";
+		}
 	}
 
-	@Getter
-	@Setter
 	static class AddressWithEncryptedZip extends Address {
 
 		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) String zip;
@@ -571,6 +722,14 @@ public class EncryptionTests {
 		public String toString() {
 			return "AddressWithEncryptedZip{" + "zip='" + zip + '\'' + ", city='" + getCity() + '\'' + ", street='"
 					+ getStreet() + '\'' + '}';
+		}
+
+		public String getZip() {
+			return this.zip;
+		}
+
+		public void setZip(String zip) {
+			this.zip = zip;
 		}
 	}
 }

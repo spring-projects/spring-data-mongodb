@@ -15,14 +15,58 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.Data;
-
+import java.util.Objects;
 import java.util.UUID;
 
-@Data
 public class PersonWithIdPropertyOfTypeUUID {
 
 	private UUID id;
 	private String firstName;
 	private int age;
+
+	public UUID getId() {
+		return this.id;
+	}
+
+	public String getFirstName() {
+		return this.firstName;
+	}
+
+	public int getAge() {
+		return this.age;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		PersonWithIdPropertyOfTypeUUID that = (PersonWithIdPropertyOfTypeUUID) o;
+		return age == that.age && Objects.equals(id, that.id) && Objects.equals(firstName, that.firstName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, firstName, age);
+	}
+
+	public String toString() {
+		return "PersonWithIdPropertyOfTypeUUID(id=" + this.getId() + ", firstName=" + this.getFirstName() + ", age="
+				+ this.getAge() + ")";
+	}
 }

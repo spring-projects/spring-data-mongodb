@@ -20,8 +20,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
 
-import lombok.Data;
-
 import java.util.List;
 import java.util.Map;
 
@@ -211,7 +209,6 @@ class MongoEncryptionConverterUnitTests {
 				.append("k2", convertedValue2.toBsonDocument()).toBsonDocument());
 	}
 
-	@Data
 	static class Type {
 
 		String notAnnotated;
@@ -248,6 +245,116 @@ class MongoEncryptionConverterUnitTests {
 		RecordWithEncryptedValue recordWithEncryptedValue;
 
 		List<RecordWithEncryptedValue> listOfRecordWithEncryptedValue;
+
+		public String getNotAnnotated() {
+			return this.notAnnotated;
+		}
+
+		public String getStringValueWithAlgorithmOnly() {
+			return this.stringValueWithAlgorithmOnly;
+		}
+
+		public String getStringValueWithAlgorithmAndAltKeyName() {
+			return this.stringValueWithAlgorithmAndAltKeyName;
+		}
+
+		public String getStringValueWithAlgorithmAndAltKeyNameFromPropertyValue() {
+			return this.stringValueWithAlgorithmAndAltKeyNameFromPropertyValue;
+		}
+
+		public JustATypeWithAnUnencryptedField getNestedFullyEncrypted() {
+			return this.nestedFullyEncrypted;
+		}
+
+		public NestedWithEncryptedField getNestedWithEncryptedField() {
+			return this.nestedWithEncryptedField;
+		}
+
+		public List<String> getListOfString() {
+			return this.listOfString;
+		}
+
+		public List<JustATypeWithAnUnencryptedField> getListOfComplex() {
+			return this.listOfComplex;
+		}
+
+		public Map<String, String> getMapOfString() {
+			return this.mapOfString;
+		}
+
+		public Map<String, JustATypeWithAnUnencryptedField> getMapOfComplex() {
+			return this.mapOfComplex;
+		}
+
+		public RecordWithEncryptedValue getRecordWithEncryptedValue() {
+			return this.recordWithEncryptedValue;
+		}
+
+		public List<RecordWithEncryptedValue> getListOfRecordWithEncryptedValue() {
+			return this.listOfRecordWithEncryptedValue;
+		}
+
+		public void setNotAnnotated(String notAnnotated) {
+			this.notAnnotated = notAnnotated;
+		}
+
+		public void setStringValueWithAlgorithmOnly(String stringValueWithAlgorithmOnly) {
+			this.stringValueWithAlgorithmOnly = stringValueWithAlgorithmOnly;
+		}
+
+		public void setStringValueWithAlgorithmAndAltKeyName(String stringValueWithAlgorithmAndAltKeyName) {
+			this.stringValueWithAlgorithmAndAltKeyName = stringValueWithAlgorithmAndAltKeyName;
+		}
+
+		public void setStringValueWithAlgorithmAndAltKeyNameFromPropertyValue(
+				String stringValueWithAlgorithmAndAltKeyNameFromPropertyValue) {
+			this.stringValueWithAlgorithmAndAltKeyNameFromPropertyValue = stringValueWithAlgorithmAndAltKeyNameFromPropertyValue;
+		}
+
+		public void setNestedFullyEncrypted(JustATypeWithAnUnencryptedField nestedFullyEncrypted) {
+			this.nestedFullyEncrypted = nestedFullyEncrypted;
+		}
+
+		public void setNestedWithEncryptedField(NestedWithEncryptedField nestedWithEncryptedField) {
+			this.nestedWithEncryptedField = nestedWithEncryptedField;
+		}
+
+		public void setListOfString(List<String> listOfString) {
+			this.listOfString = listOfString;
+		}
+
+		public void setListOfComplex(List<JustATypeWithAnUnencryptedField> listOfComplex) {
+			this.listOfComplex = listOfComplex;
+		}
+
+		public void setMapOfString(Map<String, String> mapOfString) {
+			this.mapOfString = mapOfString;
+		}
+
+		public void setMapOfComplex(Map<String, JustATypeWithAnUnencryptedField> mapOfComplex) {
+			this.mapOfComplex = mapOfComplex;
+		}
+
+		public void setRecordWithEncryptedValue(RecordWithEncryptedValue recordWithEncryptedValue) {
+			this.recordWithEncryptedValue = recordWithEncryptedValue;
+		}
+
+		public void setListOfRecordWithEncryptedValue(List<RecordWithEncryptedValue> listOfRecordWithEncryptedValue) {
+			this.listOfRecordWithEncryptedValue = listOfRecordWithEncryptedValue;
+		}
+
+		public String toString() {
+			return "MongoEncryptionConverterUnitTests.Type(notAnnotated=" + this.getNotAnnotated()
+					+ ", stringValueWithAlgorithmOnly=" + this.getStringValueWithAlgorithmOnly()
+					+ ", stringValueWithAlgorithmAndAltKeyName=" + this.getStringValueWithAlgorithmAndAltKeyName()
+					+ ", stringValueWithAlgorithmAndAltKeyNameFromPropertyValue="
+					+ this.getStringValueWithAlgorithmAndAltKeyNameFromPropertyValue() + ", nestedFullyEncrypted="
+					+ this.getNestedFullyEncrypted() + ", nestedWithEncryptedField=" + this.getNestedWithEncryptedField()
+					+ ", listOfString=" + this.getListOfString() + ", listOfComplex=" + this.getListOfComplex() + ", mapOfString="
+					+ this.getMapOfString() + ", mapOfComplex=" + this.getMapOfComplex() + ", recordWithEncryptedValue="
+					+ this.getRecordWithEncryptedValue() + ", listOfRecordWithEncryptedValue="
+					+ this.getListOfRecordWithEncryptedValue() + ")";
+		}
 	}
 
 	static class JustATypeWithAnUnencryptedField {

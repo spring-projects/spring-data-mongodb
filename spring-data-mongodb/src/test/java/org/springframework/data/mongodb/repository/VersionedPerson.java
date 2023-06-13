@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Objects;
 
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -26,14 +25,14 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  */
 @Document
-@Data
-@NoArgsConstructor
 public class VersionedPerson extends Contact {
 
 	private String firstname;
 	private @Nullable String lastname;
 
 	private @Version Long version;
+
+	public VersionedPerson() {}
 
 	public VersionedPerson(String firstname) {
 		this(firstname, null);
@@ -43,5 +42,54 @@ public class VersionedPerson extends Contact {
 
 		this.firstname = firstname;
 		this.lastname = lastname;
+	}
+
+	public String getFirstname() {
+		return this.firstname;
+	}
+
+	@Nullable
+	public String getLastname() {
+		return this.lastname;
+	}
+
+	public Long getVersion() {
+		return this.version;
+	}
+
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
+
+	public void setLastname(@Nullable String lastname) {
+		this.lastname = lastname;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (o == this) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		VersionedPerson that = (VersionedPerson) o;
+		return Objects.equals(firstname, that.firstname) && Objects.equals(lastname, that.lastname)
+				&& Objects.equals(version, that.version);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(firstname, lastname, version);
+	}
+
+	public String toString() {
+		return "VersionedPerson(firstname=" + this.getFirstname() + ", lastname=" + this.getLastname() + ", version="
+				+ this.getVersion() + ")";
 	}
 }

@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.util.Map;
 
@@ -162,8 +159,6 @@ class EntityOperationsUnitTests {
 		Instant time;
 	}
 
-	@AllArgsConstructor
-	@NoArgsConstructor
 	class WithNestedDocument {
 
 		String id;
@@ -172,8 +167,17 @@ class EntityOperationsUnitTests {
 
 		Document document;
 
+		public WithNestedDocument() {}
+
 		public WithNestedDocument(String id) {
 			this.id = id;
+		}
+
+		public WithNestedDocument(String id, WithNestedDocument nested, Document document) {
+
+			this.id = id;
+			this.nested = nested;
+			this.document = document;
 		}
 	}
 

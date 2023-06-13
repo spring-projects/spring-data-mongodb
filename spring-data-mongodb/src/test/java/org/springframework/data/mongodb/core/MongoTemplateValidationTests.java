@@ -19,11 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.validation.Validator.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.bson.Document;
@@ -213,13 +211,64 @@ public class MongoTemplateValidationTests {
 		});
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(collection = COLLECTION_NAME)
 	static class SimpleBean {
 
 		private @Nullable String nonNullString;
 		private @Nullable Integer rangedInteger;
 		private @Field("customName") Object customFieldName;
+
+		public SimpleBean(@Nullable String nonNullString, @Nullable Integer rangedInteger, Object customFieldName) {
+			this.nonNullString = nonNullString;
+			this.rangedInteger = rangedInteger;
+			this.customFieldName = customFieldName;
+		}
+
+		@Nullable
+		public String getNonNullString() {
+			return this.nonNullString;
+		}
+
+		@Nullable
+		public Integer getRangedInteger() {
+			return this.rangedInteger;
+		}
+
+		public Object getCustomFieldName() {
+			return this.customFieldName;
+		}
+
+		public void setNonNullString(@Nullable String nonNullString) {
+			this.nonNullString = nonNullString;
+		}
+
+		public void setRangedInteger(@Nullable Integer rangedInteger) {
+			this.rangedInteger = rangedInteger;
+		}
+
+		public void setCustomFieldName(Object customFieldName) {
+			this.customFieldName = customFieldName;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SimpleBean that = (SimpleBean) o;
+			return Objects.equals(nonNullString, that.nonNullString) && Objects.equals(rangedInteger, that.rangedInteger) && Objects.equals(customFieldName, that.customFieldName);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(nonNullString, rangedInteger, customFieldName);
+		}
+
+		public String toString() {
+			return "MongoTemplateValidationTests.SimpleBean(nonNullString=" + this.getNonNullString() + ", rangedInteger=" + this.getRangedInteger() + ", customFieldName=" + this.getCustomFieldName() + ")";
+		}
 	}
 }

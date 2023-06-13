@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
 
-import lombok.Data;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.function.Function;
@@ -142,7 +140,6 @@ class EncryptionKeyResolverUnitTests {
 		return encryptionContext;
 	}
 
-	@Data
 	class AnnotatedWithExplicitlyEncrypted {
 
 		String notAnnotated;
@@ -155,9 +152,46 @@ class EncryptionKeyResolverUnitTests {
 
 		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random, keyAltName = "/notAnnotated") //
 		String algorithmAndAltKeyNameFromPropertyValue;
+
+		public String getNotAnnotated() {
+			return this.notAnnotated;
+		}
+
+		public String getAlgorithm() {
+			return this.algorithm;
+		}
+
+		public String getAlgorithmAndAltKeyName() {
+			return this.algorithmAndAltKeyName;
+		}
+
+		public String getAlgorithmAndAltKeyNameFromPropertyValue() {
+			return this.algorithmAndAltKeyNameFromPropertyValue;
+		}
+
+		public void setNotAnnotated(String notAnnotated) {
+			this.notAnnotated = notAnnotated;
+		}
+
+		public void setAlgorithm(String algorithm) {
+			this.algorithm = algorithm;
+		}
+
+		public void setAlgorithmAndAltKeyName(String algorithmAndAltKeyName) {
+			this.algorithmAndAltKeyName = algorithmAndAltKeyName;
+		}
+
+		public void setAlgorithmAndAltKeyNameFromPropertyValue(String algorithmAndAltKeyNameFromPropertyValue) {
+			this.algorithmAndAltKeyNameFromPropertyValue = algorithmAndAltKeyNameFromPropertyValue;
+		}
+
+		public String toString() {
+			return "EncryptionKeyResolverUnitTests.AnnotatedWithExplicitlyEncrypted(notAnnotated=" + this.getNotAnnotated()
+					+ ", algorithm=" + this.getAlgorithm() + ", algorithmAndAltKeyName=" + this.getAlgorithmAndAltKeyName()
+					+ ", algorithmAndAltKeyNameFromPropertyValue=" + this.getAlgorithmAndAltKeyNameFromPropertyValue() + ")";
+		}
 	}
 
-	@Data
 	@Encrypted(keyId = "xKVup8B1Q+CkHaVRx+qa+g==")
 	class AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType {
 
@@ -166,13 +200,49 @@ class EncryptionKeyResolverUnitTests {
 
 		@ExplicitEncrypted(keyAltName = "sec-key-name") //
 		String altKeyNameFromPropertyIgnoringKeyIdFromDomainType;
+
+		public AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType() {}
+
+		public String getKeyIdFromDomainType() {
+			return this.keyIdFromDomainType;
+		}
+
+		public String getAltKeyNameFromPropertyIgnoringKeyIdFromDomainType() {
+			return this.altKeyNameFromPropertyIgnoringKeyIdFromDomainType;
+		}
+
+		public void setKeyIdFromDomainType(String keyIdFromDomainType) {
+			this.keyIdFromDomainType = keyIdFromDomainType;
+		}
+
+		public void setAltKeyNameFromPropertyIgnoringKeyIdFromDomainType(
+				String altKeyNameFromPropertyIgnoringKeyIdFromDomainType) {
+			this.altKeyNameFromPropertyIgnoringKeyIdFromDomainType = altKeyNameFromPropertyIgnoringKeyIdFromDomainType;
+		}
+
+		public String toString() {
+			return "EncryptionKeyResolverUnitTests.AnnotatedWithExplicitlyEncryptedHavingDefaultAlgorithmServedViaAnnotationOnType(keyIdFromDomainType="
+					+ this.getKeyIdFromDomainType() + ", altKeyNameFromPropertyIgnoringKeyIdFromDomainType="
+					+ this.getAltKeyNameFromPropertyIgnoringKeyIdFromDomainType() + ")";
+		}
 	}
 
-	@Data
 	@Encrypted(keyId = "#{#myKeyId}")
 	class KeyIdFromSpel {
 
 		@ExplicitEncrypted //
 		String keyIdFromDomainType;
+
+		public String getKeyIdFromDomainType() {
+			return this.keyIdFromDomainType;
+		}
+
+		public void setKeyIdFromDomainType(String keyIdFromDomainType) {
+			this.keyIdFromDomainType = keyIdFromDomainType;
+		}
+
+		public String toString() {
+			return "EncryptionKeyResolverUnitTests.KeyIdFromSpel(keyIdFromDomainType=" + this.getKeyIdFromDomainType() + ")";
+		}
 	}
 }

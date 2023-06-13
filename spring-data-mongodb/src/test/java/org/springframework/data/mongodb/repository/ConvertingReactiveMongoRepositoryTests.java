@@ -17,27 +17,21 @@ package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
-import io.reactivex.rxjava3.observers.TestObserver;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.reactive.RxJava3CrudRepository;
-import org.springframework.data.repository.reactive.RxJava3SortingRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
@@ -46,7 +40,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
+import org.springframework.data.repository.reactive.RxJava3CrudRepository;
+import org.springframework.data.repository.reactive.RxJava3SortingRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -258,8 +255,6 @@ interface ReactivePersonRepostitory
 	}
 
 	@Document
-	@Data
-	@NoArgsConstructor
 	static class ReactivePerson {
 
 		@Id String id;
@@ -268,11 +263,68 @@ interface ReactivePersonRepostitory
 		String lastname;
 		int age;
 
+		public ReactivePerson() {}
+
 		public ReactivePerson(String firstname, String lastname, int age) {
 
 			this.firstname = firstname;
 			this.lastname = lastname;
 			this.age = age;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ReactivePerson that = (ReactivePerson) o;
+			return age == that.age && Objects.equals(id, that.id) && Objects.equals(firstname, that.firstname)
+					&& Objects.equals(lastname, that.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname, age);
+		}
+
+		public String toString() {
+			return "ConvertingReactiveMongoRepositoryTests.ReactivePerson(id=" + this.getId() + ", firstname="
+					+ this.getFirstname() + ", lastname=" + this.getLastname() + ", age=" + this.getAge() + ")";
 		}
 	}
 

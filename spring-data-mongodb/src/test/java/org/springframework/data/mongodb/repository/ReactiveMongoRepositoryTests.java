@@ -17,14 +17,11 @@ package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThat;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -867,12 +864,13 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 	}
 
 	@Document
-	@NoArgsConstructor
 	static class Capped {
 
 		String id;
 		String key;
 		double random;
+
+		public Capped() {}
 
 		Capped(String key, double random) {
 			this.key = key;
@@ -884,9 +882,29 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		double getRandom();
 	}
 
-	@Data
 	static class DtoProjection {
+
 		String id;
 		double unknown;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public double getUnknown() {
+			return this.unknown;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setUnknown(double unknown) {
+			this.unknown = unknown;
+		}
+
+		public String toString() {
+			return "ReactiveMongoRepositoryTests.DtoProjection(id=" + this.getId() + ", unknown=" + this.getUnknown() + ")";
+		}
 	}
 }

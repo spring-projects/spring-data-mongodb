@@ -19,8 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -177,23 +176,98 @@ class ClientSessionTests {
 		session.abortTransaction();
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
 	static class SomeDoc {
 
 		@Id String id;
 		String value;
+
+		SomeDoc(String id, String value) {
+
+			this.id = id;
+			this.value = value;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SomeDoc someDoc = (SomeDoc) o;
+			return Objects.equals(id, someDoc.id) && Objects.equals(value, someDoc.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "ClientSessionTests.SomeDoc(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(REF_COLLECTION_NAME)
 	static class WithDbRef {
 
 		@Id String id;
 		String value;
 		@DBRef SomeDoc someDocRef;
+
+		WithDbRef(String id, String value, SomeDoc someDocRef) {
+			this.id = id;
+			this.value = value;
+			this.someDocRef = someDocRef;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public SomeDoc getSomeDocRef() {
+			return this.someDocRef;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public void setSomeDocRef(SomeDoc someDocRef) {
+			this.someDocRef = someDocRef;
+		}
+
+		public String toString() {
+			return "ClientSessionTests.WithDbRef(id=" + this.getId() + ", value=" + this.getValue() + ", someDocRef="
+					+ this.getSomeDocRef() + ")";
+		}
 	}
 
 }

@@ -21,13 +21,10 @@ import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -727,7 +724,6 @@ class ChangeStreamTests {
 		template.createCollection(User.class, CollectionOptions.emitChangedRevisions());
 	}
 
-	@Data
 	static class User {
 
 		@Id String id;
@@ -745,14 +741,101 @@ class ChangeStreamTests {
 
 			return user;
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getUserName() {
+			return this.userName;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			User user = (User) o;
+			return age == user.age && Objects.equals(id, user.id) && Objects.equals(userName, user.userName)
+					&& Objects.equals(address, user.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, userName, age, address);
+		}
+
+		public String toString() {
+			return "ChangeStreamTests.User(id=" + this.getId() + ", userName=" + this.getUserName() + ", age=" + this.getAge()
+					+ ", address=" + this.getAddress() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Address {
 
 		@Field("s") String street;
+
+		public Address(String street) {
+			this.street = street;
+		}
+
+		public Address() {}
+
+		public String getStreet() {
+			return this.street;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(street, address.street);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(street);
+		}
+
+		public String toString() {
+			return "ChangeStreamTests.Address(street=" + this.getStreet() + ")";
+		}
 	}
 
 }

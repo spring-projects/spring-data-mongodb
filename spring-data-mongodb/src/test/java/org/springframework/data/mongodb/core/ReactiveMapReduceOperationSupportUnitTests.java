@@ -20,16 +20,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -140,7 +137,6 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 
 	interface Contact {}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person implements Contact {
 
@@ -149,13 +145,93 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 		String lastname;
 		Object ability;
 		Person father;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public Object getAbility() {
+			return this.ability;
+		}
+
+		public Person getFather() {
+			return this.father;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public void setAbility(Object ability) {
+			this.ability = ability;
+		}
+
+		public void setFather(Person father) {
+			this.father = father;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(lastname, person.lastname) && Objects.equals(ability, person.ability)
+					&& Objects.equals(father, person.father);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname, ability, father);
+		}
+
+		public String toString() {
+			return "ReactiveMapReduceOperationSupportUnitTests.Person(id=" + this.getId() + ", firstname="
+					+ this.getFirstname() + ", lastname=" + this.getLastname() + ", ability=" + this.getAbility() + ", father="
+					+ this.getFather() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public Jedi(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String toString() {
+			return "ReactiveMapReduceOperationSupportUnitTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 }

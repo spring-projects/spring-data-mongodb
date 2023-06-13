@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.ToString;
-
 import java.util.List;
 
 import org.bson.Document;
@@ -226,7 +224,6 @@ public class TextQueryTests {
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "fullTextDoc")
-	@ToString
 	static class FullTextDoc {
 
 		@Id String id;
@@ -299,6 +296,10 @@ public class TextQueryTests {
 				return false;
 			}
 			return true;
+		}
+
+		public String toString() {
+			return "TextQueryTests.FullTextDoc(id=" + this.id + ", language=" + this.language + ", headline=" + this.headline + ", subheadline=" + this.subheadline + ", body=" + this.body + ", score=" + this.score + ")";
 		}
 
 		static class FullTextDocBuilder {

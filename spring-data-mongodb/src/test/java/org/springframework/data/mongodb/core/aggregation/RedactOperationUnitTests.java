@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Data;
-
 import java.util.Arrays;
 
 import org.bson.Document;
@@ -74,10 +72,21 @@ class RedactOperationUnitTests {
 				.otherwise(RedactOperation.DESCEND)).toDocument(contextFor(DomainType.class))).isEqualTo(expectedMapped);
 	}
 
-	@Data
 	static class DomainType {
 
 		@Field("le_v_el") String level;
+
+		public String getLevel() {
+			return this.level;
+		}
+
+		public void setLevel(String level) {
+			this.level = level;
+		}
+
+		public String toString() {
+			return "RedactOperationUnitTests.DomainType(level=" + this.getLevel() + ")";
+		}
 	}
 
 	private static AggregationOperationContext contextFor(@Nullable Class<?> type) {

@@ -17,10 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -221,29 +219,90 @@ public class QueryByExampleTests {
 	}
 
 	@Document("dramatis-personae")
-	@EqualsAndHashCode
-	@ToString
 	static class Person {
 
 		@Id String id;
 		String firstname, middlename;
 		@Field("last_name") String lastname;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(middlename, person.middlename) && Objects.equals(lastname, person.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, middlename, lastname);
+		}
+
+		public String toString() {
+			return "QueryByExampleTests.Person(id=" + this.id + ", firstname=" + this.firstname + ", middlename="
+					+ this.middlename + ", lastname=" + this.lastname + ")";
+		}
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class NotAPersonButStillMatchingFields {
 
 		String firstname, middlename;
 		@Field("last_name") String lastname;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			NotAPersonButStillMatchingFields that = (NotAPersonButStillMatchingFields) o;
+			return Objects.equals(firstname, that.firstname) && Objects.equals(middlename, that.middlename)
+					&& Objects.equals(lastname, that.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(firstname, middlename, lastname);
+		}
+
+		public String toString() {
+			return "QueryByExampleTests.NotAPersonButStillMatchingFields(firstname=" + this.firstname + ", middlename="
+					+ this.middlename + ", lastname=" + this.lastname + ")";
+		}
 	}
 
 	@Document("dramatis-personae")
-	@EqualsAndHashCode
-	@ToString
 	static class PersonWrapper {
 
 		@Id String id;
 		Person child;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			PersonWrapper that = (PersonWrapper) o;
+			return Objects.equals(id, that.id) && Objects.equals(child, that.child);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, child);
+		}
+
+		public String toString() {
+			return "QueryByExampleTests.PersonWrapper(id=" + this.id + ", child=" + this.child + ")";
+		}
 	}
 }

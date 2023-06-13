@@ -20,8 +20,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -456,13 +454,19 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")
-	@AllArgsConstructor
 	public static class FooPerson {
 
 		final ObjectId id;
 		final String name;
 		@org.springframework.data.mongodb.core.mapping.Field("last_name") final String lastName;
 		final Age age;
+
+		public FooPerson(ObjectId id, String name, String lastName, Age age) {
+			this.id = id;
+			this.name = name;
+			this.lastName = lastName;
+			this.age = age;
+		}
 	}
 
 	public static class Age {

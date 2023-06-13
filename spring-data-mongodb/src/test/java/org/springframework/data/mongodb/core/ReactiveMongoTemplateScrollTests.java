@@ -18,14 +18,11 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Field;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -37,11 +34,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.data.domain.KeysetScrollPosition;
-import org.springframework.data.domain.OffsetScrollPosition;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
@@ -79,6 +75,7 @@ class ReactiveMongoTemplateScrollTests {
 
 	@BeforeEach
 	void setUp() {
+
 		template.remove(Person.class).all() //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
@@ -168,7 +165,7 @@ class ReactiveMongoTemplateScrollTests {
 	static Stream<Arguments> positions() {
 
 		return Stream.of(args(ScrollPosition.keyset(), Person.class, Function.identity()), //
-				args(ScrollPosition.keyset(), Document.class, MongoTemplateScrollTests::toDocument), //
+				args(ScrollPosition.keyset(), Document.class, ReactiveMongoTemplateScrollTests::toDocument), //
 				args(ScrollPosition.offset(), Person.class, Function.identity()));
 	}
 
@@ -193,15 +190,66 @@ class ReactiveMongoTemplateScrollTests {
 				.append("firstName", person.getFirstName()).append("age", person.getAge());
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class WithRenamedField {
 
 		String id;
 
 		@Field("_val") String value;
 
-		MongoTemplateScrollTests.WithRenamedField nested;
+		WithRenamedField nested;
+
+		public WithRenamedField() {}
+
+		public WithRenamedField(String id, String value, WithRenamedField nested) {
+			this.id = id;
+			this.value = value;
+			this.nested = nested;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public WithRenamedField getNested() {
+			return this.nested;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public void setNested(WithRenamedField nested) {
+			this.nested = nested;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithRenamedField that = (WithRenamedField) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value) && Objects.equals(nested, that.nested);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, nested);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateScrollTests.WithRenamedField(id=" + this.getId() + ", value=" + this.getValue()
+					+ ", nested=" + this.getNested() + ")";
+		}
 	}
 }

@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core.schema;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -69,7 +67,6 @@ public class MongoJsonSchemaTests {
 		protected String getDatabaseName() {
 			return "json-schema-tests";
 		}
-
 
 	}
 
@@ -182,7 +179,6 @@ public class MongoJsonSchemaTests {
 		return collectionInfo.get("options", Document.class).get("validator", Document.class);
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "persons")
 	static class Person {
 
@@ -190,6 +186,34 @@ public class MongoJsonSchemaTests {
 		String lastname;
 		Address address;
 
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		public String toString() {
+			return "MongoJsonSchemaTests.Person(firstname=" + this.getFirstname() + ", lastname=" + this.getLastname()
+					+ ", address=" + this.getAddress() + ")";
+		}
 	}
 
 	static class Address {

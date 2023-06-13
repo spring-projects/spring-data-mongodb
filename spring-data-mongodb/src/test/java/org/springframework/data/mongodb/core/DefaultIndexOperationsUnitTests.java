@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Data;
-
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -128,9 +125,23 @@ public class DefaultIndexOperationsUnitTests {
 		return new DefaultIndexOperations(template, template.getCollectionName(type), type);
 	}
 
-	@Data
 	static class Jedi {
+
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String toString() {
+			return "DefaultIndexOperationsUnitTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")

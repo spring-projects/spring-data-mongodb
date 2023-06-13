@@ -21,8 +21,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -364,14 +362,32 @@ public class SessionBoundMongoTemplateTests {
 		assertThat(resultList).hasSize(nrThreads).allMatch(it -> it.equals(1L));
 	}
 
-	@Data
 	static class WithDbRef {
 
 		@Id String id;
 		@DBRef Person personRef;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Person getPersonRef() {
+			return this.personRef;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPersonRef(Person personRef) {
+			this.personRef = personRef;
+		}
+
+		public String toString() {
+			return "SessionBoundMongoTemplateTests.WithDbRef(id=" + this.getId() + ", personRef=" + this.getPersonRef() + ")";
+		}
 	}
 
-	@Data
 	static class WithLazyDbRef {
 
 		@Id String id;
@@ -379,6 +395,23 @@ public class SessionBoundMongoTemplateTests {
 
 		public Person getPersonRef() {
 			return personRef;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPersonRef(Person personRef) {
+			this.personRef = personRef;
+		}
+
+		public String toString() {
+			return "SessionBoundMongoTemplateTests.WithLazyDbRef(id=" + this.getId() + ", personRef=" + this.getPersonRef()
+					+ ")";
 		}
 	}
 

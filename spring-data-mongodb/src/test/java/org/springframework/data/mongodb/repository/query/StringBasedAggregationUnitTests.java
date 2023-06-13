@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Value;
-
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Arrays;
@@ -37,7 +35,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -408,11 +405,33 @@ public class StringBasedAggregationUnitTests {
 
 	}
 
-	@Value
-	private static class AggregationInvocation {
+	private static final class AggregationInvocation {
 
-		TypedAggregation<?> aggregation;
-		Class<?> targetType;
-		Object result;
+		private final TypedAggregation<?> aggregation;
+		private final Class<?> targetType;
+		private final Object result;
+
+		public AggregationInvocation(TypedAggregation<?> aggregation, Class<?> targetType, Object result) {
+			this.aggregation = aggregation;
+			this.targetType = targetType;
+			this.result = result;
+		}
+
+		public TypedAggregation<?> getAggregation() {
+			return this.aggregation;
+		}
+
+		public Class<?> getTargetType() {
+			return this.targetType;
+		}
+
+		public Object getResult() {
+			return this.result;
+		}
+
+		public String toString() {
+			return "StringBasedAggregationUnitTests.AggregationInvocation(aggregation=" + this.getAggregation()
+					+ ", targetType=" + this.getTargetType() + ", result=" + this.getResult() + ")";
+		}
 	}
 }
