@@ -61,7 +61,8 @@ class ScrollUtils {
 
 		Document sortObject = query.getSortObject();
 		KeysetScrollPosition keyset = query.getKeyset();
-		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
+		Direction direction = keyset.getDirection();
+		KeysetScrollDirector director = KeysetScrollDirector.of(direction);
 
 		List<T> resultsToUse = director.postPostProcessResults(result, query.getLimit());
 
@@ -71,7 +72,7 @@ class ScrollUtils {
 			Entity<T> entity = operations.forEntity(last);
 
 			Map<String, Object> keys = entity.extractKeys(sortObject, sourceType);
-			return ScrollPosition.forward(keys);
+			return ScrollPosition.of(keys, direction);
 		};
 
 		return Window.from(resultsToUse, positionFunction, hasMoreElements(result, query.getLimit()));
