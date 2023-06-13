@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.repository.query.StubParameterAccessor.*;
