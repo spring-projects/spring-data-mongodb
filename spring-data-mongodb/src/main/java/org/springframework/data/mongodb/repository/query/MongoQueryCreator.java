@@ -52,6 +52,7 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -352,6 +353,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @return the regex options or {@literal null}.
 	 */
+	@Nullable
 	private String toRegexOptions(Part part) {
 
 		String regexOptions = null;
