@@ -107,7 +107,9 @@ public enum MongoRegexCreator {
 	 * @param source
 	 * @return
 	 * @since 2.2.14
+	 * @deprecated since 4.2
 	 */
+	@Deprecated(since = "4.2", forRemoval = true)
 	public Object toCaseInsensitiveMatch(Object source) {
 		return source instanceof String stringValue ? new BsonRegularExpression(Pattern.quote(stringValue), "i") : source;
 	}
