@@ -193,9 +193,30 @@ class MongoTemplateScrollTests {
 		window = template.scroll(q.with(window.positionAt(0)).limit(2), Person.class);
 
 		assertThat(window).hasSize(2);
-		assertThat(window).containsOnly(john20, john40_1);
-		assertThat(window.hasNext()).isTrue();
-		assertThat(window.isLast()).isFalse();
+		assertThat(window).containsOnly(jane_20, jane_40);
+		assertThat(window.hasNext()).isFalse();
+		assertThat(window.isLast()).isTrue();
+	}
+
+	@Test // GH-4413
+	void shouldAllowInitialBackwardSort() {
+
+		Person jane_20 = new Person("Jane", 20);
+		Person jane_40 = new Person("Jane", 40);
+		Person jane_42 = new Person("Jane", 42);
+		Person john20 = new Person("John", 20);
+		Person john40_1 = new Person("John", 40);
+		Person john40_2 = new Person("John", 40);
+
+		template.insertAll(Arrays.asList(john20, john40_1, john40_2, jane_20, jane_40, jane_42));
+		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age"));
+		q.with(ScrollPosition.keyset().backward()).limit(3);
+
+		Window<Person> window = template.scroll(q, Person.class);
+		assertThat(window).containsExactly(john20, john40_1, john40_2);
+
+		window = template.scroll(q.with(window.positionAt(0)).limit(3), Person.class);
+		assertThat(window).containsExactly(jane_20, jane_40, jane_42);
 	}
 
 	@ParameterizedTest // GH-4308
@@ -276,8 +297,7 @@ class MongoTemplateScrollTests {
 		return Stream.of(args(ScrollPosition.keyset(), Person.class, Function.identity()), //
 				args(ScrollPosition.keyset(), Document.class, MongoTemplateScrollTests::toDocument), //
 				args(ScrollPosition.offset(), Person.class, Function.identity()), //
-				args(ScrollPosition.offset(), PersonDtoProjection.class,
-						MongoTemplateScrollTests::toPersonDtoProjection), //
+				args(ScrollPosition.offset(), PersonDtoProjection.class, MongoTemplateScrollTests::toPersonDtoProjection), //
 				args(ScrollPosition.offset(), PersonInterfaceProjection.class,
 						MongoTemplateScrollTests::toPersonInterfaceProjection, MongoTemplateScrollTests::compareProxies));
 	}
