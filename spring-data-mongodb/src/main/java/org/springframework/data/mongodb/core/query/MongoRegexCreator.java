@@ -89,18 +89,13 @@ public enum MongoRegexCreator {
 
 		String regex = prepareAndEscapeStringBeforeApplyingLikeRegex(source, matcherType);
 
-		switch (matcherType) {
-			case STARTING_WITH:
-				return String.format("^%s", regex);
-			case ENDING_WITH:
-				return String.format("%s$", regex);
-			case CONTAINING:
-				return String.format(".*%s.*", regex);
-			case EXACT:
-				return String.format("^%s$", regex);
-			default:
-				return regex;
-		}
+		return switch (matcherType) {
+			case STARTING_WITH -> String.format("^%s", regex);
+			case ENDING_WITH -> String.format("%s$", regex);
+			case CONTAINING -> String.format(".*%s.*", regex);
+			case EXACT -> String.format("^%s$", regex);
+			default -> regex;
+		};
 	}
 
 	/**
