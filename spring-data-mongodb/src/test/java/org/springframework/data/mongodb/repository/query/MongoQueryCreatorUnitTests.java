@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.repository.query.StubParameterAcc
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,12 +38,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -281,11 +278,13 @@ class MongoQueryCreatorUnitTests {
 	void createsQueryWithFindByInClauseHavingIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findAllByFirstNameInIgnoreCase", Person.class);
-		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, List.of("da've", "carter")), context);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, Arrays.asList("da've", "carter")),
+				context);
 
 		Query query = creator.createQuery();
 		assertThat(query).isEqualTo(query(where("firstName")
-				.in(List.of(new BsonRegularExpression("^\\Qda've\\E$", "i"), new BsonRegularExpression("^carter$", "i")))));
+				.in(Arrays.asList(new BsonRegularExpression("^\\Qda've\\E$", "i"),
+						new BsonRegularExpression("^carter$", "i")))));
 	}
 
 	@Test // DATAMONGO-770
