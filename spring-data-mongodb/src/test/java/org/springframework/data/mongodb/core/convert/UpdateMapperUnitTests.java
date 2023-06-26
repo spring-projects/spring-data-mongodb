@@ -1223,6 +1223,16 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.3", "4")));
 	}
 
+    @Test
+    void mapNestedLastBigIntegerFieldCorrectly() {
+
+        Update update = new Update().set("levelOne.0.1.32", "4");
+        Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+            context.getPersistentEntity(EntityWithNestedMap.class));
+
+        assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.32", "4")));
+    }
+
 	@Test // GH-3775
 	void mapNestedMixedStringIntegerFieldCorrectly() {
 
@@ -1720,6 +1730,8 @@ class UpdateMapperUnitTests {
 
 	static class EntityWithNestedMap {
 		Map<String, Map<String, Map<String, Object>>> levelOne;
+        // for test mapNestedLastBigIntegerFieldCorrectly()
+		Map<String, Map<String, Map<String, Object>>> levelOne2;
 	}
 
 	static class Customer {
