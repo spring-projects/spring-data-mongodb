@@ -1233,6 +1233,18 @@ public class QueryMapper {
 
 			String rawPath = removePlaceholders(POSITIONAL_OPERATOR,
 					removePlaceholders(DOT_POSITIONAL_PATTERN, pathExpression));
+            // fix xx.11.22.33 becomes xx3, it should be xx.33, then path should be null. (test mapNestedLastBigIntegerFieldCorrectly)
+            if (pathExpression.contains(".")) {
+                String lastDotString = pathExpression.substring(pathExpression.lastIndexOf("."));
+                int lastDotLength = lastDotString.length();
+                int newLength = 0;
+                if (rawPath.contains(".")) {
+                    newLength = rawPath.substring(rawPath.lastIndexOf(".")).length();
+                }
+                if (lastDotLength != newLength) {
+                    rawPath = rawPath.substring(0, rawPath.length() - 1) + lastDotString;
+                }
+            }
 
 			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
 				return mappingContext.getPersistentPropertyPath(
