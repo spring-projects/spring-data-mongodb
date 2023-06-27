@@ -22,6 +22,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -170,6 +174,8 @@ public final class LazyLoadingProxyFactory {
 				throw new RuntimeException(e);
 			}
 		}
+
+		private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 		private final MongoPersistentProperty property;
 		private final DbRefResolverCallback callback;
@@ -339,8 +345,9 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		@Nullable
-		private synchronized Object resolve() {
+		private Object resolve() {
 
+			lock.readLock().lock();
 			if (resolved) {
 
 				if (LOGGER.isTraceEnabled()) {
@@ -349,6 +356,7 @@ public final class LazyLoadingProxyFactory {
 				}
 				return result;
 			}
+			lock.readLock().unlock();
 
 			try {
 				if (LOGGER.isTraceEnabled()) {
@@ -356,6 +364,7 @@ public final class LazyLoadingProxyFactory {
 							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
 				}
 
+				lock.writeLock().lock();
 				return callback.resolve(property);
 
 			} catch (RuntimeException ex) {
@@ -368,6 +377,8 @@ public final class LazyLoadingProxyFactory {
 
 				throw new LazyLoadingException("Unable to lazily resolve DBRef",
 						translatedException != null ? translatedException : ex);
+			} finally {
+				lock.writeLock().unlock();
 			}
 		}
 	}

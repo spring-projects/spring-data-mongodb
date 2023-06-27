@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,8 +51,10 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	private final TaskFactory taskFactory;
 	private final Optional<ErrorHandler> errorHandler;
 
-	private final Object lifecycleMonitor = new Object();
 	private final Map<SubscriptionRequest, Subscription> subscriptions = new LinkedHashMap<>();
+
+	ReadWriteLock lifecycleMonitor = new ReentrantReadWriteLock();
+	ReadWriteLock subscriptionMonitor = new ReentrantReadWriteLock();
 
 	private boolean running = false;
 
@@ -109,42 +113,47 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	@Override
 	public void start() {
 
-		synchronized (lifecycleMonitor) {
+		lifecycleMonitor.writeLock().lock();
+		try {
+			if (!this.running) {
+				subscriptions.values().stream() //
+						.filter(it -> !it.isActive()) //
+						.filter(TaskSubscription.class::isInstance) //
+						.map(TaskSubscription.class::cast) //
+						.map(TaskSubscription::getTask) //
+						.forEach(taskExecutor::execute);
 
-			if (this.running) {
-				return;
+				running = true;
 			}
-
-			subscriptions.values().stream() //
-					.filter(it -> !it.isActive()) //
-					.filter(TaskSubscription.class::isInstance) //
-					.map(TaskSubscription.class::cast) //
-					.map(TaskSubscription::getTask) //
-					.forEach(taskExecutor::execute);
-
-			running = true;
+		} finally {
+			lifecycleMonitor.writeLock().unlock();
 		}
 	}
 
 	@Override
 	public void stop() {
 
-		synchronized (lifecycleMonitor) {
+		lifecycleMonitor.writeLock().lock();
 
+		try {
 			if (this.running) {
-
 				subscriptions.values().forEach(Cancelable::cancel);
-
 				running = false;
 			}
+		} finally {
+			lifecycleMonitor.writeLock().unlock();
 		}
+
 	}
 
 	@Override
 	public boolean isRunning() {
 
-		synchronized (this.lifecycleMonitor) {
+		lifecycleMonitor.writeLock().lock();
+		try {
 			return running;
+		} finally {
+			lifecycleMonitor.writeLock().unlock();
 		}
 	}
 
@@ -171,35 +180,42 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	@Override
 	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
 
-		synchronized (lifecycleMonitor) {
+		subscriptionMonitor.readLock();
+		try {
 			return Optional.ofNullable(subscriptions.get(request));
+		} finally {
+			subscriptionMonitor.readLock().unlock();
 		}
+
 	}
 
 	public Subscription register(SubscriptionRequest request, Task task) {
 
 		Subscription subscription = new TaskSubscription(task);
 
-		synchronized (lifecycleMonitor) {
-
+		this.subscriptionMonitor.writeLock().lock();
+		try {
 			if (subscriptions.containsKey(request)) {
 				return subscriptions.get(request);
 			}
 
 			this.subscriptions.put(request, subscription);
 
-			if (this.running) {
+			if (this.isRunning()) {
 				taskExecutor.execute(task);
 			}
+			return subscription;
+		} finally {
+			this.subscriptionMonitor.writeLock().unlock();
 		}
 
-		return subscription;
 	}
 
 	@Override
 	public void remove(Subscription subscription) {
 
-		synchronized (lifecycleMonitor) {
+		this.subscriptionMonitor.writeLock().lock();
+		try {
 
 			if (subscriptions.containsValue(subscription)) {
 
@@ -209,6 +225,8 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 				subscriptions.values().remove(subscription);
 			}
+		} finally {
+			this.subscriptionMonitor.writeLock().unlock();
 		}
 	}
 

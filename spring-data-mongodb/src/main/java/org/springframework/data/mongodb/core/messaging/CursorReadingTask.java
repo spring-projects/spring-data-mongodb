@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.messaging;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -39,7 +41,7 @@ import com.mongodb.client.MongoCursor;
  */
 abstract class CursorReadingTask<T, R> implements Task {
 
-	private final Object lifecycleMonitor = new Object();
+	private final Lock lock = new ReentrantLock();
 
 	private final MongoTemplate template;
 	private final SubscriptionRequest<T, R, RequestOptions> request;
@@ -86,18 +88,18 @@ abstract class CursorReadingTask<T, R> implements Task {
 					}
 				} catch (InterruptedException e) {
 
-					synchronized (lifecycleMonitor) {
-						state = State.CANCELLED;
-					}
+					lock.lock();
+					state = State.CANCELLED;
+					lock.unlock();
 					Thread.currentThread().interrupt();
 					break;
 				}
 			}
 		} catch (RuntimeException e) {
 
-			synchronized (lifecycleMonitor) {
-				state = State.CANCELLED;
-			}
+			lock.lock();
+			state = State.CANCELLED;
+			lock.unlock();
 
 			errorHandler.handleError(e);
 		}
@@ -114,18 +116,19 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 */
 	private void start() {
 
-		synchronized (lifecycleMonitor) {
-			if (!State.RUNNING.equals(state)) {
-				state = State.STARTING;
-			}
+		lock.lock();
+		if (!State.RUNNING.equals(state)) {
+			state = State.STARTING;
 		}
+		lock.unlock();
 
 		do {
 
 			boolean valid = false;
 
-			synchronized (lifecycleMonitor) {
+			lock.lock();
 
+			try {
 				if (State.STARTING.equals(state)) {
 
 					MongoCursor<T> cursor = execute(() -> initCursor(template, request.getRequestOptions(), targetType));
@@ -137,6 +140,8 @@ abstract class CursorReadingTask<T, R> implements Task {
 						cursor.close();
 					}
 				}
+			} finally {
+				lock.unlock();
 			}
 
 			if (!valid) {
@@ -145,9 +150,9 @@ abstract class CursorReadingTask<T, R> implements Task {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 
-					synchronized (lifecycleMonitor) {
-						state = State.CANCELLED;
-					}
+					lock.lock();
+					state = State.CANCELLED;
+					lock.unlock();
 					Thread.currentThread().interrupt();
 				}
 			}
@@ -163,7 +168,9 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public void cancel() throws DataAccessResourceFailureException {
 
-		synchronized (lifecycleMonitor) {
+		lock.lock();
+
+		try {
 
 			if (State.RUNNING.equals(state) || State.STARTING.equals(state)) {
 				this.state = State.CANCELLED;
@@ -171,6 +178,8 @@ abstract class CursorReadingTask<T, R> implements Task {
 					cursor.close();
 				}
 			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -182,8 +191,11 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public State getState() {
 
-		synchronized (lifecycleMonitor) {
+		lock.lock();
+		try {
 			return state;
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -220,10 +232,13 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Nullable
 	private T getNext() {
 
-		synchronized (lifecycleMonitor) {
+		lock.lock();
+		try{
 			if (State.RUNNING.equals(state)) {
 				return cursor.tryNext();
 			}
+		} finally {
+			lock.unlock();
 		}
 
 		throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
