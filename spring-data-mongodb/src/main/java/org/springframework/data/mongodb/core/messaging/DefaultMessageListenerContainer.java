@@ -20,6 +20,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,8 +39,7 @@ import org.springframework.util.ObjectUtils;
 /**
  * Simple {@link Executor} based {@link MessageListenerContainer} implementation for running {@link Task tasks} like
  * listening to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> and tailable
- * cursors.
- * <br />
+ * cursors. <br />
  * This message container creates long-running tasks that are executed on {@link Executor}.
  *
  * @author Christoph Strobl
@@ -49,8 +52,10 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	private final TaskFactory taskFactory;
 	private final Optional<ErrorHandler> errorHandler;
 
-	private final Object lifecycleMonitor = new Object();
 	private final Map<SubscriptionRequest, Subscription> subscriptions = new LinkedHashMap<>();
+
+	ReadWriteLock lifecycleMonitor = new ReentrantReadWriteLock();
+	ReadWriteLock subscriptionMonitor = new ReentrantReadWriteLock();
 
 	private boolean running = false;
 
@@ -109,43 +114,34 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	@Override
 	public void start() {
 
-		synchronized (lifecycleMonitor) {
+		doWhileLocked(lifecycleMonitor.writeLock(), () -> {
+			if (!this.running) {
+				subscriptions.values().stream() //
+						.filter(it -> !it.isActive()) //
+						.filter(TaskSubscription.class::isInstance) //
+						.map(TaskSubscription.class::cast) //
+						.map(TaskSubscription::getTask) //
+						.forEach(taskExecutor::execute);
 
-			if (this.running) {
-				return;
+				running = true;
 			}
-
-			subscriptions.values().stream() //
-					.filter(it -> !it.isActive()) //
-					.filter(TaskSubscription.class::isInstance) //
-					.map(TaskSubscription.class::cast) //
-					.map(TaskSubscription::getTask) //
-					.forEach(taskExecutor::execute);
-
-			running = true;
-		}
+		});
 	}
 
 	@Override
 	public void stop() {
 
-		synchronized (lifecycleMonitor) {
-
+		doWhileLocked(lifecycleMonitor.writeLock(), () -> {
 			if (this.running) {
-
 				subscriptions.values().forEach(Cancelable::cancel);
-
 				running = false;
 			}
-		}
+		});
 	}
 
 	@Override
 	public boolean isRunning() {
-
-		synchronized (this.lifecycleMonitor) {
-			return running;
-		}
+		return executeWhileLocked(lifecycleMonitor.readLock(), () -> running);
 	}
 
 	@Override
@@ -170,36 +166,32 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
-
-		synchronized (lifecycleMonitor) {
-			return Optional.ofNullable(subscriptions.get(request));
-		}
+		return executeWhileLocked(subscriptionMonitor.readLock(), () -> Optional.ofNullable(subscriptions.get(request)));
 	}
 
 	public Subscription register(SubscriptionRequest request, Task task) {
 
-		Subscription subscription = new TaskSubscription(task);
-
-		synchronized (lifecycleMonitor) {
-
+		return executeWhileLocked(this.subscriptionMonitor.writeLock(), () -> 
+		{
 			if (subscriptions.containsKey(request)) {
 				return subscriptions.get(request);
 			}
 
+			Subscription subscription = new TaskSubscription(task);
 			this.subscriptions.put(request, subscription);
 
-			if (this.running) {
+			if (this.isRunning()) {
 				taskExecutor.execute(task);
 			}
-		}
+			return subscription;
+		});
 
-		return subscription;
 	}
 
 	@Override
 	public void remove(Subscription subscription) {
 
-		synchronized (lifecycleMonitor) {
+		doWhileLocked(this.subscriptionMonitor.writeLock(), () -> {
 
 			if (subscriptions.containsValue(subscription)) {
 
@@ -209,6 +201,25 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 				subscriptions.values().remove(subscription);
 			}
+		});
+	}
+	
+	private static void doWhileLocked(Lock lock, Runnable action) {
+
+		executeWhileLocked(lock, () -> {
+			action.run();
+			return null;
+		});
+	}
+
+	@Nullable
+	private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
+
+		lock.lock();
+		try {
+			return stuff.get();
+		} finally {
+			lock.unlock();
 		}
 	}
 

@@ -18,8 +18,12 @@ package org.springframework.data.mongodb.core;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import org.bson.Document;
@@ -188,16 +192,19 @@ public interface MongoOperations extends FluentMongoOperations {
 
 		return new SessionScoped() {
 
-			private final Object lock = new Object();
-			private @Nullable ClientSession session = null;
+			private final Lock lock = new ReentrantLock();
+			private @Nullable ClientSession session;
 
 			@Override
 			public <T> T execute(SessionCallback<T> action, Consumer<ClientSession> onComplete) {
 
-				synchronized (lock) {
+				lock.lock();
+				try {
 					if (session == null) {
 						session = sessionProvider.get();
 					}
+				} finally {
+					lock.unlock();
 				}
 
 				try {

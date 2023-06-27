@@ -22,6 +22,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -134,7 +137,8 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		return prepareProxyFactory(propertyType,
-				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator)).getProxy(LazyLoadingProxy.class.getClassLoader());
+				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator))
+						.getProxy(LazyLoadingProxy.class.getClassLoader());
 	}
 
 	/**
@@ -170,6 +174,8 @@ public final class LazyLoadingProxyFactory {
 				throw new RuntimeException(e);
 			}
 		}
+
+		private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 		private final MongoPersistentProperty property;
 		private final DbRefResolverCallback callback;
@@ -339,25 +345,29 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		@Nullable
-		private synchronized Object resolve() {
+		private Object resolve() {
 
-			if (resolved) {
+			lock.readLock().lock();
+			try {
+				if (resolved) {
 
-				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
+								property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+					}
+					return result;
 				}
-				return result;
+			} finally {
+				lock.readLock().unlock();
+			}
+
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
+						property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
 			}
 
 			try {
-				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
-				}
-
-				return callback.resolve(property);
-
+				return executeWhileLocked(lock.writeLock(), () -> callback.resolve(property));
 			} catch (RuntimeException ex) {
 
 				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
@@ -368,6 +378,16 @@ public final class LazyLoadingProxyFactory {
 
 				throw new LazyLoadingException("Unable to lazily resolve DBRef",
 						translatedException != null ? translatedException : ex);
+			}
+		}
+
+		private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
+
+			lock.lock();
+			try {
+				return stuff.get();
+			} finally {
+				lock.unlock();
 			}
 		}
 	}
