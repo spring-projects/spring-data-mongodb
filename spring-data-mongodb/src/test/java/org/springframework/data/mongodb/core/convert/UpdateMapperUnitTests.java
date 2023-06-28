@@ -35,6 +35,8 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
@@ -1213,34 +1215,26 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.a.b.d", "e")));
 	}
 
-	@Test // GH-3775
-	void mapNestedIntegerFieldCorrectly() {
+	@ParameterizedTest // GH-3775, GH-4426
+	@ValueSource(strings = {"levelOne.0.1.3", "levelOne.0.1.32", "levelOne2.0.1.32", "levelOne2.0.1.320"})
+	void mapNestedIntegerFieldCorrectly(String path) {
 
-		Update update = new Update().set("levelOne.0.1.3", "4");
+		Update update = new Update().set(path, "4");
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.3", "4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document(path, "4")));
 	}
 
-    @Test
-    void mapNestedLastBigIntegerFieldCorrectly() {
+	@ParameterizedTest // GH-3775, GH-4426
+	@ValueSource(strings = {"levelOne.0.1.c", "levelOne.0.1.c.32", "levelOne2.0.1.32.c", "levelOne2.0.1.c.320"})
+	void mapNestedMixedStringIntegerFieldCorrectly(String path) {
 
-        Update update = new Update().set("levelOne.0.1.32", "4");
-        Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-            context.getPersistentEntity(EntityWithNestedMap.class));
-
-        assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.32", "4")));
-    }
-
-	@Test // GH-3775
-	void mapNestedMixedStringIntegerFieldCorrectly() {
-
-		Update update = new Update().set("levelOne.0.1.c", "4");
+		Update update = new Update().set(path, "4");
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.c", "4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document(path, "4")));
 	}
 
 	@Test // GH-3775
@@ -1730,7 +1724,6 @@ class UpdateMapperUnitTests {
 
 	static class EntityWithNestedMap {
 		Map<String, Map<String, Map<String, Object>>> levelOne;
-        // for test mapNestedLastBigIntegerFieldCorrectly()
 		Map<String, Map<String, Map<String, Object>>> levelOne2;
 	}
 

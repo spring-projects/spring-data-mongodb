@@ -1074,7 +1074,7 @@ public class QueryMapper {
 	protected static class MetadataBackedField extends Field {
 
 		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?");
-		private static final Pattern DOT_POSITIONAL_PATTERN = Pattern.compile("\\.\\d+(?!$)");
+		private static final Pattern NUMERIC_SEGMENT = Pattern.compile("\\d+");
 		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s; Associations can only be pointed to directly or via their id property";
 
 		private final MongoPersistentEntity<?> entity;
@@ -1216,25 +1216,12 @@ public class QueryMapper {
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
 				@Nullable MongoPersistentProperty sourceProperty) {
 
-			String rawPath = removePlaceholders(POSITIONAL_OPERATOR,
-					removePlaceholders(DOT_POSITIONAL_PATTERN, pathExpression));
-            // fix xx.11.22.33 becomes xx3, it should be xx.33, then path should be null. (test mapNestedLastBigIntegerFieldCorrectly)
-            if (pathExpression.contains(".")) {
-                String lastDotString = pathExpression.substring(pathExpression.lastIndexOf("."));
-                int lastDotLength = lastDotString.length();
-                int newLength = 0;
-                if (rawPath.contains(".")) {
-                    newLength = rawPath.substring(rawPath.lastIndexOf(".")).length();
-                }
-                if (lastDotLength != newLength) {
-                    rawPath = rawPath.substring(0, rawPath.length() - 1) + lastDotString;
-                }
-            }
-
 			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
 				return mappingContext.getPersistentPropertyPath(
 						PropertyPath.from(Pattern.quote(sourceProperty.getName()), entity.getTypeInformation()));
 			}
+
+			String rawPath = resolvePath(pathExpression);
 
 			PropertyPath path = forName(rawPath);
 			if (path == null || isPathToJavaLangClassProperty(path)) {
@@ -1328,6 +1315,38 @@ public class QueryMapper {
 				return true;
 			}
 			return false;
+		}
+
+		private static String resolvePath(String source) {
+
+			String[] segments = source.split("\\.");
+			if (segments.length == 1) {
+				return source;
+			}
+
+			List<String> path = new ArrayList<>(segments.length);
+
+			/* always start from a property, so we can skip the first segment.
+			   from there remove any position placeholder */
+			for(int i=1; i < segments.length; i++) {
+				String segment = segments[i];
+				if (segment.startsWith("[") && segment.endsWith("]")) {
+					continue;
+				}
+				if (NUMERIC_SEGMENT.matcher(segment).matches()) {
+					continue;
+				}
+				path.add(segment);
+			}
+
+			// when property is followed only by placeholders eg. 'values.0.3.90'
+			// or when there is no difference in the number of segments
+			if (path.isEmpty() || segments.length == path.size() + 1) {
+				return source;
+			}
+
+			path.add(0, segments[0]);
+			return StringUtils.collectionToDelimitedString(path, ".");
 		}
 
 		/**
