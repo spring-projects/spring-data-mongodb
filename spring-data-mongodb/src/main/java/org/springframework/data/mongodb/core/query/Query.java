@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
@@ -66,7 +67,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	private @Nullable Field fieldSpec = null;
 	private Sort sort = Sort.unsorted();
 	private long skip;
-	private int limit;
+	private Limit limit = Limit.unlimited();
 
 	private KeysetScrollPosition keysetScrollPosition;
 	private @Nullable ReadConcern readConcern;
@@ -155,8 +156,28 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 */
 	public Query limit(int limit) {
-		this.limit = limit;
+		this.limit = limit > 0 ? Limit.of(limit) : Limit.unlimited();
 		return this;
+	}
+
+	/**
+	 * Limit the number of returned documents to {@link Limit}.
+	 *
+	 * @param limit number of documents to return.
+	 * @return this.
+	 * @since 4.2
+	 */
+	public Query limit(Limit limit) {
+
+		Assert.notNull(limit, "Limit must not be null");
+
+		if (limit.isUnlimited()) {
+			this.limit = limit;
+			return this;
+		}
+
+		// retain zero/negative semantics for unlimited.
+		return limit(limit.max());
 	}
 
 	/**
@@ -254,7 +275,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 			return this;
 		}
 
-		this.limit = pageable.getPageSize();
+		this.limit = pageable.toLimit();
 		this.skip = pageable.getOffset();
 
 		return with(pageable.getSort());
@@ -457,7 +478,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @since 4.1
 	 */
 	public boolean isLimited() {
-		return this.limit > 0;
+		return this.limit.isLimited();
 	}
 
 	/**
@@ -468,7 +489,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see #isLimited()
 	 */
 	public int getLimit() {
-		return this.limit;
+		return limit.isUnlimited() ? 0 : this.limit.max();
 	}
 
 	/**
@@ -683,7 +704,8 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		};
 
 		target.skip = source.getSkip();
-		target.limit = source.getLimit();
+
+		target.limit = source.isLimited() ? Limit.of(source.getLimit()) : Limit.unlimited();
 		target.hint = source.getHint();
 		target.collation = source.getCollation();
 		target.restrictedTypes = new HashSet<>(source.getRestrictedTypes());
@@ -746,7 +768,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		result += 31 * nullSafeHashCode(sort);
 		result += 31 * nullSafeHashCode(hint);
 		result += 31 * skip;
-		result += 31 * limit;
+		result += 31 * limit.hashCode();
 		result += 31 * nullSafeHashCode(meta);
 		result += 31 * nullSafeHashCode(collation.orElse(null));
 

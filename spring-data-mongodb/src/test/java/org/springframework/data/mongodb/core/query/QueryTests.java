@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -97,6 +98,18 @@ class QueryTests {
 		assertThat(q.getQueryObject()).isEqualTo(Document
 				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}"));
 		assertThat(q.getLimit()).isEqualTo(50);
+
+		q.limit(Limit.unlimited());
+		assertThat(q.getLimit()).isZero();
+		assertThat(q.isLimited()).isFalse();
+
+		q.limit(Limit.of(10));
+		assertThat(q.getLimit()).isEqualTo(10);
+		assertThat(q.isLimited()).isTrue();
+
+		q.limit(Limit.of(-1));
+		assertThat(q.getLimit()).isZero();
+		assertThat(q.isLimited()).isFalse();
 	}
 
 	@Test
