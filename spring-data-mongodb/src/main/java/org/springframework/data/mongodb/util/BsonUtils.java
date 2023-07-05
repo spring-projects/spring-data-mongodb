@@ -15,6 +15,12 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -360,6 +366,25 @@ public class BsonUtils {
 
 		if(source instanceof Binary binary) {
 			return new BsonBinary(binary.getType(), binary.getData());
+		}
+
+		if(source instanceof Temporal) {
+			if (source instanceof Instant value) {
+				return new BsonDateTime(value.toEpochMilli());
+			}
+			if (source instanceof LocalDateTime value) {
+				return new BsonDateTime(value.toInstant(ZoneOffset.UTC).toEpochMilli());
+			}
+			if(source instanceof LocalDate value) {
+				return new BsonDateTime(value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli());
+			}
+			if(source instanceof LocalTime value) {
+				return new BsonDateTime(value.atDate(LocalDate.ofEpochDay(0L)).toInstant(ZoneOffset.UTC).toEpochMilli());
+			}
+		}
+
+		if(source instanceof Date date) {
+			new BsonDateTime(date.getTime());
 		}
 
 		throw new IllegalArgumentException(String.format("Unable to convert %s (%s) to BsonValue.", source,
