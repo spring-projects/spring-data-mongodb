@@ -21,6 +21,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,6 +88,21 @@ public abstract class AbstractEncryptionTestBase {
 		verifyThat(source) //
 				.identifiedBy(Person::getId) //
 				 .wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
+				.loadedIsEqualToSource();
+	}
+
+	@Test // GH-4432
+	void encryptAndDecryptJavaTime() {
+
+		Person source = new Person();
+		source.id = "id-1";
+		source.today = LocalDate.of(1979, Month.SEPTEMBER, 18);
+
+		template.save(source);
+
+		verifyThat(source) //
+				.identifiedBy(Person::getId) //
+				.wasSavedMatching(it -> assertThat(it.get("today")).isInstanceOf(Binary.class)) //
 				.loadedIsEqualToSource();
 	}
 
@@ -548,6 +565,9 @@ public abstract class AbstractEncryptionTestBase {
 		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
 		Map<String, Address> mapOfComplex;
 
+		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Random) //
+		LocalDate today;
+
 		public String getId() {
 			return this.id;
 		}
@@ -590,6 +610,10 @@ public abstract class AbstractEncryptionTestBase {
 
 		public Map<String, Address> getMapOfComplex() {
 			return this.mapOfComplex;
+		}
+
+		public LocalDate getToday() {
+			return today;
 		}
 
 		public void setId(String id) {
@@ -636,6 +660,10 @@ public abstract class AbstractEncryptionTestBase {
 			this.mapOfComplex = mapOfComplex;
 		}
 
+		public void setToday(LocalDate today) {
+			this.today = today;
+		}
+
 		@Override
 		public boolean equals(Object o) {
 			if (o == this) {
@@ -650,13 +678,14 @@ public abstract class AbstractEncryptionTestBase {
 					&& Objects.equals(encryptedZip, person.encryptedZip) && Objects.equals(listOfString, person.listOfString)
 					&& Objects.equals(listOfComplex, person.listOfComplex)
 					&& Objects.equals(viaAltKeyNameField, person.viaAltKeyNameField)
-					&& Objects.equals(mapOfString, person.mapOfString) && Objects.equals(mapOfComplex, person.mapOfComplex);
+					&& Objects.equals(mapOfString, person.mapOfString) && Objects.equals(mapOfComplex, person.mapOfComplex)
+					&& Objects.equals(today, person.today);
 		}
 
 		@Override
 		public int hashCode() {
 			return Objects.hash(id, name, ssn, wallet, address, encryptedZip, listOfString, listOfComplex, viaAltKeyNameField,
-					mapOfString, mapOfComplex);
+					mapOfString, mapOfComplex, today);
 		}
 
 		public String toString() {
@@ -664,7 +693,8 @@ public abstract class AbstractEncryptionTestBase {
 					+ ", wallet=" + this.getWallet() + ", address=" + this.getAddress() + ", encryptedZip="
 					+ this.getEncryptedZip() + ", listOfString=" + this.getListOfString() + ", listOfComplex="
 					+ this.getListOfComplex() + ", viaAltKeyNameField=" + this.getViaAltKeyNameField() + ", mapOfString="
-					+ this.getMapOfString() + ", mapOfComplex=" + this.getMapOfComplex() + ")";
+					+ this.getMapOfString() + ", mapOfComplex=" + this.getMapOfComplex()
+					+ ", today=" + this.getToday() + ")";
 		}
 	}
 
