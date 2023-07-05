@@ -13,61 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.data.mongodb.core.encryption;
 
-import java.security.SecureRandom;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.bson.BsonBinary;
-import org.bson.Document;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.convert.PropertyValueConverterFactory;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
-import org.springframework.data.mongodb.core.encryption.EncryptionTests.Config;
+import org.springframework.data.mongodb.core.encryption.BypassAutoEncryptionTest.Config;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoNamespace;
+import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Indexes;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.vault.ClientEncryptions;
 
 /**
+ * Encryption tests for client having {@link AutoEncryptionSettings#isBypassAutoEncryption()}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = Config.class)
-public class EncryptionTests extends AbstractEncryptionTestBase {
+public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
+
+	@Disabled
+	@Override
+	void altKeyDetection(@Autowired CachingMongoClientEncryption mongoClientEncryption) throws InterruptedException {
+		super.altKeyDetection(mongoClientEncryption);
+	}
 
 	@Configuration
-	static class Config extends AbstractMongoClientConfiguration {
+	static class Config extends EncryptionConfig {
 
 		@Autowired ApplicationContext applicationContext;
 
 		@Override
-		protected String getDatabaseName() {
-			return "fle-test";
-		}
+		protected void configureClientSettings(Builder builder) {
 
-		@Bean
-		public MongoClient mongoClient() {
-			return super.mongoClient();
+			MongoClient mongoClient = MongoClients.create();
+			ClientEncryptionSettings clientEncryptionSettings = encryptionSettings(mongoClient);
+			mongoClient.close();
+
+			builder.autoEncryptionSettings(
+					AutoEncryptionSettings.builder().kmsProviders(clientEncryptionSettings.getKmsProviders())
+							.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()).bypassAutoEncryption(true).build());
 		}
 
 		@Override
@@ -92,38 +95,6 @@ public class EncryptionTests extends AbstractEncryptionTestBase {
 			return new CachingMongoClientEncryption(() -> ClientEncryptions.create(encryptionSettings));
 		}
 
-		@Bean
-		ClientEncryptionSettings encryptionSettings(MongoClient mongoClient) {
-
-			MongoNamespace keyVaultNamespace = new MongoNamespace("encryption.testKeyVault");
-			MongoCollection<Document> keyVaultCollection = mongoClient.getDatabase(keyVaultNamespace.getDatabaseName())
-					.getCollection(keyVaultNamespace.getCollectionName());
-			keyVaultCollection.drop();
-			// Ensure that two data keys cannot share the same keyAltName.
-			keyVaultCollection.createIndex(Indexes.ascending("keyAltNames"),
-					new IndexOptions().unique(true).partialFilterExpression(Filters.exists("keyAltNames")));
-
-			MongoCollection<Document> collection = mongoClient.getDatabase(getDatabaseName()).getCollection("test");
-			collection.drop(); // Clear old data
-
-			final byte[] localMasterKey = new byte[96];
-			new SecureRandom().nextBytes(localMasterKey);
-			Map<String, Map<String, Object>> kmsProviders = new HashMap<>() {
-				{
-					put("local", new HashMap<>() {
-						{
-							put("key", localMasterKey);
-						}
-					});
-				}
-			};
-
-			// Create the ClientEncryption instance
-			ClientEncryptionSettings clientEncryptionSettings = ClientEncryptionSettings.builder()
-					.keyVaultMongoClientSettings(
-							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build())
-					.keyVaultNamespace(keyVaultNamespace.getFullName()).kmsProviders(kmsProviders).build();
-			return clientEncryptionSettings;
-		}
 	}
+
 }
