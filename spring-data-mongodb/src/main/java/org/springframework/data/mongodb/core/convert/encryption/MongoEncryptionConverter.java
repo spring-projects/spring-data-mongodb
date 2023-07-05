@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert.encryption;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +26,7 @@ import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
@@ -63,7 +65,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	public Object read(Object value, MongoConversionContext context) {
 
 		Object decrypted = EncryptingConverter.super.read(value, context);
-		return decrypted instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) decrypted) : decrypted;
+		return decrypted instanceof BsonValue bsonValue ? BsonUtils.toJavaType(bsonValue) : decrypted;
 	}
 
 	@Override
@@ -87,34 +89,54 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		}
 
 		MongoPersistentProperty persistentProperty = getProperty(context);
-
 		if (getProperty(context).isCollectionLike() && decryptedValue instanceof Iterable<?> iterable) {
 
 			int size = iterable instanceof Collection<?> c ? c.size() : 10;
 
 			if (!persistentProperty.isEntity()) {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), size);
-				iterable.forEach(it -> collection.add(BsonUtils.toJavaType((BsonValue) it)));
+				iterable.forEach(it -> {
+					if(it instanceof BsonValue bsonValue) {
+						collection.add(BsonUtils.toJavaType(bsonValue));
+					} else {
+						collection.add(context.read(it, persistentProperty.getActualType()));
+					}
+				});
+
 				return collection;
 			} else {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), size);
 				iterable.forEach(it -> {
-					collection.add(context.read(BsonUtils.toJavaType((BsonValue) it), persistentProperty.getActualType()));
+					if(it instanceof BsonValue bsonValue) {
+						collection.add(context.read(BsonUtils.toJavaType(bsonValue), persistentProperty.getActualType()));
+					} else {
+						collection.add(context.read(it, persistentProperty.getActualType()));
+					}
 				});
 				return collection;
 			}
 		}
 
-		if (!persistentProperty.isEntity() && decryptedValue instanceof BsonValue bsonValue) {
-			if (persistentProperty.isMap() && persistentProperty.getType() != Document.class) {
-				return new LinkedHashMap<>((Document) BsonUtils.toJavaType(bsonValue));
-
+		if (!persistentProperty.isEntity() && persistentProperty.isMap()) {
+			if(persistentProperty.getType() != Document.class) {
+				if(decryptedValue instanceof BsonValue bsonValue) {
+					return new LinkedHashMap<>((Document) BsonUtils.toJavaType(bsonValue));
+				}
+				if(decryptedValue instanceof Document document) {
+					return new LinkedHashMap<>(document);
+				}
+				if(decryptedValue instanceof Map map) {
+					return map;
+				}
 			}
-			return BsonUtils.toJavaType(bsonValue);
 		}
 
 		if (persistentProperty.isEntity() && decryptedValue instanceof BsonDocument bsonDocument) {
 			return context.read(BsonUtils.toJavaType(bsonDocument), persistentProperty.getTypeInformation().getType());
+		}
+
+		if (persistentProperty.isEntity() && decryptedValue instanceof Document document) {
+			return context.read(document, persistentProperty.getTypeInformation().getType());
 		}
 
 		return decryptedValue;

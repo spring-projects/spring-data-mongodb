@@ -25,38 +25,26 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.assertj.core.api.Assertions;
 import org.bson.BsonBinary;
 import org.bson.Document;
-import org.bson.types.Binary;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.encryption.EncryptionTests.Config;
-import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -71,7 +59,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
-import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
 /**
@@ -79,345 +66,7 @@ import com.mongodb.client.vault.ClientEncryptions;
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = Config.class)
-public class EncryptionTests {
-
-	@Autowired MongoTemplate template;
-
-	@Test // GH-4284
-	void encryptAndDecryptSimpleValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.ssn = "mySecretSSN";
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void encryptAndDecryptComplexValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.address = new Address();
-		source.address.city = "NYC";
-		source.address.street = "4th Ave.";
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("address")).isInstanceOf(Binary.class)) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void encryptAndDecryptValueWithinComplexOne() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.encryptedZip = new AddressWithEncryptedZip();
-		source.encryptedZip.city = "Boston";
-		source.encryptedZip.street = "central square";
-		source.encryptedZip.zip = "1234567890";
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> {
-					assertThat(it.get("encryptedZip")).isInstanceOf(Document.class);
-					assertThat(it.get("encryptedZip", Document.class).get("city")).isInstanceOf(String.class);
-					assertThat(it.get("encryptedZip", Document.class).get("street")).isInstanceOf(String.class);
-					assertThat(it.get("encryptedZip", Document.class).get("zip")).isInstanceOf(Binary.class);
-				}) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void encryptAndDecryptListOfSimpleValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.listOfString = Arrays.asList("spring", "data", "mongodb");
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("listOfString")).isInstanceOf(Binary.class)) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void encryptAndDecryptListOfComplexValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-
-		Address address = new Address();
-		address.city = "SFO";
-		address.street = "---";
-
-		source.listOfComplex = Collections.singletonList(address);
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("listOfComplex")).isInstanceOf(Binary.class)) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void encryptAndDecryptMapOfSimpleValues() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.mapOfString = Map.of("k1", "v1", "k2", "v2");
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("mapOfString")).isInstanceOf(Binary.class)) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void encryptAndDecryptMapOfComplexValues() {
-
-		Person source = new Person();
-		source.id = "id-1";
-
-		Address address1 = new Address();
-		address1.city = "SFO";
-		address1.street = "---";
-
-		Address address2 = new Address();
-		address2.city = "NYC";
-		address2.street = "---";
-
-		source.mapOfComplex = Map.of("a1", address1, "a2", address2);
-
-		template.save(source);
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("mapOfComplex")).isInstanceOf(Binary.class)) //
-				.loadedIsEqualToSource();
-	}
-
-	@Test // GH-4284
-	void canQueryDeterministicallyEncrypted() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.ssn = "mySecretSSN";
-
-		template.save(source);
-
-		Person loaded = template.query(Person.class).matching(where("ssn").is(source.ssn)).firstValue();
-		assertThat(loaded).isEqualTo(source);
-	}
-
-	@Test // GH-4284
-	void cannotQueryRandomlyEncrypted() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.wallet = "secret-wallet-id";
-
-		template.save(source);
-
-		Person loaded = template.query(Person.class).matching(where("wallet").is(source.wallet)).firstValue();
-		assertThat(loaded).isNull();
-	}
-
-	@Test // GH-4284
-	void updateSimpleTypeEncryptedFieldWithNewValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-
-		template.save(source);
-
-		template.update(Person.class).matching(where("id").is(source.id)).apply(Update.update("ssn", "secret-value"))
-				.first();
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
-				.loadedMatches(it -> assertThat(it.getSsn()).isEqualTo("secret-value"));
-	}
-
-	@Test // GH-4284
-	void updateComplexTypeEncryptedFieldWithNewValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-
-		template.save(source);
-
-		Address address = new Address();
-		address.city = "SFO";
-		address.street = "---";
-
-		template.update(Person.class).matching(where("id").is(source.id)).apply(Update.update("address", address)).first();
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> assertThat(it.get("address")).isInstanceOf(Binary.class)) //
-				.loadedMatches(it -> assertThat(it.getAddress()).isEqualTo(address));
-	}
-
-	@Test // GH-4284
-	void updateEncryptedFieldInNestedElementWithNewValue() {
-
-		Person source = new Person();
-		source.id = "id-1";
-		source.encryptedZip = new AddressWithEncryptedZip();
-		source.encryptedZip.city = "Boston";
-		source.encryptedZip.street = "central square";
-
-		template.save(source);
-
-		template.update(Person.class).matching(where("id").is(source.id)).apply(Update.update("encryptedZip.zip", "179"))
-				.first();
-
-		verifyThat(source) //
-				.identifiedBy(Person::getId) //
-				.wasSavedMatching(it -> {
-					assertThat(it.get("encryptedZip")).isInstanceOf(Document.class);
-					assertThat(it.get("encryptedZip", Document.class).get("city")).isInstanceOf(String.class);
-					assertThat(it.get("encryptedZip", Document.class).get("street")).isInstanceOf(String.class);
-					assertThat(it.get("encryptedZip", Document.class).get("zip")).isInstanceOf(Binary.class);
-				}) //
-				.loadedMatches(it -> assertThat(it.getEncryptedZip().getZip()).isEqualTo("179"));
-	}
-
-	@Test
-	void aggregationWithMatch() {
-
-		Person person = new Person();
-		person.id = "id-1";
-		person.name = "p1-name";
-		person.ssn = "mySecretSSN";
-
-		template.save(person);
-
-		AggregationResults<Person> aggregationResults = template.aggregateAndReturn(Person.class)
-				.by(newAggregation(Person.class, Aggregation.match(where("ssn").is(person.ssn)))).all();
-		assertThat(aggregationResults.getMappedResults()).containsExactly(person);
-	}
-
-	@Test
-	void altKeyDetection(@Autowired CachingMongoClientEncryption mongoClientEncryption) throws InterruptedException {
-
-		BsonBinary user1key = mongoClientEncryption.getClientEncryption().createDataKey("local",
-				new DataKeyOptions().keyAltNames(Collections.singletonList("user-1")));
-
-		BsonBinary user2key = mongoClientEncryption.getClientEncryption().createDataKey("local",
-				new DataKeyOptions().keyAltNames(Collections.singletonList("user-2")));
-
-		Person p1 = new Person();
-		p1.id = "id-1";
-		p1.name = "user-1";
-		p1.ssn = "ssn";
-		p1.viaAltKeyNameField = "value-1";
-
-		Person p2 = new Person();
-		p2.id = "id-2";
-		p2.name = "user-2";
-		p2.viaAltKeyNameField = "value-1";
-
-		Person p3 = new Person();
-		p3.id = "id-3";
-		p3.name = "user-1";
-		p3.viaAltKeyNameField = "value-1";
-
-		template.save(p1);
-		template.save(p2);
-		template.save(p3);
-
-		template.execute(Person.class, collection -> {
-			collection.find(new Document()).forEach(it -> System.out.println(it.toJson()));
-			return null;
-		});
-
-		// remove the key and invalidate encrypted data
-		mongoClientEncryption.getClientEncryption().deleteKey(user2key);
-
-		// clear the 60 second key cache within the mongo client
-		mongoClientEncryption.destroy();
-
-		assertThat(template.query(Person.class).matching(where("id").is(p1.id)).firstValue()).isEqualTo(p1);
-
-		assertThatExceptionOfType(PermissionDeniedDataAccessException.class)
-				.isThrownBy(() -> template.query(Person.class).matching(where("id").is(p2.id)).firstValue());
-	}
-
-	<T> SaveAndLoadAssert<T> verifyThat(T source) {
-		return new SaveAndLoadAssert<>(source);
-	}
-
-	class SaveAndLoadAssert<T> {
-
-		T source;
-		Function<T, ?> idProvider;
-
-		SaveAndLoadAssert(T source) {
-			this.source = source;
-		}
-
-		SaveAndLoadAssert<T> identifiedBy(Function<T, ?> idProvider) {
-			this.idProvider = idProvider;
-			return this;
-		}
-
-		SaveAndLoadAssert<T> wasSavedAs(Document expected) {
-			return wasSavedMatching(it -> Assertions.assertThat(it).isEqualTo(expected));
-		}
-
-		SaveAndLoadAssert<T> wasSavedMatching(Consumer<Document> saved) {
-			EncryptionTests.this.assertSaved(source, idProvider, saved);
-			return this;
-		}
-
-		SaveAndLoadAssert<T> loadedMatches(Consumer<T> expected) {
-			EncryptionTests.this.assertLoaded(source, idProvider, expected);
-			return this;
-		}
-
-		SaveAndLoadAssert<T> loadedIsEqualToSource() {
-			return loadedIsEqualTo(source);
-		}
-
-		SaveAndLoadAssert<T> loadedIsEqualTo(T expected) {
-			return loadedMatches(it -> Assertions.assertThat(it).isEqualTo(expected));
-		}
-
-	}
-
-	<T> void assertSaved(T source, Function<T, ?> idProvider, Consumer<Document> dbValue) {
-
-		Document savedDocument = template.execute(Person.class, collection -> {
-			return collection.find(new Document("_id", idProvider.apply(source))).first();
-		});
-		dbValue.accept(savedDocument);
-	}
-
-	<T> void assertLoaded(T source, Function<T, ?> idProvider, Consumer<T> loadedValue) {
-
-		T loaded = template.query((Class<T>) source.getClass()).matching(where("id").is(idProvider.apply(source)))
-				.firstValue();
-
-		loadedValue.accept(loaded);
-	}
+public class EncryptionTests extends AbstractEncryptionTestBase {
 
 	@Configuration
 	static class Config extends AbstractMongoClientConfiguration {
