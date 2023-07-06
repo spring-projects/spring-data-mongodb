@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperationUnit
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -651,6 +652,58 @@ public class AggregationUnitTests {
 
 		List<Document> documents = newAggregation(City.class, aggregationOperations).toPipeline(new RelaxedTypeBasedAggregationOperationContext(City.class, mappingContext, queryMapper));
 		assertThat(documents.get(2)).isEqualTo("{ $sort : { 'serial_number' : -1, 'label_name' : -1 } }");
+	}
+
+	@Test // GH-4428
+	void projectIncludePath() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
+				Root.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+
+		assertThat(project("flat").andIncludePath("list.element").toDocument(context)).isEqualTo(
+				Document.parse("""
+						{
+						  "$project": {
+						    "flat": 1,
+						    "list.elE_m_enT": 1
+						  }
+						}""")
+		);
+	}
+
+	@Test // GH-4428
+	void projectExcludePath() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
+				Root.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+
+		assertThat(project("flat").andExcludePath("list.element").toDocument(context)).isEqualTo(
+				Document.parse("""
+						{
+						  "$project": {
+						    "flat": 1,
+						    "list.elE_m_enT": 0
+						  }
+						}""")
+		);
+	}
+
+
+	static class Root {
+		String flat;
+		List<Nested> list;
+	}
+
+	static class Nested {
+
+		@Field("elE_m_enT")
+		int element;
+		String description;
+
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {
