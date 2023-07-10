@@ -81,7 +81,7 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 
 	/**
 	 * Obtain the target field name for a given field/type combination.
-	 * 
+	 *
 	 * @param type The type containing the field.
 	 * @param field The property/field name
 	 * @return never {@literal null}.
@@ -103,7 +103,7 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	}
 
 	/**
-	 * Returns the {@link Fields} exposed by the type. May be a {@literal class} or an {@literal interface}. The default
+	 * Returns the {@link Fields} exposed by the type. Can be a {@literal class} or an {@literal interface}. The default
 	 * implementation uses {@link BeanUtils#getPropertyDescriptors(Class) property descriptors} discover fields from a
 	 * {@link Class}.
 	 *
@@ -133,7 +133,7 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 
 	/**
 	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
-	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
+	 * its existence. Typically, the {@link AggregationOperationContext} fails when referencing unknown fields, those that
 	 * are not present in one of the previous stages or the input source, throughout the pipeline.
 	 *
 	 * @return a more relaxed {@link AggregationOperationContext}.

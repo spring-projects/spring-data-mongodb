@@ -109,7 +109,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	 * @param foreignField can be {@literal null} if {@literal pipeline} is present.
 	 * @param let can be {@literal null} if {@literal localField} and {@literal foreignField} are present.
 	 * @param as must not be {@literal null}.
-	 * @since 4.1
+	 * @since 4.2
 	 */
 	private LookupOperation(Object from, @Nullable Field localField, @Nullable Field foreignField, @Nullable Let let,
 			@Nullable AggregationPipeline pipeline, Field as) {
@@ -142,11 +142,11 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		Document lookupObject = new Document();
 
 		lookupObject.append("from", getCollectionName(context));
-		
+
 		if (localField != null) {
 			lookupObject.append("localField", localField.getTarget());
 		}
-		
+
 		if (foreignField != null) {
 			lookupObject.append("foreignField", getForeignFieldName(context));
 		}
@@ -198,7 +198,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		 * Use the given type to determine name of the foreign collection and map
 		 * {@link ForeignFieldBuilder#foreignField(String)} against it to consider eventually present
 		 * {@link org.springframework.data.mongodb.core.mapping.Field} annotations.
-		 * 
+		 *
 		 * @param type the type of the target collection in the same database to perform the join with, must not be
 		 *          {@literal null}.
 		 * @return never {@literal null}.
