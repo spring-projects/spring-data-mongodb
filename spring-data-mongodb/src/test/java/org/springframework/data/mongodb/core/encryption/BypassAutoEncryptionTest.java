@@ -68,9 +68,10 @@ public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 			ClientEncryptionSettings clientEncryptionSettings = encryptionSettings(mongoClient);
 			mongoClient.close();
 
-			builder.autoEncryptionSettings(
-					AutoEncryptionSettings.builder().kmsProviders(clientEncryptionSettings.getKmsProviders())
-							.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()).bypassAutoEncryption(true).build());
+			builder.autoEncryptionSettings(AutoEncryptionSettings.builder() //
+					.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
+					.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
+					.bypassAutoEncryption(true).build());
 		}
 
 		@Override
@@ -81,6 +82,7 @@ public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 		}
 
 		@Bean
+		@Override
 		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
 
 			Lazy<BsonBinary> dataKey = Lazy.of(() -> mongoClientEncryption.getClientEncryption().createDataKey("local",
@@ -91,6 +93,7 @@ public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 		}
 
 		@Bean
+		@Override
 		CachingMongoClientEncryption clientEncryption(ClientEncryptionSettings encryptionSettings) {
 			return new CachingMongoClientEncryption(() -> ClientEncryptions.create(encryptionSettings));
 		}

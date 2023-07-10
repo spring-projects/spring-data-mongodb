@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.encryption;
 
 import java.security.SecureRandom;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.bson.BsonBinary;
@@ -66,6 +65,7 @@ public class EncryptionTests extends AbstractEncryptionTestBase {
 		}
 
 		@Bean
+		@Override
 		public MongoClient mongoClient() {
 			return super.mongoClient();
 		}
@@ -106,24 +106,17 @@ public class EncryptionTests extends AbstractEncryptionTestBase {
 			MongoCollection<Document> collection = mongoClient.getDatabase(getDatabaseName()).getCollection("test");
 			collection.drop(); // Clear old data
 
-			final byte[] localMasterKey = new byte[96];
+			byte[] localMasterKey = new byte[96];
 			new SecureRandom().nextBytes(localMasterKey);
-			Map<String, Map<String, Object>> kmsProviders = new HashMap<>() {
-				{
-					put("local", new HashMap<>() {
-						{
-							put("key", localMasterKey);
-						}
-					});
-				}
-			};
+			Map<String, Map<String, Object>> kmsProviders = Map.of("local", Map.of("key", localMasterKey));
 
 			// Create the ClientEncryption instance
-			ClientEncryptionSettings clientEncryptionSettings = ClientEncryptionSettings.builder()
+			return ClientEncryptionSettings.builder()
 					.keyVaultMongoClientSettings(
-							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build())
-					.keyVaultNamespace(keyVaultNamespace.getFullName()).kmsProviders(kmsProviders).build();
-			return clientEncryptionSettings;
+							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build()) //
+					.keyVaultNamespace(keyVaultNamespace.getFullName()) //
+					.kmsProviders(kmsProviders) //
+					.build();
 		}
 	}
 }
