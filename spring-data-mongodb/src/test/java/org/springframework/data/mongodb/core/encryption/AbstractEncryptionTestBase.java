@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,14 +33,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.mongodb.ClientEncryptionSettings;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Indexes;
-import com.mongodb.client.vault.ClientEncryptions;
 import org.assertj.core.api.Assertions;
 import org.bson.BsonBinary;
 import org.bson.Document;
@@ -61,13 +52,21 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions.Mong
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.Lazy;
 
+import com.mongodb.ClientEncryptionSettings;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.vault.ClientEncryption;
-import org.springframework.data.util.Lazy;
+import com.mongodb.client.vault.ClientEncryptions;
 
 /**
  * @author Christoph Strobl
@@ -87,7 +86,7 @@ public abstract class AbstractEncryptionTestBase {
 
 		verifyThat(source) //
 				.identifiedBy(Person::getId) //
-				 .wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
+				.wasSavedMatching(it -> assertThat(it.get("ssn")).isInstanceOf(Binary.class)) //
 				.loadedIsEqualToSource();
 	}
 
@@ -119,7 +118,7 @@ public abstract class AbstractEncryptionTestBase {
 
 		verifyThat(source) //
 				.identifiedBy(Person::getId) //
-				 .wasSavedMatching(it -> assertThat(it.get("address")).isInstanceOf(Binary.class)) //
+				.wasSavedMatching(it -> assertThat(it.get("address")).isInstanceOf(Binary.class)) //
 				.loadedIsEqualToSource();
 	}
 
@@ -483,24 +482,17 @@ public abstract class AbstractEncryptionTestBase {
 			MongoCollection<Document> collection = mongoClient.getDatabase(getDatabaseName()).getCollection("test");
 			collection.drop(); // Clear old data
 
-			final byte[] localMasterKey = new byte[96];
+			byte[] localMasterKey = new byte[96];
 			new SecureRandom().nextBytes(localMasterKey);
-			Map<String, Map<String, Object>> kmsProviders = new HashMap<>() {
-				{
-					put("local", new HashMap<>() {
-						{
-							put("key", localMasterKey);
-						}
-					});
-				}
-			};
+			Map<String, Map<String, Object>> kmsProviders = Map.of("local", Map.of("key", localMasterKey));
 
 			// Create the ClientEncryption instance
-			ClientEncryptionSettings clientEncryptionSettings = ClientEncryptionSettings.builder()
+			return ClientEncryptionSettings.builder() //
 					.keyVaultMongoClientSettings(
-							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build())
-					.keyVaultNamespace(keyVaultNamespace.getFullName()).kmsProviders(kmsProviders).build();
-			return clientEncryptionSettings;
+							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build()) //
+					.keyVaultNamespace(keyVaultNamespace.getFullName()) //
+					.kmsProviders(kmsProviders) //
+					.build();
 		}
 	}
 
@@ -693,8 +685,7 @@ public abstract class AbstractEncryptionTestBase {
 					+ ", wallet=" + this.getWallet() + ", address=" + this.getAddress() + ", encryptedZip="
 					+ this.getEncryptedZip() + ", listOfString=" + this.getListOfString() + ", listOfComplex="
 					+ this.getListOfComplex() + ", viaAltKeyNameField=" + this.getViaAltKeyNameField() + ", mapOfString="
-					+ this.getMapOfString() + ", mapOfComplex=" + this.getMapOfComplex()
-					+ ", today=" + this.getToday() + ")";
+					+ this.getMapOfString() + ", mapOfComplex=" + this.getMapOfComplex() + ", today=" + this.getToday() + ")";
 		}
 	}
 

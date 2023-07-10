@@ -286,36 +286,22 @@ public class BsonUtils {
 	 */
 	public static Object toJavaType(BsonValue value) {
 
-		switch (value.getBsonType()) {
-			case INT32:
-				return value.asInt32().getValue();
-			case INT64:
-				return value.asInt64().getValue();
-			case STRING:
-				return value.asString().getValue();
-			case DECIMAL128:
-				return value.asDecimal128().doubleValue();
-			case DOUBLE:
-				return value.asDouble().getValue();
-			case BOOLEAN:
-				return value.asBoolean().getValue();
-			case OBJECT_ID:
-				return value.asObjectId().getValue();
-			case DB_POINTER:
-				return new DBRef(value.asDBPointer().getNamespace(), value.asDBPointer().getId());
-			case BINARY:
-				return value.asBinary().getData();
-			case DATE_TIME:
-				return new Date(value.asDateTime().getValue());
-			case SYMBOL:
-				return value.asSymbol().getSymbol();
-			case ARRAY:
-				return value.asArray().toArray();
-			case DOCUMENT:
-				return Document.parse(value.asDocument().toJson());
-			default:
-				return value;
-		}
+		return switch (value.getBsonType()) {
+			case INT32 -> value.asInt32().getValue();
+			case INT64 -> value.asInt64().getValue();
+			case STRING -> value.asString().getValue();
+			case DECIMAL128 -> value.asDecimal128().doubleValue();
+			case DOUBLE -> value.asDouble().getValue();
+			case BOOLEAN -> value.asBoolean().getValue();
+			case OBJECT_ID -> value.asObjectId().getValue();
+			case DB_POINTER -> new DBRef(value.asDBPointer().getNamespace(), value.asDBPointer().getId());
+			case BINARY -> value.asBinary().getData();
+			case DATE_TIME -> new Date(value.asDateTime().getValue());
+			case SYMBOL -> value.asSymbol().getSymbol();
+			case ARRAY -> value.asArray().toArray();
+			case DOCUMENT -> Document.parse(value.asDocument().toJson());
+			default -> value;
+		};
 	}
 
 	/**
@@ -364,26 +350,26 @@ public class BsonUtils {
 			return new BsonDouble(floatValue);
 		}
 
-		if(source instanceof Binary binary) {
+		if (source instanceof Binary binary) {
 			return new BsonBinary(binary.getType(), binary.getData());
 		}
 
-		if(source instanceof Temporal) {
+		if (source instanceof Temporal) {
 			if (source instanceof Instant value) {
 				return new BsonDateTime(value.toEpochMilli());
 			}
 			if (source instanceof LocalDateTime value) {
 				return new BsonDateTime(value.toInstant(ZoneOffset.UTC).toEpochMilli());
 			}
-			if(source instanceof LocalDate value) {
+			if (source instanceof LocalDate value) {
 				return new BsonDateTime(value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli());
 			}
-			if(source instanceof LocalTime value) {
+			if (source instanceof LocalTime value) {
 				return new BsonDateTime(value.atDate(LocalDate.ofEpochDay(0L)).toInstant(ZoneOffset.UTC).toEpochMilli());
 			}
 		}
 
-		if(source instanceof Date date) {
+		if (source instanceof Date date) {
 			new BsonDateTime(date.getTime());
 		}
 
@@ -393,7 +379,7 @@ public class BsonUtils {
 
 	/**
 	 * Merge the given {@link Document documents} into on in the given order. Keys contained within multiple documents are
-	 * overwritten by their follow ups.
+	 * overwritten by their follow-ups.
 	 *
 	 * @param documents must not be {@literal null}. Can be empty.
 	 * @return the document containing all key value pairs.
@@ -694,7 +680,7 @@ public class BsonUtils {
 
 			if (value instanceof Collection<?> collection) {
 				return toString(collection);
-			} else if (value instanceof Map<?,?> map) {
+			} else if (value instanceof Map<?, ?> map) {
 				return toString(map);
 			} else if (ObjectUtils.isArray(value)) {
 				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
@@ -716,8 +702,9 @@ public class BsonUtils {
 
 	private static String toString(Map<?, ?> source) {
 
+		// Avoid String.format for performance
 		return iterableToDelimitedString(source.entrySet(), "{ ", " }",
-				entry -> String.format("\"%s\" : %s", entry.getKey(), toJson(entry.getValue())));
+				entry -> "\"" + entry.getKey() + "\" : " + toJson(entry.getValue()));
 	}
 
 	private static String toString(Collection<?> source) {

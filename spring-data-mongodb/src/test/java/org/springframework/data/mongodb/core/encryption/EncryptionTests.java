@@ -15,10 +15,7 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.Data;
 import lombok.Getter;
@@ -26,12 +23,8 @@ import lombok.Setter;
 
 import java.security.SecureRandom;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.bson.BsonBinary;
 import org.bson.Document;
@@ -45,6 +38,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.encryption.EncryptionTests.Config;
+import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -79,6 +73,7 @@ public class EncryptionTests extends AbstractEncryptionTestBase {
 		}
 
 		@Bean
+		@Override
 		public MongoClient mongoClient() {
 			return super.mongoClient();
 		}
@@ -119,55 +114,19 @@ public class EncryptionTests extends AbstractEncryptionTestBase {
 			MongoCollection<Document> collection = mongoClient.getDatabase(getDatabaseName()).getCollection("test");
 			collection.drop(); // Clear old data
 
-			final byte[] localMasterKey = new byte[96];
+			byte[] localMasterKey = new byte[96];
 			new SecureRandom().nextBytes(localMasterKey);
-			Map<String, Map<String, Object>> kmsProviders = new HashMap<>() {
-				{
-					put("local", new HashMap<>() {
-						{
-							put("key", localMasterKey);
-						}
-					});
-				}
-			};
+			Map<String, Map<String, Object>> kmsProviders = Map.of("local", Map.of("key", localMasterKey));
 
 			// Create the ClientEncryption instance
-			ClientEncryptionSettings clientEncryptionSettings = ClientEncryptionSettings.builder()
+			return ClientEncryptionSettings.builder()
 					.keyVaultMongoClientSettings(
-							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build())
-					.keyVaultNamespace(keyVaultNamespace.getFullName()).kmsProviders(kmsProviders).build();
-			return clientEncryptionSettings;
+							MongoClientSettings.builder().applyConnectionString(new ConnectionString("mongodb://localhost")).build()) //
+					.keyVaultNamespace(keyVaultNamespace.getFullName()) //
+					.kmsProviders(kmsProviders) //
+					.build();
 		}
 
-	}
-
-	static class CachingMongoClientEncryption extends MongoClientEncryption implements DisposableBean {
-
-		static final AtomicReference<ClientEncryption> cache = new AtomicReference<>();
-
-		CachingMongoClientEncryption(Supplier<ClientEncryption> source) {
-			super(() -> {
-
-				if (cache.get() != null) {
-					return cache.get();
-				}
-
-				ClientEncryption clientEncryption = source.get();
-				cache.set(clientEncryption);
-
-				return clientEncryption;
-			});
-		}
-
-		@Override
-		public void destroy() {
-
-			ClientEncryption clientEncryption = cache.get();
-			if (clientEncryption != null) {
-				clientEncryption.close();
-				cache.set(null);
-			}
-		}
 	}
 
 	@Data

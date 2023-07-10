@@ -26,7 +26,6 @@ import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
@@ -96,7 +95,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			if (!persistentProperty.isEntity()) {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), size);
 				iterable.forEach(it -> {
-					if(it instanceof BsonValue bsonValue) {
+					if (it instanceof BsonValue bsonValue) {
 						collection.add(BsonUtils.toJavaType(bsonValue));
 					} else {
 						collection.add(context.read(it, persistentProperty.getActualType()));
@@ -107,7 +106,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			} else {
 				Collection<Object> collection = CollectionFactory.createCollection(persistentProperty.getType(), size);
 				iterable.forEach(it -> {
-					if(it instanceof BsonValue bsonValue) {
+					if (it instanceof BsonValue bsonValue) {
 						collection.add(context.read(BsonUtils.toJavaType(bsonValue), persistentProperty.getActualType()));
 					} else {
 						collection.add(context.read(it, persistentProperty.getActualType()));
@@ -118,14 +117,14 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		}
 
 		if (!persistentProperty.isEntity() && persistentProperty.isMap()) {
-			if(persistentProperty.getType() != Document.class) {
-				if(decryptedValue instanceof BsonValue bsonValue) {
+			if (persistentProperty.getType() != Document.class) {
+				if (decryptedValue instanceof BsonValue bsonValue) {
 					return new LinkedHashMap<>((Document) BsonUtils.toJavaType(bsonValue));
 				}
-				if(decryptedValue instanceof Document document) {
+				if (decryptedValue instanceof Document document) {
 					return new LinkedHashMap<>(document);
 				}
-				if(decryptedValue instanceof Map map) {
+				if (decryptedValue instanceof Map map) {
 					return map;
 				}
 			}
