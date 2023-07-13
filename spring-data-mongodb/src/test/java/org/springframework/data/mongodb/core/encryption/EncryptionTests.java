@@ -49,6 +49,7 @@ import com.mongodb.client.vault.ClientEncryptions;
 
 /**
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = Config.class)
@@ -74,7 +75,8 @@ public class EncryptionTests extends AbstractEncryptionTestBase {
 		protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
 
 			converterConfigurationAdapter
-					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext));
+					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext))
+					.useNativeDriverJavaTimeCodecs();
 		}
 
 		@Bean

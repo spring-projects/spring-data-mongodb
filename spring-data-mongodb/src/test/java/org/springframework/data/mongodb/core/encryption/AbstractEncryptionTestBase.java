@@ -70,6 +70,7 @@ import com.mongodb.client.vault.ClientEncryptions;
 
 /**
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 public abstract class AbstractEncryptionTestBase {
 
@@ -450,7 +451,8 @@ public abstract class AbstractEncryptionTestBase {
 		protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
 
 			converterConfigurationAdapter
-					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext));
+					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext))
+					.useNativeDriverJavaTimeCodecs();
 		}
 
 		@Bean
