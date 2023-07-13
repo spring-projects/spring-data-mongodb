@@ -30,7 +30,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -110,6 +109,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author Roman Puchkovskiy
  * @author Heesu Jung
+ * @author Julia Lee
  */
 @ExtendWith(MockitoExtension.class)
 class MappingMongoConverterUnitTests {
@@ -2623,7 +2623,7 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleInterfaceProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay(systemDefault()).toInstant())).append("foo", "Walter");
 
 		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
@@ -2641,7 +2641,7 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleDtoProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay(systemDefault()).toInstant())).append("foo", "Walter");
 
 		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()

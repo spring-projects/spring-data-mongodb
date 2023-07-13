@@ -45,6 +45,7 @@ import com.mongodb.client.vault.ClientEncryptions;
  * Encryption tests for client having {@link AutoEncryptionSettings#isBypassAutoEncryption()}.
  *
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = Config.class)
@@ -78,7 +79,8 @@ public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 		protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
 
 			converterConfigurationAdapter
-					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext));
+					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext))
+					.useNativeDriverJavaTimeCodecs();
 		}
 
 		@Bean
