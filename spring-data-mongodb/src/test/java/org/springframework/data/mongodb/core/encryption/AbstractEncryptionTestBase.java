@@ -450,7 +450,8 @@ public abstract class AbstractEncryptionTestBase {
 		protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
 
 			converterConfigurationAdapter
-					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext));
+					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext))
+					.useNativeDriverJavaTimeCodecs();
 		}
 
 		@Bean

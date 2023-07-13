@@ -2619,7 +2619,7 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleInterfaceProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay(systemDefault()).toInstant())).append("foo", "Walter");
 
 		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
@@ -2637,7 +2637,7 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleDtoProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay(systemDefault()).toInstant())).append("foo", "Walter");
 
 		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
