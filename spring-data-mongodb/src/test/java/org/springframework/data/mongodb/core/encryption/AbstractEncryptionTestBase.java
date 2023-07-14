@@ -70,6 +70,7 @@ import com.mongodb.client.vault.ClientEncryptions;
 
 /**
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 public abstract class AbstractEncryptionTestBase {
 

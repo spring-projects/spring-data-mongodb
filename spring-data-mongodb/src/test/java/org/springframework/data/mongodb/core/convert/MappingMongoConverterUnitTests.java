@@ -25,7 +25,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -106,6 +105,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author Roman Puchkovskiy
  * @author Heesu Jung
+ * @author Julia Lee
  */
 @ExtendWith(MockitoExtension.class)
 class MappingMongoConverterUnitTests {

@@ -16,20 +16,10 @@
 
 package org.springframework.data.mongodb.core.encryption;
 
-import java.util.Collections;
-
-import org.bson.BsonBinary;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.convert.PropertyValueConverterFactory;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
-import org.springframework.data.mongodb.core.encryption.BypassAutoEncryptionTest.Config;
-import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -38,16 +28,15 @@ import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.model.vault.DataKeyOptions;
-import com.mongodb.client.vault.ClientEncryptions;
 
 /**
  * Encryption tests for client having {@link AutoEncryptionSettings#isBypassAutoEncryption()}.
  *
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = Config.class)
+@ContextConfiguration
 public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 
 	@Disabled
@@ -58,8 +47,6 @@ public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 
 	@Configuration
 	static class Config extends EncryptionConfig {
-
-		@Autowired ApplicationContext applicationContext;
 
 		@Override
 		protected void configureClientSettings(Builder builder) {
@@ -72,31 +59,6 @@ public class BypassAutoEncryptionTest extends AbstractEncryptionTestBase {
 					.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
 					.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
 					.bypassAutoEncryption(true).build());
-		}
-
-		@Override
-		protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
-
-			converterConfigurationAdapter
-					.registerPropertyValueConverterFactory(PropertyValueConverterFactory.beanFactoryAware(applicationContext))
-					.useNativeDriverJavaTimeCodecs();
-		}
-
-		@Bean
-		@Override
-		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
-
-			Lazy<BsonBinary> dataKey = Lazy.of(() -> mongoClientEncryption.getClientEncryption().createDataKey("local",
-					new DataKeyOptions().keyAltNames(Collections.singletonList("mySuperSecretKey"))));
-
-			return new MongoEncryptionConverter(mongoClientEncryption,
-					EncryptionKeyResolver.annotated((ctx) -> EncryptionKey.keyId(dataKey.get())));
-		}
-
-		@Bean
-		@Override
-		CachingMongoClientEncryption clientEncryption(ClientEncryptionSettings encryptionSettings) {
-			return new CachingMongoClientEncryption(() -> ClientEncryptions.create(encryptionSettings));
 		}
 
 	}
