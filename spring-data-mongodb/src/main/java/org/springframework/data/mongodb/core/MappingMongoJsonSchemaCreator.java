@@ -203,8 +203,9 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 								target.properties(nestedProperties.toArray(new JsonSchemaProperty[0])), required));
 					}
 				}
-				return targetProperties.size() == 1 ? targetProperties.iterator().next()
+				JsonSchemaProperty schemaProperty = targetProperties.size() == 1 ? targetProperties.iterator().next()
 						: JsonSchemaProperty.merged(targetProperties);
+				return applyEncryptionDataIfNecessary(property, schemaProperty);
 			}
 		}
 
