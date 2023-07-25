@@ -88,19 +88,14 @@ abstract class CursorReadingTask<T, R> implements Task {
 					}
 				} catch (InterruptedException e) {
 
-					lock.lock();
-					state = State.CANCELLED;
-					lock.unlock();
+					doWhileLocked(lock, () -> state = State.CANCELLED);
 					Thread.currentThread().interrupt();
 					break;
 				}
 			}
 		} catch (RuntimeException e) {
 
-			lock.lock();
-			state = State.CANCELLED;
-			lock.unlock();
-
+			doWhileLocked(lock, () -> state = State.CANCELLED);
 			errorHandler.handleError(e);
 		}
 	}
@@ -116,33 +111,32 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 */
 	private void start() {
 
-		lock.lock();
-		if (!State.RUNNING.equals(state)) {
-			state = State.STARTING;
-		}
-		lock.unlock();
+		doWhileLocked(lock, () -> {
+			if (!State.RUNNING.equals(state)) {
+				state = State.STARTING;
+			}
+		});
 
 		do {
 
-			boolean valid = false;
+			// boolean valid = false;
 
-			lock.lock();
+			boolean valid = executeWhileLocked(lock, () -> {
 
-			try {
-				if (State.STARTING.equals(state)) {
-
-					MongoCursor<T> cursor = execute(() -> initCursor(template, request.getRequestOptions(), targetType));
-					valid = isValidCursor(cursor);
-					if (valid) {
-						this.cursor = cursor;
-						state = State.RUNNING;
-					} else if (cursor != null) {
-						cursor.close();
-					}
+				if (!State.STARTING.equals(state)) {
+					return false;
 				}
-			} finally {
-				lock.unlock();
-			}
+
+				MongoCursor<T> cursor = execute(() -> initCursor(template, request.getRequestOptions(), targetType));
+				boolean isValid = isValidCursor(cursor);
+				if (isValid) {
+					this.cursor = cursor;
+					state = State.RUNNING;
+				} else if (cursor != null) {
+					cursor.close();
+				}
+				return isValid;
+			});
 
 			if (!valid) {
 
@@ -150,9 +144,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 
-					lock.lock();
-					state = State.CANCELLED;
-					lock.unlock();
+					doWhileLocked(lock, () -> state = State.CANCELLED);
 					Thread.currentThread().interrupt();
 				}
 			}
@@ -168,9 +160,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public void cancel() throws DataAccessResourceFailureException {
 
-		lock.lock();
-
-		try {
+		doWhileLocked(lock, () -> {
 
 			if (State.RUNNING.equals(state) || State.STARTING.equals(state)) {
 				this.state = State.CANCELLED;
@@ -178,9 +168,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					cursor.close();
 				}
 			}
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	@Override
@@ -190,13 +178,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	@Override
 	public State getState() {
-
-		lock.lock();
-		try {
-			return state;
-		} finally {
-			lock.unlock();
-		}
+		return executeWhileLocked(lock, () -> state);
 	}
 
 	@Override
@@ -232,16 +214,12 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Nullable
 	private T getNext() {
 
-		lock.lock();
-		try{
+		return executeWhileLocked(lock, () -> {
 			if (State.RUNNING.equals(state)) {
 				return cursor.tryNext();
 			}
-		} finally {
-			lock.unlock();
-		}
-
-		throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
+			throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
+		});
 	}
 
 	private static boolean isValidCursor(@Nullable MongoCursor<?> cursor) {
@@ -276,6 +254,25 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 			RuntimeException translated = template.getExceptionTranslator().translateExceptionIfPossible(e);
 			throw translated != null ? translated : e;
+		}
+	}
+
+	private static void doWhileLocked(Lock lock, Runnable action) {
+
+		executeWhileLocked(lock, () -> {
+			action.run();
+			return null;
+		});
+	}
+
+	@Nullable
+	private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
+
+		lock.lock();
+		try {
+			return stuff.get();
+		} finally {
+			lock.unlock();
 		}
 	}
 }

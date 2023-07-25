@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
@@ -138,7 +137,8 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		return prepareProxyFactory(propertyType,
-				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator)).getProxy(LazyLoadingProxy.class.getClassLoader());
+				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator))
+						.getProxy(LazyLoadingProxy.class.getClassLoader());
 	}
 
 	/**
@@ -348,25 +348,26 @@ public final class LazyLoadingProxyFactory {
 		private Object resolve() {
 
 			lock.readLock().lock();
-			if (resolved) {
+			try {
+				if (resolved) {
 
-				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
+								property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+					}
+					return result;
 				}
-				return result;
+			} finally {
+				lock.readLock().unlock();
 			}
-			lock.readLock().unlock();
+
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
+						property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+			}
 
 			try {
-				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
-				}
-
-				lock.writeLock().lock();
-				return callback.resolve(property);
-
+				return executeWhileLocked(lock.writeLock(), () -> callback.resolve(property));
 			} catch (RuntimeException ex) {
 
 				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
@@ -377,8 +378,16 @@ public final class LazyLoadingProxyFactory {
 
 				throw new LazyLoadingException("Unable to lazily resolve DBRef",
 						translatedException != null ? translatedException : ex);
+			}
+		}
+
+		private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
+
+			lock.lock();
+			try {
+				return stuff.get();
 			} finally {
-				lock.writeLock().unlock();
+				lock.unlock();
 			}
 		}
 	}
