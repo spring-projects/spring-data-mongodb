@@ -90,6 +90,7 @@ import com.mongodb.client.MongoCollection;
  * @author Maninder Singh
  * @author Sergey Shcherbakov
  * @author Minsu Kim
+ * @author Julia Lee
  */
 @ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
@@ -118,7 +119,7 @@ public class AggregationTests {
 
 		mongoTemplate.flush(Product.class, UserWithLikes.class, DATAMONGO753.class, Data.class, DATAMONGO788.class,
 				User.class, Person.class, Reservation.class, Venue.class, MeterData.class, LineItem.class, InventoryItem.class,
-				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class);
+				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class, Item.class);
 
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
 		mongoTemplate.dropCollection("personQueryTemp");
@@ -1952,6 +1953,23 @@ public class AggregationTests {
 		assertThat(aggregate.getMappedResults()).contains(widget);
 	}
 
+	@Test // GH-4443
+	void shouldHonorFieldAliasesForFieldReferencesUsingFieldExposingOperation() {
+
+		Item item1 = Item.builder().itemId("1").tags(Arrays.asList("a", "b")).build();
+		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
+		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
+
+		TypedAggregation<Item> aggregation = newAggregation(Item.class,
+				match(where("itemId").is("1")),
+				unwind("tags"),
+				match(where("itemId").is("1").and("tags").is("c")));
+		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Document.class);
+		List<Document> mappedResults = results.getMappedResults();
+		assertThat(mappedResults).hasSize(1);
+		assertThat(mappedResults.get(0)).containsEntry("item_id", "1");
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -2204,7 +2222,7 @@ public class AggregationTests {
 		List<Item> items;
 	}
 
-	// DATAMONGO-1491
+	// DATAMONGO-1491, GH-4443
 	@lombok.Data
 	@Builder
 	static class Item {
@@ -2213,6 +2231,7 @@ public class AggregationTests {
 		String itemId;
 		Integer quantity;
 		Long price;
+		List<String> tags = new ArrayList<>();
 	}
 
 	// DATAMONGO-1538
