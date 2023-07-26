@@ -49,6 +49,7 @@ import com.mongodb.client.model.Projections;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Julia Lee
  */
 public class AggregationUnitTests {
 
@@ -612,7 +613,7 @@ public class AggregationUnitTests {
 				WithRetypedIdField.class, mappingContext,
 				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
 		Document document = project(WithRetypedIdField.class).toDocument(context);
-		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1)));
+		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1).append("entries", 1)));
 	}
 
 	@Test // GH-4038
@@ -653,6 +654,22 @@ public class AggregationUnitTests {
 		assertThat(documents.get(2)).isEqualTo("{ $sort : { 'serial_number' : -1, 'label_name' : -1 } }");
 	}
 
+	@Test // GH-4443
+	void fieldsExposingContextShouldUseCustomFieldNameFromRelaxedRootContext() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
+				WithRetypedIdField.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+
+		TypedAggregation<WithRetypedIdField> agg = newAggregation(WithRetypedIdField.class,
+				unwind("entries"), match(where("foo").is("value 2")));
+		List<Document> pipeline = agg.toPipeline(context);
+
+		Document fields = getAsDocument(pipeline.get(1), "$match");
+		assertThat(fields.get("renamed-field")).isEqualTo("value 2");
+	}
+
 	private Document extractPipelineElement(Document agg, int index, String operation) {
 
 		List<Document> pipeline = (List<Document>) agg.get("pipeline");
@@ -671,6 +688,8 @@ public class AggregationUnitTests {
 		@Id @org.springframework.data.mongodb.core.mapping.Field private String id;
 
 		@org.springframework.data.mongodb.core.mapping.Field("renamed-field") private String foo;
+
+		private List<String> entries = new ArrayList<>();
 
 	}
 }
