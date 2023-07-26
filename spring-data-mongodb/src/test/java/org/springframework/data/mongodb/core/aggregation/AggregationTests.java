@@ -91,6 +91,7 @@ import com.mongodb.client.MongoCollection;
  * @author Sergey Shcherbakov
  * @author Minsu Kim
  * @author Sangyong Choi
+ * @author Julia Lee
  */
 @ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
@@ -119,7 +120,7 @@ public class AggregationTests {
 
 		mongoTemplate.flush(Product.class, UserWithLikes.class, DATAMONGO753.class, Data.class, DATAMONGO788.class,
 				User.class, Person.class, Reservation.class, Venue.class, MeterData.class, LineItem.class, InventoryItem.class,
-				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class);
+				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class, Item.class);
 
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
 		mongoTemplate.dropCollection("personQueryTemp");
@@ -1992,6 +1993,23 @@ public class AggregationTests {
 		assertThat(aggregate.getMappedResults()).contains(widget);
 	}
 
+	@Test // GH-4443
+	void shouldHonorFieldAliasesForFieldReferencesUsingFieldExposingOperation() {
+
+		Item item1 = Item.builder().itemId("1").tags(Arrays.asList("a", "b")).build();
+		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
+		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
+
+		TypedAggregation<Item> aggregation = newAggregation(Item.class,
+				match(where("itemId").is("1")),
+				unwind("tags"),
+				match(where("itemId").is("1").and("tags").is("c")));
+		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Document.class);
+		List<Document> mappedResults = results.getMappedResults();
+		assertThat(mappedResults).hasSize(1);
+		assertThat(mappedResults.get(0)).containsEntry("item_id", "1");
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -2314,19 +2332,21 @@ public class AggregationTests {
 		}
 	}
 
-	// DATAMONGO-1491
+	// DATAMONGO-1491, GH-4443
 	static class Item {
 
 		@org.springframework.data.mongodb.core.mapping.Field("item_id") //
 		String itemId;
 		Integer quantity;
 		Long price;
+		List<String> tags = new ArrayList<>();
 
-		Item(String itemId, Integer quantity, Long price) {
+		Item(String itemId, Integer quantity, Long price, List<String> tags) {
 
 			this.itemId = itemId;
 			this.quantity = quantity;
 			this.price = price;
+			this.tags = tags;
 		}
 
 		public static ItemBuilder builder() {
@@ -2385,6 +2405,7 @@ public class AggregationTests {
 			private String itemId;
 			private Integer quantity;
 			private Long price;
+			private List<String> tags;
 
 			ItemBuilder() {}
 
@@ -2403,8 +2424,13 @@ public class AggregationTests {
 				return this;
 			}
 
+			public ItemBuilder tags(List<String> tags) {
+				this.tags = tags;
+				return this;
+			}
+
 			public Item build() {
-				return new Item(itemId, quantity, price);
+				return new Item(itemId, quantity, price, tags);
 			}
 
 			public String toString() {
