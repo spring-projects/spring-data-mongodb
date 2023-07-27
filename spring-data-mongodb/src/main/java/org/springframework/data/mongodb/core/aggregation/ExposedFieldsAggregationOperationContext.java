@@ -68,11 +68,6 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
 	 */
 	@Override
-	public Document getMappedObject(Document document) {
-		return rootContext.getMappedObject(document);
-	}
-
-	@Override
 	public FieldReference getReference(Field field) {
 
 		if (field.isInternal()) {
