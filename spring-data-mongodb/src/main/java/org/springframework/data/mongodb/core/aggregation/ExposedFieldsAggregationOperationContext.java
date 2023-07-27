@@ -61,11 +61,6 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	}
 
 	@Override
-	public Document getMappedObject(Document document) {
-		return rootContext.getMappedObject(document);
-	}
-
-	@Override
 	public FieldReference getReference(Field field) {
 
 		if (field.isInternal()) {
