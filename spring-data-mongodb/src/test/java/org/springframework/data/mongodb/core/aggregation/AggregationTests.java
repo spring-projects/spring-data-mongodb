@@ -1970,6 +1970,25 @@ public class AggregationTests {
 		assertThat(mappedResults.get(0)).containsEntry("item_id", "1");
 	}
 
+	@Test // GH-4443
+	void projectShouldResetContextToAvoidMappingFieldsAgainstANoLongerExistingTarget() {
+
+		Item item1 = Item.builder().itemId("1").tags(Arrays.asList("a", "b")).build();
+		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
+		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
+
+		TypedAggregation<Item> aggregation = newAggregation(Item.class,
+				match(where("itemId").is("1")),
+				unwind("tags"),
+				project().and("itemId").as("itemId").and("tags").as("tags"),
+				match(where("itemId").is("1").and("tags").is("c")));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Document.class);
+		List<Document> mappedResults = results.getMappedResults();
+		assertThat(mappedResults).hasSize(1);
+		assertThat(mappedResults.get(0)).containsEntry("itemId", "1");
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);

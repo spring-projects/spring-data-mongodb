@@ -64,7 +64,7 @@ class AggregationOperationRenderer {
 					contextToUse = new InheritingExposedFieldsAggregationOperationContext(fields, contextToUse);
 				} else {
 					contextToUse = fields.exposesNoFields() ? DEFAULT_CONTEXT
-							: new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), contextToUse);
+							: new ExposedFieldsAggregationOperationContext(fields, contextToUse);
 				}
 			}
 		}
