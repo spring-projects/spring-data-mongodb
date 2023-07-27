@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 
 /**
@@ -22,6 +23,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
  * {@link AggregationOperationContext}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.9
  */
 class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAggregationOperationContext {
@@ -41,6 +43,11 @@ class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAg
 		super(exposedFields, previousContext);
 
 		this.previousContext = previousContext;
+	}
+
+	@Override
+	public Document getMappedObject(Document document) {
+		return previousContext.getMappedObject(document);
 	}
 
 	@Override
