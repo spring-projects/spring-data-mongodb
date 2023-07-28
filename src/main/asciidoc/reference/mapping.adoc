@@ -350,6 +350,14 @@ You can add additional converters to the converter by overriding the `customConv
 MongoDB's native JSR-310 support can be enabled through `MongoConverterConfigurationAdapter.useNativeDriverJavaTimeCodecs()`.
 Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
 
+[TIP]
+====
+.Java Time Types
+
+We recommend using MongoDB's native JSR-310 support via `MongoConverterConfigurationAdapter.useNativeDriverJavaTimeCodecs()` as described above as it is using an `UTC` based approach.
+The default JSR-310 support for `java.time` types inherited from Spring Data Commons uses the local machine timezone as reference and should only be used for backwards compatibility.
+====
+
 NOTE: `AbstractMongoClientConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
 
 
