@@ -33,7 +33,7 @@ embedded schema objects that describe properties and subdocuments.
 <2> `required` is a property that describes which properties are required in a document. It can be specified optionally, along with other
 schema constraints. See MongoDB's documentation on https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#available-keywords[available keywords].
 <3> `properties` is related to a schema object that describes an `object` type. It contains property-specific schema constraints.
-<4> `firstname` specifies constraints for the `firsname` field inside the document. Here, it is a string-based `properties` element declaring
+<4> `firstname` specifies constraints for the `firstname` field inside the document. Here, it is a string-based `properties` element declaring
  possible field values.
 <5> `address` is a subdocument defining a schema for values in its `postCode` field.
 ====

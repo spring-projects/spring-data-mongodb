@@ -88,7 +88,7 @@ class Person {
 ----
 Account account = …
 
-tempate.insert(account);                               <2>
+template.insert(account);                               <2>
 
 template.update(Person.class)
   .matching(where("id").is(…))
@@ -441,7 +441,7 @@ class Entity {
   "lastname" : "Long",       <2>
 }
 ----
-<1> Read/wirte the keys `fn` & `ln` from/to the linkage document based on the lookup query.
+<1> Read/write the keys `fn` & `ln` from/to the linkage document based on the lookup query.
 <2> Use non _id_ fields for the lookup of the target documents.
 ====
 
@@ -477,7 +477,7 @@ class ToDocumentPointerConverter implements Converter<ReferencedObject, Document
   }
 }
 ----
-<1> Read/wirte the keys `_id` from/to the reference document to use them in the lookup query.
+<1> Read/write the keys `_id` from/to the reference document to use them in the lookup query.
 <2> The collection name can be read from the reference document using its key.
 ====
 

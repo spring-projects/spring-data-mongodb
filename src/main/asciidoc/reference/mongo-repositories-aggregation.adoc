@@ -71,7 +71,7 @@ Therefore, the `Sort` properties are mapped against the methods return type `Per
 <4> `$skip`, `$limit` and `$sort` can be passed on via a `Pageable` argument. Same as in <2>, the operators are appended to the pipeline definition. Methods accepting `Pageable` can return `Slice` for easier pagination.
 <5> Aggregation methods can return `Stream` to consume results directly from an underlying cursor. Make sure to close the stream after consuming it to release the server-side cursor by either calling `close()` or through `try-with-resources`.
 <6> Map the result of an aggregation returning a single `Document` to an instance of a desired `SumValue` target type.
-<7> Aggregations resulting in single document holding just an accumulation result like eg. `$sum` can be extracted directly from the result `Document`.
+<7> Aggregations resulting in single document holding just an accumulation result like e.g. `$sum` can be extracted directly from the result `Document`.
 To gain more control, you might consider `AggregationResult` as method return type as shown in <7>.
 <8> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
 <9> Like in <6>, a single value can be directly obtained from multiple result ``Document``s.
