@@ -178,6 +178,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Anton Barkan
  * @author Bartłomiej Mazur
  * @author Michael Krog
+ * @author Jakub Zurawa
  */
 public class MongoTemplate
 		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, ReadPreferenceAware {
@@ -1618,7 +1619,7 @@ public class MongoTemplate
 					}
 				}
 
-				collectionToUse.replaceOne(filter, replacement, new ReplaceOptions().upsert(true));
+				collectionToUse.replaceOne(filter, replacement, new com.mongodb.client.model.ReplaceOptions().upsert(true));
 			}
 			return mapped.getId();
 		});
@@ -1749,7 +1750,7 @@ public class MongoTemplate
 					}
 				}
 
-				ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
+				com.mongodb.client.model.ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
 				return collection.replaceOne(filter, updateObj, replaceOptions);
 			} else {
 				return multi ? collection.updateMany(queryObj, updateObj, opts)
@@ -3421,6 +3422,56 @@ public class MongoTemplate
 		return mongoDbFactory;
 	}
 
+	@Override
+	public <S> UpdateResult replace(Query query, S replacement, ReplaceOptions options, Class<S> entityType,
+			String collectionName) {
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(replacement, "Replacement must not be null");
+		Assert.notNull(options, "Options must not be null Use ReplaceOptions#empty() instead");
+		Assert.notNull(entityType, "EntityType must not be null");
+		Assert.notNull(collectionName, "CollectionName must not be null");
+
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
+		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
+		QueryContext queryContext = queryOperations.createQueryContext(query);
+
+		CollectionPreparerDelegate collectionPreparer = createDelegate(query);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
+
+		replacement = maybeCallBeforeConvert(replacement, collectionName);
+		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
+		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
+
+		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
+		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
+
+		UpdateResult result = doReplace(options, entityType, collectionName, queryContext, collectionPreparer, mappedQuery,
+				mappedReplacement);
+
+		if (result.wasAcknowledged()) {
+			maybeEmitEvent(new AfterSaveEvent<>(replacement, mappedReplacement, collectionName));
+			maybeCallAfterSave(replacement, mappedReplacement, collectionName);
+		}
+
+		return result;
+	}
+
+	private <S> UpdateResult doReplace(ReplaceOptions options, Class<S> entityType, String collectionName,
+			QueryContext queryContext, CollectionPreparerDelegate collectionPreparer, Document mappedQuery,
+			Document replacement) {
+		ReplaceCallback replaceCallback = new ReplaceCallback(collectionPreparer, mappedQuery, replacement,
+				queryContext.getCollation(entityType).orElse(null), options);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(
+					String.format("findAndReplace using query: %s for class: %s and replacement: %s " + "in collection: %s",
+							serializeToJsonSafely(mappedQuery), entityType, serializeToJsonSafely(replacement), collectionName));
+		}
+
+		return execute(collectionName, replaceCallback);
+	}
+
 	/**
 	 * A {@link CloseableIterator} that is backed by a MongoDB {@link MongoCollection}.
 	 *
@@ -3554,5 +3605,34 @@ public class MongoTemplate
 	interface CountExecution {
 		long countDocuments(CollectionPreparer collectionPreparer, String collection, Document filter,
 				CountOptions options);
+	}
+
+	private static class ReplaceCallback implements CollectionCallback<UpdateResult> {
+
+		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
+		private final Document query;
+		private final Document update;
+		private final @Nullable com.mongodb.client.model.Collation collation;
+		private final ReplaceOptions options;
+
+		ReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document update,
+				@Nullable com.mongodb.client.model.Collation collation, ReplaceOptions options) {
+			this.collectionPreparer = collectionPreparer;
+			this.query = query;
+			this.update = update;
+			this.options = options;
+			this.collation = collation;
+		}
+
+		@Override
+		public UpdateResult doInCollection(MongoCollection<Document> collection)
+				throws MongoException, DataAccessException {
+			com.mongodb.client.model.ReplaceOptions opts = new com.mongodb.client.model.ReplaceOptions();
+			opts.collation(collation);
+
+			opts.upsert(options.isUpsert());
+
+			return collectionPreparer.prepare(collection).replaceOne(query, update, opts);
+		}
 	}
 }
