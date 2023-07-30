@@ -116,6 +116,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author duozhilin
+ * @author Jakub Zurawa
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
@@ -3870,6 +3871,21 @@ public class MongoTemplateTests {
 				.matching(expr(StringOperators.valueOf("emailAddress").regexFind(".*@vmware.com$", "i"))).firstValue();
 
 		assertThat(loaded).isEqualTo(source2);
+	}
+
+	@Test // GH-4300
+	public void replaceShouldReplaceDocument() {
+
+		org.bson.Document doc = new org.bson.Document("foo", "bar");
+		String collectionName = "replace";
+		template.save(doc, collectionName);
+
+		org.bson.Document replacement = new org.bson.Document("foo", "baz");
+		UpdateResult updateResult = template.replace(query(where("foo").is("bar")), replacement, ReplaceOptions.options(),
+				collectionName);
+
+		assertThat(updateResult.wasAcknowledged()).isTrue();
+		assertThat(template.findOne(query(where("foo").is("baz")), org.bson.Document.class, collectionName)).isNotNull();
 	}
 
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {

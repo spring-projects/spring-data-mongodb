@@ -1782,7 +1782,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						deferredFilter = Mono.just(filter);
 					}
 
-					ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
+					com.mongodb.client.model.ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
 					return deferredFilter.flatMap(it -> Mono.from(collectionToUse.replaceOne(it, updateObj, replaceOptions)));
 				}
 
