@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
+import java.util.Arrays;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregati
 
 /**
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 public class AggregationOperationRendererUnitTests {
 
@@ -37,7 +38,7 @@ public class AggregationOperationRendererUnitTests {
 		AggregationOperation stage1 = mock(AggregationOperation.class);
 		AggregationOperation stage2 = mock(AggregationOperation.class);
 
-		AggregationOperationRenderer.toDocument(List.of(stage1, stage2), rootContext);
+		AggregationOperationRenderer.toDocument(Arrays.asList(stage1, stage2), rootContext);
 
 		verify(stage1).toPipelineStages(eq(rootContext));
 		verify(stage2).toPipelineStages(eq(rootContext));
@@ -54,7 +55,7 @@ public class AggregationOperationRendererUnitTests {
 		when(stage1.getFields()).thenReturn(stage1fields);
 		when(stage1fields.exposesNoFields()).thenReturn(true);
 
-		AggregationOperationRenderer.toDocument(List.of(stage1, stage2), rootContext);
+		AggregationOperationRenderer.toDocument(Arrays.asList(stage1, stage2), rootContext);
 
 		verify(stage1).toPipelineStages(eq(rootContext));
 		verify(stage2).toPipelineStages(eq(AggregationOperationRenderer.DEFAULT_CONTEXT));
@@ -73,7 +74,7 @@ public class AggregationOperationRendererUnitTests {
 
 		ArgumentCaptor<AggregationOperationContext> captor = ArgumentCaptor.forClass(AggregationOperationContext.class);
 
-		AggregationOperationRenderer.toDocument(List.of(stage1, stage2), rootContext);
+		AggregationOperationRenderer.toDocument(Arrays.asList(stage1, stage2), rootContext);
 
 		verify(stage1).toPipelineStages(eq(rootContext));
 		verify(stage2).toPipelineStages(captor.capture());
@@ -98,7 +99,7 @@ public class AggregationOperationRendererUnitTests {
 
 		ArgumentCaptor<AggregationOperationContext> captor = ArgumentCaptor.forClass(AggregationOperationContext.class);
 
-		AggregationOperationRenderer.toDocument(List.of(stage1, stage2, stage3), rootContext);
+		AggregationOperationRenderer.toDocument(Arrays.asList(stage1, stage2, stage3), rootContext);
 
 		verify(stage1).toPipelineStages(captor.capture());
 		verify(stage2).toPipelineStages(captor.capture());
