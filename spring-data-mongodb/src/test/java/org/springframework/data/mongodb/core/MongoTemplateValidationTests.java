@@ -33,8 +33,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions.ValidationOptions;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.lang.Nullable;
@@ -46,11 +48,13 @@ import com.mongodb.client.model.ValidationLevel;
 
 /**
  * Integration tests for {@link CollectionOptions#validation(ValidationOptions)} using
- * {@link org.springframework.data.mongodb.core.validation.CriteriaValidator} and
- * {@link org.springframework.data.mongodb.core.validation.DocumentValidator}.
+ * {@link org.springframework.data.mongodb.core.validation.CriteriaValidator},
+ * {@link org.springframework.data.mongodb.core.validation.DocumentValidator} and
+ * {@link org.springframework.data.mongodb.core.validation.JsonSchemaValidator}.
  *
  * @author Andreas Zink
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class MongoTemplateValidationTests {
@@ -186,6 +190,20 @@ public class MongoTemplateValidationTests {
 		assertThat(getValidatorInfo(COLLECTION_NAME)).isEqualTo(new Document("customName", new Document("$type", "bool")));
 	}
 
+	@Test // GH-4454
+	public void failsJsonSchemaValidationForEncryptedDomainEntityProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create().createSchemaFor(BeanWithEncryptedDomainEntity.class);
+		template.createCollection(COLLECTION_NAME, CollectionOptions.empty().schema(schema));
+
+		BeanWithEncryptedDomainEntity person = new BeanWithEncryptedDomainEntity();
+		person.encryptedDomainEntity = new SimpleBean("some string", 100, null);
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+			.isThrownBy(() -> template.save(person))
+			.withMessageContaining("Document failed validation");
+	}
+
 	private Document getCollectionOptions(String collectionName) {
 		return getCollectionInfo(collectionName).get("options", Document.class);
 	}
@@ -270,5 +288,11 @@ public class MongoTemplateValidationTests {
 		public String toString() {
 			return "MongoTemplateValidationTests.SimpleBean(nonNullString=" + this.getNonNullString() + ", rangedInteger=" + this.getRangedInteger() + ", customFieldName=" + this.getCustomFieldName() + ")";
 		}
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = COLLECTION_NAME)
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+	static class BeanWithEncryptedDomainEntity {
+		@Encrypted SimpleBean encryptedDomainEntity;
 	}
 }
