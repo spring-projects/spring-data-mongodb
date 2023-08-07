@@ -1140,7 +1140,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 				enc.append("bsonType", type.toBsonType().value()); // TODO: no samples with type -> is it bson type all the way?
 			}
 
-			if(StringUtils.hasText(algorithm)) {
+			if (StringUtils.hasText(algorithm)) {
 				enc.append("algorithm", algorithm);
 			}
 
