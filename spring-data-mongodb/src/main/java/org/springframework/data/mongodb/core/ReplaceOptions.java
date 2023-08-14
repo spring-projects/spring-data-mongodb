@@ -1,18 +1,35 @@
+/*
+ * Copyright 2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.mongodb.core;
+
+import org.springframework.data.mongodb.core.query.Query;
+
 /**
- * Options for
- * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a>.
- * <br />
- * Defaults to
+ * Options for {@link org.springframework.data.mongodb.core.MongoOperations#replace(Query, Object) replace operations}. Defaults to
  * <dl>
  * <dt>upsert</dt>
  * <dd>false</dd>
  * </dl>
  *
  * @author Jakub Zurawa
+ * @author Christoph Strob
+ * @since 4.2
  */
-package org.springframework.data.mongodb.core;
-
 public class ReplaceOptions {
+
 	private boolean upsert;
 
 	private static final ReplaceOptions NONE = new ReplaceOptions() {
@@ -34,7 +51,7 @@ public class ReplaceOptions {
 	 *
 	 * @return new instance of {@link ReplaceOptions}.
 	 */
-	public static ReplaceOptions options() {
+	public static ReplaceOptions replaceOptions() {
 		return new ReplaceOptions();
 	}
 
@@ -42,23 +59,9 @@ public class ReplaceOptions {
 	 * Static factory method returning an unmodifiable {@link ReplaceOptions} instance.
 	 *
 	 * @return unmodifiable {@link ReplaceOptions} instance.
-	 * @since 2.2
 	 */
 	public static ReplaceOptions none() {
 		return NONE;
-	}
-
-	/**
-	 * Static factory method to create a {@link ReplaceOptions} instance with
-	 * <dl>
-	 * <dt>upsert</dt>
-	 * <dd>false</dd>
-	 * </dl>
-	 *
-	 * @return new instance of {@link ReplaceOptions}.
-	 */
-	public static ReplaceOptions empty() {
-		return new ReplaceOptions();
 	}
 
 	/**

@@ -3881,7 +3881,7 @@ public class MongoTemplateTests {
 		template.save(doc, collectionName);
 
 		org.bson.Document replacement = new org.bson.Document("foo", "baz");
-		UpdateResult updateResult = template.replace(query(where("foo").is("bar")), replacement, ReplaceOptions.options(),
+		UpdateResult updateResult = template.replace(query(where("foo").is("bar")), replacement, ReplaceOptions.replaceOptions(),
 				collectionName);
 
 		assertThat(updateResult.wasAcknowledged()).isTrue();

@@ -1311,7 +1311,7 @@ public class MongoTemplate
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
+					|| (wc.getWObject()instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -2068,6 +2068,42 @@ public class MongoTemplate
 		return doFindAndDelete(collectionName, query, entityClass);
 	}
 
+	@Override
+	public <S, T> UpdateResult replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
+			String collectionName) {
+
+		Assert.notNull(query, "Query must not be null");
+		Assert.notNull(replacement, "Replacement must not be null");
+		Assert.notNull(options, "Options must not be null Use ReplaceOptions#none() instead");
+		Assert.notNull(entityType, "EntityType must not be null");
+		Assert.notNull(collectionName, "CollectionName must not be null");
+
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
+		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
+
+		UpdateContext updateContext = queryOperations.replaceSingleContext(query,
+				operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
+
+		replacement = maybeCallBeforeConvert(replacement, collectionName);
+		Document mappedReplacement = updateContext.getMappedUpdate(mappingContext.getPersistentEntity(entityType));
+		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
+		replacement = maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
+
+		MongoAction action = new MongoAction(writeConcern, MongoActionOperation.REPLACE, collectionName, entityType,
+				mappedReplacement, updateContext.getQueryObject());
+
+		UpdateResult result = doReplace(options, entityType, collectionName, updateContext,
+				createCollectionPreparer(query, action), mappedReplacement);
+
+		if (result.wasAcknowledged()) {
+
+			maybeEmitEvent(new AfterSaveEvent<>(replacement, mappedReplacement, collectionName));
+			maybeCallAfterSave(replacement, mappedReplacement, collectionName);
+		}
+
+		return result;
+	}
+
 	/**
 	 * Retrieve and remove all documents matching the given {@code query} by calling {@link #find(Query, Class, String)}
 	 * and {@link #remove(Query, Class, String)}, whereas the {@link Query} for {@link #remove(Query, Class, String)} is
@@ -2733,6 +2769,17 @@ public class MongoTemplate
 		return CollectionPreparerDelegate.of(query);
 	}
 
+	CollectionPreparer<MongoCollection<Document>> createCollectionPreparer(Query query, @Nullable MongoAction action) {
+		CollectionPreparer<MongoCollection<Document>> collectionPreparer = createDelegate(query);
+		if (action == null) {
+			return collectionPreparer;
+		}
+		return collectionPreparer.andThen(collection -> {
+			WriteConcern writeConcern = prepareWriteConcern(action);
+			return writeConcern != null ? collection.withWriteConcern(writeConcern) : collection;
+		});
+	}
+
 	/**
 	 * Customize this part for findAndReplace.
 	 *
@@ -2766,6 +2813,24 @@ public class MongoTemplate
 		return executeFindOneInternal(new FindAndReplaceCallback(collectionPreparer, mappedQuery, mappedFields, mappedSort,
 				replacement, collation, options), new ProjectingReadCallback<>(mongoConverter, projection, collectionName),
 				collectionName);
+	}
+
+	private <S> UpdateResult doReplace(ReplaceOptions options, Class<S> entityType, String collectionName,
+			UpdateContext updateContext, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			Document replacement) {
+
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
+
+		ReplaceCallback replaceCallback = new ReplaceCallback(collectionPreparer,
+				updateContext.getMappedQuery(persistentEntity), replacement, updateContext.getReplaceOptions(entityType, it -> {
+					it.upsert(options.isUpsert());
+				}));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format("replace one using query: %s for class: %s in collection: %s",
+					serializeToJsonSafely(updateContext.getMappedQuery(persistentEntity)), entityType, collectionName));
+		}
+
+		return execute(collectionName, replaceCallback);
 	}
 
 	/**
@@ -3422,56 +3487,6 @@ public class MongoTemplate
 		return mongoDbFactory;
 	}
 
-	@Override
-	public <S> UpdateResult replace(Query query, S replacement, ReplaceOptions options, Class<S> entityType,
-			String collectionName) {
-		Assert.notNull(query, "Query must not be null");
-		Assert.notNull(replacement, "Replacement must not be null");
-		Assert.notNull(options, "Options must not be null Use ReplaceOptions#empty() instead");
-		Assert.notNull(entityType, "EntityType must not be null");
-		Assert.notNull(collectionName, "CollectionName must not be null");
-
-		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
-		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
-		QueryContext queryContext = queryOperations.createQueryContext(query);
-
-		CollectionPreparerDelegate collectionPreparer = createDelegate(query);
-		Document mappedQuery = queryContext.getMappedQuery(entity);
-
-		replacement = maybeCallBeforeConvert(replacement, collectionName);
-		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
-		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
-
-		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
-		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
-
-		UpdateResult result = doReplace(options, entityType, collectionName, queryContext, collectionPreparer, mappedQuery,
-				mappedReplacement);
-
-		if (result.wasAcknowledged()) {
-			maybeEmitEvent(new AfterSaveEvent<>(replacement, mappedReplacement, collectionName));
-			maybeCallAfterSave(replacement, mappedReplacement, collectionName);
-		}
-
-		return result;
-	}
-
-	private <S> UpdateResult doReplace(ReplaceOptions options, Class<S> entityType, String collectionName,
-			QueryContext queryContext, CollectionPreparerDelegate collectionPreparer, Document mappedQuery,
-			Document replacement) {
-		ReplaceCallback replaceCallback = new ReplaceCallback(collectionPreparer, mappedQuery, replacement,
-				queryContext.getCollation(entityType).orElse(null), options);
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(
-					String.format("findAndReplace using query: %s for class: %s and replacement: %s " + "in collection: %s",
-							serializeToJsonSafely(mappedQuery), entityType, serializeToJsonSafely(replacement), collectionName));
-		}
-
-		return execute(collectionName, replaceCallback);
-	}
-
 	/**
 	 * A {@link CloseableIterator} that is backed by a MongoDB {@link MongoCollection}.
 	 *
@@ -3612,27 +3627,20 @@ public class MongoTemplate
 		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document update;
-		private final @Nullable com.mongodb.client.model.Collation collation;
-		private final ReplaceOptions options;
+		private final com.mongodb.client.model.ReplaceOptions options;
 
 		ReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document update,
-				@Nullable com.mongodb.client.model.Collation collation, ReplaceOptions options) {
+				com.mongodb.client.model.ReplaceOptions options) {
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.update = update;
 			this.options = options;
-			this.collation = collation;
 		}
 
 		@Override
 		public UpdateResult doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
-			com.mongodb.client.model.ReplaceOptions opts = new com.mongodb.client.model.ReplaceOptions();
-			opts.collation(collation);
-
-			opts.upsert(options.isUpsert());
-
-			return collectionPreparer.prepare(collection).replaceOne(query, update, opts);
+			return collectionPreparer.prepare(collection).replaceOne(query, update, options);
 		}
 	}
 }

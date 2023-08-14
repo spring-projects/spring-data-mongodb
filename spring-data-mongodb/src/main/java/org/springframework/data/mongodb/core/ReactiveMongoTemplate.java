@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.CollectionPreparerSupport.CollectionPreparerDelegate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -1960,6 +1961,28 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
+	public <S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
+			String collectionName) {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
+		UpdateContext updateContext = queryOperations.replaceSingleContext(query, operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
+
+		return createMono(collectionName, collection -> {
+
+			Document mappedUpdate = updateContext.getMappedUpdate(entity);
+
+			MongoAction action = new MongoAction(writeConcern, MongoActionOperation.REPLACE, collectionName, entityType,
+					mappedUpdate, updateContext.getQueryObject());
+
+			MongoCollection<Document> collectionToUse = createCollectionPreparer(query, action).prepare(collection);
+
+			return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), mappedUpdate, updateContext.getReplaceOptions(entityType, it -> {
+				it.upsert(options.isUpsert());
+			}));
+		});
+	}
+
+	@Override
 	public <T> Flux<T> tail(Query query, Class<T> entityClass) {
 		return tail(query, entityClass, getCollectionName(entityClass));
 	}
@@ -2339,6 +2362,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields), preparer,
 				objectCallback, collectionName);
+	}
+
+	CollectionPreparer<MongoCollection<Document>> createCollectionPreparer(Query query) {
+		return ReactiveCollectionPreparerDelegate.of(query);
+	}
+
+	CollectionPreparer<MongoCollection<Document>> createCollectionPreparer(Query query, @Nullable MongoAction action) {
+		CollectionPreparer<MongoCollection<Document>> collectionPreparer = createCollectionPreparer(query);
+		if (action == null) {
+			return collectionPreparer;
+		}
+		return collectionPreparer.andThen(collection -> {
+			WriteConcern writeConcern = prepareWriteConcern(action);
+			return writeConcern != null ? collection.withWriteConcern(writeConcern) : collection;
+		});
 	}
 
 	/**

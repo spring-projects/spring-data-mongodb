@@ -88,6 +88,24 @@ public interface ExecutableUpdateOperation {
 	}
 
 	/**
+	 * Trigger <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a>
+	 * execution by calling one of the terminating methods./** Trigger replace execution by calling one of the terminating
+	 * methods.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.2
+	 */
+	interface TerminatingReplace {
+
+		/**
+		 * Find first and replace/upsert.
+		 * 
+		 * @return never {@literal null}.
+		 */
+		UpdateResult replaceFirst();
+	}
+
+	/**
 	 * Trigger
 	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * execution by calling one of the terminating methods.
@@ -95,7 +113,7 @@ public interface ExecutableUpdateOperation {
 	 * @author Mark Paluch
 	 * @since 2.1
 	 */
-	interface TerminatingFindAndReplace<T> {
+	interface TerminatingFindAndReplace<T> extends TerminatingReplace {
 
 		/**
 		 * Find, replace and return the first matching document.
@@ -244,13 +262,29 @@ public interface ExecutableUpdateOperation {
 	}
 
 	/**
+	 * @author Christoph Strobl
+	 * @since 4.2
+	 */
+	interface ReplaceWithOptions extends TerminatingReplace {
+
+		/**
+		 * Explicitly define {@link ReplaceOptions}.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return new instance of {@link FindAndReplaceOptions}.
+		 * @throws IllegalArgumentException if options is {@literal null}.
+		 */
+		TerminatingReplace withOptions(ReplaceOptions options);
+	}
+
+	/**
 	 * Define {@link FindAndReplaceOptions}.
 	 *
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	interface FindAndReplaceWithOptions<T> extends TerminatingFindAndReplace<T> {
+	interface FindAndReplaceWithOptions<T> extends TerminatingFindAndReplace<T>, ReplaceWithOptions {
 
 		/**
 		 * Explicitly define {@link FindAndReplaceOptions} for the {@link Update}.

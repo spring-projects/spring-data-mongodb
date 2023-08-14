@@ -182,7 +182,8 @@ A similar set of insert operations is also available:
 === How the `_id` Field is Handled in the Mapping Layer
 
 MongoDB requires that you have an `_id` field for all documents.
-If you do not provide one, the driver assigns an `ObjectId` with a generated value. When you use the `MappingMongoConverter`, certain rules govern how properties from the Java class are mapped to this `_id` field:
+If you do not provide one, the driver assigns an `ObjectId` with a generated value without considering your domain model as the server isn't aware of your identifier type.
+When you use the `MappingMongoConverter`, certain rules govern how properties from the Java class are mapped to this `_id` field:
 
 . A property or field annotated with `@Id` (`org.springframework.data.annotation.Id`) maps to the `_id` field.
 . A property or field without an annotation but named `id` maps to the `_id` field.
@@ -476,6 +477,47 @@ Mono<UpdateResult> result = template.update(Person.class)
 ======
 
 WARNING: `upsert` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
+
+[[mongo-template.replace]]
+=== Replacing Documents in a Collection
+
+The various `replace` methods available via `MongoTemplate` allow to override a single matching Document.
+If no match is found a new one can be upserted (as outlined in the previous section) by providing `ReplaceOptions` with according configuration.
+
+====
+.Replace one
+[source,java]
+----
+Person tom = template.insert(new Person("Motte", 21)); <1>
+Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName())); <2>
+tom.setFirstname("Tom"); <3>
+template.replace(query, tom, ReplaceOptions.none()); <4>
+----
+<1> Insert a new document.
+<2> The query used to identify the single document to replace.
+<3> Set up the replacement document which must hold either the same `_id` as the existing or no `_id` at all.
+<4> Run the replace operation.
+.Replace one with upsert
+[source,java]
+----
+Person tom = new Person("id-123", "Tom", 21) <1>
+Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName()));
+template.replace(query, tom, ReplaceOptions.replaceOptions().upsert()); <2>
+----
+<1> The `_id` value needs to be provided for upsert, otherwise MongoDB will generate an `ObjectId`.
+As MongoDB is not aware of your domain type, any `@Field(targetType)` hints are not considered and the resulting `ObjectId` might be not compatible with your domain model.
+<2> Use `upsert` to insert a new document if no match is found
+====
+
+[WARNING]
+====
+It is not possible to change the `_id` of existing documents with a replace operation.
+On `upsert` MongoDB uses 2 ways of determining the new id for the entry:
+* The `_id` is used within the query as in `{"_id" : 1234 }`
+* The `_id` is present in the replacement document.
+If no `_id` is provided in either way, MongoDB will create a new `ObjectId` for the document.
+This may lead to mapping and data lookup malfunctions if the used domain types `id` property has a different type like e.g. `Long`.
+====
 
 [[mongo-template.find-and-upsert]]
 == Find and Modify

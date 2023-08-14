@@ -178,6 +178,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
 		when(collection.distinct(anyString(), any(Document.class), any())).thenReturn(distinctIterable);
 		when(collectionWithWriteConcern.deleteOne(any(Bson.class), any())).thenReturn(deleteResult);
+		when(collectionWithWriteConcern.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class))).thenReturn(updateResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -2436,7 +2437,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				any(FindOneAndReplaceOptions.class));
 	}
 
-	@Test // GH-4300
+	@Test // GH-4462
 	void replaceShouldUseCollationWhenPresent() {
 
 		template.replace(new BasicQuery("{}").collation(Collation.of("fr")), new AutogenerateableId());
@@ -2449,29 +2450,68 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
-	@Test // GH-4300
+	@Test // GH-4462
+	void replaceShouldNotUpsertByDefault() {
+
+		template.replace(new BasicQuery("{}"), new Sith());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+	}
+
+	@Test // GH-4462
 	void replaceShouldUpsert() {
 
-		template.replace(new BasicQuery("{}"), new Sith(), ReplaceOptions.options().upsert());
+		template.replace(new BasicQuery("{}"), new Sith(), ReplaceOptions.replaceOptions().upsert());
 
 		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
 				.forClass(com.mongodb.client.model.ReplaceOptions.class);
 		verify(collection).replaceOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().isUpsert()).isTrue();
-
 	}
 
-	@Test // GH-4300
+	@Test // GH-4462
 	void replaceShouldUseDefaultCollationWhenPresent() {
 
-		template.replace(new BasicQuery("{}"), new Sith(), ReplaceOptions.options());
+		template.replace(new BasicQuery("{}"), new Sith(), ReplaceOptions.replaceOptions());
 
 		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
 				.forClass(com.mongodb.client.model.ReplaceOptions.class);
 		verify(collection).replaceOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseHintIfPresent() {
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-to-use");
+	}
+
+	@Test // GH-4462
+	void replaceShouldApplyWriteConcern() {
+
+		template.setWriteConcernResolver(new WriteConcernResolver() {
+			public WriteConcern resolve(MongoAction action) {
+
+				assertThat(action.getMongoActionOperation()).isEqualTo(MongoActionOperation.REPLACE);
+				return WriteConcern.UNACKNOWLEDGED;
+			}
+		});
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+
+		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
 
 	class AutogenerateableId {
