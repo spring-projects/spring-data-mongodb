@@ -1754,11 +1754,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a> to
-	 * replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document.
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document.
 	 * <br />
 	 * The collection name is derived from the {@literal replacement} type. <br />
-	 * Options are defaulted to {@link ReplaceOptions#empty()}. <br />
+	 * Options are defaulted to {@link ReplaceOptions#none()}. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -1767,16 +1766,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
+	 * @since 4.2
 	 */
 	default <T> UpdateResult replace(Query query, T replacement) {
-		return replace(query, replacement, ReplaceOptions.empty());
+		return replace(query, replacement, ReplaceOptions.none());
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a> to
-	 * replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement}
-	 * document.<br />
-	 * Options are defaulted to {@link ReplaceOptions#empty()}. <br />
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document.
+	 * Options are defaulted to {@link ReplaceOptions#none()}. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -1786,42 +1784,43 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
+	 * @since 4.2
 	 */
 	default <T> UpdateResult replace(Query query, T replacement, String collectionName) {
-		return replace(query, replacement, ReplaceOptions.empty(), collectionName);
+		return replace(query, replacement, ReplaceOptions.none(), collectionName);
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a> to
-	 * replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link ReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
+	 * @since 4.2
 	 */
 	default <T> UpdateResult replace(Query query, T replacement, ReplaceOptions options) {
 		return replace(query, replacement, options, getCollectionName(ClassUtils.getUserClass(replacement)));
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a> to
-	 * replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link ReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
+	 * @since 4.2
 	 */
 	default <T> UpdateResult replace(Query query, T replacement, ReplaceOptions options, String collectionName) {
 
@@ -1830,41 +1829,38 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a> to
-	 * replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link ReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
 	 *          from. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
+	 * @since 4.2
 	 */
 	default <S> UpdateResult replace(Query query, S replacement, ReplaceOptions options, Class<S> entityType) {
-
 		return replace(query, replacement, options, entityType, getCollectionName(ClassUtils.getUserClass(entityType)));
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a> to
-	 * replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link ReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the type used for mapping the {@link Query} to domain type fields. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
-	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
-	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
+	 * @since 4.2
 	 */
 	<S> UpdateResult replace(Query query, S replacement, ReplaceOptions options, Class<S> entityType,
 			String collectionName);

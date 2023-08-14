@@ -3425,9 +3425,10 @@ public class MongoTemplate
 	@Override
 	public <S> UpdateResult replace(Query query, S replacement, ReplaceOptions options, Class<S> entityType,
 			String collectionName) {
+
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(replacement, "Replacement must not be null");
-		Assert.notNull(options, "Options must not be null Use ReplaceOptions#empty() instead");
+		Assert.notNull(options, "Options must not be null Use ReplaceOptions#none() instead");
 		Assert.notNull(entityType, "EntityType must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
 
