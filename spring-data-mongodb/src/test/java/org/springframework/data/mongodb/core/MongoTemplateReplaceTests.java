@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.ReplaceOptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -26,11 +27,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.bson.BsonInt64;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
@@ -65,7 +68,7 @@ public class MongoTemplateReplaceTests {
 		clearTestData();
 	}
 
-	@Test // GH-4300
+	@Test // GH-4462
 	void replacesExistingDocument() {
 
 		UpdateResult result = template.replace(query(where("name").is("Central Perk Cafe")),
@@ -78,17 +81,52 @@ public class MongoTemplateReplaceTests {
 		assertThat(document).containsEntry("name", "Central Pork Cafe");
 	}
 
-	@Test // GH-4300
+	@Test // GH-4462
+	void replacesExistingDocumentWithMatchingId() {
+
+		UpdateResult result = template.replace(query(where("name").is("Central Perk Cafe")),
+				new Restaurant(1L, "Central Pork Cafe", "Manhattan", 0));
+
+		assertThat(result.getMatchedCount()).isEqualTo(1);
+		assertThat(result.getModifiedCount()).isEqualTo(1);
+
+		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 1)).first());
+		assertThat(document).containsEntry("name", "Central Pork Cafe");
+	}
+
+	@Test // GH-4462
+	void replacesExistingDocumentWithNewIdThrowsDataIntegrityViolationException() {
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.replace(query(where("name").is("Central Perk Cafe")),
+						new Restaurant(4L, "Central Pork Cafe", "Manhattan", 0)));
+	}
+
+	@Test // GH-4462
 	void doesNothingIfNoMatchFoundAndUpsertSetToFalse/* by default */() {
 
 		UpdateResult result = template.replace(query(where("name").is("Pizza Rat's Pizzaria")),
-				new Restaurant(4L, "Central Pork Cafe", "Manhattan", 8));
+				new Restaurant(null, "Pizza Rat's Pizzaria", "Manhattan", 8));
 
 		assertThat(result.getMatchedCount()).isEqualTo(0);
 		assertThat(result.getModifiedCount()).isEqualTo(0);
 
-		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 4)).first());
+		Document document = retrieve(collection -> collection.find(Filters.eq("name", "Pizza Rat's Pizzaria")).first());
 		assertThat(document).isNull();
+	}
+
+	@Test // GH-4462
+	void insertsIfNoMatchFoundAndUpsertSetToTrue() {
+
+		UpdateResult result = template.replace(query(where("name").is("Pizza Rat's Pizzaria")),
+				new Restaurant(4L, "Pizza Rat's Pizzaria", "Manhattan", 8), replaceOptions().upsert());
+
+		assertThat(result.getMatchedCount()).isEqualTo(0);
+		assertThat(result.getModifiedCount()).isEqualTo(0);
+		assertThat(result.getUpsertedId()).isEqualTo(new BsonInt64(4L));
+
+		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 4)).first());
+		assertThat(document).containsEntry("name", "Pizza Rat's Pizzaria");
 	}
 
 	void initTestData() {

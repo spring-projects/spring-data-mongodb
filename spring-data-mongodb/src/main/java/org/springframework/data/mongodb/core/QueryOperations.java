@@ -194,6 +194,15 @@ class QueryOperations {
 	}
 
 	/**
+	 * @param replacement the {@link MappedDocument mapped replacement} document.
+	 * @param upsert use {@literal true} to insert diff when no existing document found.
+	 * @return new instance of {@link UpdateContext}.
+	 */
+	UpdateContext replaceSingleContext(Query query, MappedDocument replacement, boolean upsert) {
+		return new UpdateContext(query, replacement, upsert);
+	}
+
+	/**
 	 * Create a new {@link DeleteContext} instance removing all matching documents.
 	 *
 	 * @param query must not be {@literal null}.
@@ -438,6 +447,25 @@ class QueryOperations {
 
 			return entityOperations.forType(domainType).getCollation(query) //
 					.map(Collation::toMongoCollation);
+		}
+
+		/**
+		 * Get the {@link HintFunction} reading the actual hint form the {@link Query}.
+		 *
+		 * @return new instance of {@link HintFunction}.
+		 * @since 4.2
+		 */
+		HintFunction getHintFunction() {
+			return HintFunction.from(query.getHint());
+		}
+
+		/**
+		 * Read and apply the hint from the {@link Query}.
+		 *
+		 * @since 4.2
+		 */
+		<R> void applyHint(Function<String, R> stringConsumer, Function<Bson, R> bsonConsumer) {
+			getHintFunction().ifPresent(codecRegistryProvider, stringConsumer, bsonConsumer);
 		}
 	}
 
@@ -696,8 +724,12 @@ class QueryOperations {
 		}
 
 		UpdateContext(MappedDocument update, boolean upsert) {
+			this(new BasicQuery(BsonUtils.asDocument(update.getIdFilter())), update, upsert);
+		}
 
-			super(new BasicQuery(BsonUtils.asDocument(update.getIdFilter())));
+		UpdateContext(Query query, MappedDocument update, boolean upsert) {
+
+			super(query);
 			this.multi = false;
 			this.upsert = upsert;
 			this.mappedDocument = update;
@@ -765,6 +797,7 @@ class QueryOperations {
 			ReplaceOptions options = new ReplaceOptions();
 			options.collation(updateOptions.getCollation());
 			options.upsert(updateOptions.isUpsert());
+			applyHint(options::hintString, options::hint);
 
 			if (callback != null) {
 				callback.accept(options);

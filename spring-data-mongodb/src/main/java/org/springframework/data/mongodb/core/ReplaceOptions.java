@@ -51,7 +51,7 @@ public class ReplaceOptions {
 	 *
 	 * @return new instance of {@link ReplaceOptions}.
 	 */
-	public static ReplaceOptions options() {
+	public static ReplaceOptions replaceOptions() {
 		return new ReplaceOptions();
 	}
 
