@@ -127,6 +127,17 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		public TerminatingReplace withOptions(ReplaceOptions options) {
+
+			FindAndReplaceOptions target = new FindAndReplaceOptions();
+			if(options.isUpsert()) {
+				target.upsert();
+			}
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					target, replacement, targetType);
+		}
+
+		@Override
 		public UpdateWithUpdate<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");
@@ -173,6 +184,11 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			return (T) template.findAndReplace(query, replacement,
 					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.empty(), domainType,
 					getCollectionName(), targetType);
+		}
+
+		@Override
+		public UpdateResult replaceOne() {
+			return template.replace(query, replacement,  findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), domainType, getCollectionName());
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

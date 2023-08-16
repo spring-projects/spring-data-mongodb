@@ -980,6 +980,54 @@ template.update(Person.class)
 
 WARNING: `upsert` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
 
+[[mongo-template.replace]]
+=== Replacing Documents in a Collection
+
+The various `replace` methods available via `MongoTemplate` allow to override a single matching Document.
+If no match is found a new one can be upserted (as outlined in the previous section) by providing `ReplaceOptions` with according configuration.
+
+====
+.Replace one
+[source,java]
+----
+Person tom = template.insert(new Person("Tmo", 21)); <1>
+
+Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName())); <2>
+
+tom.setFirstname("Tom"); <3>
+template.replace(query, tom, ReplaceOptions.none()); <4>
+----
+<1> Insert a new document.
+<2> The query used to identify the single document to replace.
+<3> Set up the replacement document which must hold either the same `_id` as the existing or no `_id` at all.
+<4> Run the replace operation.
+
+.Replace one with upsert
+[source,java]
+----
+Person tom = new Person("id-123", "Tom", 21) <1>
+
+Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName()));
+
+template.replace(query, tom, ReplaceOptions.replaceOptions().upsert()); <2>
+----
+<1> The `_id` value needs to be present for upsert, otherwise MongoDB will create a new potentially with the domain type incompatible ObjectId.
+<2> Use `upsert` to insert a new document if no match is found
+====
+
+[WARNING]
+====
+It is not possible to change the `_id` of existing documents with a replace operation.
+
+On `upsert` MongoDB uses 2 ways of determining the new id for the entry:
+
+* The `_id` is used within the query as in `{"_id" : 1234 }`
+* The `_id` is present in the replacement document.
+
+If no `_id` is provided in either way, MongoDB will create a new `ObjectId` for the document.
+This may lead to mapping and data lookup malfunctions if the used domain types `id` property has a different type like eg. `Long`.
+====
+
 [[mongo-template.find-and-upsert]]
 === Finding and Upserting Documents in a Collection
 

@@ -247,6 +247,29 @@ class ExecutableUpdateOperationSupportTests {
 		assertThat(result).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Luke");
 	}
 
+	@Test // GH-4463
+	void replace() {
+
+		Person luke = new Person();
+		luke.id = han.id;
+		luke.firstname = "Luke";
+
+		UpdateResult result = template.update(Person.class).matching(queryHan()).replaceWith(luke).replaceOne();
+		assertThat(result.getModifiedCount()).isEqualTo(1L);
+	}
+
+	@Test // GH-4463
+	void replaceWithOptions() {
+
+		Person luke = new Person();
+		luke.id = "upserted-luke";
+		luke.firstname = "Luke";
+
+		UpdateResult result = template.update(Person.class).matching(query(where("firstname")
+				.is("c3p0"))).replaceWith(luke).withOptions(ReplaceOptions.replaceOptions().upsert()).replaceOne();
+		assertThat(result.getUpsertedId()).isEqualTo(new BsonString("upserted-luke"));
+	}
+
 	@Test // DATAMONGO-1827
 	void findAndReplaceWithProjection() {
 

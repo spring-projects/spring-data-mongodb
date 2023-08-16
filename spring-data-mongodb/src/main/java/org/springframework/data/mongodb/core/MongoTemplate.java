@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.CollectionPreparerSupport.CollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperationSupport.ExecutableUpdateSupport;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -2081,14 +2082,11 @@ public class MongoTemplate
 		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
-
 		CollectionPreparerDelegate collectionPreparer = createDelegate(query);
-		//Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		replacement = maybeCallBeforeConvert(replacement, collectionName);
 		UpdateContext updateContext = queryOperations.replaceSingleContext(query, operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
-		Document mappedReplacement = updateContext.getMappedUpdate(null);
+		Document mappedReplacement = updateContext.getMappedUpdate(mappingContext.getPersistentEntity(entityType));
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
 		replacement = maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 

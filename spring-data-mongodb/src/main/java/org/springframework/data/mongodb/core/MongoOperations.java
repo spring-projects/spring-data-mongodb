@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1754,14 +1755,14 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> List<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document.
-	 * <br />
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
+	 * document. <br />
 	 * The collection name is derived from the {@literal replacement} type. <br />
-	 * Options are defaulted to {@link ReplaceOptions#none()}. <br />
-	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 * Options are defaulted to {@link ReplaceOptions#none()}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record. The query may
+	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
+	 *          to use. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
@@ -1773,12 +1774,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document.
-	 * Options are defaulted to {@link ReplaceOptions#none()}. <br />
-	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
+	 * document. Options are defaulted to {@link ReplaceOptions#none()}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record. The query may
+	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
+	 *          to use. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
@@ -1791,12 +1792,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link ReplaceOptions} into account.<br />
-	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
+	 * document taking {@link ReplaceOptions} into account.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record.The query may
+	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
+	 *          to use. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
@@ -1809,12 +1810,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link ReplaceOptions} into account.<br />
-	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
+	 * document taking {@link ReplaceOptions} into account.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record. The query may *
+	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
+	 *          to use. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
@@ -1829,12 +1830,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link ReplaceOptions} into account.<br />
-	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
+	 * document taking {@link ReplaceOptions} into account.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record. The query may
+	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
+	 *          to use. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
@@ -1849,12 +1850,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement} document
-	 * taking {@link ReplaceOptions} into account.<br />
-	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
+	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
+	 * document taking {@link ReplaceOptions} into account.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record. The query may
+	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
+	 *          to use. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the type used for mapping the {@link Query} to domain type fields. Must not be {@literal null}.
