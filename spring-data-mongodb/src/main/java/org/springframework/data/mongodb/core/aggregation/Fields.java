@@ -67,7 +67,7 @@ public final class Fields implements Iterable<Field> {
 
 		Assert.notNull(names, "Field names must not be null");
 
-		List<Field> fields = new ArrayList<Field>();
+		List<Field> fields = new ArrayList<>();
 
 		for (String name : names) {
 			fields.add(field(name));
@@ -114,7 +114,7 @@ public final class Fields implements Iterable<Field> {
 
 	private static List<Field> verify(List<Field> fields) {
 
-		Map<String, Field> reference = new HashMap<String, Field>();
+		Map<String, Field> reference = new HashMap<>();
 
 		for (Field field : fields) {
 
@@ -133,7 +133,7 @@ public final class Fields implements Iterable<Field> {
 
 	private Fields(Fields existing, Field tail) {
 
-		this.fields = new ArrayList<Field>(existing.fields.size() + 1);
+		this.fields = new ArrayList<>(existing.fields.size() + 1);
 		this.fields.addAll(existing.fields);
 		this.fields.add(tail);
 	}
@@ -253,10 +253,12 @@ public final class Fields implements Iterable<Field> {
 			return dollarIndex == -1 ? source : source.substring(dollarIndex + 1);
 		}
 
+		@Override
 		public String getName() {
 			return name;
 		}
 
+		@Override
 		public String getTarget() {
 
 			if (isLocalVar() || pointsToDBRefId()) {
