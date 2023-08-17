@@ -1960,6 +1960,24 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
+	public <S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
+			String collectionName) {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
+		UpdateContext updateContext = queryOperations.replaceSingleContext(query, operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
+
+		return createMono(collectionName, collection -> {
+
+			ReactiveCollectionPreparerDelegate collectionPreparer = ReactiveCollectionPreparerDelegate.of(query);
+			MongoCollection<Document> collectionToUse = collectionPreparer.prepare(collection);
+
+			return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), updateContext.getMappedUpdate(entity), updateContext.getReplaceOptions(entityType, it -> {
+				it.upsert(options.isUpsert());
+			}));
+		});
+	}
+
+	@Override
 	public <T> Flux<T> tail(Query query, Class<T> entityClass) {
 		return tail(query, entityClass, getCollectionName(entityClass));
 	}

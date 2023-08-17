@@ -102,7 +102,7 @@ public interface ExecutableUpdateOperation {
 		 * 
 		 * @return never {@literal null}.
 		 */
-		UpdateResult replaceOne();
+		UpdateResult replaceFirst();
 	}
 
 	/**

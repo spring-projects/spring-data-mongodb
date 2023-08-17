@@ -34,6 +34,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
@@ -78,7 +80,47 @@ public class MongoTemplateReplaceTests {
 		assertThat(result.getModifiedCount()).isEqualTo(1);
 
 		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 1)).first());
-		assertThat(document).containsEntry("name", "Central Pork Cafe");
+		assertThat(document).containsEntry("r-name", "Central Pork Cafe");
+	}
+
+	@Test // GH-4462
+	void replacesFirstOnMoreThanOneMatch() {
+
+		UpdateResult result = template
+				.replace(query(where("violations").exists(true)), new Restaurant("Central Pork Cafe", "Manhattan"));
+
+		assertThat(result.getMatchedCount()).isEqualTo(1);
+		assertThat(result.getModifiedCount()).isEqualTo(1);
+
+		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 2)).first());
+		assertThat(document).containsEntry("r-name", "Central Pork Cafe");
+	}
+
+	@Test // GH-4462
+	void replacesExistingDocumentWithRawDoc() {
+
+		UpdateResult result = template.replace(query(where("r-name").is("Central Perk Cafe")),
+				Document.parse("{ 'r-name' : 'Central Pork Cafe', 'Borough' : 'Manhattan' }"),
+				template.getCollectionName(Restaurant.class));
+
+		assertThat(result.getMatchedCount()).isEqualTo(1);
+		assertThat(result.getModifiedCount()).isEqualTo(1);
+
+		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 1)).first());
+		assertThat(document).containsEntry("r-name", "Central Pork Cafe");
+	}
+
+	@Test // GH-4462
+	void replacesExistingDocumentWithRawDocMappingQueryAgainstDomainType() {
+
+		UpdateResult result = template.replace(query(where("name").is("Central Perk Cafe")), Restaurant.class,
+				Document.parse("{ 'r-name' : 'Central Pork Cafe', 'Borough' : 'Manhattan' }"), ReplaceOptions.none());
+
+		assertThat(result.getMatchedCount()).isEqualTo(1);
+		assertThat(result.getModifiedCount()).isEqualTo(1);
+
+		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 1)).first());
+		assertThat(document).containsEntry("r-name", "Central Pork Cafe");
 	}
 
 	@Test // GH-4462
@@ -91,7 +133,7 @@ public class MongoTemplateReplaceTests {
 		assertThat(result.getModifiedCount()).isEqualTo(1);
 
 		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 1)).first());
-		assertThat(document).containsEntry("name", "Central Pork Cafe");
+		assertThat(document).containsEntry("r-name", "Central Pork Cafe");
 	}
 
 	@Test // GH-4462
@@ -111,7 +153,7 @@ public class MongoTemplateReplaceTests {
 		assertThat(result.getMatchedCount()).isEqualTo(0);
 		assertThat(result.getModifiedCount()).isEqualTo(0);
 
-		Document document = retrieve(collection -> collection.find(Filters.eq("name", "Pizza Rat's Pizzaria")).first());
+		Document document = retrieve(collection -> collection.find(Filters.eq("r-name", "Pizza Rat's Pizzaria")).first());
 		assertThat(document).isNull();
 	}
 
@@ -126,15 +168,15 @@ public class MongoTemplateReplaceTests {
 		assertThat(result.getUpsertedId()).isEqualTo(new BsonInt64(4L));
 
 		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 4)).first());
-		assertThat(document).containsEntry("name", "Pizza Rat's Pizzaria");
+		assertThat(document).containsEntry("r-name", "Pizza Rat's Pizzaria");
 	}
 
 	void initTestData() {
 
 		List<Document> testData = Stream.of( //
-				"{ '_id' : 1, 'name' : 'Central Perk Cafe', 'Borough' : 'Manhattan' }",
-				"{ '_id' : 2, 'name' : 'Rock A Feller Bar and Grill', 'Borough' : 'Queens', 'violations' : 2 }",
-				"{ '_id' : 3, 'name' : 'Empire State Pub', 'Borough' : 'Brooklyn', 'violations' : 0 }") //
+				"{ '_id' : 1, 'r-name' : 'Central Perk Cafe', 'Borough' : 'Manhattan' }",
+				"{ '_id' : 2, 'r-name' : 'Rock A Feller Bar and Grill', 'Borough' : 'Queens', 'violations' : 2 }",
+				"{ '_id' : 3, 'r-name' : 'Empire State Pub', 'Borough' : 'Brooklyn', 'violations' : 0 }") //
 				.map(Document::parse).collect(Collectors.toList());
 
 		doInCollection(collection -> collection.insertMany(testData));
@@ -159,7 +201,8 @@ public class MongoTemplateReplaceTests {
 	static class Restaurant {
 
 		Long id;
-		String name;
+
+		@Field("r-name") String name;
 		String borough;
 		Integer violations;
 
@@ -187,12 +230,12 @@ public class MongoTemplateReplaceTests {
 			this.id = id;
 		}
 
-		public String getName() {
+		public String getRName() {
 			return name;
 		}
 
-		public void setName(String name) {
-			this.name = name;
+		public void setRName(String rName) {
+			this.name = rName;
 		}
 
 		public String getBorough() {

@@ -60,7 +60,6 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.CollectionPreparerSupport.CollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
-import org.springframework.data.mongodb.core.ExecutableUpdateOperationSupport.ExecutableUpdateSupport;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
@@ -74,6 +73,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Builder;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -1312,7 +1312,7 @@ public class MongoTemplate
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
+					|| (wc.getWObject()instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -2070,7 +2070,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	public <S> UpdateResult replace(Query query, S replacement, ReplaceOptions options, Class<S> entityType,
+	public <S, T> UpdateResult replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
 			String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -2084,13 +2084,21 @@ public class MongoTemplate
 
 		CollectionPreparerDelegate collectionPreparer = createDelegate(query);
 
+		UpdateContext updateContext = null;
+		if (replacement instanceof AggregationUpdate au) {
+			updateContext = queryOperations.updateContext(au, query, options.isUpsert());
+		} else {
+			updateContext = queryOperations.replaceSingleContext(query,
+					operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
+		}
+
 		replacement = maybeCallBeforeConvert(replacement, collectionName);
-		UpdateContext updateContext = queryOperations.replaceSingleContext(query, operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
 		Document mappedReplacement = updateContext.getMappedUpdate(mappingContext.getPersistentEntity(entityType));
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
 		replacement = maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
-		UpdateResult result = doReplace(options, entityType, collectionName, updateContext, collectionPreparer, mappedReplacement);
+		UpdateResult result = doReplace(options, entityType, collectionName, updateContext, collectionPreparer,
+				mappedReplacement);
 
 		if (result.wasAcknowledged()) {
 			maybeEmitEvent(new AfterSaveEvent<>(replacement, mappedReplacement, collectionName));
@@ -2804,13 +2812,13 @@ public class MongoTemplate
 			UpdateContext updateContext, CollectionPreparerDelegate collectionPreparer, Document replacement) {
 
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
-		ReplaceCallback replaceCallback = new ReplaceCallback(collectionPreparer, updateContext.getMappedQuery(persistentEntity), replacement, updateContext.getReplaceOptions(entityType, it -> {
-			it.upsert(options.isUpsert());
-		}));
+		ReplaceCallback replaceCallback = new ReplaceCallback(collectionPreparer,
+				updateContext.getMappedQuery(persistentEntity), replacement, updateContext.getReplaceOptions(entityType, it -> {
+					it.upsert(options.isUpsert());
+				}));
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(
-					String.format("replace one using query: %s for class: %s in collection: %s",
-							serializeToJsonSafely(updateContext.getMappedQuery(persistentEntity)), entityType, collectionName));
+			LOGGER.debug(String.format("replace one using query: %s for class: %s in collection: %s",
+					serializeToJsonSafely(updateContext.getMappedQuery(persistentEntity)), entityType, collectionName));
 		}
 
 		return execute(collectionName, replaceCallback);
@@ -3612,7 +3620,8 @@ public class MongoTemplate
 		private final Document update;
 		private final com.mongodb.client.model.ReplaceOptions options;
 
-		ReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document update, com.mongodb.client.model.ReplaceOptions options) {
+		ReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document update,
+				com.mongodb.client.model.ReplaceOptions options) {
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.update = update;

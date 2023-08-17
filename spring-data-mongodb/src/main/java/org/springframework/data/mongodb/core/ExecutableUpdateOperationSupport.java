@@ -187,8 +187,12 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
-		public UpdateResult replaceOne() {
-			return template.replace(query, replacement,  findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), domainType, getCollectionName());
+		public UpdateResult replaceFirst() {
+			if(replacement != null) {
+				return template.replace(query, domainType, replacement, findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
+			}
+
+			return template.replace(query, domainType, update, findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

@@ -254,7 +254,7 @@ class ExecutableUpdateOperationSupportTests {
 		luke.id = han.id;
 		luke.firstname = "Luke";
 
-		UpdateResult result = template.update(Person.class).matching(queryHan()).replaceWith(luke).replaceOne();
+		UpdateResult result = template.update(Person.class).matching(queryHan()).replaceWith(luke).replaceFirst();
 		assertThat(result.getModifiedCount()).isEqualTo(1L);
 	}
 
@@ -266,7 +266,7 @@ class ExecutableUpdateOperationSupportTests {
 		luke.firstname = "Luke";
 
 		UpdateResult result = template.update(Person.class).matching(query(where("firstname")
-				.is("c3p0"))).replaceWith(luke).withOptions(ReplaceOptions.replaceOptions().upsert()).replaceOne();
+				.is("c3p0"))).replaceWith(luke).withOptions(ReplaceOptions.replaceOptions().upsert()).replaceFirst();
 		assertThat(result.getUpsertedId()).isEqualTo(new BsonString("upserted-luke"));
 	}
 

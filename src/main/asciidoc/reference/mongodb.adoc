@@ -983,7 +983,7 @@ WARNING: `upsert` does not support ordering. Please use <<mongo-template.find-an
 [[mongo-template.replace]]
 === Replacing Documents in a Collection
 
-The various `replace` methods available via `MongoTemplate` allow to override a single matching Document.
+The various `replace` methods available via `MongoTemplate` allow to override the first matching Document.
 If no match is found a new one can be upserted (as outlined in the previous section) by providing `ReplaceOptions` with according configuration.
 
 ====
@@ -1011,8 +1011,8 @@ Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName()));
 
 template.replace(query, tom, ReplaceOptions.replaceOptions().upsert()); <2>
 ----
-<1> The `_id` value needs to be present for upsert, otherwise MongoDB will create a new potentially with the domain type incompatible ObjectId.
-<2> Use `upsert` to insert a new document if no match is found
+<1> The `_id` value needs to be present for upsert, otherwise MongoDB will create a new potentially with the domain type incompatible `ObjectId`.
+<2> Use `upsert` to insert a new document if no match is found.
 ====
 
 [WARNING]
