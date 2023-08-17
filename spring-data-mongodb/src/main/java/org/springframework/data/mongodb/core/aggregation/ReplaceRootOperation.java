@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.expression.spel.ast.Projection;
 import org.springframework.util.Assert;
@@ -431,6 +430,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * @param context will never be {@literal null}.
 		 * @return never {@literal null}.
 		 */
+		@Override
 		Document toDocument(AggregationOperationContext context);
 	}
 

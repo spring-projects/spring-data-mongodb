@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the original author or authors.
+ * Copyright 2022-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.springframework.util.ObjectUtils;
  * A special field that points to a variable {@code $$} expression.
  *
  * @author Christoph Strobl
- * @since 4.1
+ * @since 4.1.3
  */
 public interface AggregationVariable extends Field {
 
@@ -33,6 +33,7 @@ public interface AggregationVariable extends Field {
 	 * @return {@literal true} if the fields {@link #getName() name} does not match the defined {@link #getTarget()
 	 *         target}.
 	 */
+	@Override
 	default boolean isAliased() {
 		return !ObjectUtils.nullSafeEquals(getName(), getTarget());
 	}
@@ -42,6 +43,7 @@ public interface AggregationVariable extends Field {
 		return getTarget();
 	}
 
+	@Override
 	default boolean isInternal() {
 		return false;
 	}
@@ -50,7 +52,7 @@ public interface AggregationVariable extends Field {
 	 * Create a new {@link AggregationVariable} for the given name.
 	 * <p>
 	 * Variables start with {@code $$}. If not, the given value gets prefixed with {@code $$}.
-	 * 
+	 *
 	 * @param value must not be {@literal null}.
 	 * @return new instance of {@link AggregationVariable}.
 	 * @throws IllegalArgumentException if given value is {@literal null}.
@@ -127,4 +129,5 @@ public interface AggregationVariable extends Field {
 		var trimmed = variable.stripLeading();
 		return trimmed.startsWith(PREFIX) ? trimmed : (PREFIX + trimmed);
 	}
+
 }
