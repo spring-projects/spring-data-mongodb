@@ -20,6 +20,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import com.mongodb.WriteConcern;
+import org.springframework.data.mongodb.core.MongoTemplateUnitTests.Sith;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -1600,6 +1602,83 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		verify(changeStreamPublisher).startAfter(eq(token));
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseCollationWhenPresent() {
+
+		template.replace(new BasicQuery("{}").collation(Collation.of("fr")), new Jedi()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
+	}
+
+	@Test // GH-4462
+	void replaceShouldNotUpsertByDefault() {
+
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+	}
+
+	@Test // GH-4462
+	void replaceShouldUpsert() {
+
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isTrue();
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseDefaultCollationWhenPresent() {
+
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseHintIfPresent() {
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new MongoTemplateUnitTests.Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-to-use");
+	}
+
+	@Test // GH-4462
+	void replaceShouldApplyWriteConcern() {
+
+		template.setWriteConcernResolver(new WriteConcernResolver() {
+			public WriteConcern resolve(MongoAction action) {
+
+				assertThat(action.getMongoActionOperation()).isEqualTo(MongoActionOperation.REPLACE);
+				return WriteConcern.UNACKNOWLEDGED;
+			}
+		});
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+
+		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
 
 	private void stubFindSubscribe(Document document) {

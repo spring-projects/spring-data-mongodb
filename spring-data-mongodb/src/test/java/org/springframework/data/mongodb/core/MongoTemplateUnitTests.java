@@ -178,6 +178,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
 		when(collection.distinct(anyString(), any(Document.class), any())).thenReturn(distinctIterable);
 		when(collectionWithWriteConcern.deleteOne(any(Bson.class), any())).thenReturn(deleteResult);
+		when(collectionWithWriteConcern.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class))).thenReturn(updateResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -2495,6 +2496,22 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).replaceOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getHintString()).isEqualTo("index-to-use");
+	}
+
+	@Test // GH-4462
+	void replaceShouldApplyWriteConcern() {
+
+		template.setWriteConcernResolver(new WriteConcernResolver() {
+			public WriteConcern resolve(MongoAction action) {
+
+				assertThat(action.getMongoActionOperation()).isEqualTo(MongoActionOperation.REPLACE);
+				return WriteConcern.UNACKNOWLEDGED;
+			}
+		});
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+
+		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
 
 	class AutogenerateableId {
