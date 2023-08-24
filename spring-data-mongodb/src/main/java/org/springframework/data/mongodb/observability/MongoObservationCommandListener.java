@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
@@ -26,10 +30,6 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 
 /**
  * Implement MongoDB's {@link CommandListener} using Micrometer's {@link Observation} API.
@@ -133,11 +133,10 @@ public class MongoObservationCommandListener implements CommandListener {
 		}
 
 		Observation observation = requestContext.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (observation == null) {
+		if (observation == null || !(observation.getContext()instanceof MongoHandlerContext context)) {
 			return;
 		}
 
-		MongoHandlerContext context = (MongoHandlerContext) observation.getContext();
 		context.setCommandSucceededEvent(event);
 
 		if (log.isDebugEnabled()) {
@@ -157,11 +156,10 @@ public class MongoObservationCommandListener implements CommandListener {
 		}
 
 		Observation observation = requestContext.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (observation == null) {
+		if (observation == null || !(observation.getContext()instanceof MongoHandlerContext context)) {
 			return;
 		}
 
-		MongoHandlerContext context = (MongoHandlerContext) observation.getContext();
 		context.setCommandFailedEvent(event);
 
 		if (log.isDebugEnabled()) {
