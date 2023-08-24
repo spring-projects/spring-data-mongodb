@@ -19,6 +19,8 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 
+import java.util.function.BiConsumer;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
@@ -126,30 +128,43 @@ public class MongoObservationCommandListener implements CommandListener {
 	@Override
 	public void commandSucceeded(CommandSucceededEvent event) {
 
-		RequestContext requestContext = event.getRequestContext();
+		doInObservation(event.getRequestContext(), (observation, context) -> {
 
-		if (requestContext == null) {
-			return;
-		}
+			context.setCommandSucceededEvent(event);
 
-		Observation observation = requestContext.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (observation == null || !(observation.getContext()instanceof MongoHandlerContext context)) {
-			return;
-		}
+			if (log.isDebugEnabled()) {
+				log.debug("Command succeeded - will stop observation [" + observation + "]");
+			}
 
-		context.setCommandSucceededEvent(event);
-
-		if (log.isDebugEnabled()) {
-			log.debug("Command succeeded - will stop observation [" + observation + "]");
-		}
-
-		observation.stop();
+			observation.stop();
+		});
 	}
 
 	@Override
 	public void commandFailed(CommandFailedEvent event) {
 
-		RequestContext requestContext = event.getRequestContext();
+		doInObservation(event.getRequestContext(), (observation, context) -> {
+
+			context.setCommandFailedEvent(event);
+
+			if (log.isDebugEnabled()) {
+				log.debug("Command failed - will stop observation [" + observation + "]");
+			}
+
+			observation.error(event.getThrowable());
+			observation.stop();
+		});
+	}
+
+	/**
+	 * Performs the given action for the {@link Observation} and {@link MongoHandlerContext} if there is an ongoing Mongo
+	 * Observation. Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param requestContext the context to extract the Observation from.
+	 * @param action the action to invoke.
+	 */
+	private void doInObservation(@Nullable RequestContext requestContext,
+			BiConsumer<Observation, MongoHandlerContext> action) {
 
 		if (requestContext == null) {
 			return;
@@ -160,14 +175,7 @@ public class MongoObservationCommandListener implements CommandListener {
 			return;
 		}
 
-		context.setCommandFailedEvent(event);
-
-		if (log.isDebugEnabled()) {
-			log.debug("Command failed - will stop observation [" + observation + "]");
-		}
-
-		observation.error(event.getThrowable());
-		observation.stop();
+		action.accept(observation, context);
 	}
 
 	/**
