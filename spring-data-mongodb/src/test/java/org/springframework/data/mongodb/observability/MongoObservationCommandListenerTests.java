@@ -16,6 +16,15 @@
 package org.springframework.data.mongodb.observability;
 
 import static io.micrometer.core.tck.MeterRegistryAssert.*;
+import static org.mockito.Mockito.*;
+
+import io.micrometer.common.KeyValues;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -33,18 +42,12 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 
-import io.micrometer.common.KeyValues;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-
 /**
  * Series of test cases exercising {@link MongoObservationCommandListener}.
  *
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
+ * @author Mark Paluch
  */
 class MongoObservationCommandListenerTests {
 
@@ -174,6 +177,38 @@ class MongoObservationCommandListenerTests {
 
 		// then
 		assertThatTimerRegisteredWithTags();
+	}
+
+	@Test // GH-4481
+	void completionShouldIgnoreIncompatibleObservationContext() {
+
+		// given
+		RequestContext traceRequestContext = getContext();
+
+		Observation observation = mock(Observation.class);
+		traceRequestContext.put(ObservationThreadLocalAccessor.KEY, observation);
+
+		// when
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
+
+		verify(observation).getContext();
+		verifyNoMoreInteractions(observation);
+	}
+
+	@Test // GH-4481
+	void failureShouldIgnoreIncompatibleObservationContext() {
+
+		// given
+		RequestContext traceRequestContext = getContext();
+
+		Observation observation = mock(Observation.class);
+		traceRequestContext.put(ObservationThreadLocalAccessor.KEY, observation);
+
+		// when
+		listener.commandFailed(new CommandFailedEvent(traceRequestContext, 0, null, "insert", 0, null));
+
+		verify(observation).getContext();
+		verifyNoMoreInteractions(observation);
 	}
 
 	private RequestContext getContext() {
