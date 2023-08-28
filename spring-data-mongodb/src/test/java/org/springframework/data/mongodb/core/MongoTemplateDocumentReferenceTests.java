@@ -1265,6 +1265,32 @@ public class MongoTemplateDocumentReferenceTests {
 				.isEqualTo(new ObjectRefHavingStringIdTargetType(id.toHexString(), "me-the-referenced-object"));
 	}
 
+	@Test // GH-4484
+	void resolveReferenceForOneToManyLookupWithSelfVariableWhenUsedInCtorArgument() {
+
+		OneToManyStylePublisherWithRequiredArgsCtor publisher = new OneToManyStylePublisherWithRequiredArgsCtor("p-100", null);
+		template.save(publisher);
+
+		OneToManyStyleBook book1 = new OneToManyStyleBook();
+		book1.id = "id-1";
+		book1.publisherId = publisher.id;
+
+		OneToManyStyleBook book2 = new OneToManyStyleBook();
+		book2.id = "id-2";
+		book2.publisherId = "p-200";
+
+		OneToManyStyleBook book3 = new OneToManyStyleBook();
+		book3.id = "id-3";
+		book3.publisherId = publisher.id;
+
+		template.save(book1);
+		template.save(book2);
+		template.save(book3);
+
+		OneToManyStylePublisherWithRequiredArgsCtor target = template.findOne(query(where("id").is(publisher.id)), OneToManyStylePublisherWithRequiredArgsCtor.class);
+		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
+	}
+
 	static class SingleRefRoot {
 
 		String id;
@@ -2247,6 +2273,42 @@ public class MongoTemplateDocumentReferenceTests {
 
 		public String toString() {
 			return "MongoTemplateDocumentReferenceTests.WithListOfRefs(id=" + this.getId() + ", refs=" + this.getRefs() + ")";
+		}
+	}
+
+	static class OneToManyStylePublisherWithRequiredArgsCtor {
+
+		@Id
+		String id;
+
+		@ReadOnlyProperty
+		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
+		List<OneToManyStyleBook> books;
+
+		public OneToManyStylePublisherWithRequiredArgsCtor(String id, List<OneToManyStyleBook> books) {
+			this.id = id;
+			this.books = books;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<OneToManyStyleBook> getBooks() {
+			return this.books;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setBooks(List<OneToManyStyleBook> books) {
+			this.books = books;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.OneToManyStylePublisherWithRequiredArgsCtor(id=" + this.getId() + ", book="
+				+ this.getBooks() + ")";
 		}
 	}
 }
