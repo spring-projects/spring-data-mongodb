@@ -117,6 +117,7 @@ import com.mongodb.DBRef;
  * @author Roman Puchkovskiy
  * @author Heesu Jung
  * @author Divya Srivastava
+ * @author Julia Lee
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -1978,8 +1979,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (property.isDocumentReference()) {
-				return (T) dbRefResolver.resolveReference(property, accessor.get(property), referenceLookupDelegate,
-						context::convert);
+				return (T) dbRefResolver.resolveReference(property,
+					new DocumentReferenceSource(accessor.getDocument(), accessor.get(property)),
+					referenceLookupDelegate, context::convert);
 			}
 
 			return super.getPropertyValue(property);
