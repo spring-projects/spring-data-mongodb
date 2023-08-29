@@ -98,6 +98,7 @@ import com.mongodb.DBRef;
  * @author Roman Puchkovskiy
  * @author Heesu Jung
  * @author Divya Srivastava
+ * @author Julia Lee
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 

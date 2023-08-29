@@ -57,6 +57,7 @@ import com.mongodb.client.model.Filters;
  * {@link DocumentReference} related integration tests for {@link MongoTemplate}.
  *
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateDocumentReferenceTests {
