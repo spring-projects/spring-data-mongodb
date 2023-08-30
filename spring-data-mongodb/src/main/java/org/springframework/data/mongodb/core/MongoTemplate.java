@@ -73,7 +73,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions.Builder;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -2082,13 +2081,8 @@ public class MongoTemplate
 		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
-		UpdateContext updateContext = null;
-		if (replacement instanceof AggregationUpdate au) {
-			updateContext = queryOperations.updateContext(au, query, options.isUpsert());
-		} else {
-			updateContext = queryOperations.replaceSingleContext(query,
-					operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
-		}
+		UpdateContext updateContext = queryOperations.replaceSingleContext(query,
+				operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
 
 		replacement = maybeCallBeforeConvert(replacement, collectionName);
 		Document mappedReplacement = updateContext.getMappedUpdate(mappingContext.getPersistentEntity(entityType));
