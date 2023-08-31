@@ -900,7 +900,6 @@ class Nested {
 ----
 ====
 
-include::document-references.adoc[]
 
 [[mapping-usage-events]]
 === Mapping Framework Events
@@ -909,7 +908,4 @@ Events are fired throughout the lifecycle of the mapping process. This is descri
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 
-include::unwrapping-entities.adoc[]
 
-include::mongo-custom-conversions.adoc[]
-include::mongo-property-converters.adoc[]
