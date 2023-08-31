@@ -1,5 +1,6 @@
 [[mongo-template.querying]]
 = Methods for Querying for Documents
+:page-section-summary-toc: 1
 
 The query methods need to specify the target type `T` that is returned, and they are overloaded with an explicit collection name for queries that should operate on a collection other than the one indicated by the return type. The following query methods let you find one or more documents:
 

@@ -1,5 +1,6 @@
 [[mongo.core]]
 = MongoDB support
+:page-section-summary-toc: 1
 
 The MongoDB support contains a wide range of features:
 

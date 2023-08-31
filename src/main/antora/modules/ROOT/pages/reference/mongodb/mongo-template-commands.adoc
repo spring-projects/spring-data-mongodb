@@ -1,5 +1,6 @@
 [[mongo-template.commands]]
 = Running Commands
+:page-section-summary-toc: 1
 
 You can get at the MongoDB driver's `MongoDatabase.runCommand( )` method by using the `executeCommand(…)` methods on `MongoTemplate`. These methods also perform exception translation into Spring's `DataAccessException` hierarchy.
 

@@ -1,5 +1,6 @@
 [[mongo.query]]
 = Querying Documents
+:page-section-summary-toc: 1
 
 You can use the `Query` and `Criteria` classes to express your queries.They have method names that mirror the native MongoDB operator names, such as `lt`, `lte`, `is`, and others.The `Query` and `Criteria` classes follow a fluent API style so that you can chain together multiple method criteria and queries while having easy-to-understand code.To improve readability, static imports let you avoid using the 'new' keyword for creating `Query` and `Criteria` instances.You can also use `BasicQuery` to create `Query` instances from plain JSON Strings, as shown in the following example:
 

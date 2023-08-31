@@ -1,5 +1,6 @@
 [[mongo.exception]]
 = Exception Translation
+:page-section-summary-toc: 1
 
 The Spring framework provides exception translation for a wide variety of database and mapping technologies. This has traditionally been for JDBC and JPA. The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
 

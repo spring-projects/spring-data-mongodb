@@ -1,5 +1,6 @@
 [[upgrading.data-mongo]]
 = Upgrading
+:page-section-summary-toc: 1
 
 include::{spring-data-commons-docs}/upgrade.adoc[leveloffset=+1]
 
