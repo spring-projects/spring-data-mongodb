@@ -58,7 +58,7 @@ MongoJsonSchema.builder()                                                    <1>
 <1> Obtain a schema builder to configure the schema with a fluent API.
 <2> Configure required properties either directly as shown here or with more details as in 3.
 <3> Configure the required String-typed `firstname` field, allowing only `luke` and `han` values. Properties can be typed or untyped. Use a static import of  `JsonSchemaProperty` to make the syntax slightly more compact and to get entry points such as `string(…)`.
-<4> Build the schema object. Use the schema to create either a collection or <<mongodb-template-query.criteria,query documents>>.
+<4> Build the schema object. Use the schema to create either a collection or xref:reference/mongodb/mongo-query/template.adoc#mongodb-template-query.criteria[query documents].
 ====
 
 There are already some predefined and strongly typed schema objects (`JsonSchemaObject` and `JsonSchemaProperty`) available
@@ -94,7 +94,7 @@ It's important, schema changes can be hard.
 However, there might be times when one does not want to balked with it, and that is where `JsonSchemaCreator` comes into play.
 
 `JsonSchemaCreator` and its default implementation generates a `MongoJsonSchema` out of domain types metadata provided by the mapping infrastructure.
-This means, that <<mapping-usage-annotations, annotated properties>> as well as potential <<mapping-configuration, custom conversions>> are considered.
+This means, that xref:reference/mapping.adoc#mapping-usage-annotations[annotated properties] as well as potential xref:reference/mapping.adoc#mapping-configuration[custom conversions] are considered.
 
 .Generate Json Schema from domain type
 ====

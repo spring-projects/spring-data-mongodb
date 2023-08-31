@@ -1,8 +1,8 @@
 [[mongodb.repositories.queries.aggregation]]
 = Aggregation Repository Methods
 
-The repository layer offers means to interact with <<mongo.aggregation, the aggregation framework>> via annotated repository query methods.
-Similar to the <<mongodb.repositories.queries.json-based, JSON based queries>>, you can define a pipeline using the `org.springframework.data.mongodb.repository.Aggregation` annotation.
+The repository layer offers means to interact with xref:reference/aggregation-framework.adoc[the aggregation framework] via annotated repository query methods.
+Similar to the xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.json-based[JSON based queries], you can define a pipeline using the `org.springframework.data.mongodb.repository.Aggregation` annotation.
 The definition may contain simple placeholders like `?0` as well as link:{springDocsUrl}/core.html#expressions[SpEL expressions] `?#{ … }`.
 
 .Aggregating Repository Method
@@ -114,7 +114,7 @@ interface PersonRepository extends CrudRepository<Person, String> {
 }
 ----
 
-TIP: You can use `@Aggregation` also with <<mongo.reactive.repositories, Reactive Repositories>>.
+TIP: You can use `@Aggregation` also with xref:reference/reactive-mongo-repositories.adoc[Reactive Repositories].
 
 [NOTE]
 ====

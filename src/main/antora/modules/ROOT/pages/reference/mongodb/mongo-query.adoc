@@ -12,5 +12,5 @@ List<Person> result = mongoTemplate.find(query, Person.class);
 ----
 ====
 
-Spring MongoDB also supports GeoSpatial queries (see the <<mongo.geospatial,GeoSpatial Queries>> section) and Map-Reduce operations (see the <<mongo.mapreduce,Map-Reduce>> section.).
+Spring MongoDB also supports GeoSpatial queries (see the xref:reference/mongodb/mongo-query/geospatial.adoc[GeoSpatial Queries] section) and Map-Reduce operations (see the xref:reference/mongodb/mongo-mapreduce.adoc[Map-Reduce] section.).
 

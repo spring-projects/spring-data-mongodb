@@ -5,17 +5,17 @@ The `MongoTemplate` class, located in the `org.springframework.data.mongodb.core
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
 
-The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface. Spring provides `MappingMongoConverter`, but you can also write your own converter. See "`<<mongo.custom-converters>>`" for more detailed information.
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface. Spring provides `MappingMongoConverter`, but you can also write your own converter. See "`xref:reference/mongo-custom-conversions.adoc[Custom Conversions - Overriding Default Mapping]`" for more detailed information.
 
 The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you can find methods such as `find`, `findAndModify`, `findAndReplace`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`. The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`. Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
 
-The default converter implementation used by `MongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions, as well as the use of mapping annotations, are explained in the "`<<mapping-chapter>>`" chapter.
+The default converter implementation used by `MongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions, as well as the use of mapping annotations, are explained in the "`xref:reference/mapping.adoc[Mapping]`" chapter.
 
-Another central feature of `MongoTemplate` is translation of exceptions thrown by the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. See "`<<mongo.exception>>`" for more information.
+Another central feature of `MongoTemplate` is translation of exceptions thrown by the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. See "`xref:reference/mongodb/mongo-exception.adoc[Exception Translation]`" for more information.
 
-`MongoTemplate` offers many convenience methods to help you easily perform common tasks. However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods. The `execute` callbacks gives you a reference to either a `com.mongodb.client.MongoCollection` or a `com.mongodb.client.MongoDatabase` object. See the <<mongo.executioncallback,"`Execution Callbacks`">> section for more information.
+`MongoTemplate` offers many convenience methods to help you easily perform common tasks. However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods. The `execute` callbacks gives you a reference to either a `com.mongodb.client.MongoCollection` or a `com.mongodb.client.MongoDatabase` object. See the xref:reference/mongodb/mongo-executioncallback.adoc["`Execution Callbacks`"] section for more information.
 
 The next section contains an example of how to work with the `MongoTemplate` in the context of the Spring container.
 

@@ -132,8 +132,8 @@ When you run the main program, the preceding examples produce the following outp
 
 Even in this simple example, there are few things to notice:
 
-* You can instantiate the central helper class of Spring Mongo, <<mongo-template,`MongoTemplate`>>, by using the standard `com.mongodb.client.MongoClient` object and the name of the database to use.
-* The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See <<mapping-chapter,here>>.).
+* You can instantiate the central helper class of Spring Mongo, xref:reference/mongodb/mongo-template.adoc[`MongoTemplate`], by using the standard `com.mongodb.client.MongoClient` object and the name of the database to use.
+* The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See xref:reference/mapping.adoc[here].).
 * Conventions are used for handling the `id` field, converting it to be an `ObjectId` when stored in the database.
 * Mapping conventions can use field access. Notice that the `Person` class has only getters.
 * If the constructor argument names match the field names of the stored document, they are used to instantiate the object

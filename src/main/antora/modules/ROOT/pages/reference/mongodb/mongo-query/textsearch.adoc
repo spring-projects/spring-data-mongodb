@@ -6,7 +6,7 @@ Since version 2.6 of MongoDB, you can run full-text queries by using the `$text`
 [[full-text-search]]
 == Full-text Search
 
-Before you can actually use full-text search, you must set up the search index correctly. See <<mapping-usage-indexes.text-index,Text Index>> for more detail on how to create index structures. The following example shows how to set up a full-text search:
+Before you can actually use full-text search, you must set up the search index correctly. See xref:reference/mapping.adoc#mapping-usage-indexes.text-index[Text Index] for more detail on how to create index structures. The following example shows how to set up a full-text search:
 
 [source,javascript]
 ----

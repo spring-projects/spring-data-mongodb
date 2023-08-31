@@ -56,7 +56,7 @@ For those cases please consider falling back to an interface type (eg. switch fr
 = Using Document References
 
 Using `@DocumentReference` offers a flexible way of referencing entities in MongoDB.
-While the goal is the same as when using <<mapping-usage-references,DBRefs>>, the store representation is different.
+While the goal is the same as when using xref:reference/document-references.adoc[DBRefs], the store representation is different.
 `DBRef` resolves to a document with a fixed structure as outlined in the https://docs.mongodb.com/manual/reference/database-references/[MongoDB Reference documentation]. +
 Document references, do not follow a specific format.
 They can be literally anything, a single value, an entire document, basically everything that can be stored in MongoDB.

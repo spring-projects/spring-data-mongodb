@@ -52,11 +52,11 @@ The `Criteria` class provides the following methods, all of which correspond to 
 * `Criteria` *sampleRate* `(double sampleRate)` Creates a criterion using the `$sampleRate` operator
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
-* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for <<mongo.jsonSchema,JSON schema criteria>>. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:reference/mongo-json-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
 * `Criteria` *bits()* is the gateway to https://docs.mongodb.com/manual/reference/operator/query-bitwise/[MongoDB bitwise query operators] like `$bitsAllClear`.
 
 
-The Criteria class also provides the following methods for geospatial queries (see the <<mongo.geospatial,GeoSpatial Queries>> section to see them in action):
+The Criteria class also provides the following methods for geospatial queries (see the xref:reference/mongodb/mongo-query/geospatial.adoc[GeoSpatial Queries] section to see them in action):
 
 * `Criteria` *within* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
 * `Criteria` *within* `(Box box)` Creates a geospatial criterion using a `$geoWithin $box` operation.
@@ -140,5 +140,5 @@ query.fields()
 <4> Use SpEL along with an `AggregationExpression` to invoke expression functions. Field names are mapped to the ones used in the domain model.
 ====
 
-`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in <<mongodb.repositories.queries.json-based>>.
+`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction].
 

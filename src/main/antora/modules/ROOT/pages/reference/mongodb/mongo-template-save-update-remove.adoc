@@ -115,7 +115,7 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
 
 NOTE: The preceding example is meant to show the use of save, update, and remove operations on `MongoTemplate` and not to show complex mapping functionality.
 
-The query syntax used in the preceding example is explained in more detail in the section "`<<mongo.query>>`".
+The query syntax used in the preceding example is explained in more detail in the section "`xref:reference/mongodb/mongo-query.adoc[Querying Documents]`".
 
 [[mongo-template.id-handling]]
 == How the `_id` Field is Handled in the Mapping Layer
@@ -373,7 +373,7 @@ Most methods return the `Update` object to provide a fluent style for the API.
 * *updateFirst*: Updates the first document that matches the query document criteria with the updated document.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
 
-WARNING: `updateFirst` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
+WARNING: `updateFirst` does not support ordering. Please use xref:reference/mongodb/mongo-template-save-update-remove.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
 NOTE: Index hints for the update operation can be provided via `Query.withHint(...)`.
 
 [[mongodb-template-update.update]]
@@ -430,7 +430,7 @@ template.update(Person.class)
   .upsert();
 ----
 
-WARNING: `upsert` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
+WARNING: `upsert` does not support ordering. Please use xref:reference/mongodb/mongo-template-save-update-remove.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
 
 [[mongo-template.find-and-upsert]]
 == Finding and Upserting Documents in a Collection
@@ -499,7 +499,7 @@ assertThat(upserted.getAge()).isOne();
 [[mongo-template.aggregation-update]]
 == Aggregation Pipeline Updates
 
-Update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an <<mongo.aggregation, Aggregation Pipeline>> via `AggregationUpdate`.
+Update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an xref:reference/aggregation-framework.adoc[Aggregation Pipeline] via `AggregationUpdate`.
 Using `AggregationUpdate` allows leveraging https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
 Using aggregations in an update allows updating one or more fields by expressing multiple stages and multiple conditions with a single operation.
 

@@ -100,7 +100,7 @@ List<Person> result = template.find(query, Person.class);
 
 [NOTE]
 ====
-`UntypedExampleMatcher` is likely the right choice for you if you are storing different entities within a single collection or opted out of writing <<mongo-template.type-mapping,type hints>>.
+`UntypedExampleMatcher` is likely the right choice for you if you are storing different entities within a single collection or opted out of writing xref:reference/mongodb/mongo-template-save-update-remove.adoc#mongo-template.type-mapping[type hints].
 
 Also, keep in mind that using `@TypeAlias` requires eager initialization of the `MappingContext`. To do so, configure `initialEntitySet` to to ensure proper alias resolution for read operations.
 ====

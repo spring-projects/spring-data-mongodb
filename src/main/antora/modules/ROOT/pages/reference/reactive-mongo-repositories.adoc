@@ -44,7 +44,7 @@ public class Person {
 ====
 
 Note that the entity defined in the preceding example has a property named `id` of type `String`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types.
-Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+Please see xref:reference/mongodb/mongo-template-save-update-remove.adoc#mongo-template.id-handling[ID mapping] for more information about on how the `id` field is handled in the mapping layer.
 
 The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
 
@@ -141,22 +141,22 @@ Flux<Person> persons = repository.findByFirstnameOrderByLastname("luke", page);
 [[mongo.reactive.repositories.features]]
 == Features
 
-Spring Data's Reactive MongoDB support comes with a reduced feature set compared to the blocking <<mongo.repositories,MongoDB Repositories>>.
+Spring Data's Reactive MongoDB support comes with a reduced feature set compared to the blocking xref:reference/mongo-repositories.adoc[MongoDB Repositories].
 
 It supports the following features:
 
-* Query Methods using <<mongodb.repositories.queries,String queries and Query Derivation>>
-* <<mongodb.reactive.repositories.queries.geo-spatial>>
-* <<mongodb.repositories.queries.delete>>
-* <<mongodb.repositories.queries.json-based>>
-* <<mongodb.repositories.queries.full-text>>
-* <<mongodb.reactive.repositories.queries.type-safe>>
+* Query Methods using xref:reference/mongo-repositories.adoc#mongodb.repositories.queries[String queries and Query Derivation]
+* xref:reference/reactive-mongo-repositories.adoc#mongodb.reactive.repositories.queries.geo-spatial[Geo-spatial Repository Queries]
+* xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.delete[Repository Delete Queries]
+* xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction]
+* xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.full-text[Full-text Search Queries]
+* xref:reference/reactive-mongo-repositories.adoc#mongodb.reactive.repositories.queries.type-safe[Type-safe Query Methods]
 * <<projections>>
 
 [[mongodb.reactive.repositories.queries.geo-spatial]]
 === Geo-spatial Repository Queries
 
-As you saw earlier in "`<<mongodb.reactive.repositories.queries.geo-spatial>>`", a few keywords trigger geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification, as the next few examples show.
+As you saw earlier in "`xref:reference/reactive-mongo-repositories.adoc#mongodb.reactive.repositories.queries.geo-spatial[Geo-spatial Repository Queries]`", a few keywords trigger geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification, as the next few examples show.
 
 The following example shows how to define a `near` query that finds all persons with a given distance of a given point:
 

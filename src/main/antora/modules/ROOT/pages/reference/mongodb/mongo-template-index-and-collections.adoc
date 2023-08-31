@@ -40,7 +40,7 @@ You can create standard, geospatial, and text indexes by using the `IndexDefinit
 mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
 ----
 
-NOTE: `Index` and `GeospatialIndex` support configuration of <<mongo.collation,collations>>.
+NOTE: `Index` and `GeospatialIndex` support configuration of xref:reference/mongodb/mongo-query/collation.adoc[collations].
 
 [[mongo-template.index-and-collections.access]]
 == Accessing Index Information
@@ -82,5 +82,5 @@ mongoTemplate.dropCollection("MyNewCollection");
 * *dropCollection*: Drops the collection.
 * *getCollection*: Gets a collection by name, creating it if it does not exist.
 
-NOTE: Collection creation allows customization with `CollectionOptions` and supports <<mongo.collation,collations>>.
+NOTE: Collection creation allows customization with `CollectionOptions` and supports xref:reference/mongodb/mongo-query/collation.adoc[collations].
 

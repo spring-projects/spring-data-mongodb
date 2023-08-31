@@ -2,7 +2,7 @@
 = Counting Documents
 
 In pre-3.x versions of SpringData MongoDB the count operation used MongoDBs internal collection statistics.
-With the introduction of <<mongo.transactions>> this was no longer possible because statistics would not correctly reflect potential changes during a transaction requiring an aggregation-based count approach.
+With the introduction of xref:reference/client-session-transactions.adoc#mongo.transactions[MongoDB Transactions] this was no longer possible because statistics would not correctly reflect potential changes during a transaction requiring an aggregation-based count approach.
 So in version 2.x `MongoOperations.count()` would use the collection statistics if no transaction was in progress, and the aggregation variant if so.
 
 As of Spring Data MongoDB 3.x any `count` operation uses regardless the existence of filter criteria the aggregation-based count approach via MongoDBs `countDocuments`.
@@ -10,7 +10,7 @@ If the application is fine with the limitations of working upon collection stati
 
 [TIP]
 ====
-By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a <<mongo.sessions,session>>.
+By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a xref:reference/client-session-transactions.adoc[session].
 It will still be possible to obtain exact numbers via `MongoTemplate#exactCount`, but may speed up things.
 ====
 

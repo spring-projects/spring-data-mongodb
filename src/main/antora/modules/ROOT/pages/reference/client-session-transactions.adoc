@@ -93,7 +93,7 @@ NOTE: Reactive use of `ClientSession` is limited to Template API usage. There's 
 [[mongo.transactions]]
 = MongoDB Transactions
 
-As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions]. Transactions are built on top of <<mongo.sessions,Sessions>> and, consequently, require an active `ClientSession`.
+As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions]. Transactions are built on top of xref:reference/client-session-transactions.adoc[Sessions] and, consequently, require an active `ClientSession`.
 
 NOTE: Unless you specify a `MongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
 

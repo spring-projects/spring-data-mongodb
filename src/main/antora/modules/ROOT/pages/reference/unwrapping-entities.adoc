@@ -256,7 +256,7 @@ db.collection.find({
 === Query By Example on unwrapped object.
 
 Unwrapped objects can be used within an `Example` probe just as any other type.
-Please review the <<query-by-example.running,Query By Example>> section, to learn more about this feature.
+Please review the xref:reference/query-by-example.adoc[Query By Example] section, to learn more about this feature.
 
 [[unwrapped-entities.queries.repository]]
 === Repository Queries on unwrapped objects.
@@ -340,7 +340,7 @@ db.collection.update({
 [[unwrapped-entities.aggregations]]
 == Aggregations on Unwrapped Objects
 
-The <<mongo.aggregation,Aggregation Framework>> will attempt to map unwrapped values of typed aggregations.
+The xref:reference/aggregation-framework.adoc[Aggregation Framework] will attempt to map unwrapped values of typed aggregations.
 Please make sure to work with the property path including the wrapper object when referencing one of its values.
 Other than that no special action is required.
 

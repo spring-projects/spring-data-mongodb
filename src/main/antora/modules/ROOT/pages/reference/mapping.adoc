@@ -69,7 +69,7 @@ When querying and updating `MongoTemplate` will use the converter to handle conv
 == Data Mapping and Type Conversion
 
 This section explains how types are mapped to and from a MongoDB representation. Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
-In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion. See <<mongo.custom-converters>> for further details.
+In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion. See xref:reference/mongo-custom-conversions.adoc[Custom Conversions - Overriding Default Mapping] for further details.
 
 The following provides samples of each available type conversion:
 
@@ -193,12 +193,12 @@ calling `get()` before the actual conversion
 
 | `LocalDate` +
 (Joda, Java 8, JSR310-BackPort)
-| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via <<mapping-configuration,MongoConverterConfigurationAdapter>>]
+| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via xref:reference/mapping.adoc#mapping-configuration[MongoConverterConfigurationAdapter]]
 | `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
 
 | `LocalDateTime`, `LocalTime` +
 (Joda, Java 8, JSR310-BackPort)
-| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via <<mapping-configuration,MongoConverterConfigurationAdapter>>]
+| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via xref:reference/mapping.adoc#mapping-configuration[MongoConverterConfigurationAdapter]]
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
 | `DateTime` (Joda)
@@ -403,7 +403,7 @@ public class Person {
 IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property, and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
 Automatic index creation is only done for types annotated with `@Document`.
 
-WARNING: Auto index creation is **disabled** by default and needs to be enabled through the configuration (see <<mapping.index-creation>>).
+WARNING: Auto index creation is **disabled** by default and needs to be enabled through the configuration (see xref:reference/mapping.adoc#mapping.index-creation[Index Creation]).
 
 [[mapping.index-creation]]
 === Index Creation
@@ -904,7 +904,7 @@ class Nested {
 [[mapping-usage-events]]
 === Mapping Framework Events
 
-Events are fired throughout the lifecycle of the mapping process. This is described in the <<mongodb.mapping-usage.events,Lifecycle Events>> section.
+Events are fired throughout the lifecycle of the mapping process. This is described in the xref:reference/mongodb/mapping-usage-events.adoc[Lifecycle Events] section.
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 

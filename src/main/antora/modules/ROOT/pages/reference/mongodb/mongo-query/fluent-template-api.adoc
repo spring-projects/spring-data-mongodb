@@ -38,7 +38,7 @@ NOTE: Using projections allows `MongoTemplate` to optimize result mapping by lim
 by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
 target type is a closed interface or DTO projection.
 
-WARNING: Projections must not be applied to <<mapping-usage-references,DBRefs>>.
+WARNING: Projections must not be applied to xref:reference/document-references.adoc[DBRefs].
 
 You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
 

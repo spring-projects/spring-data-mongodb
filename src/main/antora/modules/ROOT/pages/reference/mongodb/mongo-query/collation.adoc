@@ -84,7 +84,7 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 
 WARNING: Indexes are only used if the collation used for the operation matches the index collation.
 
-<<mongo.repositories>> support `Collations` via the `collation` attribute of the `@Query` annotation.
+xref:reference/mongo-repositories.adoc[MongoDB Repositories] support `Collations` via the `collation` attribute of the `@Query` annotation.
 
 .Collation support for Repositories
 ====

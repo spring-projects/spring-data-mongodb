@@ -152,7 +152,7 @@ public class MongoApp {
 }
 ----
 
-The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the <<mongodb-getting-started,getting started section>>.
+The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the xref:reference/mongodb/getting-started.adoc[getting started section].
 
 NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 

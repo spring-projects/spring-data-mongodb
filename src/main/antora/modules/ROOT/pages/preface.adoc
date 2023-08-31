@@ -48,7 +48,7 @@ In terms of document stores, you need at least version 3.6 of https://www.mongod
 
 The following compatibility matrix summarizes Spring Data versions to MongoDB driver/database versions.
 Database versions show the highest supported server version that pass the Spring Data test suite.
-You can use newer server versions unless your application uses functionality that is affected by <<compatibility.changes,changes in the MongoDB server>>.
+You can use newer server versions unless your application uses functionality that is affected by xref:preface.adoc#compatibility.changes[changes in the MongoDB server].
 See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibility/[official MongoDB driver compatibility matrix] for driver- and server version compatibility.
 
 [cols="h,m,m,m", options="header"]
