@@ -114,7 +114,7 @@ public class MongoTemplateReplaceTests {
 	void replacesExistingDocumentWithRawDocMappingQueryAgainstDomainType() {
 
 		UpdateResult result = template.replace(query(where("name").is("Central Perk Cafe")), Restaurant.class,
-				Document.parse("{ 'r-name' : 'Central Pork Cafe', 'Borough' : 'Manhattan' }"), ReplaceOptions.none());
+				Document.parse("{ 'r-name' : 'Central Pork Cafe', 'Borough' : 'Manhattan' }"), ReplaceOptions.none(), template.getCollectionName(Restaurant.class));
 
 		assertThat(result.getMatchedCount()).isEqualTo(1);
 		assertThat(result.getModifiedCount()).isEqualTo(1);

@@ -2069,7 +2069,13 @@ public class MongoTemplate
 	}
 
 	@Override
-	public <S, T> UpdateResult replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
+	public <T> UpdateResult replace(Query query, T replacement, ReplaceOptions options, String collectionName){
+
+		Assert.notNull(replacement, "Replacement must not be null");
+		return replace(query, (Class<T>) ClassUtils.getUserClass(replacement), replacement, options, collectionName);
+	}
+
+	protected <S, T> UpdateResult replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
 			String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
