@@ -16,3 +16,8 @@ atlassian-ide-plugin.xml
 /.gradle/
 /.idea/
 *.graphml
+build/
+node_modules
+node
+package.json
+package-lock.json

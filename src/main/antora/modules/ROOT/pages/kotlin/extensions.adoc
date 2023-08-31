@@ -1,0 +1,65 @@
+include::{commons}@data-commons::page$kotlin/extensions.adoc[]
+
+To retrieve a list of `SWCharacter` objects in Java, you would normally write the following:
+
+[source,java]
+----
+Flux<SWCharacter> characters = template.query(SWCharacter.class).inTable("star-wars").all()
+----
+
+With Kotlin and the Spring Data extensions, you can instead write the following:
+
+[source,kotlin]
+----
+val characters = template.query<SWCharacter>().inTable("star-wars").all()
+// or (both are equivalent)
+val characters : Flux<SWCharacter> = template.query().inTable("star-wars").all()
+----
+
+As in Java, `characters` in Kotlin is strongly typed, but Kotlin's clever type inference allows for shorter syntax.
+
+[[mongo.query.kotlin-support]]
+== Type-safe Queries for Kotlin
+
+Kotlin embraces domain-specific language creation through its language syntax and its extension system.
+Spring Data MongoDB ships with a Kotlin Extension for `Criteria` using https://kotlinlang.org/docs/reference/reflection.html#property-references[Kotlin property references] to build type-safe queries.
+Queries using this extension are typically benefit from improved readability.
+Most keywords on `Criteria` have a matching Kotlin extension, such as `inValues` and `regex`.
+
+Consider the following example explaining Type-safe Queries:
+
+====
+[source,kotlin]
+----
+import org.springframework.data.mongodb.core.query.*
+
+mongoOperations.find<Book>(
+  Query(Book::title isEqualTo "Moby-Dick")               <1>
+)
+
+mongoOperations.find<Book>(
+  Query(titlePredicate = Book::title exists true)
+)
+
+mongoOperations.find<Book>(
+  Query(
+    Criteria().andOperator(
+      Book::price gt 5,
+      Book::price lt 10
+    ))
+)
+
+// Binary operators
+mongoOperations.find<BinaryMessage>(
+  Query(BinaryMessage::payload bits { allClear(0b101) }) <2>
+)
+
+// Nested Properties (i.e. refer to "book.author")
+mongoOperations.find<Book>(
+  Query(Book::author / Author::name regex "^H")          <3>
+)
+----
+<1> `isEqualTo()` is an infix extension function with receiver type `KProperty<T>` that returns `Criteria`.
+<2> For bitwise operators, pass a lambda argument where you call one of the methods of `Criteria.BitwiseCriteriaOperators`.
+<3> To construct nested properties, use the `/` character (overloaded operator `div`).
+====

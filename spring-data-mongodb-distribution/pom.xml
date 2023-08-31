@@ -21,60 +21,35 @@
 
 	<properties>
 		<project.root>${basedir}/..</project.root>
-		<dist.key>SDMONGO</dist.key>
-
-		<!-- Observability -->
-		<micrometer-docs-generator.inputPath>${maven.multiModuleProjectDirectory}/spring-data-mongodb/</micrometer-docs-generator.inputPath>
-		<micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
-		<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/</micrometer-docs-generator.outputPath>
+		<antora.playbook>${project.basedir}/../src/main/antora/antora-playbook.yml</antora.playbook>
 	</properties>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}/../src/main/antora/resources/antora-resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>resources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>generate-docs</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>java</goal>
-						</goals>
-						<configuration>
-							<mainClass>io.micrometer.docs.DocsGeneratorCommand</mainClass>
-							<includePluginDependencies>true</includePluginDependencies>
-							<arguments>
-								<argument>${micrometer-docs-generator.inputPath}</argument>
-								<argument>${micrometer-docs-generator.inclusionPattern}</argument>
-								<argument>${micrometer-docs-generator.outputPath}</argument>
-							</arguments>
-						</configuration>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>io.micrometer</groupId>
-						<artifactId>micrometer-docs-generator</artifactId>
-						<version>1.0.1</version>
-						<type>jar</type>
-					</dependency>
-				</dependencies>
-			</plugin>
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<configuration>
-					<attributes>
-						<mongo-reactivestreams>${mongo.reactivestreams}
-						</mongo-reactivestreams>
-						<reactor>${reactor}</reactor>
-					</attributes>
-				</configuration>
+				<groupId>io.spring.maven.antora</groupId>
+				<artifactId>antora-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 

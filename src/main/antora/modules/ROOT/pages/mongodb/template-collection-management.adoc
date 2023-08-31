@@ -1,0 +1,205 @@
+[[mongo-template.index-and-collections]]
+= Index and Collection Management
+
+`MongoTemplate` and `ReactiveMongoTemplate` provide methods for managing indexes and collections.
+These methods are collected into a helper interface called `IndexOperations` respectively `ReactiveIndexOperations`.
+You can access these operations by calling the `indexOps` method and passing in either the collection name or the `java.lang.Class` of your entity (the collection name is derived from the `.class`, either by name or from annotation metadata).
+
+The following listing shows the `IndexOperations` interface:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface IndexOperations {
+
+    void ensureIndex(IndexDefinition indexDefinition);
+
+    void alterIndex(String name);
+
+    void dropIndex(String name);
+
+    void dropAllIndexes();
+
+    void resetIndexCache();
+
+    List<IndexInfo> getIndexInfo();
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface ReactiveIndexOperations {
+
+    Mono<String> ensureIndex(IndexDefinition indexDefinition);
+
+    Mono<Void> alterIndex(String name, IndexOptions options);
+
+    Mono<Void> dropIndex(String name);
+
+    Mono<Void> dropAllIndexes();
+
+    Flux<IndexInfo> getIndexInfo();
+----
+======
+
+[[mongo-template.index-and-collections.index]]
+== Methods for Creating an Index
+
+You can create an index on a collection to improve query performance by using the MongoTemplate class, as the following example shows:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+template.indexOps(Person.class)
+    .ensureIndex(new Index().on("name",Order.ASCENDING));
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<String> createIndex = template.indexOps(Person.class)
+    .ensureIndex(new Index().on("name",Order.ASCENDING));
+----
+======
+
+`ensureIndex` makes sure that an index for the provided IndexDefinition exists for the collection.
+
+You can create standard, geospatial, and text indexes by using the `IndexDefinition`, `GeoSpatialIndex` and `TextIndexDefinition` classes.
+For example, given the `Venue` class defined in a previous section, you could declare a geospatial query, as the following example shows:
+
+[source,java]
+----
+template.indexOps(Venue.class)
+    .ensureIndex(new GeospatialIndex("location"));
+----
+
+NOTE: `Index` and `GeospatialIndex` support configuration of xref:mongodb/template-query-options.adoc#mongo.query.collation[collations].
+
+[[mongo-template.index-and-collections.access]]
+== Accessing Index Information
+
+The `IndexOperations` interface has the `getIndexInfo` method that returns a list of `IndexInfo` objects.
+This list contains all the indexes defined on the collection. The following example defines an index on the `Person` class that has an `age` property:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+template.indexOps(Person.class)
+    .ensureIndex(new Index().on("age", Order.DESCENDING).unique());
+
+List<IndexInfo> indexInfoList = template.indexOps(Person.class)
+   .getIndexInfo();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<String> ageIndex = template.indexOps(Person.class)
+    .ensureIndex(new Index().on("age", Order.DESCENDING).unique());
+
+Flux<IndexInfo> indexInfo = ageIndex.then(template.indexOps(Person.class)
+   .getIndexInfo());
+----
+======
+
+[[mongo-template.index-and-collections.collection]]
+== Methods for Working with a Collection
+
+The following example shows how to create a collection:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+MongoCollection<Document> collection = null;
+if (!template.getCollectionNames().contains("MyNewCollection")) {
+    collection = mongoTemplate.createCollection("MyNewCollection");
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+MongoCollection<Document> collection = template.getCollectionNames().collectList()
+    .flatMap(collectionNames -> {
+        if(!collectionNames.contains("MyNewCollection")) {
+            return template.createCollection("MyNewCollection");
+        }
+        return template.getMongoDatabase().map(db -> db.getCollection("MyNewCollection"));
+    });
+----
+======
+
+NOTE: Collection creation allows customization with `CollectionOptions` and supports xref:mongodb/collation.adoc[collations].
+
+.Methods to interact with MongoCollections
+[%collapsible]
+====
+* *getCollectionNames*: Returns a set of collection names.
+* *collectionExists*: Checks to see if a collection with a given name exists.
+* *createCollection*: Creates an uncapped collection.
+* *dropCollection*: Drops the collection.
+* *getCollection*: Gets a collection by name, creating it if it does not exist.
+====
+
+[[time-series]]
+== Time Series
+
+MongoDB 5.0 introduced https://docs.mongodb.com/manual/core/timeseries-collections/[Time Series] collections that are optimized to efficiently store documents over time such as measurements or events.
+Those collections need to be created as such before inserting any data.
+Collections can be created by either running the `createCollection` command, defining time series collection options or extracting options from a `@TimeSeries` annotation as shown in the examples below.
+
+.Create a Time Series Collection
+====
+.Create a Time Series via the MongoDB Driver
+[source,java]
+----
+template.execute(db -> {
+
+    com.mongodb.client.model.CreateCollectionOptions options = new CreateCollectionOptions();
+    options.timeSeriesOptions(new TimeSeriesOptions("timestamp"));
+
+    db.createCollection("weather", options);
+    return "OK";
+});
+----
+
+.Create a Time Series Collection with `CollectionOptions`
+[source,java]
+----
+template.createCollection("weather", CollectionOptions.timeSeries("timestamp"));
+----
+
+.Create a Time Series Collection derived from an Annotation
+[source,java]
+----
+@TimeSeries(collection="weather", timeField = "timestamp")
+public class Measurement {
+
+    String id;
+    Instant timestamp;
+    // ...
+}
+
+template.createCollection(Measurement.class);
+----
+====
+
+The snippets above can easily be transferred to the reactive API offering the very same methods.
+Make sure to properly _subscribe_ to the returned publishers.

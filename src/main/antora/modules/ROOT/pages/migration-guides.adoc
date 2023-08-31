@@ -1,0 +1,8 @@
+[[mongodb.migration]]
+= Migration Guides
+:page-section-summary-toc: 1
+
+This section contains version-specific migration guides explaining how to upgrade between two versions.
+
+
+

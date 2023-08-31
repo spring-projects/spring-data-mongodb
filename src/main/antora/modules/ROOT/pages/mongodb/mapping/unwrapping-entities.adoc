@@ -1,0 +1,382 @@
+[[unwrapped-entities]]
+= Unwrapping Types
+
+Unwrapped entities are used to design value objects in your Java domain model whose properties are flattened out into the parent's MongoDB Document.
+
+[[unwrapped-entities.mapping]]
+== Unwrapped Types Mapping
+
+Consider the following domain model where `User.name` is annotated with `@Unwrapped`.
+The `@Unwrapped` annotation signals that all properties of `UserName` should be flattened out into the `user` document that owns the `name` property.
+
+.Sample Code of unwrapping objects
+====
+[source,java]
+----
+class User {
+
+    @Id
+    String userId;
+
+    @Unwrapped(onEmpty = USE_NULL) <1>
+    UserName name;
+}
+
+class UserName {
+
+    String firstname;
+
+    String lastname;
+
+}
+----
+
+[source,json]
+----
+{
+  "_id" : "1da2ba06-3ba7",
+  "firstname" : "Emma",
+  "lastname" : "Frost"
+}
+----
+<1> When loading the `name` property its value is set to `null` if both `firstname` and `lastname` are either `null` or not present.
+By using `onEmpty=USE_EMPTY` an empty `UserName`, with potential `null` value for its properties, will be created.
+====
+
+For less verbose embeddable type declarations use `@Unwrapped.Nullable` and `@Unwrapped.Empty` instead `@Unwrapped(onEmpty = USE_NULL)` and `@Unwrapped(onEmpty = USE_EMPTY)`.
+Both annotations are meta-annotated with JSR-305 `@javax.annotation.Nonnull` to aid with nullability inspections.
+
+[WARNING]
+====
+It is possible to use complex types within an unwrapped object.
+However, those must not be, nor contain unwrapped fields themselves.
+====
+
+[[unwrapped-entities.mapping.field-names]]
+== Unwrapped Types field names
+
+A value object can be unwrapped multiple times by using the optional `prefix` attribute of the `@Unwrapped` annotation.
+By dosing so the chosen prefix is prepended to each property or `@Field("…")` name in the unwrapped object.
+Please note that values will overwrite each other if multiple properties render to the same field name.
+
+.Sample Code of unwrapped object with name prefix
+====
+[source,java]
+----
+class User {
+
+    @Id
+    String userId;
+
+    @Unwrapped.Nullable(prefix = "u_") <1>
+    UserName name;
+
+    @Unwrapped.Nullable(prefix = "a_") <2>
+    UserName name;
+}
+
+class UserName {
+
+    String firstname;
+
+    String lastname;
+}
+----
+
+[source,json]
+----
+{
+  "_id" : "a6a805bd-f95f",
+  "u_firstname" : "Jean",             <1>
+  "u_lastname" : "Grey",
+  "a_firstname" : "Something",        <2>
+  "a_lastname" : "Else"
+}
+----
+<1> All properties of `UserName` are prefixed with `u_`.
+<2> All properties of `UserName` are prefixed with `a_`.
+====
+
+While combining the `@Field` annotation with `@Unwrapped` on the very same property does not make sense and therefore leads to an error.
+It is a totally valid approach to use `@Field` on any of the unwrapped types properties.
+
+.Sample Code unwrapping objects with `@Field` annotation
+====
+[source,java]
+----
+public class User {
+
+	@Id
+    private String userId;
+
+    @Unwrapped.Nullable(prefix = "u-") <1>
+    UserName name;
+}
+
+public class UserName {
+
+	@Field("first-name")              <2>
+    private String firstname;
+
+	@Field("last-name")
+    private String lastname;
+}
+----
+
+[source,json]
+----
+{
+  "_id" : "2647f7b9-89da",
+  "u-first-name" : "Barbara",         <2>
+  "u-last-name" : "Gordon"
+}
+----
+<1> All properties of `UserName` are prefixed with `u-`.
+<2> Final field names are a result of concatenating `@Unwrapped(prefix)` and `@Field(name)`.
+====
+
+[[unwrapped-entities.queries]]
+== Query on Unwrapped Objects
+
+Defining queries on unwrapped properties is possible on type- as well as field-level as the provided `Criteria` is matched against the domain type.
+Prefixes and potential custom field names will be considered when rendering the actual query.
+Use the property name of the unwrapped object to match against all contained fields as shown in the sample below.
+
+.Query on unwrapped object
+====
+[source,java]
+----
+UserName userName = new UserName("Carol", "Danvers")
+Query findByUserName = query(where("name").is(userName));
+User user = template.findOne(findByUserName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "firstname" : "Carol",
+  "lastname" : "Danvers"
+})
+----
+====
+
+It is also possible to address any field of the unwrapped object directly using its property name as shown in the snippet below.
+
+.Query on field of unwrapped object
+====
+[source,java]
+----
+Query findByUserFirstName = query(where("name.firstname").is("Shuri"));
+List<User> users = template.findAll(findByUserFirstName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "firstname" : "Shuri"
+})
+----
+====
+
+[[unwrapped-entities.queries.sort]]
+=== Sort by unwrapped field.
+
+Fields of unwrapped objects can be used for sorting via their property path as shown in the sample below.
+
+.Sort on unwrapped field
+====
+[source,java]
+----
+Query findByUserLastName = query(where("name.lastname").is("Romanoff"));
+List<User> user = template.findAll(findByUserName.withSort(Sort.by("name.firstname")), User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "lastname" : "Romanoff"
+}).sort({ "firstname" : 1 })
+----
+====
+
+[NOTE]
+====
+Though possible, using the unwrapped object itself as sort criteria includes all of its fields in unpredictable order and may result in inaccurate ordering.
+====
+
+[[unwrapped-entities.queries.project]]
+=== Field projection on unwrapped objects
+
+Fields of unwrapped objects can be subject for projection either as a whole or via single fields as shown in the samples below.
+
+.Project on unwrapped object.
+====
+[source,java]
+----
+Query findByUserLastName = query(where("name.firstname").is("Gamora"));
+findByUserLastName.fields().include("name");                             <1>
+List<User> user = template.findAll(findByUserName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "lastname" : "Gamora"
+},
+{
+  "firstname" : 1,
+  "lastname" : 1
+})
+----
+<1> A field projection on an unwrapped object includes all of its properties.
+====
+
+.Project on a field of an unwrapped object.
+====
+[source,java]
+----
+Query findByUserLastName = query(where("name.lastname").is("Smoak"));
+findByUserLastName.fields().include("name.firstname");                   <1>
+List<User> user = template.findAll(findByUserName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "lastname" : "Smoak"
+},
+{
+  "firstname" : 1
+})
+----
+<1> A field projection on an unwrapped object includes all of its properties.
+====
+
+[[unwrapped-entities.queries.by-example]]
+=== Query By Example on unwrapped object.
+
+Unwrapped objects can be used within an `Example` probe just as any other type.
+Please review the xref:mongodb/template-query-operations.adoc#mongo.query-by-example[Query By Example] section, to learn more about this feature.
+
+[[unwrapped-entities.queries.repository]]
+=== Repository Queries on unwrapped objects.
+
+The `Repository` abstraction allows deriving queries on fields of unwrapped objects as well as the entire object.
+
+.Repository queries on unwrapped objects.
+====
+[source,java]
+----
+interface UserRepository extends CrudRepository<User, String> {
+
+	List<User> findByName(UserName username);         <1>
+
+	List<User> findByNameFirstname(String firstname); <2>
+}
+----
+<1> Matches against all fields of the unwrapped object.
+<2> Matches against the `firstname`.
+====
+
+[NOTE]
+====
+Index creation for unwrapped objects is suspended even if the repository `create-query-indexes` namespace attribute is set to `true`.
+====
+
+[[unwrapped-entities.update]]
+== Update on Unwrapped Objects
+
+Unwrapped objects can be updated as any other object that is part of the domain model.
+The mapping layer takes care of flattening structures into their surroundings.
+It is possible to update single attributes of the unwrapped object as well as the entire value as shown in the examples below.
+
+.Update a single field of an unwrapped object.
+====
+[source,java]
+----
+Update update = new Update().set("name.firstname", "Janet");
+template.update(User.class).matching(where("id").is("Wasp"))
+   .apply(update).first()
+----
+
+[source,json]
+----
+db.collection.update({
+  "_id" : "Wasp"
+},
+{
+  "$set" { "firstname" : "Janet" }
+},
+{ ... }
+)
+----
+====
+
+.Update an unwrapped object.
+====
+[source,java]
+----
+Update update = new Update().set("name", new Name("Janet", "van Dyne"));
+template.update(User.class).matching(where("id").is("Wasp"))
+   .apply(update).first()
+----
+
+[source,json]
+----
+db.collection.update({
+  "_id" : "Wasp"
+},
+{
+  "$set" {
+    "firstname" : "Janet",
+    "lastname" : "van Dyne",
+  }
+},
+{ ... }
+)
+----
+====
+
+[[unwrapped-entities.aggregations]]
+== Aggregations on Unwrapped Objects
+
+The xref:mongodb/aggregation-framework.adoc[Aggregation Framework] will attempt to map unwrapped values of typed aggregations.
+Please make sure to work with the property path including the wrapper object when referencing one of its values.
+Other than that no special action is required.
+
+[[unwrapped-entities.indexes]]
+== Index on Unwrapped Objects
+
+It is possible to attach the `@Indexed` annotation to properties of an unwrapped type just as it is done with regular objects.
+It is not possible to use `@Indexed` along with the `@Unwrapped` annotation on the owning property.
+
+====
+[source,java]
+----
+public class User {
+
+	@Id
+    private String userId;
+
+    @Unwrapped(onEmpty = USE_NULL)
+    UserName name;                    <1>
+
+    // Invalid -> InvalidDataAccessApiUsageException
+    @Indexed                          <2>
+    @Unwrapped(onEmpty = USE_Empty)
+    Address address;
+}
+
+public class UserName {
+
+    private String firstname;
+
+    @Indexed
+    private String lastname;           <1>
+}
+----
+<1> Index created for `lastname` in `users` collection.
+<2> Invalid `@Indexed` usage along with `@Unwrapped`
+====
+
+

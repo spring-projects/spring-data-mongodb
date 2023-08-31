@@ -1,0 +1,61 @@
+[[mongodb.migration.2.x-3.x]]
+= Migration Guide from 2.x to 3.x
+
+Spring Data MongoDB 3.x requires the MongoDB Java Driver 4.x +
+To learn more about driver versions please visit the https://www.mongodb.com/docs/drivers/java/sync/current/upgrade/[MongoDB Documentation].
+
+[[dependency-changes]]
+== Dependency Changes
+
+* `org.mongodb:mongo-java-driver` (uber jar) got replaced with:
+** bson-jar
+** core-jar
+** sync-jar
+
+The change in dependencies allows usage of the reactive support without having to pull the synchronous driver.
+NOTE: The new sync driver does no longer support `com.mongodb.DBObject`. Please use `org.bson.Document` instead.
+
+[[signature-changes]]
+== Signature Changes
+
+* `MongoTemplate` no longer supports `com.mongodb.MongoClient` and `com.mongodb.MongoClientOptions`.
+Please use `com.mongodb.client.MongoClient` and `com.mongodb.MongoClientSettings` instead.
+
+In case you're using `AbstractMongoConfiguration` please switch to `AbstractMongoClientConfiguration`.
+
+[[namespace-changes]]
+== Namespace Changes
+
+The switch to `com.mongodb.client.MongoClient` requires an update of your configuration XML if you have one.
+The best way to provide required connection information is by using a connection string.
+Please see the https://docs.mongodb.com/manual/reference/connection-string/[MongoDB Documentation] for details.
+
+
+====
+[source,xml]
+----
+<mongo:mongo.mongo-client id="with-defaults" />
+----
+
+[source,xml]
+----
+<context:property-placeholder location="classpath:..."/>
+
+<mongo:mongo.mongo-client id="client-just-host-port"
+                          host="${mongo.host}" port="${mongo.port}" />
+
+<mongo:mongo.mongo-client id="client-using-connection-string"
+                          connection-string="mongodb://${mongo.host}:${mongo.port}/?replicaSet=rs0" />
+----
+
+[source,xml]
+----
+<mongo:mongo.mongo-client id="client-with-settings" replica-set="rs0">
+		<mongo:client-settings cluster-connection-mode="MULTIPLE"
+							   cluster-type="REPLICA_SET"
+							   cluster-server-selection-timeout="300"
+							   cluster-local-threshold="100"
+							   cluster-hosts="localhost:27018,localhost:27019,localhost:27020" />
+	</mongo:mongo.mongo-client>
+----
+====

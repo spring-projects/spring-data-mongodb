@@ -1,0 +1,139 @@
+[[preface]]
+= Preface
+
+The Spring Data MongoDB project applies core Spring concepts to the development of solutions that use the MongoDB document style data store. We provide a "`template`" as a high-level abstraction for storing and querying documents. You may notice similarities to the JDBC support provided by the Spring Framework.
+
+This document is the reference guide for Spring Data - MongoDB Support. It explains MongoDB module concepts and semantics and syntax for various store namespaces.
+
+This section provides some basic introduction to Spring and Document databases. The rest of the document refers only to Spring Data MongoDB features and assumes the user is familiar with MongoDB and Spring concepts.
+
+[[get-started:first-steps:spring]]
+== Learning Spring
+
+Spring Data uses Spring framework's link:{springDocsUrl}/core.html[core] functionality, including:
+
+* link:{springDocsUrl}/core.html#beans[IoC] container
+* link:{springDocsUrl}/core.html#validation[type conversion system]
+* link:{springDocsUrl}/core.html#expressions[expression language]
+* link:{springDocsUrl}/integration.html#jmx[JMX integration]
+* link:{springDocsUrl}/data-access.html#dao-exceptions[DAO exception hierarchy].
+
+While you need not know the Spring APIs, understanding the concepts behind them is important. At a minimum, the idea behind Inversion of Control (IoC) should be familiar, and you should be familiar with whatever IoC container you choose to use.
+
+The core functionality of the MongoDB support can be used directly, with no need to invoke the IoC services of the Spring Container. This is much like `JdbcTemplate`, which can be used "'standalone'" without any other services of the Spring container. To leverage all the features of Spring Data MongoDB, such as the repository support, you need to configure some parts of the library to use Spring.
+
+To learn more about Spring, you can refer to the comprehensive documentation that explains the Spring Framework in detail. There are a lot of articles, blog entries, and books on the subject. See the Spring framework https://spring.io/docs[home page] for more information.
+
+[[get-started:first-steps:nosql]]
+== Learning NoSQL and Document databases
+NoSQL stores have taken the storage world by storm. It is a vast domain with a plethora of solutions, terms, and patterns (to make things worse, even the term itself has multiple https://www.google.com/search?q=nosoql+acronym[meanings]). While some of the principles are common, you must be familiar with MongoDB to some degree. The best way to get acquainted is to read the documentation and follow the examples. It usually does not take more then 5-10 minutes to go through them and, especially if you are coming from an RDMBS-only background, these exercises can be an eye opener.
+
+The starting point for learning about MongoDB is https://www.mongodb.org/[www.mongodb.org]. Here is a list of other useful resources:
+
+* The https://docs.mongodb.org/manual/[manual] introduces MongoDB and contains links to getting started guides, reference documentation, and tutorials.
+* Visit https://learn.mongodb.com/[MongoDB University] for free training material and online courses.
+* MongoDB https://docs.mongodb.org/ecosystem/drivers/java/[Java Language Center].
+* Several https://www.mongodb.org/books[books] you can purchase.
+* Karl Seguin's online book: https://openmymind.net/mongodb.pdf[The Little MongoDB Book].
+
+[[requirements]]
+== Requirements
+
+The Spring Data MongoDB 4.x binaries require JDK level 17 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
+
+In terms of document stores, you need at least version 3.6 of https://www.mongodb.org/[MongoDB], though we recommend a more recent version.
+
+[[compatibility.matrix]]
+=== Compatibility Matrix
+
+The following compatibility matrix summarizes Spring Data versions to MongoDB driver/database versions.
+Database versions show the highest supported server version that pass the Spring Data test suite.
+You can use newer server versions unless your application uses functionality that is affected by xref:preface.adoc#compatibility.changes[changes in the MongoDB server].
+See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibility/[official MongoDB driver compatibility matrix] for driver- and server version compatibility.
+
+[cols="h,m,m,m", options="header"]
+|===
+
+|Spring Data Release Train
+|Spring Data MongoDB
+|Driver Version
+|Server Version
+
+|2023.0
+|4.1.x
+|4.9.x
+|6.0.x
+
+|2022.0
+|4.0.x
+|4.7.x
+|6.0.x
+
+|2021.2
+|3.4.x
+|4.6.x
+|5.0.x
+
+|2021.1
+|3.3.x
+|4.4.x
+|5.0.x
+
+|2021.0
+|3.2.x
+|4.1.x
+|4.4.x
+
+|2020.0
+|3.1.x
+|4.1.x
+|4.4.x
+
+|Neumann
+|3.0.x
+|4.0.x
+|4.4.x
+
+|Moore
+|2.2.x
+|3.11.x/Reactive Streams 1.12.x
+|4.2.x
+
+|Lovelace
+|2.1.x
+|3.8.x/Reactive Streams 1.9.x
+|4.0.x
+
+|===
+
+[[compatibility.changes]]
+[[compatibility.changes-4.4]]
+==== Relevant Changes in MongoDB 4.4
+
+* Fields list must not contain text search score property when no `$text` criteria present. See also https://docs.mongodb.com/manual/reference/operator/query/text/[`$text` operator]
+* Sort must not be an empty document when running map reduce.
+
+[[compatibility.changes-4.2]]
+==== Relevant Changes in MongoDB 4.2
+
+* Removal of `geoNear` command. See also https://docs.mongodb.com/manual/release-notes/4.2-compatibility/#remove-support-for-the-geonear-command[Removal of `geoNear`]
+* Removal of `eval` command. See also https://docs.mongodb.com/manual/release-notes/4.2-compatibility/#remove-support-for-the-eval-command[Removal of `eval`]
+
+[[get-started:help]]
+== Additional Help Resources
+
+Learning a new framework is not always straightforward.
+In this section, we try to provide what we think is an easy-to-follow guide for starting with the Spring Data MongoDB module.
+However, if you encounter issues or you need advice, feel free to use one of the following links:
+
+[[get-started:help:community]]
+Community Forum :: Spring Data on https://stackoverflow.com/questions/tagged/spring-data[Stack Overflow] is a tag for all Spring Data (not just Document) users to share information and help each other.
+Note that registration is needed only for posting.
+
+[[get-started:help:professional]]
+Professional Support :: Professional, from-the-source support, with guaranteed response time, is available from https://pivotal.io/[Pivotal Software, Inc.], the company behind Spring Data and Spring.
+
+[[get-started:up-to-date]]
+== Following Development
+
+For information on the Spring Data Mongo source code repository, nightly builds, and snapshot artifacts, see the Spring Data Mongo https://spring.io/projects/spring-data-mongodb/[homepage]. You can help make Spring Data best serve the needs of the Spring community by interacting with developers through the Community on https://stackoverflow.com/questions/tagged/spring-data[Stack Overflow]. To follow developer activity, look for the mailing list information on the Spring Data Mongo https://spring.io/projects/spring-data-mongodb/[homepage]. If you encounter a bug or want to suggest an improvement, please create a ticket on the Spring Data https://github.com/spring-projects/spring-data-mongodb/issues[issue tracker]. To stay up to date with the latest news and announcements in the Spring eco system, subscribe to the Spring Community https://spring.io[Portal]. You can also follow the Spring https://spring.io/blog[blog] or the project team on Twitter (https://twitter.com/SpringData[SpringData]).

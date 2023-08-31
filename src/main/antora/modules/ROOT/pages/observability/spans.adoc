@@ -1,0 +1,30 @@
+[[observability-spans]]
+= Spans
+
+Below you can find a list of all spans declared by this project.
+
+[[observability-spans-mongodb-command-observation]]
+== Mongodb Command Observation Span
+
+> Timer created around a MongoDB command execution.
+
+**Span name** `spring.data.mongodb.command`.
+
+Fully qualified name of the enclosing class `org.springframework.data.mongodb.observability.MongoObservation`.
+
+.Tag Keys
+|===
+|Name | Description
+|`db.connection_string` _(required)_|MongoDB connection string.
+|`db.mongodb.collection` _(required)_|MongoDB collection name.
+|`db.name` _(required)_|MongoDB database name.
+|`db.operation` _(required)_|MongoDB command value.
+|`db.system` _(required)_|MongoDB database system.
+|`db.user` _(required)_|MongoDB user.
+|`net.peer.name` _(required)_|Name of the database host.
+|`net.peer.port` _(required)_|Logical remote port number.
+|`net.sock.peer.addr` _(required)_|Mongo peer address.
+|`net.sock.peer.port` _(required)_|Mongo peer port.
+|`net.transport` _(required)_|Network transport.
+|`spring.data.mongodb.cluster_id` _(required)_|MongoDB cluster identifier.
+|===

@@ -1,0 +1,466 @@
+[[mongo.jsonSchema]]
+= JSON Schema
+
+As of version 3.6, MongoDB supports collections that validate documents against a provided https://docs.mongodb.com/manual/core/schema-validation/#json-schema[JSON Schema].
+The schema itself and both validation action and level can be defined when creating the collection, as the following example shows:
+
+.Sample JSON schema
+====
+[source,json]
+----
+{
+  "type": "object",                                                        <1>
+
+  "required": [ "firstname", "lastname" ],                                 <2>
+
+  "properties": {                                                          <3>
+
+    "firstname": {                                                         <4>
+      "type": "string",
+      "enum": [ "luke", "han" ]
+    },
+    "address": {                                                           <5>
+      "type": "object",
+      "properties": {
+        "postCode": { "type": "string", "minLength": 4, "maxLength": 5 }
+      }
+    }
+  }
+}
+----
+<1> JSON schema documents always describe a whole document from its root. A schema is a schema object itself that can contain
+embedded schema objects that describe properties and subdocuments.
+<2> `required` is a property that describes which properties are required in a document. It can be specified optionally, along with other
+schema constraints. See MongoDB's documentation on https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#available-keywords[available keywords].
+<3> `properties` is related to a schema object that describes an `object` type. It contains property-specific schema constraints.
+<4> `firstname` specifies constraints for the `firstname` field inside the document. Here, it is a string-based `properties` element declaring
+ possible field values.
+<5> `address` is a subdocument defining a schema for values in its `postCode` field.
+====
+
+You can provide a schema either by specifying a schema document (that is, by using the `Document` API to parse or build a document object) or by building it with Spring Data's JSON schema utilities in `org.springframework.data.mongodb.core.schema`. `MongoJsonSchema` is the entry point for all JSON schema-related operations. The following example shows how use `MongoJsonSchema.builder()` to create a JSON schema:
+
+.Creating a JSON schema
+====
+[source,java]
+----
+MongoJsonSchema.builder()                                                    <1>
+    .required("lastname")                                                    <2>
+
+    .properties(
+                required(string("firstname").possibleValues("luke", "han")), <3>
+
+                object("address")
+                     .properties(string("postCode").minLength(4).maxLength(5)))
+
+    .build();                                                                <4>
+----
+<1> Obtain a schema builder to configure the schema with a fluent API.
+<2> Configure required properties either directly as shown here or with more details as in 3.
+<3> Configure the required String-typed `firstname` field, allowing only `luke` and `han` values. Properties can be typed or untyped. Use a static import of  `JsonSchemaProperty` to make the syntax slightly more compact and to get entry points such as `string(…)`.
+<4> Build the schema object.
+====
+
+There are already some predefined and strongly typed schema objects (`JsonSchemaObject` and `JsonSchemaProperty`) available
+through static methods on the gateway interfaces.
+However, you may need to build custom property validation rules, which can be created through the builder API, as the following example shows:
+
+[source,java]
+----
+// "birthdate" : { "bsonType": "date" }
+JsonSchemaProperty.named("birthdate").ofType(Type.dateType());
+
+// "birthdate" : { "bsonType": "date", "description", "Must be a date" }
+JsonSchemaProperty.named("birthdate").with(JsonSchemaObject.of(Type.dateType()).description("Must be a date"));
+----
+
+`CollectionOptions` provides the entry point to schema support for collections, as the following example shows:
+
+.Create collection with `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
+----
+====
+
+[[mongo.jsonSchema.generated]]
+== Generating a Schema
+
+Setting up a schema can be a time consuming task and we encourage everyone who decides to do so, to really take the time it takes.
+It's important, schema changes can be hard.
+However, there might be times when one does not want to balked with it, and that is where `JsonSchemaCreator` comes into play.
+
+`JsonSchemaCreator` and its default implementation generates a `MongoJsonSchema` out of domain types metadata provided by the mapping infrastructure.
+This means, that xref:mongodb/mapping/mapping.adoc#mapping-usage-annotations[annotated properties] as well as potential xref:mongodb/mapping/mapping.adoc#mapping-configuration[custom conversions] are considered.
+
+.Generate Json Schema from domain type
+====
+[source,java]
+----
+public class Person {
+
+    private final String firstname;                   <1>
+    private final int age;                            <2>
+    private Species species;                          <3>
+    private Address address;                          <4>
+    private @Field(fieldType=SCRIPT) String theForce; <5>
+    private @Transient Boolean useTheForce;           <6>
+
+    public Person(String firstname, int age) {        <1> <2>
+
+        this.firstname = firstname;
+        this.age = age;
+    }
+
+    // gettter / setter omitted
+}
+
+MongoJsonSchema schema = MongoJsonSchemaCreator.create(mongoOperations.getConverter())
+    .createSchemaFor(Person.class);
+
+template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
+----
+
+[source,json]
+----
+{
+    'type' : 'object',
+    'required' : ['age'],                     <2>
+    'properties' : {
+        'firstname' : { 'type' : 'string' },  <1>
+        'age' : { 'bsonType' : 'int' }        <2>
+        'species' : {                         <3>
+            'type' : 'string',
+            'enum' : ['HUMAN', 'WOOKIE', 'UNKNOWN']
+        }
+        'address' : {                         <4>
+            'type' : 'object'
+            'properties' : {
+                'postCode' : { 'type': 'string' }
+            }
+        },
+        'theForce' : { 'type' : 'javascript'} <5>
+     }
+}
+----
+<1> Simple object properties are consideres regular properties.
+<2> Primitive types are considered required properties
+<3> Enums are restricted to possible values.
+<4> Object type properties are inspected and represented as nested documents.
+<5> `String` type property that is converted to `Code` by the converter.
+<6> `@Transient` properties are omitted when generating the schema.
+====
+
+NOTE: `_id` properties using types that can be converted into `ObjectId` like `String` are mapped to `{ type : 'object' }`
+unless there is more specific information available via the `@MongoId` annotation.
+
+[cols="2,2,6", options="header"]
+.Sepcial Schema Generation rules
+|===
+| Java
+| Schema Type
+| Notes
+
+| `Object`
+| `type : object`
+| with `properties` if metadata available.
+
+| `Collection`
+| `type : array`
+| -
+
+| `Map`
+| `type : object`
+| -
+
+| `Enum`
+| `type : string`
+| with `enum` property holding the possible enumeration values.
+
+| `array`
+| `type : array`
+| simple type array unless it's a `byte[]`
+
+| `byte[]`
+| `bsonType : binData`
+| -
+
+|===
+
+The above example demonstrated how to derive the schema from a very precise typed source.
+Using polymorphic elements within the domain model can lead to inaccurate schema representation for `Object` and generic `<T>` types, which are likely to represented as `{ type : 'object' }` without further specification.
+`MongoJsonSchemaCreator.property(…)` allows defining additional details such as nested document types that should be considered when rendering the schema.
+
+.Specify additional types for properties
+====
+[source,java]
+----
+class Root {
+	Object value;
+}
+
+class A {
+	String aValue;
+}
+
+class B {
+	String bValue;
+}
+MongoJsonSchemaCreator.create()
+    .property("value").withTypes(A.class, B.class) <1>
+----
+
+[source,json]
+----
+{
+    'type' : 'object',
+    'properties' : {
+        'value' : {
+            'type' : 'object',
+            'properties' : {                       <1>
+                'aValue' : { 'type' : 'string' },
+                'bValue' : { 'type' : 'string' }
+            }
+        }
+    }
+}
+----
+<1> Properties of the given types are merged into one element.
+====
+
+MongoDBs schema-free approach allows storing documents of different structure in one collection.
+Those may be modeled having a common base class.
+Regardless of the chosen approach, `MongoJsonSchemaCreator.merge(…)`  can help circumvent the need of merging multiple schema into one.
+
+.Merging multiple Schemas into a single Schema definition
+====
+[source,java]
+----
+abstract class Root {
+	String rootValue;
+}
+
+class A extends Root {
+	String aValue;
+}
+
+class B extends Root {
+	String bValue;
+}
+
+MongoJsonSchemaCreator.mergedSchemaFor(A.class, B.class) <1>
+----
+
+[source,json]
+----
+{
+    'type' : 'object',
+       'properties' : { <1>
+           'rootValue' : { 'type' : 'string' },
+           'aValue' : { 'type' : 'string' },
+           'bValue' : { 'type' : 'string' }
+       }
+    }
+}
+----
+<1> Properties (and their inherited ones) of the given types are combined into one schema.
+====
+
+[NOTE]
+====
+Properties with the same name need to refer to the same JSON schema in order to be combined.
+The following example shows a definition that cannot be merged automatically because of a data type mismatch.
+In this case a `ConflictResolutionFunction` must be provided to `MongoJsonSchemaCreator`.
+
+[source,java]
+----
+class A extends Root {
+	String value;
+}
+
+class B extends Root {
+	Integer value;
+}
+----
+====
+
+[[mongo.jsonSchema.encrypted-fields]]
+== Encrypted Fields
+
+MongoDB 4.2 https://docs.mongodb.com/master/core/security-client-side-encryption/[Field Level Encryption] allows to directly encrypt individual properties.
+
+Properties can be wrapped within an encrypted property when setting up the JSON Schema as shown in the example below.
+
+.Client-Side Field Level Encryption via Json Schema
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder()
+    .properties(
+        encrypted(string("ssn"))
+            .algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+            .keyId("*key0_id")
+	).build();
+----
+====
+
+Instead of defining encrypted fields manually it is possible leverage the `@Encrypted` annotation as shown in the snippet below.
+
+.Client-Side Field Level Encryption via Json Schema
+====
+[source,java]
+----
+@Document
+@Encrypted(keyId = "xKVup8B1Q+CkHaVRx+qa+g==", algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random") <1>
+static class Patient {
+
+    @Id String id;
+    String name;
+
+    @Encrypted <2>
+    String bloodType;
+
+    @Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic") <3>
+    Integer ssn;
+}
+----
+<1> Default encryption settings that will be set for `encryptMetadata`.
+<2> Encrypted field using default encryption settings.
+<3> Encrypted field overriding the default encryption algorithm.
+====
+
+[TIP]
+====
+The `@Encrypted` Annotation supports resolving keyIds via SpEL Expressions.
+To do so additional environment metadata (via the `MappingContext`) is required and must be provided.
+
+[source,java]
+----
+@Document
+@Encrypted(keyId = "#{mongocrypt.keyId(#target)}")
+static class Patient {
+
+    @Id String id;
+    String name;
+
+    @Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random")
+    String bloodType;
+
+    @Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+    Integer ssn;
+}
+
+MongoJsonSchemaCreator schemaCreator = MongoJsonSchemaCreator.create(mappingContext);
+MongoJsonSchema patientSchema = schemaCreator
+    .filter(MongoJsonSchemaCreator.encryptedOnly())
+    .createSchemaFor(Patient.class);
+----
+
+The `mongocrypt.keyId` function is defined via an `EvaluationContextExtension` as shown in the snippet below.
+Providing a custom extension provides the most flexible way of computing keyIds.
+
+[source,java]
+----
+public class EncryptionExtension implements EvaluationContextExtension {
+
+    @Override
+    public String getExtensionId() {
+        return "mongocrypt";
+    }
+
+    @Override
+    public Map<String, Function> getFunctions() {
+        return Collections.singletonMap("keyId", new Function(getMethod("computeKeyId", String.class), this));
+    }
+
+    public String computeKeyId(String target) {
+        // ... lookup via target element name
+    }
+}
+----
+====
+
+[[mongo.jsonSchema.types]]
+== JSON Schema Types
+
+The following table shows the supported JSON schema types:
+
+[cols="3,1,6", options="header"]
+.Supported JSON schema types
+|===
+| Schema Type
+| Java Type
+| Schema Properties
+
+| `untyped`
+| -
+| `description`, generated `description`, `enum`, `allOf`, `anyOf`, `oneOf`, `not`
+
+| `object`
+| `Object`
+| `required`, `additionalProperties`, `properties`, `minProperties`, `maxProperties`, `patternProperties`
+
+| `array`
+| any array except `byte[]`
+| `uniqueItems`, `additionalItems`, `items`, `minItems`, `maxItems`
+
+| `string`
+| `String`
+| `minLength`, `maxLentgth`, `pattern`
+
+| `int`
+| `int`, `Integer`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `long`
+| `long`, `Long`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `double`
+| `float`, `Float`, `double`, `Double`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `decimal`
+| `BigDecimal`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `number`
+| `Number`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `binData`
+| `byte[]`
+| (none)
+
+| `boolean`
+| `boolean`, `Boolean`
+| (none)
+
+| `null`
+| `null`
+| (none)
+
+| `objectId`
+| `ObjectId`
+| (none)
+
+| `date`
+| `java.util.Date`
+| (none)
+
+| `timestamp`
+| `BsonTimestamp`
+| (none)
+
+| `regex`
+| `java.util.regex.Pattern`
+| (none)
+
+|===
+
+NOTE: `untyped` is a generic type that is inherited by all typed schema types. It provides all `untyped` schema properties to typed schema types.
+
+For more information, see https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#op._S_jsonSchema[$jsonSchema].

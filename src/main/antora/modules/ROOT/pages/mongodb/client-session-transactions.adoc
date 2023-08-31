@@ -1,0 +1,416 @@
+[[mongo.sessions]]
+= Sessions & Transactions
+
+As of version 3.6, MongoDB supports the concept of sessions.
+The use of sessions enables MongoDB's https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency[Causal Consistency] model, which guarantees running operations in an order that respects their causal relationships.
+Those are split into `ServerSession` instances and `ClientSession` instances.
+In this section, when we speak of a session, we refer to `ClientSession`.
+
+WARNING: Operations within a client session are not isolated from operations outside the session.
+
+Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations.
+`MongoCollection` and `MongoDatabase` use session proxy objects that implement MongoDB's collection and database interfaces, so you need not add a session on each call.
+This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
+
+NOTE: Methods such as `(Reactive)MongoOperations#getCollection` return native MongoDB Java Driver gateway objects (such as `MongoCollection`) that themselves offer dedicated methods for `ClientSession`. These methods are *NOT* session-proxied. You should provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not through one of the `#execute` callbacks on `MongoOperations`.
+
+[[mongo.sessions.sync]]
+[[mongo.sessions.reactive]]
+== ClientSession support
+
+The following example shows the usage of a session:
+
+[tabs]
+======
+Imperative::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+ClientSessionOptions sessionOptions = ClientSessionOptions.builder()
+    .causallyConsistent(true)
+    .build();
+
+ClientSession session = client.startSession(sessionOptions); <1>
+
+template.withSession(() -> session)
+    .execute(action -> {
+
+        Query query = query(where("name").is("Durzo Blint"));
+        Person durzo = action.findOne(query, Person.class);  <2>
+
+        Person azoth = new Person("Kylar Stern");
+        azoth.setMaster(durzo);
+
+        action.insert(azoth);                                <3>
+
+        return azoth;
+    });
+
+session.close()                                              <4>
+----
+<1> Obtain a new session from the server.
+<2> Use `MongoOperation` methods as before. The `ClientSession` gets applied automatically.
+<3> Make sure to close the `ClientSession`.
+<4> Close the session.
+
+WARNING: When dealing with `DBRef` instances, especially lazily loaded ones, it is essential to *not* close the `ClientSession` before all data is loaded. Otherwise, lazy fetch fails.
+====
+
+Reactive::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+ClientSessionOptions sessionOptions = ClientSessionOptions.builder()
+.causallyConsistent(true)
+.build();
+
+Publisher<ClientSession> session = client.startSession(sessionOptions); <1>
+
+template.withSession(session)
+.execute(action -> {
+
+        Query query = query(where("name").is("Durzo Blint"));
+        return action.findOne(query, Person.class)
+            .flatMap(durzo -> {
+
+                Person azoth = new Person("Kylar Stern");
+                azoth.setMaster(durzo);
+
+                return action.insert(azoth);                            <2>
+            });
+    }, ClientSession::close)                                            <3>
+    .subscribe();                                                       <4>
+----
+<1> Obtain a `Publisher` for new session retrieval.
+<2> Use `ReactiveMongoOperation` methods as before. The `ClientSession` is obtained and applied automatically.
+<3> Make sure to close the `ClientSession`.
+<4> Nothing happens until you subscribe. See https://projectreactor.io/docs/core/release/reference/#reactive.subscribe[the Project Reactor Reference Guide] for details.
+
+By using a `Publisher` that provides the actual session, you can defer session acquisition to the point of actual subscription.
+Still, you need to close the session when done, so as to not pollute the server with stale sessions. Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you no longer need the session.
+If you prefer having more control over the session itself, you can obtain the `ClientSession` through the driver and provide it through a `Supplier`.
+
+NOTE: Reactive use of `ClientSession` is limited to Template API usage. There's currently no session integration with reactive repositories.
+====
+======
+
+[[mongo.transactions]]
+== MongoDB Transactions
+
+As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions]. Transactions are built on top of xref:mongodb/client-session-transactions.adoc[Sessions] and, consequently, require an active `ClientSession`.
+
+NOTE: Unless you specify a `MongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
+
+To get full programmatic control over transactions, you may want to use the session callback on `MongoOperations`.
+
+The following example shows programmatic transaction control:
+
+.Programmatic transactions
+[tabs]
+======
+Imperative::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+ClientSession session = client.startSession(options);                   <1>
+
+template.withSession(session)
+    .execute(action -> {
+
+        session.startTransaction();                                     <2>
+
+        try {
+
+            Step step = // ...;
+            action.insert(step);
+
+            process(step);
+
+            action.update(Step.class).apply(Update.set("state", // ...
+
+            session.commitTransaction();                                <3>
+
+        } catch (RuntimeException e) {
+            session.abortTransaction();                                 <4>
+        }
+    }, ClientSession::close)                                            <5>
+----
+<1> Obtain a new `ClientSession`.
+<2> Start the transaction.
+<3> If everything works out as expected, commit the changes.
+<4> Something broke, so roll back everything.
+<5> Do not forget to close the session when done.
+
+The preceding example lets you have full control over transactional behavior while using the session scoped `MongoOperations` instance within the callback to ensure the session is passed on to every server call.
+To avoid some of the overhead that comes with this approach, you can use a `TransactionTemplate` to take away some of the noise of manual transaction flow.
+====
+
+Reactive::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<DeleteResult> result = Mono
+    .from(client.startSession())                                                             <1>
+
+    .flatMap(session -> {
+        session.startTransaction();                                                          <2>
+
+        return Mono.from(collection.deleteMany(session, ...))                                <3>
+
+            .onErrorResume(e -> Mono.from(session.abortTransaction()).then(Mono.error(e)))   <4>
+
+            .flatMap(val -> Mono.from(session.commitTransaction()).then(Mono.just(val)))     <5>
+
+            .doFinally(signal -> session.close());                                           <6>
+      });
+----
+<1> First we obviously need to initiate the session.
+<2> Once we have the `ClientSession` at hand, start the transaction.
+<3> Operate within the transaction by passing on the `ClientSession` to the operation.
+<4> If the operations completes exceptionally, we need to stop the transaction and preserve the error.
+<5> Or of course, commit the changes in case of success. Still preserving the operations result.
+<6> Lastly, we need to make sure to close the session.
+
+The culprit of the above operation is in keeping the main flows `DeleteResult` instead of the transaction outcome
+published via either `commitTransaction()` or `abortTransaction()`, which leads to a rather complicated setup.
+
+NOTE: Unless you specify a `ReactiveMongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
+====
+======
+
+[[mongo.transactions.transaction-template]]
+[[mongo.transactions.reactive-operator]]
+== Transactions with TransactionTemplate / TransactionalOperator
+
+Spring Data MongoDB transactions support both `TransactionTemplate` and `TransactionalOperator`.
+
+.Transactions with `TransactionTemplate` / `TransactionalOperator`
+[tabs]
+======
+Imperative::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+template.setSessionSynchronization(ALWAYS);                                     <1>
+
+// ...
+
+TransactionTemplate txTemplate = new TransactionTemplate(anyTxManager);         <2>
+
+txTemplate.execute(new TransactionCallbackWithoutResult() {
+
+    @Override
+    protected void doInTransactionWithoutResult(TransactionStatus status) {     <3>
+
+        Step step = // ...;
+        template.insert(step);
+
+        process(step);
+
+        template.update(Step.class).apply(Update.set("state", // ...
+    };
+});
+----
+<1> Enable transaction synchronization during Template API configuration.
+<2> Create the `TransactionTemplate` using the provided `PlatformTransactionManager`.
+<3> Within the callback the `ClientSession` and transaction are already registered.
+
+CAUTION: Changing state of `MongoTemplate` during runtime (as you might think would be possible in item 1 of the preceding listing) can cause threading and visibility issues.
+====
+
+Reactive::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+template.setSessionSynchronization(ALWAYS);                                          <1>
+
+// ...
+
+TransactionalOperator rxtx = TransactionalOperator.create(anyTxManager,
+                                   new DefaultTransactionDefinition());              <2>
+
+
+Step step = // ...;
+template.insert(step);
+
+Mono<Void> process(step)
+    .then(template.update(Step.class).apply(Update.set("state", …))
+    .as(rxtx::transactional)                                                         <3>
+    .then();
+----
+<1> Enable transaction synchronization for Transactional participation.
+<2> Create the `TransactionalOperator` using the provided `ReactiveTransactionManager`.
+<3> `TransactionalOperator.transactional(…)` provides transaction management for all upstream operations.
+====
+======
+
+[[mongo.transactions.tx-manager]]
+[[mongo.transactions.reactive-tx-manager]]
+== Transactions with MongoTransactionManager & ReactiveMongoTransactionManager
+
+`MongoTransactionManager` / `ReactiveMongoTransactionManager` is the gateway to the well known Spring transaction support.
+It lets applications use link:{springDocsUrl}/data-access.html#transaction[the managed transaction features of Spring].
+The `MongoTransactionManager` binds a `ClientSession` to the thread whereas the `ReactiveMongoTransactionManager` is using the `ReactorContext` for this.
+`MongoTemplate` detects the session and operates on these resources which are associated with the transaction accordingly.
+`MongoTemplate` can also participate in other, ongoing transactions. The following example shows how to create and use transactions with a `MongoTransactionManager`:
+
+.Transactions with `MongoTransactionManager` / `ReactiveMongoTransactionManager`
+[tabs]
+======
+Imperative::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+@Configuration
+static class Config extends AbstractMongoClientConfiguration {
+
+    @Bean
+    MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {  <1>
+        return new MongoTransactionManager(dbFactory);
+    }
+
+    // ...
+}
+
+@Component
+public class StateService {
+
+    @Transactional
+    void someBusinessFunction(Step step) {                                        <2>
+
+        template.insert(step);
+
+        process(step);
+
+        template.update(Step.class).apply(Update.set("state", // ...
+    };
+});
+
+----
+<1> Register `MongoTransactionManager` in the application context.
+<2> Mark methods as transactional.
+
+NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to also start a transaction that adds the
+`ClientSession` to outgoing requests.
+====
+
+Reactive::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+@Configuration
+public class Config extends AbstractReactiveMongoConfiguration {
+
+    @Bean
+    ReactiveMongoTransactionManager transactionManager(ReactiveMongoDatabaseFactory factory) {  <1>
+        return new ReactiveMongoTransactionManager(factory);
+    }
+
+    // ...
+}
+
+@Service
+public class StateService {
+
+    @Transactional
+    Mono<UpdateResult> someBusinessFunction(Step step) {                                  <2>
+
+        return template.insert(step)
+            .then(process(step))
+            .then(template.update(Step.class).apply(Update.set("state", …));
+    };
+});
+
+----
+<1> Register `ReactiveMongoTransactionManager` in the application context.
+<2> Mark methods as transactional.
+
+NOTE: `@Transactional(readOnly = true)` advises `ReactiveMongoTransactionManager` to also start a transaction that adds the `ClientSession` to outgoing requests.
+====
+======
+
+[[mongo.transactions.behavior]]
+== Special behavior inside transactions
+
+Inside transactions, MongoDB server has a slightly different behavior.
+
+*Connection Settings*
+
+The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into auto detection
+mode. This option helps identifying the primary replica set nodes and command routing during a transaction.
+
+NOTE: Make sure to add `replicaSet` to the MongoDB URI. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
+
+*Collection Operations*
+
+MongoDB does *not* support collection operations, such as collection creation, within a transaction. This also
+affects the on the fly collection creation that happens on first usage. Therefore make sure to have all required
+structures in place.
+
+*Transient Errors*
+
+MongoDB can add special labels to errors raised during transactional operations. Those may indicate transient failures
+that might vanish by merely retrying the operation.
+We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes. Nevertheless
+one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
+behavior as outlined in the MongoDB reference manual.
+
+*Count*
+
+MongoDB `count` operates upon collection statistics which may not reflect the actual situation within a transaction.
+The server responds with _error 50851_ when issuing a `count` command inside of a multi-document transaction.
+Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the
+aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
+
+Restrictions apply when using geo commands inside of the aggregation count helper. The following operators cannot be used and must be replaced with a different operator:
+
+* `$where` -> `$expr`
+* `$near` -> `$geoWithin` with `$center`
+* `$nearSphere` -> `$geoWithin` with `$centerSphere`
+
+Queries using `Criteria.near(…)` and `Criteria.nearSphere(…)` must be rewritten to `Criteria.within(…)` respective `Criteria.withinSphere(…)`. Same applies for the `near` query keyword in repository query methods that must be changed to `within`. See also MongoDB JIRA ticket https://jira.mongodb.org/browse/DRIVERS-518[DRIVERS-518] for further reference.
+
+The following snippet shows `count` usage inside the session-bound closure:
+
+====
+[source,javascript]
+----
+session.startTransaction();
+
+template.withSession(session)
+    .execute(action -> {
+        action.count(query(where("state").is("active")), Step.class)
+        ...
+----
+====
+
+The snippet above materializes in the following command:
+
+====
+[source,javascript]
+----
+db.collection.aggregate(
+   [
+      { $match: { state: "active" } },
+      { $count: "totalEntityCount" }
+   ]
+)
+----
+====
+
+instead of:
+
+====
+[source,javascript]
+----
+db.collection.find( { state: "active" } ).count()
+----
+====

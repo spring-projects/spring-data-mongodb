@@ -1,0 +1,164 @@
+[[mongo-template]]
+= Template API
+
+The `MongoTemplate` and its reactive counterpart class, located in the `org.springframework.data.mongodb.core` package, is the central class of Spring's MongoDB support and provides a rich feature set for interacting with the database.
+The template offers convenience operations to create, update, delete, and query MongoDB documents and provides a mapping between your domain objects and MongoDB documents.
+
+NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
+
+[[mongo-template.convenience-methods]]
+== Convenience Methods
+
+The `MongoTemplate` class implements the interface `MongoOperations`.
+In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API.
+For example, you can find methods such as `find`, `findAndModify`, `findAndReplace`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`.
+The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`.
+A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`.
+Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
+
+For more information please refer to the the xref:mongodb/template-crud-operations.adoc[CRUD] and xref:mongodb/template-query-operations.adoc[Query] sections of the documentation.
+
+NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
+
+[[mongo-template.execute-callbacks]]
+== Execute Callbacks
+
+`MongoTemplate` offers many convenience methods to help you easily perform common tasks.
+However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods.
+The `execute` callbacks gives you a reference to either a `MongoCollection` or a `MongoDatabase` object.
+
+* `<T> T` *execute* `(Class<?> entityClass, CollectionCallback<T> action)`: Runs the given `CollectionCallback` for the entity collection of the specified class.
+
+* `<T> T` *execute* `(String collectionName, CollectionCallback<T> action)`: Runs the given `CollectionCallback` on the collection of the given name.
+
+* `<T> T` *execute* `(DbCallback<T> action)`: Runs a DbCallback, translating any exceptions as necessary. Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
+
+* `<T> T` *execute* `(String collectionName, DbCallback<T> action)`: Runs a `DbCallback` on the collection of the given name translating any exceptions as necessary.
+
+* `<T> T` *executeInSession* `(DbCallback<T> action)`: Runs the given `DbCallback` within the same connection to the database so as to ensure consistency in a write-heavy environment where you may read the data that you wrote.
+
+The following example uses the `CollectionCallback` to return information about an index:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+boolean hasIndex = template.execute("geolocation", collection ->
+    Streamable.of(collection.listIndexes(org.bson.Document.class))
+        .stream()
+        .map(document -> document.get("name"))
+        .anyMatch("location_2d"::equals)
+);
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<Boolean> hasIndex = template.execute("geolocation", collection ->
+    Flux.from(collection.listIndexes(org.bson.Document.class))
+        .map(document -> document.get("name"))
+        .filterWhen(name -> Mono.just("location_2d".equals(name)))
+        .map(it -> Boolean.TRUE)
+        .single(Boolean.FALSE)
+    ).next();
+----
+======
+
+[[mongo-template.fluent-api]]
+== Fluent API
+
+Being the central component when it comes to more low-level interaction with MongoDB `MongoTemplate` offers a wide range of methods covering needs from collection creation, index creation, and CRUD operations to more advanced functionality, such as Map-Reduce and aggregations.
+You can find multiple overloads for each method.
+Most of them cover optional or nullable parts of the API.
+
+`FluentMongoOperations` provides a more narrow interface for the common methods of `MongoOperations` and provides a more readable, fluent API.
+The entry points (`insert(…)`, `find(…)`, `update(…)`, and others) follow a natural naming schema based on the operation to be run.
+Moving on from the entry point, the API is designed to offer only context-dependent methods that lead to a terminating method that invokes the actual `MongoOperations` counterpart -- the `all` method in the case of the following example:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+List<Jedi> all = template.query(SWCharacter.class) <1>
+  .inCollection("star-wars") <2>
+  .as(Jedi.class) <3>
+  .matching(query(where("jedi").is(true))) <4>
+  .all();
+----
+<1> The type used to map fields used in the query to.
+<2> The collection name to use if not defined on the domain type.
+<3> Result type if not using the original domain type.
+<4> The lookup query.
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Flux<Jedi> all = template.query(SWCharacter.class)
+  .inCollection("star-wars")
+  .as(Jedi.class)
+  .matching(query(where("jedi").is(true)))
+  .all();
+----
+======
+
+NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required
+by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
+target type is a closed interface or DTO projection.
+
+WARNING: Projections must not be applied to xref:mongodb/mapping/document-references.adoc[DBRefs].
+
+You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
+
+When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for running a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+GeoResults<Jedi> results = template.query(SWCharacter.class)
+  .as(Jedi.class)
+  .near(alderaan) // NearQuery.near(-73.9667, 40.78).maxDis…
+  .all();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Flux<GeoResult<Jedi>> results = template.query(SWCharacter.class)
+  .as(Jedi.class)
+  .near(alderaan) // NearQuery.near(-73.9667, 40.78).maxDis…
+  .all();
+----
+======
+
+[[mongo-template.exception-translation]]
+== Exception Translation
+
+The Spring framework provides exception translation for a wide variety of database and mapping technologies. T
+his has traditionally been for JDBC and JPA.
+The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
+
+The motivation behind mapping to Spring's link:{springDocsUrl}/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes.
+All of Spring's data access exceptions are inherited from the root `DataAccessException` class so that you can be sure to catch all database related exception within a single try-catch block.
+Note that not all exceptions thrown by the MongoDB driver inherit from the `MongoException` class.
+The inner exception and message are preserved so that no information is lost.
+
+Some of the mappings performed by the `MongoExceptionTranslator` are `com.mongodb.Network to DataAccessResourceFailureException` and `MongoException` error codes 1003, 12001, 12010, 12011, and 12012 to `InvalidDataAccessApiUsageException`.
+Look into the implementation for more details on the mapping.
+
+[[mongo-template.type-mapping]]
+== Domain Type Mapping
+
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface.
+Spring provides `MappingMongoConverter`, but you can also write your own converter.
+While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names.
+These conventions, as well as the use of mapping annotations, are explained in the xref:mongodb/mapping/mapping.adoc[Mapping] chapter.
