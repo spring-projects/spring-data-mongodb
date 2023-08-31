@@ -1,5 +1,5 @@
 [[mongodb.repositories.queries.aggregation]]
-=== Aggregation Repository Methods
+= Aggregation Repository Methods
 
 The repository layer offers means to interact with <<mongo.aggregation, the aggregation framework>> via annotated repository query methods.
 Similar to the <<mongodb.repositories.queries.json-based, JSON based queries>>, you can define a pipeline using the `org.springframework.data.mongodb.repository.Aggregation` annotation.

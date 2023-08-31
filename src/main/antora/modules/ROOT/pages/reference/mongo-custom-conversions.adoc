@@ -1,5 +1,5 @@
 [[mongo.custom-converters]]
-== Custom Conversions - Overriding Default Mapping
+= Custom Conversions - Overriding Default Mapping
 
 The most trivial way of influencing the mapping result is by specifying the desired native MongoDB target type via the
 `@Field` annotation. This allows to work with non MongoDB types like `BigDecimal` in the domain model while persisting
@@ -43,7 +43,7 @@ The `MappingMongoConverter` checks to see if any Spring converters can handle a 
 NOTE: For more information on the Spring type conversion service, see the reference docs link:{springDocsUrl}/core.html#validation[here].
 
 [[mongo.custom-converters.writer]]
-=== Saving by Using a Registered Spring Converter
+== Saving by Using a Registered Spring Converter
 
 The following example shows an implementation of the `Converter` that converts from a `Person` object to a `org.bson.Document`:
 
@@ -66,7 +66,7 @@ public class PersonWriteConverter implements Converter<Person, Document> {
 ----
 
 [[mongo.custom-converters.reader]]
-=== Reading by Using a Spring Converter
+== Reading by Using a Spring Converter
 
 The following example shows an implementation of a `Converter` that converts from a `Document` to a `Person` object:
 
@@ -83,7 +83,7 @@ public class PersonReadConverter implements Converter<Document, Person> {
 ----
 
 [[mongo.custom-converters.xml]]
-=== Registering Spring Converters with the `MongoConverter`
+== Registering Spring Converters with the `MongoConverter`
 
 [source,java]
 ----

@@ -1,5 +1,5 @@
 [[query-by-example.running]]
-== Running an Example
+= Running an Example
 
 The following example shows how to query by example when using a repository (of `Person` objects, in this case):
 
@@ -73,7 +73,7 @@ Spring Data MongoDB provides support for the following matching options:
 |===
 
 [[query-by-example.untyped]]
-== Untyped Example
+= Untyped Example
 
 By default `Example` is strictly typed. This means that the mapped query has an included type match, restricting it to probe assignable types. For example, when sticking with the default type key (`_class`), the query has restrictions such as (`_class : { $in : [ com.acme.Person] }`).
 

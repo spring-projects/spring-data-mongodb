@@ -1,10 +1,10 @@
 [[unwrapped-entities]]
-== Unwrapping Types
+= Unwrapping Types
 
 Unwrapped entities are used to design value objects in your Java domain model whose properties are flattened out into the parent's MongoDB Document.
 
 [[unwrapped-entities.mapping]]
-=== Unwrapped Types Mapping
+== Unwrapped Types Mapping
 
 Consider the following domain model where `User.name` is annotated with `@Unwrapped`.
 The `@Unwrapped` annotation signals that all properties of `UserName` should be flattened out into the `user` document that owns the `name` property.
@@ -53,7 +53,7 @@ However, those must not be, nor contain unwrapped fields themselves.
 ====
 
 [[unwrapped-entities.mapping.field-names]]
-=== Unwrapped Types field names
+== Unwrapped Types field names
 
 A value object can be unwrapped multiple times by using the optional `prefix` attribute of the `@Unwrapped` annotation.
 By dosing so the chosen prefix is prepended to each property or `@Field("…")` name in the unwrapped object.
@@ -136,7 +136,7 @@ public class UserName {
 ====
 
 [[unwrapped-entities.queries]]
-=== Query on Unwrapped Objects
+== Query on Unwrapped Objects
 
 Defining queries on unwrapped properties is possible on type- as well as field-level as the provided `Criteria` is matched against the domain type.
 Prefixes and potential custom field names will be considered when rendering the actual query.
@@ -179,7 +179,7 @@ db.collection.find({
 ====
 
 [[unwrapped-entities.queries.sort]]
-==== Sort by unwrapped field.
+=== Sort by unwrapped field.
 
 Fields of unwrapped objects can be used for sorting via their property path as shown in the sample below.
 
@@ -205,7 +205,7 @@ Though possible, using the unwrapped object itself as sort criteria includes all
 ====
 
 [[unwrapped-entities.queries.project]]
-==== Field projection on unwrapped objects
+=== Field projection on unwrapped objects
 
 Fields of unwrapped objects can be subject for projection either as a whole or via single fields as shown in the samples below.
 
@@ -253,13 +253,13 @@ db.collection.find({
 ====
 
 [[unwrapped-entities.queries.by-example]]
-==== Query By Example on unwrapped object.
+=== Query By Example on unwrapped object.
 
 Unwrapped objects can be used within an `Example` probe just as any other type.
 Please review the <<query-by-example.running,Query By Example>> section, to learn more about this feature.
 
 [[unwrapped-entities.queries.repository]]
-==== Repository Queries on unwrapped objects.
+=== Repository Queries on unwrapped objects.
 
 The `Repository` abstraction allows deriving queries on fields of unwrapped objects as well as the entire object.
 
@@ -284,7 +284,7 @@ Index creation for unwrapped objects is suspended even if the repository `create
 ====
 
 [[unwrapped-entities.update]]
-=== Update on Unwrapped Objects
+== Update on Unwrapped Objects
 
 Unwrapped objects can be updated as any other object that is part of the domain model.
 The mapping layer takes care of flattening structures into their surroundings.
@@ -338,14 +338,14 @@ db.collection.update({
 ====
 
 [[unwrapped-entities.aggregations]]
-=== Aggregations on Unwrapped Objects
+== Aggregations on Unwrapped Objects
 
 The <<mongo.aggregation,Aggregation Framework>> will attempt to map unwrapped values of typed aggregations.
 Please make sure to work with the property path including the wrapper object when referencing one of its values.
 Other than that no special action is required.
 
 [[unwrapped-entities.indexes]]
-=== Index on Unwrapped Objects
+== Index on Unwrapped Objects
 
 It is possible to attach the `@Indexed` annotation to properties of an unwrapped type just as it is done with regular objects.
 It is not possible to use `@Indexed` along with the `@Unwrapped` annotation on the owning property.

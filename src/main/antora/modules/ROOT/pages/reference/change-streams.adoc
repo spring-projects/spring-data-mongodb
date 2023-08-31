@@ -1,5 +1,5 @@
 [[change-streams]]
-== Change Streams
+= Change Streams
 
 As of MongoDB 3.6, https://docs.mongodb.com/manual/changeStreams/[Change Streams] let applications get notified about changes without having to tail the oplog.
 
@@ -13,7 +13,7 @@ changes from all collections within the database. When subscribing to a database
 In doubt, use `Document`.
 
 [[change-streams-with-messagelistener]]
-=== Change Streams with `MessageListener`
+== Change Streams with `MessageListener`
 
 Listening to a https://docs.mongodb.com/manual/tutorial/change-streams-example/[Change Stream by using a Sync Driver] creates a long running, blocking task that needs to be delegated to a separate component.
 In this case, we need to first create a `MessageListenerContainer`, which will be the main entry point for running the specific `SubscriptionRequest` tasks.
@@ -51,7 +51,7 @@ Please use `register(request, body, errorHandler)` to provide additional functio
 ====
 
 [[reactive-change-streams]]
-=== Reactive Change Streams
+== Reactive Change Streams
 
 Subscribing to Change Streams with the reactive API is a more natural approach to work with streams. Still, the essential building blocks, such as `ChangeStreamOptions`, remain the same. The following example shows how to use Change Streams emitting ``ChangeStreamEvent``s:
 
@@ -70,7 +70,7 @@ Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(User.class) <
 ====
 
 [[resuming-change-streams]]
-=== Resuming Change Streams
+== Resuming Change Streams
 
 Change Streams can be resumed and resume emitting events where you left. To resume the stream, you need to supply either a resume
 token or the last known server time (in UTC). Use `ChangeStreamOptions` to set the value accordingly.

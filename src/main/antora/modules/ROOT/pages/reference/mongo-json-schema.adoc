@@ -1,5 +1,5 @@
 [[mongo.jsonSchema]]
-=== JSON Schema
+= JSON Schema
 
 As of version 3.6, MongoDB supports collections that validate documents against a provided https://docs.mongodb.com/manual/core/schema-validation/#json-schema[JSON Schema].
 The schema itself and both validation action and level can be defined when creating the collection, as the following example shows:
@@ -87,7 +87,7 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
 ====
 
 [[mongo.jsonSchema.generated]]
-==== Generating a Schema
+== Generating a Schema
 
 Setting up a schema can be a time consuming task and we encourage everyone who decides to do so, to really take the time it takes.
 It's important, schema changes can be hard.
@@ -288,7 +288,7 @@ class B extends Root {
 ====
 
 [[mongo.jsonSchema.query]]
-==== Query a collection for matching JSON Schema
+== Query a collection for matching JSON Schema
 
 You can use a schema to query any collection for documents that match a given structure defined by a JSON schema, as the following example shows:
 
@@ -303,7 +303,7 @@ template.find(query(matchingDocumentStructure(schema)), Person.class);
 ====
 
 [[mongo.jsonSchema.encrypted-fields]]
-==== Encrypted Fields
+== Encrypted Fields
 
 MongoDB 4.2 https://docs.mongodb.com/master/core/security-client-side-encryption/[Field Level Encryption] allows to directly encrypt individual properties.
 
@@ -399,7 +399,7 @@ public class EncryptionExtension implements EvaluationContextExtension {
 ====
 
 [[mongo.jsonSchema.types]]
-==== JSON Schema Types
+== JSON Schema Types
 
 The following table shows the supported JSON schema types:
 

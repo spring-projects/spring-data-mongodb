@@ -1,6 +1,6 @@
 // carry over the old bookmarks to prevent external links from failing
 [[tailable-cursors]]
-== [[mongo.reactive.repositories.infinite-streams]] Infinite Streams with Tailable Cursors
+= [[mongo.reactive.repositories.infinite-streams]] Infinite Streams with Tailable Cursors
 
 By default, MongoDB automatically closes a cursor when the client exhausts all results supplied by the cursor.
 Closing a cursor on exhaustion turns a stream into a finite stream. For https://docs.mongodb.com/manual/core/capped-collections/[capped collections],
@@ -14,7 +14,7 @@ reactive variant, as it is less resource-intensive. However, if you cannot use t
 concept that is already prevalent in the Spring ecosystem.
 
 [[tailable-cursors.sync]]
-=== Tailable Cursors with `MessageListener`
+== Tailable Cursors with `MessageListener`
 
 Listening to a capped collection using a Sync Driver creates a long running, blocking task that needs to be delegated to
 a separate component. In this case, we need to first create a `MessageListenerContainer`, which will be the main entry point
@@ -54,7 +54,7 @@ container.stop();                                                               
 ====
 
 [[tailable-cursors.reactive]]
-=== Reactive Tailable Cursors
+== Reactive Tailable Cursors
 
 Using tailable cursors with a reactive data types allows construction of infinite streams. A tailable cursor remains open until it is closed externally. It emits data as new documents arrive in a capped collection.
 

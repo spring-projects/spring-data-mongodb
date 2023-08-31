@@ -1,12 +1,12 @@
 [[mongo.aggregation]]
-== Aggregation Framework Support
+= Aggregation Framework Support
 
 Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
 
 For further information, see the full https://docs.mongodb.org/manual/aggregation/[reference documentation] of the aggregation framework and other data aggregation tools for MongoDB.
 
 [[mongo.aggregation.basic-concepts]]
-=== Basic Concepts
+== Basic Concepts
 
 The Aggregation Framework support in Spring Data MongoDB is based on the following key abstractions: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
 
@@ -52,12 +52,12 @@ List<OutputType> mappedResult = results.getMappedResults();
 Note that, if you provide an input class as the first parameter to the `newAggregation` method, the `MongoTemplate` derives the name of the input collection from this class. Otherwise, if you do not not specify an input class, you must provide the name of the input collection explicitly. If both an input class and an input collection are provided, the latter takes precedence.
 
 [[mongo.aggregation.supported-aggregation-operations]]
-=== Supported Aggregation Operations & Stages
+== Supported Aggregation Operations & Stages
 
 The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
 
 [[aggregation-stages]]
-==== Aggregation Stages
+=== Aggregation Stages
 
 * addFields - `AddFieldsOperation`
 * bucket / bucketAuto - `BucketOperation` / `BucketAutoOperation`
@@ -104,7 +104,7 @@ Aggregation.stage("""
 ====
 
 [[aggregation-operators]]
-==== Aggregation Operators
+=== Aggregation Operators
 
 * Group/Accumulator Aggregation Operators
 * Boolean Aggregation Operators
@@ -173,7 +173,7 @@ At the time of this writing, we provide support for the following Aggregation Op
 Note that the aggregation operations not listed here are currently not supported by Spring Data MongoDB. Comparison aggregation operators are expressed as `Criteria` expressions.
 
 [[mongo.aggregation.projection]]
-=== Projection Expressions
+== Projection Expressions
 
 Projection expressions are used to define the fields that are the outcome of a particular aggregation step. Projection expressions can be defined through the `project` method of the `Aggregation` class, either by passing a list of `String` objects or an aggregation framework `Fields` object. The projection can be extended with additional fields through a fluent API by using the `and(String)` method and aliased by using the `as(String)` method.
 Note that you can also define fields with aliases by using the `Fields.field` static factory method of the aggregation framework, which you can then use to construct a new `Fields` instance. References to projected fields in later aggregation stages are valid only for the field names of included fields or their aliases (including newly defined fields and their aliases). Fields not included in the projection cannot be referenced in later aggregation stages. The following listings show examples of projection expression:
@@ -211,12 +211,12 @@ project().and("firstname").as("name"), sort(ASC, "firstname")
 More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
 
 [[mongo.aggregation.facet]]
-=== Faceted Classification
+== Faceted Classification
 
 As of Version 3.4, MongoDB supports faceted classification by using the Aggregation Framework. A faceted classification uses semantic categories (either general or subject-specific) that are combined to create the full classification entry. Documents flowing through the aggregation pipeline are classified into buckets. A multi-faceted classification enables various aggregations on the same set of input documents, without needing to retrieve the input documents multiple times.
 
 [[buckets]]
-==== Buckets
+=== Buckets
 
 Bucket operations categorize incoming documents into groups, called buckets, based on a specified expression and bucket boundaries. Bucket operations require a grouping field or a grouping expression. You can define them by using the `bucket()` and `bucketAuto()` methods of the `Aggregate` class. `BucketOperation` and `BucketAutoOperation` can expose accumulations based on aggregation expressions for input documents. You can extend the bucket operation with additional parameters through a fluent API by using the `with…()` methods and the `andOutput(String)` method. You can alias the operation by using the `as(String)` method. Each bucket is represented as a document in the output.
 
@@ -263,7 +263,7 @@ Note that further details regarding bucket expressions can be found in the https
 https://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
 
 [[multi-faceted-aggregation]]
-==== Multi-faceted Aggregation
+=== Multi-faceted Aggregation
 
 Multiple aggregation pipelines can be used to create multi-faceted aggregations that characterize data across multiple dimensions (or facets) within a single aggregation stage. Multi-faceted aggregations provide multiple filters and categorizations to guide data browsing and analysis. A common implementation of faceting is how many online retailers provide ways to narrow down search results by applying filters on product price, manufacturer, size, and other factors.
 
@@ -294,7 +294,7 @@ facet(project("title").and("publicationDate").extractYear().as("publicationYear"
 Note that further details regarding facet operation can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/facet/[`$facet` section] of the MongoDB Aggregation Framework reference documentation.
 
 [[mongo.aggregation.sort-by-count]]
-==== Sort By Count
+=== Sort By Count
 
 Sort by count operations group incoming documents based on the value of a specified expression, compute the count of documents in each distinct group, and sort the results by count. It offers a handy shortcut to apply sorting when using <<mongo.aggregation.facet>>. Sort by count operations require a grouping field or grouping expression. The following listing shows a sort by count example:
 
@@ -315,12 +315,12 @@ A sort by count operation is equivalent to the following BSON (Binary JSON):
 ----
 
 [[mongo.aggregation.projection.expressions]]
-==== Spring Expression Support in Projection Expressions
+=== Spring Expression Support in Projection Expressions
 
 We support the use of SpEL expressions in projection expressions through the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This feature lets you define the desired expression as a SpEL expression. On running a query, the SpEL expression is translated into a corresponding MongoDB projection expression part. This arrangement makes it much easier to express complex calculations.
 
 [[complex-calculations-with-spel-expressions]]
-===== Complex Calculations with SpEL expressions
+==== Complex Calculations with SpEL expressions
 
 Consider the following SpEL expression:
 
@@ -389,12 +389,12 @@ In addition to the transformations shown in the preceding table, you can use sta
 ----
 
 [[mongo.aggregation.examples]]
-==== Aggregation Framework Examples
+=== Aggregation Framework Examples
 
 The examples in this section demonstrate the usage patterns for the MongoDB Aggregation Framework with Spring Data MongoDB.
 
 [[mongo.aggregation.examples.example1]]
-===== Aggregation Framework Example 1
+==== Aggregation Framework Example 1
 
 In this introductory example, we want to aggregate a list of tags to get the occurrence count of a particular tag from a MongoDB collection (called `tags`) sorted by the occurrence count in descending order. This example demonstrates the usage of grouping, sorting, projections (selection), and unwinding (result splitting).
 
@@ -435,7 +435,7 @@ The preceding listing uses the following algorithm:
 Note that the input collection is explicitly specified as the `tags` parameter to the `aggregate` Method. If the name of the input collection is not specified explicitly, it is derived from the input class passed as the first parameter to the `newAggreation` method.
 
 [[mongo.aggregation.examples.example2]]
-===== Aggregation Framework Example 2
+==== Aggregation Framework Example 2
 
 This example is based on the https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state[Largest and Smallest Cities by State] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return the smallest and largest cities by population for each state by using the aggregation framework. This example demonstrates grouping, sorting, and projections (selection).
 
@@ -501,7 +501,7 @@ The preceding listings use the following algorithm:
 Note that we derive the name of the input collection from the `ZipInfo` class passed as the first parameter to the `newAggregation` method.
 
 [[mongo.aggregation.examples.example3]]
-===== Aggregation Framework Example 3
+==== Aggregation Framework Example 3
 
 This example is based on the https://docs.mongodb.org/manual/tutorial/aggregation-examples/#states-with-populations-over-10-million[States with Populations Over 10 Million] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return all states with a population greater than 10 million, using the aggregation framework. This example demonstrates grouping, sorting, and matching (filtering).
 
@@ -537,7 +537,7 @@ The preceding listings use the following algorithm:
 Note that we derive the name of the input collection from the `ZipInfo` class passed as first parameter to the `newAggregation` method.
 
 [[mongo.aggregation.examples.example4]]
-===== Aggregation Framework Example 4
+==== Aggregation Framework Example 4
 
 This example demonstrates the use of simple arithmetic operations in the projection operation.
 
@@ -571,7 +571,7 @@ List<Document> resultList = result.getMappedResults();
 Note that we derive the name of the input collection from the `Product` class passed as first parameter to the `newAggregation` method.
 
 [[mongo.aggregation.examples.example5]]
-===== Aggregation Framework Example 5
+==== Aggregation Framework Example 5
 
 This example demonstrates the use of simple arithmetic operations derived from SpEL Expressions in the projection operation.
 
@@ -605,7 +605,7 @@ List<Document> resultList = result.getMappedResults();
 ----
 
 [[mongo.aggregation.examples.example6]]
-===== Aggregation Framework Example 6
+==== Aggregation Framework Example 6
 
 This example demonstrates the use of complex arithmetic operations derived from SpEL Expressions in the projection operation.
 
@@ -639,7 +639,7 @@ List<Document> resultList = result.getMappedResults();
 Note that we can also refer to other fields of the document within the SpEL expression.
 
 [[mongo.aggregation.examples.example7]]
-===== Aggregation Framework Example 7
+==== Aggregation Framework Example 7
 
 This example uses conditional projection. It is derived from the https://docs.mongodb.com/manual/reference/operator/aggregation/cond/[$cond reference documentation].
 

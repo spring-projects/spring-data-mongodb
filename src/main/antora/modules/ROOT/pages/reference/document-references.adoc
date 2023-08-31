@@ -1,5 +1,5 @@
 [[mapping-usage-references]]
-=== Using DBRefs
+= Using DBRefs
 
 The mapping framework does not have to store child objects embedded within the document.
 You can also store them separately and use a `DBRef` to refer to that document.
@@ -53,7 +53,7 @@ CAUTION: Lazy loading may require class proxies, that in turn, might need access
 For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
 
 [[mapping-usage.document-references]]
-=== Using Document References
+= Using Document References
 
 Using `@DocumentReference` offers a flexible way of referencing entities in MongoDB.
 While the goal is the same as when using <<mapping-usage-references,DBRefs>>, the store representation is different.

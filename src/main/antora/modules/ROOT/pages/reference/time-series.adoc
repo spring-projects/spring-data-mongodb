@@ -1,5 +1,5 @@
 [[time-series]]
-== Time Series
+= Time Series
 
 MongoDB 5.0 introduced https://docs.mongodb.com/manual/core/timeseries-collections/[Time Series] collections that are optimized to efficiently store documents over time such as measurements or events.
 Those collections need to be created as such before inserting any data.

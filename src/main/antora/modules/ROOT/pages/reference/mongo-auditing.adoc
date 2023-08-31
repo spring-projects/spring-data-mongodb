@@ -1,5 +1,5 @@
 [[mongo.auditing]]
-== General Auditing Configuration for MongoDB
+= General Auditing Configuration for MongoDB
 
 Since Spring Data MongoDB 1.4, auditing can be enabled by annotating a configuration class with the `@EnableMongoAuditing` annotation, as the following example shows:
 
