@@ -1961,7 +1961,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	@Override
-	public <S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
+	public <T> Mono<UpdateResult> replace(Query query, T replacement, ReplaceOptions options, String collectionName) {
+
+		Assert.notNull(replacement, "Replacement must not be null");
+		return replace(query, (Class<T>) ClassUtils.getUserClass(replacement), replacement, options, collectionName);
+	}
+
+	protected <S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
 			String collectionName) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);

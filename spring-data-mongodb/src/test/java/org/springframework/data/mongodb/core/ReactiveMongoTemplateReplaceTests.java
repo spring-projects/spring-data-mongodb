@@ -128,7 +128,7 @@ public class ReactiveMongoTemplateReplaceTests {
 	void replacesExistingDocumentWithRawDocMappingQueryAgainstDomainType() {
 
 		Mono<UpdateResult> result = template.replace(query(where("name").is("Central Perk Cafe")), Restaurant.class,
-				Document.parse("{ 'r-name' : 'Central Pork Cafe', 'Borough' : 'Manhattan' }"), ReplaceOptions.none());
+				Document.parse("{ 'r-name' : 'Central Pork Cafe', 'Borough' : 'Manhattan' }"), ReplaceOptions.none(), template.getCollectionName(Restaurant.class));
 
 		result.as(StepVerifier::create).consumeNextWith(it -> {
 			assertThat(it.getMatchedCount()).isEqualTo(1);

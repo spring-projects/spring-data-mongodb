@@ -1668,8 +1668,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
-	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
-	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 4.2
 	 */
 	default <T> Mono<UpdateResult> replace(Query query, T replacement, String collectionName) {
@@ -1708,48 +1706,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 4.2
 	 */
-	default <T> Mono<UpdateResult> replace(Query query, T replacement, ReplaceOptions options, String collectionName) {
-
-		Assert.notNull(replacement, "Replacement must not be null");
-		return replace(query, (Class<T>) ClassUtils.getUserClass(replacement), replacement, options, collectionName);
-	}
-
-	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
-	 * document taking {@link ReplaceOptions} into account.
-	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document. The query may
-	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
-	 *          to use. Must not be {@literal null}.
-	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
-	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
-	 *          from. Must not be {@literal null}.
-	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
-	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
-	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
-	 * @since 4.2
-	 */
-	default <S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options) {
-		return replace(query, entityType, replacement, options, getCollectionName(ClassUtils.getUserClass(entityType)));
-	}
-
-	/**
-	 * Replace a single document matching the {@link Criteria} of given {@link Query} with the {@code replacement}
-	 * document taking {@link ReplaceOptions} into account.
-	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document. The query may
-	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
-	 *          to use. Must not be {@literal null}.
-	 * @param entityType the type used for mapping the {@link Query} to domain type fields. Must not be {@literal null}.
-	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
-	 * @param collectionName the collection to query. Must not be {@literal null}.
-	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
-	 * @since 4.2
-	 */
-	<S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
-			String collectionName);
+	<T> Mono<UpdateResult> replace(Query query, T replacement, ReplaceOptions options, String collectionName);
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a stream of objects of the specified
