@@ -1,0 +1,290 @@
+[[mongo.reactive.repositories]]
+= Reactive MongoDB repositories
+
+This chapter describes the specialties for reactive repository support for MongoDB. This chapter builds on the core repository support explained in <<repositories>>. You should have a sound understanding of the basic concepts explained there.
+
+[[mongo.reactive.repositories.libraries]]
+== Reactive Composition Libraries
+
+The reactive space offers various reactive composition libraries. The most common libraries are https://github.com/ReactiveX/RxJava[RxJava] and https://projectreactor.io/[Project Reactor].
+
+Spring Data MongoDB is built on top of the https://mongodb.github.io/mongo-java-driver-reactivestreams/[MongoDB Reactive Streams] driver, to provide maximal interoperability by relying on the https://www.reactive-streams.org/[Reactive Streams] initiative. Static APIs, such as `ReactiveMongoOperations`, are provided by using Project Reactor's `Flux` and `Mono` types. Project Reactor offers various adapters to convert reactive wrapper types  (`Flux` to `Observable` and vice versa), but conversion can easily clutter your code.
+
+Spring Data's Repository abstraction is a dynamic API, mostly defined by you and your requirements as you declare query methods. Reactive MongoDB repositories can be implemented by using either RxJava or Project Reactor wrapper types by extending from one of the following library-specific repository interfaces:
+
+* `ReactiveCrudRepository`
+* `ReactiveSortingRepository`
+* `RxJava2CrudRepository`
+* `RxJava2SortingRepository`
+* `RxJava3CrudRepository`
+* `RxJava3SortingRepository`
+
+Spring Data converts reactive wrapper types behind the scenes so that you can stick to your favorite composition library.
+
+[[mongo.reactive.repositories.usage]]
+== Usage
+
+To access domain entities stored in a MongoDB database, you can use our sophisticated repository support that eases implementing those quite significantly. To do so, create an interface similar for your repository. Before you can do that, though, you need an entity, such as the entity defined in the following example:
+
+.Sample `Person` entity
+====
+[source,java]
+----
+public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}
+----
+====
+
+Note that the entity defined in the preceding example has a property named `id` of type `String`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types.
+Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+
+The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
+
+.Basic repository interface to persist Person entities
+====
+[source]
+----
+public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, String> {
+
+  Flux<Person> findByFirstname(String firstname);                                   <1>
+
+  Flux<Person> findByFirstname(Publisher<String> firstname);                        <2>
+
+  Flux<Person> findByFirstnameOrderByLastname(String firstname, Pageable pageable); <3>
+
+  Mono<Person> findByFirstnameAndLastname(String firstname, String lastname);       <4>
+
+  Mono<Person> findFirstByLastname(String lastname);                                <5>
+}
+----
+<1> The method shows a query for all people with the given `lastname`. The query is derived by parsing the method name for constraints that can be concatenated with `And` and `Or`. Thus, the method name results in a query expression of `{"lastname" : lastname}`.
+<2> The method shows a query for all people with the given `firstname` once the `firstname` is emitted by the given `Publisher`.
+<3> Use `Pageable` to pass offset and sorting parameters to the database.
+<4> Find a single entity for the given criteria. It completes with `IncorrectResultSizeDataAccessException` on non-unique results.
+<5> Unless <4>, the first entity is always emitted even if the query yields more result documents.
+====
+
+For Java configuration, use the `@EnableReactiveMongoRepositories` annotation. The annotation carries the same attributes as the namespace element. If no base package is configured, the infrastructure scans the package of the annotated configuration class.
+
+NOTE: MongoDB uses two different drivers for imperative (synchronous/blocking) and reactive (non-blocking) data access. You must create a connection by using the Reactive Streams driver to provide the required infrastructure for Spring Data's Reactive MongoDB support. Consequently, you must provide a separate configuration for MongoDB's Reactive Streams driver. Note that your application operates on two different connections if you use reactive and blocking Spring Data MongoDB templates and repositories.
+
+The following listing shows how to use Java configuration for a repository:
+
+.Java configuration for repositories
+====
+[source,java]
+----
+@Configuration
+@EnableReactiveMongoRepositories
+class ApplicationConfig extends AbstractReactiveMongoConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "e-store";
+  }
+
+  @Override
+  public MongoClient reactiveMongoClient() {
+    return MongoClients.create();
+  }
+
+  @Override
+  protected String getMappingBasePackage() {
+    return "com.oreilly.springdata.mongodb";
+  }
+}
+----
+====
+
+Because our domain repository extends `ReactiveSortingRepository`, it provides you with CRUD operations as well as methods for sorted access to the entities. Working with the repository instance is a matter of dependency injecting it into a client, as the following example shows:
+
+.Sorted access to Person entities
+====
+[source,java]
+----
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration
+class PersonRepositoryTests {
+
+    @Autowired ReactivePersonRepository repository;
+
+    @Test
+    public void sortsElementsCorrectly() {
+      Flux<Person> persons = repository.findAll(Sort.by(new Order(ASC, "lastname")));
+    }
+}
+----
+====
+
+WARNING: The `Page` return type (as in `Mono<Page>`) is not supported by reactive repositories.
+
+It is possible to use `Pageable` in derived finder methods, to pass on `sort`, `limit` and `offset` parameters to the query to reduce load and network traffic.
+The returned `Flux` will only emit data within the declared range.
+
+.Limit and Offset with reactive repositories
+====
+[source,java]
+----
+Pageable page = PageRequest.of(1, 10, Sort.by("lastname"));
+Flux<Person> persons = repository.findByFirstnameOrderByLastname("luke", page);
+----
+====
+
+[[mongo.reactive.repositories.features]]
+== Features
+
+Spring Data's Reactive MongoDB support comes with a reduced feature set compared to the blocking <<mongo.repositories,MongoDB Repositories>>.
+
+It supports the following features:
+
+* Query Methods using <<mongodb.repositories.queries,String queries and Query Derivation>>
+* <<mongodb.reactive.repositories.queries.geo-spatial>>
+* <<mongodb.repositories.queries.delete>>
+* <<mongodb.repositories.queries.json-based>>
+* <<mongodb.repositories.queries.full-text>>
+* <<mongodb.reactive.repositories.queries.type-safe>>
+* <<projections>>
+
+[[mongodb.reactive.repositories.queries.geo-spatial]]
+=== Geo-spatial Repository Queries
+
+As you saw earlier in "`<<mongodb.reactive.repositories.queries.geo-spatial>>`", a few keywords trigger geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification, as the next few examples show.
+
+The following example shows how to define a `near` query that finds all persons with a given distance of a given point:
+
+.Advanced `Near` queries
+====
+[source,java]
+----
+interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+  // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+  Flux<Person> findByLocationNear(Point location, Distance distance);
+}
+----
+====
+
+Adding a `Distance` parameter to the query method allows restricting results to those within the given distance. If the `Distance` was set up containing a `Metric`, we transparently use `$nearSphere` instead of `$code`, as the following example shows:
+
+.Using `Distance` with `Metrics`
+====
+[source,java]
+----
+Point point = new Point(43.7, 48.8);
+Distance distance = new Distance(200, Metrics.KILOMETERS);
+… = repository.findByLocationNear(point, distance);
+// {'location' : {'$nearSphere' : [43.7, 48.8], '$maxDistance' : 0.03135711885774796}}
+----
+====
+
+NOTE: Reactive Geo-spatial repository queries support the domain type and `GeoResult<T>` results within a reactive wrapper type. `GeoPage` and `GeoResults` are not supported as they contradict the deferred result approach with pre-calculating the average distance. Howevery, you can still pass in a `Pageable` argument to page results yourself.
+
+Using a `Distance` with a `Metric` causes a `$nearSphere` (instead of a plain `$near`) clause to be added. Beyond that, the actual distance gets calculated according to the `Metrics` used.
+
+(Note that `Metric` does not refer to metric units of measure. It could be miles rather than kilometers. Rather, `metric` refers to the concept of a system of measurement, regardless of which system you use.)
+
+NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of `$nearSphere` operator.
+
+==== Geo-near Queries
+
+Spring Data MongoDB supports geo-near queries, as the following example shows:
+
+[source,java]
+----
+interface PersonRepository extends ReactiveMongoRepository<Person, String>  {
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  Flux<GeoResult<Person>> findByLocationNear(Point location);
+
+  // No metric: {'geoNear' : 'person', 'near' : [x, y], maxDistance : distance }
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance,
+  //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
+  Flux<GeoResult<Person>> findByLocationNear(Point location, Distance distance);
+
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'minDistance' : min,
+  //          'maxDistance' : max, 'distanceMultiplier' : metric.multiplier,
+  //          'spherical' : true }
+  Flux<GeoResult<Person>> findByLocationNear(Point location, Distance min, Distance max);
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  Flux<GeoResult<Person>> findByLocationNear(Point location);
+}
+----
+
+[[mongodb.reactive.repositories.queries.type-safe]]
+=== Type-safe Query Methods
+
+Reactive MongoDB repository support integrates with the http://www.querydsl.com/[Querydsl] project, which provides a way to perform type-safe queries.
+
+[quote, Querydsl Team]
+Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API.
+
+It provides the following features:
+
+* Code completion in the IDE (all properties, methods, and operations can be expanded in your favorite Java IDE).
+* Almost no syntactically invalid queries allowed (type-safe on all levels).
+* Domain types and properties can be referenced safely -- no strings involved!
+* Adapts better to refactoring changes in domain types.
+* Incremental query definition is easier.
+
+See the http://www.querydsl.com/static/querydsl/latest/reference/html/[Querydsl documentation] for how to bootstrap your environment for APT-based code generation using Maven or Ant.
+
+The Querydsl repository support lets you write and run queries, such as the following:
+
+[source,java]
+----
+QPerson person = QPerson.person;
+
+Flux<Person> result = repository.findAll(person.address.zipCode.eq("C0123"));
+----
+
+`QPerson` is a class that is generated by the Java annotation post-processing tool. It is a `Predicate` that lets you write type-safe queries.
+Note that there are no strings in the query other than the `C0123` value.
+
+You can use the generated `Predicate` class by using the `ReactiveQuerydslPredicateExecutor` interface, which the following listing shows:
+
+.The Gateway to Reactive Querydsl - The ReactiveQuerydslPredicateExecutor
+====
+[source,java]
+----
+interface ReactiveQuerydslPredicateExecutor<T> {
+
+	Mono<T> findOne(Predicate predicate);
+
+	Flux<T> findAll(Predicate predicate);
+
+	Flux<T> findAll(Predicate predicate, Sort sort);
+
+	Flux<T> findAll(Predicate predicate, OrderSpecifier<?>... orders);
+
+	Flux<T> findAll(OrderSpecifier<?>... orders);
+
+	Mono<Long> count(Predicate predicate);
+
+	Mono<Boolean> exists(Predicate predicate);
+}
+----
+====
+
+To use this in your repository implementation, add it to the list of repository interfaces from which your interface inherits, as the following example shows:
+
+.Reactive Querydsl Respository Declaration
+====
+[source,java]
+----
+interface PersonRepository extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
+
+   // additional query methods go here
+}
+----
+====
+
+NOTE: Please note that joins (DBRef's) are not supported with Reactive MongoDB support.

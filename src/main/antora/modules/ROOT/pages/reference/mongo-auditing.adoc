@@ -1,0 +1,49 @@
+[[mongo.auditing]]
+== General Auditing Configuration for MongoDB
+
+Since Spring Data MongoDB 1.4, auditing can be enabled by annotating a configuration class with the `@EnableMongoAuditing` annotation, as the following example shows:
+
+====
+.Java
+[source,java,role="primary"]
+----
+@Configuration
+@EnableMongoAuditing
+class Config {
+
+  @Bean
+  public AuditorAware<AuditableUser> myAuditorProvider() {
+      return new AuditorAwareImpl();
+  }
+}
+----
+
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:auditing mapping-context-ref="customMappingContext" auditor-aware-ref="yourAuditorAwareImpl"/>
+----
+====
+
+If you expose a bean of type `AuditorAware` to the `ApplicationContext`, the auditing infrastructure picks it up automatically and uses it to determine the current user to be set on domain types. If you have multiple implementations registered in the `ApplicationContext`, you can select the one to be used by explicitly setting the `auditorAwareRef` attribute of `@EnableMongoAuditing`.
+
+To enable auditing, leveraging a reactive programming model, use the `@EnableReactiveMongoAuditing` annotation. +
+If you expose a bean of type `ReactiveAuditorAware` to the `ApplicationContext`, the auditing infrastructure picks it up automatically and uses it to determine the current user to be set on domain types. If you have multiple implementations registered in the `ApplicationContext`, you can select the one to be used by explicitly setting the `auditorAwareRef` attribute of `@EnableReactiveMongoAuditing`.
+
+.Activating reactive auditing using JavaConfig
+====
+[source,java]
+----
+@Configuration
+@EnableReactiveMongoAuditing
+class Config {
+
+  @Bean
+  public ReactiveAuditorAware<AuditableUser> myAuditorProvider() {
+      return new AuditorAwareImpl();
+  }
+}
+----
+====
+
+

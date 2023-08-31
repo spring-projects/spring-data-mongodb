@@ -1,0 +1,10 @@
+[[upgrading.data-mongo]]
+= Upgrading
+
+include::{spring-data-commons-docs}/upgrade.adoc[leveloffset=+1]
+
+[[upgrading.3-4]]
+== Upgrading MongoDB Drivers
+
+Spring Data MongoDB 4.x requires the MongoDB Java Driver 4.8.x +
+To learn more about driver versions please visit the https://www.mongodb.com/docs/drivers/java/sync/current/upgrade/[MongoDB Documentation].

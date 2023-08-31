@@ -1,0 +1,739 @@
+[[mongo.repositories]]
+= MongoDB Repositories
+
+[[mongo-repo-intro]]
+This chapter points out the specialties for repository support for MongoDB.
+This chapter builds on the core repository support explained in <<repositories>>.
+You should have a sound understanding of the basic concepts explained there.
+
+[[mongo-repo-usage]]
+== Usage
+
+To access domain entities stored in a MongoDB, you can use our sophisticated repository support that eases implementation quite significantly.
+To do so, create an interface for your repository, as the following example shows:
+
+.Sample Person entity
+====
+[source,java]
+----
+public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}
+----
+====
+
+Note that the domain type shown in the preceding example has a property named `id` of type `String`.The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID.
+Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types.
+Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+
+Now that we have a domain object, we can define an interface that uses it, as follows:
+
+.Basic repository interface to persist Person entities
+====
+[source]
+----
+public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
+
+  // additional custom query methods go here
+}
+----
+====
+
+Right now this interface serves only to provide type information, but we can add additional methods to it later.
+
+To start using the repository, use the `@EnableMongoRepositories` annotation.
+That annotation carries the same attributes as the namespace element.
+If no base package is configured, the infrastructure scans the package of the annotated configuration class.
+The following example shows how to configuration your application to use MongoDB repositories:
+
+====
+.Java
+[source,java,role="primary"]
+----
+@Configuration
+@EnableMongoRepositories("com.acme.*.repositories")
+class ApplicationConfig extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "e-store";
+  }
+
+  @Override
+  protected String getMappingBasePackage() {
+    return "com.acme.*.repositories";
+  }
+}
+----
+
+.XML
+[source,xml,role="secondary"]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    https://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/data/mongo
+    https://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
+
+  <mongo:mongo-client id="mongoClient" />
+
+  <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+    <constructor-arg ref="mongoClient" />
+    <constructor-arg value="databaseName" />
+  </bean>
+
+  <mongo:repositories base-package="com.acme.*.repositories" />
+
+</beans>
+----
+====
+
+This namespace element causes the base packages to be scanned for interfaces that extend `MongoRepository` and create Spring beans for each one found.
+By default, the repositories get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
+
+Because our domain repository extends `PagingAndSortingRepository`, it provides you with CRUD operations as well as methods for paginated and sorted access to the entities.
+Working with the repository instance is just a matter of dependency injecting it into a client .
+Consequently, accessing the second page of `Person` objects at a page size of 10 would resemble the following code:
+
+.Paging access to Person entities
+====
+[source,java]
+----
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration
+class PersonRepositoryTests {
+
+    @Autowired PersonRepository repository;
+
+    @Test
+    void readsFirstPageCorrectly() {
+
+      Page<Person> persons = repository.findAll(PageRequest.of(0, 10));
+      assertThat(persons.isFirstPage()).isTrue();
+    }
+}
+----
+====
+
+The preceding example creates an application context with Spring's unit test support, which performs annotation-based dependency injection into test cases.
+Inside the test method, we use the repository to query the datastore.
+We hand the repository a `PageRequest` instance that requests the first page of `Person` objects at a page size of 10.
+
+[[mongodb.repositories.queries]]
+== Query Methods
+
+Most of the data access operations you usually trigger on a repository result in a query being executed against the MongoDB databases.
+Defining such a query is a matter of declaring a method on the repository interface, as the following example shows:
+
+.PersonRepository with query methods
+====
+[source,java]
+----
+public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
+
+    List<Person> findByLastname(String lastname);                      <1>
+
+    Page<Person> findByFirstname(String firstname, Pageable pageable); <2>
+
+    Person findByShippingAddresses(Address address);                   <3>
+
+    Person findFirstByLastname(String lastname)                        <4>
+
+    Stream<Person> findAllBy();                                        <5>
+}
+----
+
+<1> The `findByLastname` method shows a query for all people with the given last name.
+The query is derived by parsing the method name for constraints that can be concatenated with `And` and `Or`.
+Thus, the method name results in a query expression of `{"lastname" : lastname}`.
+<2> Applies pagination to a query.
+You can equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and Spring Data automatically pages the query accordingly.
+<3> Shows that you can query based on properties that are not primitive types.
+Throws `IncorrectResultSizeDataAccessException` if more than one match is found.
+<4> Uses the `First` keyword to restrict the query to only the first result.
+Unlike <3>, this method does not throw an exception if more than one match is found.
+<5> Uses a Java 8 `Stream` that reads and converts individual elements while iterating the stream.
+====
+
+NOTE: We do not support referring to parameters that are mapped as `DBRef` in the domain class.
+
+The following table shows the keywords that are supported for query methods:
+
+[cols="1,2,3",options="header"]
+.Supported keywords for query methods
+|===
+| Keyword
+| Sample
+| Logical result
+
+| `After`
+| `findByBirthdateAfter(Date date)`
+| `{"birthdate" : {"$gt" : date}}`
+
+| `GreaterThan`
+| `findByAgeGreaterThan(int age)`
+| `{"age" : {"$gt" : age}}`
+
+| `GreaterThanEqual`
+| `findByAgeGreaterThanEqual(int age)`
+| `{"age" : {"$gte" : age}}`
+
+| `Before`
+| `findByBirthdateBefore(Date date)`
+| `{"birthdate" : {"$lt" : date}}`
+
+| `LessThan`
+| `findByAgeLessThan(int age)`
+| `{"age" : {"$lt" : age}}`
+
+| `LessThanEqual`
+| `findByAgeLessThanEqual(int age)`
+| `{"age" : {"$lte" : age}}`
+
+| `Between`
+| `findByAgeBetween(int from, int to)` +
+`findByAgeBetween(Range<Integer> range)`
+| `{"age" : {"$gt" : from, "$lt" : to}}` +
+lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
+
+| `In`
+| `findByAgeIn(Collection ages)`
+| `{"age" : {"$in" : [ages...]}}`
+
+| `NotIn`
+| `findByAgeNotIn(Collection ages)`
+| `{"age" : {"$nin" : [ages...]}}`
+
+| `IsNotNull`, `NotNull`
+| `findByFirstnameNotNull()`
+| `{"firstname" : {"$ne" : null}}`
+
+| `IsNull`, `Null`
+| `findByFirstnameNull()`
+| `{"firstname" : null}`
+
+| `Like`, `StartingWith`, `EndingWith`
+| `findByFirstnameLike(String name)`
+| `{"firstname" : name} (name as regex)`
+
+| `NotLike`, `IsNotLike`
+| `findByFirstnameNotLike(String name)`
+| `{"firstname" : { "$not" : name }} (name as regex)`
+
+| `Containing` on String
+| `findByFirstnameContaining(String name)`
+| `{"firstname" : name} (name as regex)`
+
+| `NotContaining` on String
+| `findByFirstnameNotContaining(String name)`
+| `{"firstname" : { "$not" : name}} (name as regex)`
+
+| `Containing` on Collection
+| `findByAddressesContaining(Address address)`
+| `{"addresses" : { "$in" : address}}`
+
+| `NotContaining` on Collection
+| `findByAddressesNotContaining(Address address)`
+| `{"addresses" : { "$not" : { "$in" : address}}}`
+
+| `Regex`
+| `findByFirstnameRegex(String firstname)`
+| `{"firstname" : {"$regex" : firstname }}`
+
+| `(No keyword)`
+| `findByFirstname(String name)`
+| `{"firstname" : name}`
+
+| `Not`
+| `findByFirstnameNot(String name)`
+| `{"firstname" : {"$ne" : name}}`
+
+| `Near`
+| `findByLocationNear(Point point)`
+| `{"location" : {"$near" : [x,y]}}`
+
+| `Near`
+| `findByLocationNear(Point point, Distance max)`
+| `{"location" : {"$near" : [x,y], "$maxDistance" : max}}`
+
+| `Near`
+| `findByLocationNear(Point point, Distance min, Distance max)`
+| `{"location" : {"$near" : [x,y], "$minDistance" : min, "$maxDistance" : max}}`
+
+| `Within`
+| `findByLocationWithin(Circle circle)`
+| `{"location" : {"$geoWithin" : {"$center" : [ [x, y], distance]}}}`
+
+| `Within`
+| `findByLocationWithin(Box box)`
+| `{"location" : {"$geoWithin" : {"$box" : [ [x1, y1], x2, y2]}}}`
+
+| `IsTrue`, `True`
+| `findByActiveIsTrue()`
+| `{"active" : true}`
+
+| `IsFalse`,  `False`
+| `findByActiveIsFalse()`
+| `{"active" : false}`
+
+| `Exists`
+| `findByLocationExists(boolean exists)`
+| `{"location" : {"$exists" : exists }}`
+
+| `IgnoreCase`
+| `findByUsernameIgnoreCase(String username)`
+| `{"username" : {"$regex" : "^username$", "$options" : "i" }}`
+|===
+
+NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
+
+[[mongodb.repositories.queries.hint]]
+=== Repository Index Hints
+
+The `@Hint` annotation allows to override MongoDB's default index selection and forces the database to use the specified index instead.
+
+.Example of index hints
+====
+[source,java]
+----
+@Hint("lastname-idx")                                          <1>
+List<Person> findByLastname(String lastname);
+
+@Query(value = "{ 'firstname' : ?0 }", hint = "firstname-idx") <2>
+List<Person> findByFirstname(String firstname);
+----
+
+<1> Use the index with name `lastname-idx`.
+<2> The `@Query` annotation defines the `hint` alias which is equivalent to adding the `@Hint` annotation.
+====
+
+[[mongodb.repositories.queries.update]]
+=== Repository Update Methods
+
+You can also use the keywords in the preceding table to create queries that identify matching documents for running updates on them.
+The actual update action is defined by the `@Update` annotation on the method itself, as the following listing shows.
+Note that the naming schema for derived queries starts with `find`.
+Using `update` (as in `updateAllByLastname(...)`) is allowed only in combination with `@Query`.
+
+The update is applied to *all* matching documents and it is *not* possible to limit the scope by passing in a `Page` or by using any of the <<repositories.limit-query-result,limiting keywords>>.
+The return type can be either `void` or a _numeric_ type, such as `long`, to hold the number of modified documents.
+
+.Update Methods
+====
+[source,java]
+----
+public interface PersonRepository extends CrudRepository<Person, String> {
+
+  @Update("{ '$inc' : { 'visits' : 1 } }")
+  long findAndIncrementVisitsByLastname(String lastname); <1>
+
+  @Update("{ '$inc' : { 'visits' : ?1 } }")
+  void findAndIncrementVisitsByLastname(String lastname, int increment); <2>
+
+  @Update("{ '$inc' : { 'visits' : ?#{[1]} } }")
+  long findAndIncrementVisitsUsingSpELByLastname(String lastname, int increment); <3>
+
+  @Update(pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+  void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment); <4>
+
+  @Update("{ '$push' : { 'shippingAddresses' : ?1 } }")
+  long findAndPushShippingAddressByEmail(String email, Address address); <5>
+
+  @Query("{ 'lastname' : ?0 }")
+  @Update("{ '$inc' : { 'visits' : ?1 } }")
+  void updateAllByLastname(String lastname, int increment); <6>
+}
+----
+
+<1> The filter query for the update is derived from the method name.
+The update is "`as is`" and does not bind any parameters.
+<2> The actual increment value is defined by the `increment` method argument that is bound to the `?1` placeholder.
+<3> Use the Spring Expression Language (SpEL) for parameter binding.
+<4> Use the `pipeline` attribute to issue <<mongo-template.aggregation-update,aggregation pipeline updates>>.
+<5> The update may contain complex objects.
+<6> Combine a <<mongodb.repositories.queries.json-based,string based query>> with an update.
+====
+
+WARNING: Repository updates do not emit persistence nor mapping lifecycle events.
+
+[[mongodb.repositories.queries.delete]]
+=== Repository Delete Queries
+
+The keywords in the preceding table can be used in conjunction with `delete…By` or `remove…By` to create queries that delete matching documents.
+
+.`Delete…By` Query
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  List <Person> deleteByLastname(String lastname);      <1>
+
+  Long deletePersonByLastname(String lastname);         <2>
+
+  @Nullable
+  Person deleteSingleByLastname(String lastname);       <3>
+
+  Optional<Person> deleteByBirthdate(Date birthdate);   <4>
+}
+----
+
+<1> Using a return type of `List` retrieves and returns all matching documents before actually deleting them.
+<2> A numeric return type directly removes the matching documents, returning the total number of documents removed.
+<3> A single domain type result retrieves and removes the first matching document.
+<4> Same as in 3 but wrapped in an `Optional` type.
+====
+
+[[mongodb.repositories.queries.geo-spatial]]
+=== Geo-spatial Repository Queries
+
+As you saw in the preceding table of keywords, a few keywords trigger geo-spatial operations within a MongoDB query.
+The `Near` keyword allows some further modification, as the next few examples show.
+
+The following example shows how to define a `near` query that finds all persons with a given distance of a given point:
+
+.Advanced `Near` queries
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+  List<Person> findByLocationNear(Point location, Distance distance);
+}
+----
+====
+
+Adding a `Distance` parameter to the query method allows restricting results to those within the given distance.
+If the `Distance` was set up containing a `Metric`, we transparently use `$nearSphere` instead of `$code`, as the following example shows:
+
+.Using `Distance` with `Metrics`
+====
+[source,java]
+----
+Point point = new Point(43.7, 48.8);
+Distance distance = new Distance(200, Metrics.KILOMETERS);
+… = repository.findByLocationNear(point, distance);
+// {'location' : {'$nearSphere' : [43.7, 48.8], '$maxDistance' : 0.03135711885774796}}
+----
+====
+
+Using a `Distance` with a `Metric` causes a `$nearSphere` (instead of a plain `$near`) clause to be added.
+Beyond that, the actual distance gets calculated according to the `Metrics` used.
+
+(Note that `Metric` does not refer to metric units of measure.
+It could be miles rather than kilometers.
+Rather, `metric` refers to the concept of a system of measurement, regardless of which system you use.)
+
+NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of the `$nearSphere` operator.
+
+==== Geo-near Queries
+
+Spring Data MongoDb supports geo-near queries, as the following example shows:
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  GeoResults<Person> findByLocationNear(Point location);
+
+  // No metric: {'geoNear' : 'person', 'near' : [x, y], maxDistance : distance }
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance,
+  //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
+  GeoResults<Person> findByLocationNear(Point location, Distance distance);
+
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'minDistance' : min,
+  //          'maxDistance' : max, 'distanceMultiplier' : metric.multiplier,
+  //          'spherical' : true }
+  GeoResults<Person> findByLocationNear(Point location, Distance min, Distance max);
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  GeoResults<Person> findByLocationNear(Point location);
+}
+----
+
+[[mongodb.repositories.queries.json-based]]
+=== MongoDB JSON-based Query Methods and Field Restriction
+
+By adding the `org.springframework.data.mongodb.repository.Query` annotation to your repository query methods, you can specify a MongoDB JSON query string to use instead of having the query be derived from the method name, as the following example shows:
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query("{ 'firstname' : ?0 }")
+  List<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+
+The `?0` placeholder lets you substitute the value from the method arguments into the JSON query string.
+
+NOTE: `String` parameter values are escaped during the binding process, which means that it is not possible to add MongoDB specific operators through the argument.
+
+You can also use the filter property to restrict the set of properties that is mapped into the Java object, as the following example shows:
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname' : 1, 'lastname' : 1}")
+  List<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+
+The query in the preceding example returns only the `firstname`, `lastname` and `Id` properties of the `Person` objects.
+The `age` property, a `java.lang.Integer`, is not set and its value is therefore null.
+
+[[mongodb.repositories.queries.sort]]
+=== Sorting Query Method results
+
+MongoDB repositories allow various approaches to define sorting order.
+Let's take a look at the following example:
+
+.Sorting Query Results
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  List<Person> findByFirstnameSortByAgeDesc(String firstname); <1>
+
+  List<Person> findByFirstname(String firstname, Sort sort);   <2>
+
+  @Query(sort = "{ age : -1 }")
+  List<Person> findByFirstname(String firstname);              <3>
+
+  @Query(sort = "{ age : -1 }")
+  List<Person> findByLastname(String lastname, Sort sort);     <4>
+}
+----
+
+<1> Static sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` for the sort parameter.
+<2> Dynamic sorting using a method argument.
+`Sort.by(DESC, "age")` creates `{ age : -1 }` for the sort parameter.
+<3> Static sorting via `Query` annotation.
+Sort parameter applied as stated in the `sort` attribute.
+<4> Default sorting via `Query` annotation combined with dynamic one via a method argument. `Sort.unsorted()`
+results in `{ age : -1 }`.
+Using `Sort.by(ASC, "age")` overrides the defaults and creates `{ age : 1 }`.
+`Sort.by
+(ASC, "firstname")` alters the default and results in `{ age : -1, firstname : 1 }`.
+====
+
+[[mongodb.repositories.queries.json-spel]]
+=== JSON-based Queries with SpEL Expressions
+
+Query strings and field definitions can be used together with SpEL expressions to create dynamic queries at runtime.
+SpEL expressions can provide predicate values and can be used to extend predicates with subdocuments.
+
+Expressions expose method arguments through an array that contains all the arguments.
+The following query uses `[0]`
+to declare the predicate value for `lastname` (which is equivalent to the `?0` parameter binding):
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query("{'lastname': ?#{[0]} }")
+  List<Person> findByQueryWithExpression(String param0);
+}
+----
+
+Expressions can be used to invoke functions, evaluate conditionals, and construct values.
+SpEL expressions used in conjunction with JSON reveal a side-effect, because Map-like declarations inside of SpEL read like JSON, as the following example shows:
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
+  List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
+}
+----
+
+WARNING: SpEL in query strings can be a powerful way to enhance queries.
+However, they can also accept a broad range of unwanted arguments.
+Make sure to sanitize strings before passing them to the query to avoid creation of vulnerabilities or unwanted changes to your query.
+
+Expression support is extensible through the Query SPI: `org.springframework.data.repository.query.spi.EvaluationContextExtension`.
+The Query SPI can contribute properties and functions and can customize the root object.
+Extensions are retrieved from the application context at the time of SpEL evaluation when the query is built.
+The following example shows how to use `EvaluationContextExtension`:
+
+[source,java]
+----
+public class SampleEvaluationContextExtension extends EvaluationContextExtensionSupport {
+
+  @Override
+  public String getExtensionId() {
+    return "security";
+  }
+
+  @Override
+  public Map<String, Object> getProperties() {
+    return Collections.singletonMap("principal", SecurityContextHolder.getCurrent().getPrincipal());
+  }
+}
+----
+
+NOTE: Bootstrapping `MongoRepositoryFactory` yourself is not application context-aware and requires further configuration to pick up Query SPI extensions.
+
+NOTE: Reactive query methods can make use of `org.springframework.data.spel.spi.ReactiveEvaluationContextExtension`.
+
+[[mongodb.repositories.queries.type-safe]]
+=== Type-safe Query Methods
+
+MongoDB repository support integrates with the http://www.querydsl.com/[Querydsl] project, which provides a way to perform type-safe queries.
+To quote from the project description, "Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API." It provides the following features:
+
+* Code completion in the IDE (all properties, methods, and operations can be expanded in your favorite Java IDE).
+* Almost no syntactically invalid queries allowed (type-safe on all levels).
+* Domain types and properties can be referenced safely -- no strings involved!
+* Adapts better to refactoring changes in domain types.
+* Incremental query definition is easier.
+
+See the http://www.querydsl.com/static/querydsl/latest/reference/html/[QueryDSL documentation] for how to bootstrap your environment for APT-based code generation using Maven or Ant.
+
+QueryDSL lets you write queries such as the following:
+
+[source,java]
+----
+QPerson person = new QPerson("person");
+List<Person> result = repository.findAll(person.address.zipCode.eq("C0123"));
+
+Page<Person> page = repository.findAll(person.lastname.contains("a"),
+                                       PageRequest.of(0, 2, Direction.ASC, "lastname"));
+----
+
+`QPerson` is a class that is generated by the Java annotation post-processing tool.
+It is a `Predicate` that lets you write type-safe queries.
+Notice that there are no strings in the query other than the `C0123` value.
+
+You can use the generated `Predicate` class by using the `QuerydslPredicateExecutor` interface, which the following listing shows:
+
+[source,java]
+----
+public interface QuerydslPredicateExecutor<T> {
+
+  T findOne(Predicate predicate);
+
+  List<T> findAll(Predicate predicate);
+
+  List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders);
+
+  Page<T> findAll(Predicate predicate, Pageable pageable);
+
+  Long count(Predicate predicate);
+}
+----
+
+To use this in your repository implementation, add it to the list of repository interfaces from which your interface inherits, as the following example shows:
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>, QuerydslPredicateExecutor<Person> {
+
+   // additional query methods go here
+}
+----
+
+[[mongodb.repositories.queries.full-text]]
+=== Full-text Search Queries
+
+MongoDB's full-text search feature is store-specific and, therefore, can be found on `MongoRepository` rather than on the more general `CrudRepository`.
+We need a document with a full-text index (see "`<<mapping-usage-indexes.text-index>>`" to learn how to create a full-text index).
+
+Additional methods on `MongoRepository` take `TextCriteria` as an input parameter.
+In addition to those explicit methods, it is also possible to add a `TextCriteria`-derived repository method.
+The criteria are added as an additional `AND` criteria.
+Once the entity contains a `@TextScore`-annotated property, the document's full-text score can be retrieved.
+Furthermore, the `@TextScore` annotated also makes it possible to sort by the document's score, as the following example shows:
+
+[source,java]
+----
+@Document
+class FullTextDocument {
+
+  @Id String id;
+  @TextIndexed String title;
+  @TextIndexed String content;
+  @TextScore Float score;
+}
+
+interface FullTextRepository extends Repository<FullTextDocument, String> {
+
+  // Execute a full-text search and define sorting dynamically
+  List<FullTextDocument> findAllBy(TextCriteria criteria, Sort sort);
+
+  // Paginate over a full-text search result
+  Page<FullTextDocument> findAllBy(TextCriteria criteria, Pageable pageable);
+
+  // Combine a derived query with a full-text search
+  List<FullTextDocument> findByTitleOrderByScoreDesc(String title, TextCriteria criteria);
+}
+
+
+Sort sort = Sort.by("score");
+TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny("spring", "data");
+List<FullTextDocument> result = repository.findAllBy(criteria, sort);
+
+criteria = TextCriteria.forDefaultLanguage().matching("film");
+Page<FullTextDocument> page = repository.findAllBy(criteria, PageRequest.of(1, 1, sort));
+List<FullTextDocument> result = repository.findByTitleOrderByScoreDesc("mongodb", criteria);
+----
+
+include::../{spring-data-commons-docs}/repository-projections.adoc[leveloffset=+2]
+
+include::./mongo-repositories-aggregation.adoc[]
+
+[[mongodb.repositories.misc.cdi-integration]]
+== CDI Integration
+
+Instances of the repository interfaces are usually created by a container, and Spring is the most natural choice when working with Spring Data.
+As of version 1.3.0, Spring Data MongoDB ships with a custom CDI extension that lets you use the repository abstraction in CDI environments.
+The extension is part of the JAR.
+To activate it, drop the Spring Data MongoDB JAR into your classpath.
+You can now set up the infrastructure by implementing a CDI Producer for the `MongoTemplate`, as the following example shows:
+
+[source,java]
+----
+class MongoTemplateProducer {
+
+    @Produces
+    @ApplicationScoped
+    public MongoOperations createMongoTemplate() {
+
+        MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database");
+        return new MongoTemplate(factory);
+    }
+}
+----
+
+The Spring Data MongoDB CDI extension picks up the `MongoTemplate` available as a CDI bean and creates a proxy for a Spring Data repository whenever a bean of a repository type is requested by the container.
+Thus, obtaining an instance of a Spring Data repository is a matter of declaring an `@Inject`-ed property, as the following example shows:
+
+[source,java]
+----
+class RepositoryClient {
+
+  @Inject
+  PersonRepository repository;
+
+  public void businessMethod() {
+    List<Person> people = repository.findAll();
+  }
+}
+----
