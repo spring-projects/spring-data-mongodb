@@ -811,7 +811,7 @@ class QueryOperations {
 
 			Document mappedQuery = super.getMappedQuery(domainType);
 
-			if (multi && update.isIsolated() && !mappedQuery.containsKey("$isolated")) {
+			if (multi && update != null && update.isIsolated() && !mappedQuery.containsKey("$isolated")) {
 				mappedQuery.put("$isolated", 1);
 			}
 
@@ -907,7 +907,7 @@ class QueryOperations {
 			if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 
 				String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
-				if (!update.modifies(versionFieldName)) {
+				if (update != null && !update.modifies(versionFieldName)) {
 					update.inc(versionFieldName);
 				}
 			}
