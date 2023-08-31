@@ -12,6 +12,7 @@ changes from all collections within the database. When subscribing to a database
  suitable type for the event type as conversion might not apply correctly across different entity types.
 In doubt, use `Document`.
 
+[[change-streams-with-messagelistener]]
 === Change Streams with `MessageListener`
 
 Listening to a https://docs.mongodb.com/manual/tutorial/change-streams-example/[Change Stream by using a Sync Driver] creates a long running, blocking task that needs to be delegated to a separate component.
@@ -49,6 +50,7 @@ Errors while processing are passed on to an `org.springframework.util.ErrorHandl
 Please use `register(request, body, errorHandler)` to provide additional functionality.
 ====
 
+[[reactive-change-streams]]
 === Reactive Change Streams
 
 Subscribing to Change Streams with the reactive API is a more natural approach to work with streams. Still, the essential building blocks, such as `ChangeStreamOptions`, remain the same. The following example shows how to use Change Streams emitting ``ChangeStreamEvent``s:
@@ -67,6 +69,7 @@ Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(User.class) <
 <3> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to the requested domain type from (2).
 ====
 
+[[resuming-change-streams]]
 === Resuming Change Streams
 
 Change Streams can be resumed and resume emitting events where you left. To resume the stream, you need to supply either a resume

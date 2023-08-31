@@ -742,6 +742,7 @@ mongoTemplate.save(sample);
 
 Spring Data MongoDB stores the type information as the last field for the actual root class as well as for the nested type (because it is complex and a subtype of `Contact`).So, if you now use `mongoTemplate.findAll(Object.class, "sample")`, you can find out that the document stored is a `Sample` instance.You can also find out that the value property is actually a `Person`.
 
+[[customizing-type-mapping]]
 ==== Customizing Type Mapping
 
 If you want to avoid writing the entire Java class name as type information but would rather like to use a key, you can use the `@TypeAlias` annotation on the entity class.If you need to customize the mapping even more, have a look at the `TypeInformationMapper` interface.An instance of that interface can be configured at the `DefaultMongoTypeMapper`, which can, in turn, be configured on `MappingMongoConverter`.The following example shows how to define a type alias for an entity:
@@ -780,6 +781,7 @@ class AppConfig extends AbstractMongoClientConfiguration {
 ----
 ====
 
+[[configuring-custom-type-mapping]]
 ==== Configuring Custom Type Mapping
 
 The following example shows how to configure a custom `MongoTypeMapper` in `MappingMongoConverter`:
@@ -1862,6 +1864,7 @@ The next major version (`4.0`) will register both, ``JsonDeserializer``s and ``J
 
 Since version 2.6 of MongoDB, you can run full-text queries by using the `$text` operator. Methods and operations specific to full-text queries are available in `TextQuery` and `TextCriteria`. When doing full text search, see the https://docs.mongodb.org/manual/reference/operator/query/text/#behavior[MongoDB reference] for its behavior and limitations.
 
+[[full-text-search]]
 ==== Full-text Search
 
 Before you can actually use full-text search, you must set up the search index correctly. See <<mapping-usage-indexes.text-index,Text Index>> for more detail on how to create index structures. The following example shows how to set up a full-text search:

@@ -437,6 +437,7 @@ Rather, `metric` refers to the concept of a system of measurement, regardless of
 
 NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of the `$nearSphere` operator.
 
+[[geo-near-queries]]
 ==== Geo-near Queries
 
 Spring Data MongoDb supports geo-near queries, as the following example shows:

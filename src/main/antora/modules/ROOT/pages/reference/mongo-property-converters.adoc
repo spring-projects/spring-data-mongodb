@@ -84,10 +84,12 @@ WARNING: Dot notation (such as `registerConverter(Person.class, "address.street"
 The preceding sections outlined the purpose an overall structure of `PropertyValueConverters`.
 This section focuses on MongoDB specific aspects.
 
+[[mongovalueconverter-and-mongoconversioncontext]]
 ==== MongoValueConverter and MongoConversionContext
 
 `MongoValueConverter` offers a pre-typed `PropertyValueConverter` interface that uses `MongoConversionContext`.
 
+[[mongocustomconversions-configuration]]
 ==== MongoCustomConversions configuration
 
 By default, `MongoCustomConversions` can handle declarative value converters, depending on the configured `PropertyValueConverterFactory`.

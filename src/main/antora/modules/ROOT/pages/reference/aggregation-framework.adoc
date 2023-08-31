@@ -56,6 +56,7 @@ Note that, if you provide an input class as the first parameter to the `newAggre
 
 The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
 
+[[aggregation-stages]]
 ==== Aggregation Stages
 
 * addFields - `AddFieldsOperation`
@@ -102,6 +103,7 @@ Aggregation.stage("""
 ----
 ====
 
+[[aggregation-operators]]
 ==== Aggregation Operators
 
 * Group/Accumulator Aggregation Operators
@@ -213,6 +215,7 @@ More examples for project operations can be found in the `AggregationTests` clas
 
 As of Version 3.4, MongoDB supports faceted classification by using the Aggregation Framework. A faceted classification uses semantic categories (either general or subject-specific) that are combined to create the full classification entry. Documents flowing through the aggregation pipeline are classified into buckets. A multi-faceted classification enables various aggregations on the same set of input documents, without needing to retrieve the input documents multiple times.
 
+[[buckets]]
 ==== Buckets
 
 Bucket operations categorize incoming documents into groups, called buckets, based on a specified expression and bucket boundaries. Bucket operations require a grouping field or a grouping expression. You can define them by using the `bucket()` and `bucketAuto()` methods of the `Aggregate` class. `BucketOperation` and `BucketAutoOperation` can expose accumulations based on aggregation expressions for input documents. You can extend the bucket operation with additional parameters through a fluent API by using the `with…()` methods and the `andOutput(String)` method. You can alias the operation by using the `as(String)` method. Each bucket is represented as a document in the output.
@@ -259,6 +262,7 @@ To create output fields in buckets, bucket operations can use `AggregationExpres
 Note that further details regarding bucket expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
 https://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
 
+[[multi-faceted-aggregation]]
 ==== Multi-faceted Aggregation
 
 Multiple aggregation pipelines can be used to create multi-faceted aggregations that characterize data across multiple dimensions (or facets) within a single aggregation stage. Multi-faceted aggregations provide multiple filters and categorizations to guide data browsing and analysis. A common implementation of faceting is how many online retailers provide ways to narrow down search results by applying filters on product price, manufacturer, size, and other factors.
@@ -315,6 +319,7 @@ A sort by count operation is equivalent to the following BSON (Binary JSON):
 
 We support the use of SpEL expressions in projection expressions through the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This feature lets you define the desired expression as a SpEL expression. On running a query, the SpEL expression is translated into a corresponding MongoDB projection expression part. This arrangement makes it much easier to express complex calculations.
 
+[[complex-calculations-with-spel-expressions]]
 ===== Complex Calculations with SpEL expressions
 
 Consider the following SpEL expression:

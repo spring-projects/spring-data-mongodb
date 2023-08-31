@@ -6,6 +6,7 @@ This chapter coverts major changes and outlines migration steps.
 [[migrating-2.x-to-3.0]]
 == 2.x to 3.0
 
+[[dependency-changes]]
 === Dependency Changes
 
 * `org.mongodb:mongo-java-driver` (uber jar) got replaced with:
@@ -16,6 +17,7 @@ This chapter coverts major changes and outlines migration steps.
 The change in dependencies allows usage of the reactive support without having to pull the synchronous driver.
 NOTE: The new sync driver does no longer support `com.mongodb.DBObject`. Please use `org.bson.Document` instead.
 
+[[signature-changes]]
 === Signature Changes
 
 * `MongoTemplate` no longer supports `com.mongodb.MongoClient` and `com.mongodb.MongoClientOptions`.
@@ -23,6 +25,7 @@ Please use `com.mongodb.client.MongoClient` and `com.mongodb.MongoClientSettings
 
 In case you're using `AbstractMongoConfiguration` please switch to `AbstractMongoClientConfiguration`.
 
+[[namespace-changes]]
 === Namespace Changes
 
 The switch to `com.mongodb.client.MongoClient` requires an update of your configuration XML if you have one.
