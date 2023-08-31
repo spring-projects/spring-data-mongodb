@@ -1,0 +1,12 @@
+[[mongo-template.commands]]
+= Running Commands
+
+You can get at the MongoDB driver's `MongoDatabase.runCommand( )` method by using the `executeCommand(…)` methods on `MongoTemplate`. These methods also perform exception translation into Spring's `DataAccessException` hierarchy.
+
+[[mongo-template.commands.execution]]
+== Methods for running commands
+
+* `Document` *executeCommand* `(Document command)`: Run a MongoDB command.
+* `Document` *executeCommand* `(Document command, ReadPreference readPreference)`: Run a MongoDB command with the given nullable MongoDB `ReadPreference`.
+* `Document` *executeCommand* `(String jsonCommand)`: Run a MongoDB command expressed as a JSON string.
+

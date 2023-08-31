@@ -1,0 +1,11 @@
+[[mongo-template.querying]]
+= Methods for Querying for Documents
+
+The query methods need to specify the target type `T` that is returned, and they are overloaded with an explicit collection name for queries that should operate on a collection other than the one indicated by the return type. The following query methods let you find one or more documents:
+
+* *findAll*: Query for a list of objects of type `T` from the collection.
+* *findOne*: Map the results of an ad-hoc query on the collection to a single instance of an object of the specified type.
+* *findById*: Return an object of the given ID and target class.
+* *find*: Map the results of an ad-hoc query on the collection to a `List` of the specified type.
+* *findAndRemove*: Map the results of an ad-hoc query on the collection to a single instance of an object of the specified type. The first document that matches the query is returned and removed from the collection in the database.
+

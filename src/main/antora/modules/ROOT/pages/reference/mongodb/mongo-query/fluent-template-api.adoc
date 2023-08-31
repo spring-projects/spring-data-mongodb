@@ -1,0 +1,56 @@
+[[mongo.query.fluent-template-api]]
+= Fluent Template API
+
+The `MongoOperations` interface is one of the central components when it comes to more low-level interaction with MongoDB. It offers a wide range of methods covering needs from collection creation, index creation, and CRUD operations to more advanced functionality, such as Map-Reduce and aggregations.
+You can find multiple overloads for each method. Most of them cover optional or nullable parts of the API.
+
+`FluentMongoOperations` provides a more narrow interface for the common methods of `MongoOperations` and provides a more readable, fluent API.
+The entry points (`insert(…)`, `find(…)`, `update(…)`, and others) follow a natural naming schema based on the operation to be run. Moving on from the entry point, the API is designed to offer only context-dependent methods that lead to a terminating method that invokes the actual `MongoOperations` counterpart -- the `all` method in the case of the following example:
+
+====
+[source,java]
+----
+List<SWCharacter> all = ops.find(SWCharacter.class)
+  .inCollection("star-wars")                        <1>
+  .all();
+----
+<1> Skip this step if `SWCharacter` defines the collection with `@Document` or if you use the class name as the collection name, which is fine.
+====
+
+Sometimes, a collection in MongoDB holds entities of different types, such as a `Jedi` within a collection of `SWCharacters`.
+To use different types for `Query` and return value mapping, you can use `as(Class<?> targetType)` to map results differently, as the following example shows:
+
+====
+[source,java]
+----
+List<Jedi> all = ops.find(SWCharacter.class)    <1>
+  .as(Jedi.class)                               <2>
+  .matching(query(where("jedi").is(true)))
+  .all();
+----
+<1> The query fields are mapped against the `SWCharacter` type.
+<2> Resulting documents are mapped into `Jedi`.
+====
+
+TIP: You can directly apply <<projections>> to result documents by providing the target type via `as(Class<?>)`.
+
+NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required
+by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
+target type is a closed interface or DTO projection.
+
+WARNING: Projections must not be applied to <<mapping-usage-references,DBRefs>>.
+
+You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
+
+When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for running a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:
+
+====
+[source,java]
+----
+GeoResults<Jedi> results = mongoOps.query(SWCharacter.class)
+  .as(Jedi.class)
+  .near(alderaan) // NearQuery.near(-73.9667, 40.78).maxDis…
+  .all();
+----
+====
+

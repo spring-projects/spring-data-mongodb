@@ -1,0 +1,108 @@
+[[mongo-template]]
+= Introduction to `MongoTemplate`
+
+The `MongoTemplate` class, located in the `org.springframework.data.mongodb.core` package, is the central class of Spring's MongoDB support and provides a rich feature set for interacting with the database. The template offers convenience operations to create, update, delete, and query MongoDB documents and provides a mapping between your domain objects and MongoDB documents.
+
+NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
+
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface. Spring provides `MappingMongoConverter`, but you can also write your own converter. See "`<<mongo.custom-converters>>`" for more detailed information.
+
+The `MongoTemplate` class implements the interface `MongoOperations`. In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you can find methods such as `find`, `findAndModify`, `findAndReplace`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`. The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`. A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`. Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
+
+NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
+
+The default converter implementation used by `MongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions, as well as the use of mapping annotations, are explained in the "`<<mapping-chapter>>`" chapter.
+
+Another central feature of `MongoTemplate` is translation of exceptions thrown by the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. See "`<<mongo.exception>>`" for more information.
+
+`MongoTemplate` offers many convenience methods to help you easily perform common tasks. However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods. The `execute` callbacks gives you a reference to either a `com.mongodb.client.MongoCollection` or a `com.mongodb.client.MongoDatabase` object. See the <<mongo.executioncallback,"`Execution Callbacks`">> section for more information.
+
+The next section contains an example of how to work with the `MongoTemplate` in the context of the Spring container.
+
+[[mongo-template.instantiating]]
+== Instantiating `MongoTemplate`
+
+You can use the following configuration to create and register an instance of `MongoTemplate`, as the following example shows:
+
+.Registering a `com.mongodb.client.MongoClient` object and enabling Spring's exception translation support
+====
+.Java
+[source,java,role="primary"]
+----
+@Configuration
+class AppConfig {
+
+  @Bean
+  MongoClient mongoClient() {
+      return MongoClients.create("mongodb://localhost:27017");
+  }
+
+  @Bean
+  MongoTemplate mongoTemplate(MongoClient mongoClient) {
+      return new MongoTemplate(mongoClient, "geospatial");
+  }
+}
+----
+
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:mongo-client host="localhost" port="27017"/>
+
+<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+  <constructor-arg ref="mongoClient"/>
+  <constructor-arg name="databaseName" value="geospatial"/>
+</bean>
+----
+====
+
+There are several overloaded constructors of `MongoTemplate`:
+
+* `MongoTemplate(MongoClient mongo, String databaseName)`: Takes the `MongoClient` object and the default database name to operate against.
+* `MongoTemplate(MongoDatabaseFactory mongoDbFactory)`: Takes a MongoDbFactory object that encapsulated the `MongoClient` object, database name, and username and password.
+* `MongoTemplate(MongoDatabaseFactory mongoDbFactory, MongoConverter mongoConverter)`: Adds a `MongoConverter` to use for mapping.
+
+
+Other optional properties that you might like to set when creating a `MongoTemplate` are the default `WriteResultCheckingPolicy`, `WriteConcern`, and `ReadPreference` properties.
+
+NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
+
+[[mongo-template.writeresultchecking]]
+== `WriteResultChecking` Policy
+
+When in development, it is handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully when, in fact, the database was not modified according to your expectations. You can set the `WriteResultChecking` property of `MongoTemplate` to one of the following values: `EXCEPTION` or `NONE`, to either throw an `Exception` or do nothing, respectively. The default is to use a `WriteResultChecking` value of `NONE`.
+
+[[mongo-template.writeconcern]]
+== `WriteConcern`
+
+If it has not yet been specified through the driver at a higher level (such as `com.mongodb.client.MongoClient`), you can set the `com.mongodb.WriteConcern` property that the `MongoTemplate` uses for write operations. If the `WriteConcern` property is not set, it defaults to the one set in the MongoDB driver's DB or Collection setting.
+
+[[mongo-template.writeconcernresolver]]
+== `WriteConcernResolver`
+
+For more advanced cases where you want to set different `WriteConcern` values on a per-operation basis (for remove, update, insert, and save operations), a strategy interface called `WriteConcernResolver` can be configured on `MongoTemplate`. Since `MongoTemplate` is used to persist POJOs, the `WriteConcernResolver` lets you create a policy that can map a specific POJO class to a `WriteConcern` value. The following listing shows the  `WriteConcernResolver` interface:
+
+[source,java]
+----
+public interface WriteConcernResolver {
+  WriteConcern resolve(MongoAction action);
+}
+----
+
+You can use the `MongoAction` argument to determine the `WriteConcern` value or use the value of the Template itself as a default. `MongoAction` contains the collection name being written to, the `java.lang.Class` of the POJO, the converted `Document`, the operation (`REMOVE`, `UPDATE`, `INSERT`, `INSERT_LIST`, or `SAVE`), and a few other pieces of contextual information. The following example shows two sets of classes getting different `WriteConcern` settings:
+
+[source]
+----
+private class MyAppWriteConcernResolver implements WriteConcernResolver {
+
+  public WriteConcern resolve(MongoAction action) {
+    if (action.getEntityClass().getSimpleName().contains("Audit")) {
+      return WriteConcern.NONE;
+    } else if (action.getEntityClass().getSimpleName().contains("Metadata")) {
+      return WriteConcern.JOURNAL_SAFE;
+    }
+    return action.getDefaultWriteConcern();
+  }
+}
+----
+

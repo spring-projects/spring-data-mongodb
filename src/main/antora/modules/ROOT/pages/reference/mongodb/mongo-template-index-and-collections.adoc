@@ -1,0 +1,86 @@
+[[mongo-template.index-and-collections]]
+= Index and Collection Management
+
+`MongoTemplate` provides a few methods for managing indexes and collections. These methods are collected into a helper interface called `IndexOperations`. You can access these operations by calling the `indexOps` method and passing in either the collection name or the `java.lang.Class` of your entity (the collection name is derived from the `.class`, either by name or from annotation metadata).
+
+The following listing shows the `IndexOperations` interface:
+
+[source,java]
+----
+public interface IndexOperations {
+
+  void ensureIndex(IndexDefinition indexDefinition);
+
+  void dropIndex(String name);
+
+  void dropAllIndexes();
+
+  void resetIndexCache();
+
+  List<IndexInfo> getIndexInfo();
+}
+----
+
+[[mongo-template.index-and-collections.index]]
+== Methods for Creating an Index
+
+You can create an index on a collection to improve query performance by using the MongoTemplate class, as the following example shows:
+
+[source,java]
+----
+mongoTemplate.indexOps(Person.class).ensureIndex(new Index().on("name",Order.ASCENDING));
+----
+
+`ensureIndex` makes sure that an index for the provided IndexDefinition exists for the collection.
+
+You can create standard, geospatial, and text indexes by using the `IndexDefinition`, `GeoSpatialIndex` and `TextIndexDefinition` classes. For example, given the `Venue` class defined in a previous section, you could declare a geospatial query, as the following example shows:
+
+[source,java]
+----
+mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
+----
+
+NOTE: `Index` and `GeospatialIndex` support configuration of <<mongo.collation,collations>>.
+
+[[mongo-template.index-and-collections.access]]
+== Accessing Index Information
+
+The `IndexOperations` interface has the `getIndexInfo` method that returns a list of `IndexInfo` objects. This list contains all the indexes defined on the collection. The following example defines an index on the `Person` class that has an `age` property:
+
+[source,java]
+----
+template.indexOps(Person.class).ensureIndex(new Index().on("age", Order.DESCENDING).unique());
+
+List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
+
+// Contains
+// [IndexInfo [fieldSpec={_id=ASCENDING}, name=_id_, unique=false, sparse=false],
+//  IndexInfo [fieldSpec={age=DESCENDING}, name=age_-1, unique=true, sparse=false]]
+----
+
+[[mongo-template.index-and-collections.collection]]
+== Methods for Working with a Collection
+
+The following example shows how to create a collection:
+
+.Working with collections by using `MongoTemplate`
+====
+[source,java]
+----
+MongoCollection<Document> collection = null;
+if (!mongoTemplate.getCollectionNames().contains("MyNewCollection")) {
+    collection = mongoTemplate.createCollection("MyNewCollection");
+}
+
+mongoTemplate.dropCollection("MyNewCollection");
+----
+====
+
+* *getCollectionNames*: Returns a set of collection names.
+* *collectionExists*: Checks to see if a collection with a given name exists.
+* *createCollection*: Creates an uncapped collection.
+* *dropCollection*: Drops the collection.
+* *getCollection*: Gets a collection by name, creating it if it does not exist.
+
+NOTE: Collection creation allows customization with `CollectionOptions` and supports <<mongo.collation,collations>>.
+

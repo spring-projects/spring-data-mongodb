@@ -1,0 +1,306 @@
+[[mongo.geo-json]]
+= GeoJSON Support
+
+MongoDB supports https://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
+
+[[mongo.geo-json.domain.classes]]
+== GeoJSON Types in Domain Classes
+
+Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
+
+====
+[source,java]
+----
+public class Store {
+
+	String id;
+
+	/**
+	 * location is stored in GeoJSON format.
+	 * {
+	 *   "type" : "Point",
+	 *   "coordinates" : [ x, y ]
+	 * }
+	 */
+	GeoJsonPoint location;
+}
+----
+====
+
+[TIP]
+====
+If the `coordinates` of a GeoJSON object represent _latitude_ and _longitude_ pairs, the _longitude_ goes first followed by _latitude_. +
+`GeoJsonPoint` therefore treats `getX()` as _longitude_ and `getY()` as _latitude_.
+====
+
+[[mongo.geo-json.query-methods]]
+== GeoJSON Types in Repository Query Methods
+
+Using GeoJSON types as repository query parameters forces usage of the `$geometry` operator when creating the query, as the following example shows:
+
+====
+[source,java]
+----
+public interface StoreRepository extends CrudRepository<Store, String> {
+
+	List<Store> findByLocationWithin(Polygon polygon);  <1>
+
+}
+
+/*
+ * {
+ *   "location": {
+ *     "$geoWithin": {
+ *       "$geometry": {
+ *         "type": "Polygon",
+ *         "coordinates": [
+ *           [
+ *             [-73.992514,40.758934],
+ *             [-73.961138,40.760348],
+ *             [-73.991658,40.730006],
+ *             [-73.992514,40.758934]
+ *           ]
+ *         ]
+ *       }
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <2>
+  new GeoJsonPolygon(
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006),
+    new Point(-73.992514, 40.758934)));                 <3>
+
+/*
+ * {
+ *   "location" : {
+ *     "$geoWithin" : {
+ *        "$polygon" : [ [-73.992514,40.758934] , [-73.961138,40.760348] , [-73.991658,40.730006] ]
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <4>
+  new Polygon(
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006)));
+----
+<1> Repository method definition using the commons type allows calling it with both the GeoJSON and the legacy format.
+<2> Use GeoJSON type to make use of `$geometry` operator.
+<3> Note that GeoJSON polygons need to define a closed ring.
+<4> Use the legacy format `$polygon` operator.
+====
+
+[[mongo.geo-json.metrics]]
+== Metrics and Distance calculation
+
+Then MongoDB `$geoNear` operator allows usage of a GeoJSON Point or legacy coordinate pairs.
+
+====
+[source,java]
+----
+NearQuery.near(new Point(-73.99171, 40.738868))
+----
+[source,json]
+----
+{
+  "$geoNear": {
+    //...
+    "near": [-73.99171, 40.738868]
+  }
+}
+----
+====
+====
+[source,java]
+----
+NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868))
+----
+[source,json]
+----
+{
+  "$geoNear": {
+    //...
+    "near": { "type": "Point", "coordinates": [-73.99171, 40.738868] }
+  }
+}
+
+----
+====
+
+Though syntactically different the server is fine accepting both no matter what format the target Document within the collection
+is using.
+
+WARNING: There is a huge difference in the distance calculation. Using the legacy format operates
+upon _Radians_ on an Earth like sphere, whereas the GeoJSON format uses _Meters_.
+
+To avoid a serious headache make sure to set the `Metric` to the desired unit of measure which ensures the
+distance to be calculated correctly.
+
+In other words:
+
+====
+Assume you've got 5 Documents like the ones below:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a5"),
+    "name" : "Penn Station",
+    "location" : { "type" : "Point", "coordinates" : [  -73.99408, 40.75057 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796ab"),
+    "name" : "Momofuku Milk Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.985839, 40.731698 ] }
+}
+----
+====
+
+Fetching all Documents within a 400 Meter radius from `[-73.99171, 40.738868]` would look like this using
+GeoJSON:
+
+.GeoNear with GeoJSON
+====
+[source,json]
+----
+{
+    "$geoNear": {
+        "maxDistance": 400, <1>
+        "num": 10,
+        "near": { type: "Point", coordinates: [-73.99171, 40.738868] },
+        "spherical":true, <2>
+        "key": "location",
+        "distanceField": "distance"
+    }
+}
+----
+Returning the following 3 Documents:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+    "distance" : 0.0 <3>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 69.3582262492474 <3>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 69.3582262492474 <3>
+}
+----
+<1> Maximum distance from center point in _Meters_.
+<2> GeoJSON always operates upon a sphere.
+<3> Distance from center point in _Meters_.
+====
+
+Now, when using legacy coordinate pairs one operates upon _Radians_ as discussed before. So we use `Metrics#KILOMETERS
+when constructing the `$geoNear` command. The `Metric` makes sure the distance multiplier is set correctly.
+
+.GeoNear with Legacy Coordinate Pairs
+====
+[source,json]
+----
+{
+    "$geoNear": {
+        "maxDistance": 0.0000627142377, <1>
+        "distanceMultiplier": 6378.137, <2>
+        "num": 10,
+        "near": [-73.99171, 40.738868],
+        "spherical":true, <3>
+        "key": "location",
+        "distanceField": "distance"
+    }
+}
+----
+Returning the 3 Documents just like the GeoJSON variant:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+    "distance" : 0.0 <4>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 0.0693586286032982 <4>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 0.0693586286032982 <4>
+}
+----
+<1> Maximum distance from center point in _Radians_.
+<2> The distance multiplier so we get _Kilometers_ as resulting distance.
+<3> Make sure we operate on a 2d_sphere index.
+<4> Distance from center point in _Kilometers_ - take it times 1000 to match _Meters_ of the GeoJSON variant.
+====
+
+[[mongo.geo-json.jackson-modules]]
+== GeoJSON Jackson Modules
+
+By using the <<core.web>>, Spring Data registers additional Jackson ``Modules``s to the `ObjectMapper` for de-/serializing common Spring Data domain types.
+Please refer to the <<core.web.basic.jackson-mappers>> section to learn more about the infrastructure setup of this feature.
+
+The MongoDB module additionally registers ``JsonDeserializer``s for the following GeoJSON types via its `GeoJsonConfiguration` exposing the `GeoJsonModule`.
+----
+org.springframework.data.mongodb.core.geo.GeoJsonPoint
+org.springframework.data.mongodb.core.geo.GeoJsonMultiPoint
+org.springframework.data.mongodb.core.geo.GeoJsonLineString
+org.springframework.data.mongodb.core.geo.GeoJsonMultiLineString
+org.springframework.data.mongodb.core.geo.GeoJsonPolygon
+org.springframework.data.mongodb.core.geo.GeoJsonMultiPolygon
+----
+
+[NOTE]
+====
+The `GeoJsonModule` only registers ``JsonDeserializer``s! +
+To equip the `ObjectMapper` with a symmetric set of ``JsonSerializer``s you need to either manually configure those for the `ObjectMapper` or provide a custom `SpringDataJacksonModules` configuration exposing  `GeoJsonModule.serializers()` as a Spring Bean.
+
+[source,java]
+----
+class GeoJsonConfiguration implements SpringDataJacksonModules {
+
+	@Bean
+	public Module geoJsonSerializers() {
+		return GeoJsonModule.serializers();
+	}
+}
+----
+====
+
+[WARNING]
+====
+The next major version (`4.0`) will register both, ``JsonDeserializer``s and ``JsonSerializer``s for GeoJSON types by default.
+====
+
