@@ -130,7 +130,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		public TerminatingReplace withOptions(ReplaceOptions options) {
 
 			FindAndReplaceOptions target = new FindAndReplaceOptions();
-			if(options.isUpsert()) {
+			if (options.isUpsert()) {
 				target.upsert();
 			}
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
@@ -188,11 +188,13 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 		@Override
 		public UpdateResult replaceFirst() {
-			if(replacement != null) {
-				return template.replace(query, domainType, replacement, findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
+			if (replacement != null) {
+				return template.replace(query, domainType, replacement,
+						findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 			}
 
-			return template.replace(query, domainType, update, findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
+			return template.replace(query, domainType, update,
+					findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

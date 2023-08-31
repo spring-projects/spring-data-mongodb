@@ -89,8 +89,7 @@ public interface ExecutableUpdateOperation {
 
 	/**
 	 * Trigger <a href="https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/">replaceOne</a>
-	 * execution by calling one of the terminating methods./** Trigger replace execution by calling one of the terminating
-	 * methods.
+	 * execution by calling one of the terminating methods.
 	 *
 	 * @author Christoph Strobl
 	 * @since 4.2
@@ -99,7 +98,7 @@ public interface ExecutableUpdateOperation {
 
 		/**
 		 * Find first and replace/upsert.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		UpdateResult replaceFirst();
