@@ -256,6 +256,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public boolean isReadable() {
+		return delegate.isReadable();
+	}
+
+	@Override
 	public boolean isImmutable() {
 		return delegate.isImmutable();
 	}
