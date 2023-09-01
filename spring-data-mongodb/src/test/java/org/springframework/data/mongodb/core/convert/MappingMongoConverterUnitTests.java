@@ -2350,6 +2350,24 @@ class MappingMongoConverterUnitTests {
 				.isEqualTo(expected);
 	}
 
+	@Test // GH-4491
+	void readUnwrappedTypeWithComplexValueUsingConstructor() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("stringValue", "hello").append("address",
+				new org.bson.Document("s", "1007 Mountain Drive").append("city", "Gotham"));
+
+		WithUnwrappedConstructor target = converter.read(WithUnwrappedConstructor.class, source);
+
+		Address expected = new Address();
+		expected.city = "Gotham";
+		expected.street = "1007 Mountain Drive";
+
+		assertThat(target.embeddableValue.stringValue) //
+				.isEqualTo("hello");
+		assertThat(target.embeddableValue.address) //
+				.isEqualTo(expected);
+	}
+
 	@Test // DATAMONGO-1902
 	void writeUnwrappedTypeWithComplexValue() {
 
@@ -3372,6 +3390,18 @@ class MappingMongoConverterUnitTests {
 		String id;
 
 		@Unwrapped.Nullable EmbeddableType embeddableValue;
+	}
+
+	static class WithUnwrappedConstructor {
+
+		private final String id;
+
+		private final @Unwrapped.Empty EmbeddableType embeddableValue;
+
+		public WithUnwrappedConstructor(String id, EmbeddableType embeddableValue) {
+			this.id = id;
+			this.embeddableValue = embeddableValue;
+		}
 	}
 
 	static class WithPrefixedNullableUnwrapped {

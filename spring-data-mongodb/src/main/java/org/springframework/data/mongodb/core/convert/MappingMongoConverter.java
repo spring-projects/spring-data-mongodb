@@ -17,7 +17,16 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -41,7 +50,13 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.TypeMapper;
-import org.springframework.data.mapping.*;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.InstanceCreatorMetadata;
+import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.Parameter;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -1961,6 +1976,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
+			ConversionContext propertyContext = context.forProperty(property);
+
 			if (property.isDbReference() && property.getDBRef().lazy()) {
 
 				Object rawRefValue = accessor.get(property);
@@ -1977,9 +1994,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (property.isDocumentReference()) {
+
 				return (T) dbRefResolver.resolveReference(property,
-					new DocumentReferenceSource(accessor.getDocument(), accessor.get(property)),
-					referenceLookupDelegate, context::convert);
+						new DocumentReferenceSource(accessor.getDocument(), accessor.get(property)), referenceLookupDelegate,
+						context::convert);
+			}
+
+			if (property.isUnwrapped()) {
+
+				return (T) readUnwrapped(propertyContext, accessor, property,
+						mappingContext.getRequiredPersistentEntity(property));
 			}
 
 			return super.getPropertyValue(property);
