@@ -507,7 +507,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		S instance = instantiator.createInstance(entity, provider);
 
 		if (entity.requiresPropertyPopulation()) {
-
 			return populateProperties(context, entity, documentAccessor, evaluator, instance);
 		}
 
@@ -586,14 +585,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			ConversionContext propertyContext = context.forProperty(prop);
 			MongoDbPropertyValueProvider valueProviderToUse = valueProvider.withContext(propertyContext);
 
-			if (prop.isAssociation() && !entity.isCreatorArgument(prop)) {
+			if (prop.isAssociation()) {
 
 				if (callback == null) {
 					callback = getDbRefResolverCallback(propertyContext, documentAccessor, evaluator);
 				}
 
-				readAssociation(prop.getRequiredAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback,
-						propertyContext, evaluator);
+				Object value = readAssociation(prop.getRequiredAssociation(), documentAccessor, dbRefProxyHandler, callback,
+						propertyContext);
+
+				if (value != null) {
+					accessor.setProperty(prop, value);
+				}
 				continue;
 			}
 
@@ -608,17 +611,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			if (prop.isAssociation()) {
-
-				if (callback == null) {
-					callback = getDbRefResolverCallback(propertyContext, documentAccessor, evaluator);
-				}
-
-				readAssociation(prop.getRequiredAssociation(), accessor, documentAccessor, dbRefProxyHandler, callback,
-						propertyContext, evaluator);
-				continue;
-			}
-
 			accessor.setProperty(prop, valueProviderToUse.getPropertyValue(prop));
 		}
 	}
@@ -630,9 +622,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				(prop, bson, e, path) -> MappingMongoConverter.this.getValueInternal(context, prop, bson, e));
 	}
 
-	private void readAssociation(Association<MongoPersistentProperty> association, PersistentPropertyAccessor<?> accessor,
+	@Nullable
+	private Object readAssociation(Association<MongoPersistentProperty> association,
 			DocumentAccessor documentAccessor, DbRefProxyHandler handler, DbRefResolverCallback callback,
-			ConversionContext context, SpELExpressionEvaluator evaluator) {
+			ConversionContext context) {
 
 		MongoPersistentProperty property = association.getInverse();
 		Object value = documentAccessor.get(property);
@@ -645,30 +638,27 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversionService.canConvert(DocumentPointer.class, property.getActualType())) {
 
 				if (value == null) {
-					return;
+					return null;
 				}
 
 				DocumentPointer<?> pointer = () -> value;
 
 				// collection like special treatment
-				accessor.setProperty(property, conversionService.convert(pointer, property.getActualType()));
+				return conversionService.convert(pointer, property.getActualType());
 			} else {
 
-				accessor.setProperty(property,
-						dbRefResolver.resolveReference(property,
+				return dbRefResolver.resolveReference(property,
 								new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)),
-								referenceLookupDelegate, context.forProperty(property)::convert));
+						referenceLookupDelegate, context.forProperty(property)::convert);
 			}
-			return;
 		}
 
 		if (value == null) {
-			return;
+			return null;
 		}
 
 		if (value instanceof DBRef dbref) {
-			accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
-			return;
+			return dbRefResolver.resolveDbRef(property, dbref, callback, handler);
 		}
 
 		/*
@@ -679,18 +669,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (value instanceof Document document) {
 			if (property.isMap()) {
 				if (document.isEmpty() || peek(document.values()) instanceof DBRef) {
-					accessor.setProperty(property, dbRefResolver.resolveDbRef(property, null, callback, handler));
+					return dbRefResolver.resolveDbRef(property, null, callback, handler);
 				} else {
-					accessor.setProperty(property, readMap(context, document, property.getTypeInformation()));
+					return readMap(context, document, property.getTypeInformation());
 				}
 			} else {
-				accessor.setProperty(property, read(property.getActualType(), document));
+				return read(property.getActualType(), document);
 			}
 		} else if (value instanceof Collection<?> collection && !collection.isEmpty()
 				&& peek(collection) instanceof Document) {
-			accessor.setProperty(property, readCollectionOrArray(context, collection, property.getTypeInformation()));
+			return readCollectionOrArray(context, collection, property.getTypeInformation());
 		} else {
-			accessor.setProperty(property, dbRefResolver.resolveDbRef(property, null, callback, handler));
+			return dbRefResolver.resolveDbRef(property, null, callback, handler);
 		}
 	}
 
@@ -1978,32 +1968,24 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			ConversionContext propertyContext = context.forProperty(property);
 
-			if (property.isDbReference() && property.getDBRef().lazy()) {
-
-				Object rawRefValue = accessor.get(property);
-				if (rawRefValue == null) {
-					return null;
-				}
+			if (property.isAssociation()) {
 
 				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(accessor.getDocument(), context.getPath(),
 						evaluator, (prop, bson, evaluator, path) -> MappingMongoConverter.this.getValueInternal(context, prop, bson,
 								evaluator));
 
-				DBRef dbref = rawRefValue instanceof DBRef dbRef ? dbRef : null;
-				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
-			}
-
-			if (property.isDocumentReference()) {
-
-				return (T) dbRefResolver.resolveReference(property,
-						new DocumentReferenceSource(accessor.getDocument(), accessor.get(property)), referenceLookupDelegate,
-						context::convert);
+				return (T) readAssociation(property.getRequiredAssociation(), accessor, dbRefProxyHandler, callback,
+						propertyContext);
 			}
 
 			if (property.isUnwrapped()) {
 
 				return (T) readUnwrapped(propertyContext, accessor, property,
 						mappingContext.getRequiredPersistentEntity(property));
+			}
+
+			if (!accessor.hasValue(property)) {
+				return null;
 			}
 
 			return super.getPropertyValue(property);
