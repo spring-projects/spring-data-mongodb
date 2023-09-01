@@ -1893,6 +1893,25 @@ public class AggregationTests {
 		assertThat(categorizeByYear).hasSize(3);
 	}
 
+	@Test // GH-4473
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "7.0")
+	void percentileShouldBeAppliedCorrectly() {
+
+		mongoTemplate.insert(new DATAMONGO788(15, 16));
+		mongoTemplate.insert(new DATAMONGO788(17, 18));
+
+		Aggregation agg = Aggregation.newAggregation(
+				project().and(ArithmeticOperators.valueOf("x").percentile(0.9).and("y"))
+				.as("ninetiethPercentile"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
+
+		// MongoDB server returns $percentile as an array of doubles
+		List<Document> rawResults = (List<Document>) result.getRawResults().get("results");
+		assertThat((List<Object>) rawResults.get(0).get("ninetiethPercentile")).containsExactly(16.0);
+		assertThat((List<Object>) rawResults.get(1).get("ninetiethPercentile")).containsExactly(18.0);
+	}
+
 	@Test // DATAMONGO-1986
 	void runMatchOperationCriteriaThroughQueryMapperForTypedAggregation() {
 

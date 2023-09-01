@@ -2241,6 +2241,26 @@ public class ProjectionOperationUnitTests {
 				"{ $project: { \"author\" : 1,  \"myArray\" : [ \"$ti_t_le\", \"plain - string\", { \"$sum\" : [\"$ti_t_le\", 10] } ] } } ] }"));
 	}
 
+	@Test // GH-4473
+	void shouldRenderPercentileAggregationExpression() {
+
+		Document agg = project()
+			.and(ArithmeticOperators.valueOf("score").percentile(0.3, 0.9)).as("scorePercentiles")
+			.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { scorePercentiles: { $percentile: { input: \"$score\", method: \"approximate\", p: [0.3, 0.9] } }} } }"));
+	}
+
+	@Test // GH-4473
+	void shouldRenderPercentileWithMultipleArgsAggregationExpression() {
+
+		Document agg = project()
+			.and(ArithmeticOperators.valueOf("scoreOne").percentile(0.4).and("scoreTwo")).as("scorePercentiles")
+			.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { scorePercentiles: { $percentile: { input: [\"$scoreOne\", \"$scoreTwo\"], method: \"approximate\", p: [0.4] } }} } }"));
+	}
+
 	private static Document extractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
