@@ -353,7 +353,7 @@ public abstract class AbstractEncryptionTestBase {
 		template.save(p3);
 
 		template.execute(Person.class, collection -> {
-			collection.find(new Document()).forEach(it -> System.out.println(it.toJson()));
+			collection.find(new Document());
 			return null;
 		});
 
