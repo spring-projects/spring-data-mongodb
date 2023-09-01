@@ -1963,6 +1963,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
+			ConversionContext propertyContext = context.forProperty(property);
+
 			if (property.isDbReference() && property.getDBRef().lazy()) {
 
 				Object rawRefValue = accessor.get(property);
@@ -1979,9 +1981,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (property.isDocumentReference()) {
+
 				return (T) dbRefResolver.resolveReference(property,
-					new DocumentReferenceSource(accessor.getDocument(), accessor.get(property)),
-					referenceLookupDelegate, context::convert);
+						new DocumentReferenceSource(accessor.getDocument(), accessor.get(property)), referenceLookupDelegate,
+						context::convert);
+			}
+
+			if (property.isUnwrapped()) {
+
+				return (T) readUnwrapped(propertyContext, accessor, property,
+						mappingContext.getRequiredPersistentEntity(property));
 			}
 
 			return super.getPropertyValue(property);
