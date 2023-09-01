@@ -1,6 +1,0 @@
-[[mongo.examples-repo]]
-= Examples Repository
-:page-section-summary-toc: 1
-
-There is a https://github.com/spring-projects/spring-data-examples[GitHub repository with several examples] that you can download and play around with to get a feel for how the library works.
-

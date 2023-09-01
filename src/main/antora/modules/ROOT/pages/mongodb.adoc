@@ -2,16 +2,21 @@
 = MongoDB Support
 :page-section-summary-toc: 1
 
-Spring Data support for Apache Cassandra contains a wide range of features:
+Spring Data support for MongoDB contains a wide range of features:
 
-* Spring configuration support with xref:cassandra/configuration.adoc[Java-based `@Configuration` classes or the XML namespace].
-* The xref:cassandra/cql-template.adoc[`CqlTemplate`, `AsyncCqlTemplate`, and `ReactiveCqlTemplate`] helper classes that increases productivity by properly handling common Cassandra data access operations.
-* The xref:cassandra/template.adoc[`CassandraTemplate`, `AsyncCassandraTemplate`, and `ReactiveCassandraTemplate`] helper classes that provide object mapping between CQL Tables and POJOs.
-* xref:cassandra/cql-template.adoc#exception-translation[Exception translation] into Spring's portable {springDocsUrl}data-access.html#dao-exceptions[Data Access Exception Hierarchy].
-* Feature rich xref:object-mapping.adoc[object mapping] integrated with _Spring's_ {springDocsUrl}core.html#core-convert[Conversion Service].
-* xref:object-mapping.adoc#mapping.usage-annotations[Annotation-based mapping] metadata that is extensible to support other metadata formats.
-* Java-based xref:cassandra/template.adoc#cassandra.template.query[query, criteria, and update DSLs].
-* Automatic implementation of xref:repositories.adoc[imperative and reactive `Repository` interfaces] including support for xref:repositories/custom-implementations.adoc[custom query methods].
+* Spring configuration support with Java-based `@Configuration` classes or an XML namespace for a Mongo driver instance and replica sets.
+* `MongoTemplate` helper class that increases productivity when performing common Mongo operations. Includes integrated object mapping between documents and POJOs.
+* Exception translation into Spring's portable Data Access Exception hierarchy.
+* Feature-rich Object Mapping integrated with Spring's Conversion Service.
+* Annotation-based mapping metadata that is extensible to support other metadata formats.
+* Persistence and mapping lifecycle events.
+* Java-based Query, Criteria, and Update DSLs.
+* Automatic implementation of Repository interfaces, including support for custom finder methods.
+* QueryDSL integration to support type-safe queries.
+* Multi Document Transactions.
+* GeoSpatial integration.
 
-For most data-oriented tasks, you can use the `[Reactive|Async]CassandraTemplate` or the `Repository` support, both of which use the rich object-mapping functionality. `[Reactive|Async]CqlTemplate` is commonly used to increment counters or perform ad-hoc CRUD operations. `[Reactive|Async]CqlTemplate` also provides callback methods that make it easy to get low-level API objects, such as `com.datastax.oss.driver.api.core.CqlSession`, which lets you communicate directly with Cassandra.
-Spring Data for Apache Cassandra uses consistent naming conventions on objects in various APIs to those found in the DataStax Java Driver so that they are familiar and so that you can map your existing knowledge onto the Spring APIs.
+For most tasks, you should use `MongoTemplate` or the Repository support, which both leverage the rich mapping functionality.
+`MongoTemplate` is the place to look for accessing functionality such as incrementing counters or ad-hoc CRUD operations.
+`MongoTemplate` also provides callback methods so that it is easy for you to get the low-level API artifacts, such as `com.mongodb.client.MongoDatabase`, to communicate directly with MongoDB.
+The goal with naming conventions on various API artifacts is to copy those in the base MongoDB Java driver so you can easily map your existing knowledge onto the Spring APIs.
