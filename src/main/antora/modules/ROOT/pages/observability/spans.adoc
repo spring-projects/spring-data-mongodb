@@ -1,0 +1,41 @@
+[[observability-spans]]
+= Spans
+
+Below you can find a list of all spans declared by this project.
+
+[[observability-spans-cassandra-query-observation]]
+== Cassandra Query Observation Span
+
+> Create an `io.micrometer.observation.Observation` for Cassandra-based queries.
+
+**Span name** `spring.data.cassandra.query`.
+
+Fully qualified name of the enclosing class `org.springframework.data.cassandra.observability.CassandraObservation`.
+
+
+
+.Tag Keys
+|===
+|Name | Description
+|`db.cassandra.consistency_level`|
+|`db.cassandra.coordinator.dc`|
+|`db.cassandra.coordinator.id`|
+|`db.cassandra.idempotence`|
+|`db.cassandra.page_size`|
+|`db.name`|Name of the Cassandra keyspace.
+|`db.operation`|The database operation.
+|`db.statement`|A key-value containing Cassandra CQL.
+|`db.system`|Database system.
+|`net.peer.name`|Name of the database host.
+|`net.peer.port`|Logical remote port number.
+|`net.sock.peer.addr`|Cassandra peer address.
+|`net.sock.peer.port`|Cassandra peer port.
+|`net.transport`|Network transport.
+|`spring.data.cassandra.methodName`|The method name
+|`spring.data.cassandra.node[%s].error`|A tag containing error that occurred for the given node. (since the name contains `%s` the final value will be resolved at runtime)
+|`spring.data.cassandra.sessionName`|Cassandra session
+|===
+
+
+
+

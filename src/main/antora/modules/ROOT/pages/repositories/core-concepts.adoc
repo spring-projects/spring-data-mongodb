@@ -1,0 +1,9 @@
+include::{commons}@data-commons::page$repositories/core-concepts.adoc[]
+
+[[cassandra.entity-persistence.state-detection-strategies]]
+include::{commons}@data-commons::page$is-new-state-detection.adoc[leveloffset=+1]
+
+NOTE: Cassandra provides no means to generate identifiers upon inserting data.
+As consequence, entities must be associated with identifier values.
+Spring Data defaults to identifier inspection to determine whether an entity is new.
+If you want to use xref:cassandra/auditing.adoc[auditing] make sure to either use xref:cassandra/template.adoc#cassandra.template.optimistic-locking[Optimistic Locking] or implement `Persistable` for proper entity state detection.

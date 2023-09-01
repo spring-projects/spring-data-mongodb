@@ -1,0 +1,24 @@
+include::{commons}@data-commons::page$kotlin/extensions.adoc[]
+
+To retrieve a list of `SWCharacter` objects in Java, you would normally write the following:
+
+[source,java]
+----
+Flux<SWCharacter> characters = template.query(SWCharacter.class).inTable("star-wars").all()
+----
+
+With Kotlin and the Spring Data extensions, you can instead write the following:
+
+[source,kotlin]
+----
+val characters = template.query<SWCharacter>().inTable("star-wars").all()
+// or (both are equivalent)
+val characters : Flux<SWCharacter> = template.query().inTable("star-wars").all()
+----
+
+As in Java, `characters` in Kotlin is strongly typed, but Kotlin's clever type inference allows for shorter syntax.
+
+Spring Data for Apache Cassandra provides the following extensions:
+
+* Reified generics support for `CassandraOperations` (including async and reactive variants), `CqlOperations` (including async and reactive variants)`FluentCassandraOperations`, `ReactiveFluentCassandraOperations`, `Criteria`, and `Query`.
+* <<kotlin.coroutines>> extensions for `ReactiveFluentCassandraOperations`.
