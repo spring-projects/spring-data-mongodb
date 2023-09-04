@@ -36,7 +36,7 @@ include::example$MongoApplication.java[tags=file]
 
 Reactive::
 +
-[source,kotlin,indent=0,subs="verbatim,quotes",role="secondary"]
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 include::example$ReactiveMongoApplication.java[tags=file]
 ----

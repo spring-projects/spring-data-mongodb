@@ -1,18 +1,22 @@
 [[mongodb-connectors]]
 = Connecting to MongoDB with Spring
 
-One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
+One of the first tasks when using MongoDB and Spring is to create a `MongoClient` object using the IoC container.
+There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata.
 
 NOTE: For those not familiar with how to configure the Spring container using Java-based bean metadata instead of XML-based metadata, see the high-level introduction in the reference docs https://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here] as well as the detailed documentation https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#beans-java-instantiating-container[here].
 
 [[mongo.mongo-java-config]]
-== Registering a Mongo Instance by using Java-based Metadata
+== Registering a Mongo Instance
 
-The following example shows an example of using Java-based bean metadata to register an instance of a `com.mongodb.client.MongoClient`:
+The following example shows an example to register an instance of a `MongoClient`:
 
-.Registering a `com.mongodb.client.MongoClient` object using Java-based bean metadata
-====
-[source,java]
+.Registering `MongoClient`
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
 public class AppConfig {
@@ -20,20 +24,61 @@ public class AppConfig {
   /*
    * Use the standard Mongo driver API to create a com.mongodb.client.MongoClient instance.
    */
-   public @Bean MongoClient mongoClient() {
-       return MongoClients.create("mongodb://localhost:27017");
+   public @Bean com.mongodb.client.MongoClient mongoClient() {
+       return com.mongodb.client.MongoClients.create("mongodb://localhost:27017");
    }
 }
 ----
-====
 
-This approach lets you use the standard `com.mongodb.client.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.client.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in link:{springDocsUrl}/data-access.html[Spring's DAO support features].
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+@Configuration
+public class AppConfig {
+
+  /*
+   * Use the standard Mongo driver API to create a com.mongodb.client.MongoClient instance.
+   */
+   public @Bean com.mongodb.reactivestreams.client.MongoClient mongoClient() {
+       return com.mongodb.reactivestreams.client.MongoClients.create("mongodb://localhost:27017");
+   }
+}
+----
+
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="third"]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+xsi:schemaLocation=
+"
+http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+http://www.springframework.org/schema/beans
+https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Default bean name is 'mongo' -->
+    <mongo:mongo-client host="localhost" port="27017"/>
+
+</beans>
+----
+=====
+
+This approach lets you use the standard `MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`/`ReactiveMongoClientFactoryBean`.
+As compared to instantiating a `MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation.
+This hierarchy and the use of `@Repository` is described in link:{springDocsUrl}/data-access.html[Spring's DAO support features].
 
 The following example shows an example of a Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
-.Registering a `com.mongodb.client.MongoClient` object by using Spring's `MongoClientFactoryBean` and enabling Spring's exception translation support
-====
-[source,java]
+.Registering a `MongoClient` via `MongoClientFactoryBean` / `ReactiveMongoClientFactoryBean`
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
 public class AppConfig {
@@ -48,78 +93,40 @@ public class AppConfig {
      }
 }
 ----
-====
 
-To access the `com.mongodb.client.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired MongoClient mongoClient;` field.
-
-[[mongo.mongo-xml-config]]
-== Registering a Mongo Instance by Using XML-based Metadata
-
-While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.client.MongoClient` with the container, the XML can be quite verbose, as it is general-purpose. XML namespaces are a better alternative to configuring commonly used objects, such as the Mongo instance. The mongo namespace lets you create a Mongo instance server location, replica-sets, and options.
-
-To use the Mongo namespace elements, you need to reference the Mongo schema, as follows:
-
-.XML schema to configure MongoDB
-====
-[source,xml]
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:mongo="http://www.springframework.org/schema/data/mongo"
-          xsi:schemaLocation=
-          "
-          http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
-          http://www.springframework.org/schema/beans
-          https://www.springframework.org/schema/beans/spring-beans.xsd">
+@Configuration
+public class AppConfig {
 
-    <!-- Default bean name is 'mongo' -->
-    <mongo:mongo-client host="localhost" port="27017"/>
-
-</beans>
+    /*
+     * Factory bean that creates the com.mongodb.reactivestreams.client.MongoClient instance
+     */
+     public @Bean ReactiveMongoClientFactoryBean mongo() {
+          ReactiveMongoClientFactoryBean mongo = new ReactiveMongoClientFactoryBean();
+          mongo.setHost("localhost");
+          return mongo;
+     }
+}
 ----
-====
+======
 
-The following example shows a more advanced configuration with `MongoClientSettings` (note that these are not recommended values):
-
-.XML schema to configure a `com.mongodb.client.MongoClient` object with `MongoClientSettings`
-====
-[source,xml]
-----
-<beans>
-
-  <mongo:mongo-client host="localhost" port="27017">
-    <mongo:client-settings connection-pool-max-connection-life-time="10"
-        connection-pool-min-size="10"
-		connection-pool-max-size="20"
-		connection-pool-maintenance-frequency="10"
-		connection-pool-maintenance-initial-delay="11"
-		connection-pool-max-connection-idle-time="30"
-		connection-pool-max-wait-time="15" />
-  </mongo:mongo-client>
-
-</beans>
-----
-====
-
-The following example shows a configuration using replica sets:
-
-.XML schema to configure a `com.mongodb.client.MongoClient` object with Replica Sets
-====
-[source,xml]
-----
-<mongo:mongo-client id="replicaSetMongo" replica-set="rs0">
-    <mongo:client-settings cluster-hosts="127.0.0.1:27017,localhost:27018" />
-</mongo:mongo-client>
-----
-====
+To access the `MongoClient` object created by the `FactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired MongoClient mongoClient;` field.
 
 [[mongo.mongo-db-factory]]
 == The MongoDatabaseFactory Interface
 
-While `com.mongodb.client.MongoClient` is the entry point to the MongoDB driver API, connecting to a specific MongoDB database instance requires additional information, such as the database name and an optional username and password. With that information, you can obtain a `com.mongodb.client.MongoDatabase` object and access all the functionality of a specific MongoDB database instance. Spring provides the `org.springframework.data.mongodb.core.MongoDatabaseFactory` interface, shown in the following listing, to bootstrap connectivity to the database:
+While `MongoClient` is the entry point to the MongoDB driver API, connecting to a specific MongoDB database instance requires additional information, such as the database name and an optional username and password.
+With that information, you can obtain a `MongoDatabase` object and access all the functionality of a specific MongoDB database instance.
+Spring provides the `org.springframework.data.mongodb.core.MongoDatabaseFactory` & `org.springframework.data.mongodb.core.ReactiveMongoDatabaseFactory` interfaces, shown in the following listing, to bootstrap connectivity to the database:
 
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 public interface MongoDatabaseFactory {
 
@@ -129,40 +136,72 @@ public interface MongoDatabaseFactory {
 }
 ----
 
-The following sections show how you can use the container with either Java-based or XML-based metadata to configure an instance of the `MongoDatabaseFactory` interface. In turn, you can use the `MongoDatabaseFactory` instance to configure `MongoTemplate`.
-
-Instead of using the IoC container to create an instance of MongoTemplate, you can use them in standard Java code, as follows:
-
-[source,java]
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
-public class MongoApp {
+public interface ReactiveMongoDatabaseFactory {
 
-  private static final Log log = LogFactory.getLog(MongoApp.class);
+  Mono<MongoDatabase> getDatabase() throws DataAccessException;
+
+  Mono<MongoDatabase> getDatabase(String dbName) throws DataAccessException;
+}
+----
+======
+
+The following sections show how you can use the container with either Java-based or XML-based metadata to configure an instance of the `MongoDatabaseFactory` interface.
+In turn, you can use the `MongoDatabaseFactory` / `ReactiveMongoDatabaseFactory` instance to configure `MongoTemplate` / `ReactiveMongoTemplate`.
+
+Instead of using the IoC container to create an instance of the template, you can use them in standard Java code, as follows:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public class MongoApplication {
 
   public static void main(String[] args) throws Exception {
 
     MongoOperations mongoOps = new MongoTemplate(new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database"));
 
-    mongoOps.insert(new Person("Joe", 34));
-
-    log.info(mongoOps.findOne(new Query(where("name").is("Joe")), Person.class));
-
-    mongoOps.dropCollection("person");
+    // ...
   }
 }
 ----
-
 The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the xref:reference/mongodb/getting-started.adoc[getting started section].
 
 NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public class ReactiveMongoApplication {
+
+  public static void main(String[] args) throws Exception {
+
+    ReactiveMongoOperations mongoOps = new MongoTemplate(new SimpleReactiveMongoDatabaseFactory(MongoClients.create(), "database"));
+
+    // ...
+  }
+}
+----
+======
+
 [[mongo.mongo-db-factory-java]]
 [[mongo.mongo-db-factory.config]]
-== Registering a `MongoDatabaseFactory`
+== Registering a `MongoDatabaseFactory` / `ReactiveMongoDatabaseFactory`
 
-To register a `MongoDatabaseFactory` instance with the container, you write code much like what was highlighted in the previous code listing. The following listing shows a simple example:
+To register a `MongoDatabaseFactory`/ `ReactiveMongoDatabaseFactory` instance with the container, you write code much like what was highlighted in the previous section.
+The following listing shows a simple example:
 
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
 public class MongoConfiguration {
@@ -174,7 +213,24 @@ public class MongoConfiguration {
 }
 ----
 
-MongoDB Server generation 3 changed the authentication model when connecting to the DB. Therefore, some of the configuration options available for authentication are no longer valid. You should use the `MongoClient`-specific options for setting credentials through `MongoCredential` to provide authentication data, as shown in the following example:
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+@Configuration
+public class ReactiveMongoConfiguration {
+
+  @Bean
+  public ReactiveMongoDatabaseFactory mongoDatabaseFactory() {
+    return new SimpleReactiveMongoDatabaseFactory(MongoClients.create(), "database");
+  }
+}
+----
+======
+
+MongoDB Server generation 3 changed the authentication model when connecting to the DB.
+Therefore, some of the configuration options available for authentication are no longer valid.
+You should use the `MongoClient`-specific options for setting credentials through `MongoCredential` to provide authentication data, as shown in the following example:
 
 ====
 .Java
