@@ -16,6 +16,7 @@
 // tag::file[]
 package org.springframework.data.mongodb.example;
 
+// tag::class[]
 public class Person {
 
 	private String id;
@@ -44,4 +45,5 @@ public class Person {
 		return "Person [id=" + id + ", name=" + name + ", age=" + age + "]";
 	}
 }
+// end::class[]
 // end::file[]

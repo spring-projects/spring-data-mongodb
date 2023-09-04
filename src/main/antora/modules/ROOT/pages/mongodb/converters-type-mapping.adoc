@@ -1,0 +1,125 @@
+[[mongo-template.type-mapping]]
+== Type Mapping
+
+MongoDB collections can contain documents that represent instances of a variety of types.
+This feature can be useful if you store a hierarchy of classes or have a class with a property of type `Object`.In the latter case, the values held inside that property have to be read in correctly when retrieving the object.Thus, we need a mechanism to store type information alongside the actual document.
+
+To achieve that, the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as its main implementation.Its default behavior to store the fully qualified classname under `_class` inside the document.Type hints are written for top-level documents as well as for every value (if it is a complex type and a subtype of the declared property type).The following example (with a JSON representation at the end) shows how the mapping works:
+
+.Type mapping
+====
+[source,java]
+----
+class Sample {
+  Contact value;
+}
+
+abstract class Contact { … }
+
+class Person extends Contact { … }
+
+Sample sample = new Sample();
+sample.value = new Person();
+
+mongoTemplate.save(sample);
+
+{
+  "value" : { "_class" : "com.acme.Person" },
+  "_class" : "com.acme.Sample"
+}
+----
+====
+
+Spring Data MongoDB stores the type information as the last field for the actual root class as well as for the nested type (because it is complex and a subtype of `Contact`).So, if you now use `mongoTemplate.findAll(Object.class, "sample")`, you can find out that the document stored is a `Sample` instance.You can also find out that the value property is actually a `Person`.
+
+[[customizing-type-mapping]]
+=== Customizing Type Mapping
+
+If you want to avoid writing the entire Java class name as type information but would rather like to use a key, you can use the `@TypeAlias` annotation on the entity class.If you need to customize the mapping even more, have a look at the `TypeInformationMapper` interface.An instance of that interface can be configured at the `DefaultMongoTypeMapper`, which can, in turn, be configured on `MappingMongoConverter`.The following example shows how to define a type alias for an entity:
+
+.Defining a type alias for an Entity
+====
+[source,java]
+----
+@TypeAlias("pers")
+class Person {
+
+}
+----
+====
+
+Note that the resulting document contains `pers` as the value in the `_class` Field.
+
+[WARNING]
+====
+Type aliases only work if the mapping context is aware of the actual type.
+The required entity metadata is determined either on first save or has to be provided via the configurations initial entity set.
+By default, the configuration class scans the base package for potential candidates.
+
+[source,java]
+----
+@Configuration
+class AppConfig extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected Set<Class<?>> getInitialEntitySet() {
+    return Collections.singleton(Person.class);
+  }
+
+  // ...
+}
+----
+====
+
+[[configuring-custom-type-mapping]]
+=== Configuring Custom Type Mapping
+
+The following example shows how to configure a custom `MongoTypeMapper` in `MappingMongoConverter`:
+
+[source,java]
+----
+class CustomMongoTypeMapper extends DefaultMongoTypeMapper {
+  //implement custom type mapping here
+}
+----
+
+.Configuring a custom `MongoTypeMapper`
+====
+.Java
+[source,java,role="primary"]
+----
+@Configuration
+class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "database";
+  }
+
+  @Bean
+  @Override
+  public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
+    MappingMongoConverter mmc = super.mappingMongoConverter();
+    mmc.setTypeMapper(customTypeMapper());
+    return mmc;
+  }
+
+  @Bean
+  public MongoTypeMapper customTypeMapper() {
+    return new CustomMongoTypeMapper();
+  }
+}
+----
+
+.XML
+[source,xml,role="secondary"]
+----
+<mongo:mapping-converter type-mapper-ref="customMongoTypeMapper"/>
+
+<bean name="customMongoTypeMapper" class="com.acme.CustomMongoTypeMapper"/>
+----
+====
+
+Note that the preceding example extends the `AbstractMongoClientConfiguration` class and overrides the bean definition of the `MappingMongoConverter` where we configured our custom `MongoTypeMapper`.
+
