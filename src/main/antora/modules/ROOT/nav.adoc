@@ -18,7 +18,6 @@
 **** xref:mongodb/mongo-query/geo-json.adoc[]
 **** xref:mongodb/mongo-query/textsearch.adoc[]
 **** xref:mongodb/mongo-query/collation.adoc[]
-**** xref:mongodb/mongo-query/fluent-template-api.adoc[]
 **** xref:mongodb/mongo-query/kotlin-support.adoc[]
 **** xref:mongodb/mongo-query/additional-options.adoc[]
 *** xref:mongodb/mongo-query-count.adoc[]
