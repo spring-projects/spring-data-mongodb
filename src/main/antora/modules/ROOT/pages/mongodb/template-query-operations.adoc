@@ -225,4 +225,501 @@ template.query(Person.class)  <1>
 <4> Retrieve all distinct values as a `List` of `String`. If the type cannot be converted into the desired target type, this method throws a `DataAccessException`.
 ====
 
+[[mongo.geospatial]]
+= GeoSpatial Queries
 
+MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin`, and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes (`Box`, `Circle`, and `Point`) that are used in conjunction with geospatial related `Criteria` methods.
+
+NOTE: Using GeoSpatial queries requires attention when used within MongoDB transactions, see xref:reference/client-session-transactions.adoc#mongo.transactions.behavior[Special behavior inside transactions].
+
+To understand how to perform GeoSpatial queries, consider the following `Venue` class (taken from the integration tests and relying on the rich `MappingMongoConverter`):
+
+[source,java]
+----
+@Document(collection="newyork")
+public class Venue {
+
+  @Id
+  private String id;
+  private String name;
+  private double[] location;
+
+  @PersistenceConstructor
+  Venue(String name, double[] location) {
+    super();
+    this.name = name;
+    this.location = location;
+  }
+
+  public Venue(String name, double x, double y) {
+    super();
+    this.name = name;
+    this.location = new double[] { x, y };
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public double[] getLocation() {
+    return location;
+  }
+
+  @Override
+  public String toString() {
+    return "Venue [id=" + id + ", name=" + name + ", location="
+        + Arrays.toString(location) + "]";
+  }
+}
+----
+
+To find locations within a `Circle`, you can use the following query:
+
+[source,java]
+----
+Circle circle = new Circle(-73.99171, 40.738868, 0.01);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
+----
+
+To find venues within a `Circle` using spherical coordinates, you can use the following query:
+
+[source,java]
+----
+Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").withinSphere(circle)), Venue.class);
+----
+
+To find venues within a `Box`, you can use the following query:
+
+[source,java]
+----
+//lower-left then upper-right
+Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").within(box)), Venue.class);
+----
+
+To find venues near a `Point`, you can use the following queries:
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
+----
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").near(point).minDistance(0.01).maxDistance(100)), Venue.class);
+----
+
+To find venues near a `Point` using spherical coordinates, you can use the following query:
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(
+        Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)),
+        Venue.class);
+----
+
+[[mongo.geo-near]]
+== Geo-near Queries
+
+[WARNING]
+====
+*Changed in 2.2!* +
+https://docs.mongodb.com/master/release-notes/4.2-compatibility/[MongoDB 4.2] removed support for the
+`geoNear` command which had been previously used to run the `NearQuery`.
+
+Spring Data MongoDB 2.2 `MongoOperations#geoNear` uses the `$geoNear` https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/[aggregation]
+instead of the `geoNear` command to run a `NearQuery`.
+
+The calculated distance (the `dis` when using a geoNear command) previously returned within a wrapper type now is embedded
+into the resulting document.
+If the given domain type already contains a property with that name, the calculated distance
+is named `calculated-distance` with a potentially random postfix.
+
+Target types may contain a property named after the returned distance to (additionally) read it back directly into the domain type as shown below.
+
+[source,java]
+----
+GeoResults<VenueWithDistanceField> = template.query(Venue.class) <1>
+    .as(VenueWithDistanceField.class)                            <2>
+    .near(NearQuery.near(new GeoJsonPoint(-73.99, 40.73), KILOMETERS))
+    .all();
+----
+<1> Domain type used to identify the target collection and potential query mapping.
+<2> Target type containing a `dis` field of type `Number`.
+====
+
+MongoDB supports querying the database for geo locations and calculating the distance from a given origin at the same time. With geo-near queries, you can express queries such as "find all restaurants in the surrounding 10 miles". To let you do so, `MongoOperations` provides `geoNear(…)` methods that take a `NearQuery` as an argument (as well as the already familiar entity type and collection), as shown in the following example:
+
+[source,java]
+----
+Point location = new Point(-73.99171, 40.738868);
+NearQuery query = NearQuery.near(location).maxDistance(new Distance(10, Metrics.MILES));
+
+GeoResults<Restaurant> = operations.geoNear(query, Restaurant.class);
+----
+
+We use the `NearQuery` builder API to set up a query to return all `Restaurant` instances surrounding the given `Point` out to 10 miles.
+The `Metrics` enum used here actually implements an interface so that other metrics could be plugged into a distance as well.
+A `Metric` is backed by a multiplier to transform the distance value of the given metric into native distances.
+The sample shown here would consider the 10 to be miles. Using one of the built-in metrics (miles and kilometers) automatically triggers the spherical flag to be set on the query.
+If you want to avoid that, pass plain `double` values into `maxDistance(…)`.
+For more information, see the https://docs.spring.io/spring-data/mongodb/docs/{version}/api/index.html[JavaDoc] of `NearQuery` and `Distance`.
+
+The geo-near operations return a `GeoResults` wrapper object that encapsulates `GeoResult` instances.
+Wrapping `GeoResults` allows accessing the average distance of all results.
+A single `GeoResult` object carries the entity found plus its distance from the origin.
+
+[[mongo.geo-json]]
+== GeoJSON Support
+
+MongoDB supports https://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
+
+[[mongo.geo-json.domain.classes]]
+== GeoJSON Types in Domain Classes
+
+Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
+
+====
+[source,java]
+----
+public class Store {
+
+	String id;
+
+	/**
+	 * location is stored in GeoJSON format.
+	 * {
+	 *   "type" : "Point",
+	 *   "coordinates" : [ x, y ]
+	 * }
+	 */
+	GeoJsonPoint location;
+}
+----
+====
+
+[TIP]
+====
+If the `coordinates` of a GeoJSON object represent _latitude_ and _longitude_ pairs, the _longitude_ goes first followed by _latitude_. +
+`GeoJsonPoint` therefore treats `getX()` as _longitude_ and `getY()` as _latitude_.
+====
+
+[[mongo.geo-json.query-methods]]
+== GeoJSON Types in Repository Query Methods
+
+Using GeoJSON types as repository query parameters forces usage of the `$geometry` operator when creating the query, as the following example shows:
+
+====
+[source,java]
+----
+public interface StoreRepository extends CrudRepository<Store, String> {
+
+	List<Store> findByLocationWithin(Polygon polygon);  <1>
+
+}
+
+/*
+ * {
+ *   "location": {
+ *     "$geoWithin": {
+ *       "$geometry": {
+ *         "type": "Polygon",
+ *         "coordinates": [
+ *           [
+ *             [-73.992514,40.758934],
+ *             [-73.961138,40.760348],
+ *             [-73.991658,40.730006],
+ *             [-73.992514,40.758934]
+ *           ]
+ *         ]
+ *       }
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <2>
+  new GeoJsonPolygon(
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006),
+    new Point(-73.992514, 40.758934)));                 <3>
+
+/*
+ * {
+ *   "location" : {
+ *     "$geoWithin" : {
+ *        "$polygon" : [ [-73.992514,40.758934] , [-73.961138,40.760348] , [-73.991658,40.730006] ]
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <4>
+  new Polygon(
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006)));
+----
+<1> Repository method definition using the commons type allows calling it with both the GeoJSON and the legacy format.
+<2> Use GeoJSON type to make use of `$geometry` operator.
+<3> Note that GeoJSON polygons need to define a closed ring.
+<4> Use the legacy format `$polygon` operator.
+====
+
+[[mongo.geo-json.metrics]]
+== Metrics and Distance calculation
+
+Then MongoDB `$geoNear` operator allows usage of a GeoJSON Point or legacy coordinate pairs.
+
+====
+[source,java]
+----
+NearQuery.near(new Point(-73.99171, 40.738868))
+----
+[source,json]
+----
+{
+  "$geoNear": {
+    //...
+    "near": [-73.99171, 40.738868]
+  }
+}
+----
+====
+====
+[source,java]
+----
+NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868))
+----
+[source,json]
+----
+{
+  "$geoNear": {
+    //...
+    "near": { "type": "Point", "coordinates": [-73.99171, 40.738868] }
+  }
+}
+
+----
+====
+
+Though syntactically different the server is fine accepting both no matter what format the target Document within the collection
+is using.
+
+WARNING: There is a huge difference in the distance calculation. Using the legacy format operates
+upon _Radians_ on an Earth like sphere, whereas the GeoJSON format uses _Meters_.
+
+To avoid a serious headache make sure to set the `Metric` to the desired unit of measure which ensures the
+distance to be calculated correctly.
+
+In other words:
+
+====
+Assume you've got 5 Documents like the ones below:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a5"),
+    "name" : "Penn Station",
+    "location" : { "type" : "Point", "coordinates" : [  -73.99408, 40.75057 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796ab"),
+    "name" : "Momofuku Milk Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.985839, 40.731698 ] }
+}
+----
+====
+
+Fetching all Documents within a 400 Meter radius from `[-73.99171, 40.738868]` would look like this using
+GeoJSON:
+
+.GeoNear with GeoJSON
+====
+[source,json]
+----
+{
+    "$geoNear": {
+        "maxDistance": 400, <1>
+        "num": 10,
+        "near": { type: "Point", coordinates: [-73.99171, 40.738868] },
+        "spherical":true, <2>
+        "key": "location",
+        "distanceField": "distance"
+    }
+}
+----
+Returning the following 3 Documents:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+    "distance" : 0.0 <3>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 69.3582262492474 <3>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 69.3582262492474 <3>
+}
+----
+<1> Maximum distance from center point in _Meters_.
+<2> GeoJSON always operates upon a sphere.
+<3> Distance from center point in _Meters_.
+====
+
+Now, when using legacy coordinate pairs one operates upon _Radians_ as discussed before. So we use `Metrics#KILOMETERS
+when constructing the `$geoNear` command. The `Metric` makes sure the distance multiplier is set correctly.
+
+.GeoNear with Legacy Coordinate Pairs
+====
+[source,json]
+----
+{
+    "$geoNear": {
+        "maxDistance": 0.0000627142377, <1>
+        "distanceMultiplier": 6378.137, <2>
+        "num": 10,
+        "near": [-73.99171, 40.738868],
+        "spherical":true, <3>
+        "key": "location",
+        "distanceField": "distance"
+    }
+}
+----
+Returning the 3 Documents just like the GeoJSON variant:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+    "distance" : 0.0 <4>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 0.0693586286032982 <4>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 0.0693586286032982 <4>
+}
+----
+<1> Maximum distance from center point in _Radians_.
+<2> The distance multiplier so we get _Kilometers_ as resulting distance.
+<3> Make sure we operate on a 2d_sphere index.
+<4> Distance from center point in _Kilometers_ - take it times 1000 to match _Meters_ of the GeoJSON variant.
+====
+
+[[mongo.textsearch]]
+== Full-text Search
+
+Since version 2.6 of MongoDB, you can run full-text queries by using the `$text` operator. Methods and operations specific to full-text queries are available in `TextQuery` and `TextCriteria`. When doing full text search, see the https://docs.mongodb.org/manual/reference/operator/query/text/#behavior[MongoDB reference] for its behavior and limitations.
+
+Before you can actually use full-text search, you must set up the search index correctly.
+See xref:mongodb/mapping.adoc#mapping-usage-indexes.text-index[Text Index] for more detail on how to create index structures.
+The following example shows how to set up a full-text search:
+
+[source,javascript]
+----
+db.foo.createIndex(
+{
+  title : "text",
+  content : "text"
+},
+{
+  weights : {
+              title : 3
+            }
+}
+)
+----
+
+A query searching for `coffee cake` can be defined and run as follows:
+
+.Full Text Query
+====
+[source,java]
+----
+Query query = TextQuery
+  .queryText(new TextCriteria().matchingAny("coffee", "cake"));
+
+List<Document> page = template.find(query, Document.class);
+----
+====
+
+To sort results by relevance according to the `weights` use `TextQuery.sortByScore`.
+
+.Full Text Query - Sort by Score
+====
+[source,java]
+----
+Query query = TextQuery
+  .queryText(new TextCriteria().matchingAny("coffee", "cake"))
+  .sortByScore() <1>
+  .includeScore(); <2>
+
+List<Document> page = template.find(query, Document.class);
+----
+<1> Use the score property for sorting results by relevance which triggers `.sort({'score': {'$meta': 'textScore'}})`.
+<2> Use `TextQuery.includeScore()` to include the calculated relevance in the resulting `Document`.
+====
+
+You can exclude search terms by prefixing the term with `-` or by using `notMatching`, as shown in the following example (note that the two lines have the same effect and are thus redundant):
+
+[source,java]
+----
+// search for 'coffee' and not 'cake'
+TextQuery.queryText(new TextCriteria().matching("coffee").matching("-cake"));
+TextQuery.queryText(new TextCriteria().matching("coffee").notMatching("cake"));
+----
+
+`TextCriteria.matching` takes the provided term as is.
+Therefore, you can define phrases by putting them between double quotation marks (for example, `\"coffee cake\")` or using by `TextCriteria.phrase.`
+The following example shows both ways of defining a phrase:
+
+[source,java]
+----
+// search for phrase 'coffee cake'
+TextQuery.queryText(new TextCriteria().matching("\"coffee cake\""));
+TextQuery.queryText(new TextCriteria().phrase("coffee cake"));
+----
+
+You can set flags for `$caseSensitive` and `$diacriticSensitive` by using the corresponding methods on `TextCriteria`.
+Note that these two optional flags have been introduced in MongoDB 3.2 and are not included in the query unless explicitly set.
