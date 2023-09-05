@@ -16,60 +16,63 @@
 **** xref:mongodb/template-query-options.adoc[]
 *** xref:mongodb/template-document-count.adoc[]
 *** xref:mongodb/aggregation-framework.adoc[]
-
-
-
-
-
-// still needed???
-*** xref:mongodb/mongo-mapreduce.adoc[]
-*** xref:mongodb/mongo-server-side-scripts.adoc[]
-*** xref:mongodb/mongo-group.adoc[]
+*** xref:mongodb/template-collection-management.adoc[]
+**** xref:mongodb/template-collection-schema.adoc[]
+** xref:mongodb/template-gridfs.adoc[]
 
 
 // Mapping
-
+** xref:mongodb/mapping/mapping.adoc[]
+*** xref:mongodb/mapping/custom-conversions.adoc[]
+*** xref:mongodb/mapping/property-converters.adoc[]
+*** xref:mongodb/mapping/unwrapping-entities.adoc[]
+*** xref:mongodb/mapping/document-references.adoc[]
+*** xref:mongodb/mapping/entity-callbacks.adoc[]
+*** xref:mongodb/mapping/lifecycle-events.adoc[]
+** xref:mongodb/auditing.adoc[]
 
 // Repository
+* xref:repositories.adoc[]
+** xref:repositories/core-concepts.adoc[]
+** xref:repositories/definition.adoc[]
+** xref:mongodb/repositories/repositories.adoc[]
+** xref:mongodb/mongo-repositories-aggregation.adoc[]
+** xref:repositories/create-instances.adoc[]
+** xref:repositories/query-methods-details.adoc[]
+** xref:repositories/projections.adoc[]
+** xref:repositories/custom-implementations.adoc[]
+** xref:repositories/core-domain-events.adoc[]
+** xref:repositories/null-handling.adoc[]
+** xref:mongodb/repositories/cdi-integration.adoc[]
+** xref:repositories/query-keywords-reference.adoc[]
+** xref:repositories/query-return-types-reference.adoc[]
 
+* xref:observability.adoc[]
 
 // Mongo Specifics
-
-
-
-*** xref:mongodb/mongo-template-index-and-collections.adoc[]
-*** xref:mongodb/mongo-template-commands.adoc[]
-*** xref:mongodb/mapping-usage-events.adoc[]
-*** xref:mongodb/mongo-exception.adoc[]
-*** xref:mongodb/mongo-executioncallback.adoc[]
-** xref:mongodb/mongo-json-schema.adoc[]
-** xref:mongodb/mongo-entity-callbacks.adoc[]
-** xref:mongodb/gridfs.adoc[]
+** xref:mongodb/client-session-transactions.adoc[]
 ** xref:mongodb/tailable-cursors.adoc[]
 ** xref:mongodb/change-streams.adoc[]
-** xref:mongodb/time-series.adoc[]
 ** xref:mongodb/observability.adoc[]
-** xref:mongodb/client-session-transactions.adoc[]
-** xref:mongodb/reactive-mongodb.adoc[]
-** xref:mongodb/mongo-repositories.adoc[]
-** xref:mongodb/mongo-repositories-aggregation.adoc[]
-** xref:mongodb/reactive-mongo-repositories.adoc[]
-** xref:mongodb/mongo-auditing.adoc[]
-** xref:mongodb/mapping.adoc[]
-** xref:mongodb/document-references.adoc[]
-** xref:mongodb/unwrapping-entities.adoc[]
-** xref:mongodb/mongo-custom-conversions.adoc[]
-** xref:mongodb/mongo-property-converters.adoc[]
 ** xref:mongodb/sharding.adoc[]
 ** xref:mongodb/mongo-encryption.adoc[]
-** xref:mongodb/kotlin.adoc[]
-** xref:mongodb/jmx.adoc[]
-** xref:mongodb/migrating.adoc[]
+
+* xref:kotlin.adoc[]
+** xref:kotlin/requirements.adoc[]
+** xref:kotlin/null-safety.adoc[]
+** xref:kotlin/object-mapping.adoc[]
+** xref:kotlin/extensions.adoc[]
+** xref:kotlin/coroutines.adoc[]
 
 
-
+// move parts somewhere else
 ** xref:mongodb/query-by-example.adoc[]
 **** xref:mongodb/mongo-query/geo-json.adoc[]
 **** xref:mongodb/mongo-query/collation.adoc[]
 **** xref:mongodb/mongo-query/kotlin-support.adoc[]
 **** xref:mongodb/mongo-query/additional-options.adoc[]
+
+// still needed???
+*** xref:mongodb/mongo-mapreduce.adoc[]
+*** xref:mongodb/mongo-server-side-scripts.adoc[]
+*** xref:mongodb/mongo-group.adoc[]

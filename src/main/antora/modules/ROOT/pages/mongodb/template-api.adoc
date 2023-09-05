@@ -6,9 +6,7 @@ The template offers convenience operations to create, update, delete, and query 
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
 
-The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface.
-Spring provides `MappingMongoConverter`, but you can also write your own converter.
-See "`xref:mongodb/mongo-custom-conversions.adoc[Custom Conversions - Overriding Default Mapping]`" for more detailed information.
+== Template API
 
 The `MongoTemplate` class implements the interface `MongoOperations`.
 In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API.
@@ -18,13 +16,6 @@ A major difference between the two APIs is that `MongoOperations` can be passed 
 Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
-
-The default converter implementation used by `MongoTemplate` is `MappingMongoConverter`.
-While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names.
-These conventions, as well as the use of mapping annotations, are explained in the "`xref:reference/mapping.adoc[Mapping]`" chapter.
-
-Another central feature of `MongoTemplate` is translation of exceptions thrown by the MongoDB Java driver into Spring's portable Data Access Exception hierarchy.
-See "`xref:mongodb/mongo-exception.adoc[Exception Translation]`" for more information.
 
 `MongoTemplate` offers many convenience methods to help you easily perform common tasks.
 However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods.
@@ -112,4 +103,23 @@ GeoResults<Jedi> results = mongoOps.query(SWCharacter.class)
 ----
 ====
 
-The next section contains an example of how to work with the `MongoTemplate` in the context of the Spring container.
+== Exception Translation
+
+The Spring framework provides exception translation for a wide variety of database and mapping technologies. T
+his has traditionally been for JDBC and JPA.
+The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
+
+The motivation behind mapping to Spring's link:{springDocsUrl}/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes.
+All of Spring's data access exceptions are inherited from the root `DataAccessException` class so that you can be sure to catch all database related exception within a single try-catch block.
+Note that not all exceptions thrown by the MongoDB driver inherit from the `MongoException` class.
+The inner exception and message are preserved so that no information is lost.
+
+Some of the mappings performed by the `MongoExceptionTranslator` are `com.mongodb.Network to DataAccessResourceFailureException` and `MongoException` error codes 1003, 12001, 12010, 12011, and 12012 to `InvalidDataAccessApiUsageException`.
+Look into the implementation for more details on the mapping.
+
+== Domain Type Mapping
+
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface.
+Spring provides `MappingMongoConverter`, but you can also write your own converter.
+While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names.
+These conventions, as well as the use of mapping annotations, are explained in the "`xref:mongodb/mapping.adoc[Mapping]`" chapter.
