@@ -1,6 +1,5 @@
-
 [[mapping-chapter]]
-= Mapping
+= Object Mapping
 
 Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set to map domain objects to MongoDB documents.
 The mapping metadata model is populated by using annotations on your domain objects.

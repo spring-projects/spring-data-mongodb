@@ -1,12 +1,10 @@
 [[mongo-template]]
-= Introduction to `MongoTemplate`
+= Template API
 
 The `MongoTemplate` and its reactive counterpart class, located in the `org.springframework.data.mongodb.core` package, is the central class of Spring's MongoDB support and provides a rich feature set for interacting with the database.
 The template offers convenience operations to create, update, delete, and query MongoDB documents and provides a mapping between your domain objects and MongoDB documents.
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
-
-== Template API
 
 The `MongoTemplate` class implements the interface `MongoOperations`.
 In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API.

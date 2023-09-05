@@ -1,5 +1,5 @@
 [[mongodb-connectors]]
-= Connecting to MongoDB with Spring
+= Connecting to MongoDB
 
 One of the first tasks when using MongoDB and Spring is to create a `MongoClient` object using the IoC container.
 There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata.
@@ -171,8 +171,7 @@ public class MongoApplication {
 }
 ----
 The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the xref:mongodb/getting-started.adoc[getting started section].
-
-NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
+Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 
 Reactive::
 +
@@ -232,12 +231,14 @@ MongoDB Server generation 3 changed the authentication model when connecting to 
 Therefore, some of the configuration options available for authentication are no longer valid.
 You should use the `MongoClient`-specific options for setting credentials through `MongoCredential` to provide authentication data, as shown in the following example:
 
-====
-.Java
-[source,java,role="primary"]
+[tabs]
+======
+Java::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
-public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
+public class MongoAppConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
@@ -256,28 +257,29 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientCo
 }
 ----
 
-.XML
-[source,xml,role="secondary"]
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 <mongo:db-factory dbname="database" />
 ----
-====
-
-
-NOTE: Username and password credentials used in XML-based configuration must be URL-encoded when these contain reserved characters, such as `:`, `%`, `@`, or `,`.
+Username and password credentials used in XML-based configuration must be URL-encoded when these contain reserved characters, such as `:`, `%`, `@`, or `,`.
 The following example shows encoded credentials:
 `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
 See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for further details.
+======
 
 If you need to configure additional options on the `com.mongodb.client.MongoClient` instance that is used to create a `SimpleMongoClientDbFactory`, you can refer to an existing bean as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
 
-====
-.Java
-[source,java,role="primary"]
+[tabs]
+======
+Java::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
 @PropertySource("classpath:/com/myapp/mongodb/config/mongo.properties")
-public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
+public class MongoAppConfig extends AbstractMongoClientConfiguration {
 
   @Autowired
   Environment env;
@@ -309,8 +311,9 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientCo
 }
 ----
 
-.XML
-[source,xml,role="secondary"]
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 <context:property-placeholder location="classpath:/com/myapp/mongodb/config/mongo.properties"/>
 
@@ -330,5 +333,4 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientCo
   <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 </bean>
 ----
-====
-
+======

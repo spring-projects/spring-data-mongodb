@@ -1,6 +1,6 @@
 // carry over the old bookmarks to prevent external links from failing
 [[tailable-cursors]]
-= [[mongo.reactive.repositories.infinite-streams]] Infinite Streams with Tailable Cursors
+= Tailable Cursors
 
 By default, MongoDB automatically closes a cursor when the client exhausts all results supplied by the cursor.
 Closing a cursor on exhaustion turns a stream into a finite stream. For https://docs.mongodb.com/manual/core/capped-collections/[capped collections],

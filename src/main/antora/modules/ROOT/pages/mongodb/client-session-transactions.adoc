@@ -1,11 +1,16 @@
 [[mongo.sessions]]
-= MongoDB Sessions
+= Sessions & Transactions
 
-As of version 3.6, MongoDB supports the concept of sessions. The use of sessions enables MongoDB's https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency[Causal Consistency] model, which guarantees running operations in an order that respects their causal relationships. Those are split into `ServerSession` instances and `ClientSession` instances. In this section, when we speak of a session, we refer to `ClientSession`.
+As of version 3.6, MongoDB supports the concept of sessions.
+The use of sessions enables MongoDB's https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency[Causal Consistency] model, which guarantees running operations in an order that respects their causal relationships.
+Those are split into `ServerSession` instances and `ClientSession` instances.
+In this section, when we speak of a session, we refer to `ClientSession`.
 
 WARNING: Operations within a client session are not isolated from operations outside the session.
 
-Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations. `MongoCollection` and `MongoDatabase` use session proxy objects that implement MongoDB's collection and database interfaces, so you need not add a session on each call. This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
+Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for tying a `ClientSession` to the operations.
+`MongoCollection` and `MongoDatabase` use session proxy objects that implement MongoDB's collection and database interfaces, so you need not add a session on each call.
+This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
 
 NOTE: Methods such as `(Reactive)MongoOperations#getCollection` return native MongoDB Java Driver gateway objects (such as `MongoCollection`) that themselves offer dedicated methods for `ClientSession`. These methods are *NOT* session-proxied. You should provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not through one of the `#execute` callbacks on `MongoOperations`.
 

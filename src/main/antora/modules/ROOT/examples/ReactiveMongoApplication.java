@@ -30,7 +30,7 @@ public class ReactiveMongoApplication {
 
 		ReactiveMongoOperations mongoOps = new ReactiveMongoTemplate(MongoClients.create(), "database");
 
-		Mono<Person> joe = mongoOps.insert(new Person("Joe", 34))
+		mongoOps.insert(new Person("Joe", 34))
 			.then(mongoOps.query(Person.class).matching(where("name").is("Joe")).first())
 			.doOnNext(System.out::println)
 			.block();

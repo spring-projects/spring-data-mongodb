@@ -48,11 +48,11 @@ XML::
 +
 [source,xml,indent=0,subs="verbatim,quotes",role="third"]
 ----
-<mongo:mongo-client host="localhost" port="27017"/>
+<mongo:mongo-client host="localhost" port="27017" />
 
 <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-  <constructor-arg ref="mongoClient"/>
-  <constructor-arg name="databaseName" value="geospatial"/>
+  <constructor-arg ref="mongoClient" />
+  <constructor-arg name="databaseName" value="geospatial" />
 </bean>
 ----
 ======

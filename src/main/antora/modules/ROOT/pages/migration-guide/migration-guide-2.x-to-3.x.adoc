@@ -1,11 +1,11 @@
 [[mongodb.migration.2.x-3.x]]
-== Migration Guide from 2.x to 3.x
+= Migration Guide from 2.x to 3.x
 
 Spring Data MongoDB 3.x requires the MongoDB Java Driver 4.x +
 To learn more about driver versions please visit the https://www.mongodb.com/docs/drivers/java/sync/current/upgrade/[MongoDB Documentation].
 
 [[dependency-changes]]
-=== Dependency Changes
+== Dependency Changes
 
 * `org.mongodb:mongo-java-driver` (uber jar) got replaced with:
 ** bson-jar
@@ -16,7 +16,7 @@ The change in dependencies allows usage of the reactive support without having t
 NOTE: The new sync driver does no longer support `com.mongodb.DBObject`. Please use `org.bson.Document` instead.
 
 [[signature-changes]]
-=== Signature Changes
+== Signature Changes
 
 * `MongoTemplate` no longer supports `com.mongodb.MongoClient` and `com.mongodb.MongoClientOptions`.
 Please use `com.mongodb.client.MongoClient` and `com.mongodb.MongoClientSettings` instead.
@@ -24,18 +24,20 @@ Please use `com.mongodb.client.MongoClient` and `com.mongodb.MongoClientSettings
 In case you're using `AbstractMongoConfiguration` please switch to `AbstractMongoClientConfiguration`.
 
 [[namespace-changes]]
-=== Namespace Changes
+== Namespace Changes
 
 The switch to `com.mongodb.client.MongoClient` requires an update of your configuration XML if you have one.
 The best way to provide required connection information is by using a connection string.
 Please see the https://docs.mongodb.com/manual/reference/connection-string/[MongoDB Documentation] for details.
 
-[source,xml]
+
 ====
+[source,xml]
 ----
 <mongo:mongo.mongo-client id="with-defaults" />
 ----
 
+[source,xml]
 ----
 <context:property-placeholder location="classpath:..."/>
 
@@ -46,6 +48,7 @@ Please see the https://docs.mongodb.com/manual/reference/connection-string/[Mong
                           connection-string="mongodb://${mongo.host}:${mongo.port}/?replicaSet=rs0" />
 ----
 
+[source,xml]
 ----
 <mongo:mongo.mongo-client id="client-with-settings" replica-set="rs0">
 		<mongo:client-settings cluster-connection-mode="MULTIPLE"

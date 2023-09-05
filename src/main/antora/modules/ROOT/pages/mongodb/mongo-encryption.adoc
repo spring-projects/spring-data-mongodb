@@ -1,5 +1,5 @@
 [[mongo.encryption]]
-= Client Side Field Level Encryption (CSFLE)
+= Encryption (CSFLE)
 
 Client Side Encryption is a feature that encrypts data in your application before it is sent to MongoDB.
 We recommend you get familiar with the concepts, ideally from the https://www.mongodb.com/docs/manual/core/csfle/[MongoDB Documentation] to learn more about its capabilities and restrictions before you continue applying Encryption through Spring Data.
