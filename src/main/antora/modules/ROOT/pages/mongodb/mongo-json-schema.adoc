@@ -287,21 +287,6 @@ class B extends Root {
 ----
 ====
 
-[[mongo.jsonSchema.query]]
-== Query a collection for matching JSON Schema
-
-You can use a schema to query any collection for documents that match a given structure defined by a JSON schema, as the following example shows:
-
-.Query for Documents matching a `$jsonSchema`
-====
-[source,java]
-----
-MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
-
-template.find(query(matchingDocumentStructure(schema)), Person.class);
-----
-====
-
 [[mongo.jsonSchema.encrypted-fields]]
 == Encrypted Fields
 

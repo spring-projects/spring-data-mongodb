@@ -1,7 +1,9 @@
 [[mongo.collation]]
 = Collations
 
-Since version 3.4, MongoDB supports collations for collection and index creation and various query operations. Collations define string comparison rules based on the http://userguide.icu-project.org/collation/concepts[ICU collations]. A collation document consists of various properties that are encapsulated in `Collation`, as the following listing shows:
+Since version 3.4, MongoDB supports collations for collection and index creation and various query operations.
+Collations define string comparison rules based on the http://userguide.icu-project.org/collation/concepts[ICU collations].
+A collation document consists of various properties that are encapsulated in `Collation`, as the following listing shows:
 
 ====
 [source,java]

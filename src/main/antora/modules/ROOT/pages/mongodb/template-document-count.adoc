@@ -1,8 +1,20 @@
 [[mongo.query.count]]
 = Counting Documents
 
+The template API offers various methods to count the number of documents matching a given criteria.
+One of them outlined below.
+
+====
+[source,java]
+----
+template.query(Person.class)
+    .matching(query(where("firstname").is("luke")))
+    .count();
+----
+====
+
 In pre-3.x versions of SpringData MongoDB the count operation used MongoDBs internal collection statistics.
-With the introduction of xref:reference/client-session-transactions.adoc#mongo.transactions[MongoDB Transactions] this was no longer possible because statistics would not correctly reflect potential changes during a transaction requiring an aggregation-based count approach.
+With the introduction of xref:mongodb/client-session-transactions.adoc#mongo.transactions[MongoDB Transactions] this was no longer possible because statistics would not correctly reflect potential changes during a transaction requiring an aggregation-based count approach.
 So in version 2.x `MongoOperations.count()` would use the collection statistics if no transaction was in progress, and the aggregation variant if so.
 
 As of Spring Data MongoDB 3.x any `count` operation uses regardless the existence of filter criteria the aggregation-based count approach via MongoDBs `countDocuments`.

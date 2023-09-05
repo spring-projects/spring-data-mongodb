@@ -96,11 +96,11 @@ The `Criteria` class provides the following methods, all of which correspond to 
 * `Criteria` *sampleRate* `(double sampleRate)` Creates a criterion using the `$sampleRate` operator
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
-* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:reference/mongo-json-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:mongodb/mongo-json-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
 * `Criteria` *bits()* is the gateway to https://docs.mongodb.com/manual/reference/operator/query-bitwise/[MongoDB bitwise query operators] like `$bitsAllClear`.
 
 
-The Criteria class also provides the following methods for geospatial queries (see the xref:reference/mongodb/mongo-query/geospatial.adoc[GeoSpatial Queries] section to see them in action):
+The Criteria class also provides the following methods for geospatial queries.
 
 * `Criteria` *within* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
 * `Criteria` *within* `(Box box)` Creates a geospatial criterion using a `$geoWithin $box` operation.
@@ -184,7 +184,7 @@ query.fields()
 <4> Use SpEL along with an `AggregationExpression` to invoke expression functions. Field names are mapped to the ones used in the domain model.
 ====
 
-`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction].
+`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in xref:mongodb/mongo-repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction].
 
 [[mongo-template.query.distinct]]
 == Query Distinct Values
@@ -230,7 +230,7 @@ template.query(Person.class)  <1>
 
 MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin`, and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes (`Box`, `Circle`, and `Point`) that are used in conjunction with geospatial related `Criteria` methods.
 
-NOTE: Using GeoSpatial queries requires attention when used within MongoDB transactions, see xref:reference/client-session-transactions.adoc#mongo.transactions.behavior[Special behavior inside transactions].
+NOTE: Using GeoSpatial queries requires attention when used within MongoDB transactions, see xref:mongodb/client-session-transactions.adoc#mongo.transactions.behavior[Special behavior inside transactions].
 
 To understand how to perform GeoSpatial queries, consider the following `Venue` class (taken from the integration tests and relying on the rich `MappingMongoConverter`):
 
@@ -723,3 +723,125 @@ TextQuery.queryText(new TextCriteria().phrase("coffee cake"));
 
 You can set flags for `$caseSensitive` and `$diacriticSensitive` by using the corresponding methods on `TextCriteria`.
 Note that these two optional flags have been introduced in MongoDB 3.2 and are not included in the query unless explicitly set.
+
+[[mongo.query-by-example]]
+== Query by Example
+
+Some general information about Query By Example support in Spring Data can be found in the commons documentation.
+
+The following snipped shows how to query by example:
+
+.Typed Example Query
+[source,java]
+----
+Person probe = new Person();
+probe.lastname = "stark";
+
+Example example = Example.of(probe);
+
+Query query = new Query(new Criteria().alike(example));
+List<Person> result = template.find(query, Person.class);
+----
+
+By default `Example` is strictly typed. This means that the mapped query has an included type match, restricting it to probe assignable types.
+For example, when sticking with the default type key (`_class`), the query has restrictions such as (`_class : { $in : [ com.acme.Person] }`).
+
+By using the `UntypedExampleMatcher`, it is possible to bypass the default behavior and skip the type restriction. So, as long as field names match, nearly any domain type can be used as the probe for creating the reference, as the following example shows:
+
+.Untyped Example Query
+====
+[source, java]
+----
+
+class JustAnArbitraryClassWithMatchingFieldName {
+  @Field("lastname") String value;
+}
+
+JustAnArbitraryClassWithMatchingFieldNames probe = new JustAnArbitraryClassWithMatchingFieldNames();
+probe.value = "stark";
+
+Example example = Example.of(probe, UntypedExampleMatcher.matching());
+
+Query query = new Query(new Criteria().alike(example));
+List<Person> result = template.find(query, Person.class);
+----
+====
+
+[NOTE]
+====
+When including `null` values in the `ExampleSpec`, Spring Data Mongo uses embedded document matching instead of dot notation property matching.
+Doing so forces exact document matching for all property values and the property order in the embedded document.
+====
+
+[NOTE]
+====
+`UntypedExampleMatcher` is likely the right choice for you if you are storing different entities within a single collection or opted out of writing xref:mongodb/mongodb/mongo-template-save-update-remove.adoc#mongo-template.type-mapping[type hints].
+
+Also, keep in mind that using `@TypeAlias` requires eager initialization of the `MappingContext`. To do so, configure `initialEntitySet` to to ensure proper alias resolution for read operations.
+====
+
+Spring Data MongoDB provides support for the following matching options:
+
+[cols="1,2", options="header"]
+.`StringMatcher` options
+|===
+| Matching
+| Logical result
+
+| `DEFAULT` (case-sensitive)
+| `{"firstname" : firstname}`
+
+| `DEFAULT` (case-insensitive)
+| `{"firstname" : { $regex: firstname, $options: 'i'}}`
+
+| `EXACT`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname$/}}`
+
+| `EXACT` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname$/, $options: 'i'}}`
+
+| `STARTING`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname/}}`
+
+| `STARTING` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname/, $options: 'i'}}`
+
+| `ENDING`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname$/}}`
+
+| `ENDING` (case-insensitive)
+| `{"firstname" : { $regex: /firstname$/, $options: 'i'}}`
+
+| `CONTAINING`  (case-sensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/}}`
+
+| `CONTAINING` (case-insensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/, $options: 'i'}}`
+
+| `REGEX`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname/}}`
+
+| `REGEX` (case-insensitive)
+| `{"firstname" : { $regex: /firstname/, $options: 'i'}}`
+
+|===
+
+[[mongo.jsonSchema.query]]
+== Query a collection for matching JSON Schema
+
+You can use a schema to query any collection for documents that match a given structure defined by a JSON schema, as the following example shows:
+
+.Query for Documents matching a `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.find(query(matchingDocumentStructure(schema)), Person.class);
+----
+====
+
+Please refer to the xref:mongodb/mongo-json-schema.adoc[JSON Schema] section to learn more about the schema support in Spring Data MongoDB.
+
+
+

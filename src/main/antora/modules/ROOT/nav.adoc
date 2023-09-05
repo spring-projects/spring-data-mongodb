@@ -11,11 +11,13 @@
 *** xref:mongodb/template-config.adoc[]
 *** xref:mongodb/template-crud-operations.adoc[]
 *** xref:mongodb/template-query-operations.adoc[]
-**** xref:mongodb/mongo-query/geo-json.adoc[]
-**** xref:mongodb/mongo-query/collation.adoc[]
-**** xref:mongodb/mongo-query/kotlin-support.adoc[]
-**** xref:mongodb/mongo-query/additional-options.adoc[]
-*** xref:mongodb/mongo-query-count.adoc[]
+**** xref:mongodb/template-query-options.adoc[]
+*** xref:mongodb/template-document-count.adoc[]
+
+
+
+
+
 *** xref:mongodb/mongo-mapreduce.adoc[]
 *** xref:mongodb/mongo-server-side-scripts.adoc[]
 *** xref:mongodb/mongo-group.adoc[]
@@ -25,7 +27,6 @@
 *** xref:mongodb/mongo-exception.adoc[]
 *** xref:mongodb/mongo-executioncallback.adoc[]
 ** xref:mongodb/mongo-json-schema.adoc[]
-** xref:mongodb/query-by-example.adoc[]
 ** xref:mongodb/aggregation-framework.adoc[]
 ** xref:mongodb/mongo-entity-callbacks.adoc[]
 ** xref:mongodb/gridfs.adoc[]
@@ -49,3 +50,11 @@
 ** xref:mongodb/kotlin.adoc[]
 ** xref:mongodb/jmx.adoc[]
 ** xref:mongodb/migrating.adoc[]
+
+
+
+** xref:mongodb/query-by-example.adoc[]
+**** xref:mongodb/mongo-query/geo-json.adoc[]
+**** xref:mongodb/mongo-query/collation.adoc[]
+**** xref:mongodb/mongo-query/kotlin-support.adoc[]
+**** xref:mongodb/mongo-query/additional-options.adoc[]

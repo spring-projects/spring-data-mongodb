@@ -1,19 +1,4 @@
-[[mongo.query.additional-query-options]]
-= Additional Query Options
-
-MongoDB offers various ways of applying meta information, like a comment or a batch size, to a query.Using the `Query` API
-directly there are several methods for those options.
-
-====
-[source,java]
-----
-Query query = query(where("firstname").is("luke"))
-    .comment("find luke")         <1>
-    .cursorBatchSize(100)                                 <2>
-----
-<1> The comment propagated to the MongoDB profile log.
-<2> The number of documents to return in each response batch.
-====
+TODO: move to repo
 
 On the repository level the `@Meta` annotation provides means to add query options in a declarative way.
 
