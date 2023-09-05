@@ -7,27 +7,42 @@
 * xref:mongodb.adoc[]
 ** xref:mongodb/getting-started.adoc[]
 ** xref:mongodb/configuration.adoc[]
+
+// Template
 ** xref:mongodb/template-api.adoc[]
 *** xref:mongodb/template-config.adoc[]
 *** xref:mongodb/template-crud-operations.adoc[]
 *** xref:mongodb/template-query-operations.adoc[]
 **** xref:mongodb/template-query-options.adoc[]
 *** xref:mongodb/template-document-count.adoc[]
+*** xref:mongodb/aggregation-framework.adoc[]
 
 
 
 
 
+// still needed???
 *** xref:mongodb/mongo-mapreduce.adoc[]
 *** xref:mongodb/mongo-server-side-scripts.adoc[]
 *** xref:mongodb/mongo-group.adoc[]
+
+
+// Mapping
+
+
+// Repository
+
+
+// Mongo Specifics
+
+
+
 *** xref:mongodb/mongo-template-index-and-collections.adoc[]
 *** xref:mongodb/mongo-template-commands.adoc[]
 *** xref:mongodb/mapping-usage-events.adoc[]
 *** xref:mongodb/mongo-exception.adoc[]
 *** xref:mongodb/mongo-executioncallback.adoc[]
 ** xref:mongodb/mongo-json-schema.adoc[]
-** xref:mongodb/aggregation-framework.adoc[]
 ** xref:mongodb/mongo-entity-callbacks.adoc[]
 ** xref:mongodb/gridfs.adoc[]
 ** xref:mongodb/tailable-cursors.adoc[]

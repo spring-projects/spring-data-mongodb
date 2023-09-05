@@ -29,7 +29,33 @@ See "`xref:mongodb/mongo-exception.adoc[Exception Translation]`" for more inform
 `MongoTemplate` offers many convenience methods to help you easily perform common tasks.
 However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods.
 The `execute` callbacks gives you a reference to either a `MongoCollection` or a `MongoDatabase` object.
-See the xref:mongodb/mongo-executioncallback.adoc["`Execution Callbacks`"] section for more information.
+
+* `<T> T` *execute* `(Class<?> entityClass, CollectionCallback<T> action)`: Runs the given `CollectionCallback` for the entity collection of the specified class.
+
+* `<T> T` *execute* `(String collectionName, CollectionCallback<T> action)`: Runs the given `CollectionCallback` on the collection of the given name.
+
+* `<T> T` *execute* `(DbCallback<T> action)`: Runs a DbCallback, translating any exceptions as necessary. Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
+
+* `<T> T` *execute* `(String collectionName, DbCallback<T> action)`: Runs a `DbCallback` on the collection of the given name translating any exceptions as necessary.
+
+* `<T> T` *executeInSession* `(DbCallback<T> action)`: Runs the given `DbCallback` within the same connection to the database so as to ensure consistency in a write-heavy environment where you may read the data that you wrote.
+
+The following example uses the `CollectionCallback` to return information about an index:
+
+[source,java]
+----
+boolean hasIndex = template.execute("geolocation", new CollectionCallbackBoolean>() {
+  public Boolean doInCollection(Venue.class, DBCollection collection) throws MongoException, DataAccessException {
+    List<Document> indexes = collection.getIndexInfo();
+    for (Document document : indexes) {
+      if ("location_2d".equals(document.get("name"))) {
+        return true;
+      }
+    }
+    return false;
+  }
+});
+----
 
 Being the central component when it comes to more low-level interaction with MongoDB `MongoTemplate` offers a wide range of methods covering needs from collection creation, index creation, and CRUD operations to more advanced functionality, such as Map-Reduce and aggregations.
 You can find multiple overloads for each method.
