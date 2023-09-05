@@ -50,7 +50,7 @@ container.stop();                                                               
 <4> Provide an optional filter for documents to receive.
 <5> Set the message listener to publish incoming ``Message``s to.
 <6> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel it to free resources.
-<5> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
+<7> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
 ====
 
 [[tailable-cursors.reactive]]

@@ -10,6 +10,3 @@ List<Person> findByFirstname(String firstname);
 ----
 ====
 
-include:../../:../{spring-data-commons-docs}/query-by-example.adoc[leveloffset=+1]
-include:../../:query-by-example.adoc[leveloffset=+1]
-

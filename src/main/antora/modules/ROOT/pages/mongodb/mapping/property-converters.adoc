@@ -1,7 +1,7 @@
 [[mongo.property-converters]]
 = Property Converters - Mapping specific fields
 
-While xref:reference/mongo-custom-conversions.adoc[type-based conversion] already offers ways to influence the conversion and representation of certain types within the target store, it has limitations when only certain values or properties of a particular type should be considered for conversion.
+While xref:mongodb/mapping/custom-conversions.adoc[type-based conversion] already offers ways to influence the conversion and representation of certain types within the target store, it has limitations when only certain values or properties of a particular type should be considered for conversion.
 Property-based converters allow configuring conversion rules on a per-property basis, either declaratively (via `@ValueConverter`) or programmatically (by registering a `PropertyValueConverter` for a specific property).
 
 A `PropertyValueConverter` can transform a given value into its store representation (write) and back (read) as the following listing shows.

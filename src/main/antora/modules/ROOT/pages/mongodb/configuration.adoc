@@ -65,7 +65,7 @@ https://www.springframework.org/schema/beans/spring-beans.xsd">
 
 </beans>
 ----
-=====
+======
 
 This approach lets you use the standard `MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`/`ReactiveMongoClientFactoryBean`.
 As compared to instantiating a `MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation.
@@ -170,7 +170,7 @@ public class MongoApplication {
   }
 }
 ----
-The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the xref:reference/mongodb/getting-started.adoc[getting started section].
+The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the xref:mongodb/getting-started.adoc[getting started section].
 
 NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 

@@ -22,7 +22,7 @@ If the application is fine with the limitations of working upon collection stati
 
 [TIP]
 ====
-By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a xref:reference/client-session-transactions.adoc[session].
+By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a xref:mongodb/client-session-transactions.adoc[session].
 It will still be possible to obtain exact numbers via `MongoTemplate#exactCount`, but may speed up things.
 ====
 

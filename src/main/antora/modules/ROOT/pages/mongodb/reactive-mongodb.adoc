@@ -19,7 +19,7 @@ For most tasks, you should use `ReactiveMongoTemplate` or the repository support
 
 Spring MongoDB support requires MongoDB 2.6 or higher and Java SE 8 or higher.
 
-First, you need to set up a running MongoDB server. Refer to the https://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of running the following command: `${MONGO_HOME}/bin/mongod`
+First, you need to set up a running MongoDB server. Refer to the https://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of running the following command: `/bin/mongod`
 
 To create a Spring project in STS, go to File -> New -> Spring Template Project -> Simple Spring Utility Project and press Yes when prompted. Then enter a project and a package name, such as org.spring.mongodb.example.
 
@@ -40,7 +40,7 @@ Then add the following to the pom.xml dependencies section.
   <dependency>
     <groupId>org.mongodb</groupId>
     <artifactId>mongodb-driver-reactivestreams</artifactId>
-    <version>{mongo-reactivestreams}</version>
+    <version>{mongoversion}</version>
   </dependency>
 
   <dependency>
@@ -127,8 +127,8 @@ Running the preceding class produces the following output:
 
 Even in this simple example, there are a few things to take notice of:
 
-* You can instantiate the central helper class of Spring Mongo (xref:reference/reactive-mongodb.adoc#mongo.reactive.template[`ReactiveMongoTemplate`]) by using the standard `com.mongodb.reactivestreams.client.MongoClient` object and the name of the database to use.
-* The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See xref:reference/mapping.adoc[here].).
+* You can instantiate the central helper class of Spring Mongo  by using the standard `com.mongodb.reactivestreams.client.MongoClient` object and the name of the database to use.
+* The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See xref:mongodb/mapping/mapping.adoc[here].).
 * Conventions are used for handling the ID field, converting it to be an `ObjectId` when stored in the database.
 * Mapping conventions can use field access. Notice that the `Person` class has only getters.
 * If the constructor argument names match the field names of the stored document, they are used to instantiate the object
@@ -250,7 +250,7 @@ public class MongoApp {
 }
 ----
 
-The use of `SimpleReactiveMongoDatabaseFactory` is the only difference between the listing shown in the xref:reference/reactive-mongodb.adoc#mongodb-reactive-getting-started[getting started section].
+The use of `SimpleReactiveMongoDatabaseFactory` is the only difference between the listing shown in the xref:mongodb/getting-started.adoc[getting started section].
 
 [[mongo.reactive.mongo-db-factory-java]]
 === Registering a ReactiveMongoDatabaseFactory Instance by Using Java-based Metadata
@@ -292,18 +292,17 @@ The `ReactiveMongoTemplate` class, located in the `org.springframework.data.mong
 
 NOTE: Once configured, `ReactiveMongoTemplate` is thread-safe and can be reused across multiple instances.
 
-The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface. Spring provides a default implementation with `MongoMappingConverter`, but you can also write your own converter. See the xref:reference/mongo-custom-conversions.adoc[section on `MongoConverter` instances] for more detailed information.
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface. Spring provides a default implementation with `MongoMappingConverter`, but you can also write your own converter. See the xref:mongodb/mapping/custom-conversions.adoc[section on `MongoConverter` instances] for more detailed information.
 
 The `ReactiveMongoTemplate` class implements the `ReactiveMongoOperations` interface. As much as possible, the methods on `ReactiveMongoOperations` mirror methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API. For example, you can find methods such as `find`, `findAndModify`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`. The design goal is to make it as easy as possible to transition between the use of the base MongoDB driver and `ReactiveMongoOperations`. A major difference between the two APIs is that `ReactiveMongoOperations` can be passed domain objects instead of `Document`, and there are fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
 NOTE: The preferred way to reference the operations on `ReactiveMongoTemplate` instance is through its `ReactiveMongoOperations` interface.
 
-The default converter implementation used by `ReactiveMongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations are explained in the xref:reference/mapping.adoc[Mapping chapter].
+The default converter implementation used by `ReactiveMongoTemplate` is `MappingMongoConverter`. While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names. These conventions as well as the use of mapping annotations are explained in the xref:mongodb/mapping/mapping.adoc[Mapping chapter].
 
-Another central feature of `ReactiveMongoTemplate` is exception translation of exceptions thrown in the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. See the section on xref:reference/mongodb/mongo-exception.adoc[exception translation] for more information.
+Another central feature of `ReactiveMongoTemplate` is exception translation of exceptions thrown in the MongoDB Java driver into Spring's portable Data Access Exception hierarchy.
 
-There are many convenience methods on `ReactiveMongoTemplate` to help you easily perform common tasks. However, if you need to access the MongoDB driver API directly to access functionality not explicitly exposed by the MongoTemplate, you can use one of several `execute` callback methods to access underlying driver APIs. The `execute` callbacks give you a reference to either a `com.mongodb.reactivestreams.client.MongoCollection` or a `com.mongodb.reactivestreams.client.MongoDatabase` object. See xref:reference/reactive-mongodb.adoc#mongo.reactive.executioncallback[Execution Callbacks] for more information.
-
+There are many convenience methods on `ReactiveMongoTemplate` to help you easily perform common tasks. However, if you need to access the MongoDB driver API directly to access functionality not explicitly exposed by the MongoTemplate, you can use one of several `execute` callback methods to access underlying driver APIs. The `execute` callbacks give you a reference to either a `com.mongodb.reactivestreams.client.MongoCollection` or a `com.mongodb.reactivestreams.client.MongoDatabase` object.
 [[mongo.reactive.template.instantiating]]
 === Instantiating ReactiveMongoTemplate
 
@@ -456,8 +455,6 @@ public class ReactiveMongoApp {
 The preceding example includes implicit conversion between a `String` and `ObjectId` (by using the `MongoConverter`) as stored in the database and recognizing a convention of the property `Id` name.
 
 NOTE: The preceding example is meant to show the use of save, update, and remove operations on `ReactiveMongoTemplate` and not to show complex mapping or chaining functionality.
-
-"`xref:reference/mongodb/mongo-query.adoc[Querying Documents]`" explains the query syntax used in the preceding example in more detail. Additional documentation can be found in xref:reference/mongodb/mongo-template.adoc[the blocking `MongoTemplate`] section.
 
 [[mongo.reactive.executioncallback]]
 == Execution Callbacks

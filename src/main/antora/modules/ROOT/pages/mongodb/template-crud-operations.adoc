@@ -108,7 +108,7 @@ public class ReactiveMongoApplication {
 `MongoConverter` caused implicit conversion between a `String` and an `ObjectId` stored in the database by recognizing (through convention) the `Id` property name.
 
 The preceding example is meant to show the use of save, update, and remove operations on `MongoTemplate` / `ReactiveMongoTemplate` and not to show complex mapping functionality.
-The query syntax used in the preceding example is explained in more detail in the section "`xref:mongodb/mongo-query.adoc[Querying Documents]`".
+The query syntax used in the preceding example is explained in more detail in the section "`xref:mongodb/template-query-operations.adoc[Querying Documents]`".
 
 IMPORTANT: MongoDB requires that you have an `_id` field for all documents. Please refer to the xref:mongodb/template-id-handling.adoc[id handling] section for details on the special treatment of this field.
 

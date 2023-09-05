@@ -96,7 +96,7 @@ The `Criteria` class provides the following methods, all of which correspond to 
 * `Criteria` *sampleRate* `(double sampleRate)` Creates a criterion using the `$sampleRate` operator
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
-* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:mongodb/mongo-json-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:mongodb/template-collection-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
 * `Criteria` *bits()* is the gateway to https://docs.mongodb.com/manual/reference/operator/query-bitwise/[MongoDB bitwise query operators] like `$bitsAllClear`.
 
 
@@ -184,7 +184,7 @@ query.fields()
 <4> Use SpEL along with an `AggregationExpression` to invoke expression functions. Field names are mapped to the ones used in the domain model.
 ====
 
-`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in xref:mongodb/mongo-repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction].
+`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in xref:mongodb/repositories/repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction].
 
 [[mongo-template.query.distinct]]
 == Query Distinct Values
@@ -226,7 +226,7 @@ template.query(Person.class)  <1>
 ====
 
 [[mongo.geospatial]]
-= GeoSpatial Queries
++= GeoSpatial Queries
 
 MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin`, and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes (`Box`, `Circle`, and `Point`) that are used in conjunction with geospatial related `Criteria` methods.
 
@@ -653,7 +653,7 @@ Returning the 3 Documents just like the GeoJSON variant:
 Since version 2.6 of MongoDB, you can run full-text queries by using the `$text` operator. Methods and operations specific to full-text queries are available in `TextQuery` and `TextCriteria`. When doing full text search, see the https://docs.mongodb.org/manual/reference/operator/query/text/#behavior[MongoDB reference] for its behavior and limitations.
 
 Before you can actually use full-text search, you must set up the search index correctly.
-See xref:mongodb/mapping.adoc#mapping-usage-indexes.text-index[Text Index] for more detail on how to create index structures.
+See xref:mongodb/mapping/mapping.adoc#mapping-usage-indexes.text-index[Text Index] for more detail on how to create index structures.
 The following example shows how to set up a full-text search:
 
 [source,javascript]
@@ -775,7 +775,7 @@ Doing so forces exact document matching for all property values and the property
 
 [NOTE]
 ====
-`UntypedExampleMatcher` is likely the right choice for you if you are storing different entities within a single collection or opted out of writing xref:mongodb/mongodb/mongo-template-save-update-remove.adoc#mongo-template.type-mapping[type hints].
+`UntypedExampleMatcher` is likely the right choice for you if you are storing different entities within a single collection or opted out of writing type hints.
 
 Also, keep in mind that using `@TypeAlias` requires eager initialization of the `MappingContext`. To do so, configure `initialEntitySet` to to ensure proper alias resolution for read operations.
 ====
@@ -841,7 +841,7 @@ template.find(query(matchingDocumentStructure(schema)), Person.class);
 ----
 ====
 
-Please refer to the xref:mongodb/mongo-json-schema.adoc[JSON Schema] section to learn more about the schema support in Spring Data MongoDB.
+Please refer to the xref:mongodb/template-collection-schema.adoc[JSON Schema] section to learn more about the schema support in Spring Data MongoDB.
 
 
 

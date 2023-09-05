@@ -15,9 +15,9 @@ Specific data types require deterministic encryption to preserve equality compar
 == Automatic Encryption
 
 MongoDB supports https://www.mongodb.com/docs/manual/core/csfle/[Client-Side Field Level Encryption] out of the box using the MongoDB driver with its Automatic Encryption feature.
-Automatic Encryption requires a xref:reference/mongo-json-schema.adoc[JSON Schema] that allows to perform encrypted read and write operations without the need to provide an explicit en-/decryption step.
+Automatic Encryption requires a xref:mongodb/template-collection-schema.adoc[JSON Schema] that allows to perform encrypted read and write operations without the need to provide an explicit en-/decryption step.
 
-Please refer to the xref:reference/mongo-json-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema] section for more information on defining a JSON Schema that holds encryption information.
+Please refer to the xref:mongodb/template-collection-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema] section for more information on defining a JSON Schema that holds encryption information.
 
 To make use of a the `MongoJsonSchema` it needs to be combined with `AutoEncryptionSettings` which can be done eg. via a `MongoClientSettingsBuilderCustomizer`.
 
@@ -50,7 +50,7 @@ MongoClientSettingsBuilderCustomizer customizer(MappingContext mappingContext) {
 == Explicit Encryption
 
 Explicit encryption uses the MongoDB driver's encryption library (`org.mongodb:mongodb-crypt`) to perform encryption and decryption tasks.
-The `@ExplicitEncrypted` annotation is a combination of the `@Encrypted` annotation used for xref:reference/mongo-json-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema creation] and a xref:reference/mongo-property-converters.adoc[Property Converter].
+The `@ExplicitEncrypted` annotation is a combination of the `@Encrypted` annotation used for xref:mongodb/template-collection-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema creation] and a xref:mongodb/mapping/property-converters.adoc[Property Converter].
 In other words, `@ExplicitEncrypted` uses existing building blocks to combine them for simplified explicit encryption support.
 
 [NOTE]
@@ -112,7 +112,7 @@ Fields cannot be used in queries/aggregations.
 
 By default, the `@ExplicitEncrypted(value=…)` attribute references a `MongoEncryptionConverter`.
 It is possible to change the default implementation and exchange it with any `PropertyValueConverter` implementation by providing the according type reference.
-To learn more about custom `PropertyValueConverters` and the required configuration, please refer to the xref:reference/mongo-property-converters.adoc[Property Converters - Mapping specific fields] section.
+To learn more about custom `PropertyValueConverters` and the required configuration, please refer to the xref:mongodb/mapping/property-converters.adoc[Property Converters - Mapping specific fields] section.
 
 [[mongo.encryption.explicit-setup]]
 === MongoEncryptionConverter Setup

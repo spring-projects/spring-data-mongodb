@@ -17,4 +17,6 @@ asciidoc:
     spring-framework-javadoc: '{springjavadocurl}'
     springhateoasversion: ${spring-hateoas}
     releasetrainversion: ${releasetrain}
+    reactor: ${reactor}
+    mongoversion: ${mongo}
     store: Mongo

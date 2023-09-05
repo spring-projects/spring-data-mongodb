@@ -31,7 +31,7 @@ public class Person {
 
 Note that the domain type shown in the preceding example has a property named `id` of type `String`.The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID.
 Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types.
-Please see xref:reference/mongodb/mongo-template-save-update-remove.adoc#mongo-template.id-handling[ID mapping] for more information about on how the `id` field is handled in the mapping layer.
+Please see xref:mongodb/template-id-handling.adoc#mongo-template.id-handling[ID mapping] for more information about on how the `id` field is handled in the mapping layer.
 
 Now that we have a domain object, we can define an interface that uses it, as follows:
 
@@ -359,9 +359,9 @@ public interface PersonRepository extends CrudRepository<Person, String> {
 The update is "`as is`" and does not bind any parameters.
 <2> The actual increment value is defined by the `increment` method argument that is bound to the `?1` placeholder.
 <3> Use the Spring Expression Language (SpEL) for parameter binding.
-<4> Use the `pipeline` attribute to issue xref:reference/mongodb/mongo-template-save-update-remove.adoc#mongo-template.aggregation-update[aggregation pipeline updates].
+<4> Use the `pipeline` attribute to issue xref:mongodb/template-crud-operations.adoc#mongo-template.aggregation-update[aggregation pipeline updates].
 <5> The update may contain complex objects.
-<6> Combine a xref:reference/mongo-repositories.adoc#mongodb.repositories.queries.json-based[string based query] with an update.
+<6> Combine a xref:mongodb/repositories/repositories.adoc#mongodb.repositories.queries.json-based[string based query] with an update.
 ====
 
 WARNING: Repository updates do not emit persistence nor mapping lifecycle events.
@@ -655,7 +655,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 === Full-text Search Queries
 
 MongoDB's full-text search feature is store-specific and, therefore, can be found on `MongoRepository` rather than on the more general `CrudRepository`.
-We need a document with a full-text index (see "`xref:reference/mapping.adoc#mapping-usage-indexes.text-index[Text Indexes]`" to learn how to create a full-text index).
+We need a document with a full-text index (see "`xref:mongodb/mapping/mapping.adoc#mapping-usage-indexes.text-index[Text Indexes]`" to learn how to create a full-text index).
 
 Additional methods on `MongoRepository` take `TextCriteria` as an input parameter.
 In addition to those explicit methods, it is also possible to add a `TextCriteria`-derived repository method.

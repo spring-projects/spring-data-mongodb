@@ -1,7 +1,3 @@
-include::../{spring-data-commons-docs}/kotlin.adoc[]
-
-include::../{spring-data-commons-docs}/kotlin-extensions.adoc[leveloffset=+1]
-
 To retrieve a list of `SWCharacter` objects in Java, you would normally write the following:
 
 [source,java]
@@ -23,7 +19,6 @@ As in Java, `characters` in Kotlin is strongly typed, but Kotlin's clever type i
 Spring Data MongoDB provides the following extensions:
 
 * Reified generics support for `MongoOperations`, `ReactiveMongoOperations`, `FluentMongoOperations`, `ReactiveFluentMongoOperations`, and `Criteria`.
-* xref:reference/mongodb/mongo-query/kotlin-support.adoc[Type-safe Queries for Kotlin]
+* xref:mongodb/mongo-query/kotlin-support.adoc[Type-safe Queries for Kotlin]
 * <<kotlin.coroutines>> extensions for `ReactiveFluentMongoOperations`.
 
-include::../{spring-data-commons-docs}/kotlin-coroutines.adoc[leveloffset=+1]

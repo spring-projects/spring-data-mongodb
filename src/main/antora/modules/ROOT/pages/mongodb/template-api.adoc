@@ -87,7 +87,7 @@ NOTE: Using projections allows `MongoTemplate` to optimize result mapping by lim
 by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
 target type is a closed interface or DTO projection.
 
-WARNING: Projections must not be applied to xref:mongodb/document-references.adoc[DBRefs].
+WARNING: Projections must not be applied to xref:mongodb/mapping/document-references.adoc[DBRefs].
 
 You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
 
@@ -122,4 +122,4 @@ Look into the implementation for more details on the mapping.
 The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface.
 Spring provides `MappingMongoConverter`, but you can also write your own converter.
 While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names.
-These conventions, as well as the use of mapping annotations, are explained in the "`xref:mongodb/mapping.adoc[Mapping]`" chapter.
+These conventions, as well as the use of mapping annotations, are explained in the "`xref:mongodb/mapping/mapping.adoc[Mapping]`" chapter.

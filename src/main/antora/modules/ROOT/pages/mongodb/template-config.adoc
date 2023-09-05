@@ -110,7 +110,7 @@ private class MyAppWriteConcernResolver implements WriteConcernResolver {
 [[mongo-template.entity-lifecycle-events]]
 == Publish entity lifecycle events
 
-The template publishes xref:mongodb/mapping-usage-events.adoc#mongodb.mapping-usage.events[lifecycle events].
+The template publishes xref:mongodb/mapping/lifecycle-events.adoc#mongodb.mapping-usage.events[lifecycle events].
 In case there are no listeners present, this feature can be disabled.
 
 [source,java]
@@ -126,7 +126,7 @@ MongoOperations mongoTemplate(MongoClient mongoClient) {
 [[mongo-template.entity-callbacks-config]]
 == Configure `EntityCallbacks`
 
-Nest to lifecycle events the template invokes xref:mongodb/mongo-entity-callbacks.adoc[EntityCallbacks] which can be (if not auto configured) set via the template API.
+Nest to lifecycle events the template invokes xref:mongodb/mapping/entity-callbacks.adoc[EntityCallbacks] which can be (if not auto configured) set via the template API.
 
 [source,java]
 ----
@@ -142,4 +142,4 @@ MongoOperations mongoTemplate(MongoClient mongoClient) {
 == Documents count configuration
 
 By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a xref:mongodb/client-session-transactions.adoc[session].
-Please refer to to the xref:mongodb/mongo-query-count.adoc#mongo.query.count[Counting Documents] section for more information.
+Please refer to to the xref:mongodb/template-document-count.adoc#mongo.query.count[Counting Documents] section for more information.

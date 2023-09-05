@@ -51,6 +51,4 @@ NOTE: Lifecycle events are only emitted for root level types. Complex types used
 
 WARNING: Lifecycle events depend on an `ApplicationEventMulticaster`, which in case of the `SimpleApplicationEventMulticaster` can be configured with a `TaskExecutor`, and therefore gives no guarantees when an Event is processed.
 
-include:../:../{spring-data-commons-docs}/entity-callbacks.adoc[leveloffset=+1]
-include:../:./mongo-entity-callbacks.adoc[leveloffset=+2]
 

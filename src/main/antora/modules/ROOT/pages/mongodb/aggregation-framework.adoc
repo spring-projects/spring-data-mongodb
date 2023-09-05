@@ -257,7 +257,7 @@ bucketAuto("price", 5).andOutput("title").push().as("titles");
 ----
 ====
 
-To create output fields in buckets, bucket operations can use `AggregationExpression` through `andOutput()` and xref:reference/aggregation-framework.adoc#mongo.aggregation.projection.expressions[SpEL expressions] through `andOutputExpression()`.
+To create output fields in buckets, bucket operations can use `AggregationExpression` through `andOutput()` and xref:mongodb/aggregation-framework.adoc#mongo.aggregation.projection.expressions[SpEL expressions] through `andOutputExpression()`.
 
 Note that further details regarding bucket expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
 https://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
@@ -296,7 +296,7 @@ Note that further details regarding facet operation can be found in the https://
 [[mongo.aggregation.sort-by-count]]
 === Sort By Count
 
-Sort by count operations group incoming documents based on the value of a specified expression, compute the count of documents in each distinct group, and sort the results by count. It offers a handy shortcut to apply sorting when using xref:reference/aggregation-framework.adoc#mongo.aggregation.facet[Faceted Classification]. Sort by count operations require a grouping field or grouping expression. The following listing shows a sort by count example:
+Sort by count operations group incoming documents based on the value of a specified expression, compute the count of documents in each distinct group, and sort the results by count. It offers a handy shortcut to apply sorting when using xref:mongodb/aggregation-framework.adoc#mongo.aggregation.facet[Faceted Classification]. Sort by count operations require a grouping field or grouping expression. The following listing shows a sort by count example:
 
 .Sort by count example
 ====
@@ -341,7 +341,7 @@ The preceding expression is translated into the following projection expression 
 }]}
 ----
 
-You can see examples in more context in xref:reference/aggregation-framework.adoc#mongo.aggregation.examples.example5[Aggregation Framework Example 5] and xref:reference/aggregation-framework.adoc#mongo.aggregation.examples.example6[Aggregation Framework Example 6]. You can find more usage examples for supported SpEL expression constructs in `SpelExpressionTransformerUnitTests`. The following table shows the SpEL transformations supported by Spring Data MongoDB:
+You can see examples in more context in xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example5[Aggregation Framework Example 5] and xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example6[Aggregation Framework Example 6]. You can find more usage examples for supported SpEL expression constructs in `SpelExpressionTransformerUnitTests`. The following table shows the SpEL transformations supported by Spring Data MongoDB:
 
 .Supported SpEL transformations
 [%header,cols="2"]

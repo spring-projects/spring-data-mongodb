@@ -53,10 +53,10 @@ CAUTION: Lazy loading may require class proxies, that in turn, might need access
 For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
 
 [[mapping-usage.document-references]]
-= Using Document References
+== Using Document References
 
 Using `@DocumentReference` offers a flexible way of referencing entities in MongoDB.
-While the goal is the same as when using xref:reference/document-references.adoc[DBRefs], the store representation is different.
+While the goal is the same as when using xref:mongodb/mapping/document-references.adoc[DBRefs], the store representation is different.
 `DBRef` resolves to a document with a fixed structure as outlined in the https://docs.mongodb.com/manual/reference/database-references/[MongoDB Reference documentation]. +
 Document references, do not follow a specific format.
 They can be literally anything, a single value, an entire document, basically everything that can be stored in MongoDB.
