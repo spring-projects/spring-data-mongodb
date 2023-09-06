@@ -52,12 +52,11 @@ List<OutputType> mappedResult = results.getMappedResults();
 Note that, if you provide an input class as the first parameter to the `newAggregation` method, the `MongoTemplate` derives the name of the input collection from this class. Otherwise, if you do not not specify an input class, you must provide the name of the input collection explicitly. If both an input class and an input collection are provided, the latter takes precedence.
 
 [[mongo.aggregation.supported-aggregation-operations]]
-== Supported Aggregation Operations & Stages
-
-The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
-
 [[aggregation-stages]]
-=== Aggregation Stages
+.Supported Aggregation Operations & Stages
+[%collapsible]
+====
+The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
 
 * addFields - `AddFieldsOperation`
 * bucket / bucketAuto - `BucketOperation` / `BucketAutoOperation`
@@ -82,6 +81,7 @@ The MongoDB Aggregation Framework provides the following types of aggregation st
 * unionWith - `UnionWithOperation`
 * unset - `UnsetOperation`
 * unwind - `UnwindOperation`
+====
 
 [TIP]
 ====
@@ -102,22 +102,6 @@ Aggregation.stage("""
 """);
 ----
 ====
-
-[[aggregation-operators]]
-=== Aggregation Operators
-
-* Group/Accumulator Aggregation Operators
-* Boolean Aggregation Operators
-* Comparison Aggregation Operators
-* Arithmetic Aggregation Operators
-* String Aggregation Operators
-* Date Aggregation Operators
-* Array Aggregation Operators
-* Conditional Aggregation Operators
-* Lookup Aggregation Operators
-* Convert Aggregation Operators
-* Object Aggregation Operators
-* Script Aggregation Operators
 
 At the time of this writing, we provide support for the following Aggregation Operators in Spring Data MongoDB:
 
@@ -341,9 +325,12 @@ The preceding expression is translated into the following projection expression 
 }]}
 ----
 
-You can see examples in more context in xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example5[Aggregation Framework Example 5] and xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example6[Aggregation Framework Example 6]. You can find more usage examples for supported SpEL expression constructs in `SpelExpressionTransformerUnitTests`. The following table shows the SpEL transformations supported by Spring Data MongoDB:
+You can see examples in more context in xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example5[Aggregation Framework Example 5] and xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example6[Aggregation Framework Example 6].
+You can find more usage examples for supported SpEL expression constructs in `SpelExpressionTransformerUnitTests`.
 
 .Supported SpEL transformations
+[%collapsible]
+====
 [%header,cols="2"]
 |===
 | SpEL Expression
@@ -379,6 +366,7 @@ You can see examples in more context in xref:mongodb/aggregation-framework.adoc#
 | !a
 | { $not : [$a] }
 |===
+====
 
 In addition to the transformations shown in the preceding table, you can use standard SpEL operations such as `new` to (for example) create arrays and reference expressions through their names (followed by the arguments to use in brackets). The following example shows how to create an array in this fashion:
 
