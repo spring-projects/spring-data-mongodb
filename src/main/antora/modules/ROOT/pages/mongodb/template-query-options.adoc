@@ -1,11 +1,11 @@
 [[mongo.query.additional-query-options]]
-== Additional Query Options
+= Additional Query Options
 
 MongoDB offers various ways of applying meta information, like a comment or a batch size, to a query.Using the `Query` API
 directly there are several methods for those options.
 
 [[mongo.query.hints]]
-=== Hints
+== Hints
 
 Index hints can be applied in two ways, using the index name or its field definition.
 
@@ -21,7 +21,7 @@ template.query(Person.class)
 ====
 
 [[mongo.query.cursor-size]]
-=== Cursor Batch Size
+== Cursor Batch Size
 
 The cursor batch size defines the number of documents to return in each response batch.
 ====
@@ -33,7 +33,7 @@ Query query = query(where("firstname").is("luke"))
 ====
 
 [[mongo.query.collation]]
-=== Collations
+== Collations
 
 Using collations with collection operations is a matter of specifying a `Collation` instance in your query or operation options, as the following two examples show:
 
@@ -50,7 +50,7 @@ List<Person> results = template.find(query, Person.class);
 ====
 
 [[mongo.query.read-preference]]
-=== Read Preference
+== Read Preference
 
 The `ReadPreference` to use can be set directly on the `Query` object to be run as outlined below.
 
@@ -66,7 +66,7 @@ template.find(Person.class)
 NOTE: The preference set on the `Query` instance will supersede the default `ReadPreference` of `MongoTemplate`.
 
 [[mongo.query.comment]]
-=== Comments
+== Comments
 
 Queries can be equipped with comments which makes them easier to look up in server logs.
 

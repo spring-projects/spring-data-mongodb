@@ -67,8 +67,9 @@ The rest of this section lists the methods of the `Criteria` and `Query` classes
 Most methods return the `Criteria` object, to provide a fluent style for the API.
 
 [[mongodb-template-query.criteria]]
-== Methods for the Criteria Class
-
+.Methods of the Criteria Class
+[%collapsible]
+====
 The `Criteria` class provides the following methods, all of which correspond to operators in MongoDB:
 
 * `Criteria` *all* `(Object o)` Creates a criterion using the `$all` operator
@@ -99,7 +100,6 @@ The `Criteria` class provides the following methods, all of which correspond to 
 * `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:mongodb/template-collection-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
 * `Criteria` *bits()* is the gateway to https://docs.mongodb.com/manual/reference/operator/query-bitwise/[MongoDB bitwise query operators] like `$bitsAllClear`.
 
-
 The Criteria class also provides the following methods for geospatial queries.
 
 * `Criteria` *within* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
@@ -109,19 +109,35 @@ The Criteria class also provides the following methods for geospatial queries.
 * `Criteria` *nearSphere* `(Point point)` Creates a geospatial criterion using `$nearSphere$center` operations. This is only available for MongoDB 1.7 and higher.
 * `Criteria` *minDistance* `(double minDistance)` Creates a geospatial criterion using the `$minDistance` operation, for use with $near.
 * `Criteria` *maxDistance* `(double maxDistance)` Creates a geospatial criterion using the `$maxDistance` operation, for use with $near.
+====
 
+The `Query` class has some additional methods that allow to select certain fields as well as to limit and sort the result.
 
 [[mongodb-template-query.query]]
-== Methods for the Query class
-
-The `Query` class has some additional methods that provide options for the query:
-
+.Methods of the Query class
+[%collapsible]
+====
 * `Query` *addCriteria* `(Criteria criteria)` used to add additional criteria to the query
 * `Field` *fields* `()` used to define fields to be included in the query results
 * `Query` *limit* `(int limit)` used to limit the size of the returned results to the provided limit (used for paging)
 * `Query` *skip* `(int skip)` used to skip the provided number of documents in the results (used for paging)
 * `Query` *with* `(Sort sort)` used to provide sort definition for the results
 * `Query` *with* `(ScrollPosition position)` used to provide a scroll position (Offset- or Keyset-based pagination) to start or resume a `Scroll`
+====
+
+[[mongo-template.query.result-projection]]
+
+The template API allows direct usage of result projections that enable you to map queries against a given domain type while projecting the operation result onto another one as outlined below.
+
+[source,java]
+----
+class
+
+template.query(SWCharacter.class)
+    .as(Jedi.class)
+----
+
+For more information on result projections please refer to the xref:repositories/projections.adoc[Projections] section of the documentation.
 
 [[mongo-template.querying.field-selection]]
 == Selecting fields
@@ -151,8 +167,6 @@ query.fields().exclude("id").include("lastname") <2>
 query.fields().include("address")                <3>
 
 query.fields().include("address.city")           <4>
-
-
 ----
 <1> Result will contain both `_id` and `last_name` via `{ "last_name" : 1 }`.
 <2> Result will only contain the `last_name` via `{ "_id" : 0, "last_name" : 1 }`.
@@ -234,6 +248,9 @@ NOTE: Using GeoSpatial queries requires attention when used within MongoDB trans
 
 To understand how to perform GeoSpatial queries, consider the following `Venue` class (taken from the integration tests and relying on the rich `MappingMongoConverter`):
 
+.Venue.java
+[%collapsible]
+====
 [source,java]
 ----
 @Document(collection="newyork")
@@ -272,6 +289,7 @@ public class Venue {
   }
 }
 ----
+====
 
 To find locations within a `Circle`, you can use the following query:
 
@@ -397,11 +415,7 @@ public class Store {
 	String id;
 
 	/**
-	 * location is stored in GeoJSON format.
-	 * {
-	 *   "type" : "Point",
-	 *   "coordinates" : [ x, y ]
-	 * }
+	 * { "type" : "Point", "coordinates" : [ x, y ] }
 	 */
 	GeoJsonPoint location;
 }
@@ -780,10 +794,12 @@ Doing so forces exact document matching for all property values and the property
 Also, keep in mind that using `@TypeAlias` requires eager initialization of the `MappingContext`. To do so, configure `initialEntitySet` to to ensure proper alias resolution for read operations.
 ====
 
-Spring Data MongoDB provides support for the following matching options:
+Spring Data MongoDB provides support for different matching options:
 
-[cols="1,2", options="header"]
 .`StringMatcher` options
+[%collapsible]
+====
+[cols="1,2", options="header"]
 |===
 | Matching
 | Logical result
@@ -825,6 +841,7 @@ Spring Data MongoDB provides support for the following matching options:
 | `{"firstname" : { $regex: /firstname/, $options: 'i'}}`
 
 |===
+====
 
 [[mongo.jsonSchema.query]]
 == Query a collection for matching JSON Schema
