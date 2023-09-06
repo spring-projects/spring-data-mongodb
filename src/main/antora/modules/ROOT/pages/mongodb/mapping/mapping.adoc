@@ -1,7 +1,8 @@
 [[mapping-chapter]]
 = Object Mapping
 
-Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set to map domain objects to MongoDB documents.
+Rich mapping support is provided by the `MappingMongoConverter`.
+The converter holds a metadata model that provides a full feature set to map domain objects to MongoDB documents.
 The mapping metadata model is populated by using annotations on your domain objects.
 However, the infrastructure is not limited to using annotations as the only source of metadata information.
 The `MappingMongoConverter` also lets you map objects to documents without providing any additional metadata, by following a set of conventions.
@@ -65,11 +66,14 @@ When querying and updating `MongoTemplate` will use the converter to handle conv
 [[mapping-conversion]]
 == Data Mapping and Type Conversion
 
-This section explains how types are mapped to and from a MongoDB representation. Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
-In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types. You can provide your own converters to adjust type conversion. See xref:mongodb/mapping/custom-conversions.adoc[Custom Conversions - Overriding Default Mapping] for further details.
+Spring Data MongoDB supports all types that can be represented as BSON, MongoDB's internal document format.
+In addition to these types, Spring Data MongoDB provides a set of built-in converters to map additional types.
+You can provide your own converters to adjust type conversion.
+See xref:mongodb/mapping/custom-conversions.adoc[Custom Conversions - Overriding Default Mapping] for further details.
 
-The following provides samples of each available type conversion:
-
+.Built in Type conversions:
+[%collapsible]
+====
 [cols="3,1,6", options="header"]
 .Type
 |===
@@ -256,7 +260,7 @@ calling `get()` before the actual conversion
      [ [ -73.97880 , 40.77247 ], [ -73.97036 , 40.76811 ] ]
   ] }}`
 |===
-
+====
 
 [[mapping-configuration]]
 == Mapping Configuration
@@ -265,9 +269,12 @@ Unless explicitly configured, an instance of `MappingMongoConverter` is created 
 
 You can configure the `MappingMongoConverter` as well as `com.mongodb.client.MongoClient` and MongoTemplate by using either Java-based or XML-based metadata. The following example shows the configuration:
 
-====
-.Java
-[source,java,role="primary"]
+
+[tabs]
+======
+Java::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
@@ -296,11 +303,13 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     return new LoggingEventListener<MongoMappingEvent>();
   }
 }
-
 ----
+<1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`. By default the configuration classes package is used.
+<2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
 
-.XML
-[source,xml,role="secondary"]
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -337,11 +346,10 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 
 </beans>
 ----
-<1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`. By default the configuration classes package is used.
-<2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
-====
+======
 
-`AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name. `AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
+`AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name.
+`AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
 
 You can add additional converters to the converter by overriding the `customConversionsConfiguration` method.
 MongoDB's native JSR-310 support can be enabled through `MongoConverterConfigurationAdapter.useNativeDriverJavaTimeCodecs()`.
@@ -402,95 +410,6 @@ Automatic index creation is only done for types annotated with `@Document`.
 
 WARNING: Auto index creation is **disabled** by default and needs to be enabled through the configuration (see xref:mongodb/mapping/mapping.adoc#mapping.index-creation[Index Creation]).
 
-[[mapping.index-creation]]
-=== Index Creation
-
-Spring Data MongoDB can automatically create indexes for entity types annotated with `@Document`.
-Index creation must be explicitly enabled since version 3.0 to prevent undesired effects with collection lifecyle and performance impact.
-Indexes are automatically created for the initial entity set on application startup and when accessing an entity type for the first time while the application runs.
-
-We generally recommend explicit index creation for application-based control of indexes as Spring Data cannot automatically create indexes for collections that were recreated while the application was running.
-
-`IndexResolver` provides an abstraction for programmatic index definition creation if you want to make use of `@Indexed` annotations such as `@GeoSpatialIndexed`, `@TextIndexed`, `@CompoundIndex` and `@WildcardIndexed`.
-You can use index definitions with `IndexOperations` to create indexes.
-A good point in time for index creation is on application startup, specifically after the application context was refreshed, triggered by observing `ContextRefreshedEvent`.
-This event guarantees that the context is fully initialized.
-Note that at this time other components, especially bean factories might have access to the MongoDB database.
-
-[WARNING]
-====
-``Map``-like properties are skipped by the `IndexResolver` unless annotated with `@WildcardIndexed` because the _map key_ must be part of the index definition. Since the purpose of maps is the usage of dynamic keys and values, the keys cannot be resolved from static mapping metadata.
-====
-
-.Programmatic Index Creation for a single Domain Type
-====
-[source,java]
-----
-class MyListener {
-
-  @EventListener(ContextRefreshedEvent.class)
-  public void initIndicesAfterStartup() {
-
-    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
-                .getConverter().getMappingContext();
-
-    IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
-
-    IndexOperations indexOps = mongoTemplate.indexOps(DomainType.class);
-    resolver.resolveIndexFor(DomainType.class).forEach(indexOps::ensureIndex);
-  }
-}
-----
-====
-
-.Programmatic Index Creation for all Initial Entities
-====
-[source,java]
-----
-class MyListener{
-
-  @EventListener(ContextRefreshedEvent.class)
-  public void initIndicesAfterStartup() {
-
-    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
-        .getConverter().getMappingContext();
-
-    // consider only entities that are annotated with @Document
-    mappingContext.getPersistentEntities()
-                            .stream()
-                            .filter(it -> it.isAnnotationPresent(Document.class))
-                            .forEach(it -> {
-
-    IndexOperations indexOps = mongoTemplate.indexOps(it.getType());
-    resolver.resolveIndexFor(it.getType()).forEach(indexOps::ensureIndex);
-    });
-  }
-}
-----
-====
-
-Alternatively, if you want to ensure index and collection presence before any component is able to access your database from your application, declare a `@Bean` method for `MongoTemplate` and include the code  from above before returning the `MongoTemplate` object.
-
-[NOTE]
-====
-To turn automatic index creation _ON_ please override `autoIndexCreation()` in your configuration.
-[source,java]
-----
-@Configuration
-public class Config extends AbstractMongoClientConfiguration {
-
-  @Override
-  public boolean autoIndexCreation() {
-    return true;
-  }
-
-// ...
-}
-----
-====
-
-IMPORTANT: Automatic index creation is turned _OFF_ by default as of version 3.0.
-
 [[mapping-usage-annotations]]
 === Mapping Annotation Overview
 
@@ -515,8 +434,9 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic. Specific subclasses are using in the MongoDB support to support annotation based metadata. Other strategies are also possible to put in place if there is demand.
 
-Here is an example of a more complex mapping.
-
+.Here is an example of a more complex mapping
+[%collapsible]
+====
 [source,java]
 ----
 @Document
@@ -571,6 +491,7 @@ public class Person<T extends Address> {
 // other getters/setters omitted
 }
 ----
+====
 
 [TIP]
 ====
@@ -645,264 +566,9 @@ NOTE: The SpEL expression in the `@Value` annotation of the `quantity` parameter
 
 Additional examples for using the `@PersistenceConstructor` annotation can be found in the https://github.com/spring-projects/spring-data-mongodb/blob/master/spring-data-mongodb/src/test/java/org/springframework/data/mongodb/core/convert/MappingMongoConverterUnitTests.java[MappingMongoConverterUnitTests] test suite.
 
-[[mapping-usage-indexes.compound-index]]
-=== Compound Indexes
-
-Compound indexes are also supported. They are defined at the class level, rather than on individual properties.
-
-NOTE: Compound indexes are very important to improve the performance of queries that involve criteria on multiple fields
-
-Here's an example that creates a compound index of `lastName` in ascending order and `age` in descending order:
-
-.Example Compound Index Usage
-====
-[source,java]
-----
-package com.mycompany.domain;
-
-@Document
-@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
-public class Person {
-
-  @Id
-  private ObjectId id;
-  private Integer age;
-  private String firstName;
-  private String lastName;
-
-}
-----
-====
-
-[TIP]
-====
-`@CompoundIndex` is repeatable using `@CompoundIndexes` as its container.
-
-[source,java]
-----
-@Document
-@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
-@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
-public class Person {
-
-  String firstname;
-  String lastname;
-
-  Address address;
-
-  // ...
-}
-----
-====
-
-[[mapping-usage-indexes.hashed-index]]
-=== Hashed Indexes
-
-Hashed indexes allow hash based sharding within a sharded cluster.
-Using hashed field values to shard collections results in a more random distribution.
-For details, refer to the https://docs.mongodb.com/manual/core/index-hashed/[MongoDB Documentation].
-
-Here's an example that creates a hashed index for `_id`:
-
-.Example Hashed Index Usage
-====
-[source,java]
-----
-@Document
-public class DomainType {
-
-  @HashIndexed @Id String id;
-
-  // ...
-}
-----
-====
-
-Hashed indexes can be created next to other index definitions like shown below, in that case both indices are created:
-
-.Example Hashed Index Usage togehter with simple index
-====
-[source,java]
-----
-@Document
-public class DomainType {
-
-  @Indexed
-  @HashIndexed
-  String value;
-
-  // ...
-}
-----
-====
-
-In case the example above is too verbose, a compound annotation allows to reduce the number of annotations that need to be declared on a property:
-
-.Example Composed Hashed Index Usage
-====
-[source,java]
-----
-@Document
-public class DomainType {
-
-  @IndexAndHash(name = "idx...")                            <1>
-  String value;
-
-  // ...
-}
-
-@Indexed
-@HashIndexed
-@Retention(RetentionPolicy.RUNTIME)
-public @interface IndexAndHash {
-
-  @AliasFor(annotation = Indexed.class, attribute = "name") <1>
-  String name() default "";
-}
-----
-<1> Potentially register an alias for certain attributes of the meta annotation.
-====
-
-[NOTE]
-====
-Although index creation via annotations comes in handy for many scenarios cosider taking over more control by setting up indices manually via `IndexOperations`.
-
-[source,java]
-----
-mongoOperations.indexOpsFor(Jedi.class)
-  .ensureIndex(HashedIndex.hashed("useTheForce"));
-----
-====
-
-[[mapping-usage-indexes.wildcard-index]]
-=== Wildcard Indexes
-
-A `WildcardIndex` is an index that can be used to include all fields or specific ones based a given (wildcard) pattern.
-For details, refer to the https://docs.mongodb.com/manual/core/index-wildcard/[MongoDB Documentation].
-
-The index can be set up programmatically using `WildcardIndex` via `IndexOperations`.
-
-.Programmatic WildcardIndex setup
-====
-[source,java]
-----
-mongoOperations
-    .indexOps(User.class)
-    .ensureIndex(new WildcardIndex("userMetadata"));
-----
-[source,javascript]
-----
-db.user.createIndex({ "userMetadata.$**" : 1 }, {})
-----
-====
-
-The `@WildcardIndex` annotation allows a declarative index setup that can used either with a document type or property.
-
-If placed on a type that is a root level domain entity (one annotated with `@Document`) , the index resolver will create a
-wildcard index for it.
-
-.Wildcard index on domain type
-====
-[source,java]
-----
-@Document
-@WildcardIndexed
-public class Product {
-	// …
-}
-----
-[source,javascript]
-----
-db.product.createIndex({ "$**" : 1 },{})
-----
-====
-
-The `wildcardProjection` can be used to specify keys to in-/exclude in the index.
-
-.Wildcard index with `wildcardProjection`
-====
-[source,java]
-----
-@Document
-@WildcardIndexed(wildcardProjection = "{ 'userMetadata.age' : 0 }")
-public class User {
-    private @Id String id;
-    private UserMetadata userMetadata;
-}
-----
-[source,javascript]
-----
-db.user.createIndex(
-  { "$**" : 1 },
-  { "wildcardProjection" :
-    { "userMetadata.age" : 0 }
-  }
-)
-----
-====
-
-Wildcard indexes can also be expressed by adding the annotation directly to the field.
-Please note that `wildcardProjection` is not allowed on nested paths such as properties.
-Projections on types annotated with `@WildcardIndexed` are omitted during index creation.
-
-.Wildcard index on property
-====
-[source,java]
-----
-@Document
-public class User {
-    private @Id String id;
-
-    @WildcardIndexed
-    private UserMetadata userMetadata;
-}
-----
-[source,javascript]
-----
-db.user.createIndex({ "userMetadata.$**" : 1 }, {})
-----
-====
-
-[[mapping-usage-indexes.text-index]]
-=== Text Indexes
-
-NOTE: The text index feature is disabled by default for MongoDB v.2.4.
-
-Creating a text index allows accumulating several fields into a searchable full-text index.
-It is only possible to have one text index per collection, so all fields marked with `@TextIndexed` are combined into this index.
-Properties can be weighted to influence the document score for ranking results.
-The default language for the text index is English.To change the default language, set the `language` attribute to whichever language you want (for example,`@Document(language="spanish")`).
-Using a property called `language` or `@Language` lets you define a language override on a per-document base.
-The following example shows how to created a text index and set the language to Spanish:
-
-.Example Text Index Usage
-====
-[source,java]
-----
-@Document(language = "spanish")
-class SomeEntity {
-
-    @TextIndexed String foo;
-
-    @Language String lang;
-
-    Nested nested;
-}
-
-class Nested {
-
-    @TextIndexed(weight=5) String bar;
-    String roo;
-}
-----
-====
-
-
 [[mapping-usage-events]]
 === Mapping Framework Events
 
 Events are fired throughout the lifecycle of the mapping process. This is described in the xref:mongodb/mapping/lifecycle-events.adoc[Lifecycle Events] section.
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
-
-

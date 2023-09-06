@@ -1,5 +1,5 @@
 [[mongo.property-converters]]
-= Property Converters - Mapping specific fields
+= Property Converters
 
 While xref:mongodb/mapping/custom-conversions.adoc[type-based conversion] already offers ways to influence the conversion and representation of certain types within the target store, it has limitations when only certain values or properties of a particular type should be considered for conversion.
 Property-based converters allow configuring conversion rules on a per-property basis, either declaratively (via `@ValueConverter`) or programmatically (by registering a `PropertyValueConverter` for a specific property).
@@ -78,19 +78,10 @@ registrar.registerConverter(Person.class, Person::getSsn())                     
 
 WARNING: Dot notation (such as `registerConverter(Person.class, "address.street", …)`) for nagivating across properties into subdocuments is *not* supported when registering converters.
 
-[[mongo.property-converters.value-conversions]]
-== MongoDB property value conversions
-
-The preceding sections outlined the purpose an overall structure of `PropertyValueConverters`.
-This section focuses on MongoDB specific aspects.
-
-[[mongovalueconverter-and-mongoconversioncontext]]
-=== MongoValueConverter and MongoConversionContext
-
-`MongoValueConverter` offers a pre-typed `PropertyValueConverter` interface that uses `MongoConversionContext`.
+TIP: `MongoValueConverter` offers a pre-typed `PropertyValueConverter` interface that uses `MongoConversionContext`.
 
 [[mongocustomconversions-configuration]]
-=== MongoCustomConversions configuration
+== MongoCustomConversions configuration
 
 By default, `MongoCustomConversions` can handle declarative value converters, depending on the configured `PropertyValueConverterFactory`.
 `MongoConverterConfigurationAdapter` helps to set up programmatic value conversions or define the `PropertyValueConverterFactory` to be used.

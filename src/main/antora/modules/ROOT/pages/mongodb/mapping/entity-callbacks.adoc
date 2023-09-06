@@ -1,5 +1,7 @@
+include::{commons}@data-commons::page$entity-callbacks.adoc[]
+
 [[mongo.entity-callbacks]]
-= Store specific EntityCallbacks
+== Store specific EntityCallbacks
 
 Spring Data MongoDB uses the `EntityCallback` API for its auditing support and reacts on the following callbacks.
 

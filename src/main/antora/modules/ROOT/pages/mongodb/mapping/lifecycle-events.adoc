@@ -39,13 +39,15 @@ public class BeforeSaveListener extends AbstractMongoEventListener<Person> {
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 
-The following callback methods are present in `AbstractMappingEventListener`:
-
+.Callbacks on `AbstractMappingEventListener`:
+[%collapsible]
+====
 * `onBeforeConvert`: Called in `MongoTemplate` `insert`, `insertList`, and `save` operations before the object is converted to a `Document` by a `MongoConverter`.
 * `onBeforeSave`: Called in `MongoTemplate` `insert`, `insertList`, and `save` operations *before* inserting or saving the `Document` in the database.
 * `onAfterSave`: Called in `MongoTemplate` `insert`, `insertList`, and `save` operations *after* inserting or saving the `Document` in the database.
 * `onAfterLoad`: Called in `MongoTemplate` `find`, `findAndRemove`, `findOne`, and `getCollection` methods after the `Document` has been retrieved from the database.
 * `onAfterConvert`: Called in `MongoTemplate` `find`, `findAndRemove`, `findOne`, and `getCollection` methods after the `Document` has been retrieved from the database was converted to a POJO.
+====
 
 NOTE: Lifecycle events are only emitted for root level types. Complex types used as properties within a document root are not subject to event publication unless they are document references annotated with `@DBRef`.
 
