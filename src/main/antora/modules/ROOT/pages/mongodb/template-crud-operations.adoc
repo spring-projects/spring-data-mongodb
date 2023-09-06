@@ -18,6 +18,7 @@ Given the `Person` class in the preceding example, you can save, update and dele
 ======
 Imperative::
 +
+====
 [source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 public class MongoApplication {
@@ -26,32 +27,32 @@ public class MongoApplication {
 
   public static void main(String[] args) {
 
-    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoClientDbFactory(MongoClients.create(), "database"));
+    MongoOperations template = new MongoTemplate(new SimpleMongoClientDbFactory(MongoClients.create(), "database"));
 
     Person p = new Person("Joe", 34);
 
     // Insert is used to initially store the object into the database.
-    mongoOps.insert(p);
+    template.insert(p);
     log.info("Insert: " + p);
 
     // Find
-    p = mongoOps.findById(p.getId(), Person.class);
+    p = template.findById(p.getId(), Person.class);
     log.info("Found: " + p);
 
     // Update
-    mongoOps.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class);
-    p = mongoOps.findOne(query(where("name").is("Joe")), Person.class);
+    template.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class);
+    p = template.findOne(query(where("name").is("Joe")), Person.class);
     log.info("Updated: " + p);
 
     // Delete
-    mongoOps.remove(p);
+    template.remove(p);
 
     // Check that deletion worked
-    List<Person> people =  mongoOps.findAll(Person.class);
+    List<Person> people =  template.findAll(Person.class);
     log.info("Number of people = : " + people.size());
 
 
-    mongoOps.dropCollection(Person.class);
+    template.dropCollection(Person.class);
   }
 }
 ----
@@ -72,6 +73,7 @@ DEBUG work.data.mongodb.core.MongoTemplate: 823 - remove using query: { "id" : "
 INFO               org.spring.example.MongoApp:  46 - Number of people = : 0
 DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.person]
 ----
+====
 
 Reactive::
 +
@@ -85,13 +87,13 @@ public class ReactiveMongoApplication {
 
     CountDownLatch latch = new CountDownLatch(1);
 
-    ReactiveMongoTemplate mongoOps = new ReactiveMongoTemplate(MongoClients.create(), "database");
+    ReactiveMongoTemplate template = new ReactiveMongoTemplate(MongoClients.create(), "database");
 
-    mongoOps.insert(new Person("Joe", 34)).doOnNext(person -> log.info("Insert: " + person))
-      .flatMap(person -> mongoOps.findById(person.getId(), Person.class))
+    template.insert(new Person("Joe", 34)).doOnNext(person -> log.info("Insert: " + person))
+      .flatMap(person -> template.findById(person.getId(), Person.class))
       .doOnNext(person -> log.info("Found: " + person))
-      .zipWith(person -> mongoOps.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class))
-      .flatMap(tuple -> mongoOps.remove(tuple.getT1())).flatMap(deleteResult -> mongoOps.findAll(Person.class))
+      .zipWith(person -> template.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class))
+      .flatMap(tuple -> template.remove(tuple.getT1())).flatMap(deleteResult -> template.findAll(Person.class))
       .count().doOnSuccess(count -> {
         log.info("Number of people: " + count);
         latch.countDown();
@@ -115,7 +117,7 @@ IMPORTANT: MongoDB requires that you have an `_id` field for all documents. Plea
 IMPORTANT: MongoDB collections can contain documents that represent instances of a variety of types. Please refer to the xref:mongodb/converters-type-mapping.adoc[type mapping] for details.
 
 [[mongo-template.save-insert]]
-== Methods for Saving and Inserting Documents
+== Insert / Save
 
 There are several convenient methods on `MongoTemplate` for saving and inserting your objects.
 To have more fine-grained control over the conversion process, you can register Spring converters with the `MappingMongoConverter` -- for example  `Converter<Person, Document>` and `Converter<Document, Person>`.
@@ -143,9 +145,11 @@ import static org.springframework.data.mongodb.core.query.Criteria.query;
 
 //...
 
-mongoTemplate.insert(new Person("Bob", 33));
+template.insert(new Person("Bob", 33));
 
-Person person = mongoTemplate.findOne(query(where("age").is(33)), Person.class);
+Person person = template.query(Person.class)
+    .matching(query(where("age").is(33)))
+    .oneValue();
 ----
 
 Reactive::
@@ -158,7 +162,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.query;
 //...
 
 Mono<Person> person = mongoTemplate.insert(new Person("Bob", 33))
-    .then(mongoTemplate.findOne(query(where("age").is(33)), Person.class));
+    .then(mongoTemplate.query(Person.class)
+        .matching(query(where("age").is(33)))
+        .one());
 ----
 ======
 
@@ -195,12 +201,56 @@ The following methods in the `MongoOperations` interface support this functional
 === Inserting Several Objects in a Batch
 
 The MongoDB driver supports inserting a collection of documents in one operation.
-The following methods in the `MongoOperations` interface support this functionality:
+The following methods in the `MongoOperations` interface support this functionality via `insert` or a dedicated `BulkOperations` interface.
 
-* *insert* methods: Take a `Collection` as the first argument. They insert a list of objects in a single batch write to the database.
+.Batch Insert
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+Collection<Person> inserted = template.insert(List.of(...), Person.class);
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Flux<Person> inserted = template.insert(List.of(...), Person.class);
+----
+======
+
+.Bulk Insert
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+BulkWriteResult result = template.bulkOps(BulkMode.ORDERED, Person.class)
+    .insert(List.of(...))
+    .execute();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<BulkWriteResult> result = template.bulkOps(BulkMode.ORDERED, Person.class)
+    .insert(List.of(...))
+    .execute();
+----
+======
+
+[NOTE]
+====
+Server performance of batch and bulk is identical.
+However bulk operations do not publish xref:mongodb/mapping/lifecycle-events.adoc[lifecycle events].
+====
 
 [[mongodb-template-update]]
-== Updating Documents in a Collection
+== Update
 
 For updates, you can update the first document found by using `MongoOperation.updateFirst` or you can update all documents that were found to match the query by using the `MongoOperation.updateMulti` method or `all` on the fluent API.
 The following example shows an update of all `SAVINGS` accounts where we are adding a one-time $50.00 bonus to the balance by using the `$inc` operator:
@@ -250,6 +300,7 @@ Most methods return the `Update` object to provide a fluent style for the API.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
 
 WARNING: `updateFirst` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
+
 NOTE: Index hints for the update operation can be provided via `Query.withHint(...)`.
 
 [[mongodb-template-update.update]]
@@ -279,7 +330,7 @@ The `Update` class contains the following methods:
 
 Some update modifiers, such as `$push` and `$addToSet`, allow nesting of additional operators.
 
-[source]
+[source,java]
 ----
 // { $push : { "category" : { "$each" : [ "spring" , "data" ] } } }
 new Update().push("category").each("spring", "data")
@@ -294,96 +345,8 @@ new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel"));
 new Update().addToSet("values").each("spring", "data", "mongodb");
 ----
 
-[[mongo-template.upserts]]
-== "`Upserting`" Documents in a Collection
-
-Related to performing an `updateFirst` operation, you can also perform an "`upsert`" operation, which will perform an insert if no document is found that matches the query.
-The document that is inserted is a combination of the query document and the update document.
-The following example shows how to use the `upsert` method:
-
-[tabs]
-======
-Imperative::
-+
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
-----
-UpdateResult result = template.update(Person.class)
-  .matching(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update"))
-  .apply(update("address", addr))
-  .upsert();
-----
-
-Reactive::
-+
-[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
-----
-Mono<UpdateResult> result = template.update(Person.class)
-  .matching(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update"))
-  .apply(update("address", addr))
-  .upsert();
-----
-======
-
-WARNING: `upsert` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
-
-[[mongo-template.find-and-upsert]]
-== Finding and Upserting Documents in a Collection
-
-The `findAndModify(…)` method on `MongoCollection` can update a document and return either the old or newly updated document in a single operation.
-`MongoTemplate` provides four `findAndModify` overloaded methods that take `Query` and `Update` classes and converts from `Document` to your POJOs:
-
-[source,java]
-----
-<T> T findAndModify(Query query, Update update, Class<T> entityClass);
-
-<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
-
-<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
-
-<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass, String collectionName);
-----
-
-The following example inserts a few `Person` objects into the container and performs a `findAndUpdate` operation:
-
-[source,java]
-----
-template.insert(new Person("Tom", 21));
-template.insert(new Person("Dick", 22));
-template.insert(new Person("Harry", 23));
-
-Query query = new Query(Criteria.where("firstName").is("Harry"));
-Update update = new Update().inc("age", 1);
-
-Person oldValue = template.update(Person.class)
-  .matching(query)
-  .apply(update)
-  .findAndModifyValue(); // oldValue.age == 23
-
-Person newValue = template.query(Person.class)
-  .matching(query)
-  .findOneValue(); // newValye.age == 24
-
-Person newestValue = template.update(Person.class)
-  .matching(query)
-  .apply(update)
-  .withOptions(FindAndModifyOptions.options().returnNew(true)) // Now return the newly updated document when updating
-  .findAndModifyValue(); // newestValue.age == 25
-----
-
-The `FindAndModifyOptions` method lets you set the options of `returnNew`, `upsert`, and `remove`.
-An example extending from the previous code snippet follows:
-
-[source,java]
-----
-Person upserted = template.update(Person.class)
-  .matching(new Query(Criteria.where("firstName").is("Mary")))
-  .apply(update)
-  .withOptions(FindAndModifyOptions.options().upsert(true).returnNew(true))
-  .findAndModifyValue()
-----
-
 [[mongo-template.aggregation-update]]
-== Aggregation Pipeline Updates
+=== Aggregation Pipeline Updates
 
 Update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an xref:mongodb/aggregation-framework.adoc[Aggregation Pipeline] via `AggregationUpdate`.
 Using `AggregationUpdate` allows leveraging https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
@@ -438,8 +401,96 @@ db.students.update(                                                         <3>
 <4> Apply the update to all matching documents in the collection.
 ====
 
+[[mongo-template.upserts]]
+== Upsert
+
+Related to performing an `updateFirst` operation, you can also perform an `upsert` operation, which will perform an insert if no document is found that matches the query.
+The document that is inserted is a combination of the query document and the update document.
+The following example shows how to use the `upsert` method:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+UpdateResult result = template.update(Person.class)
+  .matching(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update"))
+  .apply(update("address", addr))
+  .upsert();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<UpdateResult> result = template.update(Person.class)
+  .matching(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update"))
+  .apply(update("address", addr))
+  .upsert();
+----
+======
+
+WARNING: `upsert` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
+
+[[mongo-template.find-and-upsert]]
+== Find and Modify
+
+The `findAndModify(…)` method on `MongoCollection` can update a document and return either the old or newly updated document in a single operation.
+`MongoTemplate` provides four `findAndModify` overloaded methods that take `Query` and `Update` classes and converts from `Document` to your POJOs:
+
+[source,java]
+----
+<T> T findAndModify(Query query, Update update, Class<T> entityClass);
+
+<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+
+<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+
+<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass, String collectionName);
+----
+
+The following example inserts a few `Person` objects into the container and performs a `findAndUpdate` operation:
+
+[source,java]
+----
+template.insert(new Person("Tom", 21));
+template.insert(new Person("Dick", 22));
+template.insert(new Person("Harry", 23));
+
+Query query = new Query(Criteria.where("firstName").is("Harry"));
+Update update = new Update().inc("age", 1);
+
+Person oldValue = template.update(Person.class)
+  .matching(query)
+  .apply(update)
+  .findAndModifyValue(); // oldValue.age == 23
+
+Person newValue = template.query(Person.class)
+  .matching(query)
+  .findOneValue(); // newValye.age == 24
+
+Person newestValue = template.update(Person.class)
+  .matching(query)
+  .apply(update)
+  .withOptions(FindAndModifyOptions.options().returnNew(true)) // Now return the newly updated document when updating
+  .findAndModifyValue(); // newestValue.age == 25
+----
+
+The `FindAndModifyOptions` method lets you set the options of `returnNew`, `upsert`, and `remove`.
+An example extending from the previous code snippet follows:
+
+[source,java]
+----
+Person upserted = template.update(Person.class)
+  .matching(new Query(Criteria.where("firstName").is("Mary")))
+  .apply(update)
+  .withOptions(FindAndModifyOptions.options().upsert(true).returnNew(true))
+  .findAndModifyValue()
+----
+
 [[mongo-template.find-and-replace]]
-== Finding and Replacing Documents
+== Find and Replace
 
 The most straight forward method of replacing an entire `Document` is via its `id` using the `save` method.
 However this might not always be feasible.
@@ -468,7 +519,7 @@ carried over to the replacement by the store itself. Also keep in mind that `fin
 document matching the query criteria depending on a potentially given sort order.
 
 [[mongo-template.delete]]
-== Methods for Removing Documents
+== Delete
 
 You can use one of five overloaded methods to remove an object from the database:
 
