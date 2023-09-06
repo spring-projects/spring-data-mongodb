@@ -1,11 +1,15 @@
 [[gridfs]]
 = GridFS Support
 
-MongoDB supports storing binary files inside its filesystem, GridFS. Spring Data MongoDB provides a `GridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate`, to let you interact with the filesystem. You can set up a `GridFsTemplate` instance by handing it a `MongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
+MongoDB supports storing binary files inside its filesystem, GridFS.
+Spring Data MongoDB provides a `GridFsOperations` and `ReactiveGridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate` and `ReactiveGridFsTemplate`, to let you interact with the filesystem.
+You can set up a template instance by handing it a `MongoDatabaseFactory`/`ReactiveMongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
 
-====
-.Java
-[source,java,role="primary"]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 class GridFsConfiguration extends AbstractMongoClientConfiguration {
 
@@ -18,17 +22,33 @@ class GridFsConfiguration extends AbstractMongoClientConfiguration {
 }
 ----
 
-.XML
-[source,xml,role="secondary"]
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+class ReactiveGridFsConfiguration extends AbstractReactiveMongoConfiguration {
+
+  // … further configuration omitted
+
+  @Bean
+  public ReactiveGridFsTemplate reactiveGridFsTemplate() {
+    return new ReactiveGridFsTemplate(reactiveMongoDbFactory(), mappingMongoConverter());
+  }
+}
+----
+
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:mongo="http://www.springframework.org/schema/data/mongo"
-  xsi:schemaLocation="http://www.springframework.org/schema/data/mongo
-                      https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
-                      http://www.springframework.org/schema/beans
-                      https://www.springframework.org/schema/beans/spring-beans.xsd">
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+xsi:schemaLocation="http://www.springframework.org/schema/data/mongo
+https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+http://www.springframework.org/schema/beans
+https://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <mongo:db-factory id="mongoDbFactory" dbname="database" />
   <mongo:mapping-converter id="converter" />
@@ -40,13 +60,17 @@ class GridFsConfiguration extends AbstractMongoClientConfiguration {
 
 </beans>
 ----
-====
+======
 
 The template can now be injected and used to perform storage and retrieval operations, as the following example shows:
 
-.Using GridFsTemplate to store files
+.Using GridFS to store files
+[tabs]
+======
+Imperative::
++
 ====
-[source,java]
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 class GridFsClient {
 
@@ -64,15 +88,55 @@ class GridFsClient {
   }
 }
 ----
+The `store(…)` operations take an `InputStream`, a filename, and (optionally) metadata information about the file to store.
+The metadata can be an arbitrary object, which will be marshaled by the `MongoConverter` configured with the `GridFsTemplate`.
+Alternatively, you can also provide a `Document`.
 ====
 
-The `store(…)` operations take an `InputStream`, a filename, and (optionally) metadata information about the file to store. The metadata can be an arbitrary object, which will be marshaled by the `MongoConverter` configured with the `GridFsTemplate`. Alternatively, you can also provide a `Document`.
+Reactive::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+class ReactiveGridFsClient {
 
-You can read files from the filesystem through either the `find(…)` or the `getResources(…)` methods. Let's have a look at the `find(…)` methods first. You can either find a single file or multiple files that match a `Query`. You can use the `GridFsCriteria` helper class to define queries. It provides static factory methods to encapsulate default metadata fields (such as `whereFilename()` and `whereContentType()`) or a custom one through `whereMetaData()`. The following example shows how to use `GridFsTemplate` to query for files:
+  @Autowired
+  ReactiveGridFsTemplate operations;
+
+  @Test
+  public Mono<ObjectId> storeFileToGridFs() {
+
+    FileMetadata metadata = new FileMetadata();
+    // populate metadata
+    Publisher<DataBuffer> file = … // lookup File or Resource
+
+    return operations.store(file, "filename.txt", metadata);
+  }
+}
+----
+The `store(…)` operations take an `Publisher<DataBuffer>`, a filename, and (optionally) metadata information about the file to store.
+The metadata can be an arbitrary object, which will be marshaled by the `MongoConverter` configured with the `ReactiveGridFsTemplate`.
+Alternatively, you can also provide a `Document`.
+
+The MongoDB's driver uses `AsyncInputStream` and `AsyncOutputStream` interfaces to exchange binary streams.
+Spring Data MongoDB adapts these interfaces to `Publisher<DataBuffer>`.
+Read more about `DataBuffer` in https://docs.spring.io/spring-framework/docs/{springVersion}/reference/html/core.html#databuffers[Spring's reference documentation].
+====
+======
+
+You can read files from the filesystem through either the `find(…)` or the `getResources(…)` methods.
+Let's have a look at the `find(…)` methods first.
+You can either find a single file or multiple files that match a `Query`.
+You can use the `GridFsCriteria` helper class to define queries.
+It provides static factory methods to encapsulate default metadata fields (such as `whereFilename()` and `whereContentType()`) or a custom one through `whereMetaData()`.
+The following example shows how to use the template to query for files:
 
 .Using GridFsTemplate to query for files
-====
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 class GridFsClient {
 
@@ -85,31 +149,66 @@ class GridFsClient {
   }
 }
 ----
-====
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+class ReactiveGridFsClient {
+
+  @Autowired
+  ReactiveGridFsTemplate operations;
+
+  @Test
+  public Flux<GridFSFile> findFilesInGridFs() {
+    return operations.find(query(whereFilename().is("filename.txt")))
+  }
+}
+----
+======
 
 NOTE: Currently, MongoDB does not support defining sort criteria when retrieving files from GridFS. For this reason, any sort criteria defined on the `Query` instance handed into the `find(…)` method are disregarded.
 
-The other option to read files from the GridFs is to use the methods introduced by the `ResourcePatternResolver` interface. They allow handing an Ant path into the method and can thus retrieve files matching the given pattern. The following example shows how to use `GridFsTemplate` to read files:
+The other option to read files from the GridFs is to use the methods introduced by the `ResourcePatternResolver` interface.
+They allow handing an Ant path into the method and can thus retrieve files matching the given pattern.
+The following example shows how to use `GridFsTemplate` to read files:
 
 .Using GridFsTemplate to read files
-====
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 class GridFsClient {
 
   @Autowired
   GridFsOperations operations;
 
-  @Test
-  public void readFilesFromGridFs() {
-    GridFsResources[] txtFiles = operations.getResources("*.txt");
+  public GridFsResources[] readFilesFromGridFs() {
+     return operations.getResources("*.txt");
   }
 }
 ----
-====
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+class ReactiveGridFsClient {
+
+  @Autowired
+  ReactiveGridFsOperations operations;
+
+  public Flux<ReactiveGridFsResource> readFilesFromGridFs() {
+     return operations.getResources("*.txt");
+  }
+}
+----
+======
 
 `GridFsOperations` extends `ResourcePatternResolver` and lets the `GridFsTemplate` (for example) to be plugged into an `ApplicationContext` to read Spring Config files from MongoDB database.
 
 NOTE: By default, `GridFsTemplate` obtains `GridFSBucket` once upon the first GridFS interaction.
-After that, the Template instance reuses the cached bucket.
+After that, the template instance reuses the cached bucket.
 To use different buckets, from the same Template instance use the constructor accepting `Supplier<GridFSBucket>`.
