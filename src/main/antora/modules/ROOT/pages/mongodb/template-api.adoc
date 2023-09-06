@@ -6,6 +6,9 @@ The template offers convenience operations to create, update, delete, and query 
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
 
+[[mongo-template.convenience-methods]]
+== Convenience Methods
+
 The `MongoTemplate` class implements the interface `MongoOperations`.
 In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API.
 For example, you can find methods such as `find`, `findAndModify`, `findAndReplace`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`.
@@ -13,7 +16,12 @@ The design goal was to make it as easy as possible to transition between the use
 A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`.
 Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
+For more information please refer to the the xref:mongodb/template-crud-operations.adoc[CRUD] and xref:mongodb/template-query-operations.adoc[Query] sections of the documentation.
+
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
+
+[[mongo-template.execute-callbacks]]
+== Execute Callbacks
 
 `MongoTemplate` offers many convenience methods to help you easily perform common tasks.
 However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods.
@@ -31,20 +39,36 @@ The `execute` callbacks gives you a reference to either a `MongoCollection` or a
 
 The following example uses the `CollectionCallback` to return information about an index:
 
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
-boolean hasIndex = template.execute("geolocation", new CollectionCallbackBoolean>() {
-  public Boolean doInCollection(Venue.class, DBCollection collection) throws MongoException, DataAccessException {
-    List<Document> indexes = collection.getIndexInfo();
-    for (Document document : indexes) {
-      if ("location_2d".equals(document.get("name"))) {
-        return true;
-      }
-    }
-    return false;
-  }
-});
+boolean hasIndex = template.execute("geolocation", collection ->
+    Streamable.of(collection.listIndexes(org.bson.Document.class))
+        .stream()
+        .map(document -> document.get("name"))
+        .anyMatch("location_2d"::equals)
+);
 ----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<Boolean> hasIndex = template.execute("geolocation", collection ->
+    Flux.from(collection.listIndexes(org.bson.Document.class))
+        .map(document -> document.get("name"))
+        .filterWhen(name -> Mono.just("location_2d".equals(name)))
+        .map(it -> Boolean.TRUE)
+        .single(Boolean.FALSE)
+    ).next();
+----
+======
+
+[[mongo-template.fluent-api]]
+== Fluent API
 
 Being the central component when it comes to more low-level interaction with MongoDB `MongoTemplate` offers a wide range of methods covering needs from collection creation, index creation, and CRUD operations to more advanced functionality, such as Map-Reduce and aggregations.
 You can find multiple overloads for each method.
@@ -54,32 +78,34 @@ Most of them cover optional or nullable parts of the API.
 The entry points (`insert(…)`, `find(…)`, `update(…)`, and others) follow a natural naming schema based on the operation to be run.
 Moving on from the entry point, the API is designed to offer only context-dependent methods that lead to a terminating method that invokes the actual `MongoOperations` counterpart -- the `all` method in the case of the following example:
 
-====
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
-List<SWCharacter> all = ops.find(SWCharacter.class)
-  .inCollection("star-wars")                        <1>
+List<Jedi> all = template.query(SWCharacter.class) <1>
+  .inCollection("star-wars") <2>
+  .as(Jedi.class) <3>
+  .matching(query(where("jedi").is(true))) <4>
   .all();
 ----
-<1> Skip this step if `SWCharacter` defines the collection with `@Document` or if you use the class name as the collection name, which is fine.
-====
+<1> The type used to map fields used in the query to.
+<2> The collection name to use if not defined on the domain type.
+<3> Result type if not using the original domain type.
+<4> The lookup query.
 
-Sometimes, a collection in MongoDB holds entities of different types, such as a `Jedi` within a collection of `SWCharacters`.
-To use different types for `Query` and return value mapping, you can use `as(Class<?> targetType)` to map results differently, as the following example shows:
-
-====
-[source,java]
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
-List<Jedi> all = ops.find(SWCharacter.class)    <1>
-  .as(Jedi.class)                               <2>
+Flux<Jedi> all = template.query(SWCharacter.class)
+  .inCollection("star-wars")
+  .as(Jedi.class)
   .matching(query(where("jedi").is(true)))
   .all();
 ----
-<1> The query fields are mapped against the `SWCharacter` type.
-<2> Resulting documents are mapped into `Jedi`.
-====
-
-TIP: You can directly apply <<projections>> to result documents by providing the target type via `as(Class<?>)`.
+======
 
 NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required
 by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
@@ -91,16 +117,30 @@ You can switch between retrieving a single entity and retrieving multiple entiti
 
 When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for running a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:
 
-====
-[source,java]
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
-GeoResults<Jedi> results = mongoOps.query(SWCharacter.class)
+GeoResults<Jedi> results = template.query(SWCharacter.class)
   .as(Jedi.class)
   .near(alderaan) // NearQuery.near(-73.9667, 40.78).maxDis…
   .all();
 ----
-====
 
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Flux<GeoResult<Jedi>> results = template.query(SWCharacter.class)
+  .as(Jedi.class)
+  .near(alderaan) // NearQuery.near(-73.9667, 40.78).maxDis…
+  .all();
+----
+======
+
+[[mongo-template.exception-translation]]
 == Exception Translation
 
 The Spring framework provides exception translation for a wide variety of database and mapping technologies. T
@@ -115,9 +155,10 @@ The inner exception and message are preserved so that no information is lost.
 Some of the mappings performed by the `MongoExceptionTranslator` are `com.mongodb.Network to DataAccessResourceFailureException` and `MongoException` error codes 1003, 12001, 12010, 12011, and 12012 to `InvalidDataAccessApiUsageException`.
 Look into the implementation for more details on the mapping.
 
+[[mongo-template.type-mapping]]
 == Domain Type Mapping
 
 The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface.
 Spring provides `MappingMongoConverter`, but you can also write your own converter.
 While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names.
-These conventions, as well as the use of mapping annotations, are explained in the "`xref:mongodb/mapping/mapping.adoc[Mapping]`" chapter.
+These conventions, as well as the use of mapping annotations, are explained in the xref:mongodb/mapping/mapping.adoc[Mapping] chapter.
