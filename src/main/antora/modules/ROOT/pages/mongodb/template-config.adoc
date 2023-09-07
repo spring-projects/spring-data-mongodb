@@ -68,7 +68,7 @@ Other optional properties that you might like to set when creating a `MongoTempl
 [[mongo-template.read-preference]]
 == Default Read Preference
 
-The default read preference applied to read operations if no other preference was defined via the xref:mongodb/template-query-options.adoc#mongo.query.read-preference[Query].
+The default read preference applied to read operations if no other preference was defined via the xref:mongodb/template-query-operations.adoc#mongo.query.read-preference[Query].
 
 [[mongo-template.writeresultchecking]]
 == WriteResultChecking Policy

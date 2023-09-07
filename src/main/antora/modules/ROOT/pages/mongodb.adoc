@@ -11,7 +11,7 @@ Includes integrated object mapping between documents and POJOs.
 * Feature-rich xref:mongodb/mapping/mapping.adoc[Object Mapping] integrated with Spring's Conversion Service.
 * xref:mongodb/mapping/mapping.adoc#mapping-usage-annotations[Annotation-based mapping metadata] that is extensible to support other metadata formats.
 * xref:mongodb/lifecycle-events.adoc[Persistence and mapping lifecycle events].
-* xref:mongodb/template-query-options.adoc[Java-based Query, Criteria, and Update DSLs].
+* xref:mongodb/template-query-operations.adoc[Java-based Query, Criteria, and Update DSLs].
 * Automatic implementation of xref:repositories.adoc[Repository interfaces], including support for custom query methods.
 * xref:mongodb/repositories/repositories.adoc#mongodb.repositories.queries.type-safe[QueryDSL integration] to support type-safe queries.
 * xref:mongodb/client-session-transactions.adoc[Multi-Document Transactions].

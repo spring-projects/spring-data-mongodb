@@ -82,7 +82,7 @@ template.indexOps(Venue.class)
     .ensureIndex(new GeospatialIndex("location"));
 ----
 
-NOTE: `Index` and `GeospatialIndex` support configuration of xref:mongodb/template-query-options.adoc#mongo.query.collation[collations].
+NOTE: `Index` and `GeospatialIndex` support configuration of xref:mongodb/template-query-operations.adoc#mongo.query.collation[collations].
 
 [[mongo-template.index-and-collections.access]]
 == Accessing Index Information
