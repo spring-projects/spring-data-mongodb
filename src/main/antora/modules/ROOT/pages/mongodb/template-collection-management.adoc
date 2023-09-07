@@ -146,7 +146,7 @@ MongoCollection<Document> collection = template.getCollectionNames().collectList
 ----
 ======
 
-NOTE: Collection creation allows customization with `CollectionOptions` and supports xref:mongodb/mongo-query/collation.adoc[collations].
+NOTE: Collection creation allows customization with `CollectionOptions` and supports xref:mongodb/collation.adoc[collations].
 
 .Methods to interact with MongoCollections
 [%collapsible]

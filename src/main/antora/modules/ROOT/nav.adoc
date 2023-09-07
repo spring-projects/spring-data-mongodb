@@ -31,14 +31,14 @@
 ** xref:mongodb/sharding.adoc[]
 ** xref:mongodb/mongo-encryption.adoc[]
 ** xref:mongodb/auditing.adoc[]
-** xref:mongodb/observability.adoc[]
 
 // Repository
 * xref:repositories.adoc[]
 ** xref:repositories/core-concepts.adoc[]
 ** xref:repositories/definition.adoc[]
 ** xref:mongodb/repositories/repositories.adoc[]
-** xref:mongodb/mongo-repositories-aggregation.adoc[]
+*** xref:mongodb/repositories/repositories-index-hints.adoc[]
+*** xref:mongodb/repositories/repositories-collation.adoc[]
 ** xref:repositories/create-instances.adoc[]
 ** xref:repositories/query-methods-details.adoc[]
 ** xref:repositories/projections.adoc[]
@@ -49,24 +49,15 @@
 ** xref:repositories/query-keywords-reference.adoc[]
 ** xref:repositories/query-return-types-reference.adoc[]
 
-* xref:observability.adoc[]
+// Observability
+* xref:observability/observability.adoc[]
+** xref:observability/conventions.adoc[]
+** xref:observability/metrics.adoc[]
+** xref:observability/spans.adoc[]
 
 * xref:kotlin.adoc[]
 ** xref:kotlin/requirements.adoc[]
 ** xref:kotlin/null-safety.adoc[]
-** xref:kotlin/object-mapping.adoc[]
 ** xref:kotlin/extensions.adoc[]
 ** xref:kotlin/coroutines.adoc[]
 
-
-// move parts somewhere else
-// ** xref:mongodb/query-by-example.adoc[]
-// **** xref:mongodb/mongo-query/geo-json.adoc[]
-// **** xref:mongodb/mongo-query/collation.adoc[]
-// **** xref:mongodb/mongo-query/kotlin-support.adoc[]
-// **** xref:mongodb/mongo-query/additional-options.adoc[]
-//
-// // still needed???
-// *** xref:mongodb/mongo-mapreduce.adoc[]
-// *** xref:mongodb/mongo-server-side-scripts.adoc[]
-// *** xref:mongodb/mongo-group.adoc[]
