@@ -17,7 +17,6 @@
 package org.springframework.data.mongodb.example;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;

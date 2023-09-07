@@ -49,8 +49,58 @@ Declaring these beans in your Spring ApplicationContext causes them to be invoke
 * `onAfterConvert`: Called in `MongoTemplate` `find`, `findAndRemove`, `findOne`, and `getCollection` methods after the `Document` has been retrieved from the database was converted to a POJO.
 ====
 
-NOTE: Lifecycle events are only emitted for root level types. Complex types used as properties within a document root are not subject to event publication unless they are document references annotated with `@DBRef`.
+NOTE: Lifecycle events are only emitted for root level types.
+Complex types used as properties within a document root are not subject to event publication unless they are document references annotated with `@DBRef`.
 
 WARNING: Lifecycle events depend on an `ApplicationEventMulticaster`, which in case of the `SimpleApplicationEventMulticaster` can be configured with a `TaskExecutor`, and therefore gives no guarantees when an Event is processed.
 
+include::{commons}@data-commons::page$entity-callbacks.adoc[leveloffset=+1]
+
+[[mongo.entity-callbacks]]
+== Store specific EntityCallbacks
+
+Spring Data MongoDB uses the `EntityCallback` API for its auditing support and reacts on the following callbacks.
+
+.Supported Entity Callbacks
+[%header,cols="4"]
+|===
+| Callback
+| Method
+| Description
+| Order
+
+| `ReactiveBeforeConvertCallback`
+`BeforeConvertCallback`
+| `onBeforeConvert(T entity, String collection)`
+| Invoked before a domain object is converted to `org.bson.Document`.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| `ReactiveAfterConvertCallback`
+`AfterConvertCallback`
+| `onAfterConvert(T entity, org.bson.Document target, String collection)`
+| Invoked after a domain object is loaded. +
+Can modify the domain object after reading it from a `org.bson.Document`.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| `ReactiveAuditingEntityCallback`
+`AuditingEntityCallback`
+| `onBeforeConvert(Object entity, String collection)`
+| Marks an auditable entity _created_ or _modified_
+| 100
+
+| `ReactiveBeforeSaveCallback`
+`BeforeSaveCallback`
+| `onBeforeSave(T entity, org.bson.Document target, String collection)`
+| Invoked before a domain object is saved. +
+Can modify the target, to be persisted, `Document` containing all mapped entity information.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| `ReactiveAfterSaveCallback`
+`AfterSaveCallback`
+| `onAfterSave(T entity, org.bson.Document target, String collection)`
+| Invoked before a domain object is saved. +
+Can modify the domain object, to be returned after save, `Document` containing all mapped entity information.
+| `Ordered.LOWEST_PRECEDENCE`
+
+|===
 

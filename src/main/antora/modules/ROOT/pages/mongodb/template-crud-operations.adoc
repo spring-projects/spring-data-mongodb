@@ -9,7 +9,7 @@ Consider the following class:
 
 [source,java]
 ----
-include::example$Person.java[tags=class]
+include::example$example/Person.java[tags=class]
 ----
 
 Given the `Person` class in the preceding example, you can save, update and delete the object, as the following example shows:
@@ -246,7 +246,7 @@ Mono<BulkWriteResult> result = template.bulkOps(BulkMode.ORDERED, Person.class)
 [NOTE]
 ====
 Server performance of batch and bulk is identical.
-However bulk operations do not publish xref:mongodb/mapping/lifecycle-events.adoc[lifecycle events].
+However bulk operations do not publish xref:mongodb/lifecycle-events.adoc[lifecycle events].
 ====
 
 [[mongodb-template-update]]

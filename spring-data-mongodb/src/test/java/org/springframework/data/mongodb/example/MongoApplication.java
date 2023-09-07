@@ -16,12 +16,10 @@
 // tag::file[]
 package org.springframework.data.mongodb.example;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.client.MongoClients;
 

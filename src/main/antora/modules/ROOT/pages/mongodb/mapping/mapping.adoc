@@ -9,21 +9,26 @@ The `MappingMongoConverter` also lets you map objects to documents without provi
 
 This section describes the features of the `MappingMongoConverter`, including fundamentals, how to use conventions for mapping objects to documents and how to override those conventions with annotation-based mapping metadata.
 
+include::{commons}@data-commons::page$object-mapping.adoc[leveloffset=+1]
+
 [[mapping-conventions]]
 == Convention-based Mapping
 
-`MappingMongoConverter` has a few conventions for mapping objects to documents when no additional mapping metadata is provided. The conventions are:
+`MappingMongoConverter` has a few conventions for mapping objects to documents when no additional mapping metadata is provided.
+The conventions are:
 
-* The short Java class name is mapped to the collection name in the following manner. The class `com.bigbank.SavingsAccount` maps to the `savingsAccount` collection name.
+* The short Java class name is mapped to the collection name in the following manner.
+The class `com.bigbank.SavingsAccount` maps to the `savingsAccount` collection name.
 * All nested objects are stored as nested objects in the document and *not* as DBRefs.
 * The converter uses any Spring Converters registered with it to override the default mapping of object properties to document fields and values.
-* The fields of an object are used to convert to and from fields in the document. Public `JavaBean` properties are not used.
-* If you have a single non-zero-argument constructor whose constructor argument names match top-level field names of document, that constructor is used. Otherwise, the zero-argument constructor is used. If there is more than one non-zero-argument constructor, an exception will be thrown.
+* The fields of an object are used to convert to and from fields in the document.
+Public `JavaBean` properties are not used.
+* If you have a single non-zero-argument constructor whose constructor argument names match top-level field names of document, that constructor is used.Otherwise, the zero-argument constructor is used.If there is more than one non-zero-argument constructor, an exception will be thrown.
 
 [[mapping.conventions.id-field]]
 === How the `_id` field is handled in the mapping layer.
 
-MongoDB requires that you have an `_id` field for all documents. If you don't provide one the driver will assign a ObjectId with a generated value. The "_id" field can be of any type the, other than arrays, so long as it is unique. The driver naturally supports all primitive types and Dates. When using the `MappingMongoConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
+MongoDB requires that you have an `_id` field for all documents.If you don't provide one the driver will assign a ObjectId with a generated value.The "_id" field can be of any type the, other than arrays, so long as it is unique.The driver naturally supports all primitive types and Dates.When using the `MappingMongoConverter` there are certain rules that govern how properties from the Java class is mapped to this `_id` field.
 
 The following outlines what field will be mapped to the `_id` document field:
 
@@ -569,6 +574,7 @@ Additional examples for using the `@PersistenceConstructor` annotation can be fo
 [[mapping-usage-events]]
 === Mapping Framework Events
 
-Events are fired throughout the lifecycle of the mapping process. This is described in the xref:mongodb/mapping/lifecycle-events.adoc[Lifecycle Events] section.
+Events are fired throughout the lifecycle of the mapping process.
+This is described in the xref:mongodb/lifecycle-events.adoc[Lifecycle Events] section.
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
