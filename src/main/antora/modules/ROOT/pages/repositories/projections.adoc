@@ -1,4 +1,2 @@
-[[cassandra.projections]]
-= Projections
-
-include::{commons}@data-commons::page$repositories/projections.adoc[leveloffset=+1]
+[[mongodb.projections]]
+include::{commons}@data-commons::page$repositories/projections.adoc[]

@@ -30,7 +30,7 @@ public class Payment {
   "date"   : ISODate("2019-04-03T12:11:01.870Z") <3>
 }
 ----
-<1> String _id_ values that represent a valid `ObjectId` are converted automatically. See xref:mongodb/template-id-handling.adoc#mongo-template.id-handling[How the `_id` Field is Handled in the Mapping Layer]
+<1> String _id_ values that represent a valid `ObjectId` are converted automatically. See xref:mongodb/template-crud-operations.adoc#mongo-template.id-handling[How the `_id` Field is Handled in the Mapping Layer]
 for details.
 <2> The desired target type is explicitly defined as `Decimal128` which translates to `NumberDecimal`. Otherwise the
 `BigDecimal` value would have been truned into a `String`.

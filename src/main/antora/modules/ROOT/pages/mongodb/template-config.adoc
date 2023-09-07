@@ -1,5 +1,5 @@
 [[mongo-template.instantiating]]
-= MongoTemplate Configuration
+= Configuration
 
 You can use the following configuration to create and register an instance of `MongoTemplate`, as the following example shows:
 
@@ -68,7 +68,7 @@ Other optional properties that you might like to set when creating a `MongoTempl
 [[mongo-template.read-preference]]
 == Default Read Preference
 
-The default read preference applied to read operations if no other preference was defined via the xref:mongodb/template-query-options.adoc#mongo.query.read-preference[Query].
+The default read preference applied to read operations if no other preference was defined via the xref:mongodb/template-query-operations.adoc#mongo.query.read-preference[Query].
 
 [[mongo-template.writeresultchecking]]
 == WriteResultChecking Policy
@@ -115,7 +115,7 @@ public class MyAppWriteConcernResolver implements WriteConcernResolver {
 [[mongo-template.entity-lifecycle-events]]
 == Publish entity lifecycle events
 
-The template publishes xref:mongodb/mapping/lifecycle-events.adoc#mongodb.mapping-usage.events[lifecycle events].
+The template publishes xref:mongodb/lifecycle-events.adoc#mongodb.mapping-usage.events[lifecycle events].
 In case there are no listeners present, this feature can be disabled.
 
 [source,java]
@@ -131,7 +131,7 @@ MongoOperations mongoTemplate(MongoClient mongoClient) {
 [[mongo-template.entity-callbacks-config]]
 == Configure EntityCallbacks
 
-Nest to lifecycle events the template invokes xref:mongodb/mapping/entity-callbacks.adoc[EntityCallbacks] which can be (if not auto configured) set via the template API.
+Nest to lifecycle events the template invokes xref:mongodb/lifecycle-events.adoc#mongo.entity-callbacks[EntityCallbacks] which can be (if not auto configured) set via the template API.
 
 [tabs]
 ======

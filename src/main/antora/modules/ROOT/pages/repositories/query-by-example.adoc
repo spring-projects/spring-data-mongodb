@@ -1,7 +1,7 @@
-[[query-by-example.running]]
-= Running an Example
+include::{commons}@data-commons::query-by-example.adoc[]
 
-TODO: move this section to the repositories documentation
+[[query-by-example.running]]
+== Running an Example
 
 The following example shows how to query by example when using a repository (of `Person` objects, in this case):
 
