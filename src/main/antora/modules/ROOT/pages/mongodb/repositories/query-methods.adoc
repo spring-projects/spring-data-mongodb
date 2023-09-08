@@ -74,10 +74,10 @@ Flux<Person> persons = repository.findByFirstnameOrderByLastname("luke", page);
 
 NOTE: We do not support referring to parameters that are mapped as `DBRef` in the domain class.
 
-The following table shows the keywords that are supported for query methods:
-
-[cols="1,2,3",options="header"]
 .Supported keywords for query methods
+[%collapsible]
+====
+[cols="1,2,3",options="header"]
 |===
 | Keyword
 | Sample
@@ -201,6 +201,7 @@ lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 | `findByUsernameIgnoreCase(String username)`
 | `{"username" : {"$regex" : "^username$", "$options" : "i" }}`
 |===
+====
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
 
@@ -262,11 +263,6 @@ It could be miles rather than kilometers.
 Rather, `metric` refers to the concept of a system of measurement, regardless of which system you use.)
 
 NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of the `$nearSphere` operator.
-
-[[geo-near-queries]]
-=== Geo-near Queries
-
-Spring Data MongoDb supports geo-near queries, as the following example shows:
 
 [tabs]
 ======
@@ -387,62 +383,6 @@ public interface PersonRepository extends ReactiveMongoRepository<Person, String
 The query in the preceding example returns only the `firstname`, `lastname` and `Id` properties of the `Person` objects.
 The `age` property, a `java.lang.Integer`, is not set and its value is therefore null.
 
-[[mongodb.repositories.queries.sort]]
-== Sorting Results
-
-MongoDB repositories allow various approaches to define sorting order.
-Let's take a look at the following example:
-
-.Sorting Query Results
-[tabs]
-======
-Imperative::
-+
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
-----
-public interface PersonRepository extends MongoRepository<Person, String> {
-
-    List<Person> findByFirstnameSortByAgeDesc(String firstname); <1>
-
-    List<Person> findByFirstname(String firstname, Sort sort);   <2>
-
-    @Query(sort = "{ age : -1 }")
-    List<Person> findByFirstname(String firstname);              <3>
-
-    @Query(sort = "{ age : -1 }")
-    List<Person> findByLastname(String lastname, Sort sort);     <4>
-}
-----
-<1> Static sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` for the sort parameter.
-<2> Dynamic sorting using a method argument.
-`Sort.by(DESC, "age")` creates `{ age : -1 }` for the sort parameter.
-<3> Static sorting via `Query` annotation.
-Sort parameter applied as stated in the `sort` attribute.
-<4> Default sorting via `Query` annotation combined with dynamic one via a method argument. `Sort.unsorted()`
-results in `{ age : -1 }`.
-Using `Sort.by(ASC, "age")` overrides the defaults and creates `{ age : 1 }`.
-`Sort.by
-(ASC, "firstname")` alters the default and results in `{ age : -1, firstname : 1 }`.
-
-Reactive::
-+
-[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
-----
-public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
-
-    Flux<Person> findByFirstnameSortByAgeDesc(String firstname);
-
-    Flux<Person> findByFirstname(String firstname, Sort sort);
-
-    @Query(sort = "{ age : -1 }")
-    Flux<Person> findByFirstname(String firstname);
-
-    @Query(sort = "{ age : -1 }")
-    Flux<Person> findByLastname(String lastname, Sort sort);
-}
-----
-======
-
 [[mongodb.repositories.queries.json-spel]]
 == JSON-based Queries with SpEL Expressions
 
@@ -558,101 +498,50 @@ NOTE: Bootstrapping `MongoRepositoryFactory` yourself is not application context
 
 NOTE: Reactive query methods can make use of `org.springframework.data.spel.spi.ReactiveEvaluationContextExtension`.
 
-[[mongodb.repositories.queries.update]]
-== Update Methods
+[[mongodb.repositories.queries.full-text]]
+== Full-text Search Queries
 
-You can also use the keywords in the preceding table to create queries that identify matching documents for running updates on them.
-The actual update action is defined by the `@Update` annotation on the method itself, as the following listing shows.
-Note that the naming schema for derived queries starts with `find`.
-Using `update` (as in `updateAllByLastname(...)`) is allowed only in combination with `@Query`.
+MongoDB's full-text search feature is store-specific and, therefore, can be found on `MongoRepository` rather than on the more general `CrudRepository`.
+We need a document with a full-text index (see "`xref:mongodb/mapping/mapping.adoc#mapping-usage-indexes.text-index[Text Indexes]`" to learn how to create a full-text index).
 
-The update is applied to *all* matching documents and it is *not* possible to limit the scope by passing in a `Page` or by using any of the <<repositories.limit-query-result,limiting keywords>>.
-The return type can be either `void` or a _numeric_ type, such as `long`, to hold the number of modified documents.
+Additional methods on `MongoRepository` take `TextCriteria` as an input parameter.
+In addition to those explicit methods, it is also possible to add a `TextCriteria`-derived repository method.
+The criteria are added as an additional `AND` criteria.
+Once the entity contains a `@TextScore`-annotated property, the document's full-text score can be retrieved.
+Furthermore, the `@TextScore` annotated also makes it possible to sort by the document's score, as the following example shows:
 
-.Update Methods
-====
 [source,java]
 ----
-public interface PersonRepository extends CrudRepository<Person, String> {
+@Document
+class FullTextDocument {
 
-    @Update("{ '$inc' : { 'visits' : 1 } }")
-    long findAndIncrementVisitsByLastname(String lastname); <1>
-
-    @Update("{ '$inc' : { 'visits' : ?1 } }")
-    void findAndIncrementVisitsByLastname(String lastname, int increment); <2>
-
-    @Update("{ '$inc' : { 'visits' : ?#{[1]} } }")
-    long findAndIncrementVisitsUsingSpELByLastname(String lastname, int increment); <3>
-
-    @Update(pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
-    void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment); <4>
-
-    @Update("{ '$push' : { 'shippingAddresses' : ?1 } }")
-    long findAndPushShippingAddressByEmail(String email, Address address); <5>
-
-    @Query("{ 'lastname' : ?0 }")
-    @Update("{ '$inc' : { 'visits' : ?1 } }")
-    void updateAllByLastname(String lastname, int increment); <6>
+  @Id String id;
+  @TextIndexed String title;
+  @TextIndexed String content;
+  @TextScore Float score;
 }
-----
 
-<1> The filter query for the update is derived from the method name.
-The update is "`as is`" and does not bind any parameters.
-<2> The actual increment value is defined by the `increment` method argument that is bound to the `?1` placeholder.
-<3> Use the Spring Expression Language (SpEL) for parameter binding.
-<4> Use the `pipeline` attribute to issue xref:mongodb/template-crud-operations.adoc#mongo-template.aggregation-update[aggregation pipeline updates].
-<5> The update may contain complex objects.
-<6> Combine a xref:mongodb/repositories/repositories.adoc#mongodb.repositories.queries.json-based[string based query] with an update.
-====
+interface FullTextRepository extends Repository<FullTextDocument, String> {
 
-WARNING: Repository updates do not emit persistence nor mapping lifecycle events.
+  // Execute a full-text search and define sorting dynamically
+  List<FullTextDocument> findAllBy(TextCriteria criteria, Sort sort);
 
-[[mongodb.repositories.queries.delete]]
-== Delete Methods
+  // Paginate over a full-text search result
+  Page<FullTextDocument> findAllBy(TextCriteria criteria, Pageable pageable);
 
-The keywords in the preceding table can be used in conjunction with `delete…By` or `remove…By` to create queries that delete matching documents.
-
-.`Delete…By` Query
-[tabs]
-======
-Imperative::
-+
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
-----
-public interface PersonRepository extends MongoRepository<Person, String> {
-
-    List <Person> deleteByLastname(String lastname);      <1>
-
-    Long deletePersonByLastname(String lastname);         <2>
-
-    @Nullable
-    Person deleteSingleByLastname(String lastname);       <3>
-
-    Optional<Person> deleteByBirthdate(Date birthdate);   <4>
+  // Combine a derived query with a full-text search
+  List<FullTextDocument> findByTitleOrderByScoreDesc(String title, TextCriteria criteria);
 }
+
+
+Sort sort = Sort.by("score");
+TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny("spring", "data");
+List<FullTextDocument> result = repository.findAllBy(criteria, sort);
+
+criteria = TextCriteria.forDefaultLanguage().matching("film");
+Page<FullTextDocument> page = repository.findAllBy(criteria, PageRequest.of(1, 1, sort));
+List<FullTextDocument> result = repository.findByTitleOrderByScoreDesc("mongodb", criteria);
 ----
-<1> Using a return type of `List` retrieves and returns all matching documents before actually deleting them.
-<2> A numeric return type directly removes the matching documents, returning the total number of documents removed.
-<3> A single domain type result retrieves and removes the first matching document.
-<4> Same as in 3 but wrapped in an `Optional` type.
-
-Reactive::
-+
-[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
-----
-public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
-
-    Flux<Person> deleteByLastname(String lastname);      <1>
-
-    Mono<Long> deletePersonByLastname(String lastname);         <2>
-
-    Mono<Person> deleteSingleByLastname(String lastname);       <3>
-}
-----
-<1> Using a return type of `Flux` retrieves and returns all matching documents before actually deleting them.
-<2> A numeric return type directly removes the matching documents, returning the total number of documents removed.
-<3> A single domain type result retrieves and removes the first matching document.
-======
 
 [[mongodb.repositories.queries.aggregation]]
 == Aggregation Methods
@@ -783,6 +672,68 @@ Simple-type single-result inspects the returned `Document` and checks for the fo
 WARNING: The `Page` return type is not supported for repository methods using `@Aggregation`. However, you can use a
 `Pageable` argument to add `$skip`, `$limit` and `$sort` to the pipeline and let the method return `Slice`.
 
+[[mongodb.repositories.queries.by-example]]
+include::../../repositories/query-by-example.adoc[leveloffset=+1]
+
+[[mongodb.repositories.queries.scroll]]
+include::{commons}@data-commons::page$repositories/scrolling.adoc[leveloffset=+1]
+
+[[mongodb.repositories.queries.sort]]
+== Sorting Results
+
+MongoDB repositories allow various approaches to define sorting order.
+Let's take a look at the following example:
+
+.Sorting Query Results
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    List<Person> findByFirstnameSortByAgeDesc(String firstname); <1>
+
+    List<Person> findByFirstname(String firstname, Sort sort);   <2>
+
+    @Query(sort = "{ age : -1 }")
+    List<Person> findByFirstname(String firstname);              <3>
+
+    @Query(sort = "{ age : -1 }")
+    List<Person> findByLastname(String lastname, Sort sort);     <4>
+}
+----
+<1> Static sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` for the sort parameter.
+<2> Dynamic sorting using a method argument.
+`Sort.by(DESC, "age")` creates `{ age : -1 }` for the sort parameter.
+<3> Static sorting via `Query` annotation.
+Sort parameter applied as stated in the `sort` attribute.
+<4> Default sorting via `Query` annotation combined with dynamic one via a method argument. `Sort.unsorted()`
+results in `{ age : -1 }`.
+Using `Sort.by(ASC, "age")` overrides the defaults and creates `{ age : 1 }`.
+`Sort.by
+(ASC, "firstname")` alters the default and results in `{ age : -1, firstname : 1 }`.
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    Flux<Person> findByFirstnameSortByAgeDesc(String firstname);
+
+    Flux<Person> findByFirstname(String firstname, Sort sort);
+
+    @Query(sort = "{ age : -1 }")
+    Flux<Person> findByFirstname(String firstname);
+
+    @Query(sort = "{ age : -1 }")
+    Flux<Person> findByLastname(String lastname, Sort sort);
+}
+----
+======
+
 [[mongodb.repositories.index-hint]]
 == Index Hints
 
@@ -805,7 +756,7 @@ List<Person> findByFirstname(String firstname);
 For more information about index creation please refer to the xref:mongodb/template-collection-management.adoc[Collection Management] section.
 
 [[mongo.repositories.collation]]
-== Repository Collation Support
+== Collation Support
 
 Next to the xref:mongodb/collation.adoc[general Collation Support] repositories allow to define the collation for various operations.
 

@@ -8,7 +8,7 @@ antora:
       root_component_name: 'data-mongodb'
 site:
   title: Spring Data MongoDB
-  url: https://docs.spring.io/spring-data-mongodb/reference/
+  url: https://docs.spring.io/spring-data/mongo/reference
 content:
   sources:
     - url: ./../../..

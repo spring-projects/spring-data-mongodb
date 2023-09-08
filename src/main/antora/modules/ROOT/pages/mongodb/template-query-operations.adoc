@@ -822,7 +822,7 @@ Note that these two optional flags have been introduced in MongoDB 3.2 and are n
 [[mongo.query-by-example]]
 == Query by Example
 
-xref:repositories/query-by-example.adoc[Query by Example] can be used on the Template API level run example queries.
+xref:mongodb/repositories/query-methods.adoc#query-by-example[Query by Example] can be used on the Template API level run example queries.
 
 The following snipped shows how to query by example:
 
