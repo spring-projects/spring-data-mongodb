@@ -2364,6 +2364,21 @@ class MappingMongoConverterUnitTests {
 				.isEqualTo(expected);
 	}
 
+	@Test // GH-4491
+	void readUnwrappedTypeWithComplexValueUsingConstructorWhenUnwrappedPropertiesNotPresent() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1");
+
+		WithUnwrappedConstructor target = converter.read(WithUnwrappedConstructor.class, source);
+
+		assertThat(target.id).isEqualTo("id-1");
+		assertThat(target.embeddableValue).isNotNull(); // it's defined as Empty
+		assertThat(target.embeddableValue.stringValue) //
+				.isNull();
+		assertThat(target.embeddableValue.address) //
+				.isNull();
+	}
+
 	@Test // DATAMONGO-1902
 	void writeUnwrappedTypeWithComplexValue() {
 
