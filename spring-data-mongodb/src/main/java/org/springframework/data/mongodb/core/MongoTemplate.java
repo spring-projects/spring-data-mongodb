@@ -2606,7 +2606,7 @@ public class MongoTemplate
 	 *
 	 * @since 2.0
 	 */
-	<S, T> List<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+	protected <S, T> List<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
 			Document query, Document fields, Class<S> sourceClass, Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
