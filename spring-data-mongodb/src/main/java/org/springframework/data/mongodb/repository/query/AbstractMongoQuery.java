@@ -137,12 +137,29 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		query = applyAnnotatedDefaultSortIfPresent(query);
 		query = applyAnnotatedCollationIfPresent(query, accessor);
 		query = applyHintIfPresent(query);
+		query = applyAnnotatedReadPreferenceIfPresent(query);
 
 		FindWithQuery<?> find = typeToRead == null //
 				? executableFind //
 				: executableFind.as(typeToRead);
 
 		return getExecution(accessor, find).execute(query);
+	}
+
+	/**
+	 * If present apply the {@link com.mongodb.ReadPreference} from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	private Query applyAnnotatedReadPreferenceIfPresent(Query query) {
+		
+		if (!method.hasAnnotatedReadPreference()) {
+			return query;
+		}
+		
+		return query.withReadPreference(method.getAnnotatedReadPreference());
 	}
 
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {

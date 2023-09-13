@@ -22,7 +22,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
@@ -36,6 +40,7 @@ import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
@@ -314,6 +319,58 @@ public class MongoQueryMethod extends QueryMethod {
 				"Expected to find @Query annotation but did not; Make sure to check hasAnnotatedSort() before."));
 	}
 
+
+	/**
+	 * Check if the query method is decorated with an non empty {@link Query#collation()}.
+	 *
+	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
+	 * @since 4.2
+	 */
+	public boolean hasAnnotatedReadPreference() {
+		return doFindReadPreferenceAnnotation().map(ReadPreference::value).filter(StringUtils::hasText).isPresent();
+	}
+
+	/**
+	 * Get the {@link com.mongodb.ReadPreference} extracted from the {@link ReadPreference} annotation.
+	 *
+	 * @return the {@link ReadPreference()}.
+	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
+	 *                               {@link #hasAnnotatedQuery()} first.
+	 * @since 4.2
+	 */
+	public com.mongodb.ReadPreference getAnnotatedReadPreference() {
+
+		return doFindReadPreferenceAnnotation().map(annotationReadPreference -> {
+
+			com.mongodb.ReadPreference readPreference = com.mongodb.ReadPreference.valueOf(annotationReadPreference.value());
+
+			if (annotationReadPreference.tags().length > 0) {
+				List<Tag> tags = Arrays.stream(annotationReadPreference.tags())
+						.map(tag -> new Tag(tag.name(), tag.value()))
+						.collect(Collectors.toList());
+				readPreference = readPreference.withTagSet(new TagSet(tags));
+			}
+			
+			if (annotationReadPreference.maxStalenessSeconds() > 0) {
+				readPreference = readPreference.withMaxStalenessMS(annotationReadPreference.maxStalenessSeconds(), TimeUnit.SECONDS);
+			}
+			
+			return readPreference;
+		}).orElseThrow(() -> new IllegalStateException(
+						"Expected to find @ReadPreference annotation but did not; Make sure to check hasAnnotatedReadPreference() before."));
+	}
+
+	/**
+	 * Get {@link com.mongodb.ReadPreference} from query. First check if the method is annotated. If not, check if the class is annotated.
+	 * So if the method and the class are annotated with @ReadPreference, the method annotation takes precedence.
+	 * @return the {@link com.mongodb.ReadPreference}
+	 * @since 4.2
+	 */
+	private Optional<ReadPreference> doFindReadPreferenceAnnotation() {
+		return doFindAnnotation(ReadPreference.class).or(() -> doFindAnnotationInClass(ReadPreference.class));
+	}
+
+
 	/**
 	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
 	 * {@link Aggregation#collation()}.
@@ -400,9 +457,19 @@ public class MongoQueryMethod extends QueryMethod {
 
 	@SuppressWarnings("unchecked")
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
+		
 
 		return (Optional<A>) this.annotationCache.computeIfAbsent(annotationType,
 				it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it)));
+	}
+
+	@SuppressWarnings("unchecked")
+	private <A extends Annotation> Optional<A>  doFindAnnotationInClass(Class<A> annotationType) {
+
+		Optional<Annotation> mergedAnnotation = Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), annotationType));
+		annotationCache.put(annotationType, mergedAnnotation);
+
+		return (Optional<A>) mergedAnnotation;
 	}
 
 	@Override

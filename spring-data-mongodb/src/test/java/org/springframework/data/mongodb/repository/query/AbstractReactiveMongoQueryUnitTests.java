@@ -19,6 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.mongodb.MongoClientSettings;
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
+import com.mongodb.TaggableReadPreference;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate;
@@ -26,6 +29,8 @@ import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpd
 import org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Hint;
+import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.ReadPreferenceTag;
 import org.springframework.data.mongodb.repository.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,6 +38,7 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -263,6 +269,19 @@ class AbstractReactiveMongoQueryUnitTests {
 		assertThat(captor.getValue().getHint()).isEqualTo("idx-ln");
 	}
 
+	@Test // GH-2971
+	void findShouldApplyReadPreference() {
+
+		createQueryForMethod("findWithReadPreferenceByFirstname", String.class).executeBlocking(new Object[] { "Jasna" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getTagSetList())
+				.containsExactly(new TagSet(List.of(new Tag("local", "east"), new Tag("pre", "west"))));
+		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getMaxStaleness(TimeUnit.SECONDS)).isEqualTo(99);
+	}
+
 	private ReactiveMongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -367,5 +386,12 @@ class AbstractReactiveMongoQueryUnitTests {
 
 		@Hint("idx-fn")
 		void findWithHintByFirstname(String firstname);
+
+		@ReadPreference(
+				value = "secondaryPreferred",
+				tags = { @ReadPreferenceTag(name = "local", value = "east"), @ReadPreferenceTag(name = "pre", value = "west") },
+				maxStalenessSeconds = 99
+		)
+		Flux<Person> findWithReadPreferenceByFirstname(String firstname);
 	}
 }

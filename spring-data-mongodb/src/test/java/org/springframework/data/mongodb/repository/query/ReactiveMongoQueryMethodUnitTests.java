@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -226,6 +227,43 @@ public class ReactiveMongoQueryMethodUnitTests {
 		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
 	}
 
+
+	@Test // GH-2971
+	void readsReadPreferenceAtQueryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithReadPreferenceFromAtReadPreferenceByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceFromAtQueryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithReadPreferenceFromAtQueryByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void annotatedReadPreferenceClashSelectsAtReadPreferenceAnnotationValue() throws Exception {
+
+		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceAtRepositoryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "deleteByUserName", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("primaryPreferred");
+	}
+
 	private ReactiveMongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
 			throws Exception {
 
@@ -234,6 +272,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 		return new ReactiveMongoQueryMethod(method, new DefaultRepositoryMetadata(repository), factory, context);
 	}
 
+	@ReadPreference(value = "primaryPreferred")
 	interface PersonRepository extends Repository<User, Long> {
 
 		Mono<Person> findMonoByLastname(String lastname, Pageable pageRequest);
@@ -277,6 +316,16 @@ public class ReactiveMongoQueryMethodUnitTests {
 		@Collation("de_AT")
 		@Query(collation = "en_US")
 		List<User> findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname(String firstname);
+
+		@ReadPreference("secondaryPreferred")
+		Flux<User> findWithReadPreferenceFromAtReadPreferenceByFirstname(String firstname);
+
+		@Query(readPreference = "secondaryPreferred")
+		Flux<User> findWithReadPreferenceFromAtQueryByFirstname(String firstname);
+
+		@ReadPreference("secondaryPreferred")
+		@Query(readPreference = "primaryPreferred")
+		Flux<User> findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname(String firstname);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

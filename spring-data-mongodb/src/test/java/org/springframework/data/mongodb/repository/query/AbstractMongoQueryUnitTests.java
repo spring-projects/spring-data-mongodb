@@ -23,7 +23,11 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
+import com.mongodb.TaggableReadPreference;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
@@ -65,6 +69,8 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.ReadPreferenceTag;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -518,6 +524,33 @@ class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("fn", 1));
 	}
 
+	@Test // GH-2971
+	void findShouldApplyReadPreference() {
+
+		createQueryForMethod("findWithReadPreferenceByFirstname", String.class).execute(new Object[] { "Jasna" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getTagSetList())
+				.containsExactly(new TagSet(List.of(new Tag("local", "east"), new Tag("pre", "west"))));
+		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getMaxStaleness(TimeUnit.SECONDS)).isEqualTo(99);
+	}
+
+	@Test // GH-2971
+	void findShouldApplyReadPreferenceAtRepository() {
+
+		createQueryForMethod("findWithLimit", String.class, Limit.class).execute(new Object[] { "dalinar", Limit.of(42) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getReadPreference().getName()).isEqualTo("primaryPreferred");
+		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getTagSetList())
+						.containsExactly(new TagSet(List.of(new Tag("primary-local", "east"), new Tag("primary-pre", "west"))));
+		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getMaxStaleness(TimeUnit.SECONDS)).isEqualTo(20);
+	}
+
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -588,6 +621,11 @@ class AbstractMongoQueryUnitTests {
 		}
 	}
 
+	@ReadPreference(
+			value = "primaryPreferred",
+			tags = { @ReadPreferenceTag(name = "primary-local", value = "east"), @ReadPreferenceTag(name = "primary-pre", value = "west") },
+			maxStalenessSeconds = 20
+	)
 	private interface Repo extends MongoRepository<Person, Long> {
 
 		List<Person> deleteByLastname(String lastname);
@@ -643,6 +681,13 @@ class AbstractMongoQueryUnitTests {
 		List<Person> findWithLimit(String firstname, Limit limit);
 
 		List<Person> findWithSortAndLimit(String firstname, Sort sort, Limit limit);
+
+		@ReadPreference(
+				value = "secondaryPreferred", 
+				tags = { @ReadPreferenceTag(name = "local", value = "east"), @ReadPreferenceTag(name = "pre", value = "west") },
+				maxStalenessSeconds = 99
+		)
+		List<Person> findWithReadPreferenceByFirstname(String firstname);
 	}
 
 	// DATAMONGO-1872
