@@ -824,3 +824,33 @@ interface GameRepository extends Repository<Game, String> {
 <2> Instead of `@Query(collation=...)`.
 <3> Favors `@Collation` over meta usage.
 ====
+
+== Read Preferences
+
+The `@ReadPreference` annotation allows you to configure MongoDB's ReadPreferences
+
+.Example of read preferences
+====
+[source,java]
+----
+
+@ReadPreference(
+        value = "primaryPreferred",
+        tags = {@ReadPreferenceTag(name = "local", value = "east"), @ReadPreferenceTag(name = "pre", value = "west")},
+        maxStalenessSeconds = 150
+) <1>
+public interface PersonRepository extends CrudRepository<Person, String> {
+
+    @ReadPreference(value = "secondaryPreferred") <2>
+    List<Person> findWithReadPreferenceAnnotationByLastname(String lastname);
+
+    @Query(readPreference = "nearest") <3>
+    List<Person> findWithReadPreferenceAtTagByFirstname(String firstname);
+
+    List<Person> findWithReadPreferenceAtTagByFirstname(String firstname); <4>
+----
+<1> Configure read preference for all repository operations that do not have a query-level definition. Therefore, in this case the read preference mode will be `primaryPreferred`
+<2> Use the read preference mode defined in annotation `ReadPreference`, in this case secondaryPreferred
+<3> The `@Query` annotation defines the `read preference mode` alias which is equivalent to adding the `@ReadPreference` annotation.
+<4> This query will use the read preference mode defined in the repository.
+====
