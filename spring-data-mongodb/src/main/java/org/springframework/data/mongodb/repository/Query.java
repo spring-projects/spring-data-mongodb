@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 @Collation
 @Retention(RetentionPolicy.RUNTIME)
@@ -40,6 +41,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 @Documented
 @QueryAnnotation
 @Hint
+@ReadPreference
 public @interface Query {
 
 	/**
@@ -147,4 +149,21 @@ public @interface Query {
 	 */
 	@AliasFor(annotation = Hint.class, attribute = "indexName")
 	String hint() default "";
+
+	/**
+	 * The mode of the read preference to use. <br />
+	 * {@code @Query(value = "...", readPreference = "secondary")} can be used as shortcut for:
+	 *
+	 * <pre class="code">
+	 * &#64;Query(...)
+	 * &#64;ReadPreference("secondary")
+	 * List&lt;User&gt; findAllByLastname(String collation);
+	 * </pre>
+	 *
+	 * @return the index name.
+	 * @since 4.2
+	 * @see ReadPreference#value()
+	 */
+	@AliasFor(annotation = ReadPreference.class, attribute = "value")
+	String readPreference() default "";
 }

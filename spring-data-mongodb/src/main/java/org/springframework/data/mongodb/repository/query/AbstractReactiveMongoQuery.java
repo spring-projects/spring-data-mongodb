@@ -66,6 +66,7 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jorge Rodríguez
  * @since 2.0
  */
 public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
@@ -161,6 +162,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			query = applyAnnotatedDefaultSortIfPresent(query);
 			query = applyAnnotatedCollationIfPresent(query, accessor);
 			query = applyHintIfPresent(query);
+			query = applyAnnotatedReadPreferenceIfPresent(query);
+
 
 			FindWithQuery<?> find = typeToRead == null //
 					? findOperationWithProjection //
@@ -229,6 +232,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return method.getTailableAnnotation() != null;
 	}
 
+
 	Query applyQueryMetaAttributesWhenPresent(Query query) {
 
 		if (method.hasQueryMetaAttributes()) {
@@ -284,6 +288,22 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		}
 
 		return query.withHint(method.getAnnotatedHint());
+	}
+
+	/**
+	 * If present apply the {@link com.mongodb.ReadPreference} from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	private Query applyAnnotatedReadPreferenceIfPresent(Query query) {
+
+		if (!method.hasAnnotatedReadPreference()) {
+			return query;
+		}
+
+		return query.withReadPreference(method.getAnnotatedReadPreference());
 	}
 
 	/**
