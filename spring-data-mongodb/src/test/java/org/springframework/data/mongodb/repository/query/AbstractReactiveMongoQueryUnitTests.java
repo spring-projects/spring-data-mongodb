@@ -74,7 +74,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @currentRead Way of Kings - Brandon Sanderson
+ * @author Jorge Rodríguez
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

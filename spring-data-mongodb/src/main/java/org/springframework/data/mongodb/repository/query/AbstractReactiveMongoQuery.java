@@ -66,6 +66,7 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jorge Rodríguez
  * @since 2.0
  */
 public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {

@@ -90,6 +90,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

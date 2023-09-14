@@ -54,6 +54,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jorge Rodríguez
  */
 public class ReactiveMongoQueryMethodUnitTests {
 

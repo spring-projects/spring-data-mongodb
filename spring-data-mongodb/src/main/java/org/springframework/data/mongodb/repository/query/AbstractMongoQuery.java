@@ -62,6 +62,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 

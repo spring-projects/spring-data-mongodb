@@ -53,6 +53,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 public class MongoQueryMethodUnitTests {
 

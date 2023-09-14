@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 @Collation
 @Retention(RetentionPolicy.RUNTIME)
