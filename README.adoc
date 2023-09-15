@@ -1,6 +1,6 @@
 image:https://spring.io/badges/spring-data-mongodb/ga.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start] image:https://spring.io/badges/spring-data-mongodb/snapshot.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start]
 
-= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]]
+= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]] image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Gradle Enterprise", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data MongoDB"]
 
 The primary goal of the https://spring.io/projects/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
