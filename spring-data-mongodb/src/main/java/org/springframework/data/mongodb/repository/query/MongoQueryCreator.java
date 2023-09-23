@@ -17,15 +17,19 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -64,6 +68,7 @@ import org.springframework.util.ObjectUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Edward Prentice
+ * @author Gyungrai Wang
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
@@ -72,6 +77,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private final MongoParameterAccessor accessor;
 	private final MappingContext<?, MongoPersistentProperty> context;
 	private final boolean isGeoNearQuery;
+	private final ConversionService conversionService;
 
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
@@ -82,8 +88,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param context
 	 */
 	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor,
-			MappingContext<?, MongoPersistentProperty> context) {
-		this(tree, accessor, context, false);
+			MappingContext<?, MongoPersistentProperty> context, ConversionService conversionService) {
+		this(tree, accessor, context, false, conversionService);
 	}
 
 	/**
@@ -96,7 +102,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param isGeoNearQuery
 	 */
 	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor,
-			MappingContext<?, MongoPersistentProperty> context, boolean isGeoNearQuery) {
+			MappingContext<?, MongoPersistentProperty> context, boolean isGeoNearQuery, ConversionService conversionService) {
 
 		super(tree, accessor);
 
@@ -105,6 +111,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		this.accessor = accessor;
 		this.isGeoNearQuery = isGeoNearQuery;
 		this.context = context;
+		this.conversionService = conversionService;
 	}
 
 	@Override
@@ -168,24 +175,24 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		switch (type) {
 			case AFTER:
 			case GREATER_THAN:
-				return criteria.gt(parameters.next());
+				return criteria.gt(next(parameters, property.getFieldType()));
 			case GREATER_THAN_EQUAL:
-				return criteria.gte(parameters.next());
+				return criteria.gte(next(parameters, property.getFieldType()));
 			case BEFORE:
 			case LESS_THAN:
-				return criteria.lt(parameters.next());
+				return criteria.lt(next(parameters, property.getFieldType()));
 			case LESS_THAN_EQUAL:
-				return criteria.lte(parameters.next());
+				return criteria.lte(next(parameters, property.getFieldType()));
 			case BETWEEN:
-				return computeBetweenPart(criteria, parameters);
+				return computeBetweenPart(criteria, parameters, property);
 			case IS_NOT_NULL:
 				return criteria.ne(null);
 			case IS_NULL:
 				return criteria.is(null);
 			case NOT_IN:
-				return criteria.nin(nextAsList(parameters, part));
+				return criteria.nin(nextAsList(parameters, part, property));
 			case IN:
-				return criteria.in(nextAsList(parameters, part));
+				return criteria.in(nextAsList(parameters, part, property));
 			case LIKE:
 			case STARTING_WITH:
 			case ENDING_WITH:
@@ -200,7 +207,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				Object param = parameters.next();
 				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 			case EXISTS:
-				return criteria.exists((Boolean) parameters.next());
+				return criteria.exists((Boolean) next(parameters, property.getFieldType()));
 			case TRUE:
 				return criteria.is(true);
 			case FALSE:
@@ -212,7 +219,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				Optional<Distance> minDistance = range.getLowerBound().getValue();
 
 				Point point = accessor.getGeoNearLocation();
-				Point pointToUse = point == null ? nextAs(parameters, Point.class) : point;
+				Point pointToUse = point == null ? nextAs(parameters, Point.class, property) : point;
 
 				boolean isSpherical = isSpherical(property);
 
@@ -239,21 +246,47 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 			case WITHIN:
 
-				Object parameter = parameters.next();
+				Object parameter = next(parameters, property.getFieldType());
 				return criteria.within((Shape) parameter);
 			case SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.is(parameters.next())
+				return isSimpleComparisionPossible(part) ? criteria.is(next(parameters, property.getFieldType()))
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, false);
 
 			case NEGATING_SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.next())
+				return isSimpleComparisionPossible(part) ? criteria.ne(next(parameters, property.getFieldType()))
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
 				throw new IllegalArgumentException("Unsupported keyword");
 		}
 	}
+
+	private Object nextAsList(Iterator<Object> parameters, Class<?> targetType) {
+		Object nextValue = parameters.next();
+
+		if(nextValue instanceof Iterable<?>) {
+			List<Object> convertedList = new ArrayList<>();
+			for(Object item : (Iterable<?>) nextValue) {
+				convertedList.add(convert(item, targetType));
+			}
+			return convertedList;
+		}
+
+		return nextValue;
+	}
+
+	private Object next(Iterator<Object> parameters, Class<?> targetType) {
+		return convert(parameters.next(), targetType);
+	}
+
+	private Object convert(Object value, Class<?> targetType) {
+		if(conversionService.canConvert(TypeDescriptor.forObject(value), TypeDescriptor.valueOf(targetType))) {
+			return conversionService.convert(value, targetType);
+		}
+		return value;
+	}
+
 
 	private boolean isSimpleComparisionPossible(Part part) {
 
@@ -299,7 +332,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 					criteria = criteria.not();
 				}
 
-				return addAppropriateLikeRegexTo(criteria, part, parameters.next());
+				return addAppropriateLikeRegexTo(criteria, part, next(parameters, property.getFieldType()));
 
 			case NEVER:
 				// intentional no-op
@@ -324,10 +357,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			Iterator<Object> parameters) {
 
 		if (property.isCollectionLike()) {
-			return criteria.in(nextAsList(parameters, part));
+			return criteria.in(nextAsList(parameters, part, property));
 		}
 
-		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
+		return addAppropriateLikeRegexTo(criteria, part, next(parameters, property.getFieldType()));
 	}
 
 	/**
@@ -376,9 +409,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private <T> T nextAs(Iterator<Object> iterator, Class<T> type) {
+	private <T> T nextAs(Iterator<Object> iterator, Class<T> type, MongoPersistentProperty property) {
 
-		Object parameter = iterator.next();
+		Object parameter = next(iterator, property.getFieldType());
 
 		if (ClassUtils.isAssignable(type, parameter.getClass())) {
 			return (T) parameter;
@@ -388,9 +421,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				String.format("Expected parameter type of %s but got %s", type, parameter.getClass()));
 	}
 
-	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
+	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part, MongoPersistentProperty property) {
 
-		Streamable<?> streamable = asStreamable(iterator.next());
+		Streamable<?> streamable = asStreamable(nextAsList(iterator, property.getFieldType()));
 		if (!isSimpleComparisionPossible(part)) {
 
 			MatchMode matchMode = toMatchMode(part.getType());
@@ -446,11 +479,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @return
 	 * @since 2.2
 	 */
-	private static Criteria computeBetweenPart(Criteria criteria, Iterator<Object> parameters) {
+	private Criteria computeBetweenPart(Criteria criteria, Iterator<Object> parameters, MongoPersistentProperty property) {
 
-		Object value = parameters.next();
+		Object value = next(parameters, property.getFieldType());
 		if (!(value instanceof Range<?> range)) {
-			return criteria.gt(value).lt(parameters.next());
+			return criteria.gt(value).lt(next(parameters, property.getFieldType()));
 		}
 
 		Optional<?> min = range.getLowerBound().getValue();

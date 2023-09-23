@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -49,6 +50,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	private final boolean isGeoNearQuery;
 	private final MappingContext<?, MongoPersistentProperty> context;
 	private final ResultProcessor processor;
+	private final ConversionService conversionService;
 
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
@@ -67,6 +69,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());
 		this.isGeoNearQuery = method.isGeoNearQuery();
 		this.context = mongoOperations.getConverter().getMappingContext();
+		this.conversionService = mongoOperations.getConverter().getConversionService();
 	}
 
 	/**
@@ -81,7 +84,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery, conversionService);
 		Query query = creator.createQuery();
 
 		if (tree.isLimiting()) {
@@ -126,7 +129,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 	@Override
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
-		return new MongoQueryCreator(tree, accessor, context, false).createQuery();
+		return new MongoQueryCreator(tree, accessor, context, false, conversionService).createQuery();
 	}
 
 	@Override

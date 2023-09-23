@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.core.convert.ConversionService;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
@@ -49,6 +50,8 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	private final MappingContext<?, MongoPersistentProperty> context;
 	private final ResultProcessor processor;
 
+	private final ConversionService conversionService;
+
 	/**
 	 * Creates a new {@link ReactivePartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
 	 *
@@ -66,6 +69,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());
 		this.isGeoNearQuery = method.isGeoNearQuery();
 		this.context = mongoOperations.getConverter().getMappingContext();
+		this.conversionService = mongoOperations.getConverter().getConversionService();
 	}
 
 	/**
@@ -89,7 +93,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 	private Query createQueryInternal(ConvertingParameterAccessor accessor, boolean isCountQuery) {
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isCountQuery ? false : isGeoNearQuery);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isCountQuery ? false : isGeoNearQuery, conversionService);
 		Query query = creator.createQuery();
 
 		if (isCountQuery) {
