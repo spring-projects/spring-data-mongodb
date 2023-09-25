@@ -20,6 +20,10 @@ import static org.assertj.core.api.Assertions.*;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.aggregation.ObjectOperators.MergeObjects;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Unit tests for {@link ObjectOperators}.
@@ -109,11 +113,38 @@ public class ObjectOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $getField : { field : \"robin\", input : \"$batman\" }}"));
 	}
 
+	@Test // GH-4464
+	public void getFieldOfCurrent() {
+
+		assertThat(ObjectOperators.valueOf(Aggregation.CURRENT).getField("robin").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $getField : { field : \"robin\", input : \"$$CURRENT\" }}"));
+	}
+
+	@Test // GH-4464
+	public void getFieldOfMappedKey() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
+		converter.afterPropertiesSet();
+
+		assertThat(ObjectOperators.getValueOf("population").toDocument(new RelaxedTypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter))))
+				.isEqualTo(Document.parse("{ $getField : { field :  \"pop\", input : \"$$CURRENT\" } }"));
+	}
+
 	@Test // GH-4139
 	public void setField() {
 
 		assertThat(ObjectOperators.valueOf("batman").setField("friend").toValue("robin").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $setField : { field : \"friend\", value : \"robin\", input : \"$batman\" }}"));
+	}
+
+	@Test // GH-4464
+	public void setFieldOfMappedKey() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
+		converter.afterPropertiesSet();
+
+		assertThat(ObjectOperators.setValueTo("population", "robin").toDocument(new RelaxedTypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter))))
+				.isEqualTo(Document.parse("{ $setField : { field : \"pop\", value : \"robin\", input : \"$$CURRENT\" }}"));
 	}
 
 	@Test // GH-4139

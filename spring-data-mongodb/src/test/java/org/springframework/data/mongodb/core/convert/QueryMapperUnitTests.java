@@ -52,6 +52,7 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.*;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1509,6 +1510,13 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).isEqualTo("{ 'text' : { $in : ['gnirps', 'atad'] } }");
 	}
 
+	@Test // GH-4464
+	void usesKeyNameWithDotsIfFieldNameTypeIsKey() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("value").is("A")).getQueryObject(), context.getPersistentEntity(WithPropertyHavingDotsInFieldName.class));
+		assertThat(mappedObject).isEqualTo("{ 'field.name.with.dots' : 'A' }");
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1803,5 +1811,12 @@ public class QueryMapperUnitTests {
 			doc.put("street", address.street);
 			return doc;
 		}
+	}
+
+	static class WithPropertyHavingDotsInFieldName {
+
+		@Field(name = "field.name.with.dots", nameType = Type.KEY)
+		String value;
+
 	}
 }

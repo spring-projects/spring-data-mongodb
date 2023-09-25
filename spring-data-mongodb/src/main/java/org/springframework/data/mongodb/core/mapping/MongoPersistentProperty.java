@@ -177,6 +177,12 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	Collection<Object> getEncryptionKeyIds();
 
 	/**
+	 * @return the {@link MongoField} representing the raw field to read/write in a MongoDB document.
+	 * @since 4.2
+	 */
+	MongoField getMongoField();
+
+	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
 	 *
 	 * @author Oliver Gierke

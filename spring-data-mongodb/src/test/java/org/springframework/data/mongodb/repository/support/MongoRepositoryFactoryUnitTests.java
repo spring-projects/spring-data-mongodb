@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -46,7 +47,7 @@ import org.springframework.data.repository.Repository;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoRepositoryFactoryUnitTests {
 
-	@Mock MongoTemplate template;
+	@Mock MongoOperations template;
 
 	@Mock MongoConverter converter;
 

@@ -535,6 +535,94 @@ public class Balance {
 ----
 ====
 
+=== Special Field Names
+
+Generally speaking MongoDB uses the `.` (dot) sign as a path deliminator for nested objects.
+This means that in a query or update statement a key like `a.b.c` targets an object structure as outlined below.
+
+[source,json]
+----
+{
+    'a' : {
+        'b' : {
+            'c' : ...
+        }
+    }
+}
+----
+
+Therefore up until MongoDB 5.0 field names must not contain `.` (dot). +
+Using a `MappingMongoConverter#setMapKeyDotReplacement` allowed circumvent some of the limitations when storing `Map` structures by substituting `.` (dots) on write with another character.
+
+[source,java]
+----
+converter.setMapKeyDotReplacement("-");
+// ...
+
+source.map = Map.of("key.with.dot", "value")
+converter.write(source,...) // -> map : { 'key-with-dot', 'value' }
+----
+
+With the release of MongoDB 5.0 this restriction on `Document` field names containing special characters was lifted.
+We highly recommend reading more about limitations on using dots in field names in the https://www.mongodb.com/docs/manual/core/dot-dollar-considerations/[MongoDB Reference]. +
+To allow `.` (dots) in `Map` structures please set `preserveMapKeys` on the `MappingMongoConverter`.
+
+Using `@Field` allows to customize the field name to consider `.` (dots) in two ways.
+
+. `@Field(name = "a.b")`: The name is considered to be a path. Writes will create nested objects such as `{ `a` : { `b` : ... } }`.
+. `@Field(name = "a.b", fieldNameType = KEY)`: The names is considered a name as is. Writes will create a field with the given value as `{ 'a.b' : ... }`
+
+[WARNING]
+====
+Due to the special nature of the `.` (dot) sign in both MongoDB query and update statements field names containing `.` cannot be targeted directly and therefore are excluded from being used in derived query methods.
+Consider the following `Item` having a `categoryId` property that is mapped to the field named `cat.id`.
+
+[source,java]
+----
+public class Item {
+
+	@Field(name = "cat.id", fieldNameType = KEY)
+	String categoryId;
+
+	// ...
+}
+----
+
+It's raw representation will look like
+[source,json]
+----
+{
+    'cat.id' : "5b28b5e7-52c2",
+    ...
+}
+----
+
+Since we cannot target the `cat.id` field directly (as this would be interpreted as a path) we need the help of the xref:mongodb/aggregation-framework.adoc#mongo.aggregation[Aggregation Framework].
+
+.Query fields with `.` (dot) in name
+[source,java]
+----
+template.query(Item.class)
+    // $expr : { $eq : [ { $getField : { input : '$$CURRENT', 'cat.id' }, '5b28b5e7-52c2' ] }
+    .matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("value")).equalToValue("5b28b5e7-52c2"))) <1>
+    .all();
+----
+<1> The mapping layer takes care of translating the property name `value` into the actual field name. It is absolutely valid to use the target field name here as well.
+
+.Update fields with `.` (dot) in name
+[source,java]
+----
+template.update(Item.class)
+    .matching(where("id").is("r2d2"))
+    // $replaceWith: { $setField : { input: '$$CURRENT', field : 'cat.id', value : 'af29-f87f4e933f97' } }
+    .apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("value", "af29-f87f4e933f97")))) <1>
+    .first();
+----
+<1> The mapping layer takes care of translating the property name `value` into the actual field name. It is absolutely valid to use the target field name here as well.
+
+The above shows a simple example where the special field is present on the top document level. Increased levels of nesting increase the complexity of the aggregation expression required to interact with the field.
+====
+
 [[mapping-custom-object-construction]]
 === Customized Object Construction
 

@@ -26,7 +26,6 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -34,6 +33,8 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.data.mongodb.core.mapping.MongoField.MongoFieldBuilder;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
@@ -131,30 +132,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @return
 	 */
 	public String getFieldName() {
-
-		if (isIdProperty()) {
-
-			if (getOwner().getIdProperty() == null) {
-				return ID_FIELD_NAME;
-			}
-
-			if (getOwner().isIdProperty(this)) {
-				return ID_FIELD_NAME;
-			}
-		}
-
-		if (hasExplicitFieldName()) {
-			return getAnnotatedFieldName();
-		}
-
-		String fieldName = fieldNamingStrategy.getFieldName(this);
-
-		if (!StringUtils.hasText(fieldName)) {
-			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s",
-					this, fieldNamingStrategy.getClass()));
-		}
-
-		return fieldName;
+		return getMongoField().getFieldName().name();
 	}
 
 	@Override
@@ -175,7 +153,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			return FieldType.OBJECT_ID.getJavaClass();
 		}
 
-		FieldType fieldType = fieldAnnotation.targetType();
+		FieldType fieldType = getMongoField().getFieldType();
 		if (fieldType == FieldType.IMPLICIT) {
 
 			if (isEntity()) {
@@ -207,11 +185,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	public int getFieldOrder() {
-
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
-				org.springframework.data.mongodb.core.mapping.Field.class);
-
-		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
+		return getMongoField().getFieldOrder();
 	}
 
 	@Override
@@ -279,6 +253,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	@Override
+	public MongoField getMongoField() {
+		return doGetMongoField();
+	}
+
+	@Override
 	public Collection<Object> getEncryptionKeyIds() {
 
 		Encrypted encrypted = findAnnotation(Encrypted.class);
@@ -302,4 +281,57 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 		return target;
 	}
+
+	protected MongoField doGetMongoField() {
+
+		MongoFieldBuilder builder = MongoField.builder();
+		if (isAnnotationPresent(Field.class) && Type.KEY.equals(findAnnotation(Field.class).nameType())) {
+			builder.fieldName(doGetFieldName());
+		} else {
+			builder.fieldPath(doGetFieldName());
+		}
+		builder.fieldType(doGetFieldType());
+		builder.fieldOrderNumber(doGetFieldOrder());
+		return builder.build();
+	}
+
+	private String doGetFieldName() {
+
+		if (isIdProperty()) {
+
+			if (getOwner().getIdProperty() == null) {
+				return ID_FIELD_NAME;
+			}
+
+			if (getOwner().isIdProperty(this)) {
+				return ID_FIELD_NAME;
+			}
+		}
+
+		if (hasExplicitFieldName()) {
+			return getAnnotatedFieldName();
+		}
+
+		String fieldName = fieldNamingStrategy.getFieldName(this);
+
+		if (!StringUtils.hasText(fieldName)) {
+			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s",
+					this, fieldNamingStrategy.getClass()));
+		}
+
+		return fieldName;
+	}
+
+	private FieldType doGetFieldType() {
+
+		Field fieldAnnotation = findAnnotation(Field.class);
+		return fieldAnnotation != null ? fieldAnnotation.targetType() : FieldType.IMPLICIT;
+	}
+
+	private int doGetFieldOrder() {
+
+		Field annotation = findAnnotation(Field.class);
+		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
+	}
+
 }

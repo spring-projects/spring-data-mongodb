@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -91,14 +91,8 @@ class DocumentAccessor {
 	public void put(MongoPersistentProperty prop, @Nullable Object value) {
 
 		Assert.notNull(prop, "MongoPersistentProperty must not be null");
-		String fieldName = getFieldName(prop);
 
-		if (!fieldName.contains(".")) {
-			BsonUtils.addToMap(document, fieldName, value);
-			return;
-		}
-
-		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
+		Iterator<String> parts = Arrays.asList(prop.getMongoField().getFieldName().parts()).iterator();
 		Bson document = this.document;
 
 		while (parts.hasNext()) {
@@ -153,8 +147,8 @@ class DocumentAccessor {
 		return BsonUtils.hasValue(document, getFieldName(property));
 	}
 
-	String getFieldName(MongoPersistentProperty prop) {
-		return prop.getFieldName();
+	FieldName getFieldName(MongoPersistentProperty prop) {
+		return prop.getMongoField().getFieldName();
 	}
 
 	/**

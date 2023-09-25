@@ -39,6 +39,8 @@ import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -518,24 +520,41 @@ public class BsonUtils {
 	}
 
 	/**
-	 * Resolve the value for a given key. If the given {@link Map} value contains the key the value is immediately
-	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
+	 * Resolve the value for a given {@link FieldName field name}.
+	 * If the given name is a {@link Type#KEY} the value is obtained from the target {@link Bson} immediately.
+	 * If the given fieldName is a {@link Type#PATH} maybe using the dot ({@code .}) notation it will try to resolve the path by
+	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
+	 * (wrong) type, {@literal null} is returned.
+	 *
+	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param fieldName the name to lookup. Must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 * @since 4.2
+	 */
+	public static Object resolveValue(Bson bson, FieldName fieldName) {
+		return resolveValue(asMap(bson), fieldName);
+	}
+
+	/**
+	 * Resolve the value for a given {@link FieldName field name}.
+	 * If the given name is a {@link Type#KEY} the value is obtained from the target {@link Bson} immediately.
+	 * If the given fieldName is a {@link Type#PATH} maybe using the dot ({@code .}) notation it will try to resolve the path by
 	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
 	 * (wrong) type, {@literal null} is returned.
 	 *
 	 * @param source the source to inspect. Must not be {@literal null}.
-	 * @param key the key to lookup. Must not be {@literal null}.
+	 * @param fieldName the key to lookup. Must not be {@literal null}.
 	 * @return can be {@literal null}.
-	 * @since 4.1
+	 * @since 4.2
 	 */
 	@Nullable
-	public static Object resolveValue(Map<String, Object> source, String key) {
+	public static Object resolveValue(Map<String, Object> source, FieldName fieldName) {
 
-		if (source.containsKey(key) || !key.contains(".")) {
-			return source.get(key);
+		if(fieldName.isOfType(Type.KEY)) {
+			return source.get(fieldName.name());
 		}
 
-		String[] parts = key.split("\\.");
+		String[] parts = fieldName.parts();
 
 		for (int i = 1; i < parts.length; i++) {
 
@@ -552,28 +571,34 @@ public class BsonUtils {
 	}
 
 	/**
-	 * Returns whether the underlying {@link Bson bson} has a value ({@literal null} or non-{@literal null}) for the given
-	 * {@code key}.
+	 * Resolve the value for a given key. If the given {@link Map} value contains the key the value is immediately
+	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
+	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
+	 * (wrong) type, {@literal null} is returned.
 	 *
-	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param source the source to inspect. Must not be {@literal null}.
 	 * @param key the key to lookup. Must not be {@literal null}.
-	 * @return {@literal true} if no non {@literal null} value present.
-	 * @since 3.0.8
+	 * @return can be {@literal null}.
+	 * @since 4.1
 	 */
-	public static boolean hasValue(Bson bson, String key) {
+	@Nullable
+	public static Object resolveValue(Map<String, Object> source, String key) {
+
+		if(source.containsKey(key)) {
+			return source.get(key);
+		}
+
+		return resolveValue(source, FieldName.path(key));
+	}
+
+	public static boolean hasValue(Bson bson, FieldName fieldName) {
 
 		Map<String, Object> source = asMap(bson);
-
-		if (source.get(key) != null) {
-			return true;
+		if(fieldName.isOfType(Type.KEY)) {
+			return source.get(fieldName.name()) != null;
 		}
 
-		if (!key.contains(".")) {
-			return false;
-		}
-
-		String[] parts = key.split("\\.");
-
+		String [] parts = fieldName.parts();
 		Object result;
 
 		for (int i = 1; i < parts.length; i++) {
@@ -587,6 +612,20 @@ public class BsonUtils {
 		}
 
 		return source.containsKey(parts[parts.length - 1]);
+
+	}
+
+	/**
+	 * Returns whether the underlying {@link Bson bson} has a value ({@literal null} or non-{@literal null}) for the given
+	 * {@code key}.
+	 *
+	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param key the key to lookup. Must not be {@literal null}.
+	 * @return {@literal true} if no non {@literal null} value present.
+	 * @since 3.0.8
+	 */
+	public static boolean hasValue(Bson bson, String key) {
+		return hasValue(bson, FieldName.path(key));
 	}
 
 	/**
