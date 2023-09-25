@@ -72,6 +72,7 @@ import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersistentPropertyTranslator;
@@ -245,6 +246,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
+	 * If {@link #preserveMapKeys(boolean) preserve} is set to {@literal true} the conversion will treat map keys containing {@literal .} (dot) characters as is.
+	 *
+	 * @since 4.2
+	 * @see #setMapKeyDotReplacement(String)
+	 */
+	public void preserveMapKeys(boolean preserve) {
+		setMapKeyDotReplacement(preserve ? "." : null);
+	}
+
+	/**
 	 * Configure a {@link CodecRegistryProvider} that provides native MongoDB {@link org.bson.codecs.Codec codecs} for
 	 * reading values.
 	 *
@@ -345,8 +356,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				Predicates.negate(MongoPersistentProperty::hasExplicitFieldName));
 		DocumentAccessor documentAccessor = new DocumentAccessor(bson) {
 			@Override
-			String getFieldName(MongoPersistentProperty prop) {
-				return propertyTranslator.translate(prop).getFieldName();
+			FieldName getFieldName(MongoPersistentProperty prop) {
+				return propertyTranslator.translate(prop).getMongoField().getFieldName();
 			}
 		};
 

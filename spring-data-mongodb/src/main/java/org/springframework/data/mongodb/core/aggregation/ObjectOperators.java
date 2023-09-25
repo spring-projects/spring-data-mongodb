@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
@@ -50,6 +51,41 @@ public class ObjectOperators {
 	 */
 	public static ObjectOperatorFactory valueOf(AggregationExpression expression) {
 		return new ObjectOperatorFactory(expression);
+	}
+
+	/**
+	 * Use the value from the given {@link SystemVariable} as input for the target {@link AggregationExpression expression}.
+	 *
+	 * @param variable the {@link SystemVariable} to use (eg. {@link SystemVariable#ROOT}.
+	 * @return new instance of {@link ObjectOperatorFactory}.
+	 * @since 4.2
+	 */
+	public static ObjectOperatorFactory valueOf(SystemVariable variable) {
+		return new ObjectOperatorFactory(Fields.field(variable.getName(), variable.getTarget()));
+	}
+
+	/**
+	 * Get the value of the field with given name from the {@literal $$CURRENT} object.
+	 * Short version for {@code ObjectOperators.valueOf("$$CURRENT").getField(fieldName)}.
+	 *
+	 * @param fieldName the field name.
+	 * @return new instance of {@link AggregationExpression}.
+	 * @since 4.2
+	 */
+	public static AggregationExpression getValueOf(String fieldName) {
+		return new ObjectOperatorFactory(SystemVariable.CURRENT).getField(fieldName);
+	}
+
+	/**
+	 * Set the value of the field with given name on the {@literal $$CURRENT} object.
+	 * Short version for {@code ObjectOperators.valueOf($$CURRENT).setField(fieldName).toValue(value)}.
+	 *
+	 * @param fieldName the field name.
+	 * @return new instance of {@link AggregationExpression}.
+	 * @since 4.2
+	 */
+	public static AggregationExpression setValueTo(String fieldName, Object value) {
+		return new ObjectOperatorFactory(SystemVariable.CURRENT).setField(fieldName).toValue(value);
 	}
 
 	/**
@@ -133,7 +169,7 @@ public class ObjectOperators {
 		 * @since 4.0
 		 */
 		public GetField getField(String fieldName) {
-			return GetField.getField(fieldName).of(value);
+			return GetField.getField(Fields.field(fieldName)).of(value);
 		}
 
 		/**
@@ -143,7 +179,7 @@ public class ObjectOperators {
 		 * @since 4.0
 		 */
 		public SetField setField(String fieldName) {
-			return SetField.field(fieldName).input(value);
+			return SetField.field(Fields.field(fieldName)).input(value);
 		}
 
 		/**
@@ -340,7 +376,7 @@ public class ObjectOperators {
 		 * @return new instance of {@link GetField}.
 		 */
 		public static GetField getField(Field field) {
-			return getField(field.getTarget());
+			return new GetField(Collections.singletonMap("field", field));
 		}
 
 		/**
@@ -367,6 +403,15 @@ public class ObjectOperators {
 
 		private GetField of(Object fieldRef) {
 			return new GetField(append("input", fieldRef));
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+
+			if(isArgumentMap() && get("field") instanceof Field field) {
+				return new GetField(append("field", context.getReference(field).getRaw())).toDocument(context);
+			}
+			return super.toDocument(context);
 		}
 
 		@Override
@@ -405,7 +450,7 @@ public class ObjectOperators {
 		 * @return new instance of {@link SetField}.
 		 */
 		public static SetField field(Field field) {
-			return field(field.getTarget());
+			return new SetField(Collections.singletonMap("field", field));
 		}
 
 		/**
@@ -470,6 +515,14 @@ public class ObjectOperators {
 		 */
 		public SetField toValue(Object value) {
 			return new SetField(append("value", value));
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+			if(get("field") instanceof Field field) {
+				return new SetField(append("field", context.getReference(field).getRaw())).toDocument(context);
+			}
+			return super.toDocument(context);
 		}
 
 		@Override

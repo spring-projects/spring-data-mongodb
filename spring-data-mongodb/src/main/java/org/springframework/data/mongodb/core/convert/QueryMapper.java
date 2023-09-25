@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -168,6 +169,14 @@ public class QueryMapper {
 
 					Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
 
+					/*
+					 * Note to future self:
+					 * ----
+					 * This could be the place to plug in a query rewrite mechanism that allows to transform comparison
+					 * against field that has a dot in its name (like 'a.b') into an $expr so that { "a.b" : "some value" }
+					 * eventually becomes { $expr : { $eq : [ { $getField : "a.b" }, "some value" ] } }
+					 * ----
+					 */
 					result.put(entry.getKey(), entry.getValue());
 				}
 			} catch (InvalidPersistentPropertyPath invalidPathException) {
@@ -1213,6 +1222,9 @@ public class QueryMapper {
 
 		@Override
 		public String getMappedKey() {
+			if(getProperty() != null && getProperty().getMongoField().getFieldName().isOfType(Type.KEY)) {
+				return getProperty().getFieldName();
+			}
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 

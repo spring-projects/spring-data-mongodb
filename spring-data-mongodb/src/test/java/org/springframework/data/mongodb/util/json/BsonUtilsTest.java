@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.bson.BsonArray;
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.util.BsonUtils;
 
 import com.mongodb.BasicDBList;
@@ -159,6 +162,33 @@ class BsonUtilsTest {
 
 		assertThat(BsonUtils.simpleToBsonValue(new int[] { 1, 2, 3 }))
 				.isEqualTo(new BsonArray(List.of(new BsonInt32(1), new BsonInt32(2), new BsonInt32(3))));
+	}
+
+	@ParameterizedTest
+	@MethodSource("fieldNames")
+	void resolveValueForField(FieldName fieldName, boolean exists) {
+
+		Map<String, Object> source = new LinkedHashMap<>();
+		source.put("a", "a-value"); // top level
+		source.put("b", new Document("a", "b.a-value")); // path
+		source.put("c.a", "c.a-value"); // key
+
+		if(exists) {
+			assertThat(BsonUtils.resolveValue(source, fieldName)).isEqualTo(fieldName.name() + "-value");
+		} else {
+			assertThat(BsonUtils.resolveValue(source, fieldName)).isNull();
+		}
+	}
+
+	static Stream<Arguments> fieldNames() {
+		return Stream.of(//
+				Arguments.of(FieldName.path("a"), true), //
+				Arguments.of(FieldName.path("b.a"), true), //
+				Arguments.of(FieldName.path("c.a"), false), //
+				Arguments.of(FieldName.name("d"), false), //
+				Arguments.of(FieldName.name("b.a"), false), //
+				Arguments.of(FieldName.name("c.a"), true) //
+		);
 	}
 
 	static Stream<Arguments> javaTimeInstances() {

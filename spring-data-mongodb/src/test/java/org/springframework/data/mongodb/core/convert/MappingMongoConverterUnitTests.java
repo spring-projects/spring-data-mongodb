@@ -77,7 +77,9 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTe
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoField;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
@@ -87,6 +89,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -2637,8 +2640,8 @@ class MappingMongoConverterUnitTests {
 		DocumentAccessor accessor = new DocumentAccessor(new org.bson.Document());
 		MongoPersistentProperty persistentProperty = mock(MongoPersistentProperty.class);
 		when(persistentProperty.isAssociation()).thenReturn(true);
-		when(persistentProperty.getFieldName()).thenReturn("pName");
-		doReturn(ClassTypeInformation.from(Person.class)).when(persistentProperty).getTypeInformation();
+		when(persistentProperty.getMongoField()).thenReturn(MongoField.just("pName"));
+		doReturn(TypeInformation.of(Person.class)).when(persistentProperty).getTypeInformation();
 		doReturn(Person.class).when(persistentProperty).getType();
 		doReturn(Person.class).when(persistentProperty).getRawType();
 
@@ -2879,6 +2882,86 @@ class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Address.class, source).city).isNull();
 	}
 
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnWriteIfFieldTypeIsKey() {
+
+		WithPropertyHavingDotsInFieldName source = new WithPropertyHavingDotsInFieldName();
+		source.value = "A";
+
+		assertThat(write(source)).containsEntry("field.name.with.dots", "A");
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnReadIfFieldTypeIsKey() {
+
+		org.bson.Document source = new org.bson.Document("field.name.with.dots", "A");
+
+		WithPropertyHavingDotsInFieldName target = converter.read(WithPropertyHavingDotsInFieldName.class, source);
+		assertThat(target.value).isEqualTo("A");
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnWriteOfNestedPropertyIfFieldTypeIsKey() {
+
+		WrapperForTypeWithPropertyHavingDotsInFieldName source = new WrapperForTypeWithPropertyHavingDotsInFieldName();
+		source.nested = new WithPropertyHavingDotsInFieldName();
+		source.nested.value = "A";
+
+		assertThat(write(source).get("nested", org.bson.Document.class)).containsEntry("field.name.with.dots", "A");
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnReadOfNestedIfFieldTypeIsKey() {
+
+		org.bson.Document source = new org.bson.Document("nested", new org.bson.Document("field.name.with.dots", "A"));
+
+		WrapperForTypeWithPropertyHavingDotsInFieldName target = converter.read(WrapperForTypeWithPropertyHavingDotsInFieldName.class, source);
+		assertThat(target.nested).isNotNull();
+		assertThat(target.nested.value).isEqualTo("A");
+	}
+
+	@Test // GH-4464
+	void writeShouldAllowDotsInMapKeyNameIfConfigured() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		Person person = new Person();
+		person.firstname = "bart";
+		person.lastname = "simpson";
+
+		ClassWithMapProperty source = new ClassWithMapProperty();
+		source.mapOfPersons = Map.of("map.key.with.dots", person);
+
+		assertThat(write(source).get("mapOfPersons", org.bson.Document.class)).containsKey("map.key.with.dots");
+	}
+
+	@Test // GH-4464
+	void readShouldAllowDotsInMapKeyNameIfConfigured() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		Person person = new Person();
+		person.firstname = "bart";
+		person.lastname = "simpson";
+
+		org.bson.Document source = new org.bson.Document("mapOfPersons", new org.bson.Document("map.key.with.dots", write(person)));
+
+		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
+
+		assertThat(target.mapOfPersons).containsEntry("map.key.with.dots", person);
+	}
+
+	org.bson.Document write(Object source) {
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+		return target;
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2961,6 +3044,23 @@ class MappingMongoConverterUnitTests {
 		@PersistenceConstructor
 		public Person(Set<Address> addresses) {
 			this.addresses = addresses;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(birthDate, person.birthDate) && Objects.equals(firstname, person.firstname) && Objects.equals(lastname, person.lastname) && Objects.equals(addresses, person.addresses);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, birthDate, firstname, lastname, addresses);
 		}
 	}
 
@@ -3920,6 +4020,18 @@ class MappingMongoConverterUnitTests {
 		public int hashCode() {
 			return Objects.hash(id, value, cycle);
 		}
+	}
+
+	static class WrapperForTypeWithPropertyHavingDotsInFieldName {
+
+		WithPropertyHavingDotsInFieldName nested;
+	}
+
+	static class WithPropertyHavingDotsInFieldName {
+
+		@Field(name = "field.name.with.dots", nameType = Type.KEY)
+		String value;
+
 	}
 
 }

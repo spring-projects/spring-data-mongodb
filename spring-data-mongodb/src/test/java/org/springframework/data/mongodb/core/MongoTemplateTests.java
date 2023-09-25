@@ -59,15 +59,22 @@ import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.ObjectOperators;
+import org.springframework.data.mongodb.core.aggregation.ReplaceWithOperation;
 import org.springframework.data.mongodb.core.aggregation.StringOperators;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
@@ -78,8 +85,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.DirtiesContext;
@@ -3686,8 +3695,7 @@ public class MongoTemplateTests {
 		template.insert(source);
 
 		org.bson.Document result = template
-				.execute(db -> db.getCollection(template.getCollectionName(RawStringId.class))
-						.find().limit(1).cursor().next());
+				.execute(db -> db.getCollection(template.getCollectionName(RawStringId.class)).find().limit(1).cursor().next());
 
 		assertThat(result).isNotNull();
 		assertThat(result.get("_id")).isEqualTo("abc");
@@ -3881,11 +3889,130 @@ public class MongoTemplateTests {
 		template.save(doc, collectionName);
 
 		org.bson.Document replacement = new org.bson.Document("foo", "baz");
-		UpdateResult updateResult = template.replace(query(where("foo").is("bar")), replacement, ReplaceOptions.replaceOptions(),
-				collectionName);
+		UpdateResult updateResult = template.replace(query(where("foo").is("bar")), replacement,
+				ReplaceOptions.replaceOptions(), collectionName);
 
 		assertThat(updateResult.wasAcknowledged()).isTrue();
 		assertThat(template.findOne(query(where("foo").is("baz")), org.bson.Document.class, collectionName)).isNotNull();
+	}
+
+	@Test // GH-4464
+	void saveEntityWithDotInFieldName() {
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.value = "v1";
+
+		template.save(source);
+
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		assertThat(raw).containsEntry("field.name.with.dots", "v1");
+	}
+
+	@Test // GH-4464
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
+	void queryEntityWithDotInFieldNameUsingExpr() {
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.value = "v1";
+
+		WithFieldNameContainingDots source2 = new WithFieldNameContainingDots();
+		source2.id = "id-2";
+		source2.value = "v2";
+
+		template.save(source);
+		template.save(source2);
+
+		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class) // with property -> fieldname mapping
+				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("value")).equalToValue("v1"))).firstValue();
+
+		assertThat(loaded).isEqualTo(source);
+
+		loaded = template.query(WithFieldNameContainingDots.class) // using raw fieldname
+				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("field.name.with.dots")).equalToValue("v1"))).firstValue();
+
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4464
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
+	void updateEntityWithDotInFieldNameUsingAggregations() {
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.value = "v1";
+
+		template.save(source);
+
+		template.update(WithFieldNameContainingDots.class)
+				.matching(where("id").is(source.id))
+				.apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("value", "changed"))))
+				.first();
+
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		assertThat(raw).containsEntry("field.name.with.dots", "changed");
+
+		template.update(WithFieldNameContainingDots.class)
+				.matching(where("id").is(source.id))
+				.apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("field.name.with.dots", "changed-again"))))
+				.first();
+
+		raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		assertThat(raw).containsEntry("field.name.with.dots", "changed-again");
+	}
+
+	@Test // GH-4464
+	void savesMapWithDotInKey() {
+
+		MongoTestUtils.flushCollection(DB_NAME, template.getCollectionName(WithFieldNameContainingDots.class), client);
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
+				template.getConverter().getMappingContext());
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), converter);
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.mapValue = Map.of("k1", "v1", "map.key.with.dot", "v2");
+
+		template.save(source);
+
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+
+		assertThat(raw.get("mapValue", org.bson.Document.class))
+				.containsEntry("k1", "v1")
+				.containsEntry("map.key.with.dot", "v2");
+	}
+
+	@Test // GH-4464
+	void readsMapWithDotInKey() {
+
+		MongoTestUtils.flushCollection(DB_NAME, template.getCollectionName(WithFieldNameContainingDots.class), client);
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
+				template.getConverter().getMappingContext());
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), converter);
+
+		Map<String, String> sourceMap = Map.of("k1", "v1", "sourceMap.key.with.dot", "v2");
+		template.execute(WithFieldNameContainingDots.class,
+				collection -> {
+					collection.insertOne(new org.bson.Document("_id", "id-1").append("mapValue", sourceMap));
+					return null;
+				}
+			);
+
+		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class)
+				.matching(where("id").is("id-1"))
+				.firstValue();
+
+		assertThat(loaded.mapValue).isEqualTo(sourceMap);
 	}
 
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
@@ -4053,11 +4180,12 @@ public class MongoTemplateTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
 		public Sample lazyDbRefProperty;
 
-		@Field("lazy_db_ref_list") @org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
+		@Field("lazy_db_ref_list")
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
 		public List<Sample> lazyDbRefAnnotatedList;
 
-		@Field("lazy_db_ref_map") @org.springframework.data.mongodb.core.mapping.DBRef(
-				lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+		@Field("lazy_db_ref_map")
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
 
 		public DocumentWithLazyDBRefsAndConstructorCreation(String id, Sample lazyDbRefProperty,
 				List<Sample> lazyDbRefAnnotatedList, Map<String, Sample> lazyDbRefAnnotatedMap) {
@@ -4846,6 +4974,39 @@ public class MongoTemplateTests {
 
 		public void setNickname(String nickname) {
 			this.nickname = nickname;
+		}
+	}
+
+	static class WithFieldNameContainingDots {
+
+		String id;
+
+		@Field(value = "field.name.with.dots", nameType = Type.KEY)
+		String value;
+
+		Map<String, String> mapValue;
+
+		@Override
+		public String toString() {
+			return "WithMap{" + "id='" + id + '\'' + ", value='" + value + '\'' + ", mapValue=" + mapValue + '}';
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithFieldNameContainingDots withFieldNameContainingDots = (WithFieldNameContainingDots) o;
+			return Objects.equals(id, withFieldNameContainingDots.id) && Objects.equals(value, withFieldNameContainingDots.value)
+					&& Objects.equals(mapValue, withFieldNameContainingDots.mapValue);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, mapValue);
 		}
 	}
 }
