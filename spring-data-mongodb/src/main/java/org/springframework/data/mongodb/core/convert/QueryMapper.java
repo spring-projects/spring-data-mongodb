@@ -1470,11 +1470,15 @@ public class QueryMapper {
 					return mappedName.toString();
 				}
 
-				String nextToken = nextToken();
-				if (isPositionalParameter(nextToken)) {
-
-					mappedName.append(".").append(nextToken);
-					currentIndex += 2;
+				int i = 1;
+				String nextToken = pathParts.get(currentIndex + i);
+				if(isPositionalParameter(nextToken)) {
+					while (isPositionalParameter(nextToken)) {
+						mappedName.append(".").append(nextToken);
+						i++;
+						nextToken = currentIndex + i < pathParts.size() ?  pathParts.get(currentIndex + i) : "";
+					}
+					currentIndex += i;
 					return mappedName.toString();
 				}
 

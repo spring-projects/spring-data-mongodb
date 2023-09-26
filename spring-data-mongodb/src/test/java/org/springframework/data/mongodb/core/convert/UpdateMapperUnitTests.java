@@ -1350,6 +1350,17 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo("{ $set : { 'text' : 'eulav' } }");
 	}
 
+	@ParameterizedTest // GH-4502
+	@ValueSource(strings = {"levelOne.levelTwo.1", "levelOne.levelTwo.1.0", "levelOne.levelTwo.2.0",})
+	void objectNestedIntegerFieldCorrectly(String path) {
+
+		Update update = new Update().set(path, "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedObject1.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document(path, "4")));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1817,5 +1828,13 @@ class UpdateMapperUnitTests {
 
 		@ValueConverter(ReversingValueConverter.class)
 		String text;
+	}
+
+	static class EntityWithNestedObject1 {
+		EntityWithNestedObject2 levelOne;
+	}
+
+	static class EntityWithNestedObject2 {
+		Integer levelTwo;
 	}
 }
