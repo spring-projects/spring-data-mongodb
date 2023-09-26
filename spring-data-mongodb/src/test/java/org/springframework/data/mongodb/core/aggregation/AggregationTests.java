@@ -1897,19 +1897,44 @@ public class AggregationTests {
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "7.0")
 	void percentileShouldBeAppliedCorrectly() {
 
-		mongoTemplate.insert(new DATAMONGO788(15, 16));
-		mongoTemplate.insert(new DATAMONGO788(17, 18));
+		DATAMONGO788 objectToSave = new DATAMONGO788(62, 81, 80);
+		DATAMONGO788 objectToSave2 = new DATAMONGO788(60, 83, 79);
+
+		mongoTemplate.insert(objectToSave);
+		mongoTemplate.insert(objectToSave2);
 
 		Aggregation agg = Aggregation.newAggregation(
-				project().and(ArithmeticOperators.valueOf("x").percentile(0.9).and("y"))
-				.as("ninetiethPercentile"));
+				project().and(ArithmeticOperators.valueOf("x").percentile(0.9, 0.4).and("y").and("xField"))
+				.as("percentileValues"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
 
 		// MongoDB server returns $percentile as an array of doubles
 		List<Document> rawResults = (List<Document>) result.getRawResults().get("results");
-		assertThat((List<Object>) rawResults.get(0).get("ninetiethPercentile")).containsExactly(16.0);
-		assertThat((List<Object>) rawResults.get(1).get("ninetiethPercentile")).containsExactly(18.0);
+		assertThat((List<Object>) rawResults.get(0).get("percentileValues")).containsExactly(81.0, 80.0);
+		assertThat((List<Object>) rawResults.get(1).get("percentileValues")).containsExactly(83.0, 79.0);
+	}
+
+	@Test // GH-4472
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "7.0")
+	void medianShouldBeAppliedCorrectly() {
+
+		DATAMONGO788 objectToSave = new DATAMONGO788(62, 81, 80);
+		DATAMONGO788 objectToSave2 = new DATAMONGO788(60, 83, 79);
+
+		mongoTemplate.insert(objectToSave);
+		mongoTemplate.insert(objectToSave2);
+
+		Aggregation agg = Aggregation.newAggregation(
+				project().and(ArithmeticOperators.valueOf("x").median().and("y").and("xField"))
+				.as("medianValue"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
+
+		// MongoDB server returns $median a Double
+		List<Document> rawResults = (List<Document>) result.getRawResults().get("results");
+		assertThat(rawResults.get(0).get("medianValue")).isEqualTo(80.0);
+		assertThat(rawResults.get(1).get("medianValue")).isEqualTo(79.0);
 	}
 
 	@Test // DATAMONGO-1986
@@ -2151,6 +2176,12 @@ public class AggregationTests {
 			this.xField = x;
 			this.y = y;
 			this.yField = y;
+		}
+
+		public DATAMONGO788(int x, int y, int xField) {
+			this.x = x;
+			this.y = y;
+			this.xField = xField;
 		}
 	}
 

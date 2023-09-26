@@ -2261,6 +2261,22 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { scorePercentiles: { $percentile: { input: [\"$scoreOne\", \"$scoreTwo\"], method: \"approximate\", p: [0.4] } }} } }"));
 	}
 
+	@Test // GH-4472
+	void shouldRenderMedianAggregationExpressions() {
+
+		Document singleArgAgg = project()
+				.and(ArithmeticOperators.valueOf("score").median()).as("medianValue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(singleArgAgg).isEqualTo(Document.parse("{ $project: { medianValue: { $median: { input: \"$score\", method: \"approximate\" } }} } }"));
+
+		Document multipleArgsAgg = project()
+				.and(ArithmeticOperators.valueOf("score").median().and("scoreTwo")).as("medianValue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(multipleArgsAgg).isEqualTo(Document.parse("{ $project: { medianValue: { $median: { input: [\"$score\", \"$scoreTwo\"], method: \"approximate\" } }} } }"));
+	}
+
 	private static Document extractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
