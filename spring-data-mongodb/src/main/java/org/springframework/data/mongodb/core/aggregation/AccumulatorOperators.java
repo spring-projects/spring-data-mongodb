@@ -265,6 +265,16 @@ public class AccumulatorOperators {
 			return percentile.percentages(percentages);
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the median of the associated numeric value expression.
+		 *
+		 * @return new instance of {@link Median}.
+		 * @since 4.2
+		 */
+		public Median median() {
+			return usesFieldRef() ? Median.medianOf(fieldReference) : Median.medianOf(expression);
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
@@ -1080,6 +1090,80 @@ public class AccumulatorOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$percentile";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $median}.
+	 *
+	 * @author Julia Lee
+	 * @since 4.2
+	 */
+	public static class Median extends AbstractAggregationExpression {
+
+		private Median(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link Median}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public static Median medianOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			Map<String, Object> fields = new HashMap<>();
+			fields.put("input", Fields.field(fieldReference));
+			fields.put("method", "approximate");
+			return new Median(fields);
+		}
+
+		/**
+		 * Creates new {@link Median}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public static Median medianOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			Map<String, Object> fields = new HashMap<>();
+			fields.put("input", expression);
+			fields.put("method", "approximate");
+			return new Median(fields);
+		}
+
+		/**
+		 * Creates new {@link Median} with all previously added inputs appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public Median and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return new Median(appendTo("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link Median} with all previously added inputs appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public Median and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return new Median(appendTo("input", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$median";
 		}
 	}
 }
