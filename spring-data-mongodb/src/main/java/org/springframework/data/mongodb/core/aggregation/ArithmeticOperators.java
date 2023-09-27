@@ -32,8 +32,6 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.St
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnit;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnits;
-import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnit;
-import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnits;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;

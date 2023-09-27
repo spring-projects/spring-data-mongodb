@@ -152,6 +152,14 @@ class AccumulatorOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $median: { input: [\"$scoreOne\", {\"$sum\": \"$scoreTwo\"}], method: \"approximate\" } }"));
 	}
 
+	@Test // GH-4472
+	void rendersMedianCorrectlyWithTypedAggregationContext() {
+
+		assertThat(valueOf("midichlorianCount").median()
+				.toDocument(TestAggregationContext.contextFor(Jedi.class)))
+						.isEqualTo(Document.parse("{ $median: { input: \"$force\", method: \"approximate\" } }"));
+	}
+
 	static class Jedi {
 
 		String name;
