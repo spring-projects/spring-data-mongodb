@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.messaging;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -26,6 +25,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.util.Lock;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
@@ -41,7 +41,7 @@ import com.mongodb.client.MongoCursor;
  */
 abstract class CursorReadingTask<T, R> implements Task {
 
-	private final Lock lock = new ReentrantLock();
+	private final Lock lock = Lock.of(new ReentrantLock());
 
 	private final MongoTemplate template;
 	private final SubscriptionRequest<T, R, RequestOptions> request;
@@ -88,14 +88,14 @@ abstract class CursorReadingTask<T, R> implements Task {
 					}
 				} catch (InterruptedException e) {
 
-					doWhileLocked(lock, () -> state = State.CANCELLED);
+					lock.executeWithoutResult(() -> state = State.CANCELLED);
 					Thread.currentThread().interrupt();
 					break;
 				}
 			}
 		} catch (RuntimeException e) {
 
-			doWhileLocked(lock, () -> state = State.CANCELLED);
+			lock.executeWithoutResult(() -> state = State.CANCELLED);
 			errorHandler.handleError(e);
 		}
 	}
@@ -111,7 +111,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 */
 	private void start() {
 
-		doWhileLocked(lock, () -> {
+		lock.executeWithoutResult(() -> {
 			if (!State.RUNNING.equals(state)) {
 				state = State.STARTING;
 			}
@@ -119,9 +119,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 		do {
 
-			// boolean valid = false;
-
-			boolean valid = executeWhileLocked(lock, () -> {
+			boolean valid = lock.execute(() -> {
 
 				if (!State.STARTING.equals(state)) {
 					return false;
@@ -144,7 +142,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 
-					doWhileLocked(lock, () -> state = State.CANCELLED);
+					lock.executeWithoutResult(() -> state = State.CANCELLED);
 					Thread.currentThread().interrupt();
 				}
 			}
@@ -160,7 +158,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public void cancel() throws DataAccessResourceFailureException {
 
-		doWhileLocked(lock, () -> {
+		lock.executeWithoutResult(() -> {
 
 			if (State.RUNNING.equals(state) || State.STARTING.equals(state)) {
 				this.state = State.CANCELLED;
@@ -178,7 +176,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	@Override
 	public State getState() {
-		return executeWhileLocked(lock, () -> state);
+		return lock.execute(() -> state);
 	}
 
 	@Override
@@ -214,7 +212,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Nullable
 	private T getNext() {
 
-		return executeWhileLocked(lock, () -> {
+		return lock.execute(() -> {
 			if (State.RUNNING.equals(state)) {
 				return cursor.tryNext();
 			}
@@ -257,22 +255,4 @@ abstract class CursorReadingTask<T, R> implements Task {
 		}
 	}
 
-	private static void doWhileLocked(Lock lock, Runnable action) {
-
-		executeWhileLocked(lock, () -> {
-			action.run();
-			return null;
-		});
-	}
-
-	@Nullable
-	private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
-
-		lock.lock();
-		try {
-			return stuff.get();
-		} finally {
-			lock.unlock();
-		}
-	}
 }

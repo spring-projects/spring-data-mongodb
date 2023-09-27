@@ -22,7 +22,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
@@ -42,6 +41,8 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.Lock;
+import org.springframework.data.util.Lock.AcquiredLock;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.SpringObjenesis;
 import org.springframework.util.ReflectionUtils;
@@ -175,7 +176,9 @@ public final class LazyLoadingProxyFactory {
 			}
 		}
 
-		private final ReadWriteLock lock = new ReentrantReadWriteLock();
+		private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+		private final Lock readLock = Lock.of(rwLock.readLock());
+		private final Lock writeLock = Lock.of(rwLock.writeLock());
 
 		private final MongoPersistentProperty property;
 		private final DbRefResolverCallback callback;
@@ -347,8 +350,7 @@ public final class LazyLoadingProxyFactory {
 		@Nullable
 		private Object resolve() {
 
-			lock.readLock().lock();
-			try {
+			try (AcquiredLock l = readLock.lock()) {
 				if (resolved) {
 
 					if (LOGGER.isTraceEnabled()) {
@@ -357,8 +359,6 @@ public final class LazyLoadingProxyFactory {
 					}
 					return result;
 				}
-			} finally {
-				lock.readLock().unlock();
 			}
 
 			if (LOGGER.isTraceEnabled()) {
@@ -367,7 +367,7 @@ public final class LazyLoadingProxyFactory {
 			}
 
 			try {
-				return executeWhileLocked(lock.writeLock(), () -> callback.resolve(property));
+				return writeLock.execute(() -> callback.resolve(property));
 			} catch (RuntimeException ex) {
 
 				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
@@ -381,15 +381,6 @@ public final class LazyLoadingProxyFactory {
 			}
 		}
 
-		private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
-
-			lock.lock();
-			try {
-				return stuff.get();
-			} finally {
-				lock.unlock();
-			}
-		}
 	}
 
 }
