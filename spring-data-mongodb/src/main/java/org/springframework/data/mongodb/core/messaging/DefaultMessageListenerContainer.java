@@ -20,10 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,6 +29,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.util.Lock;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
@@ -54,8 +53,13 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	private final Map<SubscriptionRequest, Subscription> subscriptions = new LinkedHashMap<>();
 
-	ReadWriteLock lifecycleMonitor = new ReentrantReadWriteLock();
-	ReadWriteLock subscriptionMonitor = new ReentrantReadWriteLock();
+	private final ReadWriteLock lifecycleMonitor = new ReentrantReadWriteLock();
+	private final Lock lifecycleRead = Lock.of(lifecycleMonitor.readLock());
+	private final Lock lifecycleWrite = Lock.of(lifecycleMonitor.readLock());
+
+	private final ReadWriteLock subscriptionMonitor = new ReentrantReadWriteLock();
+	private final Lock subscriptionRead = Lock.of(subscriptionMonitor.readLock());
+	private final Lock subscriptionWrite = Lock.of(subscriptionMonitor.readLock());
 
 	private boolean running = false;
 
@@ -114,7 +118,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	@Override
 	public void start() {
 
-		doWhileLocked(lifecycleMonitor.writeLock(), () -> {
+		lifecycleWrite.executeWithoutResult(() -> {
 			if (!this.running) {
 				subscriptions.values().stream() //
 						.filter(it -> !it.isActive()) //
@@ -130,8 +134,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public void stop() {
-
-		doWhileLocked(lifecycleMonitor.writeLock(), () -> {
+		lifecycleWrite.executeWithoutResult(() -> {
 			if (this.running) {
 				subscriptions.values().forEach(Cancelable::cancel);
 				running = false;
@@ -141,7 +144,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public boolean isRunning() {
-		return executeWhileLocked(lifecycleMonitor.readLock(), () -> running);
+		return lifecycleRead.execute(() -> running);
 	}
 
 	@Override
@@ -166,13 +169,12 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
-		return executeWhileLocked(subscriptionMonitor.readLock(), () -> Optional.ofNullable(subscriptions.get(request)));
+		return subscriptionRead.execute(() -> Optional.ofNullable(subscriptions.get(request)));
 	}
 
 	public Subscription register(SubscriptionRequest request, Task task) {
 
-		return executeWhileLocked(this.subscriptionMonitor.writeLock(), () -> 
-		{
+		return subscriptionWrite.execute(() -> {
 			if (subscriptions.containsKey(request)) {
 				return subscriptions.get(request);
 			}
@@ -190,8 +192,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public void remove(Subscription subscription) {
-
-		doWhileLocked(this.subscriptionMonitor.writeLock(), () -> {
+		subscriptionWrite.executeWithoutResult(() -> {
 
 			if (subscriptions.containsValue(subscription)) {
 
@@ -202,25 +203,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 				subscriptions.values().remove(subscription);
 			}
 		});
-	}
-	
-	private static void doWhileLocked(Lock lock, Runnable action) {
-
-		executeWhileLocked(lock, () -> {
-			action.run();
-			return null;
-		});
-	}
-
-	@Nullable
-	private static <T> T executeWhileLocked(Lock lock, Supplier<T> stuff) {
-
-		lock.lock();
-		try {
-			return stuff.get();
-		} finally {
-			lock.unlock();
-		}
 	}
 
 	/**
