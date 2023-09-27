@@ -181,6 +181,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
 		AggregationUtils.applyHint(builder, method);
+		AggregationUtils.applyReadPreference(builder, method);
 
 		if (ReflectionUtils.isVoid(method.getReturnType().getType()) && pipeline.isOutOrMerge()) {
 			builder.skipOutput();

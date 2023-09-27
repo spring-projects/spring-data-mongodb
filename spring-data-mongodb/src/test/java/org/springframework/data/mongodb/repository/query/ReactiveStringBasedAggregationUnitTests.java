@@ -60,6 +60,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.ReadPreference;
+
 /**
  * Unit tests for {@link ReactiveStringBasedAggregation}.
  *
@@ -211,6 +213,13 @@ public class ReactiveStringBasedAggregationUnitTests {
 		assertThat(skipResultsOf(invocation)).isFalse();
 	}
 
+	@Test // GH-2971
+	void aggregatePicksUpReadPreferenceFromAnnotation() {
+
+		AggregationInvocation invocation = executeAggregation("withReadPreference");
+		assertThat(readPreferenceOf(invocation)).isEqualTo(ReadPreference.secondaryPreferred());
+	}
+
 	private ReactiveStringBasedAggregation createAggregationForMethod(String name, Class<?>... parameters) {
 
 		Method method = ClassUtils.getMethod(SampleRepository.class, name, parameters);
@@ -250,6 +259,12 @@ public class ReactiveStringBasedAggregationUnitTests {
 				: false;
 	}
 
+	@Nullable
+	private ReadPreference readPreferenceOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference()
+				: null;
+	}
+
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
 		return invocation.getTargetType();
 	}
@@ -287,6 +302,9 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
 		Mono<Void> outSkipResult();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT }, readPreference = "secondaryPreferred")
+		Mono<PersonAggregate> withReadPreference();
 	}
 
 	static class PersonAggregate {

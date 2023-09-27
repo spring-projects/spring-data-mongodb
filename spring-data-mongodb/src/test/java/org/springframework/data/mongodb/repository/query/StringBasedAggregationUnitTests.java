@@ -68,6 +68,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadPreference;
 
 /**
  * Unit tests for {@link StringBasedAggregation}.
@@ -282,6 +283,13 @@ public class StringBasedAggregationUnitTests {
 		assertThat(skipResultsOf(invocation)).isFalse();
 	}
 
+	@Test // GH-2971
+	void aggregatePicksUpReadPreferenceFromAnnotation() {
+
+		AggregationInvocation invocation = executeAggregation("withReadPreference");
+		assertThat(readPreferenceOf(invocation)).isEqualTo(ReadPreference.secondaryPreferred());
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -333,6 +341,12 @@ public class StringBasedAggregationUnitTests {
 	private Boolean skipResultsOf(AggregationInvocation invocation) {
 		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults()
 				: false;
+	}
+
+	@Nullable
+	private ReadPreference readPreferenceOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference()
+				: null;
 	}
 
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
@@ -393,6 +407,9 @@ public class StringBasedAggregationUnitTests {
 
 		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
 		void outSkipResult();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT }, readPreference = "secondaryPreferred")
+		void withReadPreference();
 	}
 
 	private interface UnsupportedRepository extends Repository<Person, Long> {

@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
+@ReadPreference
 public @interface Aggregation {
 
 	/**
@@ -127,4 +128,21 @@ public @interface Aggregation {
 	 */
 	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
+
+	/**
+	 * The mode of the read preference to use. <br />
+	 * {@code @Aggregation(pipeline = { ... }, readPreference = "secondary")} can be used as shortcut for:
+	 *
+	 * <pre class="code">
+	 * &#64;@Aggregation(pipeline = { ... })
+	 * &#64;ReadPreference("secondary")
+	 * List&lt;PersonAggregate&gt; groupByLastnameAnd(String property);
+	 * </pre>
+	 *
+	 * @return the index name.
+	 * @since 4.2
+	 * @see ReadPreference#value()
+	 */
+	@AliasFor(annotation = ReadPreference.class, attribute = "value")
+	String readPreference() default "";
 }

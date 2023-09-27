@@ -37,6 +37,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
+import com.mongodb.ReadPreference;
+
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Aggregation}
  * support offered by repositories.
@@ -115,6 +117,22 @@ abstract class AggregationUtils {
 		}
 
 		return builder.hint(queryMethod.getAnnotatedHint());
+	}
+
+	/**
+	 * If present apply the preference from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 *
+	 * @param builder must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	static AggregationOptions.Builder applyReadPreference(AggregationOptions.Builder builder, MongoQueryMethod queryMethod) {
+
+		if (!queryMethod.hasAnnotatedReadPreference()) {
+			return builder;
+		}
+
+		return builder.readPreference(ReadPreference.valueOf(queryMethod.getAnnotatedReadPreference()));
 	}
 
 	/**

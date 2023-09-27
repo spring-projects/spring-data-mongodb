@@ -159,8 +159,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		if (!method.hasAnnotatedReadPreference()) {
 			return query;
 		}
-		
-		return query.withReadPreference(method.getAnnotatedReadPreference());
+
+		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
 	}
 
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {

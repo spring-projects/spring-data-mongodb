@@ -17,6 +17,12 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import com.mongodb.ReadPreference;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.util.Lazy;
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -63,17 +69,42 @@ import com.mongodb.client.result.DeleteResult;
  */
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
 
+	private final @Nullable RepositoryMetadata repositoryMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
 	private final ReactiveMongoOperations mongoOperations;
+	private final Lazy<ReadPreference> readPreference;
 
 	public SimpleReactiveMongoRepository(MongoEntityInformation<T, ID> entityInformation,
+			ReactiveMongoOperations mongoOperations) {
+		this(null, entityInformation, mongoOperations);
+	}
+
+	/**
+	 * Creates a new {@link SimpleReactiveMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
+	 *
+	 * @param repositoryMetadata
+	 * @param entityInformation must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @since 4.2
+	 */
+	public SimpleReactiveMongoRepository(@Nullable RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> entityInformation,
 			ReactiveMongoOperations mongoOperations) {
 
 		Assert.notNull(entityInformation, "EntityInformation must not be null");
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
+		this.repositoryMetadata = repositoryMetadata;
 		this.entityInformation = entityInformation;
 		this.mongoOperations = mongoOperations;
+
+		this.readPreference = repositoryMetadata == null ? Lazy.empty() :  Lazy.of(() -> {
+					org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), org.springframework.data.mongodb.repository.ReadPreference.class);
+					if (preference == null) {
+						return null;
+					}
+					return ReadPreference.valueOf(preference.value());
+				}
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -312,6 +343,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
 				.limit(2);
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName()).buffer(2)
 				.map(vals -> {
@@ -340,6 +372,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
 				.with(sort);
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -394,6 +427,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	private Flux<T> findAll(Query query) {
+
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
@@ -478,6 +513,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 			if (!getFieldsToInclude().isEmpty()) {
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));
 			}
+
+			readPreference.getOptional().ifPresent(query::withReadPreference);
 
 			query = queryCustomizer.apply(query);
 

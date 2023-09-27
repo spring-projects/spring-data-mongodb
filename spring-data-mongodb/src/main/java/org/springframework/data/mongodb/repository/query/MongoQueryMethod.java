@@ -22,11 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import com.mongodb.Tag;
-import com.mongodb.TagSet;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
@@ -322,7 +318,7 @@ public class MongoQueryMethod extends QueryMethod {
 
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#collation()}.
+	 * Check if the query method is decorated with an non empty {@link ReadPreference}.
 	 *
 	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
 	 * @since 4.2
@@ -334,43 +330,26 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Get the {@link com.mongodb.ReadPreference} extracted from the {@link ReadPreference} annotation.
 	 *
-	 * @return the {@link ReadPreference()}.
+	 * @return the name of the {@link ReadPreference()}.
 	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
 	 *                               {@link #hasAnnotatedQuery()} first.
 	 * @since 4.2
 	 */
-	public com.mongodb.ReadPreference getAnnotatedReadPreference() {
+	public String getAnnotatedReadPreference() {
 
-		return doFindReadPreferenceAnnotation().map(annotationReadPreference -> {
-
-			com.mongodb.ReadPreference readPreference = com.mongodb.ReadPreference.valueOf(annotationReadPreference.value());
-
-			if (annotationReadPreference.tags().length > 0) {
-				List<Tag> tags = Arrays.stream(annotationReadPreference.tags())
-						.map(tag -> new Tag(tag.name(), tag.value()))
-						.collect(Collectors.toList());
-				readPreference = readPreference.withTagSet(new TagSet(tags));
-			}
-			
-			if (annotationReadPreference.maxStalenessSeconds() > 0) {
-				readPreference = readPreference.withMaxStalenessMS(annotationReadPreference.maxStalenessSeconds(), TimeUnit.SECONDS);
-			}
-			
-			return readPreference;
-		}).orElseThrow(() -> new IllegalStateException(
+		return doFindReadPreferenceAnnotation().map(ReadPreference::value).orElseThrow(() -> new IllegalStateException(
 						"Expected to find @ReadPreference annotation but did not; Make sure to check hasAnnotatedReadPreference() before."));
 	}
 
 	/**
-	 * Get {@link com.mongodb.ReadPreference} from query. First check if the method is annotated. If not, check if the class is annotated.
+	 * Get {@link com.mongodb.ReadPreference#getName() name} from query. First check if the method is annotated. If not, check if the class is annotated.
 	 * So if the method and the class are annotated with @ReadPreference, the method annotation takes precedence.
-	 * @return the {@link com.mongodb.ReadPreference}
+	 * @return the {@link ReadPreference}
 	 * @since 4.2
 	 */
 	private Optional<ReadPreference> doFindReadPreferenceAnnotation() {
 		return doFindAnnotation(ReadPreference.class).or(() -> doFindAnnotationInClass(ReadPreference.class));
 	}
-
 
 	/**
 	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
@@ -458,7 +437,6 @@ public class MongoQueryMethod extends QueryMethod {
 
 	@SuppressWarnings("unchecked")
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
-		
 
 		return (Optional<A>) this.annotationCache.computeIfAbsent(annotationType,
 				it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it)));

@@ -319,7 +319,7 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtReadPreferenceByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	@Test // GH-2971
@@ -328,7 +328,7 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtQueryByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	@Test // GH-2971
@@ -337,8 +337,7 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
-		
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	@Test // GH-2971
@@ -347,7 +346,16 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("primaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("primaryPreferred");
+	}
+
+	@Test // GH-2971
+	void detectsReadPreferenceForAggregation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregationWithReadPreference");
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	private MongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters) throws Exception {
@@ -405,6 +413,9 @@ public class MongoQueryMethodUnitTests {
 		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
 				collation = "de_AT")
 		List<User> findByAggregationWithCollation();
+
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }", readPreference = "secondaryPreferred")
+		List<User> findByAggregationWithReadPreference();
 
 		void findAndUpdateBy(String firstname, Update update);
 

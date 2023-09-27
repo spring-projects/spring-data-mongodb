@@ -132,6 +132,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 				expressionParser, evaluationContextProvider);
 		AggregationUtils.applyMeta(builder, method);
 		AggregationUtils.applyHint(builder, method);
+		AggregationUtils.applyReadPreference(builder, method);
 
 		TypeInformation<?> returnType = method.getReturnType();
 		if (returnType.getComponentType() != null) {
