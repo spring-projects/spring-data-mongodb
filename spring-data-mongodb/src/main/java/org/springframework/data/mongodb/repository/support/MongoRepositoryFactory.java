@@ -127,7 +127,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType(),
 				information);
-		return getTargetRepositoryViaReflection(information, entityInformation, operations);
+		return getTargetRepositoryViaReflection(information, information, entityInformation, operations);
 	}
 
 	@Override

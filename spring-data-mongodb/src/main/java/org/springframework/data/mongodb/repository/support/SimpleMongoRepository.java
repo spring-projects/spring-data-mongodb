@@ -27,6 +27,8 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.mongodb.ReadPreference;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -38,11 +40,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
@@ -62,9 +67,10 @@ import com.mongodb.client.result.DeleteResult;
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
-	private final MongoOperations mongoOperations;
+	private final @Nullable RepositoryMetadata repositoryMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
-
+	private final MongoOperations mongoOperations;
+	private final Lazy<ReadPreference> readPreference;
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 *
@@ -72,12 +78,34 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
+		this(null, metadata, mongoOperations);
+	}
+
+	/**
+	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
+	 *
+	 * @param repositoryMetadata
+	 * @param metadata must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @since 4.2
+	 */
+	public SimpleMongoRepository(@Nullable RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
 
 		Assert.notNull(metadata, "MongoEntityInformation must not be null");
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
+		this.repositoryMetadata = repositoryMetadata;
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
+
+		this.readPreference = repositoryMetadata == null ? Lazy.empty() :  Lazy.of(() -> {
+					org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), org.springframework.data.mongodb.repository.ReadPreference.class);
+					if (preference == null) {
+						return null;
+					}
+					return ReadPreference.valueOf(preference.value());
+				}
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -213,7 +241,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(sort, "Sort must not be null");
 
-		return findAll(new Query().with(sort));
+		Query query = new Query().with(sort);
+		return findAll(query);
 	}
 
 	// -------------------------------------------------------------------------
@@ -253,6 +282,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 
 		return Optional
 				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
@@ -272,6 +302,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
 				.with(sort);
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -284,6 +315,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()).with(pageable); //
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 
 		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 
@@ -337,7 +369,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 
-		return new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		Query query = new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		readPreference.getOptional().ifPresent(query::withReadPreference);
+		return query;
 	}
 
 	private static <E> Collection<E> toCollection(Iterable<E> ids) {
@@ -351,6 +385,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
+		readPreference.getOptional().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
@@ -440,6 +475,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));
 			}
 
+			readPreference.getOptional().ifPresent(query::withReadPreference);
+
 			query = queryCustomizer.apply(query);
 
 			return mongoOperations.query(getPredicate().getProbeType()).inCollection(entityInformation.getCollectionName())
@@ -447,5 +484,4 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 
 	}
-
 }

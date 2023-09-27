@@ -17,11 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.annotation.Collation;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.query.MongoQueryMethodUnitTests.PersonRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,7 +25,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,12 +35,15 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -222,7 +222,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void annotatedCollationClashSelectsAtCollationAnnotationValue() throws Exception {
 
-		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
@@ -232,37 +232,46 @@ public class ReactiveMongoQueryMethodUnitTests {
 	@Test // GH-2971
 	void readsReadPreferenceAtQueryAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithReadPreferenceFromAtReadPreferenceByFirstname", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtReadPreferenceByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	@Test // GH-2971
 	void readsReadPreferenceFromAtQueryAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithReadPreferenceFromAtQueryByFirstname", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtQueryByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	@Test // GH-2971
 	void annotatedReadPreferenceClashSelectsAtReadPreferenceAnnotationValue() throws Exception {
 
-		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("secondaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	@Test // GH-2971
 	void readsReadPreferenceAtRepositoryAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "deleteByUserName", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
 		assertThat(method.hasAnnotatedReadPreference()).isTrue();
-		assertThat(method.getAnnotatedReadPreference().getName()).isEqualTo("primaryPreferred");
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("primaryPreferred");
+	}
+
+	@Test // GH-2971
+	void detectsReadPreferenceForAggregation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findByAggregationWithReadPreference");
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	private ReactiveMongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
@@ -307,6 +316,9 @@ public class ReactiveMongoQueryMethodUnitTests {
 		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
 				collation = "de_AT")
 		Flux<User> findByAggregationWithCollation();
+
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }", readPreference = "secondaryPreferred")
+		Flux<User> findByAggregationWithReadPreference();
 
 		@Collation("en_US")
 		List<User> findWithCollationFromAtCollationByFirstname(String firstname);

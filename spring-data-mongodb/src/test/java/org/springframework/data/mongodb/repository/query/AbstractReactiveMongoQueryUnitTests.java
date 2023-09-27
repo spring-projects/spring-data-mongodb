@@ -18,29 +18,15 @@ package org.springframework.data.mongodb.repository.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.mongodb.MongoClientSettings;
-import com.mongodb.Tag;
-import com.mongodb.TagSet;
-import com.mongodb.TaggableReadPreference;
-import com.mongodb.client.result.UpdateResult;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate;
-import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpdate;
-import org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery;
-import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.mongodb.repository.Hint;
-import org.springframework.data.mongodb.repository.ReadPreference;
-import org.springframework.data.mongodb.repository.ReadPreferenceTag;
-import org.springframework.data.mongodb.repository.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,11 +36,13 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpdate;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
@@ -62,12 +50,19 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * Unit tests for {@link AbstractReactiveMongoQuery}.
@@ -276,10 +271,7 @@ class AbstractReactiveMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getReadPreference().getName()).isEqualTo("secondaryPreferred");
-		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getTagSetList())
-				.containsExactly(new TagSet(List.of(new Tag("local", "east"), new Tag("pre", "west"))));
-		assertThat(((TaggableReadPreference)captor.getValue().getReadPreference()).getMaxStaleness(TimeUnit.SECONDS)).isEqualTo(99);
+		assertThat(captor.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
 	}
 
 	private ReactiveMongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
@@ -387,11 +379,7 @@ class AbstractReactiveMongoQueryUnitTests {
 		@Hint("idx-fn")
 		void findWithHintByFirstname(String firstname);
 
-		@ReadPreference(
-				value = "secondaryPreferred",
-				tags = { @ReadPreferenceTag(name = "local", value = "east"), @ReadPreferenceTag(name = "pre", value = "west") },
-				maxStalenessSeconds = 99
-		)
+		@ReadPreference(value = "secondaryPreferred")
 		Flux<Person> findWithReadPreferenceByFirstname(String firstname);
 	}
 }

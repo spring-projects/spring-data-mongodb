@@ -157,7 +157,7 @@ public @interface Query {
 	 * <pre class="code">
 	 * &#64;Query(...)
 	 * &#64;ReadPreference("secondary")
-	 * List&lt;User&gt; findAllByLastname(String collation);
+	 * List&lt;User&gt; findAllByLastname(String lastname);
 	 * </pre>
 	 *
 	 * @return the index name.

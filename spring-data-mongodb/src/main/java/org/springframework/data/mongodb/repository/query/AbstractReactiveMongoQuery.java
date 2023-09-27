@@ -164,7 +164,6 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			query = applyHintIfPresent(query);
 			query = applyAnnotatedReadPreferenceIfPresent(query);
 
-
 			FindWithQuery<?> find = typeToRead == null //
 					? findOperationWithProjection //
 					: findOperationWithProjection.as(typeToRead);
@@ -303,7 +302,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return query;
 		}
 
-		return query.withReadPreference(method.getAnnotatedReadPreference());
+		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
 	}
 
 	/**
