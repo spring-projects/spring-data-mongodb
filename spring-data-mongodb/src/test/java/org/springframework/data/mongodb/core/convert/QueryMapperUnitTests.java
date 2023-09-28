@@ -1528,6 +1528,24 @@ public class QueryMapperUnitTests {
 		assertThat(target.get("simpleMap", Map.class)).containsExactlyEntriesOf(sourceMap);
 	}
 
+	@Test // GH-4510
+	void convertsNestedOperatorValueForPropertyThatHasValueConverter() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("text").gt("spring").lt( "data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : {  $gt : 'gnirps', $lt : 'atad' } }");
+	}
+
+	@Test // GH-4510
+	void convertsNestedOperatorValueForPropertyContainingListThatHasValueConverter() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("text").gt("spring").in( "data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : {  $gt : 'gnirps', $in : [ 'atad' ] } }");
+	}
+
 	class WithSimpleMap {
 		Map<String, String> simpleMap;
 	}

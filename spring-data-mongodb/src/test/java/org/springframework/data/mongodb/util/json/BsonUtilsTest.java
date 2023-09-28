@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import org.bson.BsonArray;
@@ -178,6 +179,52 @@ class BsonUtilsTest {
 		} else {
 			assertThat(BsonUtils.resolveValue(source, fieldName)).isNull();
 		}
+	}
+
+	@Test
+	void retainsOrderWhenMappingValues() {
+
+		Document source = new Document();
+		source.append("z", "first-entry");
+		source.append("a", "second-entry");
+		source.append("0", "third-entry");
+		source.append("9", "fourth-entry");
+
+		Document target = BsonUtils.mapValues(source, (key, value) -> value);
+		assertThat(source).isNotSameAs(target).containsExactlyEntriesOf(source);
+	}
+
+	@Test
+	void retainsOrderWhenMappingKeys() {
+
+		Document source = new Document();
+		source.append("z", "first-entry");
+		source.append("a", "second-entry");
+
+		Document target = BsonUtils.mapEntries(source, entry -> entry.getKey().toUpperCase(), Entry::getValue);
+		assertThat(target).containsExactly(Map.entry("Z", "first-entry"), Map.entry("A", "second-entry"));
+	}
+
+	@Test
+	void appliesValueMapping() {
+		Document source = new Document();
+		source.append("z", "first-entry");
+		source.append("a", "second-entry");
+
+		Document target = BsonUtils.mapValues(source,
+				(key, value) -> new StringBuilder(value.toString()).reverse().toString());
+		assertThat(target).containsValues("yrtne-tsrif", "yrtne-dnoces");
+	}
+
+	@Test
+	void appliesKeyMapping() {
+
+		Document source = new Document();
+		source.append("z", "first-entry");
+		source.append("a", "second-entry");
+
+		Document target = BsonUtils.mapEntries(source, entry -> entry.getKey().toUpperCase(), Entry::getValue);
+		assertThat(target).containsKeys("Z", "A");
 	}
 
 	static Stream<Arguments> fieldNames() {
