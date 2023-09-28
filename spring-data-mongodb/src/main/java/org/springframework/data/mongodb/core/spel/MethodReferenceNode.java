@@ -231,6 +231,8 @@ public class MethodReferenceNode extends ExpressionNode {
 				.mappingParametersTo("n", "input"));
 		map.put("percentile", mapArgRef().forOperator("$percentile") //
 				.mappingParametersTo("input", "p", "method"));
+		map.put("median", mapArgRef().forOperator("$median") //
+				.mappingParametersTo("input", "method"));
 
 		// TYPE OPERATORS
 		map.put("type", singleArgRef().forOperator("$type"));

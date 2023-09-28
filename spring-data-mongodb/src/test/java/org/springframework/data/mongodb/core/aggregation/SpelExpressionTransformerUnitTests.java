@@ -1269,6 +1269,16 @@ public class SpelExpressionTransformerUnitTests {
 			.isEqualTo("{ $percentile : { input : \"$score\", p : [0.4, 0.85], method : \"approximate\" }}");
 	}
 
+	@Test // GH-4472
+	void shouldRenderMedian() {
+
+		assertThat(transform("median(new String[]{\"$scoreOne\", \"$scoreTwo\" }, \"approximate\")"))
+				.isEqualTo("{ $median : { input : [\"$scoreOne\", \"$scoreTwo\"], method : \"approximate\" }}");
+
+		assertThat(transform("median(score, \"approximate\")"))
+				.isEqualTo("{ $median : { input : \"$score\", method : \"approximate\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}
