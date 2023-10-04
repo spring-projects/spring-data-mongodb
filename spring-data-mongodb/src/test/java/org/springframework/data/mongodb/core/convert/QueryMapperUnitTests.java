@@ -127,6 +127,80 @@ public class QueryMapperUnitTests {
 		assertThat(result).containsEntry("_id", id);
 	}
 
+	@Test // ISSUE-4490
+	void translates$GtCorrectly() {
+
+		Criteria criteria = where("id").gt(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$gt")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // ISSUE-4490
+	void translates$GteCorrectly() {
+
+		Criteria criteria = where("id").gte(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$gte")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // ISSUE-4490
+	void translates$LteCorrectly() {
+
+		Criteria criteria = where("id").lte(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$lte")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // ISSUE-4490
+	void translates$LtCorrectly() {
+
+		Criteria criteria = where("id").lt(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$lt")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // ISSUE-4490
+	void translatesMultipleCompareOperatorsCorrectly() {
+
+		Criteria criteria = where("id").lt(new ObjectId().toString()).lte(new ObjectId().toString())
+				.gt(new ObjectId().toString()).gte(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$lt")).isInstanceOf(ObjectId.class);
+		assertThat(document.get("$lte")).isInstanceOf(ObjectId.class);
+		assertThat(document.get("$gt")).isInstanceOf(ObjectId.class);
+		assertThat(document.get("$gte")).isInstanceOf(ObjectId.class);
+	}
+
 	@Test // DATAMONGO-278
 	void translates$NeCorrectly() {
 

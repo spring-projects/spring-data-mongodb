@@ -459,44 +459,18 @@ public class QueryMapper {
 		}
 
 		if (documentField.isIdField() && !documentField.isAssociation()) {
-
 			if (isDBObject(value)) {
-				DBObject valueDbo = (DBObject) value;
-				Document resultDbo = new Document(valueDbo.toMap());
+				Document valueDbo = new Document(((DBObject) value).toMap());
+				Document resultDbo = new Document(valueDbo);
 
-				if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
-					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
-					List<Object> ids = new ArrayList<>();
-					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id, getIdTypeForField(documentField)));
-					}
-					resultDbo.put(inKey, ids);
-				} else if (valueDbo.containsField("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne"), getIdTypeForField(documentField)));
-				} else {
-					return getMappedObject(resultDbo, Optional.empty());
-				}
-				return resultDbo;
+				return convertIdField(valueDbo, resultDbo, documentField);
 			}
 
 			else if (isDocument(value)) {
 				Document valueDbo = (Document) value;
 				Document resultDbo = new Document(valueDbo);
 
-				if (valueDbo.containsKey("$in") || valueDbo.containsKey("$nin")) {
-					String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
-					List<Object> ids = new ArrayList<>();
-					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id, getIdTypeForField(documentField)));
-					}
-					resultDbo.put(inKey, ids);
-				} else if (valueDbo.containsKey("$ne")) {
-					resultDbo.put("$ne", convertId(valueDbo.get("$ne"), getIdTypeForField(documentField)));
-				} else {
-					return getMappedObject(resultDbo, Optional.empty());
-				}
-				return resultDbo;
-
+				return convertIdField(valueDbo, resultDbo, documentField);
 			} else {
 				return convertId(value, getIdTypeForField(documentField));
 			}
@@ -517,8 +491,42 @@ public class QueryMapper {
 		return convertSimpleOrDocument(value, documentField.getPropertyEntity());
 	}
 
+	private Document convertIdField(Document valueDbo, Document resultDbo, Field documentField) {
+		if (valueDbo.containsKey("$in") || valueDbo.containsKey("$nin")) {
+			String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
+			List<Object> ids = new ArrayList<>();
+			for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
+				ids.add(convertId(id, getIdTypeForField(documentField)));
+			}
+			resultDbo.put(inKey, ids);
+		} else if (valueDbo.containsKey("$ne")) {
+			resultDbo.put("$ne", convertId(valueDbo.get("$ne"), getIdTypeForField(documentField)));
+		} else if (containsCompareOperator(valueDbo)) {
+			if (valueDbo.containsKey("$gt")) {
+				resultDbo.put("$gt", convertId(valueDbo.get("$gt"), getIdTypeForField(documentField)));
+			}
+			if (valueDbo.containsKey("$gte")) {
+				resultDbo.put("$gte", convertId(valueDbo.get("$gte"), getIdTypeForField(documentField)));
+			}
+			if (valueDbo.containsKey("$lt")) {
+				resultDbo.put("$lt", convertId(valueDbo.get("$lt"), getIdTypeForField(documentField)));
+			}
+			if (valueDbo.containsKey("$lte")) {
+				resultDbo.put("$lte", convertId(valueDbo.get("$lte"), getIdTypeForField(documentField)));
+			}
+		} else {
+			return getMappedObject(resultDbo, Optional.empty());
+		}
+		return resultDbo;
+	}
+
 	private boolean isIdField(Field documentField) {
 		return documentField.getProperty() != null && documentField.getProperty().isIdProperty();
+	}
+
+	private boolean containsCompareOperator(Document document) {
+		return document.containsKey("$gt") || document.containsKey("$gte") || document.containsKey("$lt")
+				|| document.containsKey("$lte");
 	}
 
 	private Class<?> getIdTypeForField(Field documentField) {
