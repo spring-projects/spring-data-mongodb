@@ -1470,18 +1470,7 @@ public class QueryMapper {
 					return mappedName.toString();
 				}
 
-				int i = 1;
-				String nextToken = pathParts.get(currentIndex + i);
-				if(isPositionalParameter(nextToken)) {
-					while (isPositionalParameter(nextToken)) {
-						mappedName.append(".").append(nextToken);
-						i++;
-						nextToken = currentIndex + i < pathParts.size() ?  pathParts.get(currentIndex + i) : "";
-					}
-					currentIndex += i;
-					return mappedName.toString();
-				}
-
+				String nextToken = nextToken();
 				if (property.isMap()) {
 
 					mappedName.append(".").append(nextToken);
@@ -1489,7 +1478,13 @@ public class QueryMapper {
 					return mappedName.toString();
 				}
 
-				currentIndex++;
+				int i = 1;
+				while (isPositionalParameter(nextToken)) {
+					mappedName.append(".").append(nextToken);
+					i++;
+					nextToken = currentIndex + i < pathParts.size() ?  pathParts.get(currentIndex + i) : "";
+				}
+				currentIndex += i;
 				return mappedName.toString();
 			}
 
