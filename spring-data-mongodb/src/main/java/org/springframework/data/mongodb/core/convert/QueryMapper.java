@@ -1490,6 +1490,10 @@ public class QueryMapper {
 
 			static boolean isPositionalParameter(String partial) {
 
+				if(!StringUtils.hasText(partial)) {
+					return false;
+				}
+
 				if ("$".equals(partial)) {
 					return true;
 				}
@@ -1499,12 +1503,12 @@ public class QueryMapper {
 					return true;
 				}
 
-				try {
-					Long.valueOf(partial);
-					return true;
-				} catch (NumberFormatException e) {
-					return false;
+				for (int i = 0; i < partial.length(); i++) {
+					if (!Character.isDigit(partial.charAt(i))) {
+						return false;
+					}
 				}
+				return true;
 			}
 		}
 	}
