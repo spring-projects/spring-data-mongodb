@@ -75,6 +75,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author David Julia
  * @author Divya Srivastava
+ * @author Gyungrai Wang
  */
 public class QueryMapper {
 

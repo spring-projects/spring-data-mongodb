@@ -70,6 +70,7 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author David Julia
+ * @author Gyungrai Wang
  */
 public class QueryMapperUnitTests {
 
