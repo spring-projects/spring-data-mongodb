@@ -86,6 +86,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author David Julia
  * @author Divya Srivastava
+ * @author Gyungrai Wang
  */
 public class QueryMapper {
 
@@ -715,17 +716,20 @@ public class QueryMapper {
 		Document valueDbo = (Document) value;
 		Document resultDbo = new Document(valueDbo);
 
-		if (valueDbo.containsKey("$in") || valueDbo.containsKey("$nin")) {
-			String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
-			List<Object> ids = new ArrayList<>();
-			for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-				ids.add(convertId(id, getIdTypeForField(documentField)));
+		for (Entry<String, Object> entry : valueDbo.entrySet()) {
+
+			String key = entry.getKey();
+			if ("$nin".equals(key) || "$in".equals(key)) {
+				List<Object> ids = new ArrayList<>();
+				for (Object id : (Iterable<?>) valueDbo.get(key)) {
+					ids.add(convertId(id, getIdTypeForField(documentField)));
+				}
+				resultDbo.put(key, ids);
+			} else if (isKeyword(key)) {
+				resultDbo.put(key, convertIdField(documentField, entry.getValue()));
+			} else {
+				resultDbo.put(key, getMappedValue(documentField, entry.getValue()));
 			}
-			resultDbo.put(inKey, ids);
-		} else if (valueDbo.containsKey("$ne")) {
-			resultDbo.put("$ne", convertId(valueDbo.get("$ne"), getIdTypeForField(documentField)));
-		} else {
-			return getMappedObject(resultDbo, Optional.empty());
 		}
 
 		return resultDbo;
