@@ -16,18 +16,31 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Value Object for representing a field to read/write within a MongoDB {@link org.bson.Document}.
- * 
+ *
  * @author Christoph Strobl
  * @since 4.2
  */
 public class MongoField {
 
-	private final FieldName fieldName;
+	private final FieldName name;
 	private final FieldType fieldType;
-	private final int fieldOrder;
+	private final int order;
+
+	protected MongoField(FieldName name, Class<?> targetFieldType, int fieldOrder) {
+		this(name, FieldType.valueOf(targetFieldType.getSimpleName()), fieldOrder);
+	}
+
+	protected MongoField(FieldName name, FieldType fieldType, int fieldOrder) {
+
+		this.name = name;
+		this.fieldType = fieldType;
+		this.order = fieldOrder;
+	}
 
 	/**
 	 * Create a new {@link MongoField} with given {@literal name}.
@@ -35,8 +48,18 @@ public class MongoField {
 	 * @param name the name to be used as is (with all its potentially special characters).
 	 * @return new instance of {@link MongoField}.
 	 */
-	public static MongoField just(String name) {
-		return builder().fieldName(name).build();
+	public static MongoField fromKey(String name) {
+		return builder().name(name).build();
+	}
+
+	/**
+	 * Create a new {@link MongoField} with given {@literal name}.
+	 *
+	 * @param name the name to be used path expression.
+	 * @return new instance of {@link MongoField}.
+	 */
+	public static MongoField fromPath(String name) {
+		return builder().path(name).build();
 	}
 
 	/**
@@ -46,22 +69,11 @@ public class MongoField {
 		return new MongoFieldBuilder();
 	}
 
-	protected MongoField(FieldName fieldName, Class<?> targetFieldType, int fieldOrder) {
-		this(fieldName, FieldType.valueOf(targetFieldType.getSimpleName()), fieldOrder);
-	}
-
-	protected MongoField(FieldName fieldName, FieldType fieldType, int fieldOrder) {
-
-		this.fieldName = fieldName;
-		this.fieldType = fieldType;
-		this.fieldOrder = fieldOrder;
-	}
-
 	/**
 	 * @return never {@literal null}.
 	 */
-	public FieldName getFieldName() {
-		return fieldName;
+	public FieldName getName() {
+		return name;
 	}
 
 	/**
@@ -69,8 +81,8 @@ public class MongoField {
 	 *
 	 * @return {@link Integer#MAX_VALUE} if undefined.
 	 */
-	public int getFieldOrder() {
-		return fieldOrder;
+	public int getOrder() {
+		return order;
 	}
 
 	/**
@@ -78,53 +90,122 @@ public class MongoField {
 	 * @return new instance of {@link MongoField} with prefix appended to current field name.
 	 */
 	MongoField withPrefix(String prefix) {
-		return new MongoField(new FieldName(prefix + fieldName.name(), fieldName.type()), fieldType, fieldOrder);
+		return new MongoField(new FieldName(prefix + name.name(), name.type()), fieldType, order);
 	}
 
 	/**
 	 * Get the fields target type if defined.
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 */
 	public FieldType getFieldType() {
 		return fieldType;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		MongoField that = (MongoField) o;
+
+		if (order != that.order)
+			return false;
+		if (!ObjectUtils.nullSafeEquals(name, that.name)) {
+			return false;
+		}
+		return fieldType == that.fieldType;
+	}
+
+	@Override
+	public int hashCode() {
+
+		int result = ObjectUtils.nullSafeHashCode(name);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(fieldType);
+		result = 31 * result + order;
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return name.toString();
+	}
+
+	/**
+	 * Builder for {@link MongoField}.
+	 */
 	public static class MongoFieldBuilder {
 
-		private String fieldName;
-		private FieldType fieldType = FieldType.IMPLICIT;
-		private int orderNumber = Integer.MAX_VALUE;
-		private Type type = Type.PATH;
+		private String name;
+		private Type nameType = Type.PATH;
+		private FieldType type = FieldType.IMPLICIT;
+		private int order = Integer.MAX_VALUE;
 
+		/**
+		 * Configure the field type.
+		 *
+		 * @param fieldType
+		 * @return
+		 */
 		public MongoFieldBuilder fieldType(FieldType fieldType) {
 
-			this.fieldType = fieldType;
+			this.type = fieldType;
 			return this;
 		}
 
-		public MongoFieldBuilder fieldName(String fieldName) {
+		/**
+		 * Configure the field name as key. Key field names are used as-is without applying path segmentation splitting
+		 * rules.
+		 *
+		 * @param fieldName
+		 * @return
+		 */
+		public MongoFieldBuilder name(String fieldName) {
 
-			this.fieldName = fieldName;
-			this.type = Type.KEY;
+			Assert.hasText(fieldName, "Field name must not be empty");
+
+			this.name = fieldName;
+			this.nameType = Type.KEY;
 			return this;
 		}
 
-		public MongoFieldBuilder fieldOrderNumber(int orderNumber) {
+		/**
+		 * Configure the field name as path. Path field names are applied as paths potentially pointing into subdocuments.
+		 *
+		 * @param path
+		 * @return
+		 */
+		public MongoFieldBuilder path(String path) {
 
-			this.orderNumber = orderNumber;
+			Assert.hasText(path, "Field path (name) must not be empty");
+
+			this.name = path;
+			this.nameType = Type.PATH;
 			return this;
 		}
 
-		public MongoFieldBuilder fieldPath(String path) {
+		/**
+		 * Configure the field order, defaulting to {@link Integer#MAX_VALUE} (undefined).
+		 *
+		 * @param order
+		 * @return
+		 */
+		public MongoFieldBuilder order(int order) {
 
-			this.fieldName = path;
-			this.type = Type.PATH;
+			this.order = order;
 			return this;
 		}
 
+		/**
+		 * Build a new {@link MongoField}.
+		 *
+		 * @return a new {@link MongoField}.
+		 */
 		public MongoField build() {
-			return new MongoField(new FieldName(fieldName, type), fieldType, orderNumber);
+			return new MongoField(new FieldName(name, nameType), type, order);
 		}
 	}
 }

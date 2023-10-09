@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
@@ -208,7 +209,7 @@ abstract class AggregationUtils {
 		}
 
 		Document intermediate = new Document(source);
-		intermediate.remove("_id");
+		intermediate.remove(FieldName.ID.name());
 
 		if (intermediate.size() == 1) {
 			return getPotentiallyConvertedSimpleTypeValue(converter, intermediate.values().iterator().next(), targetType);

@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.aggregation.LookupOperation.LookupO
 import org.springframework.data.mongodb.core.aggregation.MergeOperation.MergeOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -224,7 +225,7 @@ public class Aggregation {
 	 * @return
 	 */
 	public static String previousOperation() {
-		return "_id";
+		return FieldName.ID.name();
 	}
 
 	/**

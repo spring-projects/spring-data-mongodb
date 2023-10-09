@@ -231,8 +231,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Configure the characters dots potentially contained in a {@link Map} shall be replaced with. By default we don't do
-	 * any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
+	 * Configure the characters dots potentially contained in a {@link Map} shall be replaced with. By default, we don't
+	 * do any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
 	 * object to fail. If further customization of the translation is needed, have a look at
 	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
 	 * <p>
@@ -246,7 +246,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * If {@link #preserveMapKeys(boolean) preserve} is set to {@literal true} the conversion will treat map keys containing {@literal .} (dot) characters as is.
+	 * If {@link #preserveMapKeys(boolean) preserve} is set to {@literal true} the conversion will treat map keys
+	 * containing dot ({@literal .}) characters as is.
 	 *
 	 * @since 4.2
 	 * @see #setMapKeyDotReplacement(String)
@@ -357,7 +358,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		DocumentAccessor documentAccessor = new DocumentAccessor(bson) {
 			@Override
 			FieldName getFieldName(MongoPersistentProperty prop) {
-				return propertyTranslator.translate(prop).getMongoField().getFieldName();
+				return propertyTranslator.translate(prop).getMongoField().getName();
 			}
 		};
 

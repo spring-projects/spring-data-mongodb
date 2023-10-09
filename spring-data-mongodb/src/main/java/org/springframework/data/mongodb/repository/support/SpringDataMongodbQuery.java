@@ -25,10 +25,11 @@ import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -258,7 +259,7 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	protected List<Object> getIds(Class<?> targetType, Predicate condition) {
 
 		Query query = createQuery(condition, null, QueryModifiers.EMPTY, Collections.emptyList());
-		return mongoOperations.findDistinct(query, "_id", targetType, Object.class);
+		return mongoOperations.findDistinct(query, FieldName.ID.name(), targetType, Object.class);
 	}
 
 	private static <T> T handleException(RuntimeException e, T defaultValue) {

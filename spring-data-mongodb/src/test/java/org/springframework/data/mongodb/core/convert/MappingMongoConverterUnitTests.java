@@ -2640,7 +2640,7 @@ class MappingMongoConverterUnitTests {
 		DocumentAccessor accessor = new DocumentAccessor(new org.bson.Document());
 		MongoPersistentProperty persistentProperty = mock(MongoPersistentProperty.class);
 		when(persistentProperty.isAssociation()).thenReturn(true);
-		when(persistentProperty.getMongoField()).thenReturn(MongoField.just("pName"));
+		when(persistentProperty.getMongoField()).thenReturn(MongoField.fromKey("pName"));
 		doReturn(TypeInformation.of(Person.class)).when(persistentProperty).getTypeInformation();
 		doReturn(Person.class).when(persistentProperty).getType();
 		doReturn(Person.class).when(persistentProperty).getRawType();

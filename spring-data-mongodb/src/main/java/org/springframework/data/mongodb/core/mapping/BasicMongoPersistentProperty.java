@@ -58,7 +58,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private static final Log LOG = LogFactory.getLog(BasicMongoPersistentProperty.class);
 
-	public static final String ID_FIELD_NAME = "_id";
+	public static final String ID_FIELD_NAME = FieldName.ID.name();
 	private static final String LANGUAGE_FIELD_NAME = "language";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
@@ -70,7 +70,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		SUPPORTED_ID_TYPES.add(BigInteger.class);
 
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
+		SUPPORTED_ID_PROPERTY_NAMES.add(ID_FIELD_NAME);
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;
@@ -131,8 +131,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 *
 	 * @return
 	 */
+	@Override
 	public String getFieldName() {
-		return getMongoField().getFieldName().name();
+		return getMongoField().getName().name();
 	}
 
 	@Override
@@ -171,6 +172,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 *         {@link org.springframework.data.mongodb.core.mapping.Field#value()} present.
 	 * @since 1.7
 	 */
+	@Override
 	public boolean hasExplicitFieldName() {
 		return StringUtils.hasText(getAnnotatedFieldName());
 	}
@@ -184,8 +186,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null ? annotation.value() : null;
 	}
 
+	@Override
 	public int getFieldOrder() {
-		return getMongoField().getFieldOrder();
+		return getMongoField().getOrder();
 	}
 
 	@Override
@@ -199,9 +202,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	@Override
 	protected Association<MongoPersistentProperty> createAssociation() {
-		return new Association<MongoPersistentProperty>(this, null);
+		return new Association<>(this, null);
 	}
 
+	@Override
 	public boolean isDbReference() {
 		return isAnnotationPresent(DBRef.class);
 	}
@@ -211,6 +215,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return isAnnotationPresent(DocumentReference.class);
 	}
 
+	@Override
 	@Nullable
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
@@ -286,12 +291,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		MongoFieldBuilder builder = MongoField.builder();
 		if (isAnnotationPresent(Field.class) && Type.KEY.equals(findAnnotation(Field.class).nameType())) {
-			builder.fieldName(doGetFieldName());
+			builder.name(doGetFieldName());
 		} else {
-			builder.fieldPath(doGetFieldName());
+			builder.path(doGetFieldName());
 		}
 		builder.fieldType(doGetFieldType());
-		builder.fieldOrderNumber(doGetFieldOrder());
+		builder.order(doGetFieldOrder());
 		return builder.build();
 	}
 

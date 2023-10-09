@@ -47,7 +47,7 @@ import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
-import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -81,7 +81,7 @@ public class QueryMapper {
 
 	protected static final Log LOGGER = LogFactory.getLog(QueryMapper.class);
 
-	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
+	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", FieldName.ID.name());
 	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
 	static final TypeInformation<?> NESTED_DOCUMENT = TypeInformation.of(NestedDocument.class);
 
@@ -367,7 +367,7 @@ public class QueryMapper {
 			return new Field(key);
 		}
 
-		if (Field.ID_KEY.equals(key)) {
+		if (FieldName.ID.name().equals(key)) {
 			return new MetadataBackedField(key, entity, mappingContext, entity.getIdProperty());
 		}
 
@@ -387,8 +387,7 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List<Object> newConditions = conditions instanceof Collection<?> collection
-					? new ArrayList<>(collection.size())
+			List<Object> newConditions = conditions instanceof Collection<?> collection ? new ArrayList<>(collection.size())
 					: new ArrayList<>();
 
 			for (Object condition : conditions) {
@@ -624,7 +623,7 @@ public class QueryMapper {
 
 				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
 
-				if (it.getValue() instanceof Document document) {
+				if (it.getValue()instanceof Document document) {
 					map.put(key, getMappedObject(document, entity));
 				} else {
 					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
@@ -977,8 +976,6 @@ public class QueryMapper {
 
 		protected static final Pattern POSITIONAL_OPERATOR = Pattern.compile("\\$\\[.*\\]");
 
-		private static final String ID_KEY = "_id";
-
 		protected final String name;
 
 		/**
@@ -1008,7 +1005,7 @@ public class QueryMapper {
 		 * @return
 		 */
 		public boolean isIdField() {
-			return ID_KEY.equals(name);
+			return FieldName.ID.name().equals(name);
 		}
 
 		/**
@@ -1053,7 +1050,7 @@ public class QueryMapper {
 		 * @return
 		 */
 		public String getMappedKey() {
-			return isIdField() ? ID_KEY : name;
+			return isIdField() ? FieldName.ID.name() : name;
 		}
 
 		/**
@@ -1222,9 +1219,11 @@ public class QueryMapper {
 
 		@Override
 		public String getMappedKey() {
-			if(getProperty() != null && getProperty().getMongoField().getFieldName().isOfType(Type.KEY)) {
+
+			if (getProperty() != null && getProperty().getMongoField().getName().isKey()) {
 				return getProperty().getFieldName();
 			}
+
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 
@@ -1355,7 +1354,7 @@ public class QueryMapper {
 
 			/* always start from a property, so we can skip the first segment.
 			   from there remove any position placeholder */
-			for(int i=1; i < segments.length; i++) {
+			for (int i = 1; i < segments.length; i++) {
 				String segment = segments[i];
 				if (segment.startsWith("[") && segment.endsWith("]")) {
 					continue;

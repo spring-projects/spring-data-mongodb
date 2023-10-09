@@ -26,11 +26,12 @@ import java.util.function.Consumer;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -264,7 +265,7 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	protected Flux<Object> getJoinIds(Class<?> targetType, @Nullable Predicate condition) {
 
 		return createQuery(Mono.justOrEmpty(condition), null, QueryModifiers.EMPTY, Collections.emptyList())
-				.flatMapMany(query -> mongoOperations.findDistinct(query, "_id", targetType, Object.class));
+				.flatMapMany(query -> mongoOperations.findDistinct(query, FieldName.ID.name(), targetType, Object.class));
 	}
 
 	@Override

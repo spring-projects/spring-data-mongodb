@@ -47,9 +47,8 @@ public @interface Field {
 
 	/**
 	 * The key to be used to store the field inside the document. Alias for {@link #value()}. The name may contain MongoDB
-	 * special characters like {@literal .} (dot). In this case the name is by default treated as a
-	 * {@link Type#PATH path}. To preserve dots within the name set the {@link #nameType()} attribute to
-	 * {@link Type#KEY}.
+	 * special characters like dot ({@literal .}). In this case the name is by default treated as a {@link Type#PATH
+	 * path}. To preserve dots within the name set the {@link #nameType()} attribute to {@link Type#KEY}.
 	 *
 	 * @return an empty {@link String} by default.
 	 * @since 2.2
@@ -58,8 +57,8 @@ public @interface Field {
 	String name() default "";
 
 	/**
-	 * The used {@link Type type} has impact on how a given {@link #name()} is treated if it contains
-	 * {@literal .} (dot) characters.
+	 * The used {@link Type type} has impact on how a given {@link #name()} is treated if it contains dot ({@literal .})
+	 * characters.
 	 *
 	 * @return {@link Type#PATH} by default.
 	 * @since 4.2

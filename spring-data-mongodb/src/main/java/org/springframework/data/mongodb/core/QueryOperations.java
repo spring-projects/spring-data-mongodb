@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -849,7 +850,7 @@ class QueryOperations {
 			}
 
 			String key = shardKey.getPropertyNames().iterator().next();
-			if ("_id".equals(key)) {
+			if (FieldName.ID.name().equals(key)) {
 				return true;
 			}
 

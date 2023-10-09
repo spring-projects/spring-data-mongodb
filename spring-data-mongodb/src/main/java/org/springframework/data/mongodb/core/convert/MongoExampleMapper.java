@@ -34,6 +34,7 @@ import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
@@ -278,7 +279,8 @@ public class MongoExampleMapper {
 	}
 
 	private static boolean isEmptyIdProperty(Entry<String, Object> entry) {
-		return entry.getKey().equals("_id") && (entry.getValue() == null || entry.getValue().equals(Optional.empty()));
+		return entry.getKey().equals(FieldName.ID.name())
+				&& (entry.getValue() == null || entry.getValue().equals(Optional.empty()));
 	}
 
 	private static void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher,

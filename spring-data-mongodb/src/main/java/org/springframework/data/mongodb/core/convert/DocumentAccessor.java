@@ -92,7 +92,7 @@ class DocumentAccessor {
 
 		Assert.notNull(prop, "MongoPersistentProperty must not be null");
 
-		Iterator<String> parts = Arrays.asList(prop.getMongoField().getFieldName().parts()).iterator();
+		Iterator<String> parts = Arrays.asList(prop.getMongoField().getName().parts()).iterator();
 		Bson document = this.document;
 
 		while (parts.hasNext()) {
@@ -129,7 +129,7 @@ class DocumentAccessor {
 	 */
 	@Nullable
 	public Object getRawId(MongoPersistentEntity<?> entity) {
-		return entity.hasIdProperty() ? get(entity.getRequiredIdProperty()) : BsonUtils.get(document, "_id");
+		return entity.hasIdProperty() ? get(entity.getRequiredIdProperty()) : BsonUtils.get(document, FieldName.ID.name());
 	}
 
 	/**
@@ -148,7 +148,7 @@ class DocumentAccessor {
 	}
 
 	FieldName getFieldName(MongoPersistentProperty prop) {
-		return prop.getMongoField().getFieldName();
+		return prop.getMongoField().getName();
 	}
 
 	/**
