@@ -293,9 +293,9 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#sort()}.
+	 * Check if the query method is decorated with a non-empty {@link Query#sort()}.
 	 *
-	 * @return true if method annotated with {@link Query} having an non empty sort attribute.
+	 * @return true if method annotated with {@link Query} having a non-empty sort attribute.
 	 * @since 2.1
 	 */
 	public boolean hasAnnotatedSort() {
@@ -316,9 +316,8 @@ public class MongoQueryMethod extends QueryMethod {
 				"Expected to find @Query annotation but did not; Make sure to check hasAnnotatedSort() before."));
 	}
 
-
 	/**
-	 * Check if the query method is decorated with an non empty {@link ReadPreference}.
+	 * Check if the query method is decorated with a non-empty {@link ReadPreference}.
 	 *
 	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
 	 * @since 4.2
@@ -332,18 +331,20 @@ public class MongoQueryMethod extends QueryMethod {
 	 *
 	 * @return the name of the {@link ReadPreference()}.
 	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
-	 *                               {@link #hasAnnotatedQuery()} first.
+	 *           {@link #hasAnnotatedReadPreference()} first.
 	 * @since 4.2
 	 */
 	public String getAnnotatedReadPreference() {
 
 		return doFindReadPreferenceAnnotation().map(ReadPreference::value).orElseThrow(() -> new IllegalStateException(
-						"Expected to find @ReadPreference annotation but did not; Make sure to check hasAnnotatedReadPreference() before."));
+				"Expected to find @ReadPreference annotation but did not; Make sure to check hasAnnotatedReadPreference() before."));
 	}
 
 	/**
-	 * Get {@link com.mongodb.ReadPreference#getName() name} from query. First check if the method is annotated. If not, check if the class is annotated.
-	 * So if the method and the class are annotated with @ReadPreference, the method annotation takes precedence.
+	 * Get {@link com.mongodb.ReadPreference#getName() name} from query. First check if the method is annotated. If not,
+	 * check if the class is annotated. So if the method and the class are annotated with @ReadPreference, the method
+	 * annotation takes precedence.
+	 *
 	 * @return the {@link ReadPreference}
 	 * @since 4.2
 	 */
@@ -352,7 +353,7 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
+	 * Check if the query method is decorated with a non-empty {@link Query#collation()} or
 	 * {@link Aggregation#collation()}.
 	 *
 	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
@@ -365,7 +366,7 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Get the collation value extracted from the {@link Query} or {@link Aggregation} annotation.
 	 *
-	 * @return the {@link Query#collation()} or or {@link Aggregation#collation()} value.
+	 * @return the {@link Query#collation()} or {@link Aggregation#collation()} value.
 	 * @throws IllegalStateException if method not annotated with {@link Query} or {@link Aggregation}. Make sure to check
 	 *           {@link #hasAnnotatedQuery()} first.
 	 * @since 2.2
@@ -443,9 +444,10 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <A extends Annotation> Optional<A>  doFindAnnotationInClass(Class<A> annotationType) {
+	private <A extends Annotation> Optional<A> doFindAnnotationInClass(Class<A> annotationType) {
 
-		Optional<Annotation> mergedAnnotation = Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), annotationType));
+		Optional<Annotation> mergedAnnotation = Optional
+				.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), annotationType));
 		annotationCache.put(annotationType, mergedAnnotation);
 
 		return (Optional<A>) mergedAnnotation;

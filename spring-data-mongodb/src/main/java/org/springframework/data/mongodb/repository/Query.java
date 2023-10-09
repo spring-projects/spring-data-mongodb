@@ -85,9 +85,8 @@ public @interface Query {
 	boolean delete() default false;
 
 	/**
-	 * Defines a default sort order for the given query.<br />
-	 * <strong>NOTE:</strong> The so set defaults can be altered / overwritten using an explicit
-	 * {@link org.springframework.data.domain.Sort} argument of the query method.
+	 * Defines a default sort order for the given query. <strong>NOTE:</strong> The so set defaults can be altered /
+	 * overwritten using an explicit {@link org.springframework.data.domain.Sort} argument of the query method.
 	 *
 	 * <pre>
 	 * <code>
@@ -134,8 +133,7 @@ public @interface Query {
 	String collation() default "";
 
 	/**
-	 * The name of the index to use. <br />
-	 * {@code @Query(value = "...", hint = "lastname-idx")} can be used as shortcut for:
+	 * The name of the index to use. {@code @Query(value = "...", hint = "lastname-idx")} can be used as shortcut for:
 	 *
 	 * <pre class="code">
 	 * &#64;Query(...)
@@ -151,8 +149,8 @@ public @interface Query {
 	String hint() default "";
 
 	/**
-	 * The mode of the read preference to use. <br />
-	 * {@code @Query(value = "...", readPreference = "secondary")} can be used as shortcut for:
+	 * The mode of the read preference to use. This attribute
+	 * ({@code @Query(value = "...", readPreference = "secondary")}) is an alias for:
 	 *
 	 * <pre class="code">
 	 * &#64;Query(...)

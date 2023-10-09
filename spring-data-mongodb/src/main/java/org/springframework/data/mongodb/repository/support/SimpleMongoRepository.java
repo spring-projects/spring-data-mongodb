@@ -27,23 +27,22 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.mongodb.ReadPreference;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -67,10 +66,10 @@ import com.mongodb.client.result.DeleteResult;
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
-	private final @Nullable RepositoryMetadata repositoryMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
 	private final MongoOperations mongoOperations;
-	private final Lazy<ReadPreference> readPreference;
+	private final Lazy<com.mongodb.ReadPreference> readPreference;
+
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 *
@@ -78,34 +77,40 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
-		this(null, metadata, mongoOperations);
+		this(null, metadata, mongoOperations, null);
 	}
 
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 *
-	 * @param repositoryMetadata
+	 * @param repositoryMetadata must not be {@literal null}.
 	 * @param metadata must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @since 4.2
 	 */
-	public SimpleMongoRepository(@Nullable RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
+	public SimpleMongoRepository(RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> metadata,
+			MongoOperations mongoOperations) {
+		this(repositoryMetadata, metadata, mongoOperations, null);
+	}
+
+	private SimpleMongoRepository(@Nullable RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> metadata,
+			MongoOperations mongoOperations, @Nullable Object marker) {
 
 		Assert.notNull(metadata, "MongoEntityInformation must not be null");
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
-		this.repositoryMetadata = repositoryMetadata;
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
 
-		this.readPreference = repositoryMetadata == null ? Lazy.empty() :  Lazy.of(() -> {
-					org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), org.springframework.data.mongodb.repository.ReadPreference.class);
-					if (preference == null) {
-						return null;
-					}
-					return ReadPreference.valueOf(preference.value());
-				}
-		);
+		this.readPreference = repositoryMetadata == null ? Lazy.empty() : Lazy.of(() -> {
+			ReadPreference preference = AnnotatedElementUtils
+					.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), ReadPreference.class);
+
+			if (preference == null) {
+				return null;
+			}
+			return com.mongodb.ReadPreference.valueOf(preference.value());
+		});
 	}
 
 	// -------------------------------------------------------------------------

@@ -27,17 +27,18 @@ import java.lang.annotation.Target;
  * @author Jorge Rodríguez
  * @author Christoph Strobl
  * @since 4.2
+ * @see com.mongodb.ReadPreference
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 public @interface ReadPreference {
 
 	/**
-	 * Configure read preference mode
-	 * @return read preference mode
+	 * Configure the read preference mode.
+	 *
+	 * @return read preference mode.
 	 */
 	String value() default "";
 
 }
-
