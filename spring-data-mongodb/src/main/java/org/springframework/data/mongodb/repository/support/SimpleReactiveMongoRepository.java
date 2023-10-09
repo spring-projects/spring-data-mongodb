@@ -17,12 +17,6 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import com.mongodb.ReadPreference;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,23 +29,29 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.FluentQuery;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.result.DeleteResult;
@@ -69,42 +69,48 @@ import com.mongodb.client.result.DeleteResult;
  */
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
 
-	private final @Nullable RepositoryMetadata repositoryMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
 	private final ReactiveMongoOperations mongoOperations;
-	private final Lazy<ReadPreference> readPreference;
+	private final Lazy<com.mongodb.ReadPreference> readPreference;
 
 	public SimpleReactiveMongoRepository(MongoEntityInformation<T, ID> entityInformation,
 			ReactiveMongoOperations mongoOperations) {
-		this(null, entityInformation, mongoOperations);
+		this(null, entityInformation, mongoOperations, null);
 	}
 
 	/**
-	 * Creates a new {@link SimpleReactiveMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
+	 * Creates a new {@link SimpleReactiveMongoRepository} for the given {@link MongoEntityInformation} and
+	 * {@link MongoTemplate}.
 	 *
-	 * @param repositoryMetadata
+	 * @param repositoryMetadata must not be {@literal null}.
 	 * @param entityInformation must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @since 4.2
 	 */
-	public SimpleReactiveMongoRepository(@Nullable RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> entityInformation,
-			ReactiveMongoOperations mongoOperations) {
+	public SimpleReactiveMongoRepository(RepositoryMetadata repositoryMetadata,
+			MongoEntityInformation<T, ID> entityInformation, ReactiveMongoOperations mongoOperations) {
+		this(repositoryMetadata, entityInformation, mongoOperations, null);
+	}
+
+	private SimpleReactiveMongoRepository(@Nullable RepositoryMetadata repositoryMetadata,
+			MongoEntityInformation<T, ID> entityInformation, ReactiveMongoOperations mongoOperations,
+			@Nullable Object marker) {
 
 		Assert.notNull(entityInformation, "EntityInformation must not be null");
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
-		this.repositoryMetadata = repositoryMetadata;
 		this.entityInformation = entityInformation;
 		this.mongoOperations = mongoOperations;
 
-		this.readPreference = repositoryMetadata == null ? Lazy.empty() :  Lazy.of(() -> {
-					org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), org.springframework.data.mongodb.repository.ReadPreference.class);
-					if (preference == null) {
-						return null;
-					}
-					return ReadPreference.valueOf(preference.value());
-				}
-		);
+		this.readPreference = repositoryMetadata == null ? Lazy.empty() : Lazy.of(() -> {
+
+			ReadPreference preference = AnnotatedElementUtils
+					.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), ReadPreference.class);
+			if (preference == null) {
+				return null;
+			}
+			return com.mongodb.ReadPreference.valueOf(preference.value());
+		});
 	}
 
 	// -------------------------------------------------------------------------
