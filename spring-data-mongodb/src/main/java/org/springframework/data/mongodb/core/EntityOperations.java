@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -79,7 +80,7 @@ import com.mongodb.client.model.ValidationOptions;
  */
 class EntityOperations {
 
-	private static final String ID_FIELD = "_id";
+	private static final String ID_FIELD = FieldName.ID.name();
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	private final QueryMapper queryMapper;

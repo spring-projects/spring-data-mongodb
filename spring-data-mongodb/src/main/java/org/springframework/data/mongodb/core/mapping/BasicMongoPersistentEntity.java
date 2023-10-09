@@ -116,7 +116,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		String[] keyProperties = sharded.shardKey();
 		if (ObjectUtils.isEmpty(keyProperties)) {
-			keyProperties = new String[] { "_id" };
+			keyProperties = new String[] { FieldName.ID.name() };
 		}
 
 		ShardKey shardKey = ShardingStrategy.HASH.equals(sharded.shardingStrategy()) ? ShardKey.hash(keyProperties)

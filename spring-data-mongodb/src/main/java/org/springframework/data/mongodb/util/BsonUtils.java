@@ -246,11 +246,11 @@ public class BsonUtils {
 	 */
 	public static boolean removeNullId(Bson bson) {
 
-		if (!contains(bson, "_id", null)) {
+		if (!contains(bson, FieldName.ID.name(), null)) {
 			return false;
 		}
 
-		removeFrom(bson, "_id");
+		removeFrom(bson, FieldName.ID.name());
 		return true;
 	}
 
@@ -520,11 +520,10 @@ public class BsonUtils {
 	}
 
 	/**
-	 * Resolve the value for a given {@link FieldName field name}.
-	 * If the given name is a {@link Type#KEY} the value is obtained from the target {@link Bson} immediately.
-	 * If the given fieldName is a {@link Type#PATH} maybe using the dot ({@code .}) notation it will try to resolve the path by
-	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
-	 * (wrong) type, {@literal null} is returned.
+	 * Resolve the value for a given {@link FieldName field name}. If the given name is a {@link Type#KEY} the value is
+	 * obtained from the target {@link Bson} immediately. If the given fieldName is a {@link Type#PATH} maybe using the
+	 * dot ({@code .}) notation it will try to resolve the path by inspecting the individual parts. If one of the
+	 * intermediate ones is {@literal null} or cannot be inspected further (wrong) type, {@literal null} is returned.
 	 *
 	 * @param bson the source to inspect. Must not be {@literal null}.
 	 * @param fieldName the name to lookup. Must not be {@literal null}.
@@ -536,11 +535,10 @@ public class BsonUtils {
 	}
 
 	/**
-	 * Resolve the value for a given {@link FieldName field name}.
-	 * If the given name is a {@link Type#KEY} the value is obtained from the target {@link Bson} immediately.
-	 * If the given fieldName is a {@link Type#PATH} maybe using the dot ({@code .}) notation it will try to resolve the path by
-	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
-	 * (wrong) type, {@literal null} is returned.
+	 * Resolve the value for a given {@link FieldName field name}. If the given name is a {@link Type#KEY} the value is
+	 * obtained from the target {@link Bson} immediately. If the given fieldName is a {@link Type#PATH} maybe using the
+	 * dot ({@code .}) notation it will try to resolve the path by inspecting the individual parts. If one of the
+	 * intermediate ones is {@literal null} or cannot be inspected further (wrong) type, {@literal null} is returned.
 	 *
 	 * @param source the source to inspect. Must not be {@literal null}.
 	 * @param fieldName the key to lookup. Must not be {@literal null}.
@@ -550,7 +548,7 @@ public class BsonUtils {
 	@Nullable
 	public static Object resolveValue(Map<String, Object> source, FieldName fieldName) {
 
-		if(fieldName.isOfType(Type.KEY)) {
+		if (fieldName.isKey()) {
 			return source.get(fieldName.name());
 		}
 
@@ -584,7 +582,7 @@ public class BsonUtils {
 	@Nullable
 	public static Object resolveValue(Map<String, Object> source, String key) {
 
-		if(source.containsKey(key)) {
+		if (source.containsKey(key)) {
 			return source.get(key);
 		}
 
@@ -594,11 +592,11 @@ public class BsonUtils {
 	public static boolean hasValue(Bson bson, FieldName fieldName) {
 
 		Map<String, Object> source = asMap(bson);
-		if(fieldName.isOfType(Type.KEY)) {
+		if (fieldName.isKey()) {
 			return source.get(fieldName.name()) != null;
 		}
 
-		String [] parts = fieldName.parts();
+		String[] parts = fieldName.parts();
 		Object result;
 
 		for (int i = 1; i < parts.length; i++) {

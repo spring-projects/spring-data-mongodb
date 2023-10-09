@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentRef
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -63,7 +64,8 @@ import com.mongodb.client.MongoCollection;
  */
 public final class ReferenceLookupDelegate {
 
-	private static final Document NO_RESULTS_PREDICATE = new Document("_id", new Document("$exists", false));
+	private static final Document NO_RESULTS_PREDICATE = new Document(FieldName.ID.name(),
+			new Document("$exists", false));
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final SpELContext spELContext;

@@ -20,12 +20,16 @@ import org.springframework.util.ObjectUtils;
 /**
  * Value Object representing a field name that should be used to read/write fields within the MongoDB document.
  * {@link FieldName Field names} field names may contain special characters (such as {@literal .} (dot)) but may be
- * treated differently depending ob their {@link Type type}.
- * 
+ * treated differently depending on their {@link Type type}.
+ *
  * @author Christoph Strobl
  * @since 4.2
  */
 public record FieldName(String name, Type type) {
+
+	private static final String ID_KEY = "_id";
+
+	public static final FieldName ID = new FieldName(ID_KEY, Type.KEY);
 
 	/**
 	 * Create a new {@link FieldName} that treats the given {@literal value} as is.
@@ -52,12 +56,12 @@ public record FieldName(String name, Type type) {
 	 * Get the parts the field name consists of. If the {@link FieldName} is a {@link Type#KEY} or a {@link Type#PATH}
 	 * that does not contain {@literal .} (dot) characters an array containing a single element is returned. Otherwise the
 	 * {@link #name()} is split into segments using {@literal .} (dot) as a deliminator.
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 */
 	public String[] parts() {
 
-		if (isOfType(Type.KEY)) {
+		if (isKey()) {
 			return new String[] { name };
 		}
 
@@ -72,9 +76,23 @@ public record FieldName(String name, Type type) {
 		return ObjectUtils.nullSafeEquals(type(), type);
 	}
 
+	/**
+	 * @return whether the field name represents a key (i.e. as-is name).
+	 */
+	public boolean isKey() {
+		return isOfType(Type.KEY);
+	}
+
+	/**
+	 * @return whether the field name represents a path (i.e. dot-path).
+	 */
+	public boolean isPath() {
+		return isOfType(Type.PATH);
+	}
+
 	@Override
 	public String toString() {
-		return "FieldName{%s=%s}".formatted(isOfType(Type.KEY) ? "key" : "path", name);
+		return "FieldName{%s=%s}".formatted(isKey() ? "key" : "path", name);
 	}
 
 	@Override
@@ -106,7 +124,7 @@ public record FieldName(String name, Type type) {
 	public enum Type {
 
 		/**
-		 * {@literal .} (dot) characters are treated as deliminators in a path.
+		 * {@literal .} (dot) characters are treated as separators for segments in a path.
 		 */
 		PATH,
 

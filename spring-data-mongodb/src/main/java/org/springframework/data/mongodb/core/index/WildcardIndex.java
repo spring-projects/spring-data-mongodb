@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -77,7 +78,7 @@ public class WildcardIndex extends Index {
 	 */
 	public WildcardIndex includeId() {
 
-		wildcardProjection.put("_id", 1);
+		wildcardProjection.put(FieldName.ID.name(), 1);
 		return this;
 	}
 

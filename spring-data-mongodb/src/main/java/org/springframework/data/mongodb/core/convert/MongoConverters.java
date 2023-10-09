@@ -51,6 +51,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.util.Assert;
@@ -300,7 +301,7 @@ abstract class MongoConverters {
 				return null;
 			}
 
-			String id = source.get("_id").toString();
+			String id = source.get(FieldName.ID.name()).toString();
 			Object rawValue = source.get("value");
 
 			return new NamedMongoScript(id, ((Code) rawValue).getCode());
@@ -320,7 +321,7 @@ abstract class MongoConverters {
 
 			Document document = new Document();
 
-			document.put("_id", source.getName());
+			document.put(FieldName.ID.name(), source.getName());
 			document.put("value", new Code(source.getCode()));
 
 			return document;

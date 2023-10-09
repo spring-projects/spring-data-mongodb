@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -40,7 +41,7 @@ public final class Fields implements Iterable<Field> {
 	private static final String AMBIGUOUS_EXCEPTION = "Found two fields both using '%s' as name: %s and %s; Please "
 			+ "customize your field definitions to get to unique field names";
 
-	public static final String UNDERSCORE_ID = "_id";
+	public static final String UNDERSCORE_ID = FieldName.ID.name();
 	public static final String UNDERSCORE_ID_REF = "$_id";
 
 	private final List<Field> fields;

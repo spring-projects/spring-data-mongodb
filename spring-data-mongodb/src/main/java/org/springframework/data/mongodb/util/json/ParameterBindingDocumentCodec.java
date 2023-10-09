@@ -41,6 +41,7 @@ import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
@@ -66,7 +67,7 @@ import org.springframework.util.StringUtils;
  */
 public class ParameterBindingDocumentCodec implements CollectibleCodec<Document> {
 
-	private static final String ID_FIELD_NAME = "_id";
+	private static final String ID_FIELD_NAME = FieldName.ID.name();
 	private static final CodecRegistry DEFAULT_REGISTRY = fromProviders(
 			asList(new ValueCodecProvider(), new BsonValueCodecProvider(), new DocumentCodecProvider()));
 	private static final BsonTypeClassMap DEFAULT_BSON_TYPE_CLASS_MAP = new BsonTypeClassMap();

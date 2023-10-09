@@ -34,6 +34,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapperPropertyAccessorFactory;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
@@ -232,7 +233,7 @@ class DocumentPointerFactory {
 						attribute = attribute.substring(attribute.lastIndexOf('.') + 1);
 					}
 
-					String fieldName = entry.getKey().equals("_id") ? "id" : entry.getKey();
+					String fieldName = entry.getKey().equals(FieldName.ID.name()) ? "id" : entry.getKey();
 					if (!fieldName.contains(".")) {
 
 						Object targetValue = propertyAccessor.getProperty(persistentEntity.getPersistentProperty(fieldName));
