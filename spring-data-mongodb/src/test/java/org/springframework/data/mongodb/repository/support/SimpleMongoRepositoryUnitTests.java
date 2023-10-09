@@ -40,11 +40,14 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.mongodb.repository.support.CrudMethodMetadataPostProcessor.DefaultCrudMethodMetadata;
 import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
 
 /**
+ * Unit tests for {@link SimpleMongoRepository}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class SimpleMongoRepositoryUnitTests {
@@ -144,11 +147,12 @@ public class SimpleMongoRepositoryUnitTests {
 
 	@ParameterizedTest // GH-2971
 	@MethodSource("findAllCalls")
-	void shouldAddReadPreferenceToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall) {
+	void shouldAddReadPreferenceToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
+			throws NoSuchMethodException {
 
-		RepositoryMetadata repositoryMetadata = mock(RepositoryMetadata.class);
-		doReturn(TestRepositoryWithReadPreference.class).when(repositoryMetadata).getRepositoryInterface();
-		repository = new SimpleMongoRepository<>(repositoryMetadata, entityInformation, mongoOperations);
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class.getMethod("dummy")));
 
 		findCall.accept(repository);
 
@@ -159,11 +163,11 @@ public class SimpleMongoRepositoryUnitTests {
 	}
 
 	@Test // GH-2971
-	void shouldAddReadPreferenceToFindOne() {
+	void shouldAddReadPreferenceToFindOne() throws NoSuchMethodException {
 
-		RepositoryMetadata repositoryMetadata = mock(RepositoryMetadata.class);
-		doReturn(TestRepositoryWithReadPreference.class).when(repositoryMetadata).getRepositoryInterface();
-		repository = new SimpleMongoRepository<>(repositoryMetadata, entityInformation, mongoOperations);
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class.getMethod("dummy")));
 
 		repository.findOne(Example.of(new TestDummy()));
 
@@ -174,10 +178,7 @@ public class SimpleMongoRepositoryUnitTests {
 	}
 
 	@Test // GH-2971
-	void shouldAddReadPreferenceToFluentFetchable() {
-
-		RepositoryMetadata repositoryMetadata = mock(RepositoryMetadata.class);
-		doReturn(TestRepositoryWithReadPreference.class).when(repositoryMetadata).getRepositoryInterface();
+	void shouldAddReadPreferenceToFluentFetchable() throws NoSuchMethodException {
 
 		ExecutableFind<Object> finder = mock(ExecutableFind.class);
 		when(mongoOperations.query(any())).thenReturn(finder);
@@ -185,7 +186,9 @@ public class SimpleMongoRepositoryUnitTests {
 		when(finder.matching(any(Query.class))).thenReturn(finder);
 		when(finder.as(any())).thenReturn(finder);
 
-		repository = new SimpleMongoRepository<>(repositoryMetadata, entityInformation, mongoOperations);
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreferenceMethod.class.getMethod("dummy")));
 
 		repository.findBy(Example.of(new TestDummy()), FetchableFluentQuery::all);
 
@@ -227,6 +230,13 @@ public class SimpleMongoRepositoryUnitTests {
 	@ReadPreference("secondaryPreferred")
 	interface TestRepositoryWithReadPreference {
 
+		void dummy();
+	}
+
+	interface TestRepositoryWithReadPreferenceMethod {
+
+		@ReadPreference("secondaryPreferred")
+		void dummy();
 	}
 
 }

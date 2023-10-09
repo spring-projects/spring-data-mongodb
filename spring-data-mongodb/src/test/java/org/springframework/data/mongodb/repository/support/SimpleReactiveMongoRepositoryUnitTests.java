@@ -22,6 +22,8 @@ import static org.mockito.Mockito.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -42,11 +44,13 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.FluentQuery;
 
 /**
+ * Unit tests for {@link SimpleReactiveMongoRepository}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 class SimpleReactiveMongoRepositoryUnitTests {
@@ -148,11 +152,21 @@ class SimpleReactiveMongoRepositoryUnitTests {
 
 	@ParameterizedTest // GH-2971
 	@MethodSource("findAllCalls")
-	void shouldAddReadPreferenceToFindAllMethods(Function<SimpleReactiveMongoRepository<Object, String>, Flux<Object>> findCall) {
+	void shouldAddReadPreferenceToFindAllMethods(
+			Function<SimpleReactiveMongoRepository<Object, String>, Flux<Object>> findCall) {
 
-		RepositoryMetadata repositoryMetadata = mock(RepositoryMetadata.class);
-		doReturn(TestRepositoryWithReadPreference.class).when(repositoryMetadata).getRepositoryInterface();
-		repository = new SimpleReactiveMongoRepository<>(repositoryMetadata, entityInformation, mongoOperations);
+		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
+			@Override
+			public Optional<com.mongodb.ReadPreference> getReadPreference() {
+				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
+			}
+
+			@Override
+			public Method getMethod() {
+				return null;
+			}
+		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
 		findCall.apply(repository).subscribe();
@@ -166,9 +180,18 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // GH-2971
 	void shouldAddReadPreferenceToFindOne() {
 
-		RepositoryMetadata repositoryMetadata = mock(RepositoryMetadata.class);
-		doReturn(TestRepositoryWithReadPreference.class).when(repositoryMetadata).getRepositoryInterface();
-		repository = new SimpleReactiveMongoRepository<>(repositoryMetadata, entityInformation, mongoOperations);
+		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
+			@Override
+			public Optional<com.mongodb.ReadPreference> getReadPreference() {
+				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
+			}
+
+			@Override
+			public Method getMethod() {
+				return null;
+			}
+		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
 		repository.findOne(Example.of(new SimpleMongoRepositoryUnitTests.TestDummy())).subscribe();
@@ -182,10 +205,6 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	@Test // GH-2971
 	void shouldAddReadPreferenceToFluentFetchable() {
 
-		RepositoryMetadata repositoryMetadata = mock(RepositoryMetadata.class);
-		doReturn(SimpleMongoRepositoryUnitTests.TestRepositoryWithReadPreference.class).when(repositoryMetadata)
-				.getRepositoryInterface();
-
 		ReactiveFind<Object> finder = mock(ReactiveFind.class);
 		when(mongoOperations.query(any())).thenReturn(finder);
 		when(finder.inCollection(any())).thenReturn(finder);
@@ -193,7 +212,18 @@ class SimpleReactiveMongoRepositoryUnitTests {
 		when(finder.as(any())).thenReturn(finder);
 		when(finder.all()).thenReturn(Flux.just("ok"));
 
-		repository = new SimpleReactiveMongoRepository<>(repositoryMetadata, entityInformation, mongoOperations);
+		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
+			@Override
+			public Optional<com.mongodb.ReadPreference> getReadPreference() {
+				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
+			}
+
+			@Override
+			public Method getMethod() {
+				return null;
+			}
+		});
 
 		repository.findBy(Example.of(new TestDummy()), FluentQuery.ReactiveFluentQuery::all).subscribe();
 
