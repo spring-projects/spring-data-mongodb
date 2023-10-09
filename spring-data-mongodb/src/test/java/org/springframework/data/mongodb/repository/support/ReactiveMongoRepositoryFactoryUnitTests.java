@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.io.Serializable;
-import java.util.Optional;
+import reactor.core.publisher.Mono;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
-import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -40,20 +36,18 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.ReadPreference;
-import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.Repository;
 
 /**
- * Unit test for {@link MongoRepositoryFactory}.
+ * Unit test for {@link ReactiveMongoRepositoryFactory}.
  *
- * @author Oliver Gierke
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class MongoRepositoryFactoryUnitTests {
+public class ReactiveMongoRepositoryFactoryUnitTests {
 
-	@Mock MongoOperations template;
+	@Mock ReactiveMongoTemplate template;
 
 	MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
 
@@ -62,26 +56,12 @@ public class MongoRepositoryFactoryUnitTests {
 		when(template.getConverter()).thenReturn(converter);
 	}
 
-	@Test
-	public void usesMappingMongoEntityInformationIfMappingContextSet() {
-
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
-		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
-		assertThat(entityInformation instanceof MappingMongoEntityInformation).isTrue();
-	}
-
-	@Test // DATAMONGO-385
-	public void createsRepositoryWithIdTypeLong() {
-
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
-		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
-		assertThat(repository).isNotNull();
-	}
-
 	@Test // GH-2971
 	void considersCrudMethodMetadata() {
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		when(template.findOne(any(), any(), anyString())).thenReturn(Mono.empty());
+
+		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(template);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
 		repository.findById(42L);
 
@@ -95,6 +75,6 @@ public class MongoRepositoryFactoryUnitTests {
 	interface MyPersonRepository extends Repository<Person, Long> {
 
 		@ReadPreference("secondary")
-		Optional<Person> findById(Long id);
+		Mono<Person> findById(Long id);
 	}
 }

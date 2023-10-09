@@ -27,7 +27,6 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -42,16 +41,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ReadPreference;
 import com.mongodb.client.result.DeleteResult;
 
 /**
@@ -66,9 +63,9 @@ import com.mongodb.client.result.DeleteResult;
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
+	private @Nullable CrudMethodMetadata crudMethodMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
 	private final MongoOperations mongoOperations;
-	private final Lazy<com.mongodb.ReadPreference> readPreference;
 
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
@@ -77,40 +74,12 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
-		this(null, metadata, mongoOperations, null);
-	}
-
-	/**
-	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
-	 *
-	 * @param repositoryMetadata must not be {@literal null}.
-	 * @param metadata must not be {@literal null}.
-	 * @param mongoOperations must not be {@literal null}.
-	 * @since 4.2
-	 */
-	public SimpleMongoRepository(RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> metadata,
-			MongoOperations mongoOperations) {
-		this(repositoryMetadata, metadata, mongoOperations, null);
-	}
-
-	private SimpleMongoRepository(@Nullable RepositoryMetadata repositoryMetadata, MongoEntityInformation<T, ID> metadata,
-			MongoOperations mongoOperations, @Nullable Object marker) {
 
 		Assert.notNull(metadata, "MongoEntityInformation must not be null");
 		Assert.notNull(mongoOperations, "MongoOperations must not be null");
 
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
-
-		this.readPreference = repositoryMetadata == null ? Lazy.empty() : Lazy.of(() -> {
-			ReadPreference preference = AnnotatedElementUtils
-					.findMergedAnnotation(repositoryMetadata.getRepositoryInterface(), ReadPreference.class);
-
-			if (preference == null) {
-				return null;
-			}
-			return com.mongodb.ReadPreference.valueOf(preference.value());
-		});
 	}
 
 	// -------------------------------------------------------------------------
@@ -151,8 +120,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(id, "The given id must not be null");
 
+		Query query = getIdQuery(id);
+		getReadPreference().ifPresent(query::withReadPreference);
+
 		return Optional.ofNullable(
-				mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
+				mongoOperations.findOne(query, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
 	@Override
@@ -160,7 +132,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(id, "The given id must not be null");
 
-		return mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
+		Query query = getIdQuery(id);
+		getReadPreference().ifPresent(query::withReadPreference);
+
+		return mongoOperations.exists(query, entityInformation.getJavaType(),
 				entityInformation.getCollectionName());
 	}
 
@@ -179,7 +154,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	@Override
 	public long count() {
-		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
+
+		Query query = new Query();
+		getReadPreference().ifPresent(query::withReadPreference);
+		return mongoOperations.count(query, entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -187,7 +165,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(id, "The given id must not be null");
 
-		mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName());
+		Query query = getIdQuery(id);
+		getReadPreference().ifPresent(query::withReadPreference);
+		mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -210,7 +190,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(ids, "The given Iterable of ids must not be null");
 
-		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName());
+		Query query = getIdQuery(ids);
+		getReadPreference().ifPresent(query::withReadPreference);
+		mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -223,7 +205,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	@Override
 	public void deleteAll() {
-		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
+
+		Query query = new Query();
+		getReadPreference().ifPresent(query::withReadPreference);
+
+		mongoOperations.remove(query, entityInformation.getCollectionName());
 	}
 
 	// -------------------------------------------------------------------------
@@ -287,7 +273,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
-		readPreference.getOptional().ifPresent(query::withReadPreference);
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return Optional
 				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
@@ -307,7 +293,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
 				.with(sort);
-		readPreference.getOptional().ifPresent(query::withReadPreference);
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -320,7 +306,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()).with(pageable); //
-		readPreference.getOptional().ifPresent(query::withReadPreference);
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 
@@ -335,6 +321,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -346,6 +333,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -364,6 +352,25 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	// Utility methods
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Configures a custom {@link CrudMethodMetadata} to be used to detect {@link ReadPreference}s and query hints to be
+	 * applied to queries.
+	 *
+	 * @param crudMethodMetadata
+	 */
+	public void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
+		this.crudMethodMetadata = crudMethodMetadata;
+	}
+
+	private Optional<ReadPreference> getReadPreference() {
+
+		if (crudMethodMetadata == null) {
+			return Optional.empty();
+		}
+
+		return crudMethodMetadata.getReadPreference();
+	}
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
@@ -375,7 +382,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 
 		Query query = new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
-		readPreference.getOptional().ifPresent(query::withReadPreference);
+		getReadPreference().ifPresent(query::withReadPreference);
 		return query;
 	}
 
@@ -390,7 +397,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
-		readPreference.getOptional().ifPresent(query::withReadPreference);
+		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
@@ -480,7 +487,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));
 			}
 
-			readPreference.getOptional().ifPresent(query::withReadPreference);
+			getReadPreference().ifPresent(query::withReadPreference);
 
 			query = queryCustomizer.apply(query);
 

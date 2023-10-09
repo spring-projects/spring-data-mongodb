@@ -61,6 +61,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
+	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final MongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
@@ -75,6 +76,15 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
+
+		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
+	}
+
+	@Override
+	public void setBeanClassLoader(ClassLoader classLoader) {
+
+		super.setBeanClassLoader(classLoader);
+		crudMethodMetadataPostProcessor.setBeanClassLoader(classLoader);
 	}
 
 	@Override
@@ -127,7 +137,13 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType(),
 				information);
-		return getTargetRepositoryViaReflection(information, information, entityInformation, operations);
+		Object targetRepository = getTargetRepositoryViaReflection(information, entityInformation, operations);
+
+		if (targetRepository instanceof SimpleMongoRepository<?, ?> repository) {
+			repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
+		}
+
+		return targetRepository;
 	}
 
 	@Override
