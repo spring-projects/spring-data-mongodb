@@ -37,6 +37,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -80,6 +82,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoField;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
@@ -2955,6 +2958,27 @@ class MappingMongoConverterUnitTests {
 		assertThat(target.mapOfPersons).containsEntry("map.key.with.dots", person);
 	}
 
+	@ValueSource(classes = { ComplexIdAndNoAnnotation.class, ComplexIdAndIdAnnotation.class, ComplexIdAndMongoIdAnnotation.class, ComplexIdAndFieldAnnotation.class })
+	@ParameterizedTest // GH-4524
+	void projectShouldReadComplexIdType(Class<?> projectionTargetType) {
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		ComplexId idValue = ComplexId.of(101L);
+		org.bson.Document source = new org.bson.Document("_id", new org.bson.Document("innerId", idValue.innerId))
+				.append("value", "abc").append("_class", ComplexIdAndNoAnnotation.class.getName());
+
+		EntityProjection<?, ComplexIdAndNoAnnotation> projection = introspector.introspect(projectionTargetType,
+				ComplexIdAndNoAnnotation.class);
+
+		assertThat(converter.project(projection, source)) //
+				.isInstanceOf(projectionTargetType) //
+				.extracting("id").isEqualTo(idValue);
+	}
+
 	org.bson.Document write(Object source) {
 
 		org.bson.Document target = new org.bson.Document();
@@ -3219,7 +3243,33 @@ class MappingMongoConverterUnitTests {
 	}
 
 	static class ComplexId {
+
 		Long innerId;
+
+		static ComplexId of(Long value) {
+
+			ComplexId id = new ComplexId();
+			id.innerId = value;
+			return id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ComplexId complexId = (ComplexId) o;
+			return Objects.equals(innerId, complexId.innerId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(innerId);
+		}
 	}
 
 	static class TypWithCollectionConstructor {
@@ -4031,7 +4081,32 @@ class MappingMongoConverterUnitTests {
 
 		@Field(name = "field.name.with.dots", nameType = Type.KEY)
 		String value;
-
 	}
 
+	static class ComplexIdAndFieldAnnotation {
+
+		@Field("_id") //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndMongoIdAnnotation {
+
+		@MongoId //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndIdAnnotation {
+
+		@Id //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndNoAnnotation {
+
+		ComplexId id;
+		String value;
+	}
 }
