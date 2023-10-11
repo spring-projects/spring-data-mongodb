@@ -79,6 +79,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @author Dave Perryman
  * @author Stefan Tirea
+ * @author Julia Lee
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -129,6 +130,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", collection, root));
 		indexInformation.addAll(potentiallyCreateWildcardIndexDefinitions("", collection, root));
 		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root, collection));
+		indexInformation.addAll(potentiallyCreateCompoundWildcardDefinition(root, collection));
 
 		root.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
 				.potentiallyAddIndexForProperty(root, property, indexInformation, new CycleGuard()));
@@ -154,6 +156,22 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				}
 			}
 		});
+
+		if (entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
+			CompoundWildcardIndexed indexed = entity.getRequiredAnnotation(CompoundWildcardIndexed.class);
+
+			if (!ObjectUtils.isEmpty(indexed.wildcardFieldName()) && !ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+
+				throw new MappingException(
+						String.format("CompoundWildcardIndex.wildcardProjection is only allowed on \"$**\"; Offending property: %s",
+								indexed.wildcardFieldName()));
+			}
+
+			if (ObjectUtils.isEmpty(indexed.wildcardFieldName()) && ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+
+				throw new MappingException(String.format("CompoundWildcardIndex.wildcardProjection is required on \"$**\""));
+			}
+		}
 	}
 
 	private void potentiallyAddIndexForProperty(MongoPersistentEntity<?> root, MongoPersistentProperty persistentProperty,
@@ -280,7 +298,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> potentiallyCreateCompoundIndexDefinitions(String dotPath, String collection,
 			MongoPersistentEntity<?> entity) {
 
-		if (entity.findAnnotation(CompoundIndexes.class) == null && entity.findAnnotation(CompoundIndex.class) == null) {
+		if ((!entity.isAnnotationPresent(CompoundIndexes.class) && !entity.isAnnotationPresent(CompoundIndex.class))
+				|| entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
 			return Collections.emptyList();
 		}
 
@@ -290,7 +309,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> potentiallyCreateWildcardIndexDefinitions(String dotPath, String collection,
 			MongoPersistentEntity<?> entity) {
 
-		if (!entity.isAnnotationPresent(WildcardIndexed.class)) {
+		if (!entity.isAnnotationPresent(WildcardIndexed.class)
+				|| entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
 			return Collections.emptyList();
 		}
 
@@ -343,6 +363,19 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		IndexDefinitionHolder holder = new IndexDefinitionHolder("", indexDefinition, collection);
 		return Collections.singletonList(holder);
 
+	}
+
+	private Collection<? extends IndexDefinitionHolder> potentiallyCreateCompoundWildcardDefinition(
+			MongoPersistentEntity<?> entity, String collection) {
+
+		if (!entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
+			return Collections.emptyList();
+		}
+
+		CompoundWildcardIndexed compoundWildcardIndex = entity.getRequiredAnnotation(CompoundWildcardIndexed.class);
+		IndexDefinitionHolder compoundWildcardIndexDefinition = createCompoundWildcardIndexDefinition(collection,
+				compoundWildcardIndex, entity);
+		return Collections.singletonList(compoundWildcardIndexDefinition);
 	}
 
 	private void appendTextIndexInformation(DotPath dotPath, Path path, TextIndexDefinitionBuilder indexDefinitionBuilder,
@@ -481,6 +514,30 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		indexDefinition.collation(resolveCollation(index, entity));
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	protected IndexDefinitionHolder createCompoundWildcardIndexDefinition(String collection, CompoundWildcardIndexed index,
+			@Nullable MongoPersistentEntity<?> entity) {
+
+		String wildcardField = index.wildcardFieldName();
+		org.bson.Document indexKeys = resolveCompoundIndexKeyFromStringDefinition("", index.fields(), entity);
+
+		CompoundWildcardIndexDefinition indexDefinition = new CompoundWildcardIndexDefinition(wildcardField, indexKeys);
+
+		if (StringUtils.hasText(index.wildcardProjection()) && ObjectUtils.isEmpty(wildcardField)) {
+			indexDefinition.wildcardProjection(evaluateWildcardProjection(index.wildcardProjection(), entity));
+		}
+
+		if (StringUtils.hasText(index.partialFilter())) {
+			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
+		}
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(pathAwareIndexName(index.name(), "", entity, null));
+		}
+
+		indexDefinition.collation(resolveCollation(index, entity));
+		return new IndexDefinitionHolder("", indexDefinition, collection);
 	}
 
 	private org.bson.Document resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString,
