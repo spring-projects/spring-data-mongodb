@@ -41,6 +41,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,6 +84,7 @@ import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
@@ -2866,6 +2869,35 @@ class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Address.class, source).city).isEqualTo("Gotham,Metropolis");
 	}
 
+	@ValueSource(classes = { ComplexIdAndNoAnnotation.class, ComplexIdAndIdAnnotation.class,
+			ComplexIdAndMongoIdAnnotation.class, ComplexIdAndFieldAnnotation.class })
+	@ParameterizedTest // GH-4524
+	void projectShouldReadComplexIdType(Class<?> projectionTargetType) {
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		ComplexId idValue = ComplexId.of(101L);
+		org.bson.Document source = new org.bson.Document("_id", new org.bson.Document("innerId", idValue.innerId))
+				.append("value", "abc").append("_class", ComplexIdAndNoAnnotation.class.getName());
+
+		EntityProjection<?, ComplexIdAndNoAnnotation> projection = introspector.introspect(projectionTargetType,
+				ComplexIdAndNoAnnotation.class);
+
+		assertThat(converter.project(projection, source)) //
+				.isInstanceOf(projectionTargetType) //
+				.extracting("id").isEqualTo(idValue);
+	}
+
+	org.bson.Document write(Object source) {
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+		return target;
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3082,7 +3114,33 @@ class MappingMongoConverterUnitTests {
 	}
 
 	static class ComplexId {
+
 		Long innerId;
+
+		static ComplexId of(Long value) {
+
+			ComplexId id = new ComplexId();
+			id.innerId = value;
+			return id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ComplexId complexId = (ComplexId) o;
+			return Objects.equals(innerId, complexId.innerId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(innerId);
+		}
 	}
 
 	static class TypWithCollectionConstructor {
@@ -3589,10 +3647,12 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
 	}
@@ -3706,12 +3766,79 @@ class MappingMongoConverterUnitTests {
 
 	}
 
-	@Data
 	static class Cyclic {
 
 		@Id String id;
 		String value;
 		Cyclic cycle;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public Cyclic getCycle() {
+			return cycle;
+		}
+
+		public void setCycle(Cyclic cycle) {
+			this.cycle = cycle;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Cyclic cyclic = (Cyclic) o;
+			return Objects.equals(id, cyclic.id) && Objects.equals(value, cyclic.value)
+					&& Objects.equals(cycle, cyclic.cycle);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, cycle);
+		}
 	}
 
+	static class ComplexIdAndFieldAnnotation {
+
+		@Field("_id") //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndMongoIdAnnotation {
+
+		@MongoId //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndIdAnnotation {
+
+		@Id //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndNoAnnotation {
+
+		ComplexId id;
+		String value;
+	}
 }

@@ -583,7 +583,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		String expression = idProperty.getSpelExpression();
 		Object resolvedValue = expression != null ? evaluator.evaluate(expression) : rawId;
 
-		return resolvedValue != null ? readValue(context, resolvedValue, idProperty.getTypeInformation()) : null;
+		return resolvedValue != null ? readValue(context.forProperty(idProperty), resolvedValue, idProperty.getTypeInformation()) : null;
 	}
 
 	private void readProperties(ConversionContext context, MongoPersistentEntity<?> entity,
