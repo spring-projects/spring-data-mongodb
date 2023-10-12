@@ -45,6 +45,8 @@ import com.mongodb.ReadPreference;
  * information or query hints on them.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 4.2
  */
 class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, BeanClassLoaderAware {
 
@@ -103,13 +105,15 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		 */
 		static MethodInvocation currentInvocation() throws IllegalStateException {
 
-			MethodInvocation mi = currentInvocation.get();
+			MethodInvocation invocation = currentInvocation.get();
 
-			if (mi == null)
-				throw new IllegalStateException(
-						"No MethodInvocation found: Check that an AOP invocation is in progress, and that the "
-								+ "CrudMethodMetadataPopulatingMethodInterceptor is upfront in the interceptor chain.");
-			return mi;
+			if (invocation != null) {
+				return invocation;
+			}
+
+			throw new IllegalStateException(
+					"No MethodInvocation found: Check that an AOP invocation is in progress, and that the "
+							+ "CrudMethodMetadataPopulatingMethodInterceptor is upfront in the interceptor chain.");
 		}
 
 		@Override
@@ -163,7 +167,6 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 	static class DefaultCrudMethodMetadata implements CrudMethodMetadata {
 
 		private final Optional<ReadPreference> readPreference;
-		private final Method method;
 
 		/**
 		 * Creates a new {@link DefaultCrudMethodMetadata} for the given {@link Method}.
@@ -175,7 +178,6 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 			Assert.notNull(method, "Method must not be null");
 
 			this.readPreference = findReadPreference(method);
-			this.method = method;
 		}
 
 		private Optional<ReadPreference> findReadPreference(Method method) {
@@ -200,11 +202,6 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		@Override
 		public Optional<ReadPreference> getReadPreference() {
 			return readPreference;
-		}
-
-		@Override
-		public Method getMethod() {
-			return method;
 		}
 	}
 

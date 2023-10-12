@@ -18,6 +18,10 @@ package org.springframework.data.mongodb.repository.support;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Set;
+
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +76,23 @@ public class ReactiveMongoRepositoryFactoryUnitTests {
 		assertThat(value.getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondary());
 	}
 
-	interface MyPersonRepository extends Repository<Person, Long> {
+	@Test // GH-2971
+	void ignoresCrudMethodMetadataOnNonAnnotatedMethods() {
+
+		when(template.find(any(), any(), anyString())).thenReturn(Flux.empty());
+
+		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(template);
+		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
+		repository.findAllById(Set.of(42L));
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(template).find(captor.capture(), eq(Person.class), eq("person"));
+
+		Query value = captor.getValue();
+		assertThat(value.getReadPreference()).isNull();
+	}
+
+	interface MyPersonRepository extends ReactiveCrudRepository<Person, Long> {
 
 		@ReadPreference("secondary")
 		Mono<Person> findById(Long id);

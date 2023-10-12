@@ -357,8 +357,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 * applied to queries.
 	 *
 	 * @param crudMethodMetadata
+	 * @since 4.2
 	 */
-	public void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
+	void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
 		this.crudMethodMetadata = crudMethodMetadata;
 	}
 

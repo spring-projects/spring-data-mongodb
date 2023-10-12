@@ -434,8 +434,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	 * applied to queries.
 	 *
 	 * @param crudMethodMetadata
+	 * @since 4.2
 	 */
-	public void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
+	void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
 		this.crudMethodMetadata = crudMethodMetadata;
 	}
 

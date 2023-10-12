@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import java.lang.reflect.Method;
 import java.util.Optional;
 
 import com.mongodb.ReadPreference;
@@ -25,6 +24,7 @@ import com.mongodb.ReadPreference;
  * execution.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.2
  */
 public interface CrudMethodMetadata {
@@ -36,10 +36,4 @@ public interface CrudMethodMetadata {
 	 */
 	Optional<ReadPreference> getReadPreference();
 
-	/**
-	 * Returns the {@link Method} that this metadata applies to.
-	 *
-	 * @return the {@link Method} that this metadata applies to.
-	 */
-	Method getMethod();
 }

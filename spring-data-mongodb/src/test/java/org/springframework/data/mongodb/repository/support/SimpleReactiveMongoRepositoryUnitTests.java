@@ -161,11 +161,6 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			public Optional<com.mongodb.ReadPreference> getReadPreference() {
 				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
 			}
-
-			@Override
-			public Method getMethod() {
-				return null;
-			}
 		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
@@ -185,11 +180,6 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			@Override
 			public Optional<com.mongodb.ReadPreference> getReadPreference() {
 				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
-			}
-
-			@Override
-			public Method getMethod() {
-				return null;
 			}
 		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
@@ -217,11 +207,6 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			@Override
 			public Optional<com.mongodb.ReadPreference> getReadPreference() {
 				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
-			}
-
-			@Override
-			public Method getMethod() {
-				return null;
 			}
 		});
 

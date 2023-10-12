@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.Repository;
 
 /**
@@ -48,6 +50,7 @@ import org.springframework.data.repository.Repository;
  *
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -92,7 +95,21 @@ public class MongoRepositoryFactoryUnitTests {
 		assertThat(value.getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondary());
 	}
 
-	interface MyPersonRepository extends Repository<Person, Long> {
+	@Test // GH-2971
+	void ignoresCrudMethodMetadataOnNonAnnotatedMethods() {
+
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
+		repository.findAllById(Set.of(42L));
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(template).find(captor.capture(), eq(Person.class), eq("person"));
+
+		Query value = captor.getValue();
+		assertThat(value.getReadPreference()).isNull();
+	}
+
+	interface MyPersonRepository extends ListCrudRepository<Person, Long> {
 
 		@ReadPreference("secondary")
 		Optional<Person> findById(Long id);
