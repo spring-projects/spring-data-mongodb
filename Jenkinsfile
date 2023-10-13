@@ -77,7 +77,7 @@ pipeline {
 						}
 					}
 				}
-				stage('Publish JDK (Java 20) + MongoDB 6.0') {
+				stage('Publish JDK (Java.next) + MongoDB 6.0') {
 					when {
 						anyOf {
 							changeset "ci/openjdk20-mongodb-6.0/**"
@@ -115,7 +115,7 @@ pipeline {
 						}
 					}
 				}
-				stage('Publish JDK (Java 20) + MongoDB 7.0') {
+				stage('Publish JDK (Java.next) + MongoDB 7.0') {
 					when {
 						anyOf {
 							changeset "ci/openjdk20-mongodb-7.0/**"
