@@ -329,7 +329,7 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Get the {@link com.mongodb.ReadPreference} extracted from the {@link ReadPreference} annotation.
 	 *
-	 * @return the name of the {@link ReadPreference()}.
+	 * @return the name of the {@link ReadPreference}.
 	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
 	 *           {@link #hasAnnotatedReadPreference()} first.
 	 * @since 4.2
