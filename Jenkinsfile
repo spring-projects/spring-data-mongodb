@@ -80,7 +80,7 @@ pipeline {
 				stage('Publish JDK (Java.next) + MongoDB 6.0') {
 					when {
 						anyOf {
-							changeset "ci/openjdk20-mongodb-6.0/**"
+							changeset "ci/openjdk21-mongodb-6.0/**"
 							changeset "ci/pipeline.properties"
 						}
 					}
@@ -89,7 +89,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-with-mongodb-6.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.6.0.version']} ci/openjdk20-mongodb-6.0/")
+							def image = docker.build("springci/spring-data-with-mongodb-6.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.6.0.version']} ci/openjdk21-mongodb-6.0/")
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
@@ -118,7 +118,7 @@ pipeline {
 				stage('Publish JDK (Java.next) + MongoDB 7.0') {
 					when {
 						anyOf {
-							changeset "ci/openjdk20-mongodb-7.0/**"
+							changeset "ci/openjdk21-mongodb-7.0/**"
 							changeset "ci/pipeline.properties"
 						}
 					}
@@ -127,7 +127,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-with-mongodb-7.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.7.0.version']} ci/openjdk20-mongodb-7.0/")
+							def image = docker.build("springci/spring-data-with-mongodb-7.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.7.0.version']} ci/openjdk21-mongodb-7.0/")
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
