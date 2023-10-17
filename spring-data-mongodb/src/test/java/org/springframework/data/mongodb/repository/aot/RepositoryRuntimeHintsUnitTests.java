@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.data.mongodb.classloading.HidingClassLoader;
+import org.springframework.data.mongodb.repository.support.CrudMethodMetadata;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 import org.springframework.data.mongodb.repository.support.ReactiveQuerydslMongoPredicateExecutor;
 
@@ -63,5 +64,17 @@ class RepositoryRuntimeHintsUnitTests {
 
 		assertThat(runtimeHints).matches(RuntimeHintsPredicates.reflection().onType(QuerydslMongoPredicateExecutor.class)
 				.and(RuntimeHintsPredicates.reflection().onType(ReactiveQuerydslMongoPredicateExecutor.class).negate()));
+	}
+
+	@Test // GH-2971, GH-4534
+	void registersProxyForCrudMethodMetadata() {
+
+		RuntimeHints runtimeHints = new RuntimeHints();
+		new RepositoryRuntimeHints().registerHints(runtimeHints, null);
+
+		assertThat(runtimeHints).matches(RuntimeHintsPredicates.proxies().forInterfaces(CrudMethodMetadata.class, //
+				org.springframework.aop.SpringProxy.class, //
+				org.springframework.aop.framework.Advised.class, //
+				org.springframework.core.DecoratingProxy.class));
 	}
 }

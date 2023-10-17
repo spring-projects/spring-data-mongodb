@@ -24,10 +24,12 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
 import org.springframework.data.mongodb.aot.MongoAotPredicates;
+import org.springframework.data.mongodb.repository.support.CrudMethodMetadata;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 import org.springframework.data.mongodb.repository.support.ReactiveQuerydslMongoPredicateExecutor;
 import org.springframework.data.querydsl.QuerydslUtils;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Christoph Strobl
@@ -42,6 +44,15 @@ class RepositoryRuntimeHints implements RuntimeHintsRegistrar {
 				List.of(TypeReference.of("org.springframework.data.mongodb.repository.support.SimpleMongoRepository")),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
+
+		if (isAopPresent(classLoader)) {
+
+			// required for pushing ReadPreference,... into the default repository implementation
+			hints.proxies().registerJdkProxy(CrudMethodMetadata.class, //
+					org.springframework.aop.SpringProxy.class, //
+					org.springframework.aop.framework.Advised.class, //
+					org.springframework.core.DecoratingProxy.class);
+		}
 
 		if (isReactorPresent()) {
 
@@ -76,5 +87,9 @@ class RepositoryRuntimeHints implements RuntimeHintsRegistrar {
 			hints.reflection().registerType(QuerydslMongoPredicateExecutor.class, MemberCategory.INVOKE_PUBLIC_METHODS,
 					MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 		}
+	}
+
+	private static boolean isAopPresent(@Nullable ClassLoader classLoader) {
+		return ClassUtils.isPresent("org.springframework.aop.Pointcut", classLoader);
 	}
 }
