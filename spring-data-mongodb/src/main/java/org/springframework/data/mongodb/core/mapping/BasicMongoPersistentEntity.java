@@ -72,6 +72,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final @Nullable Expression collationExpression;
 
 	private final ShardKey shardKey;
+	private final Lazy<MongoPersistentProperty> textScoreProperty = Lazy.of(() -> getPersistentProperty(TextScore.class));
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -140,7 +141,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Nullable
 	@Override
 	public MongoPersistentProperty getTextScoreProperty() {
-		return getPersistentProperty(TextScore.class);
+		return textScoreProperty.getNullable();
 	}
 
 	@Override
