@@ -32,6 +32,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
@@ -88,18 +89,23 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
 		if (this.isAnnotationPresent(Document.class)) {
+
 			Document document = this.getRequiredAnnotation(Document.class);
 
 			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
 			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
 			this.expression = detectExpression(document.collection());
-			this.collation = document.collation();
-			this.collationExpression = detectExpression(document.collation());
 		} else {
 
 			this.collection = fallback;
 			this.language = "";
 			this.expression = null;
+		}
+
+		if(this.isAnnotationPresent(Collation.class)) {
+			this.collation = findAnnotation(Collation.class).value();
+			this.collationExpression = detectExpression(this.collation);
+		} else {
 			this.collation = null;
 			this.collationExpression = null;
 		}

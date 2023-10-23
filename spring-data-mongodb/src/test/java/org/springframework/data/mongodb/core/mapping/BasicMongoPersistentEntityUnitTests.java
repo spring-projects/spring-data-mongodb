@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link BasicMongoPersistentEntity}.
@@ -248,6 +249,15 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
 	}
 
+	@Test // GH-4535
+	void readsCollationFromCollationAnnotation() {
+
+		BasicMongoPersistentEntity<WithCollationFromCollationAnnotation> entity = new BasicMongoPersistentEntity<>(
+				TypeInformation.of(WithCollationFromCollationAnnotation.class));
+
+		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
+	}
+
 	@Test // DATAMONGO-1854
 	void readsDocumentCollation() {
 
@@ -364,6 +374,9 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Document(collation = "{ 'locale' : 'en_US' }")
 	class WithDocumentCollation {}
+
+	@org.springframework.data.mongodb.core.annotation.Collation("en_US")
+	class WithCollationFromCollationAnnotation {}
 
 	@Sharded
 	private class WithDefaultShardKey {}
