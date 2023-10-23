@@ -38,6 +38,7 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -271,8 +272,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(example, "Sample must not be null");
 
-		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation());
+		Query query = new Query(new Criteria().alike(example));
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return Optional
@@ -291,8 +292,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(sort, "Sort must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation()) //
 				.with(sort);
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -305,7 +306,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(pageable, "Pageable must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation()).with(pageable); //
+				.with(pageable); //
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -319,8 +321,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(example, "Sample must not be null");
 
-		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation());
+		Query query = new Query(new Criteria().alike(example));
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -331,8 +333,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(example, "Sample must not be null");
 
-		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation());
+		Query query = new Query(new Criteria().alike(example));
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -372,6 +374,14 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return crudMethodMetadata.getReadPreference();
 	}
 
+	private Optional<Collation> getCollation() {
+
+		if (crudMethodMetadata == null) {
+			return Optional.ofNullable(entityInformation.getCollation());
+		}
+		return crudMethodMetadata.getCollation().map(Collation::of).or(() -> Optional.ofNullable(entityInformation.getCollation()));
+	}
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
@@ -398,8 +408,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
-		if(query.getCollation().isEmpty() && entityInformation.hasCollation()) {
-			query.collation(entityInformation.getCollation());
+		if(query.getCollation().isEmpty()) {
+
+			if(getCollation().isPresent()) {
+				query.collation(getCollation().get());
+			}
 		}
 
 		getReadPreference().ifPresent(query::withReadPreference);
@@ -479,8 +492,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		private ExecutableFindOperation.TerminatingFind<T> createQuery(UnaryOperator<Query> queryCustomizer) {
 
-			Query query = new Query(new Criteria().alike(getPredicate())) //
-					.collation(entityInformation.getCollation());
+			Query query = new Query(new Criteria().alike(getPredicate())); //
+			if(getCollation().isPresent()) {
+				query.collation(getCollation().get());
+			}
 
 			if (getSort().isSorted()) {
 				query.with(getSort());

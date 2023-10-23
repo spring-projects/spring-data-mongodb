@@ -29,6 +29,8 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.annotation.MergedAnnotations;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.lang.Nullable;
@@ -167,7 +169,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 	static class DefaultCrudMethodMetadata implements CrudMethodMetadata {
 
 		private final Optional<ReadPreference> readPreference;
-
+		private final Optional<String> collation;
 		/**
 		 * Creates a new {@link DefaultCrudMethodMetadata} for the given {@link Method}.
 		 *
@@ -178,6 +180,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 			Assert.notNull(method, "Method must not be null");
 
 			this.readPreference = findReadPreference(method);
+			this.collation = Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, Collation.class)).map(Collation::value);
 		}
 
 		private Optional<ReadPreference> findReadPreference(Method method) {
@@ -202,6 +205,11 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		@Override
 		public Optional<ReadPreference> getReadPreference() {
 			return readPreference;
+		}
+
+		@Override
+		public Optional<String> getCollation() {
+			return collation;
 		}
 	}
 

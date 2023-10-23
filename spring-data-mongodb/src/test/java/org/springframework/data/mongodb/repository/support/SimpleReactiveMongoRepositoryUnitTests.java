@@ -19,11 +19,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -53,6 +56,7 @@ import org.springframework.data.repository.query.FluentQuery;
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SimpleReactiveMongoRepositoryUnitTests {
 
 	private SimpleReactiveMongoRepository<Object, String> repository;
@@ -161,6 +165,11 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			public Optional<com.mongodb.ReadPreference> getReadPreference() {
 				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
 			}
+
+			@Override
+			public Optional<String> getCollation() {
+				return Optional.empty();
+			}
 		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
@@ -180,6 +189,11 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			@Override
 			public Optional<com.mongodb.ReadPreference> getReadPreference() {
 				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
+			}
+
+			@Override
+			public Optional<String> getCollation() {
+				return Optional.empty();
 			}
 		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
@@ -208,6 +222,11 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			public Optional<com.mongodb.ReadPreference> getReadPreference() {
 				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
 			}
+
+			@Override
+			public Optional<String> getCollation() {
+				return Optional.empty();
+			}
 		});
 
 		repository.findBy(Example.of(new TestDummy()), FluentQuery.ReactiveFluentQuery::all).subscribe();
@@ -216,6 +235,54 @@ class SimpleReactiveMongoRepositoryUnitTests {
 		verify(finder).matching(query.capture());
 
 		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	@ParameterizedTest // GH-4535
+	@MethodSource("findAllCalls")
+	void shouldAddCollationFromDomainTypeToFindAllMethods(Function<SimpleReactiveMongoRepository<Object, String>, Flux<Object>> findCall)
+			throws NoSuchMethodException {
+
+		Collation collation = Collation.of("en_US");
+
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+
+		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
+		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
+
+		findCall.apply(repository).subscribe();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).find(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).hasValue(collation);
+	}
+
+	@ParameterizedTest // GH-4535
+	@MethodSource("findAllCalls")
+	void shouldAddCollationFromRepositoryToFindAllMethods(Function<SimpleReactiveMongoRepository<Object, String>, Flux<Object>> findCall)
+			throws NoSuchMethodException {
+
+		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
+			@Override
+			public Optional<com.mongodb.ReadPreference> getReadPreference() {
+				return Optional.empty();
+			}
+
+			@Override
+			public Optional<String> getCollation() {
+				return Optional.of("en_US");
+			}
+		});
+		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
+
+		findCall.apply(repository).subscribe();
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).find(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).hasValue(Collation.of("en_US"));
 	}
 
 	private static Stream<Arguments> findAllCalls() {

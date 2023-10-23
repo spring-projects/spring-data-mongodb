@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -203,7 +204,7 @@ public class SimpleMongoRepositoryUnitTests {
 
 	@ParameterizedTest // GH-4535
 	@MethodSource("findAllCalls")
-	void shouldAddCollationToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
+	void shouldAddCollationFromDomainTypeToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
 			throws NoSuchMethodException {
 
 		Collation collation = Collation.of("en_US");
@@ -219,6 +220,32 @@ public class SimpleMongoRepositoryUnitTests {
 		verify(mongoOperations).find(query.capture(), any(), any());
 
 		assertThat(query.getValue().getCollation()).hasValue(collation);
+	}
+
+	@ParameterizedTest // GH-4535
+	@MethodSource("findAllCalls")
+	void shouldAddCollationFromRepositoryToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
+			throws NoSuchMethodException {
+
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
+			@Override
+			public Optional<com.mongodb.ReadPreference> getReadPreference() {
+				return Optional.empty();
+			}
+
+			@Override
+			public Optional<String> getCollation() {
+				return Optional.of("en_US");
+			}
+		});
+
+		findCall.accept(repository);
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).find(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).hasValue(Collation.of("en_US"));
 	}
 
 	private static Stream<Arguments> findAllCalls() {
@@ -261,5 +288,4 @@ public class SimpleMongoRepositoryUnitTests {
 		@ReadPreference("secondaryPreferred")
 		void dummy();
 	}
-
 }

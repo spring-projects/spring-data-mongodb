@@ -36,4 +36,6 @@ public interface CrudMethodMetadata {
 	 */
 	Optional<ReadPreference> getReadPreference();
 
+	Optional<String> getCollation();
+
 }

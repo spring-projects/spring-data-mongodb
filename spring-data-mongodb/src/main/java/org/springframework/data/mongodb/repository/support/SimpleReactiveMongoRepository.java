@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import org.springframework.data.mongodb.core.query.Collation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -357,9 +358,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(example, "Sample must not be null");
 
-		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation()) //
+		Query query = new Query(new Criteria().alike(example))
 				.limit(2);
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName()).buffer(2)
@@ -387,8 +388,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(sort, "Sort must not be null");
 
 		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation()) //
 				.with(sort);
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -399,8 +400,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(example, "Sample must not be null");
 
-		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation());
+		Query query = new Query(new Criteria().alike(example));
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -411,8 +412,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(example, "Sample must not be null");
 
-		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation());
+		Query query = new Query(new Criteria().alike(example));
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
@@ -449,6 +450,14 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return crudMethodMetadata.getReadPreference();
 	}
 
+	private Optional<Collation> getCollation() {
+
+		if (crudMethodMetadata == null) {
+			return Optional.ofNullable(entityInformation.getCollation());
+		}
+		return crudMethodMetadata.getCollation().map(Collation::of).or(() -> Optional.ofNullable(entityInformation.getCollation()));
+	}
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
@@ -468,6 +477,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	private Flux<T> findAll(Query query) {
 
+		getCollation().ifPresent(query::collation);
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
@@ -557,8 +567,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));
 			}
 
+			getCollation().ifPresent(query::collation);
 			readPreference.ifPresent(query::withReadPreference);
-
 			query = queryCustomizer.apply(query);
 
 			return mongoOperations.query(getPredicate().getProbeType()).inCollection(entityInformation.getCollectionName())
