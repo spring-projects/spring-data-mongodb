@@ -398,6 +398,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
+		if(query.getCollation().isEmpty() && entityInformation.hasCollation()) {
+			query.collation(entityInformation.getCollation());
+		}
+
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}

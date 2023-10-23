@@ -31,6 +31,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -50,6 +52,7 @@ import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuer
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SimpleMongoRepositoryUnitTests {
 
 	SimpleMongoRepository<Object, Object> repository;
@@ -196,6 +199,26 @@ public class SimpleMongoRepositoryUnitTests {
 		verify(finder).matching(query.capture());
 
 		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	@ParameterizedTest // GH-4535
+	@MethodSource("findAllCalls")
+	void shouldAddCollationToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
+			throws NoSuchMethodException {
+
+		Collation collation = Collation.of("en_US");
+
+		when(entityInformation.hasCollation()).thenReturn(true);
+		when(entityInformation.getCollation()).thenReturn(collation);
+
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+
+		findCall.accept(repository);
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).find(query.capture(), any(), any());
+
+		assertThat(query.getValue().getCollation()).hasValue(collation);
 	}
 
 	private static Stream<Arguments> findAllCalls() {
