@@ -160,17 +160,8 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			Function<SimpleReactiveMongoRepository<Object, String>, Flux<Object>> findCall) {
 
 		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
-		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
-			@Override
-			public Optional<com.mongodb.ReadPreference> getReadPreference() {
-				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
-			}
+		repository.setRepositoryMethodMetadata(new DefaultCrudMethodMetadata(Optional.of(com.mongodb.ReadPreference.secondaryPreferred()), Optional.empty()));
 
-			@Override
-			public Optional<String> getCollation() {
-				return Optional.empty();
-			}
-		});
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
 		findCall.apply(repository).subscribe();
@@ -185,17 +176,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 	void shouldAddReadPreferenceToFindOne() {
 
 		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
-		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
-			@Override
-			public Optional<com.mongodb.ReadPreference> getReadPreference() {
-				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
-			}
-
-			@Override
-			public Optional<String> getCollation() {
-				return Optional.empty();
-			}
-		});
+		repository.setRepositoryMethodMetadata(new DefaultCrudMethodMetadata(Optional.of(com.mongodb.ReadPreference.secondaryPreferred()), Optional.empty()));
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
 		repository.findOne(Example.of(new SimpleMongoRepositoryUnitTests.TestDummy())).subscribe();
@@ -217,17 +198,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 		when(finder.all()).thenReturn(Flux.just("ok"));
 
 		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
-		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
-			@Override
-			public Optional<com.mongodb.ReadPreference> getReadPreference() {
-				return Optional.of(com.mongodb.ReadPreference.secondaryPreferred());
-			}
-
-			@Override
-			public Optional<String> getCollation() {
-				return Optional.empty();
-			}
-		});
+		repository.setRepositoryMethodMetadata(new DefaultCrudMethodMetadata(Optional.of(com.mongodb.ReadPreference.secondaryPreferred()), Optional.empty()));
 
 		repository.findBy(Example.of(new TestDummy()), FluentQuery.ReactiveFluentQuery::all).subscribe();
 
@@ -264,17 +235,7 @@ class SimpleReactiveMongoRepositoryUnitTests {
 			throws NoSuchMethodException {
 
 		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
-		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
-			@Override
-			public Optional<com.mongodb.ReadPreference> getReadPreference() {
-				return Optional.empty();
-			}
-
-			@Override
-			public Optional<String> getCollation() {
-				return Optional.of("en_US");
-			}
-		});
+		repository.setRepositoryMethodMetadata(new DefaultCrudMethodMetadata(Optional.empty(), Optional.of("en_US")));
 		when(mongoOperations.find(any(), any(), any())).thenReturn(Flux.just("ok"));
 
 		findCall.apply(repository).subscribe();

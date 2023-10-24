@@ -427,7 +427,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(queryFunction, "Query function must not be null");
 
 		return queryFunction
-				.apply(new ReactiveFluentQueryByExample<>(example, example.getProbeType(), getReadPreference()));
+				.apply(new ReactiveFluentQueryByExample<>(example, example.getProbeType(), crudMethodMetadata.capture()));
 	}
 
 	/**
@@ -490,22 +490,22 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	 */
 	class ReactiveFluentQueryByExample<S, T> extends ReactiveFluentQuerySupport<Example<S>, T> {
 
-		private final Optional<ReadPreference> readPreference;
+		private final CrudMethodMetadata metadata;
 
-		ReactiveFluentQueryByExample(Example<S> example, Class<T> resultType, Optional<ReadPreference> readPreference) {
-			this(example, Sort.unsorted(), 0, resultType, Collections.emptyList(), readPreference);
+		ReactiveFluentQueryByExample(Example<S> example, Class<T> resultType, CrudMethodMetadata metadata) {
+			this(example, Sort.unsorted(), 0, resultType, Collections.emptyList(), metadata);
 		}
 
 		ReactiveFluentQueryByExample(Example<S> example, Sort sort, int limit, Class<T> resultType,
-				List<String> fieldsToInclude, Optional<ReadPreference> readPreference) {
+				List<String> fieldsToInclude, CrudMethodMetadata metadata) {
 			super(example, sort, limit, resultType, fieldsToInclude);
-			this.readPreference = readPreference;
+			this.metadata = metadata;
 		}
 
 		@Override
 		protected <R> ReactiveFluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, int limit,
 				Class<R> resultType, List<String> fieldsToInclude) {
-			return new ReactiveFluentQueryByExample<>(predicate, sort, limit, resultType, fieldsToInclude, readPreference);
+			return new ReactiveFluentQueryByExample<>(predicate, sort, limit, resultType, fieldsToInclude, metadata);
 		}
 
 		@Override
@@ -567,8 +567,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				query.fields().include(getFieldsToInclude().toArray(new String[0]));
 			}
 
-			getCollation().ifPresent(query::collation);
-			readPreference.ifPresent(query::withReadPreference);
+			metadata.getCollation().map(Collation::of).ifPresent(query::collation);
+			metadata.getReadPreference().ifPresent(query::withReadPreference);
 			query = queryCustomizer.apply(query);
 
 			return mongoOperations.query(getPredicate().getProbeType()).inCollection(entityInformation.getCollectionName())

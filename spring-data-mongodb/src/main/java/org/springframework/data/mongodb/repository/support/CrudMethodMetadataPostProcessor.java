@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,18 +27,12 @@ import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.core.NamedThreadLocal;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.MergedAnnotations;
-import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
-
-import com.mongodb.ReadPreference;
 
 /**
  * {@link RepositoryProxyPostProcessor} that sets up interceptors to read metadata information from the invoked method.
@@ -160,56 +153,6 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 			} finally {
 				currentInvocation.set(oldInvocation);
 			}
-		}
-	}
-
-	/**
-	 * Default implementation of {@link CrudMethodMetadata} that will inspect the backing method for annotations.
-	 */
-	static class DefaultCrudMethodMetadata implements CrudMethodMetadata {
-
-		private final Optional<ReadPreference> readPreference;
-		private final Optional<String> collation;
-		/**
-		 * Creates a new {@link DefaultCrudMethodMetadata} for the given {@link Method}.
-		 *
-		 * @param method must not be {@literal null}.
-		 */
-		DefaultCrudMethodMetadata(Method method) {
-
-			Assert.notNull(method, "Method must not be null");
-
-			this.readPreference = findReadPreference(method);
-			this.collation = Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, Collation.class)).map(Collation::value);
-		}
-
-		private Optional<ReadPreference> findReadPreference(Method method) {
-
-			org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils
-					.findMergedAnnotation(method, org.springframework.data.mongodb.repository.ReadPreference.class);
-
-			if (preference == null) {
-
-				preference = AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(),
-						org.springframework.data.mongodb.repository.ReadPreference.class);
-			}
-
-			if (preference == null) {
-				return Optional.empty();
-			}
-
-			return Optional.of(com.mongodb.ReadPreference.valueOf(preference.value()));
-
-		}
-
-		@Override
-		public Optional<ReadPreference> getReadPreference() {
-			return readPreference;
-		}
-
-		@Override
-		public Optional<String> getCollation() {
-			return collation;
 		}
 	}
 

@@ -67,6 +67,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	private @Nullable CrudMethodMetadata crudMethodMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
 	private final MongoOperations mongoOperations;
+	private @Nullable RepositoryActionPreparer actionPreparer;
 
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
@@ -365,6 +366,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		this.crudMethodMetadata = crudMethodMetadata;
 	}
 
+	public void setActionPreparer(RepositoryActionPreparer actionPreparer) {
+		this.actionPreparer = actionPreparer;
+	}
+
 	private Optional<ReadPreference> getReadPreference() {
 
 		if (crudMethodMetadata == null) {
@@ -408,12 +413,12 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
-		if(query.getCollation().isEmpty()) {
+		if(this.actionPreparer != null) {
 
-			if(getCollation().isPresent()) {
-				query.collation(getCollation().get());
-			}
+			// TODO: call andThen to read entity info or find a beter way
+			actionPreparer.prepare(MongoRepositoryAction.query(() -> query), crudMethodMetadata);
 		}
+
 
 		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());

@@ -43,8 +43,8 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.mongodb.repository.support.CrudMethodMetadataPostProcessor.DefaultCrudMethodMetadata;
 import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
+import org.springframework.data.spel.EvaluationContextProvider;
 
 /**
  * Unit tests for {@link SimpleMongoRepository}.
@@ -213,6 +213,7 @@ public class SimpleMongoRepositoryUnitTests {
 		when(entityInformation.getCollation()).thenReturn(collation);
 
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setActionPreparer(new DefaultRepositoryActionPreparer(EvaluationContextProvider.DEFAULT));
 
 		findCall.accept(repository);
 
@@ -228,17 +229,8 @@ public class SimpleMongoRepositoryUnitTests {
 			throws NoSuchMethodException {
 
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
-		repository.setRepositoryMethodMetadata(new CrudMethodMetadata() {
-			@Override
-			public Optional<com.mongodb.ReadPreference> getReadPreference() {
-				return Optional.empty();
-			}
-
-			@Override
-			public Optional<String> getCollation() {
-				return Optional.of("en_US");
-			}
-		});
+		repository.setRepositoryMethodMetadata(new DefaultCrudMethodMetadata(Optional.empty(), Optional.of("en_US")));
+		repository.setActionPreparer(new DefaultRepositoryActionPreparer(EvaluationContextProvider.DEFAULT));
 
 		findCall.accept(repository);
 

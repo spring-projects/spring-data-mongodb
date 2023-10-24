@@ -38,4 +38,8 @@ public interface CrudMethodMetadata {
 
 	Optional<String> getCollation();
 
+	CrudMethodMetadata capture();
+
+	void applyTo(MongoRepositoryAction repositoryAction);
+
 }

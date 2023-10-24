@@ -19,6 +19,7 @@ import static org.springframework.data.querydsl.QuerydslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -40,10 +41,14 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.query.Parameter;
+import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -64,6 +69,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final MongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private @Nullable EvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
@@ -85,6 +91,22 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		super.setBeanClassLoader(classLoader);
 		crudMethodMetadataPostProcessor.setBeanClassLoader(classLoader);
+	}
+
+	public void setEvaluationContextProvider(QueryMethodEvaluationContextProvider evaluationContextProvider) {
+		super.setEvaluationContextProvider(evaluationContextProvider);
+		if(evaluationContextProvider != null) {
+			this.evaluationContextProvider = new EvaluationContextProvider() {
+				@Override
+				public EvaluationContext getEvaluationContext(Object rootObject) {
+					return evaluationContextProvider.getEvaluationContext(null, new Object[] {});
+				}
+			};
+		}
+	}
+
+	public void setEvaluationContextProvider(EvaluationContextProvider evaluationContextProvider) {
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	@Override
@@ -140,7 +162,9 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		Object targetRepository = getTargetRepositoryViaReflection(information, entityInformation, operations);
 
 		if (targetRepository instanceof SimpleMongoRepository<?, ?> repository) {
+
 			repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
+			repository.setActionPreparer(new DefaultRepositoryActionPreparer(evaluationContextProvider));
 		}
 
 		return targetRepository;
