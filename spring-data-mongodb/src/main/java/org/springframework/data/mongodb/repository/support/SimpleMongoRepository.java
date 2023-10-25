@@ -416,7 +416,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		if(this.actionPreparer != null) {
 
 			// TODO: call andThen to read entity info or find a beter way
-			actionPreparer.prepare(MongoRepositoryAction.query(() -> query), crudMethodMetadata);
+			actionPreparer.prepare(MongoRepositoryAction.query(entityInformation, query), crudMethodMetadata);
 		}
 
 

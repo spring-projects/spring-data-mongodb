@@ -213,6 +213,7 @@ public class SimpleMongoRepositoryUnitTests {
 		when(entityInformation.getCollation()).thenReturn(collation);
 
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(CrudMethodMetadata.none());
 		repository.setActionPreparer(new DefaultRepositoryActionPreparer(EvaluationContextProvider.DEFAULT));
 
 		findCall.accept(repository);

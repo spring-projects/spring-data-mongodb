@@ -29,6 +29,10 @@ import com.mongodb.ReadPreference;
  */
 public interface CrudMethodMetadata {
 
+	static CrudMethodMetadata none() {
+		return new DefaultCrudMethodMetadata(Optional.empty(), Optional.empty());
+	}
+
 	/**
 	 * Returns the {@link ReadPreference} to be used.
 	 *

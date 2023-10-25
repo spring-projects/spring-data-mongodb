@@ -34,6 +34,7 @@ package org.springframework.data.mongodb.repository.support;
 import java.util.function.Supplier;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 
 /**
  * @author Christoph Strobl
@@ -41,7 +42,10 @@ import org.springframework.data.mongodb.core.query.Query;
  */
 public interface MongoRepositoryAction {
 
-	static MongoRepositoryAction query(Supplier<Query> query) {
-		return new QueryAction(query);
+	static MongoRepositoryAction query(MongoEntityInformation<?,?> domainTypeInformation, Query query) {
+		return query(domainTypeInformation, () -> query);
+	}
+	static MongoRepositoryAction query(MongoEntityInformation<?,?> domainTypeInformation, Supplier<Query> query) {
+		return new QueryAction(query, domainTypeInformation);
 	}
 }
