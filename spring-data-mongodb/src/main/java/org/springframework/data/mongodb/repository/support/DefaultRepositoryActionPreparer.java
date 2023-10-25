@@ -65,6 +65,8 @@ public class DefaultRepositoryActionPreparer implements RepositoryActionPreparer
 		metadata.getReadPreference().ifPresent(it -> action.getQuery().withReadPreference(it));
 		if (!action.getQuery().getCollation().isPresent()) {
 			metadata.getCollation().map(this::resolveCollation)
+					// should we even bother about the domain type collation here?
+					// the template API will add it if not present anyway.
 					.or(() -> Optional.ofNullable(action.getDomainTypeInformation().getCollation()))
 					.ifPresent(it -> action.getQuery().collation(it));
 		}
