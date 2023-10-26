@@ -136,23 +136,23 @@ public final class MongoDbErrorCodes {
 	}
 
 	public static boolean isDataIntegrityViolationCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : dataIntegrityViolationCodes.containsKey(errorCode);
+		return errorCode != null && dataIntegrityViolationCodes.containsKey(errorCode);
 	}
 
 	public static boolean isDataAccessResourceFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : dataAccessResourceFailureCodes.containsKey(errorCode);
+		return errorCode != null && dataAccessResourceFailureCodes.containsKey(errorCode);
 	}
 
 	public static boolean isDuplicateKeyCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : duplicateKeyCodes.containsKey(errorCode);
+		return errorCode != null && duplicateKeyCodes.containsKey(errorCode);
 	}
 
 	public static boolean isPermissionDeniedCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : permissionDeniedCodes.containsKey(errorCode);
+		return errorCode != null && permissionDeniedCodes.containsKey(errorCode);
 	}
 
 	public static boolean isInvalidDataAccessApiUsageCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : invalidDataAccessApiUsageExeption.containsKey(errorCode);
+		return errorCode != null && invalidDataAccessApiUsageExeption.containsKey(errorCode);
 	}
 
 	public static String getErrorDescription(@Nullable Integer errorCode) {
@@ -167,7 +167,7 @@ public final class MongoDbErrorCodes {
 	 * @since 2.1
 	 */
 	public static boolean isClientSessionFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : clientSessionCodes.containsKey(errorCode);
+		return errorCode != null && clientSessionCodes.containsKey(errorCode);
 	}
 
 	/**
@@ -178,6 +178,6 @@ public final class MongoDbErrorCodes {
 	 * @since 2.1
 	 */
 	public static boolean isTransactionFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : transactionCodes.containsKey(errorCode);
+		return errorCode != null && transactionCodes.containsKey(errorCode);
 	}
 }
