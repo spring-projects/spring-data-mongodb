@@ -155,6 +155,7 @@ public final class MongoDbErrorCodes {
 		return errorCode != null && invalidDataAccessApiUsageExeption.containsKey(errorCode);
 	}
 
+	@Nullable
 	public static String getErrorDescription(@Nullable Integer errorCode) {
 		return errorCode == null ? null : errorCodes.get(errorCode);
 	}
