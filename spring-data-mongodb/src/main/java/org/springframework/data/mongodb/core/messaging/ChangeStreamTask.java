@@ -91,9 +91,9 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		BsonTimestamp startAt = null;
 		boolean resumeAfter = true;
 
-		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions changeStreamRequestOptions) {
+		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions requestOptions) {
 
-			ChangeStreamOptions changeStreamOptions = changeStreamRequestOptions.getChangeStreamOptions();
+			ChangeStreamOptions changeStreamOptions = requestOptions.getChangeStreamOptions();
 			filter = prepareFilter(template, changeStreamOptions);
 
 			if (changeStreamOptions.getFilter().isPresent()) {
@@ -115,9 +115,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 					.orElseGet(() -> ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 							: FullDocument.UPDATE_LOOKUP);
 
-			if(changeStreamOptions.getFullDocumentBeforeChangeLookup().isPresent()) {
-				fullDocumentBeforeChange = changeStreamOptions.getFullDocumentBeforeChangeLookup().get();
-			}
+			fullDocumentBeforeChange = changeStreamOptions.getFullDocumentBeforeChangeLookup().orElse(null);
 
 			startAt = changeStreamOptions.getResumeBsonTimestamp().orElse(null);
 		}
@@ -158,7 +156,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		iterable = iterable.fullDocument(fullDocument);
-		if(fullDocumentBeforeChange != null) {
+		if (fullDocumentBeforeChange != null) {
 			iterable = iterable.fullDocumentBeforeChange(fullDocumentBeforeChange);
 		}
 
@@ -180,7 +178,8 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 							template.getConverter().getMappingContext(), queryMapper)
 					: Aggregation.DEFAULT_CONTEXT;
 
-			return aggregation.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", denylist));
+			return aggregation
+					.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", denylist));
 		}
 
 		if (filter instanceof List) {
