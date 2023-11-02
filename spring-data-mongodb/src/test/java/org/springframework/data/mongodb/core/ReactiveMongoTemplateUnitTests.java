@@ -23,7 +23,6 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.util.BsonUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -93,6 +92,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -100,7 +100,6 @@ import org.springframework.util.CollectionUtils;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -1541,11 +1540,11 @@ public class ReactiveMongoTemplateUnitTests {
 		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
 		when(changeStreamPublisher.fullDocumentBeforeChange(any())).thenReturn(changeStreamPublisher);
 
-		template
-				.changeStream("database", "collection", ChangeStreamOptions.builder().fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).build(), Object.class)
-				.subscribe();
+		ChangeStreamOptions options = ChangeStreamOptions.builder()
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).build();
+		template.changeStream("database", "collection", options, Object.class).subscribe();
 
-		verify(changeStreamPublisher).fullDocumentBeforeChange(eq(FullDocumentBeforeChange.REQUIRED));
+		verify(changeStreamPublisher).fullDocumentBeforeChange(FullDocumentBeforeChange.REQUIRED);
 
 	}
 

@@ -1906,8 +1906,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation)
 							.orElse(publisher);
 					publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
-					
-					if(options.getFullDocumentBeforeChangeLookup().isPresent()) {
+
+					if (options.getFullDocumentBeforeChangeLookup().isPresent()) {
 						publisher = publisher.fullDocumentBeforeChange(options.getFullDocumentBeforeChangeLookup().get());
 					}
 					return publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
@@ -2495,7 +2495,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
+					|| (wc.getWObject()instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
