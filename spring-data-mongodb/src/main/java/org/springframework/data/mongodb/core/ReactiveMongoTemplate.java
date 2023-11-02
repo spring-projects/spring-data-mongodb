@@ -1906,6 +1906,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation)
 							.orElse(publisher);
 					publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
+					
+					if(options.getFullDocumentBeforeChangeLookup().isPresent()) {
+						publisher = publisher.fullDocumentBeforeChange(options.getFullDocumentBeforeChangeLookup().get());
+					}
 					return publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
 				}) //
 				.flatMapMany(publisher -> Flux.from(publisher)
