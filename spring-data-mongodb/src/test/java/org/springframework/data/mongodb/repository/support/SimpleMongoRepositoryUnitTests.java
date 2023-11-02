@@ -152,7 +152,7 @@ public class SimpleMongoRepositoryUnitTests {
 
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
 		repository.setRepositoryMethodMetadata(
-				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class.getMethod("dummy")));
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class, TestRepositoryWithReadPreference.class.getMethod("dummy")));
 
 		findCall.accept(repository);
 
@@ -167,7 +167,7 @@ public class SimpleMongoRepositoryUnitTests {
 
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
 		repository.setRepositoryMethodMetadata(
-				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class.getMethod("dummy")));
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class, TestRepositoryWithReadPreference.class.getMethod("dummy")));
 
 		repository.findOne(Example.of(new TestDummy()));
 
@@ -188,7 +188,7 @@ public class SimpleMongoRepositoryUnitTests {
 
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
 		repository.setRepositoryMethodMetadata(
-				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreferenceMethod.class.getMethod("dummy")));
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreferenceMethod.class, TestRepositoryWithReadPreferenceMethod.class.getMethod("dummy")));
 
 		repository.findBy(Example.of(new TestDummy()), FetchableFluentQuery::all);
 
