@@ -168,6 +168,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 				}
 			});
 			options.getFullDocumentLookup().ifPresent(builder::fullDocumentLookup);
+			options.getFullDocumentBeforeChangeLookup().ifPresent(builder::fullDocumentBeforeChangeLookup);
 			options.getCollation().ifPresent(builder::collation);
 
 			if (options.isResumeAfter()) {
