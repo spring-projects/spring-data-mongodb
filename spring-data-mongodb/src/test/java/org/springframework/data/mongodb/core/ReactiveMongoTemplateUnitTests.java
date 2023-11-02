@@ -20,8 +20,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import com.mongodb.WriteConcern;
-import org.springframework.data.mongodb.core.MongoTemplateUnitTests.Sith;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -101,6 +99,7 @@ import org.springframework.util.CollectionUtils;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -110,6 +109,7 @@ import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.TimeSeriesGranularity;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -1602,6 +1602,25 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		verify(changeStreamPublisher).startAfter(eq(token));
+	}
+
+	@Test // GH-4495
+	void changeStreamOptionFullDocumentBeforeChangeShouldBeApplied() {
+
+		when(factory.getMongoDatabase(anyString())).thenReturn(Mono.just(db));
+
+		when(collection.watch(any(Class.class))).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.batchSize(anyInt())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.startAfter(any())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.fullDocumentBeforeChange(any())).thenReturn(changeStreamPublisher);
+
+		template
+				.changeStream("database", "collection", ChangeStreamOptions.builder().fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).build(), Object.class)
+				.subscribe();
+
+		verify(changeStreamPublisher).fullDocumentBeforeChange(eq(FullDocumentBeforeChange.REQUIRED));
+
 	}
 
 	@Test // GH-4462
