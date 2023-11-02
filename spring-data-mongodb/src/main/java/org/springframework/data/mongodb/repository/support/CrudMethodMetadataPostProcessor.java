@@ -89,8 +89,11 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 
 		private final ConcurrentMap<Method, CrudMethodMetadata> metadataCache = new ConcurrentHashMap<>();
 		private final Set<Method> implementations = new HashSet<>();
+		private final RepositoryInformation repositoryInformation;
 
 		CrudMethodMetadataPopulatingMethodInterceptor(RepositoryInformation repositoryInformation) {
+
+			this.repositoryInformation = repositoryInformation;
 
 			ReflectionUtils.doWithMethods(repositoryInformation.getRepositoryInterface(), implementations::add,
 					method -> !repositoryInformation.isQueryMethod(method));
@@ -140,7 +143,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 
 				if (methodMetadata == null) {
 
-					methodMetadata = new DefaultCrudMethodMetadata(method);
+					methodMetadata = new DefaultCrudMethodMetadata(repositoryInformation.getRepositoryInterface(), method);
 					CrudMethodMetadata tmp = metadataCache.putIfAbsent(method, methodMetadata);
 
 					if (tmp != null) {
@@ -171,23 +174,24 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		/**
 		 * Creates a new {@link DefaultCrudMethodMetadata} for the given {@link Method}.
 		 *
+		 * @param repositoryInterface the target repository interface.
 		 * @param method must not be {@literal null}.
 		 */
-		DefaultCrudMethodMetadata(Method method) {
+		DefaultCrudMethodMetadata(Class<?> repositoryInterface, Method method) {
 
 			Assert.notNull(method, "Method must not be null");
 
-			this.readPreference = findReadPreference(method);
+			this.readPreference = findReadPreference(repositoryInterface, method);
 		}
 
-		private Optional<ReadPreference> findReadPreference(Method method) {
+		private Optional<ReadPreference> findReadPreference(Class<?> repositoryInterface, Method method) {
 
 			org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils
 					.findMergedAnnotation(method, org.springframework.data.mongodb.repository.ReadPreference.class);
 
 			if (preference == null) {
 
-				preference = AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(),
+				preference = AnnotatedElementUtils.findMergedAnnotation(repositoryInterface,
 						org.springframework.data.mongodb.repository.ReadPreference.class);
 			}
 
