@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -39,6 +38,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
  * @author Christoph Strobl
@@ -68,8 +68,6 @@ class ChangeStreamTaskUnitTests {
 		when(mongoCollection.watch(eq(Document.class))).thenReturn(changeStreamIterable);
 
 		when(changeStreamIterable.fullDocument(any())).thenReturn(changeStreamIterable);
-
-		when(changeStreamIterable.fullDocumentBeforeChange(any())).thenReturn(changeStreamIterable);
 	}
 
 	@Test // DATAMONGO-2258
@@ -123,6 +121,22 @@ class ChangeStreamTaskUnitTests {
 		initTask(request, Document.class);
 
 		verify(changeStreamIterable).startAfter(eq(resumeToken));
+	}
+
+	@Test // GH-4495
+	void shouldApplyFullDocumentBeforeChangeToChangeStream() {
+
+		when(changeStreamIterable.fullDocumentBeforeChange(any())).thenReturn(changeStreamIterable);
+
+		ChangeStreamRequest request = ChangeStreamRequest.builder() //
+				.collection("start-wars") //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED) //
+				.publishTo(message -> {}) //
+				.build();
+
+		initTask(request, Document.class);
+
+		verify(changeStreamIterable).fullDocumentBeforeChange(eq(FullDocumentBeforeChange.REQUIRED));
 	}
 
 	private MongoCursor<ChangeStreamDocument<Document>> initTask(ChangeStreamRequest request, Class<?> targetType) {
