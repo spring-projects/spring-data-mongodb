@@ -41,18 +41,21 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
+ * Unit tests for {@link ChangeStreamTask}.
+ *
  * @author Christoph Strobl
  * @author Myroslav Kosinskyi
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({ "unchecked", "rawtypes" })
 class ChangeStreamTaskUnitTests {
 
-	ChangeStreamTask task;
 	@Mock MongoTemplate template;
 	@Mock MongoDatabase mongoDatabase;
 	@Mock MongoCollection<Document> mongoCollection;
 	@Mock ChangeStreamIterable<Document> changeStreamIterable;
-	private MongoConverter converter;
+
+	MongoConverter converter;
 
 	@BeforeEach
 	void setUp() {
@@ -64,9 +67,7 @@ class ChangeStreamTaskUnitTests {
 		when(template.getDb()).thenReturn(mongoDatabase);
 
 		when(mongoDatabase.getCollection(any())).thenReturn(mongoCollection);
-
 		when(mongoCollection.watch(eq(Document.class))).thenReturn(changeStreamIterable);
-
 		when(changeStreamIterable.fullDocument(any())).thenReturn(changeStreamIterable);
 	}
 
@@ -84,7 +85,7 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).resumeAfter(eq(resumeToken));
+		verify(changeStreamIterable).resumeAfter(resumeToken);
 	}
 
 	@Test // DATAMONGO-2258
@@ -102,7 +103,7 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).resumeAfter(eq(resumeToken));
+		verify(changeStreamIterable).resumeAfter(resumeToken);
 	}
 
 	@Test // DATAMONGO-2258
@@ -120,7 +121,7 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).startAfter(eq(resumeToken));
+		verify(changeStreamIterable).startAfter(resumeToken);
 	}
 
 	@Test // GH-4495
@@ -136,7 +137,7 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).fullDocumentBeforeChange(eq(FullDocumentBeforeChange.REQUIRED));
+		verify(changeStreamIterable).fullDocumentBeforeChange(FullDocumentBeforeChange.REQUIRED);
 	}
 
 	private MongoCursor<ChangeStreamDocument<Document>> initTask(ChangeStreamRequest request, Class<?> targetType) {

@@ -746,6 +746,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Mono<Void> dropCollection(Class<T> entityClass) {
 		return dropCollection(getCollectionName(entityClass));
 	}
+
 	@Override
 	public Mono<Void> dropCollection(String collectionName) {
 
@@ -884,7 +885,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(targetClass, "Target type must not be null");
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
-		ProjectingReadCallback<?,T> callback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
+		ProjectingReadCallback<?, T> callback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
 		int limit = query.isLimited() ? query.getLimit() + 1 : Integer.MAX_VALUE;
 
 		if (query.hasKeyset()) {
@@ -894,7 +895,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
 					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
-					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback).collectList();
+					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback)
+							.collectList();
 
 			return result.map(it -> ScrollUtils.createWindow(query, it, sourceClass, operations));
 		}
@@ -1976,11 +1978,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return replace(query, (Class<T>) ClassUtils.getUserClass(replacement), replacement, options, collectionName);
 	}
 
-	protected <S,T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
+	protected <S, T> Mono<UpdateResult> replace(Query query, Class<S> entityType, T replacement, ReplaceOptions options,
 			String collectionName) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
-		UpdateContext updateContext = queryOperations.replaceSingleContext(query, operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
+		UpdateContext updateContext = queryOperations.replaceSingleContext(query,
+				operations.forEntity(replacement).toMappedDocument(this.mongoConverter), options.isUpsert());
 
 		return createMono(collectionName, collection -> {
 
@@ -1991,9 +1994,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			MongoCollection<Document> collectionToUse = createCollectionPreparer(query, action).prepare(collection);
 
-			return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), mappedUpdate, updateContext.getReplaceOptions(entityType, it -> {
-				it.upsert(options.isUpsert());
-			}));
+			return collectionToUse.replaceOne(updateContext.getMappedQuery(entity), mappedUpdate,
+					updateContext.getReplaceOptions(entityType, it -> {
+						it.upsert(options.isUpsert());
+					}));
 		});
 	}
 
@@ -2050,8 +2054,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation)
 							.orElse(publisher);
 					publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
-					
-					if(options.getFullDocumentBeforeChangeLookup().isPresent()) {
+
+					if (options.getFullDocumentBeforeChangeLookup().isPresent()) {
 						publisher = publisher.fullDocumentBeforeChange(options.getFullDocumentBeforeChangeLookup().get());
 					}
 					return publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
@@ -2675,7 +2679,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
+					|| (wc.getWObject()instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -3253,8 +3257,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			HintFunction hintFunction = HintFunction.from(query.getHint());
 			Meta meta = query.getMeta();
-			if (skip <= 0 && limit <= 0 && ObjectUtils.isEmpty(sortObject) && hintFunction.isEmpty()
-					&& !meta.hasValues()) {
+			if (skip <= 0 && limit <= 0 && ObjectUtils.isEmpty(sortObject) && hintFunction.isEmpty() && !meta.hasValues()) {
 				return findPublisherToUse;
 			}
 

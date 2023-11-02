@@ -367,7 +367,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // GH-3218
 	void updateUsesHintDocumentFromQuery() {
 
-		template.updateFirst(new Query().withHint("{ firstname : 1 }"), new Update().set("spring", "data"), Person.class).subscribe();
+		template.updateFirst(new Query().withHint("{ firstname : 1 }"), new Update().set("spring", "data"), Person.class)
+				.subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
@@ -1615,11 +1616,11 @@ public class ReactiveMongoTemplateUnitTests {
 		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
 		when(changeStreamPublisher.fullDocumentBeforeChange(any())).thenReturn(changeStreamPublisher);
 
-		template
-				.changeStream("database", "collection", ChangeStreamOptions.builder().fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).build(), Object.class)
-				.subscribe();
+		ChangeStreamOptions options = ChangeStreamOptions.builder()
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).build();
+		template.changeStream("database", "collection", options, Object.class).subscribe();
 
-		verify(changeStreamPublisher).fullDocumentBeforeChange(eq(FullDocumentBeforeChange.REQUIRED));
+		verify(changeStreamPublisher).fullDocumentBeforeChange(FullDocumentBeforeChange.REQUIRED);
 
 	}
 
@@ -1651,7 +1652,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // GH-4462
 	void replaceShouldUpsert() {
 
-		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
 
 		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
 				.forClass(com.mongodb.client.model.ReplaceOptions.class);
@@ -1663,7 +1665,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // GH-4462
 	void replaceShouldUseDefaultCollationWhenPresent() {
 
-		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions()).subscribe();
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions()).subscribe();
 
 		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
 				.forClass(com.mongodb.client.model.ReplaceOptions.class);
@@ -1675,7 +1678,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // GH-4462
 	void replaceShouldUseHintIfPresent() {
 
-		template.replace(new BasicQuery("{}").withHint("index-to-use"), new MongoTemplateUnitTests.Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new MongoTemplateUnitTests.Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
 
 		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
 				.forClass(com.mongodb.client.model.ReplaceOptions.class);
@@ -1695,7 +1699,8 @@ public class ReactiveMongoTemplateUnitTests {
 			}
 		});
 
-		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
 
 		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
