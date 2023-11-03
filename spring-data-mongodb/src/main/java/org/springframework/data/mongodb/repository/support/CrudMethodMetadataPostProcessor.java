@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Optional;
@@ -179,28 +180,25 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		 */
 		DefaultCrudMethodMetadata(Class<?> repositoryInterface, Method method) {
 
+			Assert.notNull(repositoryInterface, "Repository interface must not be null");
 			Assert.notNull(method, "Method must not be null");
 
-			this.readPreference = findReadPreference(repositoryInterface, method);
+			this.readPreference = findReadPreference(method, repositoryInterface);
 		}
 
-		private Optional<ReadPreference> findReadPreference(Class<?> repositoryInterface, Method method) {
+		private static Optional<ReadPreference> findReadPreference(AnnotatedElement... annotatedElements) {
 
-			org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils
-					.findMergedAnnotation(method, org.springframework.data.mongodb.repository.ReadPreference.class);
+			for (AnnotatedElement element : annotatedElements) {
 
-			if (preference == null) {
+				org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils
+						.findMergedAnnotation(element, org.springframework.data.mongodb.repository.ReadPreference.class);
 
-				preference = AnnotatedElementUtils.findMergedAnnotation(repositoryInterface,
-						org.springframework.data.mongodb.repository.ReadPreference.class);
+				if (preference != null) {
+					return Optional.of(com.mongodb.ReadPreference.valueOf(preference.value()));
+				}
 			}
 
-			if (preference == null) {
-				return Optional.empty();
-			}
-
-			return Optional.of(com.mongodb.ReadPreference.valueOf(preference.value()));
-
+			return Optional.empty();
 		}
 
 		@Override

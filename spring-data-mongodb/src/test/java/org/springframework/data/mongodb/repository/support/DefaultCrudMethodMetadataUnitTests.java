@@ -27,6 +27,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ * Unit tests for {@link DefaultCrudMethodMetadata}.
+ *
  * @author Christoph Strobl
  */
 class DefaultCrudMethodMetadataUnitTests {
