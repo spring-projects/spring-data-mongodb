@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
@@ -453,6 +454,16 @@ public class MongoQueryMethod extends QueryMethod {
 					throw new IllegalStateException(
 							String.format("Update method must define either 'Update#update' or 'Update#pipeline' attribute;"
 									+ " Offending method: %s", method));
+				}
+			}
+		}
+		if (hasAnnotatedAggregation()) {
+			for (String stage : getAnnotatedAggregation()) {
+				if (BsonUtils.isJsonArray(stage)) {
+					throw new IllegalStateException("""
+							Invalid aggregation pipeline. Please split Aggregation.pipeline from "[{...}, {...}]" to "{...}", "{...}".
+							Offending Method: %s.%s
+							""".formatted(method.getDeclaringClass().getSimpleName(), method.getName()));
 				}
 			}
 		}
