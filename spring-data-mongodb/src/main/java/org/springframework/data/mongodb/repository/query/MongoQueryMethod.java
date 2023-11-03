@@ -504,6 +504,16 @@ public class MongoQueryMethod extends QueryMethod {
 				}
 			}
 		}
+		if (hasAnnotatedAggregation()) {
+			for (String stage : getAnnotatedAggregation()) {
+				if (stage.trim().startsWith("[")) {
+					throw new IllegalStateException("""
+							Invalid aggregation pipeline. Please split Aggregation.pipeline from "[{...}, {...}]" to "{...}", "{...}".
+							Offending Method: %s.%s
+							""".formatted(method.getDeclaringClass().getSimpleName(), method.getName()));
+				}
+			}
+		}
 	}
 
 	private boolean isNumericOrVoidReturnValue() {
