@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
@@ -506,7 +507,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 		if (hasAnnotatedAggregation()) {
 			for (String stage : getAnnotatedAggregation()) {
-				if (stage.trim().startsWith("[")) {
+				if (BsonUtils.isJsonArray(stage)) {
 					throw new IllegalStateException("""
 							Invalid aggregation pipeline. Please split Aggregation.pipeline from "[{...}, {...}]" to "{...}", "{...}".
 							Offending Method: %s.%s
