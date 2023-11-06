@@ -107,7 +107,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null");
 
-		return Flux.from(entityStream).flatMap(entity -> entityInformation.isNew(entity) ? //
+		return Flux.from(entityStream).flatMapSequential(entity -> entityInformation.isNew(entity) ? //
 				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
 				mongoOperations.save(entity, entityInformation.getCollectionName()));
 	}
@@ -165,7 +165,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(ids, "The given Publisher of Id's must not be null");
 
-		return Flux.from(ids).buffer().flatMap(this::findAllById);
+		return Flux.from(ids).buffer().flatMapSequential(this::findAllById);
 	}
 
 	@Override
@@ -295,7 +295,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Publisher of entities must not be null");
 
-		return Flux.from(entities).flatMap(entity -> mongoOperations.insert(entity, entityInformation.getCollectionName()));
+		return Flux.from(entities)
+				.flatMapSequential(entity -> mongoOperations.insert(entity, entityInformation.getCollectionName()));
 	}
 
 	// -------------------------------------------------------------------------
