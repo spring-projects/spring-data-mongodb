@@ -445,25 +445,32 @@ public class MongoQueryMethod extends QueryMethod {
 			if (isCollectionQuery() || isScrollQuery() || isSliceQuery() || isPageQuery() || isGeoNearQuery()
 					|| !isNumericOrVoidReturnValue()) { //
 				throw new IllegalStateException(
-						String.format("Update method may be void or return a numeric value (the number of updated documents)."
-								+ "Offending method: %s", method));
+						String.format(
+								"Update method may be void or return a numeric value (the number of updated documents)."
+										+ " Offending Method: %s.%s",
+								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 			}
 
 			if (hasAnnotatedUpdate()) { // must define either an update or an update pipeline
 				if (!StringUtils.hasText(getUpdateSource().update()) && ObjectUtils.isEmpty(getUpdateSource().pipeline())) {
 					throw new IllegalStateException(
-							String.format("Update method must define either 'Update#update' or 'Update#pipeline' attribute;"
-									+ " Offending method: %s", method));
+							String.format(
+									"Update method must define either 'Update#update' or 'Update#pipeline' attribute;"
+											+ " Offending Method: %s.%s",
+									ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 				}
 			}
 		}
+
 		if (hasAnnotatedAggregation()) {
 			for (String stage : getAnnotatedAggregation()) {
 				if (BsonUtils.isJsonArray(stage)) {
-					throw new IllegalStateException("""
-							Invalid aggregation pipeline. Please split Aggregation.pipeline from "[{...}, {...}]" to "{...}", "{...}".
-							Offending Method: %s.%s
-							""".formatted(method.getDeclaringClass().getSimpleName(), method.getName()));
+					throw new IllegalStateException(String.format(
+							"""
+									Invalid aggregation pipeline. Please split the definition from @Aggregation("[{...}, {...}]") to @Aggregation({ "{...}", "{...}" }).
+									Offending Method: %s.%s
+									""",
+							ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 				}
 			}
 		}
