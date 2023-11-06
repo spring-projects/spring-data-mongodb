@@ -216,7 +216,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 			collection = collection.withWriteConcern(defaultWriteConcern);
 		}
 
-		Flux<SourceAwareWriteModelHolder> concat = Flux.concat(models).flatMap(it -> {
+		Flux<SourceAwareWriteModelHolder> concat = Flux.concat(models).flatMapSequential(it -> {
 
 			if (it.model()instanceof InsertOneModel<Document> iom) {
 
