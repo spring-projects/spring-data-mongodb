@@ -1051,7 +1051,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return (isOutOrMerge ? Flux.from(cursor.toCollection()) : Flux.from(cursor.first())).thenMany(Mono.empty());
 		}
 
-		return Flux.from(cursor).concatMap(readCallback::doWith);
+		return Flux.from(cursor).flatMapSequential(readCallback::doWith);
 	}
 
 	@Override
@@ -1098,7 +1098,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.withOptions(optionsBuilder.build());
 
 		return aggregate($geoNear, collection, Document.class) //
-				.concatMap(callback::doWith);
+				.flatMapSequential(callback::doWith);
 	}
 
 	@Override
@@ -1324,7 +1324,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(batchToSave, "Batch to insert must not be null");
 
-		return Flux.from(batchToSave).flatMap(collection -> insert(collection, collectionName));
+		return Flux.from(batchToSave).flatMapSequential(collection -> insert(collection, collectionName));
 	}
 
 	@Override
@@ -1392,7 +1392,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public <T> Flux<T> insertAll(Mono<? extends Collection<? extends T>> objectsToSave) {
-		return Flux.from(objectsToSave).flatMap(this::insertAll);
+		return Flux.from(objectsToSave).flatMapSequential(this::insertAll);
 	}
 
 	protected <T> Flux<T> doInsertAll(Collection<? extends T> listToSave, MongoWriter<Object> writer) {
@@ -1443,7 +1443,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return insertDocumentList(collectionName, documents).thenMany(Flux.fromIterable(tuples));
 		});
 
-		return insertDocuments.flatMap(tuple -> {
+		return insertDocuments.flatMapSequential(tuple -> {
 
 			Document document = tuple.getT2();
 			Object id = MappedDocument.of(document).getId();
@@ -1600,7 +1600,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return collectionToUse.insertMany(documents);
 
-		}).flatMap(s -> {
+		}).flatMapSequential(s -> {
 
 			return Flux.fromStream(documents.stream() //
 					.map(MappedDocument::of) //
@@ -2187,7 +2187,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
 
 			return Flux.from(publisher)
-					.concatMap(new ReadDocumentCallback<>(mongoConverter, resultType, inputCollectionName)::doWith);
+					.flatMapSequential(new ReadDocumentCallback<>(mongoConverter, resultType, inputCollectionName)::doWith);
 		});
 	}
 
@@ -2255,7 +2255,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return Flux.from(flux).collectList().filter(it -> !it.isEmpty())
 				.flatMapMany(list -> Flux.from(remove(operations.getByIdInQuery(list), entityClass, collectionName))
-						.flatMap(deleteResult -> Flux.fromIterable(list)));
+						.flatMapSequential(deleteResult -> Flux.fromIterable(list)));
 	}
 
 	/**
@@ -2729,7 +2729,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return createFlux(collectionName, collection -> {
 			return Flux.from(preparer.initiateFind(collection, collectionCallback::doInCollection))
-					.concatMap(objectCallback::doWith);
+					.flatMapSequential(objectCallback::doWith);
 		});
 	}
 
