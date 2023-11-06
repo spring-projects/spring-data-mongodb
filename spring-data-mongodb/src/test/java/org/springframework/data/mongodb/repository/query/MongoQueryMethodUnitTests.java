@@ -359,9 +359,9 @@ public class MongoQueryMethodUnitTests {
 	}
 
 	@Test // GH-4546
-	void errorsOnInvalidAggregation() throws Exception {
+	void errorsOnInvalidAggregation() {
 
-		assertThatExceptionOfType(IllegalStateException.class) //
+		assertThatIllegalStateException() //
 				.isThrownBy(() -> queryMethod(InvalidAggregationMethodRepo.class, "findByAggregation").verify()) //
 				.withMessageContaining("Invalid aggregation") //
 				.withMessageContaining("findByAggregation");
