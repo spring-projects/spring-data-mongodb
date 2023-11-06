@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
@@ -697,6 +698,28 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).withReadPreference(ReadPreference.primaryPreferred());
 	}
 
+	@Test // GH-4543
+	void aggregateDoesNotLimitBackpressure() {
+
+		reset(collection);
+
+		AtomicLong request = new AtomicLong();
+		Publisher<Document> realPublisher = Flux.just(new Document()).doOnRequest(request::addAndGet);
+
+		doAnswer(invocation -> {
+			Subscriber<Document> subscriber = invocation.getArgument(0);
+			realPublisher.subscribe(subscriber);
+			return null;
+		}).when(aggregatePublisher).subscribe(any());
+
+		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
+		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
+
+		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class).subscribe();
+
+		assertThat(request).hasValueGreaterThan(128);
+	}
+
 	@Test // DATAMONGO-1854
 	void aggreateShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
 
@@ -1261,6 +1284,17 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 	}
 
+	@Test // GH-4543
+	void findShouldNotLimitBackpressure() {
+
+		AtomicLong request = new AtomicLong();
+		stubFindSubscribe(new Document(), request);
+
+		template.find(new Query(), Person.class).subscribe();
+
+		assertThat(request).hasValueGreaterThan(128);
+	}
+
 	@Test // DATAMONGO-2479
 	void findByIdShouldInvokeAfterConvertCallbacks() {
 
@@ -1706,8 +1740,12 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	private void stubFindSubscribe(Document document) {
+		stubFindSubscribe(document, new AtomicLong());
+	}
 
-		Publisher<Document> realPublisher = Flux.just(document);
+	private void stubFindSubscribe(Document document, AtomicLong request) {
+
+		Publisher<Document> realPublisher = Flux.just(document).doOnRequest(request::addAndGet);
 
 		doAnswer(invocation -> {
 			Subscriber<Document> subscriber = invocation.getArgument(0);
