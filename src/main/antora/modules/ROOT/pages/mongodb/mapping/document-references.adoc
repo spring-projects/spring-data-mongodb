@@ -1,0 +1,503 @@
+[[mapping-usage-references]]
+= Using DBRefs
+
+The mapping framework does not have to store child objects embedded within the document.
+You can also store them separately and use a `DBRef` to refer to that document.
+When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your top-level document.
+
+The following example uses a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
+
+====
+[source,java]
+----
+@Document
+public class Account {
+
+  @Id
+  private ObjectId id;
+  private Float total;
+}
+
+@Document
+public class Person {
+
+  @Id
+  private ObjectId id;
+  @Indexed
+  private Integer ssn;
+  @DBRef
+  private List<Account> accounts;
+}
+----
+====
+
+You need not use `@OneToMany` or similar mechanisms because the List of objects tells the mapping framework that you want a one-to-many relationship.
+When the object is stored in MongoDB, there is a list of DBRefs rather than the `Account` objects themselves.
+When it comes to loading collections of ``DBRef``s it is advisable to restrict references held in collection types to a specific MongoDB collection.
+This allows bulk loading of all references, whereas references pointing to different MongoDB collections need to be resolved one by one.
+
+IMPORTANT: The mapping framework does not handle cascading saves.
+If you change an `Account` object that is referenced by a `Person` object, you must save the `Account` object separately.
+Calling `save` on the `Person` object does not automatically save the `Account` objects in the `accounts` property.
+
+``DBRef``s can also be resolved lazily.
+In this case the actual `Object` or `Collection` of references is resolved on first access of the property.
+Use the `lazy` attribute of `@DBRef` to specify this.
+Required properties that are also defined as lazy loading ``DBRef`` and used as constructor arguments are also decorated with the lazy loading proxy making sure to put as little pressure on the database and network as possible.
+
+TIP: Lazily loaded ``DBRef``s can be hard to debug.
+Make sure tooling does not accidentally trigger proxy resolution by e.g. calling `toString()` or some inline debug rendering invoking property getters.
+Please consider to enable _trace_ logging for `org.springframework.data.mongodb.core.convert.DefaultDbRefResolver` to gain insight on `DBRef` resolution.
+
+CAUTION: Lazy loading may require class proxies, that in turn, might need access to jdk internals, that are not open, starting with Java 16+, due to https://openjdk.java.net/jeps/396[JEP 396: Strongly Encapsulate JDK Internals by Default].
+For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
+
+[[mapping-usage.document-references]]
+== Using Document References
+
+Using `@DocumentReference` offers a flexible way of referencing entities in MongoDB.
+While the goal is the same as when using xref:mongodb/mapping/document-references.adoc[DBRefs], the store representation is different.
+`DBRef` resolves to a document with a fixed structure as outlined in the https://docs.mongodb.com/manual/reference/database-references/[MongoDB Reference documentation]. +
+Document references, do not follow a specific format.
+They can be literally anything, a single value, an entire document, basically everything that can be stored in MongoDB.
+By default, the mapping layer will use the referenced entities _id_ value for storage and retrieval, like in the sample below.
+
+====
+[source,java]
+----
+@Document
+class Account {
+
+  @Id
+  String id;
+  Float total;
+}
+
+@Document
+class Person {
+
+  @Id
+  String id;
+
+  @DocumentReference                                   <1>
+  List<Account> accounts;
+}
+----
+
+[source,java]
+----
+Account account = …
+
+template.insert(account);                               <2>
+
+template.update(Person.class)
+  .matching(where("id").is(…))
+  .apply(new Update().push("accounts").value(account)) <3>
+  .first();
+----
+
+[source,json]
+----
+{
+  "_id" : …,
+  "accounts" : [ "6509b9e" … ]                        <4>
+}
+----
+<1> Mark the collection of `Account` values to be referenced.
+<2> The mapping framework does not handle cascading saves, so make sure to persist the referenced entity individually.
+<3> Add the reference to the existing entity.
+<4> Referenced `Account` entities are represented as an array of their `_id` values.
+====
+
+The sample above uses an ``_id``-based fetch query (`{ '_id' : ?#{#target} }`) for data retrieval and resolves linked entities eagerly.
+It is possible to alter resolution defaults (listed below) using the attributes of `@DocumentReference`
+
+.@DocumentReference defaults
+[cols="2,3,5",options="header"]
+|===
+| Attribute | Description | Default
+
+| `db`
+| The target database name for collection lookup.
+| `MongoDatabaseFactory.getMongoDatabase()`
+
+| `collection`
+| The target collection name.
+| The annotated property's domain type, respectively the value type in case of `Collection` like or `Map` properties, collection name.
+
+| `lookup`
+| The single document lookup query evaluating placeholders via SpEL expressions using `#target` as the marker for a given source value. `Collection` like or `Map` properties combine individual lookups via an `$or` operator.
+| An `_id` field based query (`{ '_id' : ?#{#target} }`) using the loaded source value.
+
+| `sort`
+| Used for sorting result documents on server side.
+| None by default.
+Result order of `Collection` like properties is restored based on the used lookup query on a best-effort basis.
+
+| `lazy`
+| If set to `true` value resolution is delayed upon first access of the property.
+| Resolves properties eagerly by default.
+|===
+
+CAUTION: Lazy loading may require class proxies, that in turn, might need access to jdk internals, that are not open, starting with Java 16+, due to https://openjdk.java.net/jeps/396[JEP 396: Strongly Encapsulate JDK Internals by Default].
+For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
+
+`@DocumentReference(lookup)` allows defining filter queries that can be different from the `_id` field and therefore offer a flexible way of defining references between entities as demonstrated in the sample below, where the `Publisher` of a book is referenced by its acronym instead of the internal `id`.
+
+====
+[source,java]
+----
+@Document
+class Book {
+
+  @Id
+  ObjectId id;
+  String title;
+  List<String> author;
+
+  @Field("publisher_ac")
+  @DocumentReference(lookup = "{ 'acronym' : ?#{#target} }") <1>
+  Publisher publisher;
+}
+
+@Document
+class Publisher {
+
+  @Id
+  ObjectId id;
+  String acronym;                                            <1>
+  String name;
+
+  @DocumentReference(lazy = true)                            <2>
+  List<Book> books;
+
+}
+----
+
+.`Book` document
+[source,json]
+----
+{
+  "_id" : 9a48e32,
+  "title" : "The Warded Man",
+  "author" : ["Peter V. Brett"],
+  "publisher_ac" : "DR"
+}
+----
+
+.`Publisher` document
+[source,json]
+----
+{
+  "_id" : 1a23e45,
+  "acronym" : "DR",
+  "name" : "Del Rey",
+  …
+}
+----
+<1> Use the `acronym` field to query for entities in the `Publisher` collection.
+<2> Lazy load back references to the `Book` collection.
+====
+
+The above snippet shows the reading side of things when working with custom referenced objects.
+Writing requires a bit of additional setup as the mapping information do not express where `#target` stems from.
+The mapping layer requires registration of a `Converter` between the target document and `DocumentPointer`, like the one below:
+
+====
+[source,java]
+----
+@WritingConverter
+class PublisherReferenceConverter implements Converter<Publisher, DocumentPointer<String>> {
+
+	@Override
+	public DocumentPointer<String> convert(Publisher source) {
+		return () -> source.getAcronym();
+	}
+}
+----
+====
+
+If no `DocumentPointer` converter is provided the target reference document can be computed based on the given lookup query.
+In this case the association target properties are evaluated as shown in the following sample.
+
+====
+[source,java]
+----
+@Document
+class Book {
+
+  @Id
+  ObjectId id;
+  String title;
+  List<String> author;
+
+  @DocumentReference(lookup = "{ 'acronym' : ?#{acc} }") <1> <2>
+  Publisher publisher;
+}
+
+@Document
+class Publisher {
+
+  @Id
+  ObjectId id;
+  String acronym;                                        <1>
+  String name;
+
+  // ...
+}
+----
+
+[source,json]
+----
+{
+  "_id" : 9a48e32,
+  "title" : "The Warded Man",
+  "author" : ["Peter V. Brett"],
+  "publisher" : {
+    "acc" : "DOC"
+  }
+}
+----
+<1> Use the `acronym` field to query for entities in the `Publisher` collection.
+<2> The field value placeholders of the lookup query (like `acc`) is used to form the reference document.
+====
+
+It is also possible to model relational style _One-To-Many_ references using a combination of `@ReadonlyProperty` and `@DocumentReference`.
+This approach allows link types without storing the linking values within the owning document but rather on the referencing document as shown in the example below.
+
+====
+[source,java]
+----
+@Document
+class Book {
+
+  @Id
+  ObjectId id;
+  String title;
+  List<String> author;
+
+  ObjectId publisherId;                                        <1>
+}
+
+@Document
+class Publisher {
+
+  @Id
+  ObjectId id;
+  String acronym;
+  String name;
+
+  @ReadOnlyProperty                                            <2>
+  @DocumentReference(lookup="{'publisherId':?#{#self._id} }")  <3>
+  List<Book> books;
+}
+----
+
+.`Book` document
+[source,json]
+----
+{
+  "_id" : 9a48e32,
+  "title" : "The Warded Man",
+  "author" : ["Peter V. Brett"],
+  "publisherId" : 8cfb002
+}
+----
+
+.`Publisher` document
+[source,json]
+----
+{
+  "_id" : 8cfb002,
+  "acronym" : "DR",
+  "name" : "Del Rey"
+}
+----
+<1> Set up the link from `Book` (reference) to `Publisher` (owner) by storing the `Publisher.id` within the `Book` document.
+<2> Mark the property holding the references to be readonly.
+This prevents storing references to individual ``Book``s with the `Publisher` document.
+<3> Use the `#self` variable to access values within the `Publisher` document and in this retrieve `Books` with matching `publisherId`.
+====
+
+With all the above in place it is possible to model all kind of associations between entities.
+Have a look at the non-exhaustive list of samples below to get feeling for what is possible.
+
+.Simple Document Reference using _id_ field
+====
+[source,java]
+----
+class Entity {
+  @DocumentReference
+  ReferencedObject ref;
+}
+----
+
+[source,json]
+----
+// entity
+{
+  "_id" : "8cfb002",
+  "ref" : "9a48e32" <1>
+}
+
+// referenced object
+{
+  "_id" : "9a48e32" <1>
+}
+----
+<1> MongoDB simple type can be directly used without further configuration.
+====
+
+.Simple Document Reference using _id_ field with explicit lookup query
+====
+[source,java]
+----
+class Entity {
+  @DocumentReference(lookup = "{ '_id' : '?#{#target}' }") <1>
+  ReferencedObject ref;
+}
+----
+
+[source,json]
+----
+// entity
+{
+  "_id" : "8cfb002",
+  "ref" : "9a48e32"                                        <1>
+}
+
+// referenced object
+{
+  "_id" : "9a48e32"
+}
+----
+<1> _target_ defines the reference value itself.
+====
+
+.Document Reference extracting the `refKey` field for the lookup query
+====
+[source,java]
+----
+class Entity {
+  @DocumentReference(lookup = "{ '_id' : '?#{refKey}' }")  <1> <2>
+  private ReferencedObject ref;
+}
+----
+
+[source,java]
+----
+@WritingConverter
+class ToDocumentPointerConverter implements Converter<ReferencedObject, DocumentPointer<Document>> {
+	public DocumentPointer<Document> convert(ReferencedObject source) {
+		return () -> new Document("refKey", source.id);    <1>
+	}
+}
+----
+
+[source,json]
+----
+// entity
+{
+  "_id" : "8cfb002",
+  "ref" : {
+    "refKey" : "9a48e32"                                   <1>
+  }
+}
+
+// referenced object
+{
+  "_id" : "9a48e32"
+}
+----
+<1> The key used for obtaining the reference value must be the one used during write.
+<2> `refKey` is short for `target.refKey`.
+====
+
+.Document Reference with multiple values forming the lookup query
+====
+[source,java]
+----
+class Entity {
+  @DocumentReference(lookup = "{ 'firstname' : '?#{fn}', 'lastname' : '?#{ln}' }") <1> <2>
+  ReferencedObject ref;
+}
+----
+
+[source,json]
+----
+// entity
+{
+  "_id" : "8cfb002",
+  "ref" : {
+    "fn" : "Josh",           <1>
+    "ln" : "Long"            <1>
+  }
+}
+
+// referenced object
+{
+  "_id" : "9a48e32",
+  "firstname" : "Josh",      <2>
+  "lastname" : "Long",       <2>
+}
+----
+<1> Read/write the keys `fn` & `ln` from/to the linkage document based on the lookup query.
+<2> Use non _id_ fields for the lookup of the target documents.
+====
+
+.Document Reference reading from a target collection
+====
+[source,java]
+----
+class Entity {
+  @DocumentReference(lookup = "{ '_id' : '?#{id}' }", collection = "?#{collection}") <2>
+  private ReferencedObject ref;
+}
+----
+
+[source,java]
+----
+@WritingConverter
+class ToDocumentPointerConverter implements Converter<ReferencedObject, DocumentPointer<Document>> {
+	public DocumentPointer<Document> convert(ReferencedObject source) {
+		return () -> new Document("id", source.id)                                   <1>
+                           .append("collection", … );                                <2>
+	}
+}
+----
+
+[source,json]
+----
+// entity
+{
+  "_id" : "8cfb002",
+  "ref" : {
+    "id" : "9a48e32",                                                                <1>
+    "collection" : "…"                                                               <2>
+  }
+}
+----
+<1> Read/write the keys `_id` from/to the reference document to use them in the lookup query.
+<2> The collection name can be read from the reference document using its key.
+====
+
+[WARNING]
+====
+We know it is tempting to use all kinds of MongoDB query operators in the lookup query and this is fine.
+But there a few aspects to consider:
+
+* Make sure to have indexes in place that support your lookup.
+* Mind that resolution requires a server rountrip inducing latency, consider a lazy strategy.
+* A collection of document references is bulk loaded using the `$or` operator. +
+The original element order is restored in memory on a best-effort basis.
+Restoring the order is only possible when using equality expressions and cannot be done when using MongoDB query operators.
+In this case results will be ordered as they are received from the store or via the provided `@DocumentReference(sort)` attribute.
+
+A few more general remarks:
+
+* Do you use cyclic references?
+Ask your self if you need them.
+* Lazy document references are hard to debug.
+Make sure tooling does not accidentally trigger proxy resolution by e.g. calling `toString()`.
+* There is no support for reading document references using reactive infrastructure.
+====

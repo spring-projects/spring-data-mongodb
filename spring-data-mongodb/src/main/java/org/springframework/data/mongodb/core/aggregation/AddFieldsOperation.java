@@ -148,7 +148,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 				@Override
 				public AddFieldsOperationBuilder withValueOf(Object value) {
 
-					valueMap.put(field, value instanceof String ? Fields.fields((String) value) : value);
+					valueMap.put(field, value instanceof String stringValue ? Fields.fields(stringValue) : value);
 					return AddFieldsOperationBuilder.this;
 				}
 

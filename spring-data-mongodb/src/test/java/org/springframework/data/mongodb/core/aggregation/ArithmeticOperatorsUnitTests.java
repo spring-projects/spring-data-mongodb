@@ -25,7 +25,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link Round}.
+ * Unit tests for {@link ArithmeticOperators}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch

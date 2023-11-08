@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.util.aggregation.TestAggregationContext;
  * Unit tests for {@link AccumulatorOperators}.
  *
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 class AccumulatorOperatorsUnitTests {
 
@@ -106,6 +107,57 @@ class AccumulatorOperatorsUnitTests {
 
 		assertThat(valueOf("price").min(3).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $minN: { n: 3, input : \"$price\" } }"));
+	}
+
+	@Test // GH-4473
+	void rendersPercentileWithFieldReference() {
+
+		assertThat(valueOf("score").percentile(0.2).toDocument(Aggregation.DEFAULT_CONTEXT))
+			.isEqualTo(Document.parse("{ $percentile: { input: \"$score\", method: \"approximate\", p: [0.2] } }"));
+
+		assertThat(valueOf("score").percentile(0.3, 0.9).toDocument(Aggregation.DEFAULT_CONTEXT))
+			.isEqualTo(Document.parse("{ $percentile: { input: \"$score\", method: \"approximate\", p: [0.3, 0.9] } }"));
+
+		assertThat(valueOf("score").percentile(0.3, 0.9).and("scoreTwo").toDocument(Aggregation.DEFAULT_CONTEXT))
+			.isEqualTo(Document.parse("{ $percentile: { input: [\"$score\", \"$scoreTwo\"], method: \"approximate\", p: [0.3, 0.9] } }"));
+	}
+
+	@Test // GH-4473
+	void rendersPercentileWithExpression() {
+
+		assertThat(valueOf(Sum.sumOf("score")).percentile(0.1).toDocument(Aggregation.DEFAULT_CONTEXT))
+			.isEqualTo(Document.parse("{ $percentile: { input: {\"$sum\": \"$score\"}, method: \"approximate\", p: [0.1] } }"));
+
+		assertThat(valueOf("scoreOne").percentile(0.1, 0.2).and(Sum.sumOf("scoreTwo")).toDocument(Aggregation.DEFAULT_CONTEXT))
+			.isEqualTo(Document.parse("{ $percentile: { input: [\"$scoreOne\", {\"$sum\": \"$scoreTwo\"}], method: \"approximate\", p: [0.1, 0.2] } }"));
+	}
+
+	@Test // GH-4472
+	void rendersMedianWithFieldReference() {
+
+		assertThat(valueOf("score").median().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $median: { input: \"$score\", method: \"approximate\" } }"));
+
+		assertThat(valueOf("score").median().and("scoreTwo").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $median: { input: [\"$score\", \"$scoreTwo\"], method: \"approximate\" } }"));
+	}
+
+	@Test // GH-4472
+	void rendersMedianWithExpression() {
+
+		assertThat(valueOf(Sum.sumOf("score")).median().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $median: { input: {\"$sum\": \"$score\"}, method: \"approximate\" } }"));
+
+		assertThat(valueOf("scoreOne").median().and(Sum.sumOf("scoreTwo")).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $median: { input: [\"$scoreOne\", {\"$sum\": \"$scoreTwo\"}], method: \"approximate\" } }"));
+	}
+
+	@Test // GH-4472
+	void rendersMedianCorrectlyWithTypedAggregationContext() {
+
+		assertThat(valueOf("midichlorianCount").median()
+				.toDocument(TestAggregationContext.contextFor(Jedi.class)))
+						.isEqualTo(Document.parse("{ $median: { input: \"$force\", method: \"approximate\" } }"));
 	}
 
 	static class Jedi {

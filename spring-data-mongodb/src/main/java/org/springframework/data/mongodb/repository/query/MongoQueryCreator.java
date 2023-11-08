@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.bson.BsonRegularExpression;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -52,6 +52,7 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -197,7 +198,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case REGEX:
 
 				Object param = parameters.next();
-				return param instanceof Pattern ? criteria.regex((Pattern) param) : criteria.regex(param.toString());
+				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 			case EXISTS:
 				return criteria.exists((Boolean) parameters.next());
 			case TRUE:
@@ -352,6 +353,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @return the regex options or {@literal null}.
 	 */
+	@Nullable
 	private String toRegexOptions(Part part) {
 
 		String regexOptions = null;
@@ -390,7 +392,18 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		Streamable<?> streamable = asStreamable(iterator.next());
 		if (!isSimpleComparisionPossible(part)) {
-			streamable = streamable.map(MongoRegexCreator.INSTANCE::toCaseInsensitiveMatch);
+
+			MatchMode matchMode = toMatchMode(part.getType());
+			String regexOptions = toRegexOptions(part);
+
+			streamable = streamable.map(it -> {
+				if (it instanceof String value) {
+
+					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(value, matchMode),
+							regexOptions);
+				}
+				return it;
+			});
 		}
 
 		return streamable.toList();
@@ -398,8 +411,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private Streamable<?> asStreamable(Object value) {
 
-		if (value instanceof Collection) {
-			return Streamable.of((Collection<?>) value);
+		if (value instanceof Collection<?> collection) {
+			return Streamable.of(collection);
 		} else if (ObjectUtils.isArray(value)) {
 			return Streamable.of((Object[]) value);
 		}
@@ -436,11 +449,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private static Criteria computeBetweenPart(Criteria criteria, Iterator<Object> parameters) {
 
 		Object value = parameters.next();
-		if (!(value instanceof Range)) {
+		if (!(value instanceof Range<?> range)) {
 			return criteria.gt(value).lt(parameters.next());
 		}
 
-		Range<?> range = (Range<?>) value;
 		Optional<?> min = range.getLowerBound().getValue();
 		Optional<?> max = range.getUpperBound().getValue();
 
@@ -482,6 +494,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return MatchMode.REGEX;
 			case NEGATING_SIMPLE_PROPERTY:
 			case SIMPLE_PROPERTY:
+			case IN:
 				return MatchMode.EXACT;
 			default:
 				return MatchMode.DEFAULT;

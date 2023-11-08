@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -61,7 +62,7 @@ public class WildcardIndex extends Index {
 	/**
 	 * Create a new instance of {@link WildcardIndex} for the given {@literal path}. If no {@literal path} is provided the
 	 * index will be considered a root one using {@code $**}. <br />
-	 * <strong>NOTE</strong> {@link #wildcardProjectionInclude(String...)}, {@link #wildcardProjectionExclude(String...)}
+	 * <strong>NOTE:</strong> {@link #wildcardProjectionInclude(String...)}, {@link #wildcardProjectionExclude(String...)}
 	 * can only be used for top level index definitions having an {@literal empty} or {@literal null} path.
 	 *
 	 * @param path can be {@literal null}. If {@literal null} all fields will be indexed.
@@ -77,7 +78,7 @@ public class WildcardIndex extends Index {
 	 */
 	public WildcardIndex includeId() {
 
-		wildcardProjection.put("_id", 1);
+		wildcardProjection.put(FieldName.ID.name(), 1);
 		return this;
 	}
 

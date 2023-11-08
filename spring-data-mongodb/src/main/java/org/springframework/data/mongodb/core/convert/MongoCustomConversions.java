@@ -41,6 +41,7 @@ import org.springframework.data.convert.PropertyValueConversions;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.PropertyValueConverterRegistrar;
+import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.SimplePropertyValueConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -361,6 +362,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}, this.propertyValueConversions);
 		}
 
+		@ReadingConverter
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {
 			INSTANCE;
 
@@ -370,6 +372,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}
 		}
 
+		@ReadingConverter
 		private enum DateToUtcLocalTimeConverter implements Converter<Date, LocalTime> {
 			INSTANCE;
 
@@ -379,6 +382,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}
 		}
 
+		@ReadingConverter
 		private enum DateToUtcLocalDateConverter implements Converter<Date, LocalDate> {
 			INSTANCE;
 

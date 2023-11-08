@@ -130,8 +130,8 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 			String collection = entity.getCollection();
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
-				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
-						? (IndexDefinitionHolder) indexDefinition
+				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder definitionHolder
+						? definitionHolder
 						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				publishers.add(createIndex(indexToCreate));
@@ -187,8 +187,8 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 
 		if (t instanceof UncategorizedMongoDbException) {
 
-			return t.getCause() instanceof MongoException
-					&& MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) t.getCause()).getCode());
+			return t.getCause() instanceof MongoException mongoException
+					&& MongoDbErrorCodes.isDataIntegrityViolationCode(mongoException.getCode());
 		}
 
 		return false;

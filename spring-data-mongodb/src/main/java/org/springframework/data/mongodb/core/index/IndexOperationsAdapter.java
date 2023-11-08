@@ -51,6 +51,11 @@ public interface IndexOperationsAdapter extends IndexOperations {
 			}
 
 			@Override
+			public void alterIndex(String name, IndexOptions options) {
+				reactiveIndexOperations.alterIndex(name, options);
+			}
+
+			@Override
 			public void dropAllIndexes() {
 				reactiveIndexOperations.dropAllIndexes().block();
 			}

@@ -10,7 +10,7 @@ All of these use cases are great reasons to essentially run what Concourse does 
 
 IMPORTANT: To do this you must have Docker installed on your machine.
 
-1. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-mongodb-github springci/spring-data-8-jdk-with-mongodb /bin/bash`
+1. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-mongodb-github springci/spring-data-openjdk17-with-mongodb-5.0.3 /bin/bash`
 +
 This will launch the Docker image and mount your source code at `spring-data-mongodb-github`.
 +
@@ -23,7 +23,7 @@ Since the container is binding to your source, you can make edits from your IDE 
 If you need to test the `build.sh` script, do this:
 
 1. `mkdir /tmp/spring-data-mongodb-artifactory`
-2. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-mongodb-github --mount type=bind,source="/tmp/spring-data-mongodb-artifactory",target=/spring-data-mongodb-artifactory springci/spring-data-8-jdk-with-mongodb /bin/bash`
+2. `docker run -it --mount type=bind,source="$(pwd)",target=/spring-data-mongodb-github --mount type=bind,source="/tmp/spring-data-mongodb-artifactory",target=/spring-data-mongodb-artifactory springci/spring-data-openjdk17-with-mongodb-5.0.3 /bin/bash`
 +
 This will launch the Docker image and mount your source code at `spring-data-mongodb-github` and the temporary
 artifactory output directory at `spring-data-mongodb-artifactory`.

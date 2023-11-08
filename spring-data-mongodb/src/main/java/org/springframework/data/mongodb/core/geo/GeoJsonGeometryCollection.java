@@ -70,11 +70,9 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 			return true;
 		}
 
-		if (!(obj instanceof GeoJsonGeometryCollection)) {
+		if (!(obj instanceof GeoJsonGeometryCollection other)) {
 			return false;
 		}
-
-		GeoJsonGeometryCollection other = (GeoJsonGeometryCollection) obj;
 
 		return ObjectUtils.nullSafeEquals(this.geometries, other.geometries);
 	}

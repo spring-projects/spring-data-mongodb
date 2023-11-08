@@ -91,8 +91,8 @@ class GridFsOperationsSupport {
 	 */
 	protected Document toDocument(@Nullable Object value) {
 
-		if (value instanceof Document) {
-			return (Document) value;
+		if (value instanceof Document document) {
+			return document;
 		}
 
 		Document document = new Document();

@@ -138,12 +138,12 @@ public class UnionWithOperation implements AggregationOperation {
 
 	private AggregationOperationContext computeContext(AggregationOperationContext source) {
 
-		if (source instanceof TypeBasedAggregationOperationContext) {
-			return ((TypeBasedAggregationOperationContext) source).continueOnMissingFieldReference(domainType != null ? domainType : Object.class);
+		if (source instanceof TypeBasedAggregationOperationContext aggregationOperationContext) {
+			return aggregationOperationContext.continueOnMissingFieldReference(domainType != null ? domainType : Object.class);
 		}
 
-		if (source instanceof ExposedFieldsAggregationOperationContext) {
-			return computeContext(((ExposedFieldsAggregationOperationContext) source).getRootContext());
+		if (source instanceof ExposedFieldsAggregationOperationContext aggregationOperationContext) {
+			return computeContext(aggregationOperationContext.getRootContext());
 		}
 
 		return source;

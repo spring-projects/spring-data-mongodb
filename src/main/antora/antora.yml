@@ -1,0 +1,12 @@
+name: data-mongodb
+version: true
+title: Spring Data MongoDB
+nav:
+  - modules/ROOT/nav.adoc
+ext:
+  collector:
+    - run:
+        command: ./mvnw validate process-resources -pl :spring-data-mongodb-distribution -am -Pantora-process-resources
+        local: true
+      scan:
+        dir: spring-data-mongodb-distribution/target/classes/

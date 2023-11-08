@@ -111,16 +111,16 @@ public class MetricConversion {
 
 		ConversionMultiplier(Number source, Number target) {
 
-			if (source instanceof BigDecimal) {
-				this.source = (BigDecimal) source;
+			if (source instanceof BigDecimal bigDecimal) {
+				this.source = bigDecimal;
 			} else {
-				this.source = new BigDecimal(source.doubleValue());
+				this.source = BigDecimal.valueOf(source.doubleValue());
 			}
 
-			if (target instanceof BigDecimal) {
-				this.target = (BigDecimal) target;
+			if (target instanceof BigDecimal bigDecimal) {
+				this.target = bigDecimal;
 			} else {
-				this.target = new BigDecimal(target.doubleValue());
+				this.target = BigDecimal.valueOf(target.doubleValue());
 			}
 		}
 

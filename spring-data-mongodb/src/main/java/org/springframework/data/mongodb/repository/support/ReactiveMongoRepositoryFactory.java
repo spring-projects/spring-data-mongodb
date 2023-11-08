@@ -62,6 +62,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
+	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final ReactiveMongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
@@ -76,7 +77,16 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
+
 		setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
+		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
+	}
+
+	@Override
+	public void setBeanClassLoader(ClassLoader classLoader) {
+
+		super.setBeanClassLoader(classLoader);
+		crudMethodMetadataPostProcessor.setBeanClassLoader(classLoader);
 	}
 
 	@Override
@@ -114,7 +124,13 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType(),
 				information);
-		return getTargetRepositoryViaReflection(information, entityInformation, operations);
+		Object targetRepository = getTargetRepositoryViaReflection(information, entityInformation, operations);
+
+		if (targetRepository instanceof SimpleReactiveMongoRepository<?, ?> repository) {
+			repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
+		}
+
+		return targetRepository;
 	}
 
 	@Override

@@ -94,7 +94,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	}
 
 	public String getIdAttribute() {
-		return entityMetadata.getRequiredIdProperty().getName();
+		return entityMetadata.hasIdProperty() ? entityMetadata.getRequiredIdProperty().getName() : "_id";
 	}
 
 	@Override

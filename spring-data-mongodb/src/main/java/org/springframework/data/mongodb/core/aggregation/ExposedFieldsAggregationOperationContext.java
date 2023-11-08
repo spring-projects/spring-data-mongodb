@@ -96,6 +96,15 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 			return exposedField;
 		}
 
+		if (rootContext instanceof RelaxedTypeBasedAggregationOperationContext) {
+
+			if (field != null) {
+				return new DirectFieldReference(new ExposedField(field, true));
+			}
+
+			return new DirectFieldReference(new ExposedField(name, true));
+		}
+
 		throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));
 	}
 

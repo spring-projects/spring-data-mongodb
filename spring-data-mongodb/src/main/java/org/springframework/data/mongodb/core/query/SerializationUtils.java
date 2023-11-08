@@ -77,9 +77,8 @@ public abstract class SerializationUtils {
 
 	private static void toFlatMap(String currentPath, Object source, Map<String, Object> map) {
 
-		if (source instanceof Document) {
+		if (source instanceof Document document) {
 
-			Document document = (Document) source;
 			Iterator<Map.Entry<String, Object>> it = document.entrySet().iterator();
 			String pathPrefix = currentPath.isEmpty() ? "" : currentPath + '.';
 
@@ -119,18 +118,18 @@ public abstract class SerializationUtils {
 		}
 
 		try {
-			String json = value instanceof Document ? ((Document) value).toJson() : serializeValue(value);
+			String json = value instanceof Document document ? document.toJson() : serializeValue(value);
 			return json.replaceAll("\":", "\" :").replaceAll("\\{\"", "{ \"");
 		} catch (Exception e) {
 
-			if (value instanceof Collection) {
-				return toString((Collection<?>) value);
-			} else if (value instanceof Map) {
-				return toString((Map<?, ?>) value);
+			if (value instanceof Collection<?> collection) {
+				return toString(collection);
+			} else if (value instanceof Map<?,?> map) {
+				return toString(map);
 			} else if (ObjectUtils.isArray(value)) {
 				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
 			} else {
-				return String.format("{ \"$java\" : %s }", value.toString());
+				return String.format("{ \"$java\" : %s }", value);
 			}
 		}
 	}

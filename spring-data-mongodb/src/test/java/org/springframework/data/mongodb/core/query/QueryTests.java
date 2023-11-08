@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -97,6 +98,18 @@ class QueryTests {
 		assertThat(q.getQueryObject()).isEqualTo(Document
 				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}"));
 		assertThat(q.getLimit()).isEqualTo(50);
+
+		q.limit(Limit.unlimited());
+		assertThat(q.getLimit()).isZero();
+		assertThat(q.isLimited()).isFalse();
+
+		q.limit(Limit.of(10));
+		assertThat(q.getLimit()).isEqualTo(10);
+		assertThat(q.isLimited()).isTrue();
+
+		q.limit(Limit.of(-1));
+		assertThat(q.getLimit()).isZero();
+		assertThat(q.isLimited()).isFalse();
 	}
 
 	@Test
@@ -342,7 +355,10 @@ class QueryTests {
 		source.limit(10);
 		source.setSortObject(new Document("_id", 1));
 
-		Query target = Query.of((Query) new ProxyFactory(source).getProxy());
+		ProxyFactory proxyFactory = new ProxyFactory(source);
+		proxyFactory.setInterfaces(new Class[0]);
+
+		Query target = Query.of((Query) proxyFactory.getProxy());
 
 		compareQueries(target, source);
 	}

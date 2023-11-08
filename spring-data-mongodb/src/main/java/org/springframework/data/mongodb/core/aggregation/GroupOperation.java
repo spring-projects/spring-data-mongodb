@@ -514,8 +514,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 			if (reference == null) {
 
-				if (value instanceof AggregationExpression) {
-					return ((AggregationExpression) value).toDocument(context);
+				if (value instanceof AggregationExpression aggregationExpression) {
+					return aggregationExpression.toDocument(context);
 				}
 
 				return value;

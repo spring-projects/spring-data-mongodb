@@ -68,6 +68,8 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
 			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
 
+	private static final Set<String> SECURITY_EXCEPTIONS = Set.of("MongoCryptException");
+
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
@@ -97,12 +99,12 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
 		if (DATA_INTEGRITY_EXCEPTIONS.contains(exception)) {
 
-			if (ex instanceof MongoServerException) {
-				if (((MongoServerException) ex).getCode() == 11000) {
+			if (ex instanceof MongoServerException mse) {
+				if (mse.getCode() == 11000) {
 					return new DuplicateKeyException(ex.getMessage(), ex);
 				}
-				if (ex instanceof MongoBulkWriteException) {
-					for (BulkWriteError x : ((MongoBulkWriteException) ex).getWriteErrors()) {
+				if (ex instanceof MongoBulkWriteException bulkException) {
+					for (BulkWriteError x : bulkException.getWriteErrors()) {
 						if (x.getCode() == 11000) {
 							return new DuplicateKeyException(ex.getMessage(), ex);
 						}
@@ -114,9 +116,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		}
 
 		// All other MongoExceptions
-		if (ex instanceof MongoException) {
+		if (ex instanceof MongoException mongoException) {
 
-			int code = ((MongoException) ex).getCode();
+			int code = mongoException.getCode();
 
 			if (MongoDbErrorCodes.isDuplicateKeyCode(code)) {
 				return new DuplicateKeyException(ex.getMessage(), ex);
@@ -131,6 +133,8 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				return new ClientSessionException(ex.getMessage(), ex);
 			} else if (MongoDbErrorCodes.isTransactionFailureCode(code)) {
 				return new MongoTransactionException(ex.getMessage(), ex);
+			} else if(ex.getCause() != null && SECURITY_EXCEPTIONS.contains(ClassUtils.getShortName(ex.getCause().getClass()))) {
+				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
 			}
 
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);

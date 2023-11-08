@@ -20,6 +20,11 @@ import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import java.util.function.Supplier;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -168,8 +173,12 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("gridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("gridFsTemplate");
 
-		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
-		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
+		Supplier<GridFSBucket> gridFSBucketSupplier = (Supplier<GridFSBucket>) getField(operations, "bucketSupplier");
+		GridFSBucket gfsBucket = gridFSBucketSupplier.get();
+		assertThat(gfsBucket.getBucketName()).isEqualTo("fs"); // fs is the default
+
+		MongoCollection<GridFSFile> filesCollection = (MongoCollection<GridFSFile>) getField(gfsBucket, "filesCollection");
+		assertThat(filesCollection.getNamespace().getDatabaseName()).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
 		assertThat(converter).isNotNull();
@@ -181,9 +190,12 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("secondGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("secondGridFsTemplate");
 
-		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
-		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
-		assertThat(getField(operations, "bucket")).isEqualTo(null);
+		Supplier<GridFSBucket> gridFSBucketSupplier = (Supplier<GridFSBucket>) getField(operations, "bucketSupplier");
+		GridFSBucket gfsBucket = gridFSBucketSupplier.get();
+		assertThat(gfsBucket.getBucketName()).isEqualTo("fs"); // fs is the default
+
+		MongoCollection<GridFSFile> filesCollection = (MongoCollection<GridFSFile>) getField(gfsBucket, "filesCollection");
+		assertThat(filesCollection.getNamespace().getDatabaseName()).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
 		assertThat(converter).isNotNull();
@@ -195,9 +207,12 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("thirdGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("thirdGridFsTemplate");
 
-		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
-		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
-		assertThat(getField(operations, "bucket")).isEqualTo("bucketString");
+		Supplier<GridFSBucket> gridFSBucketSupplier = (Supplier<GridFSBucket>) getField(operations, "bucketSupplier");
+		GridFSBucket gfsBucket = gridFSBucketSupplier.get();
+		assertThat(gfsBucket.getBucketName()).isEqualTo("bucketString"); // fs is the default
+
+		MongoCollection<GridFSFile> filesCollection = (MongoCollection<GridFSFile>) getField(gfsBucket, "filesCollection");
+		assertThat(filesCollection.getNamespace().getDatabaseName()).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
 		assertThat(converter).isNotNull();

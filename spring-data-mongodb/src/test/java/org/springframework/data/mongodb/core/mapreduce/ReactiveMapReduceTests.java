@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
@@ -200,9 +199,20 @@ public class ReactiveMapReduceTests {
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document("jmr1")
-	@Data
 	static class MappedFieldsValueObject {
 
 		@Field("x") String[] values;
+
+		public String[] getValues() {
+			return this.values;
+		}
+
+		public void setValues(String[] values) {
+			this.values = values;
+		}
+
+		public String toString() {
+			return "ReactiveMapReduceTests.MappedFieldsValueObject(values=" + Arrays.deepToString(this.getValues()) + ")";
+		}
 	}
 }

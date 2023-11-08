@@ -21,8 +21,6 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import lombok.Data;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -2243,34 +2241,161 @@ public class ProjectionOperationUnitTests {
 				"{ $project: { \"author\" : 1,  \"myArray\" : [ \"$ti_t_le\", \"plain - string\", { \"$sum\" : [\"$ti_t_le\", 10] } ] } } ] }"));
 	}
 
+	@Test // GH-4473
+	void shouldRenderPercentileAggregationExpression() {
+
+		Document agg = project()
+			.and(ArithmeticOperators.valueOf("score").percentile(0.3, 0.9)).as("scorePercentiles")
+			.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { scorePercentiles: { $percentile: { input: \"$score\", method: \"approximate\", p: [0.3, 0.9] } }} } }"));
+	}
+
+	@Test // GH-4473
+	void shouldRenderPercentileWithMultipleArgsAggregationExpression() {
+
+		Document agg = project()
+			.and(ArithmeticOperators.valueOf("scoreOne").percentile(0.4).and("scoreTwo")).as("scorePercentiles")
+			.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { scorePercentiles: { $percentile: { input: [\"$scoreOne\", \"$scoreTwo\"], method: \"approximate\", p: [0.4] } }} } }"));
+	}
+
+	@Test // GH-4472
+	void shouldRenderMedianAggregationExpressions() {
+
+		Document singleArgAgg = project()
+				.and(ArithmeticOperators.valueOf("score").median()).as("medianValue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(singleArgAgg).isEqualTo(Document.parse("{ $project: { medianValue: { $median: { input: \"$score\", method: \"approximate\" } }} } }"));
+
+		Document multipleArgsAgg = project()
+				.and(ArithmeticOperators.valueOf("score").median().and("scoreTwo")).as("medianValue")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(multipleArgsAgg).isEqualTo(Document.parse("{ $project: { medianValue: { $median: { input: [\"$score\", \"$scoreTwo\"], method: \"approximate\" } }} } }"));
+	}
+
 	private static Document extractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
 
-	@Data
 	static class Book {
+
 		String title;
 		Author author;
+
+		public Book() {}
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public Author getAuthor() {
+			return this.author;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.Book(title=" + this.getTitle() + ", author=" + this.getAuthor() + ")";
+		}
 	}
 
-	@Data
 	static class BookWithFieldAnnotation {
 
 		@Field("ti_t_le") String title;
 		Author author;
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public Author getAuthor() {
+			return this.author;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.BookWithFieldAnnotation(title=" + this.getTitle() + ", author="
+					+ this.getAuthor() + ")";
+		}
 	}
 
-	@Data
 	static class BookRenamed {
+
 		@Field("ti_tl_e") String title;
 		Author author;
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public Author getAuthor() {
+			return this.author;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.BookRenamed(title=" + this.getTitle() + ", author=" + this.getAuthor() + ")";
+		}
 	}
 
-	@Data
 	static class Author {
+
 		String first;
 		String last;
 		String middle;
+
+		public String getFirst() {
+			return this.first;
+		}
+
+		public String getLast() {
+			return this.last;
+		}
+
+		public String getMiddle() {
+			return this.middle;
+		}
+
+		public void setFirst(String first) {
+			this.first = first;
+		}
+
+		public void setLast(String last) {
+			this.last = last;
+		}
+
+		public void setMiddle(String middle) {
+			this.middle = middle;
+		}
+
+		public String toString() {
+			return "ProjectionOperationUnitTests.Author(first=" + this.getFirst() + ", last=" + this.getLast() + ", middle="
+					+ this.getMiddle() + ")";
+		}
 	}
 
 	interface ProjectionInterface {

@@ -19,11 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +34,7 @@ import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -232,85 +232,425 @@ public class MongoTemplateDbRefTests {
 		assertThat(target.getValue()).containsExactlyInAnyOrder(one, two);
 	}
 
-	@Data
+	@Test // GH-2191
+	void shouldAllowToSliceCollectionOfDbRefs() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		JustSomeType two = new JustSomeType();
+		two.value = "two";
+
+		template.insertAll(Arrays.asList(one, two));
+
+		WithCollectionDbRef source = new WithCollectionDbRef();
+		source.refs = Arrays.asList(one, two);
+
+		template.save(source);
+
+		Query theQuery = query(where("id").is(source.id));
+		theQuery.fields().slice("refs", 1, 1);
+
+		WithCollectionDbRef target = template.findOne(theQuery, WithCollectionDbRef.class);
+		assertThat(target.getRefs()).containsExactly(two);
+	}
+
+	@Test // GH-2191
+	void shouldAllowToSliceCollectionOfLazyDbRefs() {
+
+		JustSomeType one = new JustSomeType();
+		one.value = "one";
+
+		JustSomeType two = new JustSomeType();
+		two.value = "two";
+
+		template.insertAll(Arrays.asList(one, two));
+
+		WithCollectionDbRef source = new WithCollectionDbRef();
+		source.lazyrefs = Arrays.asList(one, two);
+
+		template.save(source);
+
+		Query theQuery = query(where("id").is(source.id));
+		theQuery.fields().slice("lazyrefs", 1, 1);
+
+		WithCollectionDbRef target = template.findOne(theQuery, WithCollectionDbRef.class);
+		LazyLoadingTestUtils.assertProxyIsResolved(target.lazyrefs, false);
+		assertThat(target.getLazyrefs()).containsExactly(two);
+	}
+
 	@Document("cycle-with-different-type-root")
 	static class RefCycleLoadingIntoDifferentTypeRoot {
 
 		@Id String id;
 		String content;
 		@DBRef RefCycleLoadingIntoDifferentTypeIntermediate refToIntermediate;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getContent() {
+			return this.content;
+		}
+
+		public RefCycleLoadingIntoDifferentTypeIntermediate getRefToIntermediate() {
+			return this.refToIntermediate;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setContent(String content) {
+			this.content = content;
+		}
+
+		public void setRefToIntermediate(RefCycleLoadingIntoDifferentTypeIntermediate refToIntermediate) {
+			this.refToIntermediate = refToIntermediate;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.RefCycleLoadingIntoDifferentTypeRoot(id=" + this.getId() + ", content="
+					+ this.getContent() + ", refToIntermediate=" + this.getRefToIntermediate() + ")";
+		}
 	}
 
-	@Data
 	@Document("cycle-with-different-type-intermediate")
 	static class RefCycleLoadingIntoDifferentTypeIntermediate {
 
 		@Id String id;
 		@DBRef RefCycleLoadingIntoDifferentTypeRootView refToRootView;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public RefCycleLoadingIntoDifferentTypeRootView getRefToRootView() {
+			return this.refToRootView;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setRefToRootView(RefCycleLoadingIntoDifferentTypeRootView refToRootView) {
+			this.refToRootView = refToRootView;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.RefCycleLoadingIntoDifferentTypeIntermediate(id=" + this.getId()
+					+ ", refToRootView=" + this.getRefToRootView() + ")";
+		}
 	}
 
-	@Data
 	@Document("cycle-with-different-type-root")
 	static class RefCycleLoadingIntoDifferentTypeRootView {
 
 		@Id String id;
 		String content;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getContent() {
+			return this.content;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setContent(String content) {
+			this.content = content;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.RefCycleLoadingIntoDifferentTypeRootView(id=" + this.getId() + ", content="
+					+ this.getContent() + ")";
+		}
 	}
 
-	@Data
 	static class RawStringId {
 
 		@MongoId String id;
 		String value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			RawStringId that = (RawStringId) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.RawStringId(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
+	static class WithCollectionDbRef {
+
+		@Id String id;
+
+		@DBRef List<JustSomeType> refs;
+
+		@DBRef(lazy = true) List<JustSomeType> lazyrefs;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<JustSomeType> getRefs() {
+			return this.refs;
+		}
+
+		public List<JustSomeType> getLazyrefs() {
+			return this.lazyrefs;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setRefs(List<JustSomeType> refs) {
+			this.refs = refs;
+		}
+
+		public void setLazyrefs(List<JustSomeType> lazyrefs) {
+			this.lazyrefs = lazyrefs;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithCollectionDbRef(id=" + this.getId() + ", refs=" + this.getRefs()
+					+ ", lazyrefs=" + this.getLazyrefs() + ")";
+		}
+	}
+
 	static class WithDBRefOnRawStringId {
 
 		@Id String id;
 		@DBRef RawStringId value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public RawStringId getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(RawStringId value) {
+			this.value = value;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithDBRefOnRawStringId(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	static class WithLazyDBRefOnRawStringId {
 
 		@Id String id;
 		@DBRef(lazy = true) RawStringId value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public RawStringId getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(RawStringId value) {
+			this.value = value;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithLazyDBRefOnRawStringId(id=" + this.getId() + ", value=" + this.getValue()
+					+ ")";
+		}
 	}
 
-	@Data
 	static class WithRefToAnotherDb {
 
 		@Id String id;
 		@DBRef(db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public JustSomeType getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(JustSomeType value) {
+			this.value = value;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithRefToAnotherDb(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	static class WithLazyRefToAnotherDb {
 
 		@Id String id;
 		@DBRef(lazy = true, db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public JustSomeType getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(JustSomeType value) {
+			this.value = value;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithLazyRefToAnotherDb(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	static class WithListRefToAnotherDb {
 
 		@Id String id;
 		@DBRef(db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<JustSomeType> getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(List<JustSomeType> value) {
+			this.value = value;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithListRefToAnotherDb(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	static class WithLazyListRefToAnotherDb {
 
 		@Id String id;
 		@DBRef(lazy = true, db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<JustSomeType> getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(List<JustSomeType> value) {
+			this.value = value;
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.WithLazyListRefToAnotherDb(id=" + this.getId() + ", value=" + this.getValue()
+					+ ")";
+		}
 	}
 
-	@Data
 	static class JustSomeType {
 
 		@Id String id;
 		String value;
-	}
 
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			JustSomeType that = (JustSomeType) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MongoTemplateDbRefTests.JustSomeType(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
+	}
 }

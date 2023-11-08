@@ -140,7 +140,7 @@ public class SetOperation extends DocumentEnhancingOperation {
 				@Override
 				public SetOperation toValueOf(Object value) {
 
-					valueMap.put(field, value instanceof String ? Fields.fields((String) value) : value);
+					valueMap.put(field, value instanceof String stringValue ? Fields.fields(stringValue) : value);
 					return FieldAppender.this.build();
 				}
 

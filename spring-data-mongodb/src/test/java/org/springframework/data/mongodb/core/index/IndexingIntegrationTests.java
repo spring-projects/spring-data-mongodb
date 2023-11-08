@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.core.index;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -175,10 +172,16 @@ public class IndexingIntegrationTests {
 		@Field("_lastname") @IndexedFieldAnnotation String lastname;
 	}
 
-	@RequiredArgsConstructor
-	@Getter
 	static class TimeoutResolver {
 		final String timeout;
+
+		public TimeoutResolver(String timeout) {
+			this.timeout = timeout;
+		}
+
+		public String getTimeout() {
+			return this.timeout;
+		}
 	}
 
 	@Document

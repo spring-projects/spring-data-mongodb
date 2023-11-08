@@ -30,6 +30,8 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -40,8 +42,12 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mongodb.MongoExpression;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -75,7 +81,7 @@ public class QueryMapper {
 
 	protected static final Log LOGGER = LogFactory.getLog(QueryMapper.class);
 
-	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
+	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", FieldName.ID.name());
 	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
 	static final TypeInformation<?> NESTED_DOCUMENT = TypeInformation.of(NestedDocument.class);
 
@@ -163,6 +169,14 @@ public class QueryMapper {
 
 					Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
 
+					/*
+					 * Note to future self:
+					 * ----
+					 * This could be the place to plug in a query rewrite mechanism that allows to transform comparison
+					 * against field that has a dot in its name (like 'a.b') into an $expr so that { "a.b" : "some value" }
+					 * eventually becomes { $expr : { $eq : [ { $getField : "a.b" }, "some value" ] } }
+					 * ----
+					 */
 					result.put(entry.getKey(), entry.getValue());
 				}
 			} catch (InvalidPersistentPropertyPath invalidPathException) {
@@ -326,8 +340,8 @@ public class QueryMapper {
 		String key = field.getMappedKey();
 		Object value;
 
-		if (rawValue instanceof MongoExpression) {
-			return createMapEntry(key, getMappedObject(((MongoExpression) rawValue).toDocument(), field.getEntity()));
+		if (rawValue instanceof MongoExpression mongoExpression) {
+			return createMapEntry(key, getMappedObject(mongoExpression.toDocument(), field.getEntity()));
 		}
 
 		if (isNestedKeyword(rawValue) && !field.isIdField()) {
@@ -353,7 +367,7 @@ public class QueryMapper {
 			return new Field(key);
 		}
 
-		if (Field.ID_KEY.equals(key)) {
+		if (FieldName.ID.name().equals(key)) {
 			return new MetadataBackedField(key, entity, mappingContext, entity.getIdProperty());
 		}
 
@@ -373,8 +387,7 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List<Object> newConditions = conditions instanceof Collection
-					? new ArrayList<>(((Collection<?>) conditions).size())
+			List<Object> newConditions = conditions instanceof Collection<?> collection ? new ArrayList<>(collection.size())
 					: new ArrayList<>();
 
 			for (Object condition : conditions) {
@@ -412,8 +425,8 @@ public class QueryMapper {
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
 				: getMappedValue(property.with(keyword.getKey()), value);
 
-		if (keyword.isSample() && convertedValue instanceof Document) {
-			return (Document) convertedValue;
+		if (keyword.isSample() && convertedValue instanceof Document document) {
+			return document;
 		}
 
 		return new Document(keyword.key, convertedValue);
@@ -435,9 +448,22 @@ public class QueryMapper {
 
 		if (documentField.getProperty() != null
 				&& converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
-			return converter.getCustomConversions().getPropertyValueConversions()
-					.getValueConverter(documentField.getProperty())
-					.write(value, new MongoConversionContext(documentField.getProperty(), converter));
+
+			MongoConversionContext conversionContext = new MongoConversionContext(new PropertyValueProvider<>() {
+				@Override
+				public <T> T getPropertyValue(MongoPersistentProperty property) {
+					throw new IllegalStateException("No enclosing property available");
+				}
+			}, documentField.getProperty(), converter);
+			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = converter
+					.getCustomConversions().getPropertyValueConversions().getValueConverter(documentField.getProperty());
+
+			/* might be an $in clause with multiple entries */
+			if (!documentField.getProperty().isCollectionLike() && sourceValue instanceof Collection<?> collection) {
+				return collection.stream().map(it -> valueConverter.write(it, conversionContext)).collect(Collectors.toList());
+			}
+
+			return valueConverter.write(value, conversionContext);
 		}
 
 		if (documentField.isIdField() && !documentField.isAssociation()) {
@@ -556,8 +582,17 @@ public class QueryMapper {
 	@SuppressWarnings("unchecked")
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
-		if (source instanceof Example) {
-			return exampleMapper.getMappedExample((Example<?>) source, entity);
+		if (source instanceof Example<?> example) {
+			return exampleMapper.getMappedExample(example, entity);
+		}
+
+		if (source instanceof AggregationExpression age) {
+			return age
+					.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
+		}
+
+		if (source instanceof MongoExpression exr) {
+			return exr.toDocument();
 		}
 
 		if (source instanceof List) {
@@ -588,8 +623,8 @@ public class QueryMapper {
 
 				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
 
-				if (it.getValue() instanceof Document) {
-					map.put(key, getMappedObject((Document) it.getValue(), entity));
+				if (it.getValue()instanceof Document document) {
+					map.put(key, getMappedObject(document, entity));
 				} else {
 					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
 				}
@@ -641,9 +676,8 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (source instanceof DBRef) {
+		if (source instanceof DBRef ref) {
 
-			DBRef ref = (DBRef) source;
 			Object id = convertId(ref.getId(),
 					property != null && property.isIdProperty() ? property.getFieldType() : ObjectId.class);
 
@@ -654,9 +688,9 @@ public class QueryMapper {
 			}
 		}
 
-		if (source instanceof Iterable) {
+		if (source instanceof Iterable<?> iterable) {
 			BasicDBList result = new BasicDBList();
-			for (Object element : (Iterable<?>) source) {
+			for (Object element : iterable) {
 				result.add(createReferenceFor(element, property));
 			}
 			return result;
@@ -720,8 +754,8 @@ public class QueryMapper {
 
 	private Object createReferenceFor(Object source, MongoPersistentProperty property) {
 
-		if (source instanceof DBRef) {
-			return (DBRef) source;
+		if (source instanceof DBRef dbRef) {
+			return dbRef;
 		}
 
 		if (property != null && (property.isDocumentReference()
@@ -823,9 +857,8 @@ public class QueryMapper {
 			return value;
 		}
 
-		if (value instanceof Collection) {
+		if (value instanceof Collection<?> source) {
 
-			Collection<Object> source = (Collection<Object>) value;
 			Collection<Object> converted = new ArrayList<>(source.size());
 
 			for (Object o : source) {
@@ -943,8 +976,6 @@ public class QueryMapper {
 
 		protected static final Pattern POSITIONAL_OPERATOR = Pattern.compile("\\$\\[.*\\]");
 
-		private static final String ID_KEY = "_id";
-
 		protected final String name;
 
 		/**
@@ -974,7 +1005,7 @@ public class QueryMapper {
 		 * @return
 		 */
 		public boolean isIdField() {
-			return ID_KEY.equals(name);
+			return FieldName.ID.name().equals(name);
 		}
 
 		/**
@@ -1019,7 +1050,7 @@ public class QueryMapper {
 		 * @return
 		 */
 		public String getMappedKey() {
-			return isIdField() ? ID_KEY : name;
+			return isIdField() ? FieldName.ID.name() : name;
 		}
 
 		/**
@@ -1064,7 +1095,7 @@ public class QueryMapper {
 	protected static class MetadataBackedField extends Field {
 
 		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?");
-		private static final Pattern DOT_POSITIONAL_PATTERN = Pattern.compile("\\.\\d+(?!$)");
+		private static final Pattern NUMERIC_SEGMENT = Pattern.compile("\\d+");
 		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s; Associations can only be pointed to directly or via their id property";
 
 		private final MongoPersistentEntity<?> entity;
@@ -1188,6 +1219,11 @@ public class QueryMapper {
 
 		@Override
 		public String getMappedKey() {
+
+			if (getProperty() != null && getProperty().getMongoField().getName().isKey()) {
+				return getProperty().getFieldName();
+			}
+
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 
@@ -1206,13 +1242,12 @@ public class QueryMapper {
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
 				@Nullable MongoPersistentProperty sourceProperty) {
 
-			String rawPath = removePlaceholders(POSITIONAL_OPERATOR,
-					removePlaceholders(DOT_POSITIONAL_PATTERN, pathExpression));
-
 			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
 				return mappingContext.getPersistentPropertyPath(
 						PropertyPath.from(Pattern.quote(sourceProperty.getName()), entity.getTypeInformation()));
 			}
+
+			String rawPath = resolvePath(pathExpression);
 
 			PropertyPath path = forName(rawPath);
 			if (path == null || isPathToJavaLangClassProperty(path)) {
@@ -1306,6 +1341,38 @@ public class QueryMapper {
 				return true;
 			}
 			return false;
+		}
+
+		private static String resolvePath(String source) {
+
+			String[] segments = source.split("\\.");
+			if (segments.length == 1) {
+				return source;
+			}
+
+			List<String> path = new ArrayList<>(segments.length);
+
+			/* always start from a property, so we can skip the first segment.
+			   from there remove any position placeholder */
+			for (int i = 1; i < segments.length; i++) {
+				String segment = segments[i];
+				if (segment.startsWith("[") && segment.endsWith("]")) {
+					continue;
+				}
+				if (NUMERIC_SEGMENT.matcher(segment).matches()) {
+					continue;
+				}
+				path.add(segment);
+			}
+
+			// when property is followed only by placeholders eg. 'values.0.3.90'
+			// or when there is no difference in the number of segments
+			if (path.isEmpty() || segments.length == path.size() + 1) {
+				return source;
+			}
+
+			path.add(0, segments[0]);
+			return StringUtils.collectionToDelimitedString(path, ".");
 		}
 
 		/**

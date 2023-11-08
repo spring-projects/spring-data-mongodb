@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.index.IndexOptions.Unique;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -39,10 +40,9 @@ public class Index implements IndexDefinition {
 
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
 	private @Nullable String name;
-	private boolean unique = false;
 	private boolean sparse = false;
 	private boolean background = false;
-	private long expire = -1;
+	private final IndexOptions options = IndexOptions.none();
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
 
@@ -70,7 +70,8 @@ public class Index implements IndexDefinition {
 	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	public Index unique() {
-		this.unique = true;
+
+		this.options.setUnique(Unique.YES);
 		return this;
 	}
 
@@ -95,6 +96,20 @@ public class Index implements IndexDefinition {
 	public Index background() {
 
 		this.background = true;
+		return this;
+	}
+
+	/**
+	 * Hidden indexes are not visible to the query planner and cannot be used to support a query.
+	 *
+	 * @return this.
+	 * @see <a href=
+	 *      "https://www.mongodb.com/docs/manual/core/index-hidden/">https://www.mongodb.com/docs/manual/core/index-hidden/</a>
+	 * @since 4.1
+	 */
+	public Index hidden() {
+
+		options.setHidden(true);
 		return this;
 	}
 
@@ -134,7 +149,7 @@ public class Index implements IndexDefinition {
 	public Index expire(long value, TimeUnit unit) {
 
 		Assert.notNull(unit, "TimeUnit for expiration must not be null");
-		this.expire = unit.toSeconds(value);
+		options.setExpire(Duration.ofSeconds(unit.toSeconds(value)));
 		return this;
 	}
 
@@ -186,18 +201,13 @@ public class Index implements IndexDefinition {
 		if (StringUtils.hasText(name)) {
 			document.put("name", name);
 		}
-		if (unique) {
-			document.put("unique", true);
-		}
 		if (sparse) {
 			document.put("sparse", true);
 		}
 		if (background) {
 			document.put("background", true);
 		}
-		if (expire >= 0) {
-			document.put("expireAfterSeconds", expire);
-		}
+		document.putAll(options.toDocument());
 
 		filter.ifPresent(val -> document.put("partialFilterExpression", val.getFilterObject()));
 		collation.ifPresent(val -> document.append("collation", val.toDocument()));

@@ -19,54 +19,54 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
+import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.Repository;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoRepositoryFactoryUnitTests {
 
-	@Mock MongoTemplate template;
+	@Mock MongoOperations template;
 
-	@Mock MongoConverter converter;
-
-	@Mock @SuppressWarnings("rawtypes") MappingContext mappingContext;
-
-	@Mock @SuppressWarnings("rawtypes") MongoPersistentEntity entity;
+	MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
 
 	@BeforeEach
-	@SuppressWarnings("unchecked")
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);
-		when(converter.getMappingContext()).thenReturn(mappingContext);
-		when(converter.getProjectionFactory()).thenReturn(new SpelAwareProxyProjectionFactory());
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void usesMappingMongoEntityInformationIfMappingContextSet() {
-
-		when(mappingContext.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
@@ -74,17 +74,44 @@ public class MongoRepositoryFactoryUnitTests {
 	}
 
 	@Test // DATAMONGO-385
-	@SuppressWarnings("unchecked")
 	public void createsRepositoryWithIdTypeLong() {
-
-		when(mappingContext.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
 		assertThat(repository).isNotNull();
 	}
 
-	interface MyPersonRepository extends Repository<Person, Long> {
+	@Test // GH-2971
+	void considersCrudMethodMetadata() {
 
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
+		repository.findById(42L);
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(template).findOne(captor.capture(), eq(Person.class), eq("person"));
+
+		Query value = captor.getValue();
+		assertThat(value.getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondary());
+	}
+
+	@Test // GH-2971
+	void ignoresCrudMethodMetadataOnNonAnnotatedMethods() {
+
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
+		repository.findAllById(Set.of(42L));
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(template).find(captor.capture(), eq(Person.class), eq("person"));
+
+		Query value = captor.getValue();
+		assertThat(value.getReadPreference()).isNull();
+	}
+
+	interface MyPersonRepository extends ListCrudRepository<Person, Long> {
+
+		@ReadPreference("secondary")
+		Optional<Person> findById(Long id);
 	}
 }

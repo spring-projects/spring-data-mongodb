@@ -115,7 +115,6 @@ class SetWindowFieldsOperationTests {
 		});
 	}
 
-	@lombok.Data
 	static class CakeSale {
 
 		@Id Integer id;
@@ -129,6 +128,51 @@ class SetWindowFieldsOperationTests {
 		Integer qty;
 
 		String type;
+
+		public Integer getId() {
+			return this.id;
+		}
+
+		public String getState() {
+			return this.state;
+		}
+
+		public Date getDate() {
+			return this.date;
+		}
+
+		public Integer getQty() {
+			return this.qty;
+		}
+
+		public String getType() {
+			return this.type;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public void setState(String state) {
+			this.state = state;
+		}
+
+		public void setDate(Date date) {
+			this.date = date;
+		}
+
+		public void setQty(Integer qty) {
+			this.qty = qty;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		public String toString() {
+			return "SetWindowFieldsOperationTests.CakeSale(id=" + this.getId() + ", state=" + this.getState() + ", date="
+					+ this.getDate() + ", qty=" + this.getQty() + ", type=" + this.getType() + ")";
+		}
 	}
 
 }

@@ -181,14 +181,12 @@ public final class IndexField {
 			return true;
 		}
 
-		if (!(obj instanceof IndexField)) {
+		if (!(obj instanceof IndexField other)) {
 			return false;
 		}
 
-		IndexField that = (IndexField) obj;
-
-		return this.key.equals(that.key) && ObjectUtils.nullSafeEquals(this.direction, that.direction)
-				&& this.type == that.type;
+		return this.key.equals(other.key) && ObjectUtils.nullSafeEquals(this.direction, other.direction)
+				&& this.type == other.type;
 	}
 
 	@Override

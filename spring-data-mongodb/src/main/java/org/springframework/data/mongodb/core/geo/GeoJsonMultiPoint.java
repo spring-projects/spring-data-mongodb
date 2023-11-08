@@ -107,10 +107,10 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 			return true;
 		}
 
-		if (!(obj instanceof GeoJsonMultiPoint)) {
+		if (!(obj instanceof GeoJsonMultiPoint other)) {
 			return false;
 		}
 
-		return ObjectUtils.nullSafeEquals(this.points, ((GeoJsonMultiPoint) obj).points);
+		return ObjectUtils.nullSafeEquals(this.points, other.points);
 	}
 }

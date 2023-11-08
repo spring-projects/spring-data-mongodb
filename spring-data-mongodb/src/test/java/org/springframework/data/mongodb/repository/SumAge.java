@@ -15,13 +15,41 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import lombok.Value;
+import java.util.Objects;
 
 /**
  * @author Christoph Strobl
  */
-@Value
-class SumAge {
+final class SumAge {
 
-	private Long total;
+	private final Long total;
+
+	public SumAge(Long total) {
+		this.total = total;
+	}
+
+	public Long getTotal() {
+		return this.total;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SumAge sumAge = (SumAge) o;
+		return Objects.equals(total, sumAge.total);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(total);
+	}
+
+	public String toString() {
+		return "SumAge(total=" + this.getTotal() + ")";
+	}
 }

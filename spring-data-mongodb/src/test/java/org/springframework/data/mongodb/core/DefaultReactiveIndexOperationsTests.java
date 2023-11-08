@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
@@ -49,7 +50,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 @ExtendWith(MongoTemplateExtension.class)
 public class DefaultReactiveIndexOperationsTests {
 
-	@Template(initialEntitySet = DefaultIndexOperationsIntegrationTestsSample.class)
+	@Template(initialEntitySet = DefaultIndexOperationsIntegrationTestsSample.class) //
 	static ReactiveMongoTestTemplate template;
 
 	String collectionName = template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
@@ -160,6 +161,50 @@ public class DefaultReactiveIndexOperationsTests {
 				.consumeNextWith(indexInfo -> {
 					assertThat(Document.parse(indexInfo.getPartialFilterExpression()))
 							.isEqualTo(Document.parse("{ \"a_g_e\" : { \"$gte\" : 10 } }"));
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // GH-4348
+	void indexShouldNotBeHiddenByDefault() {
+
+		IndexDefinition index = new Index().named("my-index").on("a", Direction.ASC);
+
+		indexOps.ensureIndex(index).then().as(StepVerifier::create).verifyComplete();
+
+		indexOps.getIndexInfo().filter(this.indexByName("my-index")).as(StepVerifier::create) //
+				.consumeNextWith(indexInfo -> {
+					assertThat(indexInfo.isHidden()).isFalse();
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // GH-4348
+	void shouldCreateHiddenIndex() {
+
+		IndexDefinition index = new Index().named("my-hidden-index").on("a", Direction.ASC).hidden();
+
+		indexOps.ensureIndex(index).then().as(StepVerifier::create).verifyComplete();
+
+		indexOps.getIndexInfo().filter(this.indexByName("my-hidden-index")).as(StepVerifier::create) //
+				.consumeNextWith(indexInfo -> {
+					assertThat(indexInfo.isHidden()).isTrue();
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // GH-4348
+	void alterIndexShouldAllowHiding() {
+
+		template.execute(collectionName, collection -> {
+			return collection.createIndex(new Document("a", 1), new IndexOptions().name("my-index"));
+		}).then().as(StepVerifier::create).verifyComplete();
+
+		indexOps.alterIndex("my-index", org.springframework.data.mongodb.core.index.IndexOptions.hidden())
+				.as(StepVerifier::create).verifyComplete();
+		indexOps.getIndexInfo().filter(this.indexByName("my-index")).as(StepVerifier::create) //
+				.consumeNextWith(indexInfo -> {
+					assertThat(indexInfo.isHidden()).isTrue();
 				}) //
 				.verifyComplete();
 	}

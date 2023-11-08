@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -46,12 +48,14 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.ShardKey;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
@@ -188,6 +192,15 @@ class QueryOperations {
 	 */
 	UpdateContext replaceSingleContext(MappedDocument replacement, boolean upsert) {
 		return new UpdateContext(replacement, upsert);
+	}
+
+	/**
+	 * @param replacement the {@link MappedDocument mapped replacement} document.
+	 * @param upsert use {@literal true} to insert diff when no existing document found.
+	 * @return new instance of {@link UpdateContext}.
+	 */
+	UpdateContext replaceSingleContext(Query query, MappedDocument replacement, boolean upsert) {
+		return new UpdateContext(query, replacement, upsert);
 	}
 
 	/**
@@ -387,12 +400,12 @@ class QueryOperations {
 
 			for (Entry<String, Object> entry : fields.entrySet()) {
 
-				if (entry.getValue() instanceof MongoExpression) {
+				if (entry.getValue()instanceof MongoExpression mongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
 
-					evaluated.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
+					evaluated.put(entry.getKey(), AggregationExpression.from(mongoExpression).toDocument(ctx));
 				} else {
 					evaluated.put(entry.getKey(), entry.getValue());
 				}
@@ -436,6 +449,25 @@ class QueryOperations {
 			return entityOperations.forType(domainType).getCollation(query) //
 					.map(Collation::toMongoCollation);
 		}
+
+		/**
+		 * Get the {@link HintFunction} reading the actual hint form the {@link Query}.
+		 *
+		 * @return new instance of {@link HintFunction}.
+		 * @since 4.2
+		 */
+		HintFunction getHintFunction() {
+			return HintFunction.from(query.getHint());
+		}
+
+		/**
+		 * Read and apply the hint from the {@link Query}.
+		 *
+		 * @since 4.2
+		 */
+		<R> void applyHint(Function<String, R> stringConsumer, Function<Bson, R> bsonConsumer) {
+			getHintFunction().ifPresent(codecRegistryProvider, stringConsumer, bsonConsumer);
+		}
 	}
 
 	/**
@@ -455,7 +487,7 @@ class QueryOperations {
 		 */
 		private DistinctQueryContext(@Nullable Object query, String fieldName) {
 
-			super(query instanceof Document ? new BasicQuery((Document) query) : (Query) query);
+			super(query instanceof Document document ? new BasicQuery(document) : (Query) query);
 			this.fieldName = fieldName;
 		}
 
@@ -563,8 +595,21 @@ class QueryOperations {
 			if (query.getLimit() > 0) {
 				options.limit(query.getLimit());
 			}
+
 			if (query.getSkip() > 0) {
 				options.skip((int) query.getSkip());
+			}
+
+			Meta meta = query.getMeta();
+			if (meta.hasValues()) {
+
+				if (meta.hasMaxTime()) {
+					options.maxTime(meta.getRequiredMaxTimeMsec(), TimeUnit.MILLISECONDS);
+				}
+
+				if (meta.hasComment()) {
+					options.comment(meta.getComment());
+				}
 			}
 
 			HintFunction hintFunction = HintFunction.from(query.getHint());
@@ -680,8 +725,12 @@ class QueryOperations {
 		}
 
 		UpdateContext(MappedDocument update, boolean upsert) {
+			this(new BasicQuery(BsonUtils.asDocument(update.getIdFilter())), update, upsert);
+		}
 
-			super(new BasicQuery(BsonUtils.asDocument(update.getIdFilter())));
+		UpdateContext(Query query, MappedDocument update, boolean upsert) {
+
+			super(query);
 			this.multi = false;
 			this.upsert = upsert;
 			this.mappedDocument = update;
@@ -715,6 +764,7 @@ class QueryOperations {
 						.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
 			}
 
+			HintFunction.from(getQuery().getHint()).ifPresent(codecRegistryProvider, options::hintString, options::hint);
 			applyCollation(domainType, options::collation);
 
 			if (callback != null) {
@@ -748,6 +798,7 @@ class QueryOperations {
 			ReplaceOptions options = new ReplaceOptions();
 			options.collation(updateOptions.getCollation());
 			options.upsert(updateOptions.isUpsert());
+			applyHint(options::hintString, options::hint);
 
 			if (callback != null) {
 				callback.accept(options);
@@ -761,7 +812,7 @@ class QueryOperations {
 
 			Document mappedQuery = super.getMappedQuery(domainType);
 
-			if (multi && update.isIsolated() && !mappedQuery.containsKey("$isolated")) {
+			if (multi && update != null && update.isIsolated() && !mappedQuery.containsKey("$isolated")) {
 				mappedQuery.put("$isolated", 1);
 			}
 
@@ -775,7 +826,7 @@ class QueryOperations {
 
 			Document filterWithShardKey = new Document(filter);
 			getMappedShardKeyFields(domainType)
-					.forEach(key -> filterWithShardKey.putIfAbsent(key, BsonUtils.resolveValue(shardKeySource, key)));
+					.forEach(key -> filterWithShardKey.putIfAbsent(key, BsonUtils.resolveValue((Bson) shardKeySource, key)));
 
 			return filterWithShardKey;
 		}
@@ -799,7 +850,7 @@ class QueryOperations {
 			}
 
 			String key = shardKey.getPropertyNames().iterator().next();
-			if ("_id".equals(key)) {
+			if (FieldName.ID.name().equals(key)) {
 				return true;
 			}
 
@@ -857,7 +908,7 @@ class QueryOperations {
 			if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
 
 				String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
-				if (!update.modifies(versionFieldName)) {
+				if (update != null && !update.modifies(versionFieldName)) {
 					update.inc(versionFieldName);
 				}
 			}
@@ -905,10 +956,10 @@ class QueryOperations {
 
 			this.aggregation = aggregation;
 
-			if (aggregation instanceof TypedAggregation) {
-				this.inputType = ((TypedAggregation<?>) aggregation).getInputType();
-			} else if (aggregationOperationContext instanceof TypeBasedAggregationOperationContext) {
-				this.inputType = ((TypeBasedAggregationOperationContext) aggregationOperationContext).getType();
+			if (aggregation instanceof TypedAggregation typedAggregation) {
+				this.inputType = typedAggregation.getInputType();
+			} else if (aggregationOperationContext instanceof TypeBasedAggregationOperationContext typeBasedAggregationOperationContext) {
+				this.inputType = typeBasedAggregationOperationContext.getType();
 			} else {
 				this.inputType = null;
 			}
@@ -933,8 +984,8 @@ class QueryOperations {
 
 			this.aggregation = aggregation;
 
-			if (aggregation instanceof TypedAggregation) {
-				this.inputType = ((TypedAggregation<?>) aggregation).getInputType();
+			if (aggregation instanceof TypedAggregation typedAggregation) {
+				this.inputType = typedAggregation.getInputType();
 			} else {
 				this.inputType = inputType;
 			}

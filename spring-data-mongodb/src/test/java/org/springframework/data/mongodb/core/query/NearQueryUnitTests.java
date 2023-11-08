@@ -29,6 +29,10 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 
 /**
  * Unit tests for {@link NearQuery}.
@@ -228,5 +232,59 @@ public class NearQueryUnitTests {
 		query.maxDistance(new Distance(1, Metrics.KILOMETERS)).in(Metrics.MILES);
 
 		assertThat(query.toDocument()).containsEntry("maxDistance", 1000D).containsEntry("distanceMultiplier", 0.00062137D);
+	}
+
+	@Test // GH-4277
+	void fetchesReadPreferenceFromUnderlyingQueryObject() {
+
+		NearQuery nearQuery = NearQuery.near(new Point(0, 0))
+				.query(new Query().withReadPreference(ReadPreference.nearest()));
+
+		assertThat(nearQuery.getReadPreference()).isEqualTo(ReadPreference.nearest());
+	}
+
+	@Test // GH-4277
+	void fetchesReadConcernFromUnderlyingQueryObject() {
+
+		NearQuery nearQuery = NearQuery.near(new Point(0, 0)).query(new Query().withReadConcern(ReadConcern.SNAPSHOT));
+
+		assertThat(nearQuery.getReadConcern()).isEqualTo(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4277
+	void usesReadPreferenceFromNearQueryIfUnderlyingQueryDoesNotDefineAny() {
+
+		NearQuery nearQuery = NearQuery.near(new Point(0, 0)).withReadPreference(ReadPreference.nearest())
+				.query(new Query());
+
+		assertThat(((Query) ReflectionTestUtils.getField(nearQuery, "query")).getReadPreference()).isNull();
+		assertThat(nearQuery.getReadPreference()).isEqualTo(ReadPreference.nearest());
+	}
+
+	@Test // GH-4277
+	void usesReadConcernFromNearQueryIfUnderlyingQueryDoesNotDefineAny() {
+
+		NearQuery nearQuery = NearQuery.near(new Point(0, 0)).withReadConcern(ReadConcern.SNAPSHOT).query(new Query());
+
+		assertThat(((Query) ReflectionTestUtils.getField(nearQuery, "query")).getReadConcern()).isNull();
+		assertThat(nearQuery.getReadConcern()).isEqualTo(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4277
+	void readPreferenceFromUnderlyingQueryOverridesNearQueryOne() {
+
+		NearQuery nearQuery = NearQuery.near(new Point(0, 0)).withReadPreference(ReadPreference.nearest())
+				.query(new Query().withReadPreference(ReadPreference.primary()));
+
+		assertThat(nearQuery.getReadPreference()).isEqualTo(ReadPreference.primary());
+	}
+
+	@Test // GH-4277
+	void readConcernFromUnderlyingQueryOverridesNearQueryOne() {
+
+		NearQuery nearQuery = NearQuery.near(new Point(0, 0)).withReadConcern(ReadConcern.SNAPSHOT)
+				.query(new Query().withReadConcern(ReadConcern.MAJORITY));
+
+		assertThat(nearQuery.getReadConcern()).isEqualTo(ReadConcern.MAJORITY);
 	}
 }

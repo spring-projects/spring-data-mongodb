@@ -28,9 +28,11 @@ import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddF
 import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation.LookupOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.MergeOperation.MergeOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -50,6 +52,7 @@ import org.springframework.util.Assert;
  * @author Nikolay Bogdanov
  * @author Gustavo de Geus
  * @author Jérôme Guyon
+ * @author Sangyong Choi
  * @since 1.3
  */
 public class Aggregation {
@@ -222,7 +225,7 @@ public class Aggregation {
 	 * @return
 	 */
 	public static String previousOperation() {
-		return "_id";
+		return FieldName.ID.name();
 	}
 
 	/**
@@ -662,6 +665,23 @@ public class Aggregation {
 	 */
 	public static LookupOperation lookup(Field from, Field localField, Field foreignField, Field as) {
 		return new LookupOperation(from, localField, foreignField, as);
+	}
+
+	/**
+	 * Entrypoint for creating {@link LookupOperation $lookup} using a fluent builder API.
+	 * <pre class="code">
+	 * Aggregation.lookup().from("restaurants")
+	 * 	.localField("restaurant_name")
+	 * 	.foreignField("name")
+	 * 	.let(newVariable("orders_drink").forField("drink"))
+	 * 	.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
+	 * 	.as("matches")
+	 * </pre>
+	 * @return new instance of {@link LookupOperationBuilder}.
+	 * @since 4.1
+	 */
+	public static LookupOperationBuilder lookup() {
+		return new LookupOperationBuilder();
 	}
 
 	/**

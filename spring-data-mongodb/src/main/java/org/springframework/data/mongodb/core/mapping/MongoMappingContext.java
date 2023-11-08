@@ -97,11 +97,11 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 	/**
 	 * Returns whether auto-index creation is enabled or disabled. <br />
-	 * <strong>NOTE:</strong>Index creation should happen at a well-defined time that is ideally controlled by the
+	 * <strong>NOTE:</strong> Index creation should happen at a well-defined time that is ideally controlled by the
 	 * application itself.
 	 *
 	 * @return {@literal true} when auto-index creation is enabled; {@literal false} otherwise. <br />
-	 *         <strong>INFO</strong>: As of 3.x the default will is set to {@literal false} was {@literal true} in 2.x.
+	 *         <strong>INFO:</strong> As of 3.x the default will is set to {@literal false} was {@literal true} in 2.x.
 	 * @since 2.2
 	 * @see org.springframework.data.mongodb.core.index.Indexed
 	 */

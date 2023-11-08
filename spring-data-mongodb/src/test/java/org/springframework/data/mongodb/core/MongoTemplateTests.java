@@ -20,14 +20,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.With;
-
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -46,7 +38,6 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -68,12 +59,22 @@ import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.ObjectOperators;
+import org.springframework.data.mongodb.core.aggregation.ReplaceWithOperation;
+import org.springframework.data.mongodb.core.aggregation.StringOperators;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
@@ -84,8 +85,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.DirtiesContext;
@@ -122,6 +125,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author duozhilin
+ * @author Jakub Zurawa
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
@@ -1789,6 +1793,30 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).date).isNotNull();
 	}
 
+	@Test // GH-4390
+	void nativeDriverDateTimeCodecShouldBeApplied/*when configured*/() {
+
+		MongoTestTemplate ops = new MongoTestTemplate(cfg -> {
+			cfg.configureConversion(conversion -> {
+				conversion.customConversions(
+						MongoCustomConversions.create(MongoConverterConfigurationAdapter::useNativeDriverJavaTimeCodecs));
+			});
+		});
+
+		TypeWithDate source = new TypeWithDate();
+		source.id = "id-1";
+		source.date = Date.from(Instant.now());
+
+		ops.save(source);
+
+		var dbDate = ops.execute(TypeWithDate.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first().get("date"));
+
+		TypeWithDate target = ops.findOne(query(where("date").is(source.date)), TypeWithDate.class);
+
+		assertThat(target.date).isEqualTo(source.date).isEqualTo(dbDate);
+	}
+
 	@Test // DATAMONGO-540
 	public void findOneAfterUpsertForNonExistingObjectReturnsTheInsertedObject() {
 
@@ -2524,6 +2552,26 @@ public class MongoTemplateTests {
 				new MyPerson("Heisenberg"), FindAndReplaceOptions.empty(), MyPerson.class, MyPersonProjection.class);
 
 		assertThat(projection.getName()).isEqualTo("Walter");
+	}
+
+	@Test // GH-4300
+	public void findAndReplaceShouldAllowNativeDomainTypesAndReturnAProjection() {
+
+		MyPerson person = new MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person);
+
+		MyPerson previous = template.findAndReplace(query(where("name").is("Walter")),
+				new org.bson.Document("name", "Heisenberg"), FindAndReplaceOptions.options(), org.bson.Document.class,
+				"myPerson", MyPerson.class);
+
+		assertThat(previous).isNotNull();
+		assertThat(previous.getAddress()).isEqualTo(person.address);
+
+		org.bson.Document loaded = template.execute(MyPerson.class, collection -> {
+			return collection.find(new org.bson.Document("name", "Heisenberg")).first();
+		});
+		assertThat(loaded.get("_id")).isEqualTo(new ObjectId(person.id));
 	}
 
 	@Test // DATAMONGO-407
@@ -3647,8 +3695,7 @@ public class MongoTemplateTests {
 		template.insert(source);
 
 		org.bson.Document result = template
-				.execute(db -> db.getCollection(template.getCollectionName(RawStringId.class))
-						.find().limit(1).cursor().next());
+				.execute(db -> db.getCollection(template.getCollectionName(RawStringId.class)).find().limit(1).cursor().next());
 
 		assertThat(result).isNotNull();
 		assertThat(result.get("_id")).isEqualTo("abc");
@@ -3817,6 +3864,157 @@ public class MongoTemplateTests {
 		assertThat(target.values).containsExactly("spring");
 	}
 
+	@Test // GH-2750
+	void shouldExecuteQueryWithExpression() {
+
+		TypeWithFieldAnnotation source1 = new TypeWithFieldAnnotation();
+		source1.emailAddress = "spring.data@pivotal.com";
+
+		TypeWithFieldAnnotation source2 = new TypeWithFieldAnnotation();
+		source2.emailAddress = "spring.data@vmware.com";
+
+		template.insertAll(List.of(source1, source2));
+
+		TypeWithFieldAnnotation loaded = template.query(TypeWithFieldAnnotation.class)
+				.matching(expr(StringOperators.valueOf("emailAddress").regexFind(".*@vmware.com$", "i"))).firstValue();
+
+		assertThat(loaded).isEqualTo(source2);
+	}
+
+	@Test // GH-4300
+	public void replaceShouldReplaceDocument() {
+
+		org.bson.Document doc = new org.bson.Document("foo", "bar");
+		String collectionName = "replace";
+		template.save(doc, collectionName);
+
+		org.bson.Document replacement = new org.bson.Document("foo", "baz");
+		UpdateResult updateResult = template.replace(query(where("foo").is("bar")), replacement,
+				ReplaceOptions.replaceOptions(), collectionName);
+
+		assertThat(updateResult.wasAcknowledged()).isTrue();
+		assertThat(template.findOne(query(where("foo").is("baz")), org.bson.Document.class, collectionName)).isNotNull();
+	}
+
+	@Test // GH-4464
+	void saveEntityWithDotInFieldName() {
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.value = "v1";
+
+		template.save(source);
+
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		assertThat(raw).containsEntry("field.name.with.dots", "v1");
+	}
+
+	@Test // GH-4464
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
+	void queryEntityWithDotInFieldNameUsingExpr() {
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.value = "v1";
+
+		WithFieldNameContainingDots source2 = new WithFieldNameContainingDots();
+		source2.id = "id-2";
+		source2.value = "v2";
+
+		template.save(source);
+		template.save(source2);
+
+		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class) // with property -> fieldname mapping
+				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("value")).equalToValue("v1"))).firstValue();
+
+		assertThat(loaded).isEqualTo(source);
+
+		loaded = template.query(WithFieldNameContainingDots.class) // using raw fieldname
+				.matching(expr(ComparisonOperators.valueOf(ObjectOperators.getValueOf("field.name.with.dots")).equalToValue("v1"))).firstValue();
+
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4464
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
+	void updateEntityWithDotInFieldNameUsingAggregations() {
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.value = "v1";
+
+		template.save(source);
+
+		template.update(WithFieldNameContainingDots.class)
+				.matching(where("id").is(source.id))
+				.apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("value", "changed"))))
+				.first();
+
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		assertThat(raw).containsEntry("field.name.with.dots", "changed");
+
+		template.update(WithFieldNameContainingDots.class)
+				.matching(where("id").is(source.id))
+				.apply(AggregationUpdate.newUpdate(ReplaceWithOperation.replaceWithValue(ObjectOperators.setValueTo("field.name.with.dots", "changed-again"))))
+				.first();
+
+		raw = template.execute(WithFieldNameContainingDots.class, collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+		assertThat(raw).containsEntry("field.name.with.dots", "changed-again");
+	}
+
+	@Test // GH-4464
+	void savesMapWithDotInKey() {
+
+		MongoTestUtils.flushCollection(DB_NAME, template.getCollectionName(WithFieldNameContainingDots.class), client);
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
+				template.getConverter().getMappingContext());
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), converter);
+
+		WithFieldNameContainingDots source = new WithFieldNameContainingDots();
+		source.id = "id-1";
+		source.mapValue = Map.of("k1", "v1", "map.key.with.dot", "v2");
+
+		template.save(source);
+
+		org.bson.Document raw = template.execute(WithFieldNameContainingDots.class,
+				collection -> collection.find(new org.bson.Document("_id", source.id)).first());
+
+		assertThat(raw.get("mapValue", org.bson.Document.class))
+				.containsEntry("k1", "v1")
+				.containsEntry("map.key.with.dot", "v2");
+	}
+
+	@Test // GH-4464
+	void readsMapWithDotInKey() {
+
+		MongoTestUtils.flushCollection(DB_NAME, template.getCollectionName(WithFieldNameContainingDots.class), client);
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE,
+				template.getConverter().getMappingContext());
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), converter);
+
+		Map<String, String> sourceMap = Map.of("k1", "v1", "sourceMap.key.with.dot", "v2");
+		template.execute(WithFieldNameContainingDots.class,
+				collection -> {
+					collection.insertOne(new org.bson.Document("_id", "id-1").append("mapValue", sourceMap));
+					return null;
+				}
+			);
+
+		WithFieldNameContainingDots loaded = template.query(WithFieldNameContainingDots.class)
+				.matching(where("id").is("id-1"))
+				.firstValue();
+
+		assertThat(loaded.mapValue).isEqualTo(sourceMap);
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -3890,7 +4088,6 @@ public class MongoTemplateTests {
 
 	}
 
-	@Data
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
@@ -3908,10 +4105,74 @@ public class MongoTemplateTests {
 
 		@Field("lazy_db_ref_map") // DATAMONGO-1194
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<Sample> getDbRefAnnotatedList() {
+			return this.dbRefAnnotatedList;
+		}
+
+		public Sample getDbRefProperty() {
+			return this.dbRefProperty;
+		}
+
+		public List<Sample> getLazyDbRefAnnotatedList() {
+			return this.lazyDbRefAnnotatedList;
+		}
+
+		public Map<String, Sample> getLazyDbRefAnnotatedMap() {
+			return this.lazyDbRefAnnotatedMap;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setDbRefAnnotatedList(List<Sample> dbRefAnnotatedList) {
+			this.dbRefAnnotatedList = dbRefAnnotatedList;
+		}
+
+		public void setDbRefProperty(Sample dbRefProperty) {
+			this.dbRefProperty = dbRefProperty;
+		}
+
+		public void setLazyDbRefAnnotatedList(List<Sample> lazyDbRefAnnotatedList) {
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+		}
+
+		public void setLazyDbRefAnnotatedMap(Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			DocumentWithDBRefCollection that = (DocumentWithDBRefCollection) o;
+			return Objects.equals(id, that.id) && Objects.equals(dbRefAnnotatedList, that.dbRefAnnotatedList)
+					&& Objects.equals(dbRefProperty, that.dbRefProperty)
+					&& Objects.equals(lazyDbRefAnnotatedList, that.lazyDbRefAnnotatedList)
+					&& Objects.equals(lazyDbRefAnnotatedMap, that.lazyDbRefAnnotatedMap);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, dbRefAnnotatedList, dbRefProperty, lazyDbRefAnnotatedList, lazyDbRefAnnotatedMap);
+		}
+
+		public String toString() {
+			return "MongoTemplateTests.DocumentWithDBRefCollection(id=" + this.getId() + ", dbRefAnnotatedList="
+					+ this.getDbRefAnnotatedList() + ", dbRefProperty=" + this.getDbRefProperty() + ", lazyDbRefAnnotatedList="
+					+ this.getLazyDbRefAnnotatedList() + ", lazyDbRefAnnotatedMap=" + this.getLazyDbRefAnnotatedMap() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class DocumentWithLazyDBRefsAndConstructorCreation {
 
 		@Id public String id;
@@ -3919,14 +4180,60 @@ public class MongoTemplateTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
 		public Sample lazyDbRefProperty;
 
-		@Field("lazy_db_ref_list") @org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
+		@Field("lazy_db_ref_list")
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) //
 		public List<Sample> lazyDbRefAnnotatedList;
 
-		@Field("lazy_db_ref_map") @org.springframework.data.mongodb.core.mapping.DBRef(
-				lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+		@Field("lazy_db_ref_map")
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) public Map<String, Sample> lazyDbRefAnnotatedMap;
+
+		public DocumentWithLazyDBRefsAndConstructorCreation(String id, Sample lazyDbRefProperty,
+				List<Sample> lazyDbRefAnnotatedList, Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.id = id;
+			this.lazyDbRefProperty = lazyDbRefProperty;
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Sample getLazyDbRefProperty() {
+			return this.lazyDbRefProperty;
+		}
+
+		public List<Sample> getLazyDbRefAnnotatedList() {
+			return this.lazyDbRefAnnotatedList;
+		}
+
+		public Map<String, Sample> getLazyDbRefAnnotatedMap() {
+			return this.lazyDbRefAnnotatedMap;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setLazyDbRefProperty(Sample lazyDbRefProperty) {
+			this.lazyDbRefProperty = lazyDbRefProperty;
+		}
+
+		public void setLazyDbRefAnnotatedList(List<Sample> lazyDbRefAnnotatedList) {
+			this.lazyDbRefAnnotatedList = lazyDbRefAnnotatedList;
+		}
+
+		public void setLazyDbRefAnnotatedMap(Map<String, Sample> lazyDbRefAnnotatedMap) {
+			this.lazyDbRefAnnotatedMap = lazyDbRefAnnotatedMap;
+		}
+
+		public String toString() {
+			return "MongoTemplateTests.DocumentWithLazyDBRefsAndConstructorCreation(id=" + this.getId()
+					+ ", lazyDbRefProperty=" + this.getLazyDbRefProperty() + ", lazyDbRefAnnotatedList="
+					+ this.getLazyDbRefAnnotatedList() + ", lazyDbRefAnnotatedMap=" + this.getLazyDbRefAnnotatedMap() + ")";
+		}
 	}
 
-	@EqualsAndHashCode
 	static class DocumentWithCollection {
 
 		@Id String id;
@@ -3934,6 +4241,23 @@ public class MongoTemplateTests {
 
 		DocumentWithCollection(List<Model> models) {
 			this.models = models;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			DocumentWithCollection that = (DocumentWithCollection) o;
+			return Objects.equals(id, that.id) && Objects.equals(models, that.models);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, models);
 		}
 	}
 
@@ -3948,11 +4272,27 @@ public class MongoTemplateTests {
 		List<Sample> samples;
 	}
 
-	@EqualsAndHashCode
 	static class DocumentWithNestedTypeHavingStringIdProperty {
 
 		@Id String id;
 		Sample sample;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			DocumentWithNestedTypeHavingStringIdProperty that = (DocumentWithNestedTypeHavingStringIdProperty) o;
+			return Objects.equals(id, that.id) && Objects.equals(sample, that.sample);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, sample);
+		}
 	}
 
 	static class DocumentWithMultipleCollections {
@@ -3986,7 +4326,6 @@ public class MongoTemplateTests {
 		String id();
 	}
 
-	@EqualsAndHashCode
 	static class ModelA implements Model {
 
 		@Id String id;
@@ -4004,6 +4343,23 @@ public class MongoTemplateTests {
 		@Override
 		public String id() {
 			return id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ModelA modelA = (ModelA) o;
+			return Objects.equals(id, modelA.id) && Objects.equals(value, modelA.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
 		}
 	}
 
@@ -4024,8 +4380,6 @@ public class MongoTemplateTests {
 		@Id MyId id;
 	}
 
-	@EqualsAndHashCode
-	@NoArgsConstructor
 	static class Sample {
 
 		@Id String id;
@@ -4034,6 +4388,25 @@ public class MongoTemplateTests {
 		public Sample(String id, String field) {
 			this.id = id;
 			this.field = field;
+		}
+
+		public Sample() {}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sample sample = (Sample) o;
+			return Objects.equals(id, sample.id) && Objects.equals(field, sample.field);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, field);
 		}
 	}
 
@@ -4071,17 +4444,62 @@ public class MongoTemplateTests {
 		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	public static class MyPerson {
 
 		String id;
 		String name;
 		Address address;
 
+		public MyPerson() {}
+
 		public MyPerson(String name) {
 			this.name = name;
+		}
+
+		public MyPerson(String id, String name, Address address) {
+			this.id = id;
+			this.name = name;
+			this.address = address;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Address getAddress() {
+			return address;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+			MyPerson myPerson = (MyPerson) o;
+			return Objects.equals(id, myPerson.id) && Objects.equals(name, myPerson.name)
+					&& Objects.equals(address, myPerson.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, address);
 		}
 	}
 
@@ -4142,6 +4560,23 @@ public class MongoTemplateTests {
 
 		@Id ObjectId id;
 		@Field("email") String emailAddress;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			TypeWithFieldAnnotation that = (TypeWithFieldAnnotation) o;
+			return Objects.equals(id, that.id) && Objects.equals(emailAddress, that.emailAddress);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, emailAddress);
+		}
 	}
 
 	static class TypeWithDate {
@@ -4182,7 +4617,6 @@ public class MongoTemplateTests {
 		}
 	}
 
-	@EqualsAndHashCode
 	public static class SomeContent {
 
 		String id;
@@ -4196,7 +4630,6 @@ public class MongoTemplateTests {
 
 		public void setText(String text) {
 			this.text = text;
-
 		}
 
 		public String getId() {
@@ -4205,6 +4638,24 @@ public class MongoTemplateTests {
 
 		public String getText() {
 			return text;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SomeContent that = (SomeContent) o;
+			return Objects.equals(id, that.id) && Objects.equals(text, that.text) && Objects.equals(name, that.name)
+					&& Objects.equals(dbrefMessage, that.dbrefMessage);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, text, name, dbrefMessage);
 		}
 	}
 
@@ -4236,11 +4687,28 @@ public class MongoTemplateTests {
 		GeoJsonPoint point;
 	}
 
-	@Data
 	static class WithObjectTypeProperty {
 
 		@Id String id;
 		Object value;
+
+		public WithObjectTypeProperty() {}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
 	}
 
 	static class PersonWithIdPropertyOfTypeUUIDListener
@@ -4313,32 +4781,112 @@ public class MongoTemplateTests {
 	}
 
 	// DATAMONGO-1992
-
-	@AllArgsConstructor
-	@With
 	static class ImmutableVersioned {
 
 		final @Id String id;
 		final @Version Long version;
 
 		public ImmutableVersioned() {
-			id = null;
-			version = null;
+			this(null, null);
+		}
+
+		public ImmutableVersioned(String id, Long version) {
+			this.id = id;
+			this.version = version;
+		}
+
+		ImmutableVersioned withVersion(Long version) {
+			return new ImmutableVersioned(id, version);
+		}
+
+		ImmutableVersioned withId(String id) {
+			return new ImmutableVersioned(id, version);
 		}
 	}
 
-	@Value
-	@With
 	static class ImmutableAudited {
-		@Id String id;
-		@LastModifiedDate Instant modified;
+
+		final @Id String id;
+		final @LastModifiedDate Instant modified;
+
+		ImmutableAudited(String id, Instant modified) {
+			this.id = id;
+			this.modified = modified;
+		}
+
+		ImmutableAudited withId(String id) {
+			return new ImmutableAudited(id, modified);
+		}
+
+		ImmutableAudited withModified(Instant modified) {
+			return new ImmutableAudited(id, modified);
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public Instant getModified() {
+			return modified;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ImmutableAudited that = (ImmutableAudited) o;
+			return Objects.equals(id, that.id) && Objects.equals(modified, that.modified);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, modified);
+		}
 	}
 
-	@Data
 	static class RawStringId {
 
 		@MongoId String id;
 		String value;
+
+		public RawStringId() {}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			RawStringId that = (RawStringId) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
 	}
 
 	static class Outer {
@@ -4353,7 +4901,6 @@ public class MongoTemplateTests {
 		String value;
 	}
 
-	@Data
 	static class WithIdAndFieldAnnotation {
 
 		@Id //
@@ -4361,23 +4908,105 @@ public class MongoTemplateTests {
 		String id;
 		String value;
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
 	}
 
-	@Data
 	static class WithSubdocument {
 
 		@Id //
 		@Field(name = "_id") //
 		String id;
 		SubdocumentWithWriteNull subdocument;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public SubdocumentWithWriteNull getSubdocument() {
+			return subdocument;
+		}
+
+		public void setSubdocument(SubdocumentWithWriteNull subdocument) {
+			this.subdocument = subdocument;
+		}
 	}
 
-	@Data
-	@RequiredArgsConstructor
 	static class SubdocumentWithWriteNull {
 
 		final String firstname, lastname;
 
 		@Field(write = Field.Write.ALWAYS) String nickname;
+
+		public SubdocumentWithWriteNull(String firstname, String lastname) {
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
+
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public String getLastname() {
+			return lastname;
+		}
+
+		public String getNickname() {
+			return nickname;
+		}
+
+		public void setNickname(String nickname) {
+			this.nickname = nickname;
+		}
+	}
+
+	static class WithFieldNameContainingDots {
+
+		String id;
+
+		@Field(value = "field.name.with.dots", nameType = Type.KEY)
+		String value;
+
+		Map<String, String> mapValue;
+
+		@Override
+		public String toString() {
+			return "WithMap{" + "id='" + id + '\'' + ", value='" + value + '\'' + ", mapValue=" + mapValue + '}';
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithFieldNameContainingDots withFieldNameContainingDots = (WithFieldNameContainingDots) o;
+			return Objects.equals(id, withFieldNameContainingDots.id) && Objects.equals(value, withFieldNameContainingDots.value)
+					&& Objects.equals(mapValue, withFieldNameContainingDots.mapValue);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, mapValue);
+		}
 	}
 }

@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Data;
-
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +27,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 
@@ -144,10 +141,31 @@ public class ExecutableInsertOperationSupportUnitTests {
 		verify(bulkOperations).execute();
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
+
 		@Id String id;
 		String firstname;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public String toString() {
+			return "ExecutableInsertOperationSupportUnitTests.Person(id=" + this.getId() + ", firstname="
+					+ this.getFirstname() + ")";
+		}
 	}
 }

@@ -15,45 +15,62 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.1.0-SNAPSHOT</version>
+		<version>4.2.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<properties>
 		<project.root>${basedir}/..</project.root>
-		<dist.key>SDMONGO</dist.key>
+		<antora.playbook>${project.basedir}/../src/main/antora/antora-playbook.yml</antora.playbook>
 	</properties>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}/../src/main/antora/resources/antora-resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.4.0</version>
+				<executions>
+					<execution>
+						<id>timestamp-property</id>
+						<goals>
+							<goal>timestamp-property</goal>
+						</goals>
+						<phase>validate</phase>
+						<configuration>
+							<name>current.year</name>
+							<pattern>yyyy</pattern>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>resources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 			</plugin>
 			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<configuration>
-					<attributes>
-						<mongo-reactivestreams>${mongo.reactivestreams}
-						</mongo-reactivestreams>
-						<reactor>${reactor}</reactor>
-					</attributes>
-				</configuration>
+				<groupId>io.spring.maven.antora</groupId>
+				<artifactId>antora-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 
 	</build>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-plugins-release</id>
-			<url>https://repo.spring.io/plugins-release</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>spring-plugins-snapshot</id>
-			<url>https://repo.spring.io/libs-snapshot</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>

@@ -22,6 +22,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -39,6 +41,8 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.Lock;
+import org.springframework.data.util.Lock.AcquiredLock;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.SpringObjenesis;
 import org.springframework.util.ReflectionUtils;
@@ -47,7 +51,7 @@ import com.mongodb.DBRef;
 
 /**
  * {@link ProxyFactory} to create a proxy for {@link MongoPersistentProperty#getType()} to resolve a reference lazily.
- * <strong>NOTE</strong> This class is intended for internal usage only.
+ * <strong>NOTE:</strong> This class is intended for internal usage only.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -72,7 +76,7 @@ public final class LazyLoadingProxyFactory {
 	/**
 	 * Predict the proxy target type. This will advice the infrastructure to resolve as many pieces as possible in a
 	 * potential AOT scenario without necessarily resolving the entire object.
-	 * 
+	 *
 	 * @param propertyType the type to proxy
 	 * @param interceptor the interceptor to be added.
 	 * @return the proxy type.
@@ -90,16 +94,30 @@ public final class LazyLoadingProxyFactory {
 				.getProxyClass(LazyLoadingProxy.class.getClassLoader());
 	}
 
-	private ProxyFactory prepareProxyFactory(Class<?> propertyType, Supplier<LazyLoadingInterceptor> interceptor) {
+	/**
+	 * Create the {@link ProxyFactory} for the given type, already adding required additional interfaces.
+	 *
+	 * @param targetType the type to proxy.
+	 * @return the prepared {@link ProxyFactory}.
+	 * @since 4.0.5
+	 */
+	public static ProxyFactory prepareFactory(Class<?> targetType) {
 
 		ProxyFactory proxyFactory = new ProxyFactory();
 
-		for (Class<?> type : propertyType.getInterfaces()) {
+		for (Class<?> type : targetType.getInterfaces()) {
 			proxyFactory.addInterface(type);
 		}
 
 		proxyFactory.addInterface(LazyLoadingProxy.class);
-		proxyFactory.addInterface(propertyType);
+		proxyFactory.addInterface(targetType);
+
+		return proxyFactory;
+	}
+
+	private ProxyFactory prepareProxyFactory(Class<?> propertyType, Supplier<LazyLoadingInterceptor> interceptor) {
+
+		ProxyFactory proxyFactory = prepareFactory(propertyType);
 		proxyFactory.addAdvice(interceptor.get());
 
 		return proxyFactory;
@@ -120,7 +138,8 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		return prepareProxyFactory(propertyType,
-				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator)).getProxy(LazyLoadingProxy.class.getClassLoader());
+				() -> new LazyLoadingInterceptor(property, callback, source, exceptionTranslator))
+						.getProxy(LazyLoadingProxy.class.getClassLoader());
 	}
 
 	/**
@@ -156,6 +175,10 @@ public final class LazyLoadingProxyFactory {
 				throw new RuntimeException(e);
 			}
 		}
+
+		private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+		private final Lock readLock = Lock.of(rwLock.readLock());
+		private final Lock writeLock = Lock.of(rwLock.writeLock());
 
 		private final MongoPersistentProperty property;
 		private final DbRefResolverCallback callback;
@@ -264,15 +287,15 @@ public final class LazyLoadingProxyFactory {
 
 			StringBuilder description = new StringBuilder();
 			if (source != null) {
-				if (source instanceof DBRef) {
-					description.append(((DBRef) source).getCollectionName());
+				if (source instanceof DBRef dbRef) {
+					description.append(dbRef.getCollectionName());
 					description.append(":");
-					description.append(((DBRef) source).getId());
+					description.append(dbRef.getId());
 				} else {
 					description.append(source);
 				}
 			} else {
-				description.append(System.identityHashCode(source));
+				description.append(0);
 			}
 			description.append("$").append(LazyLoadingProxy.class.getSimpleName());
 
@@ -325,25 +348,26 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		@Nullable
-		private synchronized Object resolve() {
+		private Object resolve() {
 
-			if (resolved) {
+			try (AcquiredLock l = readLock.lock()) {
+				if (resolved) {
 
-				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
+								property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
+					}
+					return result;
 				}
-				return result;
+			}
+
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
+						property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
 			}
 
 			try {
-				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
-				}
-
-				return callback.resolve(property);
-
+				return writeLock.execute(() -> callback.resolve(property));
 			} catch (RuntimeException ex) {
 
 				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
@@ -356,6 +380,7 @@ public final class LazyLoadingProxyFactory {
 						translatedException != null ? translatedException : ex);
 			}
 		}
+
 	}
 
 }

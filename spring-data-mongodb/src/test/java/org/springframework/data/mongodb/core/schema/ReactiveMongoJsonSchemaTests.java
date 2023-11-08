@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core.schema;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.Data;
-import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -39,6 +37,7 @@ import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -125,7 +124,6 @@ public class ReactiveMongoJsonSchemaTests {
 		return collectionInfo.get("options", Document.class).get("validator", Document.class);
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "persons")
 	static class Person {
 
@@ -133,6 +131,34 @@ public class ReactiveMongoJsonSchemaTests {
 		String lastname;
 		Address address;
 
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		public String toString() {
+			return "ReactiveMongoJsonSchemaTests.Person(firstname=" + this.getFirstname() + ", lastname=" + this.getLastname()
+					+ ", address=" + this.getAddress() + ")";
+		}
 	}
 
 	static class Address {

@@ -15,19 +15,20 @@
  */
 package org.springframework.data.mongodb.test.util;
 
-import lombok.Data;
-
 import org.springframework.data.domain.Persistable;
 
 /**
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@Data
 public class AfterTransactionAssertion<T extends Persistable> {
 
 	private final T persistable;
 	private boolean expectToBePresent;
+
+	public AfterTransactionAssertion(T persistable) {
+		this.persistable = persistable;
+	}
 
 	public void isPresent() {
 		expectToBePresent = true;
@@ -43,5 +44,17 @@ public class AfterTransactionAssertion<T extends Persistable> {
 
 	public boolean shouldBePresent() {
 		return expectToBePresent;
+	}
+
+	public T getPersistable() {
+		return this.persistable;
+	}
+
+	public boolean isExpectToBePresent() {
+		return this.expectToBePresent;
+	}
+
+	public void setExpectToBePresent(boolean expectToBePresent) {
+		this.expectToBePresent = expectToBePresent;
 	}
 }

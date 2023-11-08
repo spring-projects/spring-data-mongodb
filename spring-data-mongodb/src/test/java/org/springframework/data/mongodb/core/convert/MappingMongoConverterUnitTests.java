@@ -20,20 +20,15 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import org.bson.BsonUndefined;
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -42,6 +37,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,7 +79,10 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTe
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoField;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
@@ -92,6 +92,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -110,6 +111,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author Roman Puchkovskiy
  * @author Heesu Jung
+ * @author Julia Lee
  */
 @ExtendWith(MockitoExtension.class)
 class MappingMongoConverterUnitTests {
@@ -1586,11 +1588,11 @@ class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1034
 	void rejectsBasicDbListToBeConvertedIntoComplexType() {
 
-		List<Object> inner = new ArrayList<Object>();
+		List<Object> inner = new ArrayList<>();
 		inner.add("key");
 		inner.add("value");
 
-		List<Object> outer = new ArrayList<Object>();
+		List<Object> outer = new ArrayList<>();
 		outer.add(inner);
 		outer.add(inner);
 
@@ -2350,6 +2352,39 @@ class MappingMongoConverterUnitTests {
 				.isEqualTo(expected);
 	}
 
+	@Test // GH-4491
+	void readUnwrappedTypeWithComplexValueUsingConstructor() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("stringValue", "hello").append("address",
+				new org.bson.Document("s", "1007 Mountain Drive").append("city", "Gotham"));
+
+		WithUnwrappedConstructor target = converter.read(WithUnwrappedConstructor.class, source);
+
+		Address expected = new Address();
+		expected.city = "Gotham";
+		expected.street = "1007 Mountain Drive";
+
+		assertThat(target.embeddableValue.stringValue) //
+				.isEqualTo("hello");
+		assertThat(target.embeddableValue.address) //
+				.isEqualTo(expected);
+	}
+
+	@Test // GH-4491
+	void readUnwrappedTypeWithComplexValueUsingConstructorWhenUnwrappedPropertiesNotPresent() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1");
+
+		WithUnwrappedConstructor target = converter.read(WithUnwrappedConstructor.class, source);
+
+		assertThat(target.id).isEqualTo("id-1");
+		assertThat(target.embeddableValue).isNotNull(); // it's defined as Empty
+		assertThat(target.embeddableValue.stringValue) //
+				.isNull();
+		assertThat(target.embeddableValue.address) //
+				.isNull();
+	}
+
 	@Test // DATAMONGO-1902
 	void writeUnwrappedTypeWithComplexValue() {
 
@@ -2608,12 +2643,12 @@ class MappingMongoConverterUnitTests {
 		DocumentAccessor accessor = new DocumentAccessor(new org.bson.Document());
 		MongoPersistentProperty persistentProperty = mock(MongoPersistentProperty.class);
 		when(persistentProperty.isAssociation()).thenReturn(true);
-		when(persistentProperty.getFieldName()).thenReturn("pName");
-		doReturn(ClassTypeInformation.from(Person.class)).when(persistentProperty).getTypeInformation();
+		when(persistentProperty.getMongoField()).thenReturn(MongoField.fromKey("pName"));
+		doReturn(TypeInformation.of(Person.class)).when(persistentProperty).getTypeInformation();
 		doReturn(Person.class).when(persistentProperty).getType();
 		doReturn(Person.class).when(persistentProperty).getRawType();
 
-		converter.writePropertyInternal(sourceValue, accessor, persistentProperty);
+		converter.writePropertyInternal(sourceValue, accessor, persistentProperty, null);
 
 		assertThat(accessor.getDocument())
 				.isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
@@ -2623,7 +2658,7 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleInterfaceProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay(systemDefault()).toInstant())).append("foo", "Walter");
 
 		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
@@ -2641,7 +2676,7 @@ class MappingMongoConverterUnitTests {
 	void projectShouldReadSimpleDtoProjection() {
 
 		org.bson.Document source = new org.bson.Document("birthDate",
-				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo", "Walter");
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay(systemDefault()).toInstant())).append("foo", "Walter");
 
 		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
@@ -2831,6 +2866,126 @@ class MappingMongoConverterUnitTests {
 		assertThat(converter.read(Cyclic.class, source).cycle.value).isEqualTo("v2");
 	}
 
+	@Test // GH-4371
+	void shouldConvertTypesToStringTargetType() {
+
+		org.bson.Document source = org.bson.Document.parse("""
+				{
+				  city : ["Gotham", "Metropolis"]
+				}
+				""");
+
+		assertThat(converter.read(Address.class, source).city).isEqualTo("Gotham,Metropolis");
+	}
+
+	@Test // GH-2350
+	void shouldConvertBsonUndefinedToNull() {
+
+		org.bson.Document source = new org.bson.Document("s", "hallway drive").append("city", new BsonUndefined());
+		assertThat(converter.read(Address.class, source).city).isNull();
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnWriteIfFieldTypeIsKey() {
+
+		WithPropertyHavingDotsInFieldName source = new WithPropertyHavingDotsInFieldName();
+		source.value = "A";
+
+		assertThat(write(source)).containsEntry("field.name.with.dots", "A");
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnReadIfFieldTypeIsKey() {
+
+		org.bson.Document source = new org.bson.Document("field.name.with.dots", "A");
+
+		WithPropertyHavingDotsInFieldName target = converter.read(WithPropertyHavingDotsInFieldName.class, source);
+		assertThat(target.value).isEqualTo("A");
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnWriteOfNestedPropertyIfFieldTypeIsKey() {
+
+		WrapperForTypeWithPropertyHavingDotsInFieldName source = new WrapperForTypeWithPropertyHavingDotsInFieldName();
+		source.nested = new WithPropertyHavingDotsInFieldName();
+		source.nested.value = "A";
+
+		assertThat(write(source).get("nested", org.bson.Document.class)).containsEntry("field.name.with.dots", "A");
+	}
+
+	@Test // GH-4464
+	void shouldNotSplitKeyNamesWithDotOnReadOfNestedIfFieldTypeIsKey() {
+
+		org.bson.Document source = new org.bson.Document("nested", new org.bson.Document("field.name.with.dots", "A"));
+
+		WrapperForTypeWithPropertyHavingDotsInFieldName target = converter.read(WrapperForTypeWithPropertyHavingDotsInFieldName.class, source);
+		assertThat(target.nested).isNotNull();
+		assertThat(target.nested.value).isEqualTo("A");
+	}
+
+	@Test // GH-4464
+	void writeShouldAllowDotsInMapKeyNameIfConfigured() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		Person person = new Person();
+		person.firstname = "bart";
+		person.lastname = "simpson";
+
+		ClassWithMapProperty source = new ClassWithMapProperty();
+		source.mapOfPersons = Map.of("map.key.with.dots", person);
+
+		assertThat(write(source).get("mapOfPersons", org.bson.Document.class)).containsKey("map.key.with.dots");
+	}
+
+	@Test // GH-4464
+	void readShouldAllowDotsInMapKeyNameIfConfigured() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.preserveMapKeys(true);
+		converter.afterPropertiesSet();
+
+		Person person = new Person();
+		person.firstname = "bart";
+		person.lastname = "simpson";
+
+		org.bson.Document source = new org.bson.Document("mapOfPersons", new org.bson.Document("map.key.with.dots", write(person)));
+
+		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
+
+		assertThat(target.mapOfPersons).containsEntry("map.key.with.dots", person);
+	}
+
+	@ValueSource(classes = { ComplexIdAndNoAnnotation.class, ComplexIdAndIdAnnotation.class, ComplexIdAndMongoIdAnnotation.class, ComplexIdAndFieldAnnotation.class })
+	@ParameterizedTest // GH-4524
+	void projectShouldReadComplexIdType(Class<?> projectionTargetType) {
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		ComplexId idValue = ComplexId.of(101L);
+		org.bson.Document source = new org.bson.Document("_id", new org.bson.Document("innerId", idValue.innerId))
+				.append("value", "abc").append("_class", ComplexIdAndNoAnnotation.class.getName());
+
+		EntityProjection<?, ComplexIdAndNoAnnotation> projection = introspector.introspect(projectionTargetType,
+				ComplexIdAndNoAnnotation.class);
+
+		assertThat(converter.project(projection, source)) //
+				.isInstanceOf(projectionTargetType) //
+				.extracting("id").isEqualTo(idValue);
+	}
+
+	org.bson.Document write(Object source) {
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+		return target;
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2860,11 +3015,35 @@ class MappingMongoConverterUnitTests {
 
 	}
 
-	@EqualsAndHashCode
-	@Getter
 	static class Address implements InterfaceType {
+
 		@Field("s") String street;
 		String city;
+
+		public String getStreet() {
+			return street;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(street, address.street) && Objects.equals(city, address.city);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(street, city);
+		}
 	}
 
 	interface Contact {
@@ -2889,6 +3068,23 @@ class MappingMongoConverterUnitTests {
 		@PersistenceConstructor
 		public Person(Set<Address> addresses) {
 			this.addresses = addresses;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(birthDate, person.birthDate) && Objects.equals(firstname, person.firstname) && Objects.equals(lastname, person.lastname) && Objects.equals(addresses, person.addresses);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, birthDate, firstname, lastname, addresses);
 		}
 	}
 
@@ -3047,7 +3243,33 @@ class MappingMongoConverterUnitTests {
 	}
 
 	static class ComplexId {
+
 		Long innerId;
+
+		static ComplexId of(Long value) {
+
+			ComplexId id = new ComplexId();
+			id.innerId = value;
+			return id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ComplexId complexId = (ComplexId) o;
+			return Objects.equals(innerId, complexId.innerId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(innerId);
+		}
 	}
 
 	static class TypWithCollectionConstructor {
@@ -3234,11 +3456,13 @@ class MappingMongoConverterUnitTests {
 		Map<String, Long> map;
 	}
 
-	@RequiredArgsConstructor
 	static class WithArrayInConstructor {
 
 		final String[] array;
 
+		public WithArrayInConstructor(String[] array) {
+			this.array = array;
+		}
 	}
 
 	static class WithArrays {
@@ -3305,18 +3529,37 @@ class MappingMongoConverterUnitTests {
 		}
 	}
 
-	@RequiredArgsConstructor
 	static class ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod {
 
 		final @Id String id;
 		String value;
+
+		public ImmutableObjectWithIdConstructorPropertyAndNoIdWitherMethod(String id) {
+			this.id = id;
+		}
 	}
 
 	// DATAMONGO-2135
-
-	@EqualsAndHashCode // equality check by fields
 	static class SomeItem {
+
 		String itemKey;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SomeItem someItem = (SomeItem) o;
+			return Objects.equals(itemKey, someItem.itemKey);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(itemKey);
+		}
 	}
 
 	static class Order {
@@ -3362,6 +3605,18 @@ class MappingMongoConverterUnitTests {
 		@Unwrapped.Nullable EmbeddableType embeddableValue;
 	}
 
+	static class WithUnwrappedConstructor {
+
+		private final String id;
+
+		private final @Unwrapped.Empty EmbeddableType embeddableValue;
+
+		public WithUnwrappedConstructor(String id, EmbeddableType embeddableValue) {
+			this.id = id;
+			this.embeddableValue = embeddableValue;
+		}
+	}
+
 	static class WithPrefixedNullableUnwrapped {
 
 		String id;
@@ -3376,7 +3631,6 @@ class MappingMongoConverterUnitTests {
 		@Unwrapped.Empty EmbeddableType embeddableValue;
 	}
 
-	@EqualsAndHashCode
 	static class EmbeddableType {
 
 		String stringValue;
@@ -3389,6 +3643,26 @@ class MappingMongoConverterUnitTests {
 		String transientValue;
 
 		Address address;
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			EmbeddableType that = (EmbeddableType) o;
+			return Objects.equals(stringValue, that.stringValue) && Objects.equals(listValue, that.listValue)
+					&& Objects.equals(atFieldAnnotatedValue, that.atFieldAnnotatedValue)
+					&& Objects.equals(transientValue, that.transientValue) && Objects.equals(address, that.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(stringValue, listValue, atFieldAnnotatedValue, transientValue, address);
+		}
 	}
 
 	static class ReturningAfterConvertCallback implements AfterConvertCallback<Person> {
@@ -3463,7 +3737,6 @@ class MappingMongoConverterUnitTests {
 		TypeImplementingMap typeImplementingMap;
 	}
 
-	@EqualsAndHashCode
 	static class TypeImplementingMap implements Map<String, String> {
 
 		String val1;
@@ -3536,6 +3809,23 @@ class MappingMongoConverterUnitTests {
 		@Override
 		public Set<Entry<String, String>> entrySet() {
 			return null;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			TypeImplementingMap that = (TypeImplementingMap) o;
+			return val2 == that.val2 && Objects.equals(val1, that.val1);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(val1, val2);
 		}
 	}
 
@@ -3634,22 +3924,39 @@ class MappingMongoConverterUnitTests {
 		String getName();
 	}
 
-	@lombok.Value
 	static class AuthorOnly {
 
-		AuthorNameOnly author;
+		final AuthorNameOnly author;
+
+		public AuthorOnly(AuthorNameOnly author) {
+			this.author = author;
+		}
+
+		public AuthorNameOnly getAuthor() {
+			return author;
+		}
 	}
 
-	@lombok.Value
 	static class AuthorNameOnly {
 
-		String firstName;
+		final String firstName;
 
-		String lastName;
+		final String lastName;
 
+		public AuthorNameOnly(String firstName, String lastName) {
+			this.firstName = firstName;
+			this.lastName = lastName;
+		}
+
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public String getLastName() {
+			return lastName;
+		}
 	}
 
-	@Data
 	static class Book {
 
 		@Id String id;
@@ -3658,9 +3965,31 @@ class MappingMongoConverterUnitTests {
 
 		Author author = new Author();
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
 	}
 
-	@Data
 	static class Author {
 
 		@Id String id;
@@ -3669,14 +3998,115 @@ class MappingMongoConverterUnitTests {
 
 		String lastName;
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(String firstName) {
+			this.firstName = firstName;
+		}
+
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(String lastName) {
+			this.lastName = lastName;
+		}
 	}
 
-	@Data
 	static class Cyclic {
 
 		@Id String id;
 		String value;
 		Cyclic cycle;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public Cyclic getCycle() {
+			return cycle;
+		}
+
+		public void setCycle(Cyclic cycle) {
+			this.cycle = cycle;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Cyclic cyclic = (Cyclic) o;
+			return Objects.equals(id, cyclic.id) && Objects.equals(value, cyclic.value)
+					&& Objects.equals(cycle, cyclic.cycle);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, cycle);
+		}
 	}
 
+	static class WrapperForTypeWithPropertyHavingDotsInFieldName {
+
+		WithPropertyHavingDotsInFieldName nested;
+	}
+
+	static class WithPropertyHavingDotsInFieldName {
+
+		@Field(name = "field.name.with.dots", nameType = Type.KEY)
+		String value;
+	}
+
+	static class ComplexIdAndFieldAnnotation {
+
+		@Field("_id") //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndMongoIdAnnotation {
+
+		@MongoId //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndIdAnnotation {
+
+		@Id //
+		ComplexId id;
+		String value;
+	}
+
+	static class ComplexIdAndNoAnnotation {
+
+		ComplexId id;
+		String value;
+	}
 }

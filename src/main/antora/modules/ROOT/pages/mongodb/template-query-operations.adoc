@@ -1,0 +1,945 @@
+[[mongo.query]]
+= Querying Documents
+:page-section-summary-toc: 1
+
+You can use the `Query` and `Criteria` classes to express your queries.
+They have method names that mirror the native MongoDB operator names, such as `lt`, `lte`, `is`, and others.
+The `Query` and `Criteria` classes follow a fluent API style so that you can chain together multiple method criteria and queries while having easy-to-understand code.
+To improve readability, static imports let you avoid using the 'new' keyword for creating `Query` and `Criteria` instances.
+You can also use `BasicQuery` to create `Query` instances from plain JSON Strings, as shown in the following example:
+
+.Creating a Query instance from a plain JSON String
+====
+[source,java]
+----
+BasicQuery query = new BasicQuery("{ age : { $lt : 50 }, accounts.balance : { $gt : 1000.00 }}");
+List<Person> result = mongoTemplate.find(query, Person.class);
+----
+====
+
+[[mongodb-template-query]]
+== Querying Documents in a Collection
+
+Earlier, we saw how to retrieve a single document by using the `findOne` and `findById` methods on `MongoTemplate`.
+These methods return a single domain object right way or using a reactive API a `Mono` emitting a single element.
+We can also query for a collection of documents to be returned as a list of domain objects.
+Assuming that we have a number of `Person` objects with name and age stored as documents in a collection and that each person has an embedded account document with a balance, we can now run a query using the following code:
+
+.Querying for documents using the MongoTemplate
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
+// ...
+
+List<Person> result = template.query(Person.class)
+  .matching(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)))
+  .all();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
+// ...
+
+Flux<Person> result = template.query(Person.class)
+  .matching(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)))
+  .all();
+----
+======
+
+All find methods take a `Query` object as a parameter.
+This object defines the criteria and options used to perform the query.
+The criteria are specified by using a `Criteria` object that has a static factory method named `where` to instantiate a new `Criteria` object.
+We recommend using static imports for `org.springframework.data.mongodb.core.query.Criteria.where` and `Query.query` to make the query more readable.
+
+The query should return a `List` or `Flux` of `Person` objects that meet the specified criteria.
+The rest of this section lists the methods of the `Criteria` and `Query` classes that correspond to the operators provided in MongoDB.
+Most methods return the `Criteria` object, to provide a fluent style for the API.
+
+[[mongodb-template-query.criteria]]
+.Methods of the Criteria Class
+[%collapsible]
+====
+The `Criteria` class provides the following methods, all of which correspond to operators in MongoDB:
+
+* `Criteria` *all* `(Object o)` Creates a criterion using the `$all` operator
+* `Criteria` *and* `(String key)` Adds a chained `Criteria` with the specified `key` to the current `Criteria` and returns the newly created one
+* `Criteria` *andOperator* `(Criteria... criteria)` Creates an and query using the `$and` operator for all of the provided criteria (requires MongoDB 2.0 or later)
+* `Criteria` *andOperator* `(Collection<Criteria> criteria)` Creates an and query using the `$and` operator for all of the provided criteria (requires MongoDB 2.0 or later)
+* `Criteria` *elemMatch* `(Criteria c)` Creates a criterion using the `$elemMatch` operator
+* `Criteria` *exists* `(boolean b)` Creates a criterion using the `$exists` operator
+* `Criteria` *gt* `(Object o)` Creates a criterion using the `$gt` operator
+* `Criteria` *gte* `(Object o)` Creates a criterion using the `$gte` operator
+* `Criteria` *in* `(Object... o)` Creates a criterion using the `$in` operator for a varargs argument.
+* `Criteria` *in* `(Collection<?> collection)` Creates a criterion using the `$in` operator using a collection
+* `Criteria` *is* `(Object o)` Creates a criterion using field matching (`{ key:value }`). If the specified value is a document, the order of the fields and exact equality in the document matters.
+* `Criteria` *lt* `(Object o)` Creates a criterion using the `$lt` operator
+* `Criteria` *lte* `(Object o)` Creates a criterion using the `$lte` operator
+* `Criteria` *mod* `(Number value, Number remainder)` Creates a criterion using the `$mod` operator
+* `Criteria` *ne* `(Object o)` Creates a criterion using the `$ne` operator
+* `Criteria` *nin* `(Object... o)` Creates a criterion using the `$nin` operator
+* `Criteria` *norOperator* `(Criteria... criteria)` Creates an nor query using the `$nor` operator for all of the provided criteria
+* `Criteria` *norOperator* `(Collection<Criteria> criteria)` Creates an nor query using the `$nor` operator for all of the provided criteria
+* `Criteria` *not* `()` Creates a criterion using the `$not` meta operator which affects the clause directly following
+* `Criteria` *orOperator* `(Criteria... criteria)` Creates an or query using the `$or` operator for all of the provided  criteria
+* `Criteria` *orOperator* `(Collection<Criteria> criteria)` Creates an or query using the `$or` operator for all of the provided  criteria
+* `Criteria` *regex* `(String re)` Creates a criterion using a `$regex`
+* `Criteria` *sampleRate* `(double sampleRate)` Creates a criterion using the `$sampleRate` operator
+* `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
+* `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
+* `Criteria` *matchingDocumentStructure* `(MongoJsonSchema schema)` Creates a criterion using the `$jsonSchema` operator for xref:mongodb/mapping/mapping-schema.adoc[JSON schema criteria]. `$jsonSchema` can only be applied on the top level of a query and not property specific. Use the `properties` attribute of the schema to match against nested fields.
+* `Criteria` *bits()* is the gateway to https://docs.mongodb.com/manual/reference/operator/query-bitwise/[MongoDB bitwise query operators] like `$bitsAllClear`.
+
+The Criteria class also provides the following methods for geospatial queries.
+
+* `Criteria` *within* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
+* `Criteria` *within* `(Box box)` Creates a geospatial criterion using a `$geoWithin $box` operation.
+* `Criteria` *withinSphere* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
+* `Criteria` *near* `(Point point)` Creates a geospatial criterion using a `$near` operation
+* `Criteria` *nearSphere* `(Point point)` Creates a geospatial criterion using `$nearSphere$center` operations. This is only available for MongoDB 1.7 and higher.
+* `Criteria` *minDistance* `(double minDistance)` Creates a geospatial criterion using the `$minDistance` operation, for use with $near.
+* `Criteria` *maxDistance* `(double maxDistance)` Creates a geospatial criterion using the `$maxDistance` operation, for use with $near.
+====
+
+The `Query` class has some additional methods that allow to select certain fields as well as to limit and sort the result.
+
+[[mongodb-template-query.query]]
+.Methods of the Query class
+[%collapsible]
+====
+* `Query` *addCriteria* `(Criteria criteria)` used to add additional criteria to the query
+* `Field` *fields* `()` used to define fields to be included in the query results
+* `Query` *limit* `(int limit)` used to limit the size of the returned results to the provided limit (used for paging)
+* `Query` *skip* `(int skip)` used to skip the provided number of documents in the results (used for paging)
+* `Query` *with* `(Sort sort)` used to provide sort definition for the results
+* `Query` *with* `(ScrollPosition position)` used to provide a scroll position (Offset- or Keyset-based pagination) to start or resume a `Scroll`
+====
+
+[[mongo-template.query.result-projection]]
+
+The template API allows direct usage of result projections that enable you to map queries against a given domain type while projecting the operation result onto another one as outlined below.
+
+[source,java]
+----
+class
+
+template.query(SWCharacter.class)
+    .as(Jedi.class)
+----
+
+For more information on result projections please refer to the xref:repositories/projections.adoc[Projections] section of the documentation.
+
+[[mongo-template.querying.field-selection]]
+== Selecting fields
+
+MongoDB supports https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/[projecting fields] returned by a query.
+A projection can include and exclude fields (the `_id` field is always included unless explicitly excluded) based on their name.
+
+.Selecting result fields
+====
+[source,java]
+----
+public class Person {
+
+    @Id String id;
+    String firstname;
+
+    @Field("last_name")
+    String lastname;
+
+    Address address;
+}
+
+query.fields().include("lastname");              <1>
+
+query.fields().exclude("id").include("lastname") <2>
+
+query.fields().include("address")                <3>
+
+query.fields().include("address.city")           <4>
+----
+<1> Result will contain both `_id` and `last_name` via `{ "last_name" : 1 }`.
+<2> Result will only contain the `last_name` via `{ "_id" : 0, "last_name" : 1 }`.
+<3> Result will contain the `_id` and entire `address` object via `{ "address" : 1 }`.
+<4> Result will contain the `_id` and and `address` object that only contains the `city` field via `{ "address.city" : 1 }`.
+====
+
+Starting with MongoDB 4.4 you can use aggregation expressions for field projections as shown below:
+
+.Computing result fields using expressions
+====
+[source,java]
+----
+query.fields()
+  .project(MongoExpression.create("'$toUpper' : '$last_name'"))         <1>
+  .as("last_name");                                                     <2>
+
+query.fields()
+  .project(StringOperators.valueOf("lastname").toUpper())               <3>
+  .as("last_name");
+
+query.fields()
+  .project(AggregationSpELExpression.expressionOf("toUpper(lastname)")) <4>
+  .as("last_name");
+----
+<1> Use a native expression. The used field name must refer to field names within the database document.
+<2> Assign the field name to which the expression result is projected. The resulting field name is not mapped against the domain model.
+<3> Use an `AggregationExpression`. Other than native `MongoExpression`, field names are mapped to the ones used in the domain model.
+<4> Use SpEL along with an `AggregationExpression` to invoke expression functions. Field names are mapped to the ones used in the domain model.
+====
+
+`@Query(fields="…")` allows usage of expression field projections at `Repository` level as described in xref:mongodb/repositories/repositories.adoc#mongodb.repositories.queries.json-based[MongoDB JSON-based Query Methods and Field Restriction].
+
+[[mongo.query.additional-query-options]]
+== Additional Query Options
+
+MongoDB offers various ways of applying meta information, like a comment or a batch size, to a query.Using the `Query` API
+directly there are several methods for those options.
+
+[[mongo.query.hints]]
+=== Hints
+
+Index hints can be applied in two ways, using the index name or its field definition.
+
+====
+[source,java]
+----
+template.query(Person.class)
+    .matching(query("...").withHint("index-to-use"));
+
+template.query(Person.class)
+    .matching(query("...").withHint("{ firstname : 1 }"));
+----
+====
+
+[[mongo.query.cursor-size]]
+=== Cursor Batch Size
+
+The cursor batch size defines the number of documents to return in each response batch.
+====
+[source,java]
+----
+Query query = query(where("firstname").is("luke"))
+    .cursorBatchSize(100)
+----
+====
+
+[[mongo.query.collation]]
+=== Collations
+
+Using collations with collection operations is a matter of specifying a `Collation` instance in your query or operation options, as the following two examples show:
+
+====
+[source,java]
+----
+Collation collation = Collation.of("de");
+
+Query query = new Query(Criteria.where("firstName").is("Amél"))
+    .collation(collation);
+
+List<Person> results = template.find(query, Person.class);
+----
+====
+
+[[mongo.query.read-preference]]
+=== Read Preference
+
+The `ReadPreference` to use can be set directly on the `Query` object to be run as outlined below.
+
+====
+[source,java]
+----
+template.find(Person.class)
+    .matching(query(where(...)).withReadPreference(ReadPreference.secondary()))
+    .all();
+----
+====
+
+NOTE: The preference set on the `Query` instance will supersede the default `ReadPreference` of `MongoTemplate`.
+
+[[mongo.query.comment]]
+=== Comments
+
+Queries can be equipped with comments which makes them easier to look up in server logs.
+
+====
+[source,java]
+----
+template.find(Person.class)
+    .matching(query(where(...)).comment("Use the force luke!"))
+    .all();
+----
+====
+
+[[mongo-template.query.distinct]]
+== Query Distinct Values
+
+MongoDB provides an operation to obtain distinct values for a single field by using a query from the resulting documents.
+Resulting values are not required to have the same data type, nor is the feature limited to simple types.
+For retrieval, the actual result type does matter for the sake of conversion and typing. The following example shows how to query for distinct values:
+
+.Retrieving distinct values
+====
+[source,java]
+----
+template.query(Person.class)  <1>
+  .distinct("lastname")       <2>
+  .all();                     <3>
+----
+<1> Query the `Person` collection.
+<2> Select distinct  values of the `lastname` field. The field name is mapped according to the domain types property declaration, taking potential `@Field` annotations into account.
+<3> Retrieve all distinct values as a `List` of `Object` (due to no explicit result type being specified).
+====
+
+Retrieving distinct values into a `Collection` of `Object` is the most flexible way, as it tries to determine the property value of the domain type and convert results to the desired type or mapping `Document` structures.
+
+Sometimes, when all values of the desired field are fixed to a certain type, it is more convenient to directly obtain a correctly typed `Collection`, as shown in the following example:
+
+.Retrieving strongly typed distinct values
+====
+[source,java]
+----
+template.query(Person.class)  <1>
+  .distinct("lastname")       <2>
+  .as(String.class)           <3>
+  .all();                     <4>
+----
+<1> Query the collection of `Person`.
+<2> Select distinct values of the `lastname` field. The fieldname is mapped according to the domain types property declaration, taking potential `@Field` annotations into account.
+<3> Retrieved values are converted into the desired target type -- in this case, `String`. It is also possible to map the values to a more complex type if the stored field contains a document.
+<4> Retrieve all distinct values as a `List` of `String`. If the type cannot be converted into the desired target type, this method throws a `DataAccessException`.
+====
+
+[[mongo.geospatial]]
++= GeoSpatial Queries
+
+MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin`, and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes (`Box`, `Circle`, and `Point`) that are used in conjunction with geospatial related `Criteria` methods.
+
+NOTE: Using GeoSpatial queries requires attention when used within MongoDB transactions, see xref:mongodb/client-session-transactions.adoc#mongo.transactions.behavior[Special behavior inside transactions].
+
+To understand how to perform GeoSpatial queries, consider the following `Venue` class (taken from the integration tests and relying on the rich `MappingMongoConverter`):
+
+.Venue.java
+[%collapsible]
+====
+[source,java]
+----
+@Document(collection="newyork")
+public class Venue {
+
+  @Id
+  private String id;
+  private String name;
+  private double[] location;
+
+  @PersistenceConstructor
+  Venue(String name, double[] location) {
+    super();
+    this.name = name;
+    this.location = location;
+  }
+
+  public Venue(String name, double x, double y) {
+    super();
+    this.name = name;
+    this.location = new double[] { x, y };
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public double[] getLocation() {
+    return location;
+  }
+
+  @Override
+  public String toString() {
+    return "Venue [id=" + id + ", name=" + name + ", location="
+        + Arrays.toString(location) + "]";
+  }
+}
+----
+====
+
+To find locations within a `Circle`, you can use the following query:
+
+[source,java]
+----
+Circle circle = new Circle(-73.99171, 40.738868, 0.01);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
+----
+
+To find venues within a `Circle` using spherical coordinates, you can use the following query:
+
+[source,java]
+----
+Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").withinSphere(circle)), Venue.class);
+----
+
+To find venues within a `Box`, you can use the following query:
+
+[source,java]
+----
+//lower-left then upper-right
+Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").within(box)), Venue.class);
+----
+
+To find venues near a `Point`, you can use the following queries:
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
+----
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").near(point).minDistance(0.01).maxDistance(100)), Venue.class);
+----
+
+To find venues near a `Point` using spherical coordinates, you can use the following query:
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(
+        Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)),
+        Venue.class);
+----
+
+[[mongo.geo-near]]
+== Geo-near Queries
+
+[WARNING]
+====
+*Changed in 2.2!* +
+https://docs.mongodb.com/master/release-notes/4.2-compatibility/[MongoDB 4.2] removed support for the
+`geoNear` command which had been previously used to run the `NearQuery`.
+
+Spring Data MongoDB 2.2 `MongoOperations#geoNear` uses the `$geoNear` https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/[aggregation]
+instead of the `geoNear` command to run a `NearQuery`.
+
+The calculated distance (the `dis` when using a geoNear command) previously returned within a wrapper type now is embedded
+into the resulting document.
+If the given domain type already contains a property with that name, the calculated distance
+is named `calculated-distance` with a potentially random postfix.
+
+Target types may contain a property named after the returned distance to (additionally) read it back directly into the domain type as shown below.
+
+[source,java]
+----
+GeoResults<VenueWithDistanceField> = template.query(Venue.class) <1>
+    .as(VenueWithDistanceField.class)                            <2>
+    .near(NearQuery.near(new GeoJsonPoint(-73.99, 40.73), KILOMETERS))
+    .all();
+----
+<1> Domain type used to identify the target collection and potential query mapping.
+<2> Target type containing a `dis` field of type `Number`.
+====
+
+MongoDB supports querying the database for geo locations and calculating the distance from a given origin at the same time. With geo-near queries, you can express queries such as "find all restaurants in the surrounding 10 miles". To let you do so, `MongoOperations` provides `geoNear(…)` methods that take a `NearQuery` as an argument (as well as the already familiar entity type and collection), as shown in the following example:
+
+[source,java]
+----
+Point location = new Point(-73.99171, 40.738868);
+NearQuery query = NearQuery.near(location).maxDistance(new Distance(10, Metrics.MILES));
+
+GeoResults<Restaurant> = operations.geoNear(query, Restaurant.class);
+----
+
+We use the `NearQuery` builder API to set up a query to return all `Restaurant` instances surrounding the given `Point` out to 10 miles.
+The `Metrics` enum used here actually implements an interface so that other metrics could be plugged into a distance as well.
+A `Metric` is backed by a multiplier to transform the distance value of the given metric into native distances.
+The sample shown here would consider the 10 to be miles. Using one of the built-in metrics (miles and kilometers) automatically triggers the spherical flag to be set on the query.
+If you want to avoid that, pass plain `double` values into `maxDistance(…)`.
+For more information, see the https://docs.spring.io/spring-data/mongodb/docs/{version}/api/index.html[JavaDoc] of `NearQuery` and `Distance`.
+
+The geo-near operations return a `GeoResults` wrapper object that encapsulates `GeoResult` instances.
+Wrapping `GeoResults` allows accessing the average distance of all results.
+A single `GeoResult` object carries the entity found plus its distance from the origin.
+
+[[mongo.geo-json]]
+== GeoJSON Support
+
+MongoDB supports https://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
+
+[[mongo.geo-json.domain.classes]]
+== GeoJSON Types in Domain Classes
+
+Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
+
+====
+[source,java]
+----
+public class Store {
+
+	String id;
+
+	/**
+	 * { "type" : "Point", "coordinates" : [ x, y ] }
+	 */
+	GeoJsonPoint location;
+}
+----
+====
+
+[TIP]
+====
+If the `coordinates` of a GeoJSON object represent _latitude_ and _longitude_ pairs, the _longitude_ goes first followed by _latitude_. +
+`GeoJsonPoint` therefore treats `getX()` as _longitude_ and `getY()` as _latitude_.
+====
+
+[[mongo.geo-json.query-methods]]
+== GeoJSON Types in Repository Query Methods
+
+Using GeoJSON types as repository query parameters forces usage of the `$geometry` operator when creating the query, as the following example shows:
+
+====
+[source,java]
+----
+public interface StoreRepository extends CrudRepository<Store, String> {
+
+	List<Store> findByLocationWithin(Polygon polygon);  <1>
+
+}
+
+/*
+ * {
+ *   "location": {
+ *     "$geoWithin": {
+ *       "$geometry": {
+ *         "type": "Polygon",
+ *         "coordinates": [
+ *           [
+ *             [-73.992514,40.758934],
+ *             [-73.961138,40.760348],
+ *             [-73.991658,40.730006],
+ *             [-73.992514,40.758934]
+ *           ]
+ *         ]
+ *       }
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <2>
+  new GeoJsonPolygon(
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006),
+    new Point(-73.992514, 40.758934)));                 <3>
+
+/*
+ * {
+ *   "location" : {
+ *     "$geoWithin" : {
+ *        "$polygon" : [ [-73.992514,40.758934] , [-73.961138,40.760348] , [-73.991658,40.730006] ]
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <4>
+  new Polygon(
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006)));
+----
+<1> Repository method definition using the commons type allows calling it with both the GeoJSON and the legacy format.
+<2> Use GeoJSON type to make use of `$geometry` operator.
+<3> Note that GeoJSON polygons need to define a closed ring.
+<4> Use the legacy format `$polygon` operator.
+====
+
+[[mongo.geo-json.metrics]]
+== Metrics and Distance calculation
+
+Then MongoDB `$geoNear` operator allows usage of a GeoJSON Point or legacy coordinate pairs.
+
+====
+[source,java]
+----
+NearQuery.near(new Point(-73.99171, 40.738868))
+----
+[source,json]
+----
+{
+  "$geoNear": {
+    //...
+    "near": [-73.99171, 40.738868]
+  }
+}
+----
+====
+====
+[source,java]
+----
+NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868))
+----
+[source,json]
+----
+{
+  "$geoNear": {
+    //...
+    "near": { "type": "Point", "coordinates": [-73.99171, 40.738868] }
+  }
+}
+
+----
+====
+
+Though syntactically different the server is fine accepting both no matter what format the target Document within the collection
+is using.
+
+WARNING: There is a huge difference in the distance calculation. Using the legacy format operates
+upon _Radians_ on an Earth like sphere, whereas the GeoJSON format uses _Meters_.
+
+To avoid a serious headache make sure to set the `Metric` to the desired unit of measure which ensures the
+distance to be calculated correctly.
+
+In other words:
+
+====
+Assume you've got 5 Documents like the ones below:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a5"),
+    "name" : "Penn Station",
+    "location" : { "type" : "Point", "coordinates" : [  -73.99408, 40.75057 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796ab"),
+    "name" : "Momofuku Milk Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.985839, 40.731698 ] }
+}
+----
+====
+
+Fetching all Documents within a 400 Meter radius from `[-73.99171, 40.738868]` would look like this using
+GeoJSON:
+
+.GeoNear with GeoJSON
+====
+[source,json]
+----
+{
+    "$geoNear": {
+        "maxDistance": 400, <1>
+        "num": 10,
+        "near": { type: "Point", coordinates: [-73.99171, 40.738868] },
+        "spherical":true, <2>
+        "key": "location",
+        "distanceField": "distance"
+    }
+}
+----
+Returning the following 3 Documents:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+    "distance" : 0.0 <3>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 69.3582262492474 <3>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 69.3582262492474 <3>
+}
+----
+<1> Maximum distance from center point in _Meters_.
+<2> GeoJSON always operates upon a sphere.
+<3> Distance from center point in _Meters_.
+====
+
+Now, when using legacy coordinate pairs one operates upon _Radians_ as discussed before. So we use `Metrics#KILOMETERS
+when constructing the `$geoNear` command. The `Metric` makes sure the distance multiplier is set correctly.
+
+.GeoNear with Legacy Coordinate Pairs
+====
+[source,json]
+----
+{
+    "$geoNear": {
+        "maxDistance": 0.0000627142377, <1>
+        "distanceMultiplier": 6378.137, <2>
+        "num": 10,
+        "near": [-73.99171, 40.738868],
+        "spherical":true, <3>
+        "key": "location",
+        "distanceField": "distance"
+    }
+}
+----
+Returning the 3 Documents just like the GeoJSON variant:
+[source,json]
+----
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a6"),
+    "name" : "10gen Office",
+    "location" : { "type" : "Point", "coordinates" : [ -73.99171, 40.738868 ] }
+    "distance" : 0.0 <4>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796a9"),
+    "name" : "City Bakery ",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 0.0693586286032982 <4>
+}
+{
+    "_id" : ObjectId("5c10f3735d38908db52796aa"),
+    "name" : "Splash Bar",
+    "location" : { "type" : "Point", "coordinates" : [ -73.992491, 40.738673 ] }
+    "distance" : 0.0693586286032982 <4>
+}
+----
+<1> Maximum distance from center point in _Radians_.
+<2> The distance multiplier so we get _Kilometers_ as resulting distance.
+<3> Make sure we operate on a 2d_sphere index.
+<4> Distance from center point in _Kilometers_ - take it times 1000 to match _Meters_ of the GeoJSON variant.
+====
+
+[[mongo.textsearch]]
+== Full-text Search
+
+Since version 2.6 of MongoDB, you can run full-text queries by using the `$text` operator. Methods and operations specific to full-text queries are available in `TextQuery` and `TextCriteria`. When doing full text search, see the https://docs.mongodb.org/manual/reference/operator/query/text/#behavior[MongoDB reference] for its behavior and limitations.
+
+Before you can actually use full-text search, you must set up the search index correctly.
+See xref:mongodb/mapping/mapping.adoc#mapping-usage-indexes.text-index[Text Index] for more detail on how to create index structures.
+The following example shows how to set up a full-text search:
+
+[source,javascript]
+----
+db.foo.createIndex(
+{
+  title : "text",
+  content : "text"
+},
+{
+  weights : {
+              title : 3
+            }
+}
+)
+----
+
+A query searching for `coffee cake` can be defined and run as follows:
+
+.Full Text Query
+====
+[source,java]
+----
+Query query = TextQuery
+  .queryText(new TextCriteria().matchingAny("coffee", "cake"));
+
+List<Document> page = template.find(query, Document.class);
+----
+====
+
+To sort results by relevance according to the `weights` use `TextQuery.sortByScore`.
+
+.Full Text Query - Sort by Score
+====
+[source,java]
+----
+Query query = TextQuery
+  .queryText(new TextCriteria().matchingAny("coffee", "cake"))
+  .sortByScore() <1>
+  .includeScore(); <2>
+
+List<Document> page = template.find(query, Document.class);
+----
+<1> Use the score property for sorting results by relevance which triggers `.sort({'score': {'$meta': 'textScore'}})`.
+<2> Use `TextQuery.includeScore()` to include the calculated relevance in the resulting `Document`.
+====
+
+You can exclude search terms by prefixing the term with `-` or by using `notMatching`, as shown in the following example (note that the two lines have the same effect and are thus redundant):
+
+[source,java]
+----
+// search for 'coffee' and not 'cake'
+TextQuery.queryText(new TextCriteria().matching("coffee").matching("-cake"));
+TextQuery.queryText(new TextCriteria().matching("coffee").notMatching("cake"));
+----
+
+`TextCriteria.matching` takes the provided term as is.
+Therefore, you can define phrases by putting them between double quotation marks (for example, `\"coffee cake\")` or using by `TextCriteria.phrase.`
+The following example shows both ways of defining a phrase:
+
+[source,java]
+----
+// search for phrase 'coffee cake'
+TextQuery.queryText(new TextCriteria().matching("\"coffee cake\""));
+TextQuery.queryText(new TextCriteria().phrase("coffee cake"));
+----
+
+You can set flags for `$caseSensitive` and `$diacriticSensitive` by using the corresponding methods on `TextCriteria`.
+Note that these two optional flags have been introduced in MongoDB 3.2 and are not included in the query unless explicitly set.
+
+[[mongo.query-by-example]]
+== Query by Example
+
+xref:mongodb/repositories/query-methods.adoc#query-by-example[Query by Example] can be used on the Template API level run example queries.
+
+The following snipped shows how to query by example:
+
+.Typed Example Query
+[source,java]
+----
+Person probe = new Person();
+probe.lastname = "stark";
+
+Example example = Example.of(probe);
+
+Query query = new Query(new Criteria().alike(example));
+List<Person> result = template.find(query, Person.class);
+----
+
+By default `Example` is strictly typed. This means that the mapped query has an included type match, restricting it to probe assignable types.
+For example, when sticking with the default type key (`_class`), the query has restrictions such as (`_class : { $in : [ com.acme.Person] }`).
+
+By using the `UntypedExampleMatcher`, it is possible to bypass the default behavior and skip the type restriction. So, as long as field names match, nearly any domain type can be used as the probe for creating the reference, as the following example shows:
+
+.Untyped Example Query
+====
+[source, java]
+----
+
+class JustAnArbitraryClassWithMatchingFieldName {
+  @Field("lastname") String value;
+}
+
+JustAnArbitraryClassWithMatchingFieldNames probe = new JustAnArbitraryClassWithMatchingFieldNames();
+probe.value = "stark";
+
+Example example = Example.of(probe, UntypedExampleMatcher.matching());
+
+Query query = new Query(new Criteria().alike(example));
+List<Person> result = template.find(query, Person.class);
+----
+====
+
+[NOTE]
+====
+When including `null` values in the `ExampleSpec`, Spring Data Mongo uses embedded document matching instead of dot notation property matching.
+Doing so forces exact document matching for all property values and the property order in the embedded document.
+====
+
+[NOTE]
+====
+`UntypedExampleMatcher` is likely the right choice for you if you are storing different entities within a single collection or opted out of writing type hints.
+
+Also, keep in mind that using `@TypeAlias` requires eager initialization of the `MappingContext`. To do so, configure `initialEntitySet` to to ensure proper alias resolution for read operations.
+====
+
+Spring Data MongoDB provides support for different matching options:
+
+.`StringMatcher` options
+[%collapsible]
+====
+[cols="1,2", options="header"]
+|===
+| Matching
+| Logical result
+
+| `DEFAULT` (case-sensitive)
+| `{"firstname" : firstname}`
+
+| `DEFAULT` (case-insensitive)
+| `{"firstname" : { $regex: firstname, $options: 'i'}}`
+
+| `EXACT`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname$/}}`
+
+| `EXACT` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname$/, $options: 'i'}}`
+
+| `STARTING`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname/}}`
+
+| `STARTING` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname/, $options: 'i'}}`
+
+| `ENDING`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname$/}}`
+
+| `ENDING` (case-insensitive)
+| `{"firstname" : { $regex: /firstname$/, $options: 'i'}}`
+
+| `CONTAINING`  (case-sensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/}}`
+
+| `CONTAINING` (case-insensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/, $options: 'i'}}`
+
+| `REGEX`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname/}}`
+
+| `REGEX` (case-insensitive)
+| `{"firstname" : { $regex: /firstname/, $options: 'i'}}`
+
+|===
+====
+
+[[mongo.jsonSchema.query]]
+== Query a collection for matching JSON Schema
+
+You can use a schema to query any collection for documents that match a given structure defined by a JSON schema, as the following example shows:
+
+.Query for Documents matching a `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.find(query(matchingDocumentStructure(schema)), Person.class);
+----
+====
+
+Please refer to the xref:mongodb/mapping/mapping-schema.adoc[JSON Schema] section to learn more about the schema support in Spring Data MongoDB.
+
+
+

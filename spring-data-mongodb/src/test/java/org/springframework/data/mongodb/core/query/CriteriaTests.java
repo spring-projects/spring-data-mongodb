@@ -19,10 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import java.util.Arrays;
 
 import org.bson.types.Binary;
@@ -151,13 +147,79 @@ class CriteriaTests {
 				.containsExactlyInAnyOrder(FIFTY_FOUR, TWENTY_INT, TWENTY_FLOAT, ONE_HUNDRED_TWO);
 	}
 
-	@Data
-	@EqualsAndHashCode(exclude = "value")
-	@AllArgsConstructor
 	static class DocumentWithBitmask {
 
 		@Id String id;
 		Object value;
 		String binaryValue;
+
+		public DocumentWithBitmask(String id, Object value, String binaryValue) {
+
+			this.id = id;
+			this.value = value;
+			this.binaryValue = binaryValue;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Object getValue() {
+			return this.value;
+		}
+
+		public String getBinaryValue() {
+			return this.binaryValue;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
+		public void setBinaryValue(String binaryValue) {
+			this.binaryValue = binaryValue;
+		}
+
+		public String toString() {
+			return "CriteriaTests.DocumentWithBitmask(id=" + this.getId() + ", value=" + this.getValue() + ", binaryValue="
+					+ this.getBinaryValue() + ")";
+		}
+
+		public boolean equals(final Object o) {
+			if (o == this)
+				return true;
+			if (!(o instanceof DocumentWithBitmask))
+				return false;
+			final DocumentWithBitmask other = (DocumentWithBitmask) o;
+			if (!other.canEqual((Object) this))
+				return false;
+			final Object this$id = this.getId();
+			final Object other$id = other.getId();
+			if (this$id == null ? other$id != null : !this$id.equals(other$id))
+				return false;
+			final Object this$binaryValue = this.getBinaryValue();
+			final Object other$binaryValue = other.getBinaryValue();
+			if (this$binaryValue == null ? other$binaryValue != null : !this$binaryValue.equals(other$binaryValue))
+				return false;
+			return true;
+		}
+
+		protected boolean canEqual(final Object other) {
+			return other instanceof DocumentWithBitmask;
+		}
+
+		public int hashCode() {
+			final int PRIME = 59;
+			int result = 1;
+			final Object $id = this.getId();
+			result = result * PRIME + ($id == null ? 43 : $id.hashCode());
+			final Object $binaryValue = this.getBinaryValue();
+			result = result * PRIME + ($binaryValue == null ? 43 : $binaryValue.hashCode());
+			return result;
+		}
 	}
 }

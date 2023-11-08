@@ -29,6 +29,7 @@ import java.util.Set;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.util.Assert;
@@ -123,7 +124,8 @@ class DefaultScriptOperations implements ScriptOperations {
 
 		Assert.hasText(scriptName, "ScriptName must not be null or empty");
 
-		return mongoOperations.exists(query(where("_id").is(scriptName)), NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
+		return mongoOperations.exists(query(where(FieldName.ID.name()).is(scriptName)), NamedMongoScript.class,
+				SCRIPT_COLLECTION_NAME);
 	}
 
 	@Override
@@ -150,7 +152,7 @@ class DefaultScriptOperations implements ScriptOperations {
 			return args;
 		}
 
-		List<Object> convertedValues = new ArrayList<Object>(args.length);
+		List<Object> convertedValues = new ArrayList<>(args.length);
 
 		for (Object arg : args) {
 			convertedValues.add(arg instanceof String && quote ? String.format("'%s'", arg)

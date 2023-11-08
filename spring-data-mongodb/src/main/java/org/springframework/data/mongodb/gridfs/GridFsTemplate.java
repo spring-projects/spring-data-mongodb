@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -30,6 +31,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -56,12 +58,14 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
  */
 public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOperations, ResourcePatternResolver {
 
-	private final MongoDatabaseFactory dbFactory;
-
-	private final @Nullable String bucket;
+	private final Supplier<GridFSBucket> bucketSupplier;
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from {@link MongoDatabaseFactory#getMongoDatabase()
+	 * MongoDatabase}. Use {@link #GridFsTemplate(MongoConverter, Supplier)} if you want to use different buckets from the
+	 * same Template instance.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
@@ -72,26 +76,44 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
+	 * <p>
+	 * Note that the {@link GridFSBucket} is obtained only once from {@link MongoDatabaseFactory#getMongoDatabase()
+	 * MongoDatabase}. Use {@link #GridFsTemplate(MongoConverter, Supplier)} if you want to use different buckets from the
+	 * same Template instance.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 * @param bucket can be {@literal null}.
 	 */
 	public GridFsTemplate(MongoDatabaseFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
+		this(converter, Lazy.of(() -> getGridFs(dbFactory, bucket)));
+	}
+
+	/**
+	 * Creates a new {@link GridFsTemplate} using the given {@link MongoConverter} and {@link Supplier} providing the
+	 * required {@link GridFSBucket}.
+	 *
+	 * @param converter must not be {@literal null}.
+	 * @param gridFSBucket must not be {@literal null}.
+	 * @since 4.2
+	 */
+	public GridFsTemplate(MongoConverter converter, Supplier<GridFSBucket> gridFSBucket) {
 
 		super(converter);
 
-		Assert.notNull(dbFactory, "MongoDbFactory must not be null");
+		Assert.notNull(gridFSBucket, "GridFSBucket supplier must not be null");
 
-		this.dbFactory = dbFactory;
-		this.bucket = bucket;
+		this.bucketSupplier = gridFSBucket;
 	}
 
+	@Override
 	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata) {
 		return store(content, filename, contentType, toDocument(metadata));
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T store(GridFsObject<T, InputStream> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
@@ -110,6 +132,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return upload.getFileId();
 	}
 
+	@Override
 	public GridFSFindIterable find(Query query) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -130,10 +153,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return iterable;
 	}
 
+	@Override
 	public GridFSFile findOne(Query query) {
 		return find(query).first();
 	}
 
+	@Override
 	public void delete(Query query) {
 
 		for (GridFSFile gridFSFile : find(query)) {
@@ -141,10 +166,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		}
 	}
 
+	@Override
 	public ClassLoader getClassLoader() {
-		return dbFactory.getClass().getClassLoader();
+		return null;
 	}
 
+	@Override
 	public GridFsResource getResource(String location) {
 
 		return Optional.ofNullable(findOne(query(whereFilename().is(location)))) //
@@ -152,6 +179,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 				.orElseGet(() -> GridFsResource.absent(location));
 	}
 
+	@Override
 	public GridFsResource getResource(GridFSFile file) {
 
 		Assert.notNull(file, "GridFSFile must not be null");
@@ -159,6 +187,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}
 
+	@Override
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
@@ -183,6 +212,12 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	}
 
 	private GridFSBucket getGridFs() {
+		return this.bucketSupplier.get();
+	}
+
+	private static GridFSBucket getGridFs(MongoDatabaseFactory dbFactory, @Nullable String bucket) {
+
+		Assert.notNull(dbFactory, "MongoDatabaseFactory must not be null");
 
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);

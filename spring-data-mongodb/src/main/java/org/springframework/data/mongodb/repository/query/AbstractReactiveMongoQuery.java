@@ -66,6 +66,7 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jorge Rodríguez
  * @since 2.0
  */
 public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
@@ -160,6 +161,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			applyQueryMetaAttributesWhenPresent(query);
 			query = applyAnnotatedDefaultSortIfPresent(query);
 			query = applyAnnotatedCollationIfPresent(query, accessor);
+			query = applyHintIfPresent(query);
+			query = applyAnnotatedReadPreferenceIfPresent(query);
 
 			FindWithQuery<?> find = typeToRead == null //
 					? findOperationWithProjection //
@@ -203,6 +206,9 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).tail();
 		} else if (method.isCollectionQuery()) {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).all();
+		} else if (method.isScrollQuery()) {
+			return (q, t, c) -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort()))
+					.scroll(accessor.getScrollPosition());
 		} else if (isCountQuery()) {
 			return (q, t, c) -> operation.matching(q).count();
 		} else if (isExistsQuery()) {
@@ -224,6 +230,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private boolean isTailable(MongoQueryMethod method) {
 		return method.getTailableAnnotation() != null;
 	}
+
 
 	Query applyQueryMetaAttributesWhenPresent(Query query) {
 
@@ -264,6 +271,38 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
 				accessor, getQueryMethod().getParameters(), expressionParser, evaluationContextProvider);
+	}
+
+	/**
+	 * If present apply the hint from the {@link org.springframework.data.mongodb.repository.Hint} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	Query applyHintIfPresent(Query query) {
+
+		if (!method.hasAnnotatedHint()) {
+			return query;
+		}
+
+		return query.withHint(method.getAnnotatedHint());
+	}
+
+	/**
+	 * If present apply the {@link com.mongodb.ReadPreference} from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	private Query applyAnnotatedReadPreferenceIfPresent(Query query) {
+
+		if (!method.hasAnnotatedReadPreference()) {
+			return query;
+		}
+
+		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
 	}
 
 	/**

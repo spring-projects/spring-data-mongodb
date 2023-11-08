@@ -20,10 +20,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Wither;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -726,6 +723,32 @@ public class ReactiveMongoTemplateTests {
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(actual.getName()).isEqualTo("Walter");
+				}).verifyComplete();
+	}
+
+	@Test // GH-4300
+	public void findAndReplaceShouldAllowNativeDomainTypesAndReturnAProjection() {
+
+		MongoTemplateTests.MyPerson person = new MongoTemplateTests.MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		template
+				.findAndReplace(query(where("name").is("Walter")), new org.bson.Document("name", "Heisenberg"),
+						FindAndReplaceOptions.options(), org.bson.Document.class, "myPerson", MongoTemplateTests.MyPerson.class)
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getAddress()).isEqualTo(person.address);
+				}).verifyComplete();
+
+		template.execute(MongoTemplateTests.MyPerson.class, collection -> {
+			return collection.find(new org.bson.Document("name", "Heisenberg")).first();
+		}).as(StepVerifier::create) //
+				.consumeNextWith(loaded -> {
+					assertThat(loaded.get("_id")).isEqualTo(new ObjectId(person.id));
 				}).verifyComplete();
 	}
 
@@ -1846,8 +1869,6 @@ public class ReactiveMongoTemplateTests {
 		return saved;
 	}
 
-	@AllArgsConstructor
-	@Wither
 	static class ImmutableVersioned {
 
 		final @Id String id;
@@ -1857,9 +1878,21 @@ public class ReactiveMongoTemplateTests {
 			id = null;
 			version = null;
 		}
+
+		public ImmutableVersioned(String id, Long version) {
+			this.id = id;
+			this.version = version;
+		}
+
+		public ImmutableVersioned withId(String id) {
+			return this.id == id ? this : new ImmutableVersioned(id, this.version);
+		}
+
+		public ImmutableVersioned withVersion(Long version) {
+			return this.version == version ? this : new ImmutableVersioned(this.id, version);
+		}
 	}
 
-	@Data
 	static class Sample {
 
 		@Id String id;
@@ -1871,19 +1904,108 @@ public class ReactiveMongoTemplateTests {
 			this.id = id;
 			this.field = field;
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getField() {
+			return this.field;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setField(String field) {
+			this.field = field;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sample sample = (Sample) o;
+			return Objects.equals(id, sample.id) && Objects.equals(field, sample.field);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, field);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateTests.Sample(id=" + this.getId() + ", field=" + this.getField() + ")";
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	public static class MyPerson {
 
 		String id;
 		String name;
 		Address address;
 
+		public MyPerson() {}
+
 		MyPerson(String name) {
 			this.name = name;
+		}
+
+		public MyPerson(String id, String name, Address address) {
+			this.id = id;
+			this.name = name;
+			this.address = address;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			MyPerson myPerson = (MyPerson) o;
+			return Objects.equals(id, myPerson.id) && Objects.equals(name, myPerson.name)
+					&& Objects.equals(address, myPerson.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, address);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateTests.MyPerson(id=" + this.getId() + ", name=" + this.getName() + ", address="
+					+ this.getAddress() + ")";
 		}
 	}
 
@@ -1891,11 +2013,46 @@ public class ReactiveMongoTemplateTests {
 		String getName();
 	}
 
-	@Data
 	static class RawStringId {
 
 		@MongoId String id;
 		String value;
-	}
 
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			RawStringId that = (RawStringId) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateTests.RawStringId(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
+	}
 }

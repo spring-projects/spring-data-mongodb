@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
 import org.springframework.data.convert.ValueConversionContext;
+import org.springframework.data.mapping.model.PropertyValueProvider;
+import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -29,13 +31,25 @@ import org.springframework.lang.Nullable;
  */
 public class MongoConversionContext implements ValueConversionContext<MongoPersistentProperty> {
 
+	private final PropertyValueProvider<MongoPersistentProperty> accessor; // TODO: generics
 	private final MongoPersistentProperty persistentProperty;
 	private final MongoConverter mongoConverter;
 
-	public MongoConversionContext(MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
+	@Nullable
+	private final SpELContext spELContext;
 
+	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
+			MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
+		this(accessor, persistentProperty, mongoConverter, null);
+	}
+
+	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
+			MongoPersistentProperty persistentProperty, MongoConverter mongoConverter, @Nullable SpELContext spELContext) {
+
+		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
+		this.spELContext = spELContext;
 	}
 
 	@Override
@@ -43,14 +57,25 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		return persistentProperty;
 	}
 
+	@Nullable
+	public Object getValue(String propertyPath) {
+		return accessor.getPropertyValue(persistentProperty.getOwner().getRequiredPersistentProperty(propertyPath));
+	}
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
 		return (T) mongoConverter.convertToMongoType(value, target);
 	}
 
 	@Override
 	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
-		return value instanceof Bson ? mongoConverter.read(target.getType(), (Bson) value)
+		return value instanceof Bson bson ? mongoConverter.read(target.getType(), bson)
 				: ValueConversionContext.super.read(value, target);
+	}
+
+	@Nullable
+	public SpELContext getSpELContext() {
+		return spELContext;
 	}
 }

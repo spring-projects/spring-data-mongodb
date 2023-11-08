@@ -34,6 +34,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapperPropertyAccessorFactory;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
@@ -73,8 +74,8 @@ class DocumentPointerFactory {
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			MongoPersistentProperty property, Object value, Class<?> typeHint) {
 
-		if (value instanceof LazyLoadingProxy) {
-			return () -> ((LazyLoadingProxy) value).getSource();
+		if (value instanceof LazyLoadingProxy proxy) {
+			return proxy::getSource;
 		}
 
 		if (conversionService.canConvert(typeHint, DocumentPointer.class)) {
@@ -94,8 +95,8 @@ class DocumentPointerFactory {
 				return () -> conversionService.convert(idValue, idProperty.getFieldType());
 			}
 
-			if (idValue instanceof String && ObjectId.isValid((String) idValue)) {
-				return () -> new ObjectId((String) idValue);
+			if (idValue instanceof String stringValue && ObjectId.isValid((String) idValue)) {
+				return () -> new ObjectId(stringValue);
 			}
 
 			return () -> idValue;
@@ -210,13 +211,13 @@ class DocumentPointerFactory {
 							lookup, entry.getKey()));
 				}
 
-				if (entry.getValue() instanceof Document) {
+				if (entry.getValue() instanceof Document document) {
 
 					MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(entry.getKey());
 					if (persistentProperty != null && persistentProperty.isEntity()) {
 
 						MongoPersistentEntity<?> nestedEntity = mappingContext.getPersistentEntity(persistentProperty.getType());
-						target.put(entry.getKey(), updatePlaceholders((Document) entry.getValue(), new Document(), mappingContext,
+						target.put(entry.getKey(), updatePlaceholders(document, new Document(), mappingContext,
 								nestedEntity, nestedEntity.getPropertyAccessor(propertyAccessor.getProperty(persistentProperty))));
 					} else {
 						target.put(entry.getKey(), updatePlaceholders((Document) entry.getValue(), new Document(), mappingContext,
@@ -232,7 +233,7 @@ class DocumentPointerFactory {
 						attribute = attribute.substring(attribute.lastIndexOf('.') + 1);
 					}
 
-					String fieldName = entry.getKey().equals("_id") ? "id" : entry.getKey();
+					String fieldName = entry.getKey().equals(FieldName.ID.name()) ? "id" : entry.getKey();
 					if (!fieldName.contains(".")) {
 
 						Object targetValue = propertyAccessor.getProperty(persistentEntity.getPersistentProperty(fieldName));

@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.bson.types.Binary;
@@ -108,19 +108,96 @@ public class MongoConvertersIntegrationTests {
 		UUID uuid;
 	}
 
-	@Data
 	@Document(COLLECTION)
 	static class WithBinaryDataInArray {
 
 		@Id String id;
 		byte[] data;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public byte[] getData() {
+			return this.data;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setData(byte[] data) {
+			this.data = data;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithBinaryDataInArray that = (WithBinaryDataInArray) o;
+			return Objects.equals(id, that.id) && Arrays.equals(data, that.data);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = Objects.hash(id);
+			result = 31 * result + Arrays.hashCode(data);
+			return result;
+		}
+
+		public String toString() {
+			return "MongoConvertersIntegrationTests.WithBinaryDataInArray(id=" + this.getId() + ", data="
+					+ java.util.Arrays.toString(this.getData()) + ")";
+		}
 	}
 
-	@Data
 	@Document(COLLECTION)
 	static class WithBinaryDataType {
 
 		@Id String id;
 		Binary data;
+
+		public WithBinaryDataType() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Binary getData() {
+			return this.data;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setData(Binary data) {
+			this.data = data;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithBinaryDataType that = (WithBinaryDataType) o;
+			return Objects.equals(id, that.id) && Objects.equals(data, that.data);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, data);
+		}
+
+		public String toString() {
+			return "MongoConvertersIntegrationTests.WithBinaryDataType(id=" + this.getId() + ", data=" + this.getData() + ")";
+		}
 	}
 }

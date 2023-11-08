@@ -61,7 +61,7 @@ interface ReactiveMongoQueryExecution {
 	 *
 	 * @author Mark Paluch
 	 */
-	class GeoNearExecution implements ReactiveMongoQueryExecution {
+	final class GeoNearExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveMongoOperations operations;
 		private final MongoParameterAccessor accessor;
@@ -83,7 +83,7 @@ interface ReactiveMongoQueryExecution {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		protected Flux<GeoResult<Object>> doExecuteQuery(@Nullable Query query, Class<?> type, String collection) {
+		private Flux<GeoResult<Object>> doExecuteQuery(@Nullable Query query, Class<?> type, String collection) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
 			NearQuery nearQuery = NearQuery.near(nearLocation);
@@ -154,7 +154,6 @@ interface ReactiveMongoQueryExecution {
 	final class UpdateExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveUpdate<?> updateOps;
-		private final MongoQueryMethod method;
 		private final MongoParameterAccessor accessor;
 		private Mono<UpdateDefinition> update;
 
@@ -162,7 +161,6 @@ interface ReactiveMongoQueryExecution {
 				Mono<UpdateDefinition> update) {
 
 			this.updateOps = updateOps;
-			this.method = method;
 			this.accessor = accessor;
 			this.update = update;
 		}
@@ -232,12 +230,12 @@ interface ReactiveMongoQueryExecution {
 
 			if (ReflectionUtils.isVoid(returnedType.getReturnedType())) {
 
-				if (source instanceof Mono) {
-					return ((Mono<?>) source).then();
+				if (source instanceof Mono<?> mono) {
+					return mono.then();
 				}
 
-				if (source instanceof Publisher) {
-					return Flux.from((Publisher<?>) source).then();
+				if (source instanceof Publisher<?> publisher) {
+					return Flux.from(publisher).then();
 				}
 			}
 

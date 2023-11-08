@@ -19,10 +19,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -108,6 +105,7 @@ import org.springframework.util.CollectionUtils;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
@@ -120,16 +118,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.MapReduceAction;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.TimeSeriesGranularity;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -142,6 +131,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael J. Simons
  * @author Roman Puchkovskiy
  * @author Yadhukrishna S Pai
+ * @author Jakub Zurawa
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -182,11 +172,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.estimatedDocumentCount(any())).thenReturn(1L);
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
+		when(collection.withReadConcern(any())).thenReturn(collection);
 		when(collection.withReadPreference(any())).thenReturn(collection);
-		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(updateResult);
+		when(collection.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class))).thenReturn(updateResult);
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
 		when(collection.distinct(anyString(), any(Document.class), any())).thenReturn(distinctIterable);
 		when(collectionWithWriteConcern.deleteOne(any(Bson.class), any())).thenReturn(deleteResult);
+		when(collectionWithWriteConcern.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class))).thenReturn(updateResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -478,6 +470,34 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, never()).withReadPreference(any());
 	}
 
+	@Test // GH-4277
+	void aggregateShouldHonorOptionsReadConcernWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readConcern(ReadConcern.SNAPSHOT).build();
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4277
+	void aggregateShouldHonorOptionsReadPreferenceWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readPreference(ReadPreference.secondary()).build();
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
+	@Test // GH-4277
+	void aggregateStreamShouldHonorOptionsReadPreferenceWhenSet() {
+
+		AggregationOptions options = AggregationOptions.builder().readPreference(ReadPreference.secondary()).build();
+		template.aggregateStream(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1",
+				Wrapper.class);
+
+		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
 	@Test // DATAMONGO-2153
 	void aggregateShouldHonorOptionsComment() {
 
@@ -556,6 +576,28 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.geoNear(query, Wrapper.class);
 
 		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadPreferenceFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadPreference(ReadPreference.secondary());
+
+		template.geoNear(query, Wrapper.class);
+
+		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadConcernFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadConcern(ReadConcern.SNAPSHOT);
+
+		template.geoNear(query, Wrapper.class);
+
+		verify(collection).withReadConcern(eq(ReadConcern.SNAPSHOT));
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264
@@ -802,6 +844,23 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(findIterable).batchSize(1234);
 	}
 
+	@Test // GH-4277
+	void findShouldUseReadConcernWhenPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}").withReadConcern(ReadConcern.SNAPSHOT), AutogenerateableId.class);
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4277
+	void findShouldUseReadPreferenceWhenPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}").withReadPreference(ReadPreference.secondary()),
+				AutogenerateableId.class);
+
+		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
 	@Test // DATAMONGO-1518
 	void executeQueryShouldUseCollationWhenPresent() {
 
@@ -917,12 +976,35 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
+	@Test // GH-3218
+	void updateUsesHintStringFromQuery() {
+
+		template.updateFirst(new Query().withHint("index-1"), new Update().set("spring", "data"), Human.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-1");
+	}
+
+	@Test // GH-3218
+	void updateUsesHintDocumentFromQuery() {
+
+		template.updateFirst(new Query().withHint("{ name : 1 }"), new Update().set("spring", "data"), Human.class);
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHint()).isEqualTo(new Document("name", 1));
+	}
+
 	@Test // DATAMONGO-1518
 	void replaceOneShouldUseCollationWhenPresent() {
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
-		ArgumentCaptor<ReplaceOptions> options = ArgumentCaptor.forClass(ReplaceOptions.class);
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
 		verify(collection).replaceOne(any(), any(), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
@@ -1048,8 +1130,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				PersonProjection.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
@@ -1057,8 +1139,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
+				PersonProjection.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
 	}
@@ -1066,8 +1148,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				PersonSpELProjection.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
@@ -1075,8 +1157,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				Jedi.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
@@ -1084,8 +1166,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
+				Jedi.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
 	}
@@ -1093,8 +1175,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				Person.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
@@ -1102,8 +1184,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
-				CursorPreparer.NO_OP_PREPARER);
+		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
+				PersonExtended.class, CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
@@ -1156,7 +1238,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.save(entity);
 
-		verify(collection, times(1)).replaceOne(queryCaptor.capture(), updateCaptor.capture(), any(ReplaceOptions.class));
+		verify(collection, times(1)).replaceOne(queryCaptor.capture(), updateCaptor.capture(), any(com.mongodb.client.model.ReplaceOptions.class));
 
 		assertThat(queryCaptor.getValue()).isEqualTo(new Document("_id", 1).append("version", 10));
 		assertThat(updateCaptor.getValue())
@@ -1698,7 +1780,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
 
-		verify(collection).replaceOne(any(), captor.capture(), any(ReplaceOptions.class));
+		verify(collection).replaceOne(any(), captor.capture(), any(com.mongodb.client.model.ReplaceOptions.class));
 		assertThat(captor.getValue()).containsEntry("added-by", "callback");
 	}
 
@@ -1918,7 +2000,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2341
 	void saveShouldAppendNonDefaultShardKeyToVersionedEntityIfNotPresentInFilter() {
 
-		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class)))
+		when(collection.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class)))
 				.thenReturn(UpdateResult.acknowledged(1, 1L, null));
 
 		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230));
@@ -2006,7 +2088,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2341
 	void saveVersionedShouldProjectOnShardKeyWhenLoadingExistingDocument() {
 
-		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class)))
+		when(collection.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class)))
 				.thenReturn(UpdateResult.acknowledged(1, 1L, null));
 		when(findIterable.first()).thenReturn(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
 
@@ -2312,6 +2394,26 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).countDocuments(any(Document.class), any());
 	}
 
+	@Test // GH-4374
+	void countConsidersMaxTimeMs() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").maxTimeMsec(5000), Human.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getMaxTime(TimeUnit.MILLISECONDS)).isEqualTo(5000);
+	}
+
+	@Test // GH-4374
+	void countPassesOnComment() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").comment("rocks!"), Human.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getComment()).isEqualTo(BsonUtils.simpleToBsonValue("rocks!"));
+	}
+
 	@Test // GH-3984
 	void templatePassesOnTimeSeriesOptionsWhenNoTypeGiven() {
 
@@ -2322,6 +2424,94 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		assertThat(options.getValue().getTimeSeriesOptions().toString())
 				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").toString());
+	}
+
+	@Test // GH-4300
+	void findAndReplaceAllowsDocumentSourceType() {
+
+		template.findAndReplace(new Query(), new Document("spring", "data"), FindAndReplaceOptions.options().upsert(),
+				Document.class, "coll-1", Person.class);
+
+		verify(db).getCollection(eq("coll-1"), eq(Document.class));
+		verify(collection).findOneAndReplace((Bson) any(Bson.class), eq(new Document("spring", "data")),
+				any(FindOneAndReplaceOptions.class));
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseCollationWhenPresent() {
+
+		template.replace(new BasicQuery("{}").collation(Collation.of("fr")), new AutogenerateableId());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
+	}
+
+	@Test // GH-4462
+	void replaceShouldNotUpsertByDefault() {
+
+		template.replace(new BasicQuery("{}"), new Sith());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+	}
+
+	@Test // GH-4462
+	void replaceShouldUpsert() {
+
+		template.replace(new BasicQuery("{}"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isTrue();
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseDefaultCollationWhenPresent() {
+
+		template.replace(new BasicQuery("{}"), new Sith(), ReplaceOptions.replaceOptions());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseHintIfPresent() {
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-to-use");
+	}
+
+	@Test // GH-4462
+	void replaceShouldApplyWriteConcern() {
+
+		template.setWriteConcernResolver(new WriteConcernResolver() {
+			public WriteConcern resolve(MongoAction action) {
+
+				assertThat(action.getMongoActionOperation()).isEqualTo(MongoActionOperation.REPLACE);
+				return WriteConcern.UNACKNOWLEDGED;
+			}
+		});
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+
+		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
 
 	class AutogenerateableId {
@@ -2355,14 +2545,52 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		}
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Person {
 
 		@Id String id;
 		String firstname;
+
+		public Person() {
+		}
+
+		public Person(String id, String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname);
+		}
 	}
 
 	static class PersonExtended extends Person {
@@ -2385,15 +2613,29 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		String getName();
 	}
 
-	@Data
 	static class Human {
 		@Id String id;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
 	}
 
-	@Data
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	class Wrapper {

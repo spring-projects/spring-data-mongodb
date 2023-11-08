@@ -29,6 +29,7 @@ import java.util.Map;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperationUnitTests.BookWithFieldAnnotation;
@@ -48,6 +49,7 @@ import com.mongodb.client.model.Projections;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Julia Lee
  */
 public class AggregationUnitTests {
 
@@ -600,7 +602,7 @@ public class AggregationUnitTests {
 				new RelaxedTypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
 						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
 
-		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : \"$_id\" }"));
+		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : 1 }"));
 	}
 
 	@Test // GH-3898
@@ -611,7 +613,7 @@ public class AggregationUnitTests {
 				WithRetypedIdField.class, mappingContext,
 				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
 		Document document = project(WithRetypedIdField.class).toDocument(context);
-		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1)));
+		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1).append("entries", 1)));
 	}
 
 	@Test // GH-4038
@@ -628,6 +630,44 @@ public class AggregationUnitTests {
 		AggregationOperation stage = stage(Aggregates.project(Projections.fields(Projections.include("name"))));
 		Document target = newAggregation(stage).toDocument("col-1", DEFAULT_CONTEXT);
 		assertThat(extractPipelineElement(target, 0, "$project")).containsKey("name");
+	}
+
+	@Test // GH-3917
+	void inheritedFieldsExposingContextShouldNotFailOnUnknownFieldReferenceForRelaxedRootContext() {
+
+		List<AggregationOperation> aggregationOperations = new ArrayList<>();
+
+		GroupOperation groupOperation = Aggregation.group("_id", "label_name");
+		aggregationOperations.add(groupOperation);
+
+		ProjectionOperation projectionOperation = Aggregation.project("label_name").andExclude("_id");
+		aggregationOperations.add(projectionOperation);
+
+		Sort sort = Sort.by(Sort.Direction.DESC, "serial_number");
+		SortOperation sortOperation = new SortOperation(sort).and(Sort.Direction.DESC, "label_name");
+		aggregationOperations.add(sortOperation);
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		QueryMapper queryMapper = new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
+
+		List<Document> documents = newAggregation(City.class, aggregationOperations).toPipeline(new RelaxedTypeBasedAggregationOperationContext(City.class, mappingContext, queryMapper));
+		assertThat(documents.get(2)).isEqualTo("{ $sort : { 'serial_number' : -1, 'label_name' : -1 } }");
+	}
+
+	@Test // GH-4443
+	void fieldsExposingContextShouldUseCustomFieldNameFromRelaxedRootContext() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
+				WithRetypedIdField.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+
+		TypedAggregation<WithRetypedIdField> agg = newAggregation(WithRetypedIdField.class,
+				unwind("entries"), match(where("foo").is("value 2")));
+		List<Document> pipeline = agg.toPipeline(context);
+
+		Document fields = getAsDocument(pipeline.get(1), "$match");
+		assertThat(fields.get("renamed-field")).isEqualTo("value 2");
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {
@@ -648,6 +688,8 @@ public class AggregationUnitTests {
 		@Id @org.springframework.data.mongodb.core.mapping.Field private String id;
 
 		@org.springframework.data.mongodb.core.mapping.Field("renamed-field") private String foo;
+
+		private List<String> entries = new ArrayList<>();
 
 	}
 }

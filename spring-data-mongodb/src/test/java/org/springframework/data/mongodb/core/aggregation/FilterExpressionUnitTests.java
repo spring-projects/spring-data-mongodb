@@ -117,6 +117,23 @@ class FilterExpressionUnitTests {
 		assertThat($filter).isEqualTo(new Document(expected));
 	}
 
+	@Test // GH-4394
+	void filterShouldAcceptExpression() {
+
+		Document $filter = ArrayOperators.arrayOf(ObjectOperators.valueOf("data.metadata").toArray()).filter().as("item")
+				.by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		Document expected = Document.parse("""
+				{ $filter : {
+					input: { $objectToArray: "$data.metadata" },
+					as: "item",
+					cond: { $gt: [ "$$item.price", "$field-1" ] }
+				}}
+				""");
+
+		assertThat($filter).isEqualTo(expected);
+	}
+
 	private Document extractFilterOperatorFromDocument(Document source) {
 
 		List<Object> pipeline = DocumentTestUtils.getAsDBList(source, "pipeline");

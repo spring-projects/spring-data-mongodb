@@ -145,6 +145,16 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public MongoField getMongoField() {
+
+		if (!context.getProperty().isUnwrapped()) {
+			return delegate.getMongoField();
+		}
+
+		return delegate.getMongoField().withPrefix(context.getProperty().findAnnotation(Unwrapped.class).prefix());
+	}
+
+	@Override
 	public TypeInformation<?> getTypeInformation() {
 		return delegate.getTypeInformation();
 	}
@@ -253,6 +263,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public boolean isWritable() {
 		return delegate.isWritable();
+	}
+
+	@Override
+	public boolean isReadable() {
+		return delegate.isReadable();
 	}
 
 	@Override

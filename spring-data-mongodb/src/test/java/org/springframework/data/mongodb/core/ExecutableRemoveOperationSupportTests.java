@@ -19,9 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -109,16 +108,67 @@ class ExecutableRemoveOperationSupportTests {
 		assertThat(result).containsExactly(han);
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
+
 		@Id String id;
 		String firstname;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname);
+		}
+
+		public String toString() {
+			return "ExecutableRemoveOperationSupportTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ")";
+		}
 	}
 
-	@Data
 	static class Jedi {
 
-		@Field("firstname") String name;
+		@Field("firstname") //
+		String name;
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String toString() {
+			return "ExecutableRemoveOperationSupportTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 }

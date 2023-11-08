@@ -113,8 +113,8 @@ public class ChangeStreamRequest<T>
 		Assert.notNull(messageListener, "MessageListener must not be null");
 		Assert.notNull(options, "Options must not be null");
 
-		this.options = options instanceof ChangeStreamRequestOptions ? (ChangeStreamRequestOptions) options
-				: ChangeStreamRequestOptions.of(options);
+		this.options = options instanceof ChangeStreamRequestOptions changeStreamRequestOptions ?
+				changeStreamRequestOptions : ChangeStreamRequestOptions.of(options);
 
 		this.messageListener = messageListener;
 	}

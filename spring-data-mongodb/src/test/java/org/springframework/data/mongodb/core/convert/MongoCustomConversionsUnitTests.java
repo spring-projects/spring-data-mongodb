@@ -64,6 +64,16 @@ class MongoCustomConversionsUnitTests {
 		assertThat(conversions.getPropertyValueConversions().hasValueConverter(persistentProperty)).isTrue();
 	}
 
+	@Test // GH-4390
+	void doesNotReturnConverterForNativeTimeTimeIfUsingDriverCodec() {
+
+		MongoCustomConversions conversions = MongoCustomConversions.create(config -> {
+			config.useNativeDriverJavaTimeCodecs();
+		});
+
+		assertThat(conversions.getCustomWriteTarget(Date.class)).isEmpty();
+	}
+
 	static class DateToZonedDateTimeConverter implements Converter<Date, ZonedDateTime> {
 
 		@Override

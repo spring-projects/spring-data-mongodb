@@ -1,0 +1,167 @@
+[[mongo-template.instantiating]]
+= Configuration
+
+You can use the following configuration to create and register an instance of `MongoTemplate`, as the following example shows:
+
+.Registering a `MongoClient` object and enabling Spring's exception translation support
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+@Configuration
+class ApplicationConfiguration {
+
+  @Bean
+  MongoClient mongoClient() {
+      return MongoClients.create("mongodb://localhost:27017");
+  }
+
+  @Bean
+  MongoOperations mongoTemplate(MongoClient mongoClient) {
+      return new MongoTemplate(mongoClient, "geospatial");
+  }
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+@Configuration
+class ReactiveApplicationConfiguration {
+
+  @Bean
+  MongoClient mongoClient() {
+      return MongoClients.create("mongodb://localhost:27017");
+  }
+
+  @Bean
+  ReactiveMongoOperations mongoTemplate(MongoClient mongoClient) {
+      return new ReactiveMongoTemplate(mongoClient, "geospatial");
+  }
+}
+----
+
+XML::
++
+[source,xml,indent=0,subs="verbatim,quotes",role="third"]
+----
+<mongo:mongo-client host="localhost" port="27017" />
+
+<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+  <constructor-arg ref="mongoClient" />
+  <constructor-arg name="databaseName" value="geospatial" />
+</bean>
+----
+======
+
+There are several overloaded constructors of `MongoTemplate` and `ReactiveMongoTemplate`:
+
+* `MongoTemplate(MongoClient mongo, String databaseName)`: Takes the `MongoClient` object and the default database name to operate against.
+* `MongoTemplate(MongoDatabaseFactory mongoDbFactory)`: Takes a MongoDbFactory object that encapsulated the `MongoClient` object, database name, and username and password.
+* `MongoTemplate(MongoDatabaseFactory mongoDbFactory, MongoConverter mongoConverter)`: Adds a `MongoConverter` to use for mapping.
+
+Other optional properties that you might like to set when creating a `MongoTemplate` / `ReactiveMongoTemplate` are the default `WriteResultCheckingPolicy`, `WriteConcern`, `ReadPreference` and others listed below.
+
+[[mongo-template.read-preference]]
+== Default Read Preference
+
+The default read preference applied to read operations if no other preference was defined via the xref:mongodb/template-query-operations.adoc#mongo.query.read-preference[Query].
+
+[[mongo-template.writeresultchecking]]
+== WriteResultChecking Policy
+
+When in development, it is handy to either log or throw an exception if the `com.mongodb.WriteResult` returned from any MongoDB operation contains an error. It is quite common to forget to do this during development and then end up with an application that looks like it runs successfully when, in fact, the database was not modified according to your expectations. You can set the `WriteResultChecking` property of `MongoTemplate` to one of the following values: `EXCEPTION` or `NONE`, to either throw an `Exception` or do nothing, respectively. The default is to use a `WriteResultChecking` value of `NONE`.
+
+[[mongo-template.writeconcern]]
+== Default WriteConcern
+
+If it has not yet been specified through the driver at a higher level (such as `com.mongodb.client.MongoClient`), you can set the `com.mongodb.WriteConcern` property that the `MongoTemplate` uses for write operations. If the `WriteConcern` property is not set, it defaults to the one set in the MongoDB driver's DB or Collection setting.
+
+[[mongo-template.writeconcernresolver]]
+== WriteConcernResolver
+
+For more advanced cases where you want to set different `WriteConcern` values on a per-operation basis (for remove, update, insert, and save operations), a strategy interface called `WriteConcernResolver` can be configured on `MongoTemplate`. Since `MongoTemplate` is used to persist POJOs, the `WriteConcernResolver` lets you create a policy that can map a specific POJO class to a `WriteConcern` value. The following listing shows the  `WriteConcernResolver` interface:
+
+[source,java]
+----
+public interface WriteConcernResolver {
+  WriteConcern resolve(MongoAction action);
+}
+----
+
+You can use the `MongoAction` argument to determine the `WriteConcern` value or use the value of the Template itself as a default.
+`MongoAction` contains the collection name being written to, the `java.lang.Class` of the POJO, the converted `Document`, the operation (`REMOVE`, `UPDATE`, `INSERT`, `INSERT_LIST`, or `SAVE`), and a few other pieces of contextual information.
+The following example shows two sets of classes getting different `WriteConcern` settings:
+
+[source,java]
+----
+public class MyAppWriteConcernResolver implements WriteConcernResolver {
+
+  @Override
+  public WriteConcern resolve(MongoAction action) {
+    if (action.getEntityType().getSimpleName().contains("Audit")) {
+      return WriteConcern.ACKNOWLEDGED;
+    } else if (action.getEntityType().getSimpleName().contains("Metadata")) {
+      return WriteConcern.JOURNALED;
+    }
+    return action.getDefaultWriteConcern();
+  }
+}
+----
+
+[[mongo-template.entity-lifecycle-events]]
+== Publish entity lifecycle events
+
+The template publishes xref:mongodb/lifecycle-events.adoc#mongodb.mapping-usage.events[lifecycle events].
+In case there are no listeners present, this feature can be disabled.
+
+[source,java]
+----
+@Bean
+MongoOperations mongoTemplate(MongoClient mongoClient) {
+    MongoTemplate template = new MongoTemplate(mongoClient, "geospatial");
+	template.setEntityLifecycleEventsEnabled(false);
+	// ...
+}
+----
+
+[[mongo-template.entity-callbacks-config]]
+== Configure EntityCallbacks
+
+Nest to lifecycle events the template invokes xref:mongodb/lifecycle-events.adoc#mongo.entity-callbacks[EntityCallbacks] which can be (if not auto configured) set via the template API.
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+@Bean
+MongoOperations mongoTemplate(MongoClient mongoClient) {
+    MongoTemplate template = new MongoTemplate(mongoClient, "...");
+	template.setEntityCallbacks(EntityCallbacks.create(...));
+	// ...
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+@Bean
+ReactiveMongoOperations mongoTemplate(MongoClient mongoClient) {
+    ReactiveMongoTemplate template = new ReactiveMongoTemplate(mongoClient, "...");
+	template.setEntityCallbacks(ReactiveEntityCallbacks.create(...));
+	// ...
+}
+----
+======
+
+[[mongo-template.count-documents-config]]
+== Document count configuration
+
+By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a xref:mongodb/client-session-transactions.adoc[session].
+Please refer to to the xref:mongodb/template-document-count.adoc#mongo.query.count[Counting Documents] section for more information.

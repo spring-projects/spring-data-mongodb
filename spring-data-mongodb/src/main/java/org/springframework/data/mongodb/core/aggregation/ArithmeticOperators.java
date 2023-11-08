@@ -24,7 +24,9 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Av
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovariancePop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovarianceSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Max;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Median;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Min;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Percentile;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevPop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
@@ -41,6 +43,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Mushtaq Ahmed
+ * @author Julia Lee
  * @since 1.10
  */
 public class ArithmeticOperators {
@@ -930,6 +933,32 @@ public class ArithmeticOperators {
 		 */
 		public Tanh tanh(AngularUnit unit) {
 			return usesFieldRef() ? Tanh.tanhOf(fieldReference, unit) : Tanh.tanhOf(expression, unit);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
+		 * numeric value.
+		 *
+		 * @return new instance of {@link Percentile}.
+		 * @param percentages must not be {@literal null}.
+		 * @since 4.2
+		 */
+		public Percentile percentile(Double... percentages) {
+			Percentile percentile = usesFieldRef() ? AccumulatorOperators.Percentile.percentileOf(fieldReference)
+					: AccumulatorOperators.Percentile.percentileOf(expression);
+			return percentile.percentages(percentages);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
+		 * numeric value.
+		 *
+		 * @return new instance of {@link Median}.
+		 * @since 4.2
+		 */
+		public Median median() {
+			return usesFieldRef() ? AccumulatorOperators.Median.medianOf(fieldReference)
+					: AccumulatorOperators.Median.medianOf(expression);
 		}
 
 		private boolean usesFieldRef() {

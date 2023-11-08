@@ -20,8 +20,9 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.Window;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -72,8 +73,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		private final @Nullable String collection;
 		private final Query query;
 
-		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType,
-				@Nullable String collection, Query query) {
+		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType, @Nullable String collection,
+				Query query) {
 			this.template = template;
 			this.domainType = domainType;
 			this.returnType = returnType;
@@ -140,6 +141,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		public Window<T> scroll(ScrollPosition scrollPosition) {
+			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
+		}
+
+		@Override
 		public TerminatingFindNear<T> near(NearQuery nearQuery) {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
@@ -168,8 +174,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();
 
-			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
-					getCursorPreparer(query, preparer));
+			return template.doFind(template.createDelegate(query), getCollectionName(), queryObject, fieldsObject, domainType,
+					returnType, getCursorPreparer(query, preparer));
 		}
 
 		private List<T> doFindDistinct(String field) {

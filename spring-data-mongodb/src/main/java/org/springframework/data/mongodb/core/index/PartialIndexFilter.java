@@ -59,12 +59,12 @@ public class PartialIndexFilter implements IndexFilter {
 
 	public Document getFilterObject() {
 
-		if (filterExpression instanceof Document) {
-			return (Document) filterExpression;
+		if (filterExpression instanceof Document document) {
+			return document;
 		}
 
-		if (filterExpression instanceof CriteriaDefinition) {
-			return ((CriteriaDefinition) filterExpression).getCriteriaObject();
+		if (filterExpression instanceof CriteriaDefinition criteriaDefinition) {
+			return criteriaDefinition.getCriteriaObject();
 		}
 
 		throw new IllegalArgumentException(

@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.Pair;
 
 import com.mongodb.bulk.BulkWriteResult;
@@ -28,6 +29,15 @@ import com.mongodb.bulk.BulkWriteResult;
  * make use of low level bulk commands on the protocol level. This interface defines a fluent API to add multiple single
  * operations or list of similar operations in sequence which can then eventually be executed by calling
  * {@link #execute()}.
+ *
+ * <pre class="code">
+ * MongoOperations ops = …;
+ *
+ * ops.bulkOps(BulkMode.UNORDERED, Person.class)
+ * 				.insert(newPerson)
+ * 				.updateOne(where("firstname").is("Joe"), Update.update("lastname", "Doe"))
+ * 				.execute();
+ * </pre>
  * <p>
  * Bulk operations are issued as one batch that pulls together all insert, update, and delete operations. Operations
  * that require individual operation results such as optimistic locking (using {@code @Version}) are not supported and
@@ -75,7 +85,19 @@ public interface BulkOperations {
 	 * @param update {@link Update} operation to perform, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateOne(Query query, Update update);
+	default BulkOperations updateOne(Query query, Update update) {
+		return updateOne(query, (UpdateDefinition) update);
+	}
+
+	/**
+	 * Add a single update to the bulk operation. For the update request, only the first matching document is updated.
+	 *
+	 * @param query update criteria, must not be {@literal null}.
+	 * @param update {@link Update} operation to perform, must not be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
+	 * @since 4.1
+	 */
+	BulkOperations updateOne(Query query, UpdateDefinition update);
 
 	/**
 	 * Add a list of updates to the bulk operation. For each update request, only the first matching document is updated.
@@ -83,7 +105,7 @@ public interface BulkOperations {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateOne(List<Pair<Query, Update>> updates);
+	BulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates);
 
 	/**
 	 * Add a single update to the bulk operation. For the update request, all matching documents are updated.
@@ -92,7 +114,19 @@ public interface BulkOperations {
 	 * @param update Update operation to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateMulti(Query query, Update update);
+	default BulkOperations updateMulti(Query query, Update update) {
+		return updateMulti(query, (UpdateDefinition) update);
+	}
+
+	/**
+	 * Add a single update to the bulk operation. For the update request, all matching documents are updated.
+	 *
+	 * @param query Update criteria.
+	 * @param update Update operation to perform.
+	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
+	 * @since 4.1
+	 */
+	BulkOperations updateMulti(Query query, UpdateDefinition update);
 
 	/**
 	 * Add a list of updates to the bulk operation. For each update request, all matching documents are updated.
@@ -100,7 +134,7 @@ public interface BulkOperations {
 	 * @param updates Update operations to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations updateMulti(List<Pair<Query, Update>> updates);
+	BulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates);
 
 	/**
 	 * Add a single upsert to the bulk operation. An upsert is an update if the set of matching documents is not empty,
@@ -110,7 +144,20 @@ public interface BulkOperations {
 	 * @param update Update operation to perform.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
-	BulkOperations upsert(Query query, Update update);
+	default BulkOperations upsert(Query query, Update update) {
+		return upsert(query, (UpdateDefinition) update);
+	}
+
+	/**
+	 * Add a single upsert to the bulk operation. An upsert is an update if the set of matching documents is not empty,
+	 * else an insert.
+	 *
+	 * @param query Update criteria.
+	 * @param update Update operation to perform.
+	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
+	 * @since 4.1
+	 */
+	BulkOperations upsert(Query query, UpdateDefinition update);
 
 	/**
 	 * Add a list of upserts to the bulk operation. An upsert is an update if the set of matching documents is not empty,
@@ -142,7 +189,7 @@ public interface BulkOperations {
 	 *
 	 * @param query Update criteria.
 	 * @param replacement the replacement document. Must not be {@literal null}.
-	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
 	 */
 	default BulkOperations replaceOne(Query query, Object replacement) {
@@ -155,7 +202,7 @@ public interface BulkOperations {
 	 * @param query Update criteria.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
-	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
 	 */
 	BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options);

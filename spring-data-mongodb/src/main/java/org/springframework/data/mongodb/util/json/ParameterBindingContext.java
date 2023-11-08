@@ -111,9 +111,8 @@ public class ParameterBindingContext {
 	@Nullable
 	public Object evaluateExpression(String expressionString, Map<String, Object> variables) {
 
-		if (expressionEvaluator instanceof EvaluationContextExpressionEvaluator) {
-			return ((EvaluationContextExpressionEvaluator) expressionEvaluator).evaluateExpression(expressionString,
-					variables);
+		if (expressionEvaluator instanceof EvaluationContextExpressionEvaluator expressionEvaluator) {
+			return expressionEvaluator.evaluateExpression(expressionString, variables);
 		}
 		return expressionEvaluator.evaluate(expressionString);
 	}

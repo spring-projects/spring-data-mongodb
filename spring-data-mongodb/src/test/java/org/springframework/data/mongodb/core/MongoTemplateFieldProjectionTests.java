@@ -17,9 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.AfterEach;
@@ -150,15 +148,33 @@ class MongoTemplateFieldProjectionTests {
 		return template.findOne(query, Person.class);
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class Wrapper {
+
 		@Id String id;
 		Person person;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Wrapper wrapper = (Wrapper) o;
+			return Objects.equals(id, wrapper.id) && Objects.equals(person, wrapper.person);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, person);
+		}
+
+		public String toString() {
+			return "MongoTemplateFieldProjectionTests.Wrapper(id=" + this.id + ", person=" + this.person + ")";
+		}
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class Person {
 
 		@Id String id;
@@ -183,11 +199,54 @@ class MongoTemplateFieldProjectionTests {
 		Person upperCaseLastnameClone() {
 			return toUpperCaseLastnameClone(this);
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(lastname, person.lastname) && Objects.equals(address, person.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname, address);
+		}
+
+		public String toString() {
+			return "MongoTemplateFieldProjectionTests.Person(id=" + this.id + ", firstname=" + this.firstname + ", lastname="
+					+ this.lastname + ", address=" + this.address + ")";
+		}
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class Address {
+
 		String planet;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(planet, address.planet);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(planet);
+		}
+
+		public String toString() {
+			return "MongoTemplateFieldProjectionTests.Address(planet=" + this.planet + ")";
+		}
 	}
 }

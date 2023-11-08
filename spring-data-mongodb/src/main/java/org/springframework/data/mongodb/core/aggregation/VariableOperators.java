@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -175,8 +174,8 @@ public class VariableOperators {
 					exposedFields, context);
 
 			Document input;
-			if (sourceArray instanceof Field) {
-				input = new Document("input", context.getReference((Field) sourceArray).toString());
+			if (sourceArray instanceof Field field) {
+				input = new Document("input", context.getReference(field).toString());
 			} else {
 				input = new Document("input", ((AggregationExpression) sourceArray).toDocument(context));
 			}
@@ -224,12 +223,25 @@ public class VariableOperators {
 	public static class Let implements AggregationExpression {
 
 		private final List<ExpressionVariable> vars;
+
+		@Nullable //
 		private final AggregationExpression expression;
 
-		private Let(List<ExpressionVariable> vars, AggregationExpression expression) {
+		private Let(List<ExpressionVariable> vars, @Nullable AggregationExpression expression) {
 
 			this.vars = vars;
 			this.expression = expression;
+		}
+
+		/**
+		 * Create a new {@link Let} holding just the given {@literal variables}.
+		 *
+		 * @param variables must not be {@literal null}.
+		 * @return new instance of {@link Let}.
+		 * @since 4.1
+		 */
+		public static Let just(ExpressionVariable... variables) {
+			return new Let(List.of(variables), null);
 		}
 
 		/**
@@ -238,14 +250,14 @@ public class VariableOperators {
 		 * @param variables must not be {@literal null}.
 		 * @return
 		 */
-		public static LetBuilder define(final Collection<ExpressionVariable> variables) {
+		public static LetBuilder define(Collection<ExpressionVariable> variables) {
 
 			Assert.notNull(variables, "Variables must not be null");
 
 			return new LetBuilder() {
 
 				@Override
-				public Let andApply(final AggregationExpression expression) {
+				public Let andApply(AggregationExpression expression) {
 
 					Assert.notNull(expression, "Expression must not be null");
 					return new Let(new ArrayList<ExpressionVariable>(variables), expression);
@@ -259,19 +271,10 @@ public class VariableOperators {
 		 * @param variables must not be {@literal null}.
 		 * @return
 		 */
-		public static LetBuilder define(final ExpressionVariable... variables) {
+		public static LetBuilder define(ExpressionVariable... variables) {
 
 			Assert.notNull(variables, "Variables must not be null");
-
-			return new LetBuilder() {
-
-				@Override
-				public Let andApply(final AggregationExpression expression) {
-
-					Assert.notNull(expression, "Expression must not be null");
-					return new Let(Arrays.asList(variables), expression);
-				}
-			};
+			return define(List.of(variables));
 		}
 
 		public interface LetBuilder {
@@ -283,10 +286,11 @@ public class VariableOperators {
 			 * @return
 			 */
 			Let andApply(AggregationExpression expression);
+
 		}
 
 		@Override
-		public Document toDocument(final AggregationOperationContext context) {
+		public Document toDocument(AggregationOperationContext context) {
 			return toLet(ExposedFields.synthetic(Fields.fields(getVariableNames())), context);
 		}
 
@@ -312,16 +316,22 @@ public class VariableOperators {
 			}
 
 			letExpression.put("vars", mappedVars);
-			letExpression.put("in", getMappedIn(operationContext));
+			if (expression != null) {
+				letExpression.put("in", getMappedIn(operationContext));
+			}
 
 			return new Document("$let", letExpression);
 		}
 
 		private Document getMappedVariable(ExpressionVariable var, AggregationOperationContext context) {
 
-			return new Document(var.variableName,
-					var.expression instanceof AggregationExpression ? ((AggregationExpression) var.expression).toDocument(context)
-							: var.expression);
+			if (var.expression instanceof AggregationExpression expression) {
+				return new Document(var.variableName, expression.toDocument(context));
+			}
+			if (var.expression instanceof Field field) {
+				return new Document(var.variableName, context.getReference(field).toString());
+			}
+			return new Document(var.variableName, var.expression);
 		}
 
 		private Object getMappedIn(AggregationOperationContext context) {
@@ -371,6 +381,10 @@ public class VariableOperators {
 
 				Assert.notNull(expression, "Expression must not be null");
 				return new ExpressionVariable(variableName, expression);
+			}
+
+			public ExpressionVariable forField(String fieldRef) {
+				return new ExpressionVariable(variableName, Fields.field(fieldRef));
 			}
 
 			/**

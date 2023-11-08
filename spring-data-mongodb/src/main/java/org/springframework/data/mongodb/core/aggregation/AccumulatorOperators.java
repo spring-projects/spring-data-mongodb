@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
@@ -25,6 +28,7 @@ import org.springframework.util.Assert;
  * Gateway to {@literal accumulator} aggregation operations.
  *
  * @author Christoph Strobl
+ * @author Julia Lee
  * @since 1.10
  * @soundtrack Rage Against The Machine - Killing In The Name
  */
@@ -52,6 +56,7 @@ public class AccumulatorOperators {
 
 	/**
 	 * @author Christoph Strobl
+	 * @author Julia Lee
 	 */
 	public static class AccumulatorOperatorFactory {
 
@@ -246,6 +251,30 @@ public class AccumulatorOperators {
 			};
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
+		 * associated numeric value expression.
+		 *
+		 * @return new instance of {@link Percentile}.
+		 * @param percentages must not be {@literal null}.
+		 * @since 4.2
+		 */
+		public Percentile percentile(Double... percentages) {
+			Percentile percentile = usesFieldRef() ? Percentile.percentileOf(fieldReference)
+					: Percentile.percentileOf(expression);
+			return percentile.percentages(percentages);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the median of the associated numeric value expression.
+		 *
+		 * @return new instance of {@link Median}.
+		 * @since 4.2
+		 */
+		public Median median() {
+			return usesFieldRef() ? Median.medianOf(fieldReference) : Median.medianOf(expression);
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
@@ -360,10 +389,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -440,10 +467,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -539,10 +564,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -639,10 +662,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -719,10 +740,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -799,10 +818,8 @@ public class AccumulatorOperators {
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
-			if (value instanceof List) {
-				if (((List) value).size() == 1) {
-					return super.toDocument(((List<Object>) value).iterator().next(), context);
-				}
+			if (value instanceof List<?> list && list.size() == 1) {
+				return super.toDocument(list.iterator().next(), context);
 			}
 
 			return super.toDocument(value, context);
@@ -987,6 +1004,166 @@ public class AccumulatorOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$expMovingAvg";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $percentile}.
+	 *
+	 * @author Julia Lee
+	 * @since 4.2
+	 */
+	public static class Percentile extends AbstractAggregationExpression {
+
+		private Percentile(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link Percentile}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Percentile}.
+		 */
+		public static Percentile percentileOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			Map<String, Object> fields = new HashMap<>();
+			fields.put("input", Fields.field(fieldReference));
+			fields.put("method", "approximate");
+			return new Percentile(fields);
+		}
+
+		/**
+		 * Creates new {@link Percentile}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Percentile}.
+		 */
+		public static Percentile percentileOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			Map<String, Object> fields = new HashMap<>();
+			fields.put("input", expression);
+			fields.put("method", "approximate");
+			return new Percentile(fields);
+		}
+
+		/**
+		 * Define the percentile value(s) that must resolve to percentages in the range {@code 0.0 - 1.0} inclusive.
+		 *
+		 * @param percentages must not be {@literal null}.
+		 * @return new instance of {@link Percentile}.
+		 */
+		public Percentile percentages(Double... percentages) {
+
+			Assert.notEmpty(percentages, "Percentages must not be null or empty");
+			return new Percentile(append("p", Arrays.asList(percentages)));
+		}
+
+		/**
+		 * Creates new {@link Percentile} with all previously added inputs appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Percentile}.
+		 */
+		public Percentile and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return new Percentile(appendTo("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link Percentile} with all previously added inputs appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Percentile}.
+		 */
+		public Percentile and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return new Percentile(appendTo("input", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$percentile";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $median}.
+	 *
+	 * @author Julia Lee
+	 * @since 4.2
+	 */
+	public static class Median extends AbstractAggregationExpression {
+
+		private Median(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link Median}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public static Median medianOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			Map<String, Object> fields = new HashMap<>();
+			fields.put("input", Fields.field(fieldReference));
+			fields.put("method", "approximate");
+			return new Median(fields);
+		}
+
+		/**
+		 * Creates new {@link Median}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public static Median medianOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			Map<String, Object> fields = new HashMap<>();
+			fields.put("input", expression);
+			fields.put("method", "approximate");
+			return new Median(fields);
+		}
+
+		/**
+		 * Creates new {@link Median} with all previously added inputs appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public Median and(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null");
+			return new Median(appendTo("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link Median} with all previously added inputs appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Median}.
+		 */
+		public Median and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null");
+			return new Median(appendTo("input", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$median";
 		}
 	}
 }

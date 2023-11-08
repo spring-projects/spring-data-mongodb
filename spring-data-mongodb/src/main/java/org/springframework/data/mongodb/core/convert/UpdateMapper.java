@@ -161,17 +161,17 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {
-		Object value = null;
+		Object value;
 
-		if (rawValue instanceof Modifier) {
+		if (rawValue instanceof Modifier modifier) {
 
-			value = getMappedValue(field, (Modifier) rawValue);
+			value = getMappedValue(field, modifier);
 
-		} else if (rawValue instanceof Modifiers) {
+		} else if (rawValue instanceof Modifiers modifiers) {
 
 			Document modificationOperations = new Document();
 
-			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
+			for (Modifier modifier : modifiers.getModifiers()) {
 				modificationOperations.putAll(getMappedValue(field, modifier));
 			}
 

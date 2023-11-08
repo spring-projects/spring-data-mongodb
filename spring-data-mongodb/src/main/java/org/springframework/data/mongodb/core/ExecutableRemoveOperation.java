@@ -76,7 +76,7 @@ public interface ExecutableRemoveOperation {
 
 		/**
 		 * Remove and return all matching documents. <br/>
-		 * <strong>NOTE</strong> The entire list of documents will be fetched before sending the actual delete commands.
+		 * <strong>NOTE:</strong> The entire list of documents will be fetched before sending the actual delete commands.
 		 * Also, {@link org.springframework.context.ApplicationEvent}s will be published for each and every delete
 		 * operation.
 		 *

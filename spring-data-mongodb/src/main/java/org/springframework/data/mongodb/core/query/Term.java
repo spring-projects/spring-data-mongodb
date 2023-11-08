@@ -98,14 +98,12 @@ public class Term {
 			return true;
 		}
 
-		if (!(o instanceof Term)) {
+		if (!(o instanceof Term other)) {
 			return false;
 		}
 
-		Term term = (Term) o;
-
-		return ObjectUtils.nullSafeEquals(negated, term.negated) && ObjectUtils.nullSafeEquals(type, term.type)
-				&& ObjectUtils.nullSafeEquals(raw, term.raw);
+		return ObjectUtils.nullSafeEquals(negated, other.negated) && ObjectUtils.nullSafeEquals(type, other.type)
+				&& ObjectUtils.nullSafeEquals(raw, other.raw);
 	}
 
 	@Override

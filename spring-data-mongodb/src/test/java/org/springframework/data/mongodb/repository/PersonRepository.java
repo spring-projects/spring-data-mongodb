@@ -23,9 +23,12 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Window;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Box;
@@ -115,13 +118,38 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByAgeLessThan(int age, Sort sort);
 
 	/**
-	 * Returns a page of {@link Person}s with a lastname mathing the given one (*-wildcards supported).
+	 * Returns a scroll of {@link Person}s with a lastname matching the given one (*-wildcards supported).
+	 *
+	 * @param lastname
+	 * @param scrollPosition
+	 * @return
+	 */
+	Window<Person> findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
+			ScrollPosition scrollPosition);
+
+	Window<Person> findByLastnameLikeOrderByLastnameAscFirstnameAsc(String lastname,
+			ScrollPosition scrollPosition, Limit limit);
+
+	/**
+	 * Returns a scroll of {@link Person}s applying projections with a lastname matching the given one (*-wildcards
+	 * supported).
+	 *
+	 * @param lastname
+	 * @param pageable
+	 * @return
+	 */
+	Window<PersonSummaryDto> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
+
+	/**
+	 * Returns a page of {@link Person}s with a lastname matching the given one (*-wildcards supported).
 	 *
 	 * @param lastname
 	 * @param pageable
 	 * @return
 	 */
 	Page<Person> findByLastnameLike(String lastname, Pageable pageable);
+
+	List<Person> findByLastnameLike(String lastname, Sort sort, Limit limit);
 
 	@Query("{ 'lastname' : { '$regex' : '?0', '$options' : 'i'}}")
 	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);
@@ -429,7 +457,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Update("{ '$inc' : { 'visits' : ?1 } }")
 	int updateAllByLastname(String lastname, int increment);
 
-	@Update( pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+	@Update(pipeline = { "{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }" })
 	void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment);
 
 	@Update("{ '$inc' : { 'visits' : ?#{[1]} } }")

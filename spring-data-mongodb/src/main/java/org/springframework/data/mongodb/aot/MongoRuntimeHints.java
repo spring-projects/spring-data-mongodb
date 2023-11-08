@@ -62,13 +62,14 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 							TypeReference.of(ReactiveAfterSaveCallback.class)),
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 									MemberCategory.INVOKE_PUBLIC_METHODS));
-
 		}
+
 	}
 
 	private static void registerTransactionProxyHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
-		if (MongoAotPredicates.isSyncClientPresent(classLoader) && ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
+		if (MongoAotPredicates.isSyncClientPresent(classLoader)
+				&& ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
 
 			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoDatabase"),
 					TypeReference.of("org.springframework.aop.SpringProxy"),
@@ -78,4 +79,5 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 					TypeReference.of("org.springframework.core.DecoratingProxy"));
 		}
 	}
+
 }

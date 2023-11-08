@@ -1,0 +1,5 @@
+[[mongodb.migration.3.x-4.x]]
+= Migration Guide from 3.x to 4.x
+
+Spring Data MongoDB 4.x requires the MongoDB Java Driver 4.8.x +
+To learn more about driver versions please visit the https://www.mongodb.com/docs/drivers/java/sync/current/upgrade/[MongoDB Documentation].

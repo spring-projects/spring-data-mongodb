@@ -20,9 +20,6 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,7 +29,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -437,7 +433,6 @@ public class ApplicationContextEventTests {
 		assertTypeHint(document, PersonPojoStringId.class);
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document
 	public static class Root {
 
@@ -451,14 +446,100 @@ public class ApplicationContextEventTests {
 
 		@DBRef Map<String, Related> mapOfReferences;
 		@DBRef(lazy = true) Map<String, Related> lazyMapOfReferences;
+
+		public Long getId() {
+			return this.id;
+		}
+
+		public Related getReference() {
+			return this.reference;
+		}
+
+		public Related getLazyReference() {
+			return this.lazyReference;
+		}
+
+		public List<Related> getListOfReferences() {
+			return this.listOfReferences;
+		}
+
+		public List<Related> getLazyListOfReferences() {
+			return this.lazyListOfReferences;
+		}
+
+		public Map<String, Related> getMapOfReferences() {
+			return this.mapOfReferences;
+		}
+
+		public Map<String, Related> getLazyMapOfReferences() {
+			return this.lazyMapOfReferences;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public void setReference(Related reference) {
+			this.reference = reference;
+		}
+
+		public void setLazyReference(Related lazyReference) {
+			this.lazyReference = lazyReference;
+		}
+
+		public void setListOfReferences(List<Related> listOfReferences) {
+			this.listOfReferences = listOfReferences;
+		}
+
+		public void setLazyListOfReferences(List<Related> lazyListOfReferences) {
+			this.lazyListOfReferences = lazyListOfReferences;
+		}
+
+		public void setMapOfReferences(Map<String, Related> mapOfReferences) {
+			this.mapOfReferences = mapOfReferences;
+		}
+
+		public void setLazyMapOfReferences(Map<String, Related> lazyMapOfReferences) {
+			this.lazyMapOfReferences = lazyMapOfReferences;
+		}
+
+		public String toString() {
+			return "ApplicationContextEventTests.Root(id=" + this.getId() + ", reference=" + this.getReference()
+					+ ", lazyReference=" + this.getLazyReference() + ", listOfReferences=" + this.getListOfReferences()
+					+ ", lazyListOfReferences=" + this.getLazyListOfReferences() + ", mapOfReferences="
+					+ this.getMapOfReferences() + ", lazyMapOfReferences=" + this.getLazyMapOfReferences() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document
 	public static class Related {
 
 		@Id Long id;
 		String description;
+
+		public Related(Long id, String description) {
+			this.id = id;
+			this.description = description;
+		}
+
+		public Long getId() {
+			return this.id;
+		}
+
+		public String getDescription() {
+			return this.description;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public void setDescription(String description) {
+			this.description = description;
+		}
+
+		public String toString() {
+			return "ApplicationContextEventTests.Related(id=" + this.getId() + ", description=" + this.getDescription() + ")";
+		}
 	}
 }

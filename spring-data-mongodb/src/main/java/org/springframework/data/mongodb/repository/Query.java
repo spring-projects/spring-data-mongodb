@@ -33,19 +33,22 @@ import org.springframework.data.mongodb.core.annotation.Collation;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 @Collation
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
+@Hint
+@ReadPreference
 public @interface Query {
 
 	/**
 	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
 	 * method name then.
 	 *
-	 * @return empty {@link String}	by default.
+	 * @return empty {@link String} by default.
 	 */
 	String value() default "";
 
@@ -53,7 +56,7 @@ public @interface Query {
 	 * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
 	 * domain object returned.
 	 *
-	 * @return empty {@link String}	by default.
+	 * @return empty {@link String} by default.
 	 */
 	String fields() default "";
 
@@ -82,9 +85,8 @@ public @interface Query {
 	boolean delete() default false;
 
 	/**
-	 * Defines a default sort order for the given query.<br />
-	 * <strong>NOTE:</strong> The so set defaults can be altered / overwritten using an explicit
-	 * {@link org.springframework.data.domain.Sort} argument of the query method.
+	 * Defines a default sort order for the given query. <strong>NOTE:</strong> The so set defaults can be altered /
+	 * overwritten using an explicit {@link org.springframework.data.domain.Sort} argument of the query method.
 	 *
 	 * <pre>
 	 * <code>
@@ -129,4 +131,37 @@ public @interface Query {
 	 */
 	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
+
+	/**
+	 * The name of the index to use. {@code @Query(value = "...", hint = "lastname-idx")} can be used as shortcut for:
+	 *
+	 * <pre class="code">
+	 * &#64;Query(...)
+	 * &#64;Hint("lastname-idx")
+	 * List&lt;User&gt; findAllByLastname(String collation);
+	 * </pre>
+	 *
+	 * @return the index name.
+	 * @since 4.1
+	 * @see Hint#indexName()
+	 */
+	@AliasFor(annotation = Hint.class, attribute = "indexName")
+	String hint() default "";
+
+	/**
+	 * The mode of the read preference to use. This attribute
+	 * ({@code @Query(value = "...", readPreference = "secondary")}) is an alias for:
+	 *
+	 * <pre class="code">
+	 * &#64;Query(...)
+	 * &#64;ReadPreference("secondary")
+	 * List&lt;User&gt; findAllByLastname(String lastname);
+	 * </pre>
+	 *
+	 * @return the index name.
+	 * @since 4.2
+	 * @see ReadPreference#value()
+	 */
+	@AliasFor(annotation = ReadPreference.class, attribute = "value")
+	String readPreference() default "";
 }

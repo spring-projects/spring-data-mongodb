@@ -339,8 +339,8 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		Document toDocument(AggregationOperationContext context) {
 
-			if (value instanceof Aggregation) {
-				return new Document("whenMatched", ((Aggregation) value).toPipeline(context));
+			if (value instanceof Aggregation aggregation) {
+				return new Document("whenMatched", aggregation.toPipeline(context));
 			}
 
 			return new Document("whenMatched", value);

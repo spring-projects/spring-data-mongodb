@@ -24,10 +24,15 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ReadConcernAware;
+import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 
 /**
  * Builder class to build near-queries. <br />
@@ -171,7 +176,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public final class NearQuery {
+public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 
 	private final Point point;
 	private @Nullable Query query;
@@ -181,6 +186,8 @@ public final class NearQuery {
 	private boolean spherical;
 	private @Nullable Long limit;
 	private @Nullable Long skip;
+	private @Nullable ReadConcern readConcern;
+	private @Nullable ReadPreference readPreference;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -225,7 +232,7 @@ public final class NearQuery {
 
 	/**
 	 * Creates a new {@link NearQuery} starting at the given {@link Point}. <br />
-	 * <strong>NOTE</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
+	 * <strong>NOTE:</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
 	 * values are rendered as coordinate pairs in the legacy format and operate upon radians, whereas the
 	 * {@link GeoJsonPoint} uses according to its specification {@literal meters} as unit of measure. This may lead to
 	 * different results when using a {@link Metrics#NEUTRAL neutral Metric}.
@@ -241,7 +248,7 @@ public final class NearQuery {
 	 * Creates a {@link NearQuery} starting near the given {@link Point} using the given {@link Metric} to adapt given
 	 * values to further configuration. E.g. setting a {@link #maxDistance(double)} will be interpreted as a value of the
 	 * initially set {@link Metric}. <br />
-	 * <strong>NOTE</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
+	 * <strong>NOTE:</strong> There is a difference in using {@link Point} versus {@link GeoJsonPoint}. {@link Point}
 	 * values are rendered as coordinate pairs in the legacy format and operate upon radians, whereas the
 	 * {@link GeoJsonPoint} uses according to its specification {@literal meters} as unit of measure. This may lead to
 	 * different results when using a {@link Metrics#NEUTRAL neutral Metric}.
@@ -553,6 +560,74 @@ public final class NearQuery {
 	@Nullable
 	public Collation getCollation() {
 		return query != null ? query.getCollation().orElse(null) : null;
+	}
+
+	/**
+	 * Configures the query to use the given {@link ReadConcern} unless the underlying {@link #query(Query)}
+	 * {@link Query#hasReadConcern() specifies} another one.
+	 *
+	 * @param readConcern must not be {@literal null}.
+	 * @return this.
+	 * @since 4.1
+	 */
+	public NearQuery withReadConcern(ReadConcern readConcern) {
+
+		Assert.notNull(readConcern, "ReadConcern must not be null");
+		this.readConcern = readConcern;
+		return this;
+	}
+
+	/**
+	 * Configures the query to use the given {@link ReadPreference} unless the underlying {@link #query(Query)}
+	 * {@link Query#hasReadPreference() specifies} another one.
+	 *
+	 * @param readPreference must not be {@literal null}.
+	 * @return this.
+	 * @since 4.1
+	 */
+	public NearQuery withReadPreference(ReadPreference readPreference) {
+
+		Assert.notNull(readPreference, "ReadPreference must not be null");
+		this.readPreference = readPreference;
+		return this;
+	}
+
+	/**
+	 * Get the {@link ReadConcern} to use. Will return the underlying {@link #query(Query) queries}
+	 * {@link Query#getReadConcern() ReadConcern} if present or the one defined on the {@link NearQuery#readConcern}
+	 * itself.
+	 * 
+	 * @return can be {@literal null} if none set.
+	 * @since 4.1
+	 * @see ReadConcernAware
+	 */
+	@Nullable
+	@Override
+	public ReadConcern getReadConcern() {
+
+		if (query != null && query.hasReadConcern()) {
+			return query.getReadConcern();
+		}
+		return readConcern;
+	}
+
+	/**
+	 * Get the {@link ReadPreference} to use. Will return the underlying {@link #query(Query) queries}
+	 * {@link Query#getReadPreference() ReadPreference} if present or the one defined on the
+	 * {@link NearQuery#readPreference} itself.
+	 *
+	 * @return can be {@literal null} if none set.
+	 * @since 4.1
+	 * @see ReadPreferenceAware
+	 */
+	@Nullable
+	@Override
+	public ReadPreference getReadPreference() {
+
+		if (query != null && query.hasReadPreference()) {
+			return query.getReadPreference();
+		}
+		return readPreference;
 	}
 
 	/**

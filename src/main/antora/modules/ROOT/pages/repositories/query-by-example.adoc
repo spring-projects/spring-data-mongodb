@@ -1,0 +1,25 @@
+include::{commons}@data-commons::query-by-example.adoc[]
+
+[[query-by-example.running]]
+== Running an Example
+
+The following example shows how to query by example when using a repository (of `Person` objects, in this case):
+
+.Query by Example using a repository
+====
+[source, java]
+----
+public interface PersonRepository extends QueryByExampleExecutor<Person> {
+
+}
+
+public class PersonService {
+
+  @Autowired PersonRepository personRepository;
+
+  public List<Person> findPeople(Person probe) {
+    return personRepository.findAll(Example.of(probe));
+  }
+}
+----
+====

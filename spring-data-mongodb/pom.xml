@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.1.0-SNAPSHOT</version>
+		<version>4.2.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -113,6 +113,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-crypt</artifactId>
+			<version>1.8.0</version>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
 			<optional>true</optional>
@@ -159,23 +166,6 @@
 		<dependency>
 			<groupId>org.apache.openwebbeans</groupId>
 			<artifactId>openwebbeans-se</artifactId>
-			<classifier>jakarta</classifier>
-			<version>${webbeans}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.openwebbeans</groupId>
-			<artifactId>openwebbeans-spi</artifactId>
-			<classifier>jakarta</classifier>
-			<version>${webbeans}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.openwebbeans</groupId>
-			<artifactId>openwebbeans-impl</artifactId>
-			<classifier>jakarta</classifier>
 			<version>${webbeans}</version>
 			<scope>test</scope>
 		</dependency>

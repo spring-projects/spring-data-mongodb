@@ -1,0 +1,691 @@
+[[mongo.aggregation]]
+= Aggregation Framework Support
+
+Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
+
+For further information, see the full https://docs.mongodb.org/manual/aggregation/[reference documentation] of the aggregation framework and other data aggregation tools for MongoDB.
+
+[[mongo.aggregation.basic-concepts]]
+== Basic Concepts
+
+The Aggregation Framework support in Spring Data MongoDB is based on the following key abstractions: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
+
+* `Aggregation`
++
+An `Aggregation` represents a MongoDB `aggregate` operation and holds the description of the aggregation pipeline instructions. Aggregations are created by invoking the appropriate `newAggregation(…)` static factory method of the `Aggregation` class, which takes a list of `AggregateOperation` and an optional input class.
++
+The actual aggregate operation is run by the `aggregate` method of the `MongoTemplate`, which takes the desired output class as a parameter.
++
+* `TypedAggregation`
++
+A `TypedAggregation`, just like an `Aggregation`, holds the instructions of the aggregation pipeline and a reference to the input type, that is used for mapping domain properties to actual document fields.
++
+At runtime, field references get checked against the given input type, considering potential `@Field` annotations.
+[NOTE]
+====
+Changed in 3.2 referencing non-existent properties does no longer raise errors. To restore the previous behaviour use the `strictMapping` option of `AggregationOptions`.
+====
+* `AggregationDefinition`
++
+An `AggregationDefinition` represents a MongoDB aggregation pipeline operation and describes the processing that should be performed in this aggregation step. Although you could manually create an `AggregationDefinition`, we recommend using the static factory methods provided by the `Aggregate` class to construct an `AggregateOperation`.
++
+* `AggregationResults`
++
+`AggregationResults` is the container for the result of an aggregate operation. It provides access to the raw aggregation result, in the form of a `Document` to the mapped objects and other information about the aggregation.
++
+The following listing shows the canonical example for using the Spring Data MongoDB support for the MongoDB Aggregation Framework:
++
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+Aggregation agg = newAggregation(
+    pipelineOP1(),
+    pipelineOP2(),
+    pipelineOPn()
+);
+
+AggregationResults<OutputType> results = mongoTemplate.aggregate(agg, "INPUT_COLLECTION_NAME", OutputType.class);
+List<OutputType> mappedResult = results.getMappedResults();
+----
+
+Note that, if you provide an input class as the first parameter to the `newAggregation` method, the `MongoTemplate` derives the name of the input collection from this class. Otherwise, if you do not not specify an input class, you must provide the name of the input collection explicitly. If both an input class and an input collection are provided, the latter takes precedence.
+
+[[mongo.aggregation.supported-aggregation-operations]]
+[[aggregation-stages]]
+.Supported Aggregation Operations & Stages
+[%collapsible]
+====
+The MongoDB Aggregation Framework provides the following types of aggregation stages and operations:
+
+* addFields - `AddFieldsOperation`
+* bucket / bucketAuto - `BucketOperation` / `BucketAutoOperation`
+* count - `CountOperation`
+* densify - `DensifyOperation`
+* facet - `FacetOperation`
+* geoNear - `GeoNearOperation`
+* graphLookup - `GraphLookupOperation`
+* group - `GroupOperation`
+* limit - `LimitOperation`
+* lookup - `LookupOperation`
+* match - `MatchOperation`
+* merge - `MergeOperation`
+* project - `ProjectionOperation`
+* redact - `RedactOperation`
+* replaceRoot - `ReplaceRootOperation`
+* sample - `SampleOperation`
+* set - `SetOperation`
+* setWindowFields - `SetWindowFieldsOperation`
+* skip - `SkipOperation`
+* sort / sortByCount - `SortOperation` / `SortByCountOperation`
+* unionWith - `UnionWithOperation`
+* unset - `UnsetOperation`
+* unwind - `UnwindOperation`
+====
+
+[TIP]
+====
+Unsupported aggregation stages (like https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/[$search] for MongoDB Atlas) can be provided by implementing either `AggregationOperation`.
+`Aggregation.stage` is a shortcut for registering a pipeline stage by providing its JSON or `Bson` representation.
+
+[source,java]
+----
+Aggregation.stage("""
+    { $search : {
+        "near": {
+          "path": "released",
+          "origin": { "$date": { "$numberLong": "..." } } ,
+          "pivot": 7
+        }
+      }
+    }
+""");
+----
+====
+
+At the time of this writing, we provide support for the following Aggregation Operators in Spring Data MongoDB:
+
+.Aggregation Operators currently supported by Spring Data MongoDB
+[cols="2*"]
+|===
+| Set Aggregation Operators
+| `setEquals`, `setIntersection`, `setUnion`, `setDifference`, `setIsSubset`, `anyElementTrue`, `allElementsTrue`
+
+| Group/Accumulator Aggregation Operators
+| `addToSet`, `bottom`, `bottomN`, `covariancePop`, `covarianceSamp`, `expMovingAvg`, `first`, `firstN`, `last`, `lastN` `max`, `maxN`, `min`, `minN`, `avg`, `push`, `sum`, `top`, `topN`, `count` (+++*+++), `median`, `percentile`, `stdDevPop`, `stdDevSamp`
+
+| Arithmetic Aggregation Operators
+| `abs`, `acos`, `acosh`, `add` (+++*+++ via `plus`), `asin`, `asin`, `atan`, `atan2`, `atanh`, `ceil`, `cos`, `cosh`, `derivative`, `divide`, `exp`, `floor`, `integral`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `round`, `sqrt`, `subtract` (+++*+++ via `minus`), `sin`, `sinh`, `tan`, `tanh`, `trunc`
+
+| String Aggregation Operators
+| `concat`, `substr`, `toLower`, `toUpper`, `strcasecmp`, `indexOfBytes`, `indexOfCP`, `regexFind`, `regexFindAll`, `regexMatch`, `replaceAll`, `replaceOne`, split`, `strLenBytes`, `strLenCP`, `substrCP`, `trim`, `ltrim`, `rtim`
+
+| Comparison Aggregation Operators
+| `eq` (+++*+++ via `is`), `gt`, `gte`, `lt`, `lte`, `ne`
+
+| Array Aggregation Operators
+| `arrayElementAt`, `arrayToObject`, `concatArrays`, `filter`, `first`, `in`, `indexOfArray`, `isArray`, `last`, range`, `reverseArray`, `reduce`, `size`, `sortArray`, `slice`, `zip`
+
+| Literal Operators
+| `literal`
+
+| Date Aggregation Operators
+| `dateSubstract`, `dateTrunc`, `dayOfYear`, `dayOfMonth`, `dayOfWeek`, `year`, `month`, `week`, `hour`, `minute`, `second`, `millisecond`, `dateAdd`, `dateDiff`, `dateToString`, `dateFromString`, `dateFromParts`, `dateToParts`, `isoDayOfWeek`, `isoWeek`, `isoWeekYear`, `tsIncrement`, `tsSecond`
+
+| Variable Operators
+| `map`
+
+| Conditional Aggregation Operators
+| `cond`, `ifNull`, `switch`
+
+| Type Aggregation Operators
+| `type`
+
+| Convert Aggregation Operators
+| `convert`, `degreesToRadians`, `toBool`, `toDate`, `toDecimal`, `toDouble`, `toInt`, `toLong`, `toObjectId`, `toString`
+
+| Object Aggregation Operators
+| `objectToArray`, `mergeObjects`, `getField`, `setField`
+
+| Script Aggregation Operators
+| `function`, `accumulator`
+
+|===
+
++++*+++ The operation is mapped or added by Spring Data MongoDB.
+
+Note that the aggregation operations not listed here are currently not supported by Spring Data MongoDB. Comparison aggregation operators are expressed as `Criteria` expressions.
+
+[[mongo.aggregation.projection]]
+== Projection Expressions
+
+Projection expressions are used to define the fields that are the outcome of a particular aggregation step. Projection expressions can be defined through the `project` method of the `Aggregation` class, either by passing a list of `String` objects or an aggregation framework `Fields` object. The projection can be extended with additional fields through a fluent API by using the `and(String)` method and aliased by using the `as(String)` method.
+Note that you can also define fields with aliases by using the `Fields.field` static factory method of the aggregation framework, which you can then use to construct a new `Fields` instance. References to projected fields in later aggregation stages are valid only for the field names of included fields or their aliases (including newly defined fields and their aliases). Fields not included in the projection cannot be referenced in later aggregation stages. The following listings show examples of projection expression:
+
+.Projection expression examples
+====
+[source,java]
+----
+// generates {$project: {name: 1, netPrice: 1}}
+project("name", "netPrice")
+
+// generates {$project: {thing1: $thing2}}
+project().and("thing1").as("thing2")
+
+// generates {$project: {a: 1, b: 1, thing2: $thing1}}
+project("a","b").and("thing1").as("thing2")
+----
+====
+
+.Multi-Stage Aggregation using Projection and Sorting
+====
+[source,java]
+----
+// generates {$project: {name: 1, netPrice: 1}}, {$sort: {name: 1}}
+project("name", "netPrice"), sort(ASC, "name")
+
+// generates {$project: {name: $firstname}}, {$sort: {name: 1}}
+project().and("firstname").as("name"), sort(ASC, "name")
+
+// does not work
+project().and("firstname").as("name"), sort(ASC, "firstname")
+----
+====
+
+More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
+
+[[mongo.aggregation.facet]]
+== Faceted Classification
+
+As of Version 3.4, MongoDB supports faceted classification by using the Aggregation Framework. A faceted classification uses semantic categories (either general or subject-specific) that are combined to create the full classification entry. Documents flowing through the aggregation pipeline are classified into buckets. A multi-faceted classification enables various aggregations on the same set of input documents, without needing to retrieve the input documents multiple times.
+
+[[buckets]]
+=== Buckets
+
+Bucket operations categorize incoming documents into groups, called buckets, based on a specified expression and bucket boundaries. Bucket operations require a grouping field or a grouping expression. You can define them by using the `bucket()` and `bucketAuto()` methods of the `Aggregate` class. `BucketOperation` and `BucketAutoOperation` can expose accumulations based on aggregation expressions for input documents. You can extend the bucket operation with additional parameters through a fluent API by using the `with…()` methods and the `andOutput(String)` method. You can alias the operation by using the `as(String)` method. Each bucket is represented as a document in the output.
+
+`BucketOperation` takes a defined set of boundaries to group incoming documents into these categories. Boundaries are required to be sorted. The following listing shows some examples of bucket operations:
+
+.Bucket operation examples
+====
+[source,java]
+----
+// generates {$bucket: {groupBy: $price, boundaries: [0, 100, 400]}}
+bucket("price").withBoundaries(0, 100, 400);
+
+// generates {$bucket: {groupBy: $price, default: "Other" boundaries: [0, 100]}}
+bucket("price").withBoundaries(0, 100).withDefault("Other");
+
+// generates {$bucket: {groupBy: $price, boundaries: [0, 100], output: { count: { $sum: 1}}}}
+bucket("price").withBoundaries(0, 100).andOutputCount().as("count");
+
+// generates {$bucket: {groupBy: $price, boundaries: [0, 100], 5, output: { titles: { $push: "$title"}}}
+bucket("price").withBoundaries(0, 100).andOutput("title").push().as("titles");
+----
+====
+
+`BucketAutoOperation` determines boundaries in an attempt to evenly distribute documents into a specified number of buckets. `BucketAutoOperation` optionally takes a granularity value that specifies the https://en.wikipedia.org/wiki/Preferred_number[preferred number] series to use to ensure that the calculated boundary edges end on preferred round numbers or on powers of 10. The following listing shows examples of bucket operations:
+
+.Bucket operation examples
+====
+[source,java]
+----
+// generates {$bucketAuto: {groupBy: $price, buckets: 5}}
+bucketAuto("price", 5)
+
+// generates {$bucketAuto: {groupBy: $price, buckets: 5, granularity: "E24"}}
+bucketAuto("price", 5).withGranularity(Granularities.E24).withDefault("Other");
+
+// generates {$bucketAuto: {groupBy: $price, buckets: 5, output: { titles: { $push: "$title"}}}
+bucketAuto("price", 5).andOutput("title").push().as("titles");
+----
+====
+
+To create output fields in buckets, bucket operations can use `AggregationExpression` through `andOutput()` and xref:mongodb/aggregation-framework.adoc#mongo.aggregation.projection.expressions[SpEL expressions] through `andOutputExpression()`.
+
+Note that further details regarding bucket expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
+https://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
+
+[[multi-faceted-aggregation]]
+=== Multi-faceted Aggregation
+
+Multiple aggregation pipelines can be used to create multi-faceted aggregations that characterize data across multiple dimensions (or facets) within a single aggregation stage. Multi-faceted aggregations provide multiple filters and categorizations to guide data browsing and analysis. A common implementation of faceting is how many online retailers provide ways to narrow down search results by applying filters on product price, manufacturer, size, and other factors.
+
+You can define a `FacetOperation` by using the `facet()` method of the `Aggregation` class. You can customize it with multiple aggregation pipelines by using the `and()` method. Each sub-pipeline has its own field in the output document where its results are stored as an array of documents.
+
+Sub-pipelines can project and filter input documents prior to grouping. Common use cases include extraction of date parts or calculations before categorization. The following listing shows facet operation examples:
+
+.Facet operation examples
+====
+[source,java]
+----
+// generates {$facet: {categorizedByPrice: [ { $match: { price: {$exists : true}}}, { $bucketAuto: {groupBy: $price, buckets: 5}}]}}
+facet(match(Criteria.where("price").exists(true)), bucketAuto("price", 5)).as("categorizedByPrice"))
+
+// generates {$facet: {categorizedByCountry: [ { $match: { country: {$exists : true}}}, { $sortByCount: "$country"}]}}
+facet(match(Criteria.where("country").exists(true)), sortByCount("country")).as("categorizedByCountry"))
+
+// generates {$facet: {categorizedByYear: [
+//     { $project: { title: 1, publicationYear: { $year: "publicationDate"}}},
+//     { $bucketAuto: {groupBy: $price, buckets: 5, output: { titles: {$push:"$title"}}}
+// ]}}
+facet(project("title").and("publicationDate").extractYear().as("publicationYear"),
+      bucketAuto("publicationYear", 5).andOutput("title").push().as("titles"))
+  .as("categorizedByYear"))
+----
+====
+
+Note that further details regarding facet operation can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/facet/[`$facet` section] of the MongoDB Aggregation Framework reference documentation.
+
+[[mongo.aggregation.sort-by-count]]
+=== Sort By Count
+
+Sort by count operations group incoming documents based on the value of a specified expression, compute the count of documents in each distinct group, and sort the results by count. It offers a handy shortcut to apply sorting when using xref:mongodb/aggregation-framework.adoc#mongo.aggregation.facet[Faceted Classification]. Sort by count operations require a grouping field or grouping expression. The following listing shows a sort by count example:
+
+.Sort by count example
+====
+[source,java]
+----
+// generates { $sortByCount: "$country" }
+sortByCount("country");
+----
+====
+
+A sort by count operation is equivalent to the following BSON (Binary JSON):
+
+----
+{ $group: { _id: <expression>, count: { $sum: 1 } } },
+{ $sort: { count: -1 } }
+----
+
+[[mongo.aggregation.projection.expressions]]
+=== Spring Expression Support in Projection Expressions
+
+We support the use of SpEL expressions in projection expressions through the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This feature lets you define the desired expression as a SpEL expression. On running a query, the SpEL expression is translated into a corresponding MongoDB projection expression part. This arrangement makes it much easier to express complex calculations.
+
+[[complex-calculations-with-spel-expressions]]
+==== Complex Calculations with SpEL expressions
+
+Consider the following SpEL expression:
+
+[source,java]
+----
+1 + (q + 1) / (q - 1)
+----
+
+The preceding expression is translated into the following projection expression part:
+
+[source,javascript]
+----
+{ "$add" : [ 1, {
+    "$divide" : [ {
+        "$add":["$q", 1]}, {
+        "$subtract":[ "$q", 1]}
+    ]
+}]}
+----
+
+You can see examples in more context in xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example5[Aggregation Framework Example 5] and xref:mongodb/aggregation-framework.adoc#mongo.aggregation.examples.example6[Aggregation Framework Example 6].
+You can find more usage examples for supported SpEL expression constructs in `SpelExpressionTransformerUnitTests`.
+
+.Supported SpEL transformations
+[%collapsible]
+====
+[%header,cols="2"]
+|===
+| SpEL Expression
+| Mongo Expression Part
+| a == b
+| { $eq : [$a, $b] }
+| a != b
+| { $ne : [$a , $b] }
+| a > b
+| { $gt : [$a, $b] }
+| a >= b
+| { $gte : [$a, $b] }
+| a < b
+| { $lt : [$a, $b] }
+| a <= b
+| { $lte : [$a, $b] }
+| a + b
+| { $add : [$a, $b] }
+| a - b
+| { $subtract : [$a, $b] }
+| a * b
+| { $multiply : [$a, $b] }
+| a / b
+| { $divide : [$a, $b] }
+| a^b
+| { $pow : [$a, $b] }
+| a % b
+| { $mod : [$a, $b] }
+| a && b
+| { $and : [$a, $b] }
+| a \|\| b
+| { $or : [$a, $b] }
+| !a
+| { $not : [$a] }
+|===
+====
+
+In addition to the transformations shown in the preceding table, you can use standard SpEL operations such as `new` to (for example) create arrays and reference expressions through their names (followed by the arguments to use in brackets). The following example shows how to create an array in this fashion:
+
+[source,java]
+----
+// { $setEquals : [$a, [5, 8, 13] ] }
+.andExpression("setEquals(a, new int[]{5, 8, 13})");
+----
+
+[[mongo.aggregation.examples]]
+=== Aggregation Framework Examples
+
+The examples in this section demonstrate the usage patterns for the MongoDB Aggregation Framework with Spring Data MongoDB.
+
+[[mongo.aggregation.examples.example1]]
+==== Aggregation Framework Example 1
+
+In this introductory example, we want to aggregate a list of tags to get the occurrence count of a particular tag from a MongoDB collection (called `tags`) sorted by the occurrence count in descending order. This example demonstrates the usage of grouping, sorting, projections (selection), and unwinding (result splitting).
+
+[source,java]
+----
+class TagCount {
+ String tag;
+ int n;
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+Aggregation agg = newAggregation(
+    project("tags"),
+    unwind("tags"),
+    group("tags").count().as("n"),
+    project("n").and("tag").previousOperation(),
+    sort(DESC, "n")
+);
+
+AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, "tags", TagCount.class);
+List<TagCount> tagCount = results.getMappedResults();
+----
+
+The preceding listing uses the following algorithm:
+
+. Create a new aggregation by using the `newAggregation` static factory method, to which we pass a list of aggregation operations. These aggregate operations define the aggregation pipeline of our `Aggregation`.
+. Use the `project` operation to select the `tags` field (which is an array of strings) from the input collection.
+. Use the `unwind` operation to generate a new document for each tag within the `tags` array.
+. Use the `group` operation to define a group for each `tags` value for which we aggregate the occurrence count (by using the `count` aggregation operator and collecting the result in a new field called `n`).
+. Select the `n` field and create an alias for the ID field generated from the previous group operation (hence the call to `previousOperation()`) with a name of `tag`.
+. Use the `sort` operation to sort the resulting list of tags by their occurrence count in descending order.
+. Call the `aggregate` method on `MongoTemplate` to let MongoDB perform the actual aggregation operation, with the created `Aggregation` as an argument.
+
+Note that the input collection is explicitly specified as the `tags` parameter to the `aggregate` Method. If the name of the input collection is not specified explicitly, it is derived from the input class passed as the first parameter to the `newAggreation` method.
+
+[[mongo.aggregation.examples.example2]]
+==== Aggregation Framework Example 2
+
+This example is based on the https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state[Largest and Smallest Cities by State] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return the smallest and largest cities by population for each state by using the aggregation framework. This example demonstrates grouping, sorting, and projections (selection).
+
+[source,java]
+----
+class ZipInfo {
+   String id;
+   String city;
+   String state;
+   @Field("pop") int population;
+   @Field("loc") double[] location;
+}
+
+class City {
+   String name;
+   int population;
+}
+
+class ZipInfoStats {
+   String id;
+   String state;
+   City biggestCity;
+   City smallestCity;
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class,
+    group("state", "city")
+       .sum("population").as("pop"),
+    sort(ASC, "pop", "state", "city"),
+    group("state")
+       .last("city").as("biggestCity")
+       .last("pop").as("biggestPop")
+       .first("city").as("smallestCity")
+       .first("pop").as("smallestPop"),
+    project()
+       .and("state").previousOperation()
+       .and("biggestCity")
+          .nested(bind("name", "biggestCity").and("population", "biggestPop"))
+       .and("smallestCity")
+          .nested(bind("name", "smallestCity").and("population", "smallestPop")),
+    sort(ASC, "state")
+);
+
+AggregationResults<ZipInfoStats> result = mongoTemplate.aggregate(aggregation, ZipInfoStats.class);
+ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
+----
+
+Note that the `ZipInfo` class maps the structure of the given input-collection. The `ZipInfoStats` class defines the structure in the desired output format.
+
+The preceding listings use the following algorithm:
+
+. Use the `group` operation to define a group from the input-collection. The grouping criteria is the combination of the `state` and `city` fields, which forms the ID structure of the group. We aggregate the value of the `population` property from the grouped elements by using the `sum` operator and save the result in the `pop` field.
+. Use the `sort` operation to sort the intermediate-result by the `pop`, `state` and `city` fields, in ascending order, such that the smallest city is at the top and the biggest city is at the bottom of the result. Note that the sorting on `state` and `city` is implicitly performed against the group ID fields (which Spring Data MongoDB handled).
+. Use a `group` operation again to group the intermediate result by `state`. Note that `state` again implicitly references a group ID field. We select the name and the population count of the biggest and smallest city with calls to the `last(…)` and `first(...)` operators, respectively, in the `project` operation.
+. Select the `state` field from the previous `group` operation. Note that `state` again implicitly references a group ID field. Because we do not want an implicitly generated ID to appear, we exclude the ID from the previous operation by using `and(previousOperation()).exclude()`. Because we want to populate the nested `City` structures in our output class, we have to emit appropriate sub-documents by using the nested method.
+. Sort the resulting list of `StateStats` by their state name in ascending order in the `sort` operation.
+
+Note that we derive the name of the input collection from the `ZipInfo` class passed as the first parameter to the `newAggregation` method.
+
+[[mongo.aggregation.examples.example3]]
+==== Aggregation Framework Example 3
+
+This example is based on the https://docs.mongodb.org/manual/tutorial/aggregation-examples/#states-with-populations-over-10-million[States with Populations Over 10 Million] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return all states with a population greater than 10 million, using the aggregation framework. This example demonstrates grouping, sorting, and matching (filtering).
+
+[source,java]
+----
+class StateStats {
+   @Id String id;
+   String state;
+   @Field("totalPop") int totalPopulation;
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation<ZipInfo> agg = newAggregation(ZipInfo.class,
+    group("state").sum("population").as("totalPop"),
+    sort(ASC, previousOperation(), "totalPop"),
+    match(where("totalPop").gte(10 * 1000 * 1000))
+);
+
+AggregationResults<StateStats> result = mongoTemplate.aggregate(agg, StateStats.class);
+List<StateStats> stateStatsList = result.getMappedResults();
+----
+
+The preceding listings use the following algorithm:
+
+. Group the input collection by the `state` field and calculate the sum of the `population` field and store the result in the new field `"totalPop"`.
+. Sort the intermediate result by the id-reference of the previous group operation in addition to the `"totalPop"` field in ascending order.
+. Filter the intermediate result by using a `match` operation which accepts a `Criteria` query as an argument.
+
+Note that we derive the name of the input collection from the `ZipInfo` class passed as first parameter to the `newAggregation` method.
+
+[[mongo.aggregation.examples.example4]]
+==== Aggregation Framework Example 4
+
+This example demonstrates the use of simple arithmetic operations in the projection operation.
+
+[source,java]
+----
+class Product {
+    String id;
+    String name;
+    double netPrice;
+    int spaceUnits;
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation<Product> agg = newAggregation(Product.class,
+    project("name", "netPrice")
+        .and("netPrice").plus(1).as("netPricePlus1")
+        .and("netPrice").minus(1).as("netPriceMinus1")
+        .and("netPrice").multiply(1.19).as("grossPrice")
+        .and("netPrice").divide(2).as("netPriceDiv2")
+        .and("spaceUnits").mod(2).as("spaceUnitsMod2")
+);
+
+AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+List<Document> resultList = result.getMappedResults();
+----
+
+Note that we derive the name of the input collection from the `Product` class passed as first parameter to the `newAggregation` method.
+
+[[mongo.aggregation.examples.example5]]
+==== Aggregation Framework Example 5
+
+This example demonstrates the use of simple arithmetic operations derived from SpEL Expressions in the projection operation.
+
+[source,java]
+----
+class Product {
+    String id;
+    String name;
+    double netPrice;
+    int spaceUnits;
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation<Product> agg = newAggregation(Product.class,
+    project("name", "netPrice")
+        .andExpression("netPrice + 1").as("netPricePlus1")
+        .andExpression("netPrice - 1").as("netPriceMinus1")
+        .andExpression("netPrice / 2").as("netPriceDiv2")
+        .andExpression("netPrice * 1.19").as("grossPrice")
+        .andExpression("spaceUnits % 2").as("spaceUnitsMod2")
+        .andExpression("(netPrice * 0.8  + 1.2) * 1.19").as("grossPriceIncludingDiscountAndCharge")
+
+);
+
+AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+List<Document> resultList = result.getMappedResults();
+----
+
+[[mongo.aggregation.examples.example6]]
+==== Aggregation Framework Example 6
+
+This example demonstrates the use of complex arithmetic operations derived from SpEL Expressions in the projection operation.
+
+Note: The additional parameters passed to the `addExpression` method can be referenced with indexer expressions according to their position. In this example, we reference the first parameter of the parameters array with `[0]`. When the SpEL expression is transformed into a MongoDB aggregation framework expression, external parameter expressions are replaced with their respective values.
+
+[source,java]
+----
+class Product {
+    String id;
+    String name;
+    double netPrice;
+    int spaceUnits;
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+double shippingCosts = 1.2;
+
+TypedAggregation<Product> agg = newAggregation(Product.class,
+    project("name", "netPrice")
+        .andExpression("(netPrice * (1-discountRate)  + [0]) * (1+taxRate)", shippingCosts).as("salesPrice")
+);
+
+AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
+List<Document> resultList = result.getMappedResults();
+----
+
+Note that we can also refer to other fields of the document within the SpEL expression.
+
+[[mongo.aggregation.examples.example7]]
+==== Aggregation Framework Example 7
+
+This example uses conditional projection. It is derived from the https://docs.mongodb.com/manual/reference/operator/aggregation/cond/[$cond reference documentation].
+
+[source,java]
+----
+public class InventoryItem {
+
+  @Id int id;
+  String item;
+  String description;
+  int qty;
+}
+
+public class InventoryItemProjection {
+
+  @Id int id;
+  String item;
+  String description;
+  int qty;
+  int discount
+}
+----
+
+[source,java]
+----
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation<InventoryItem> agg = newAggregation(InventoryItem.class,
+  project("item").and("discount")
+    .applyCondition(ConditionalOperator.newBuilder().when(Criteria.where("qty").gte(250))
+      .then(30)
+      .otherwise(20))
+    .and(ifNull("description", "Unspecified")).as("description")
+);
+
+AggregationResults<InventoryItemProjection> result = mongoTemplate.aggregate(agg, "inventory", InventoryItemProjection.class);
+List<InventoryItemProjection> stateStatsList = result.getMappedResults();
+----
+
+This one-step aggregation uses a projection operation with the `inventory` collection. We project the `discount` field by using a conditional operation for all inventory items that have a `qty` greater than or equal to `250`. A second conditional projection is performed for the `description` field. We apply the `Unspecified` description to all items that either do not have a `description` field or items that have a `null` description.
+
+As of MongoDB 3.6, it is possible to exclude fields from the projection by using a conditional expression.
+
+.Conditional aggregation projection
+====
+[source,java]
+----
+TypedAggregation<Book> agg = Aggregation.newAggregation(Book.class,
+  project("title")
+    .and(ConditionalOperators.when(ComparisonOperators.valueOf("author.middle")     <1>
+        .equalToValue(""))                                                          <2>
+        .then("$$REMOVE")                                                           <3>
+        .otherwiseValueOf("author.middle")                                          <4>
+    )
+	.as("author.middle"));
+----
+<1> If the value of the field `author.middle`
+<2> does not contain a value,
+<3> then use https://docs.mongodb.com/manual/reference/aggregation-variables/#variable.REMOVE[``$$REMOVE``] to exclude the field.
+<4> Otherwise, add the field value of `author.middle`.
+====

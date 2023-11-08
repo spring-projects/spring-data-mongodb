@@ -1,0 +1,106 @@
+[[mongodb.mapping-usage.events]]
+= Lifecycle Events
+
+The MongoDB mapping framework includes several `org.springframework.context.ApplicationEvent` events that your application can respond to by registering special beans in the `ApplicationContext`.
+Being based on Spring's `ApplicationContext` event infrastructure enables other products, such as Spring Integration, to easily receive these events, as they are a well known eventing mechanism in Spring-based applications.
+
+Entity lifecycle events can be costly and you may notice a change in the performance profile when loading large result sets.
+You can disable lifecycle events on the link:https://docs.spring.io/spring-data/mongodb/docs/{version}/api/org/springframework/data/mongodb/core/MongoTemplate.html#setEntityLifecycleEventsEnabled(boolean)[Template API].
+
+To intercept an object before it goes through the conversion process (which turns your domain object into a `org.bson.Document`), you can register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method.
+When the event is dispatched, your listener is called and passed the domain object before it goes into the converter.
+The following example shows how to do so:
+
+====
+[source,java]
+----
+public class BeforeConvertListener extends AbstractMongoEventListener<Person> {
+  @Override
+  public void onBeforeConvert(BeforeConvertEvent<Person> event) {
+    ... does some auditing manipulation, set timestamps, whatever ...
+  }
+}
+----
+====
+
+To intercept an object before it goes into the database, you can register a subclass of `org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener` that overrides the `onBeforeSave` method. When the event is dispatched, your listener is called and passed the domain object and the converted `com.mongodb.Document`. The following example shows how to do so:
+
+====
+[source,java]
+----
+public class BeforeSaveListener extends AbstractMongoEventListener<Person> {
+  @Override
+  public void onBeforeSave(BeforeSaveEvent<Person> event) {
+    … change values, delete them, whatever …
+  }
+}
+----
+====
+
+Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
+
+.Callbacks on `AbstractMappingEventListener`:
+[%collapsible]
+====
+* `onBeforeConvert`: Called in `MongoTemplate` `insert`, `insertList`, and `save` operations before the object is converted to a `Document` by a `MongoConverter`.
+* `onBeforeSave`: Called in `MongoTemplate` `insert`, `insertList`, and `save` operations *before* inserting or saving the `Document` in the database.
+* `onAfterSave`: Called in `MongoTemplate` `insert`, `insertList`, and `save` operations *after* inserting or saving the `Document` in the database.
+* `onAfterLoad`: Called in `MongoTemplate` `find`, `findAndRemove`, `findOne`, and `getCollection` methods after the `Document` has been retrieved from the database.
+* `onAfterConvert`: Called in `MongoTemplate` `find`, `findAndRemove`, `findOne`, and `getCollection` methods after the `Document` has been retrieved from the database was converted to a POJO.
+====
+
+NOTE: Lifecycle events are only emitted for root level types.
+Complex types used as properties within a document root are not subject to event publication unless they are document references annotated with `@DBRef`.
+
+WARNING: Lifecycle events depend on an `ApplicationEventMulticaster`, which in case of the `SimpleApplicationEventMulticaster` can be configured with a `TaskExecutor`, and therefore gives no guarantees when an Event is processed.
+
+include::{commons}@data-commons::page$entity-callbacks.adoc[leveloffset=+1]
+
+[[mongo.entity-callbacks]]
+== Store specific EntityCallbacks
+
+Spring Data MongoDB uses the `EntityCallback` API for its auditing support and reacts on the following callbacks.
+
+.Supported Entity Callbacks
+[%header,cols="4"]
+|===
+| Callback
+| Method
+| Description
+| Order
+
+| `ReactiveBeforeConvertCallback`
+`BeforeConvertCallback`
+| `onBeforeConvert(T entity, String collection)`
+| Invoked before a domain object is converted to `org.bson.Document`.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| `ReactiveAfterConvertCallback`
+`AfterConvertCallback`
+| `onAfterConvert(T entity, org.bson.Document target, String collection)`
+| Invoked after a domain object is loaded. +
+Can modify the domain object after reading it from a `org.bson.Document`.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| `ReactiveAuditingEntityCallback`
+`AuditingEntityCallback`
+| `onBeforeConvert(Object entity, String collection)`
+| Marks an auditable entity _created_ or _modified_
+| 100
+
+| `ReactiveBeforeSaveCallback`
+`BeforeSaveCallback`
+| `onBeforeSave(T entity, org.bson.Document target, String collection)`
+| Invoked before a domain object is saved. +
+Can modify the target, to be persisted, `Document` containing all mapped entity information.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| `ReactiveAfterSaveCallback`
+`AfterSaveCallback`
+| `onAfterSave(T entity, org.bson.Document target, String collection)`
+| Invoked before a domain object is saved. +
+Can modify the domain object, to be returned after save, `Document` containing all mapped entity information.
+| `Ordered.LOWEST_PRECEDENCE`
+
+|===
+

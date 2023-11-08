@@ -324,7 +324,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			Assert.hasText(operation, "Operation must not be empty or null");
 			Assert.notNull(value, "Values must not be null");
 
-			List<Object> objects = new ArrayList<Object>(values.length + 1);
+			List<Object> objects = new ArrayList<>(values.length + 1);
 			objects.add(value);
 			objects.addAll(Arrays.asList(values));
 			return apply(new OperationOutput(operation, objects));
@@ -350,8 +350,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 */
 		public T as(String alias) {
 
-			if (value instanceof OperationOutput) {
-				return this.operation.andOutput(((OperationOutput) this.value).withAlias(alias));
+			if (value instanceof OperationOutput operationOutput) {
+				return this.operation.andOutput(operationOutput.withAlias(alias));
 			}
 
 			if (value instanceof Field) {
@@ -520,7 +520,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			Assert.notNull(values, "Values must not be null");
 
 			this.operation = operation;
-			this.values = new ArrayList<Object>(values);
+			this.values = new ArrayList<>(values);
 		}
 
 		private OperationOutput(Field field, OperationOutput operationOutput) {
@@ -540,18 +540,18 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		protected List<Object> getOperationArguments(AggregationOperationContext context) {
 
-			List<Object> result = new ArrayList<Object>(values != null ? values.size() : 1);
+			List<Object> result = new ArrayList<>(values != null ? values.size() : 1);
 
 			for (Object element : values) {
 
-				if (element instanceof Field) {
-					result.add(context.getReference((Field) element).toString());
-				} else if (element instanceof Fields) {
-					for (Field field : (Fields) element) {
+				if (element instanceof Field field) {
+					result.add(context.getReference(field).toString());
+				} else if (element instanceof Fields fields) {
+					for (Field field : fields) {
 						result.add(context.getReference(field).toString());
 					}
-				} else if (element instanceof AggregationExpression) {
-					result.add(((AggregationExpression) element).toDocument(context));
+				} else if (element instanceof AggregationExpression aggregationExpression) {
+					result.add(aggregationExpression.toDocument(context));
 				} else {
 					result.add(element);
 				}

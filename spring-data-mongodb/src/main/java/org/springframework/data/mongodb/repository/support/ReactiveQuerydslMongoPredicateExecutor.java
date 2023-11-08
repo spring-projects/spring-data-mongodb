@@ -26,6 +26,8 @@ import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Window;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -195,17 +197,18 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	class ReactiveFluentQuerydsl<T> extends ReactiveFluentQuerySupport<Predicate, T> {
 
 		ReactiveFluentQuerydsl(Predicate predicate, Class<T> resultType) {
-			this(predicate, Sort.unsorted(), resultType, Collections.emptyList());
+			this(predicate, Sort.unsorted(), 0, resultType, Collections.emptyList());
 		}
 
-		ReactiveFluentQuerydsl(Predicate predicate, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
-			super(predicate, sort, resultType, fieldsToInclude);
+		ReactiveFluentQuerydsl(Predicate predicate, Sort sort, int limit, Class<T> resultType,
+				List<String> fieldsToInclude) {
+			super(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
-		protected <R> ReactiveFluentQuerydsl<R> create(Predicate predicate, Sort sort, Class<R> resultType,
+		protected <R> ReactiveFluentQuerydsl<R> create(Predicate predicate, Sort sort, int limit, Class<R> resultType,
 				List<String> fieldsToInclude) {
-			return new ReactiveFluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
+			return new ReactiveFluentQuerydsl<>(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
@@ -221,6 +224,11 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		@Override
 		public Flux<T> all() {
 			return createQuery().fetch();
+		}
+
+		@Override
+		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
+			return createQuery().scroll(scrollPosition);
 		}
 
 		@Override
@@ -260,6 +268,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 			if (getSort().isSorted()) {
 				query.with(getSort());
 			}
+
+			query.limit(getLimit());
 		}
 	}
 

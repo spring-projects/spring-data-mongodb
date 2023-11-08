@@ -159,7 +159,7 @@ public class DateOperators {
 	 * +/-[hh], e.g. "+03"</td>
 	 * </tr>
 	 * </table>
-	 * <strong>NOTE: </strong>Support for timezones in aggregations Requires MongoDB 3.6 or later.
+	 * <strong>NOTE:</strong> Support for timezones in aggregations Requires MongoDB 3.6 or later.
 	 *
 	 * @author Christoph Strobl
 	 * @author Mark Paluch
@@ -985,8 +985,8 @@ public class DateOperators {
 
 			java.util.Map<String, Object> args;
 
-			if (source instanceof Map) {
-				args = new LinkedHashMap<>((Map) source);
+			if (source instanceof Map map) {
+				args = new LinkedHashMap<>(map);
 			} else {
 				args = new LinkedHashMap<>(2);
 				args.put("date", source);
@@ -1877,12 +1877,12 @@ public class DateOperators {
 
 			java.util.Map<String, Object> clone = new LinkedHashMap<>(argumentMap());
 
-			if (value instanceof Timezone) {
+			if (value instanceof Timezone timezone) {
 
 				if (ObjectUtils.nullSafeEquals(value, Timezone.none())) {
 					clone.remove("timezone");
 				} else {
-					clone.put("timezone", ((Timezone) value).value);
+					clone.put("timezone", timezone.value);
 				}
 			} else {
 				clone.put(key, value);

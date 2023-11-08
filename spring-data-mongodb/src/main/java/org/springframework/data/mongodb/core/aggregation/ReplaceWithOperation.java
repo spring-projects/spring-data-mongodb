@@ -62,23 +62,23 @@ public class ReplaceWithOperation extends ReplaceRootOperation {
 	public static ReplaceWithOperation replaceWithValueOf(Object value) {
 
 		Assert.notNull(value, "Value must not be null");
-		return new ReplaceWithOperation((ctx) -> {
+		return new ReplaceWithOperation(ctx -> {
 
-			Object target = value instanceof String ? Fields.field((String) value) : value;
+			Object target = value instanceof String stringValue ? Fields.field(stringValue) : value;
 			return computeValue(target, ctx);
 		});
 	}
 
 	private static Object computeValue(Object value, AggregationOperationContext context) {
 
-		if (value instanceof Field) {
-			return context.getReference((Field) value).toString();
+		if (value instanceof Field field) {
+			return context.getReference(field).toString();
 		}
-		if (value instanceof AggregationExpression) {
-			return ((AggregationExpression) value).toDocument(context);
+		if (value instanceof AggregationExpression aggregationExpression) {
+			return aggregationExpression.toDocument(context);
 		}
-		if (value instanceof Collection) {
-			return ((Collection) value).stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
+		if (value instanceof Collection<?> collection) {
+			return collection.stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
 		}
 
 		return value;

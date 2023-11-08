@@ -47,8 +47,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	@Override
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
 
-		if (event instanceof AfterLoadEvent) {
-			AfterLoadEvent<?> afterLoadEvent = (AfterLoadEvent<?>) event;
+		if (event instanceof AfterLoadEvent<?> afterLoadEvent) {
 
 			if (domainClass.isAssignableFrom(afterLoadEvent.getType())) {
 				onAfterLoad((AfterLoadEvent<E>) event);
@@ -57,16 +56,16 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 			return;
 		}
 
-		if (event instanceof AbstractDeleteEvent) {
+		if (event instanceof AbstractDeleteEvent deleteEvent) {
 
-			Class<?> eventDomainType = ((AbstractDeleteEvent) event).getType();
+			Class<?> eventDomainType = deleteEvent.getType();
 
 			if (eventDomainType != null && domainClass.isAssignableFrom(eventDomainType)) {
-				if (event instanceof BeforeDeleteEvent) {
-					onBeforeDelete((BeforeDeleteEvent<E>) event);
+				if (event instanceof BeforeDeleteEvent beforeDeleteEvent) {
+					onBeforeDelete(beforeDeleteEvent);
 				}
-				if (event instanceof AfterDeleteEvent) {
-					onAfterDelete((AfterDeleteEvent<E>) event);
+				if (event instanceof AfterDeleteEvent afterDeleteEvent) {
+					onAfterDelete(afterDeleteEvent);
 				}
 			}
 
@@ -81,14 +80,14 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 			return;
 		}
 
-		if (event instanceof BeforeConvertEvent) {
-			onBeforeConvert((BeforeConvertEvent<E>) event);
-		} else if (event instanceof BeforeSaveEvent) {
-			onBeforeSave((BeforeSaveEvent<E>) event);
-		} else if (event instanceof AfterSaveEvent) {
-			onAfterSave((AfterSaveEvent<E>) event);
-		} else if (event instanceof AfterConvertEvent) {
-			onAfterConvert((AfterConvertEvent<E>) event);
+		if (event instanceof BeforeConvertEvent beforeConvertEvent) {
+			onBeforeConvert(beforeConvertEvent);
+		} else if (event instanceof BeforeSaveEvent beforeSaveEvent) {
+			onBeforeSave(beforeSaveEvent);
+		} else if (event instanceof AfterSaveEvent afterSaveEvent) {
+			onAfterSave(afterSaveEvent);
+		} else if (event instanceof AfterConvertEvent afterConvertEvent) {
+			onAfterConvert(afterConvertEvent);
 		}
 	}
 

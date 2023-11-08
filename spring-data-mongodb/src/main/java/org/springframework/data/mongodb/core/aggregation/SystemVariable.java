@@ -24,7 +24,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @see <a href="https://docs.mongodb.com/manual/reference/aggregation-variables">Aggregation Variables</a>.
  */
-public enum SystemVariable {
+public enum SystemVariable implements AggregationVariable {
 
 	/**
 	 * Variable for the current datetime.
@@ -82,8 +82,6 @@ public enum SystemVariable {
 	 */
 	SEARCH_META;
 
-	private static final String PREFIX = "$$";
-
 	/**
 	 * Return {@literal true} if the given {@code fieldRef} denotes a well-known system variable, {@literal false}
 	 * otherwise.
@@ -93,13 +91,12 @@ public enum SystemVariable {
 	 */
 	public static boolean isReferingToSystemVariable(@Nullable String fieldRef) {
 
-		if (fieldRef == null || !fieldRef.startsWith(PREFIX) || fieldRef.length() <= 2) {
+		String candidate = variableNameFrom(fieldRef);
+		if (candidate == null) {
 			return false;
 		}
 
-		int indexOfFirstDot = fieldRef.indexOf('.');
-		String candidate = fieldRef.substring(2, indexOfFirstDot == -1 ? fieldRef.length() : indexOfFirstDot);
-
+		candidate = candidate.startsWith(PREFIX) ? candidate.substring(2) : candidate;
 		for (SystemVariable value : values()) {
 			if (value.name().equals(candidate)) {
 				return true;
@@ -112,5 +109,21 @@ public enum SystemVariable {
 	@Override
 	public String toString() {
 		return PREFIX.concat(name());
+	}
+
+	@Override
+	public String getTarget() {
+		return toString();
+	}
+
+	@Nullable
+	static String variableNameFrom(@Nullable String fieldRef) {
+
+		if (fieldRef == null || !fieldRef.startsWith(PREFIX) || fieldRef.length() <= 2) {
+			return null;
+		}
+
+		int indexOfFirstDot = fieldRef.indexOf('.');
+		return indexOfFirstDot == -1 ? fieldRef : fieldRef.substring(2, indexOfFirstDot);
 	}
 }

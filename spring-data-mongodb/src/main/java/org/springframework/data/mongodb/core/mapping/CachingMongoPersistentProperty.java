@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
@@ -37,6 +39,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	private @Nullable Class<?> fieldType;
 	private @Nullable Boolean usePropertyAccess;
 	private @Nullable Boolean isTransient;
+	private @Nullable Lazy<MongoField> mongoField = Lazy.of(super::getMongoField);
 
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
@@ -133,5 +136,10 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		}
 
 		return this.dbref;
+	}
+
+	@Override
+	public MongoField getMongoField() {
+		return mongoField.get();
 	}
 }

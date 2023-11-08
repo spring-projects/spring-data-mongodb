@@ -55,16 +55,15 @@ class AggregationOperationRenderer {
 
 			operationDocuments.addAll(operation.toPipelineStages(contextToUse));
 
-			if (operation instanceof FieldsExposingAggregationOperation) {
+			if (operation instanceof FieldsExposingAggregationOperation exposedFieldsOperation) {
 
-				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
 				ExposedFields fields = exposedFieldsOperation.getFields();
 
 				if (operation instanceof InheritsFieldsAggregationOperation || exposedFieldsOperation.inheritsFields()) {
 					contextToUse = new InheritingExposedFieldsAggregationOperationContext(fields, contextToUse);
 				} else {
 					contextToUse = fields.exposesNoFields() ? DEFAULT_CONTEXT
-							: new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields(), contextToUse);
+							: new ExposedFieldsAggregationOperationContext(fields, contextToUse);
 				}
 			}
 		}

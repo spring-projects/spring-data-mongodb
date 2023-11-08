@@ -52,6 +52,7 @@ public class IndexInfo {
 	private final boolean unique;
 	private final boolean sparse;
 	private final String language;
+	private final boolean hidden;
 	private @Nullable Duration expireAfter;
 	private @Nullable String partialFilterExpression;
 	private @Nullable Document collation;
@@ -64,6 +65,17 @@ public class IndexInfo {
 		this.unique = unique;
 		this.sparse = sparse;
 		this.language = language;
+		this.hidden = false;
+	}
+
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language, boolean hidden) {
+
+		this.indexFields = Collections.unmodifiableList(indexFields);
+		this.name = name;
+		this.unique = unique;
+		this.sparse = sparse;
+		this.language = language;
+		this.hidden = hidden;
 	}
 
 	/**
@@ -117,14 +129,15 @@ public class IndexInfo {
 
 		String name = sourceDocument.get("name").toString();
 
-		boolean unique = sourceDocument.containsKey("unique") ? (Boolean) sourceDocument.get("unique") : false;
-		boolean sparse = sourceDocument.containsKey("sparse") ? (Boolean) sourceDocument.get("sparse") : false;
-		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
+		boolean unique = sourceDocument.get("unique", false);
+		boolean sparse = sourceDocument.get("sparse", false);
+		boolean hidden = sourceDocument.getBoolean("hidden", false);
+		String language = sourceDocument.containsKey("default_language") ? sourceDocument.getString("default_language")
 				: "";
 
 		String partialFilter = extractPartialFilterString(sourceDocument);
 
-		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
+		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language, hidden);
 		info.partialFilterExpression = partialFilter;
 		info.collation = sourceDocument.get("collation", Document.class);
 
@@ -259,12 +272,17 @@ public class IndexInfo {
 		return getIndexFields().stream().anyMatch(IndexField::isWildcard);
 	}
 
+	public boolean isHidden() {
+		return hidden;
+	}
+
+
 	@Override
 	public String toString() {
 
 		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse
 				+ ", language=" + language + ", partialFilterExpression=" + partialFilterExpression + ", collation=" + collation
-				+ ", expireAfterSeconds=" + ObjectUtils.nullSafeToString(expireAfter) + "]";
+				+ ", expireAfterSeconds=" + ObjectUtils.nullSafeToString(expireAfter) + ", hidden=" + hidden + "]";
 	}
 
 	@Override
@@ -279,6 +297,7 @@ public class IndexInfo {
 		result += 31 * ObjectUtils.nullSafeHashCode(partialFilterExpression);
 		result += 31 * ObjectUtils.nullSafeHashCode(collation);
 		result += 31 * ObjectUtils.nullSafeHashCode(expireAfter);
+		result += 31 * ObjectUtils.nullSafeHashCode(hidden);
 		return result;
 	}
 
@@ -324,6 +343,9 @@ public class IndexInfo {
 			return false;
 		}
 		if (!ObjectUtils.nullSafeEquals(expireAfter, other.expireAfter)) {
+			return false;
+		}
+		if (hidden != other.hidden) {
 			return false;
 		}
 		return true;

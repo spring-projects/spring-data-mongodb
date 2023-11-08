@@ -20,6 +20,8 @@ import static java.lang.String.*;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeParseException;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -41,7 +43,6 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -289,10 +290,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				} else if ("DBPointer".equals(value)) {
 					setCurrentBsonType(BsonType.DB_POINTER);
 					currentValue = visitDBPointerConstructor();
-				} else if ("UUID".equals(value) || "GUID".equals(value) || "CSUUID".equals(value) || "CSGUID".equals(value)
-						|| "JUUID".equals(value) || "JGUID".equals(value) || "PYUUID".equals(value) || "PYGUID".equals(value)) {
+				} else if ("UUID".equals(value)) {
 					setCurrentBsonType(BsonType.BINARY);
-					currentValue = visitUUIDConstructor(value);
+					currentValue = visitUUIDConstructor();
 				} else if ("new".equals(value)) {
 					visitNew();
 				} else {
@@ -467,8 +467,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	private static String nullSafeToString(@Nullable Object value) {
 
-		if (value instanceof Date) {
-			return DateTimeFormatter.format(((Date) value).getTime());
+		if (value instanceof Date date) {
+			return DateTimeFormatter.format(date.getTime());
 		}
 
 		return ObjectUtils.nullSafeToString(value);
@@ -840,9 +840,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		} else if ("DBPointer".equals(value)) {
 			currentValue = visitDBPointerConstructor();
 			setCurrentBsonType(BsonType.DB_POINTER);
-		} else if ("UUID".equals(value) || "GUID".equals(value) || "CSUUID".equals(value) || "CSGUID".equals(value)
-				|| "JUUID".equals(value) || "JGUID".equals(value) || "PYUUID".equals(value) || "PYGUID".equals(value)) {
-			currentValue = visitUUIDConstructor(value);
+		} else if ("UUID".equals(value)) {
+			currentValue = visitUUIDConstructor();
 			setCurrentBsonType(BsonType.BINARY);
 		} else {
 			throw new JsonParseException("JSON reader expected a type name but found '%s'.", value);
@@ -862,7 +861,13 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					setCurrentBsonType(BsonType.BINARY);
 					return;
 				}
-			} else if ("$regex".equals(value) || "$options".equals(value)) {
+			}
+			if ("$uuid".equals(value)) {
+				currentValue = visitUuidExtendedJson();
+				setCurrentBsonType(BsonType.BINARY);
+				return;
+			}
+			else if ("$regex".equals(value) || "$options".equals(value)) {
 				currentValue = visitRegularExpressionExtendedJson(value);
 				if (currentValue != null) {
 					setCurrentBsonType(BsonType.REGULAR_EXPRESSION);
@@ -952,20 +957,16 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 		verifyToken(JsonTokenType.RIGHT_PAREN);
 
-		byte[] bytes = Base64Utils.decodeFromString(bytesToken.getValue(String.class));
+		byte[] bytes = Base64.getDecoder().decode(bytesToken.getValue(String.class));
 		return new BsonBinary(subTypeToken.getValue(Integer.class).byteValue(), bytes);
 	}
 
-	private BsonBinary visitUUIDConstructor(final String uuidConstructorName) {
-		verifyToken(JsonTokenType.LEFT_PAREN);
-		String hexString = readStringFromExtendedJson().replaceAll("\\{", "").replaceAll("}", "").replaceAll("-", "");
-		verifyToken(JsonTokenType.RIGHT_PAREN);
-		byte[] bytes = decodeHex(hexString);
-		BsonBinarySubType subType = BsonBinarySubType.UUID_STANDARD;
-		if (!"UUID".equals(uuidConstructorName) || !"GUID".equals(uuidConstructorName)) {
-			subType = BsonBinarySubType.UUID_LEGACY;
-		}
-		return new BsonBinary(subType, bytes);
+	private BsonBinary visitUUIDConstructor() {
+		this.verifyToken(JsonTokenType.LEFT_PAREN);
+		String hexString = this.readStringFromExtendedJson().replace("-", "");
+
+		this.verifyToken(JsonTokenType.RIGHT_PAREN);
+		return new BsonBinary(BsonBinarySubType.UUID_STANDARD, decodeHex(hexString));
 	}
 
 	private BsonRegularExpression visitRegularExpressionConstructor() {
@@ -1079,28 +1080,14 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		verifyToken(JsonTokenType.RIGHT_PAREN);
-		String[] patterns = { "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ssz", "yyyy-MM-dd'T'HH:mm:ss.SSSz" };
+		
+		String dateTimeString = token.getValue(String.class);
 
-		SimpleDateFormat format = new SimpleDateFormat(patterns[0], Locale.ENGLISH);
-		ParsePosition pos = new ParsePosition(0);
-		String s = token.getValue(String.class);
-
-		if (s.endsWith("Z")) {
-			s = s.substring(0, s.length() - 1) + "GMT-00:00";
+		try {
+			return DateTimeFormatter.parse(dateTimeString);
+		} catch (DateTimeParseException e) {
+			throw new JsonParseException("Failed to parse string as a date: " + dateTimeString, e);
 		}
-
-		for (final String pattern : patterns) {
-			format.applyPattern(pattern);
-			format.setLenient(true);
-			pos.setIndex(0);
-
-			Date date = format.parse(s, pos);
-
-			if (date != null && pos.getIndex() == s.length()) {
-				return date.getTime();
-			}
-		}
-		throw new JsonParseException("Invalid date format.");
 	}
 
 	private BsonBinary visitHexDataConstructor() {
@@ -1218,7 +1205,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				byte type;
 				if (firstNestedKey.equals("base64")) {
 					verifyToken(JsonTokenType.COLON);
-					data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+					data = Base64.getDecoder().decode(readStringFromExtendedJson());
 					verifyToken(JsonTokenType.COMMA);
 					verifyString("subType");
 					verifyToken(JsonTokenType.COLON);
@@ -1229,7 +1216,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					verifyToken(JsonTokenType.COMMA);
 					verifyString("base64");
 					verifyToken(JsonTokenType.COLON);
-					data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+					data = Base64.getDecoder().decode(readStringFromExtendedJson());
 				} else {
 					throw new JsonParseException("Unexpected key for $binary: " + firstNestedKey);
 				}
@@ -1257,7 +1244,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			byte type;
 
 			if (firstKey.equals("$binary")) {
-				data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+				data = Base64.getDecoder().decode(readStringFromExtendedJson());
 				verifyToken(JsonTokenType.COMMA);
 				verifyString("$type");
 				verifyToken(JsonTokenType.COLON);
@@ -1267,7 +1254,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				verifyToken(JsonTokenType.COMMA);
 				verifyString("$binary");
 				verifyToken(JsonTokenType.COLON);
-				data = Base64Utils.decodeFromString(readStringFromExtendedJson());
+				data = Base64.getDecoder().decode(readStringFromExtendedJson());
 			}
 			verifyToken(JsonTokenType.END_OBJECT);
 
@@ -1316,10 +1303,10 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				// Spring Data Customization START
 
 				Object dt = bindableValueFor(valueToken).getValue();
-				if (dt instanceof Date) {
-					value = ((Date) dt).getTime();
-				} else if (dt instanceof Number) {
-					value = NumberUtils.convertNumberToTargetClass((Number) dt, Long.class);
+				if (dt instanceof Date date) {
+					value = date.getTime();
+				} else if (dt instanceof Number numberValue) {
+					value = NumberUtils.convertNumberToTargetClass(numberValue, Long.class);
 				} else {
 					try {
 						value = DateTimeFormatter.parse(dt.toString());
@@ -1425,7 +1412,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		// Spring Data Customization START
 
 		if (patternToken.getType() == JsonTokenType.STRING || patternToken.getType() == JsonTokenType.UNQUOTED_STRING) {
-			return bindableValueFor(patternToken).getValue().toString();
+			Object value = bindableValueFor(patternToken).getValue();
+			return value != null ? value.toString() : null;
 		}
 
 		throw new JsonParseException("JSON reader expected a string but found '%s'.", patternToken.getValue());
@@ -1482,6 +1470,17 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			throw new JsonParseException("JSON reader expected an integer but found '%s'.", nextToken.getValue());
 		}
 		return value;
+	}
+
+	private BsonBinary visitUuidExtendedJson() {
+		verifyToken(JsonTokenType.COLON);
+		String hexString = this.readStringFromExtendedJson().replace("-", "");
+		verifyToken(JsonTokenType.END_OBJECT);
+		try {
+			return new BsonBinary(BsonBinarySubType.UUID_STANDARD, decodeHex(hexString));
+		} catch (IllegalArgumentException e) {
+			throw new JsonParseException(e);
+		}
 	}
 
 	private void visitJavaScriptExtendedJson() {

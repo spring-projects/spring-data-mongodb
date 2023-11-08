@@ -207,10 +207,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		for (Object value : values) {
 
-			if (value instanceof Field) {
-				builder.and((Field) value);
-			} else if (value instanceof AggregationExpression) {
-				builder.and((AggregationExpression) value);
+			if (value instanceof Field field) {
+				builder.and(field);
+			} else if (value instanceof AggregationExpression aggregationExpression) {
+				builder.and(aggregationExpression);
 			} else {
 				builder.and(value);
 			}
@@ -330,7 +330,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
-		 * @param parameters
+		 * @param parameters parameters must not be {@literal null}.
 		 */
 		public ExpressionProjectionOperationBuilder(String expression, ProjectionOperation operation, Object[] parameters) {
 
@@ -347,7 +347,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				@Override
 				protected List<Object> getOperationArguments(AggregationOperationContext context) {
 
-					List<Object> result = new ArrayList<Object>(values.length + 1);
+					List<Object> result = new ArrayList<>(values.length + 1);
 					result.add(ExpressionProjection.toMongoExpression(context,
 							ExpressionProjectionOperationBuilder.this.expression, ExpressionProjectionOperationBuilder.this.params));
 					result.addAll(Arrays.asList(values));
@@ -1455,19 +1455,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			protected List<Object> getOperationArguments(AggregationOperationContext context) {
 
-				List<Object> result = new ArrayList<Object>(values.size());
+				List<Object> result = new ArrayList<>(values.size());
 				result.add(context.getReference(getField()).toString());
 
 				for (Object element : values) {
 
-					if (element instanceof Field) {
-						result.add(context.getReference((Field) element).toString());
-					} else if (element instanceof Fields) {
-						for (Field field : (Fields) element) {
+					if (element instanceof Field field) {
+						result.add(context.getReference(field).toString());
+					} else if (element instanceof Fields fields) {
+						for (Field field : fields) {
 							result.add(context.getReference(field).toString());
 						}
-					} else if (element instanceof AggregationExpression) {
-						result.add(((AggregationExpression) element).toDocument(context));
+					} else if (element instanceof AggregationExpression aggregationExpression) {
+						result.add(aggregationExpression.toDocument(context));
 					} else {
 						result.add(element);
 					}
@@ -1735,6 +1735,29 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
+	 * A {@link Projection} including all top level fields of the given target type mapped to include potentially
+	 * deviating field names.
+	 *
+	 * @since 2.2
+	 * @author Christoph Strobl
+	 */
+	static class FilterProjection extends Projection {
+
+		public static String FILTER_ELEMENT = "filterElement";
+		private final Object value;
+
+		FilterProjection(String fieldReference, Object value) {
+			super(Fields.field(FILTER_ELEMENT + "." + fieldReference));
+			this.value = value;
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+			return new Document(getExposedField().getName(), value);
+		}
+	}
+
+	/**
 	 * Builder for {@code array} projections.
 	 *
 	 * @author Christoph Strobl
@@ -1829,20 +1852,16 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 		private Object toArrayEntry(Object projection, AggregationOperationContext ctx) {
 
-			if (projection instanceof Field) {
-				return ctx.getReference((Field) projection).toString();
+			if (projection instanceof Field field) {
+				return ctx.getReference(field).toString();
 			}
 
-			if (projection instanceof AggregationExpression) {
-				return ((AggregationExpression) projection).toDocument(ctx);
+			if (projection instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(ctx);
 			}
 
-			if (projection instanceof FieldProjection) {
-				return ctx.getReference(((FieldProjection) projection).getExposedField().getTarget()).toString();
-			}
-
-			if (projection instanceof Projection) {
-				((Projection) projection).toDocument(ctx);
+			if (projection instanceof FieldProjection fieldProjection) {
+				return ctx.getReference(fieldProjection.getExposedField().getTarget()).toString();
 			}
 
 			return projection;

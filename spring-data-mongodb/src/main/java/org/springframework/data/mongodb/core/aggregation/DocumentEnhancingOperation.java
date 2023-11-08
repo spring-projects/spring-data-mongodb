@@ -84,21 +84,21 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 		return exposedFields;
 	}
 
-	private ExposedFields add(Object field) {
+	private ExposedFields add(Object fieldValue) {
 
-		if (field instanceof Field) {
-			return exposedFields.and(new ExposedField((Field) field, true));
+		if (fieldValue instanceof Field field) {
+			return exposedFields.and(new ExposedField(field, true));
 		}
-		if (field instanceof String) {
-			return exposedFields.and(new ExposedField(Fields.field((String) field), true));
+		if (fieldValue instanceof String fieldName) {
+			return exposedFields.and(new ExposedField(Fields.field(fieldName), true));
 		}
 
-		throw new IllegalArgumentException(String.format("Expected %s to be a field/property", field));
+		throw new IllegalArgumentException(String.format("Expected %s to be a field/property", fieldValue));
 	}
 
 	private static Document toSetEntry(Entry<Object, Object> entry, AggregationOperationContext context) {
 
-		String field = entry.getKey() instanceof String ? context.getReference((String) entry.getKey()).getRaw()
+		String field = entry.getKey() instanceof String key ? context.getReference(key).getRaw()
 				: context.getReference((Field) entry.getKey()).getRaw();
 
 		Object value = computeValue(entry.getValue(), context);
@@ -108,20 +108,20 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 
 	private static Object computeValue(Object value, AggregationOperationContext context) {
 
-		if (value instanceof Field) {
-			return context.getReference((Field) value).toString();
+		if (value instanceof Field field) {
+			return context.getReference(field).toString();
 		}
 
-		if (value instanceof ExpressionProjection) {
-			return ((ExpressionProjection) value).toExpression(context);
+		if (value instanceof ExpressionProjection expressionProjection) {
+			return expressionProjection.toExpression(context);
 		}
 
-		if (value instanceof AggregationExpression) {
-			return ((AggregationExpression) value).toDocument(context);
+		if (value instanceof AggregationExpression aggregationExpression) {
+			return aggregationExpression.toDocument(context);
 		}
 
-		if (value instanceof Collection) {
-			return ((Collection<?>) value).stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
+		if (value instanceof Collection<?> collection) {
+			return collection.stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
 		}
 
 		return value;

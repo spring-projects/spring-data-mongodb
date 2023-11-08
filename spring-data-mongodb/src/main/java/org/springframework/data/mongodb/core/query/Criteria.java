@@ -19,6 +19,7 @@ import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -37,6 +38,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
@@ -45,7 +47,6 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.util.RegexFlags;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -121,7 +122,7 @@ public class Criteria implements CriteriaDefinition {
 	 * By default the {@link Example} uses typed matching restricting it to probe assignable types. For example, when
 	 * sticking with the default type key ({@code _class}), the query has restrictions such as
 	 * <code>_class : &#123; $in : [com.acme.Person] &#125; </code>. <br />
-	 * To avoid the above mentioned type restriction use an {@link UntypedExampleMatcher} with
+	 * To avoid the above-mentioned type restriction use an {@link UntypedExampleMatcher} with
 	 * {@link Example#of(Object, org.springframework.data.domain.ExampleMatcher)}.
 	 *
 	 * @param example must not be {@literal null}.
@@ -145,6 +146,37 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public static Criteria matchingDocumentStructure(MongoJsonSchema schema) {
 		return new Criteria().andDocumentStructureMatches(schema);
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} matching a documents against the given {@link MongoExpression
+	 * expression}.
+	 * <p>
+	 * The {@link MongoExpression expression} can be either something that directly renders to the store native
+	 * representation like
+	 *
+	 * <pre class="code">
+	 * expr(() -> Document.parse("{ $gt : [ '$spent', '$budget'] }")))
+	 * </pre>
+	 *
+	 * or an {@link org.springframework.data.mongodb.core.aggregation.AggregationExpression} which will be subject to
+	 * context (domain type) specific field mapping.
+	 *
+	 * <pre class="code">
+	 * expr(valueOf("amountSpent").greaterThan("budget"))
+	 * </pre>
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link Criteria}.
+	 * @since 4.1
+	 */
+	public static Criteria expr(MongoExpression expression) {
+
+		Assert.notNull(expression, "Expression must not be null");
+
+		Criteria criteria = new Criteria();
+		criteria.criteria.put("$expr", expression);
+		return criteria;
 	}
 
 	/**
@@ -179,8 +211,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using {@literal null} equality comparison which matches documents that either contain the item
-	 * field whose value is {@literal null} or that do not contain the item field.
-	 * <br />
+	 * field whose value is {@literal null} or that do not contain the item field. <br />
 	 * Use {@link #isNullValue()} to only query for documents that contain the field whose value is equal to
 	 * {@link org.bson.BsonType#NULL}. <br />
 	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
@@ -196,10 +227,9 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using a {@link org.bson.BsonType} comparison which matches only documents that contain the item
-	 * field whose value is equal to {@link org.bson.BsonType#NULL}.
-	 * <br />
-	 * Use {@link #isNull()} to query for documents that contain the field with a {@literal null} value or do not contain the
-	 * field at all. <br />
+	 * field whose value is equal to {@link org.bson.BsonType#NULL}. <br />
+	 * Use {@link #isNull()} to query for documents that contain the field with a {@literal null} value or do not contain
+	 * the field at all. <br />
 	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
 	 *
 	 * @return this.
@@ -337,7 +367,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/mod/">MongoDB Query operator: $mod</a>
 	 */
 	public Criteria mod(Number value, Number remainder) {
-		List<Object> l = new ArrayList<Object>(2);
+		List<Object> l = new ArrayList<>(2);
 		l.add(value);
 		l.add(remainder);
 		criteria.put("$mod", l);
@@ -627,8 +657,8 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a geo-spatial criterion using a {@literal $maxDistance} operation, for use with {@literal $near} or
 	 * {@literal $nearSphere}.
 	 * <p>
-	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation
-	 * (legacy vs. geoJson) as well as the target operation.
+	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation (legacy
+	 * vs. geoJson) as well as the target operation.
 	 *
 	 * @param maxDistance radians or meters
 	 * @return this.
@@ -650,8 +680,8 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a geospatial criterion using a {@literal $minDistance} operation, for use with {@literal $near} or
 	 * {@literal $nearSphere}.
 	 * <p>
-	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation
-	 * (legacy vs. geoJson) as well as the target operation.
+	 * <strong>NOTE:</strong> The unit of measure for distance may depends on the used coordinate representation (legacy
+	 * vs. geoJson) as well as the target operation.
 	 *
 	 * @param minDistance radians or meters
 	 * @return this.
@@ -953,9 +983,9 @@ public class Criteria implements CriteriaDefinition {
 
 		Object existingNearOperationValue = criteria.get(command);
 
-		if (existingNearOperationValue instanceof Document) {
+		if (existingNearOperationValue instanceof Document document) {
 
-			((Document) existingNearOperationValue).put(operation, maxDistance);
+			document.put(operation, maxDistance);
 
 			return true;
 
@@ -1022,27 +1052,22 @@ public class Criteria implements CriteriaDefinition {
 			return right == null;
 		}
 
-		if (left instanceof Pattern) {
+		if (left instanceof Pattern leftPattern) {
 
-			if (!(right instanceof Pattern)) {
+			if (!(right instanceof Pattern rightPattern)) {
 				return false;
 			}
-
-			Pattern leftPattern = (Pattern) left;
-			Pattern rightPattern = (Pattern) right;
 
 			return leftPattern.pattern().equals(rightPattern.pattern()) //
 					&& leftPattern.flags() == rightPattern.flags();
 		}
 
-		if (left instanceof Document) {
+		if (left instanceof Document leftDocument) {
 
-			if (!(right instanceof Document)) {
+			if (!(right instanceof Document rightDocument)) {
 				return false;
 			}
 
-			Document leftDocument = (Document) left;
-			Document rightDocument = (Document) right;
 			Iterator<Entry<String, Object>> leftIterator = leftDocument.entrySet().iterator();
 			Iterator<Entry<String, Object>> rightIterator = rightDocument.entrySet().iterator();
 
@@ -1098,7 +1123,7 @@ public class Criteria implements CriteriaDefinition {
 
 	private static boolean requiresGeoJsonFormat(Object value) {
 		return value instanceof GeoJson
-				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
+				|| (value instanceof GeoCommand geoCommand && geoCommand.getShape() instanceof GeoJson);
 	}
 
 	/**
@@ -1362,7 +1387,7 @@ public class Criteria implements CriteriaDefinition {
 
 			Assert.hasText(bitmask, "Bitmask must not be null");
 
-			target.criteria.put(operator, new Binary(Base64Utils.decodeFromString(bitmask)));
+			target.criteria.put(operator, new Binary(Base64.getDecoder().decode(bitmask)));
 			return target;
 		}
 

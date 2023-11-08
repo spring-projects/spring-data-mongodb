@@ -19,19 +19,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Value;
-import lombok.experimental.Wither;
-
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -117,14 +112,67 @@ public class AuditingEntityCallbackUnitTests {
 		@LastModifiedDate Date modified;
 	}
 
-	@Value
-	@Wither
-	@AllArgsConstructor
-	@NoArgsConstructor(force = true)
-	private static class ImmutableSample {
+	private static final class ImmutableSample {
 
-		@Id String id;
-		@CreatedDate Date created;
-		@LastModifiedDate Date modified;
+		@Id private final String id;
+		@CreatedDate private final Date created;
+		@LastModifiedDate private final Date modified;
+
+		public ImmutableSample() {
+			this(null, null, null);
+		}
+
+		public ImmutableSample(String id, Date created, Date modified) {
+			this.id = id;
+			this.created = created;
+			this.modified = modified;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Date getCreated() {
+			return this.created;
+		}
+
+		public Date getModified() {
+			return this.modified;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ImmutableSample that = (ImmutableSample) o;
+			return Objects.equals(id, that.id) && Objects.equals(created, that.created)
+					&& Objects.equals(modified, that.modified);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, created, modified);
+		}
+
+		public String toString() {
+			return "AuditingEntityCallbackUnitTests.ImmutableSample(id=" + this.getId() + ", created=" + this.getCreated()
+					+ ", modified=" + this.getModified() + ")";
+		}
+
+		public ImmutableSample withId(String id) {
+			return this.id == id ? this : new ImmutableSample(id, this.created, this.modified);
+		}
+
+		public ImmutableSample withCreated(Date created) {
+			return this.created == created ? this : new ImmutableSample(this.id, created, this.modified);
+		}
+
+		public ImmutableSample withModified(Date modified) {
+			return this.modified == modified ? this : new ImmutableSample(this.id, this.created, modified);
+		}
 	}
 }

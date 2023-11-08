@@ -173,6 +173,40 @@ public class DefaultIndexOperationsIntegrationTests {
 		assertThat(result).isEqualTo(expected);
 	}
 
+	@Test // GH-4348
+	void indexShouldNotBeHiddenByDefault() {
+
+		IndexDefinition index = new Index().named("my-index").on("a", Direction.ASC);
+
+		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
+		indexOps.ensureIndex(index);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "my-index");
+		assertThat(info.isHidden()).isFalse();
+	}
+
+	@Test // GH-4348
+	void shouldCreateHiddenIndex() {
+
+		IndexDefinition index = new Index().named("my-hidden-index").on("a", Direction.ASC).hidden();
+
+		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
+		indexOps.ensureIndex(index);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "my-hidden-index");
+		assertThat(info.isHidden()).isTrue();
+	}
+
+	@Test // GH-4348
+	void alterIndexShouldAllowHiding() {
+
+		collection.createIndex(new Document("a", 1), new IndexOptions().name("my-index"));
+
+		indexOps.alterIndex("my-index", org.springframework.data.mongodb.core.index.IndexOptions.hidden());
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "my-index");
+		assertThat(info.isHidden()).isTrue();
+	}
+
 	private IndexInfo findAndReturnIndexInfo(org.bson.Document keys) {
 		return findAndReturnIndexInfo(indexOps.getIndexInfo(), keys);
 	}

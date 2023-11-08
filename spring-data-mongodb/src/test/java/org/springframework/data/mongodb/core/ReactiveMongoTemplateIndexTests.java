@@ -18,10 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.data.Index.atIndex;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.Data;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -38,10 +34,13 @@ import org.junitpioneer.jupiter.RepeatFailedTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -237,7 +236,6 @@ public class ReactiveMongoTemplateIndexTests {
 		assertThat(failure).isNotNull().isInstanceOf(DataIntegrityViolationException.class);
 	}
 
-	@Data
 	static class Sample {
 
 		@Id String id;
@@ -249,21 +247,80 @@ public class ReactiveMongoTemplateIndexTests {
 			this.id = id;
 			this.field = field;
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getField() {
+			return this.field;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setField(String field) {
+			this.field = field;
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateIndexTests.Sample(id=" + this.getId() + ", field=" + this.getField() + ")";
+		}
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document
 	static class IndexedSample {
 
 		@Id String id;
 		@Indexed String field;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getField() {
+			return this.field;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setField(String field) {
+			this.field = field;
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateIndexTests.IndexedSample(id=" + this.getId() + ", field=" + this.getField() + ")";
+		}
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document("indexfail")
 	static class IndexCreationShouldFail {
 
 		@Id String id;
 		@Indexed(name = "foo") String field;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getField() {
+			return this.field;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setField(String field) {
+			this.field = field;
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateIndexTests.IndexCreationShouldFail(id=" + this.getId() + ", field=" + this.getField()
+					+ ")";
+		}
 	}
 }

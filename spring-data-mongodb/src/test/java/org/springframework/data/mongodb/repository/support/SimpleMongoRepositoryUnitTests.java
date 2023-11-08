@@ -19,23 +19,35 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.repository.support.CrudMethodMetadataPostProcessor.DefaultCrudMethodMetadata;
+import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
 
 /**
+ * Unit tests for {@link SimpleMongoRepository}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class SimpleMongoRepositoryUnitTests {
@@ -133,8 +145,98 @@ public class SimpleMongoRepositoryUnitTests {
 		assertThat(query.getValue().getCollation()).contains(collation);
 	}
 
+	@ParameterizedTest // GH-2971
+	@MethodSource("findAllCalls")
+	void shouldAddReadPreferenceToFindAllMethods(Consumer<SimpleMongoRepository<Object, Object>> findCall)
+			throws NoSuchMethodException {
+
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class, TestRepositoryWithReadPreference.class.getMethod("dummy")));
+
+		findCall.accept(repository);
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).find(query.capture(), any(), any());
+
+		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	@Test // GH-2971
+	void shouldAddReadPreferenceToFindOne() throws NoSuchMethodException {
+
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreference.class, TestRepositoryWithReadPreference.class.getMethod("dummy")));
+
+		repository.findOne(Example.of(new TestDummy()));
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(mongoOperations).findOne(query.capture(), any(), any());
+
+		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	@Test // GH-2971
+	void shouldAddReadPreferenceToFluentFetchable() throws NoSuchMethodException {
+
+		ExecutableFind<Object> finder = mock(ExecutableFind.class);
+		when(mongoOperations.query(any())).thenReturn(finder);
+		when(finder.inCollection(any())).thenReturn(finder);
+		when(finder.matching(any(Query.class))).thenReturn(finder);
+		when(finder.as(any())).thenReturn(finder);
+
+		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
+		repository.setRepositoryMethodMetadata(
+				new DefaultCrudMethodMetadata(TestRepositoryWithReadPreferenceMethod.class, TestRepositoryWithReadPreferenceMethod.class.getMethod("dummy")));
+
+		repository.findBy(Example.of(new TestDummy()), FetchableFluentQuery::all);
+
+		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+		verify(finder).matching(query.capture());
+
+		assertThat(query.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	private static Stream<Arguments> findAllCalls() {
+
+		Consumer<SimpleMongoRepository<Object, Object>> findAll = SimpleMongoRepository::findAll;
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithSort = repo -> repo.findAll(Sort.by("age"));
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithPage = repo -> repo
+				.findAll(PageRequest.of(1, 20, Sort.by("age")));
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithExample = repo -> repo
+				.findAll(Example.of(new TestDummy()));
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithExampleAndSort = repo -> repo
+				.findAll(Example.of(new TestDummy()), Sort.by("age"));
+		Consumer<SimpleMongoRepository<Object, Object>> findAllWithExampleAndPage = repo -> repo
+				.findAll(Example.of(new TestDummy()), PageRequest.of(1, 20, Sort.by("age")));
+
+		return Stream.of(Arguments.of(findAll), //
+				Arguments.of(findAllWithSort), //
+				Arguments.of(findAllWithPage), //
+				Arguments.of(findAllWithExample), //
+				Arguments.of(findAllWithExampleAndSort), //
+				Arguments.of(findAllWithExampleAndPage));
+	}
+
 	static class TestDummy {
 
+	}
+
+	interface TestRepository {
+
+	}
+
+	@ReadPreference("secondaryPreferred")
+	interface TestRepositoryWithReadPreference {
+
+		void dummy();
+	}
+
+	interface TestRepositoryWithReadPreferenceMethod {
+
+		@ReadPreference("secondaryPreferred")
+		void dummy();
 	}
 
 }

@@ -21,8 +21,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -71,6 +73,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return new ConvertingIterator(delegate.iterator());
 	}
 
+	@Override
+	public ScrollPosition getScrollPosition() {
+		return delegate.getScrollPosition();
+	}
+
 	public Pageable getPageable() {
 		return delegate.getPageable();
 	}
@@ -109,6 +116,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	@Override
 	public UpdateDefinition getUpdate() {
 		return delegate.getUpdate();
+	}
+
+	@Override
+	public Limit getLimit() {
+		return delegate.getLimit();
 	}
 
 	/**
@@ -166,7 +178,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 					Collection<?> values = asCollection(next);
 
-					List<DBRef> dbRefs = new ArrayList<DBRef>(values.size());
+					List<DBRef> dbRefs = new ArrayList<>(values.size());
 					for (Object element : values) {
 						dbRefs.add(writer.toDBRef(element, property));
 					}
@@ -195,14 +207,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	private static Collection<?> asCollection(@Nullable Object source) {
 
-		if (source instanceof Iterable) {
+		if (source instanceof Iterable<?> iterable) {
 
-			if(source instanceof Collection) {
-				return new ArrayList<>((Collection<?>) source);
+			if(source instanceof Collection<?> collection) {
+				return new ArrayList<>(collection);
 			}
 
 			List<Object> result = new ArrayList<>();
-			for (Object element : (Iterable<?>) source) {
+			for (Object element : iterable) {
 				result.add(element);
 			}
 			return result;

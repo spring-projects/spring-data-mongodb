@@ -271,6 +271,17 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 				.containsEntry("properties.value", new Document("type", "string"));
 	}
 
+	@Test // GH-4454
+	void wrapEncryptedEntityTypeLikeProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
+				.createSchemaFor(WithEncryptedEntityLikeProperty.class);
+
+		assertThat(schema.schemaDocument()) //
+				.containsEntry("properties.domainTypeValue", Document.parse("{'encrypt': {'bsonType': 'object' } }"));
+	}
+
 	// --> TYPES AND JSON
 
 	// --> ENUM
@@ -675,5 +686,10 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 
 	static class PropertyClashWithA {
 		Integer aNonEncrypted;
+	}
+
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+	static class WithEncryptedEntityLikeProperty {
+		@Encrypted SomeDomainType domainTypeValue;
 	}
 }

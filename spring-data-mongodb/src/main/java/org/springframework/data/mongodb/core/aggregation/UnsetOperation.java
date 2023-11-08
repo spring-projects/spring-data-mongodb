@@ -96,8 +96,8 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 
 		List<String> fieldNames = new ArrayList<>(fields.size());
 		for (Object it : fields) {
-			if (it instanceof Field) {
-				fieldNames.add(((Field) it).getName());
+			if (it instanceof Field field) {
+				fieldNames.add(field.getName());
 			} else {
 				fieldNames.add(it.toString());
 			}
@@ -123,16 +123,16 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 
 	private Object computeFieldName(Object field, AggregationOperationContext context) {
 
-		if (field instanceof Field) {
-			return context.getReference((Field) field).getRaw();
+		if (field instanceof Field fieldObject) {
+			return context.getReference(fieldObject).getRaw();
 		}
 
-		if (field instanceof AggregationExpression) {
-			return ((AggregationExpression) field).toDocument(context);
+		if (field instanceof AggregationExpression aggregationExpression) {
+			return aggregationExpression.toDocument(context);
 		}
 
-		if (field instanceof String) {
-			return context.getReference((String) field).getRaw();
+		if (field instanceof String stringValue) {
+			return context.getReference(stringValue).getRaw();
 		}
 
 		return field;

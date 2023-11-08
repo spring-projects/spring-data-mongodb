@@ -15,15 +15,13 @@
  */
 package org.springframework.data.mongodb;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
@@ -33,7 +31,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -247,11 +244,16 @@ public class ReactiveTransactionIntegrationTests {
 		}
 	}
 
-	@RequiredArgsConstructor
 	static class PersonService {
 
 		final ReactiveMongoOperations operations;
 		final ReactiveMongoTransactionManager manager;
+
+		PersonService(ReactiveMongoOperations operations, ReactiveMongoTransactionManager manager) {
+
+			this.operations = operations;
+			this.manager = manager;
+		}
 
 		public Mono<Person> savePersonErrors(Person person) {
 
@@ -336,20 +338,113 @@ public class ReactiveTransactionIntegrationTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	@Document("person-rx")
 	static class Person {
 
 		ObjectId id;
 		String firstname, lastname;
+
+		Person(ObjectId id, String firstname, String lastname) {
+			this.id = id;
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
+
+		public ObjectId getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public void setId(ObjectId id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(lastname, person.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname);
+		}
+
+		public String toString() {
+			return "ReactiveTransactionIntegrationTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ", lastname=" + this.getLastname() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class EventLog {
 
 		ObjectId id;
 		String action;
+
+		public EventLog(ObjectId id, String action) {
+			this.id = id;
+			this.action = action;
+		}
+
+		public ObjectId getId() {
+			return this.id;
+		}
+
+		public String getAction() {
+			return this.action;
+		}
+
+		public void setId(ObjectId id) {
+			this.id = id;
+		}
+
+		public void setAction(String action) {
+			this.action = action;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			EventLog eventLog = (EventLog) o;
+			return Objects.equals(id, eventLog.id) && Objects.equals(action, eventLog.action);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, action);
+		}
+
+		public String toString() {
+			return "ReactiveTransactionIntegrationTests.EventLog(id=" + this.getId() + ", action=" + this.getAction() + ")";
+		}
 	}
 }

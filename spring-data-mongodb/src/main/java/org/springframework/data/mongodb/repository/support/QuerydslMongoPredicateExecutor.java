@@ -25,6 +25,8 @@ import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Window;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -228,17 +230,17 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	class FluentQuerydsl<T> extends FetchableFluentQuerySupport<Predicate, T> {
 
 		FluentQuerydsl(Predicate predicate, Class<T> resultType) {
-			this(predicate, Sort.unsorted(), resultType, Collections.emptyList());
+			this(predicate, Sort.unsorted(), 0, resultType, Collections.emptyList());
 		}
 
-		FluentQuerydsl(Predicate predicate, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
-			super(predicate, sort, resultType, fieldsToInclude);
+		FluentQuerydsl(Predicate predicate, Sort sort, int limit, Class<T> resultType, List<String> fieldsToInclude) {
+			super(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
-		protected <R> FluentQuerydsl<R> create(Predicate predicate, Sort sort, Class<R> resultType,
+		protected <R> FluentQuerydsl<R> create(Predicate predicate, Sort sort, int limit, Class<R> resultType,
 				List<String> fieldsToInclude) {
-			return new FluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
+			return new FluentQuerydsl<>(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
@@ -254,6 +256,11 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		@Override
 		public List<T> all() {
 			return createQuery().fetch();
+		}
+
+		@Override
+		public Window<T> scroll(ScrollPosition scrollPosition) {
+			return createQuery().scroll(scrollPosition);
 		}
 
 		@Override
@@ -296,6 +303,8 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			if (getSort().isSorted()) {
 				query.with(getSort());
 			}
+
+			query.limit(getLimit());
 		}
 	}
 }

@@ -20,14 +20,12 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +37,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -677,7 +674,6 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 
 	interface Contact {}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person implements Contact {
 
@@ -686,6 +682,71 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 		String lastname;
 		Object ability;
 		Person father;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public Object getAbility() {
+			return this.ability;
+		}
+
+		public Person getFather() {
+			return this.father;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public void setAbility(Object ability) {
+			this.ability = ability;
+		}
+
+		public void setFather(Person father) {
+			this.father = father;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(lastname, person.lastname) && Objects.equals(ability, person.ability)
+					&& Objects.equals(father, person.father);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname, ability, father);
+		}
+
+		public String toString() {
+			return "ReactiveFindOperationSupportTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ", lastname=" + this.getLastname() + ", ability=" + this.getAbility() + ", father=" + this.getFather()
+					+ ")";
+		}
 	}
 
 	interface PersonProjection {
@@ -698,32 +759,128 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 		String getName();
 	}
 
-	@Data
 	static class Human {
+
 		@Id String id;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String toString() {
+			return "ReactiveFindOperationSupportTests.Human(id=" + this.getId() + ")";
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public Jedi(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Jedi jedi = (Jedi) o;
+			return Objects.equals(name, jedi.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
+
+		public String toString() {
+			return "ReactiveFindOperationSupportTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 
-	@Data
 	static class Sith {
 
 		String rank;
+
+		public String getRank() {
+			return this.rank;
+		}
+
+		public void setRank(String rank) {
+			this.rank = rank;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sith sith = (Sith) o;
+			return Objects.equals(rank, sith.rank);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(rank);
+		}
+
+		public String toString() {
+			return "ReactiveFindOperationSupportTests.Sith(rank=" + this.getRank() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Planet {
 
 		@Id String name;
 		Point coordinates;
+
+		public Planet(String name, Point coordinates) {
+			this.name = name;
+			this.coordinates = coordinates;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public Point getCoordinates() {
+			return this.coordinates;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setCoordinates(Point coordinates) {
+			this.coordinates = coordinates;
+		}
+
+		public String toString() {
+			return "ReactiveFindOperationSupportTests.Planet(name=" + this.getName() + ", coordinates="
+					+ this.getCoordinates() + ")";
+		}
 	}
 
 	interface PlanetProjection {

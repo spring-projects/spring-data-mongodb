@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.aot;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +26,6 @@ import java.util.Set;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.TypeReference;
-import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.annotation.Reference;
@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory.LazyLoadingInterceptor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
-import org.springframework.data.util.TypeUtils;
 
 /**
  * @author Christoph Strobl
@@ -66,9 +65,7 @@ public class LazyLoadingProxyAotProcessor {
 					if (field.getType().isInterface()) {
 
 						List<Class<?>> interfaces = new ArrayList<>(
-								TypeUtils.resolveTypesInSignature(ResolvableType.forField(field, type)));
-
-						interfaces.add(0, org.springframework.data.mongodb.core.convert.LazyLoadingProxy.class);
+								Arrays.asList(LazyLoadingProxyFactory.prepareFactory(field.getType()).getProxiedInterfaces()));
 						interfaces.add(org.springframework.aop.SpringProxy.class);
 						interfaces.add(org.springframework.aop.framework.Advised.class);
 						interfaces.add(org.springframework.core.DecoratingProxy.class);
@@ -77,7 +74,7 @@ public class LazyLoadingProxyAotProcessor {
 					} else {
 
 						Class<?> proxyClass = LazyLoadingProxyFactory.resolveProxyType(field.getType(),
-								() -> LazyLoadingInterceptor.none());
+								LazyLoadingInterceptor::none);
 
 						// see: spring-projects/spring-framework/issues/29309
 						generationContext.getRuntimeHints().reflection().registerType(proxyClass,

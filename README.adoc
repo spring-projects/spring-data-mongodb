@@ -1,6 +1,6 @@
 image:https://spring.io/badges/spring-data-mongodb/ga.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start] image:https://spring.io/badges/spring-data-mongodb/snapshot.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start]
 
-= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]]
+= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]] image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Gradle Enterprise", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data MongoDB"]
 
 The primary goal of the https://spring.io/projects/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
@@ -105,7 +105,7 @@ Follow the links in the https://github.com/spring-projects/spring-data-commons/w
 Having trouble with Spring Data? We’d love to help!
 
 * Check the
-https://docs.spring.io/spring-data/mongodb/docs/current/reference/html/[reference documentation], and https://docs.spring.io/spring-data/mongodb/docs/current/api/[Javadocs].
+https://docs.spring.io/spring-data/mongodb/reference/[reference documentation], and https://docs.spring.io/spring-data/mongodb/docs/current/api/[Javadocs]
 * Learn the Spring basics – Spring Data builds on Spring Framework, check the https://spring.io[spring.io] web-site for a wealth of reference documentation.
 If you are just starting out with Spring, try one of the https://spring.io/guides[guides].
 * If you are upgrading, check out the https://docs.spring.io/spring-data/mongodb/docs/current/changelog.txt[changelog] for "`new and noteworthy`" features.
@@ -221,10 +221,10 @@ Building the documentation builds also the project without running tests.
 
 [source,bash]
 ----
- $ ./mvnw clean install -Pdistribute
+ $ ./mvnw clean install -Pantora
 ----
 
-The generated documentation is available from `target/site/reference/html/index.html`.
+The generated documentation is available from `target/antora/site/index.html`.
 
 [[license]]
 == License

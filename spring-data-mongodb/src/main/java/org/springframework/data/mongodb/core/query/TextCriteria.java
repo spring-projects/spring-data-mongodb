@@ -230,11 +230,9 @@ public class TextCriteria implements CriteriaDefinition {
 		if (this == o) {
 			return true;
 		}
-		if (!(o instanceof TextCriteria)) {
+		if (!(o instanceof TextCriteria that)) {
 			return false;
 		}
-
-		TextCriteria that = (TextCriteria) o;
 
 		return ObjectUtils.nullSafeEquals(terms, that.terms) && ObjectUtils.nullSafeEquals(language, that.language)
 				&& ObjectUtils.nullSafeEquals(caseSensitive, that.caseSensitive)

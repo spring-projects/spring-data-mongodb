@@ -85,10 +85,10 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 			return true;
 		}
 
-		if (!(obj instanceof GeoJsonMultiLineString)) {
+		if (!(obj instanceof GeoJsonMultiLineString other)) {
 			return false;
 		}
 
-		return ObjectUtils.nullSafeEquals(this.coordinates, ((GeoJsonMultiLineString) obj).coordinates);
+		return ObjectUtils.nullSafeEquals(this.coordinates, other.coordinates);
 	}
 }

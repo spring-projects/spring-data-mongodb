@@ -64,7 +64,7 @@ public @interface Sharded {
 	 * is either a single or multiple indexed properties that exist in every document in the collection.
 	 * <br />
 	 * By default the {@literal id} property is used for sharding. <br />
-	 * <strong>NOTE</strong> Required indexes are not created automatically. Create these either externally, via
+	 * <strong>NOTE:</strong> Required indexes are not created automatically. Create these either externally, via
 	 * {@link org.springframework.data.mongodb.core.index.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)}
 	 * or by annotating your domain model with {@link org.springframework.data.mongodb.core.index.Indexed}/
 	 * {@link org.springframework.data.mongodb.core.index.CompoundIndex} along with enabled
