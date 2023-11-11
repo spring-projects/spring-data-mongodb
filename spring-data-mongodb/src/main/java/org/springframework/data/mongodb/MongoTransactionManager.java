@@ -134,7 +134,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 
 		try {
-			mongoTransactionObject.startTransaction(options);
+			mongoTransactionObject.startTransaction(MongoTransactionUtils.extractOptions(definition, options));
 		} catch (MongoException ex) {
 			throw new TransactionSystemException(String.format("Could not start Mongo transaction for session %s.",
 					debugString(mongoTransactionObject.getSession())), ex);

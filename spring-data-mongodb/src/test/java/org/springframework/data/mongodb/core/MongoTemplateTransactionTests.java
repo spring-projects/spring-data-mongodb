@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static java.util.UUID.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -33,10 +34,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
@@ -48,6 +51,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mongodb.ReadPreference;
@@ -57,6 +63,7 @@ import com.mongodb.client.model.Filters;
 
 /**
  * @author Christoph Strobl
+ * @author Yan Kardziyaka
  * @currentRead Shadow's Edge - Brent Weeks
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
@@ -72,6 +79,7 @@ public class MongoTemplateTransactionTests {
 	static @ReplSetClient MongoClient mongoClient;
 
 	@Configuration
+	@EnableTransactionManagement
 	static class Config extends AbstractMongoClientConfiguration {
 
 		@Bean
@@ -98,10 +106,19 @@ public class MongoTemplateTransactionTests {
 		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 			return Collections.emptySet();
 		}
+
+		@Bean
+		public TransactionOptionsTestService<Assassin> transactionOptionsTestService(MongoOperations operations) {
+			return new TransactionOptionsTestService<>(operations, Assassin.class);
+		}
 	}
 
-	@Autowired MongoTemplate template;
-	@Autowired MongoClient client;
+	@Autowired
+	MongoTemplate template;
+	@Autowired
+	MongoClient client;
+	@Autowired
+	TransactionOptionsTestService<Assassin> transactionOptionsTestService;
 
 	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
@@ -127,8 +144,8 @@ public class MongoTemplateTransactionTests {
 
 			boolean isPresent = collection.countDocuments(Filters.eq("_id", it.getId())) != 0;
 
-			assertThat(isPresent).isEqualTo(it.shouldBePresent())
-					.withFailMessage(String.format("After transaction entity %s should %s.", it.getPersistable(),
+			assertThat(isPresent).isEqualTo(it.shouldBePresent()).withFailMessage(
+					String.format("After transaction entity %s should %s.", it.getPersistable(),
 							it.shouldBePresent() ? "be present" : "NOT be present"));
 		});
 	}
@@ -166,6 +183,122 @@ public class MongoTemplateTransactionTests {
 		assertAfterTransaction(durzo).isNotPresent();
 	}
 
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowIllegalArgumentExceptionOnTransactionWithInvalidMaxCommitTime() {
+
+		Assassin assassin = new Assassin(randomUUID().toString(), randomUUID().toString());
+
+		assertThatThrownBy(() -> transactionOptionsTestService.saveWithInvalidMaxCommitTime(assassin)) //
+				.isInstanceOf(IllegalArgumentException.class);
+
+		assertAfterTransaction(assassin).isNotPresent();
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldCommitOnTransactionWithinMaxCommitTime() {
+
+		Assassin assassin = new Assassin(randomUUID().toString(), randomUUID().toString());
+
+		transactionOptionsTestService.saveWithinMaxCommitTime(assassin);
+
+		assertAfterTransaction(assassin).isPresent();
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowInvalidDataAccessApiUsageExceptionOnTransactionWithAvailableReadConcern() {
+
+		assertThatThrownBy(() -> transactionOptionsTestService.availableReadConcernFind(randomUUID().toString())) //
+				.isInstanceOf(InvalidDataAccessApiUsageException.class);
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowIllegalArgumentExceptionOnTransactionWithInvalidReadConcern() {
+
+		assertThatThrownBy(() -> transactionOptionsTestService.invalidReadConcernFind(randomUUID().toString())) //
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldNotThrowOnTransactionWithMajorityReadConcern() {
+		assertThatNoException() //
+				.isThrownBy(() -> transactionOptionsTestService.majorityReadConcernFind(randomUUID().toString()));
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowUncategorizedMongoDbExceptionOnTransactionWithPrimaryPreferredReadPreference() {
+
+		assertThatThrownBy(() -> transactionOptionsTestService.findFromPrimaryPreferredReplica(randomUUID().toString())) //
+				.isInstanceOf(UncategorizedMongoDbException.class);
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowIllegalArgumentExceptionOnTransactionWithInvalidReadPreference() {
+
+		assertThatThrownBy(() -> transactionOptionsTestService.findFromInvalidReplica(randomUUID().toString())) //
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldNotThrowOnTransactionWithPrimaryReadPreference() {
+
+		assertThatNoException() //
+				.isThrownBy(() -> transactionOptionsTestService.findFromPrimaryReplica(randomUUID().toString()));
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowTransactionSystemExceptionOnTransactionWithUnacknowledgedWriteConcern() {
+
+		Assassin assassin = new Assassin(randomUUID().toString(), randomUUID().toString());
+
+		assertThatThrownBy(() -> transactionOptionsTestService.unacknowledgedWriteConcernSave(assassin)) //
+				.isInstanceOf(TransactionSystemException.class);
+
+		assertAfterTransaction(assassin).isNotPresent();
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldThrowIllegalArgumentExceptionOnTransactionWithInvalidWriteConcern() {
+
+		Assassin assassin = new Assassin(randomUUID().toString(), randomUUID().toString());
+
+		assertThatThrownBy(() -> transactionOptionsTestService.invalidWriteConcernSave(assassin)) //
+				.isInstanceOf(IllegalArgumentException.class);
+
+		assertAfterTransaction(assassin).isNotPresent();
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldCommitOnTransactionWithAcknowledgedWriteConcern() {
+
+		Assassin assassin = new Assassin(randomUUID().toString(), randomUUID().toString());
+
+		transactionOptionsTestService.acknowledgedWriteConcernSave(assassin);
+
+		assertAfterTransaction(assassin).isPresent();
+	}
+
 	// --- Just some helpers and tests entities
 
 	private AfterTransactionAssertion assertAfterTransaction(Assassin assassin) {
@@ -178,7 +311,8 @@ public class MongoTemplateTransactionTests {
 	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
 	static class Assassin implements Persistable<String> {
 
-		@Id String id;
+		@Id
+		String id;
 		String name;
 
 		public Assassin(String id, String name) {

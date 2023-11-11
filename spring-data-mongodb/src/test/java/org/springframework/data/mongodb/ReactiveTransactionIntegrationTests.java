@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
+import static java.util.UUID.*;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -35,6 +37,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -44,6 +47,8 @@ import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -55,6 +60,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Yan Kardziyaka
  */
 @ExtendWith(MongoClientExtension.class)
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
@@ -69,6 +75,7 @@ public class ReactiveTransactionIntegrationTests {
 
 	PersonService personService;
 	ReactiveMongoOperations operations;
+	ReactiveTransactionOptionsTestService<Person> transactionOptionsTestService;
 
 	@BeforeAll
 	public static void init() {
@@ -85,6 +92,7 @@ public class ReactiveTransactionIntegrationTests {
 
 		personService = context.getBean(PersonService.class);
 		operations = context.getBean(ReactiveMongoOperations.class);
+		transactionOptionsTestService = context.getBean(ReactiveTransactionOptionsTestService.class);
 
 		try (MongoClient client = MongoTestUtils.reactiveClient()) {
 
@@ -220,7 +228,123 @@ public class ReactiveTransactionIntegrationTests {
 				.verifyComplete();
 	}
 
+	@Test // GH-1628
+	public void shouldThrowTransactionSystemExceptionOnTransactionWithInvalidMaxCommitTime() {
+
+		Person person = new Person(ObjectId.get(), randomUUID().toString(), randomUUID().toString());
+		transactionOptionsTestService.saveWithInvalidMaxCommitTime(person) //
+				.as(StepVerifier::create) //
+				.verifyError(TransactionSystemException.class);
+
+		operations.count(new Query(), Person.class) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-1628
+	public void shouldCommitOnTransactionWithinMaxCommitTime() {
+
+		Person person = new Person(ObjectId.get(), randomUUID().toString(), randomUUID().toString());
+		transactionOptionsTestService.saveWithinMaxCommitTime(person) //
+				.as(StepVerifier::create) //
+				.expectNext(person) //
+				.verifyComplete();
+
+		operations.count(new Query(), Person.class) //
+				.as(StepVerifier::create) //
+				.expectNext(1L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-1628
+	public void shouldThrowInvalidDataAccessApiUsageExceptionOnTransactionWithAvailableReadConcern() {
+		transactionOptionsTestService.availableReadConcernFind(randomUUID().toString()) //
+				.as(StepVerifier::create) //
+				.verifyError(InvalidDataAccessApiUsageException.class);
+	}
+
+	@Test // GH-1628
+	public void shouldThrowTransactionSystemExceptionOnTransactionWithInvalidReadConcern() {
+		transactionOptionsTestService.invalidReadConcernFind(randomUUID().toString()) //
+				.as(StepVerifier::create) //
+				.verifyError(TransactionSystemException.class);
+	}
+
+	@Test // GH-1628
+	public void shouldNotThrowOnTransactionWithMajorityReadConcern() {
+		transactionOptionsTestService.majorityReadConcernFind(randomUUID().toString()) //
+				.as(StepVerifier::create) //
+				.expectNextCount(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-1628
+	public void shouldThrowUncategorizedMongoDbExceptionOnTransactionWithPrimaryPreferredReadPreference() {
+		transactionOptionsTestService.findFromPrimaryPreferredReplica(randomUUID().toString()) //
+				.as(StepVerifier::create) //
+				.verifyError(UncategorizedMongoDbException.class);
+	}
+
+	@Test // GH-1628
+	public void shouldThrowTransactionSystemExceptionOnTransactionWithInvalidReadPreference() {
+		transactionOptionsTestService.findFromInvalidReplica(randomUUID().toString()) //
+				.as(StepVerifier::create) //
+				.verifyError(TransactionSystemException.class);
+	}
+
+	@Test // GH-1628
+	public void shouldNotThrowOnTransactionWithPrimaryReadPreference() {
+		transactionOptionsTestService.findFromPrimaryReplica(randomUUID().toString()) //
+				.as(StepVerifier::create) //
+				.expectNextCount(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-1628
+	public void shouldThrowTransactionSystemExceptionOnTransactionWithUnacknowledgedWriteConcern() {
+
+		Person person = new Person(ObjectId.get(), randomUUID().toString(), randomUUID().toString());
+		transactionOptionsTestService.unacknowledgedWriteConcernSave(person) //
+				.as(StepVerifier::create) //
+				.verifyError(TransactionSystemException.class);
+
+		operations.count(new Query(), Person.class) //
+				.as(StepVerifier::create).expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-1628
+	public void shouldThrowTransactionSystemExceptionOnTransactionWithInvalidWriteConcern() {
+
+		Person person = new Person(ObjectId.get(), randomUUID().toString(), randomUUID().toString());
+		transactionOptionsTestService.invalidWriteConcernSave(person) //
+				.as(StepVerifier::create) //
+				.verifyError(TransactionSystemException.class);
+
+		operations.count(new Query(), Person.class) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-1628
+	public void shouldCommitOnTransactionWithAcknowledgedWriteConcern() {
+
+		Person person = new Person(ObjectId.get(), randomUUID().toString(), randomUUID().toString());
+		transactionOptionsTestService.acknowledgedWriteConcernSave(person) //
+				.as(StepVerifier::create) //
+				.expectNext(person) //
+				.verifyComplete();
+
+		operations.count(new Query(), Person.class) //
+				.as(StepVerifier::create) //
+				.expectNext(1L) //
+				.verifyComplete();
+	}
+
 	@Configuration
+	@EnableTransactionManagement
 	static class TestMongoConfig extends AbstractReactiveMongoConfiguration {
 
 		@Override
@@ -234,8 +358,14 @@ public class ReactiveTransactionIntegrationTests {
 		}
 
 		@Bean
-		public ReactiveMongoTransactionManager transactionManager(ReactiveMongoDatabaseFactory factory) {
+		public ReactiveMongoTransactionManager txManager(ReactiveMongoDatabaseFactory factory) {
 			return new ReactiveMongoTransactionManager(factory);
+		}
+
+		@Bean
+		public ReactiveTransactionOptionsTestService<Person> transactionOptionsTestService(
+				ReactiveMongoOperations operations) {
+			return new ReactiveTransactionOptionsTestService<>(operations, Person.class);
 		}
 
 		@Override
@@ -291,10 +421,10 @@ public class ReactiveTransactionIntegrationTests {
 					new DefaultTransactionDefinition());
 
 			return Flux.merge(operations.save(new EventLog(new ObjectId(), "beforeConvert")), //
-					operations.save(new EventLog(new ObjectId(), "afterConvert")), //
-					operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
-					operations.save(person), //
-					operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
+							operations.save(new EventLog(new ObjectId(), "afterConvert")), //
+							operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
+							operations.save(person), //
+							operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
 					.thenMany(operations.query(EventLog.class).all()) //
 					.as(transactionalOperator::transactional);
 		}
@@ -305,15 +435,15 @@ public class ReactiveTransactionIntegrationTests {
 					new DefaultTransactionDefinition());
 
 			return Flux.merge(operations.save(new EventLog(new ObjectId(), "beforeConvert")), //
-					operations.save(new EventLog(new ObjectId(), "afterConvert")), //
-					operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
-					operations.save(person), //
-					operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
+							operations.save(new EventLog(new ObjectId(), "afterConvert")), //
+							operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
+							operations.save(person), //
+							operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
 					.<Void> flatMap(it -> Mono.error(new RuntimeException("poof"))) //
 					.as(transactionalOperator::transactional);
 		}
 
-		@Transactional
+		@Transactional(transactionManager = "txManager")
 		public Flux<Person> declarativeSavePerson(Person person) {
 
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
@@ -324,7 +454,7 @@ public class ReactiveTransactionIntegrationTests {
 			});
 		}
 
-		@Transactional
+		@Transactional(transactionManager = "txManager")
 		public Flux<Person> declarativeSavePersonErrors(Person person) {
 
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
@@ -384,8 +514,8 @@ public class ReactiveTransactionIntegrationTests {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
-					&& Objects.equals(lastname, person.lastname);
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname) && Objects.equals(lastname,
+					person.lastname);
 		}
 
 		@Override
@@ -394,8 +524,7 @@ public class ReactiveTransactionIntegrationTests {
 		}
 
 		public String toString() {
-			return "ReactiveTransactionIntegrationTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
-					+ ", lastname=" + this.getLastname() + ")";
+			return "ReactiveTransactionIntegrationTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname() + ", lastname=" + this.getLastname() + ")";
 		}
 	}
 
