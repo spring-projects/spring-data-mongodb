@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.2.0-SNAPSHOT</version>
+		<version>4.2.x-4393-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -104,11 +104,23 @@
 			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-kotlin-sync</artifactId>
+			<version>${mongo}</version>
+			<optional>true</optional>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-reactivestreams</artifactId>
 			<version>${mongo.reactivestreams}</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-kotlin-coroutine</artifactId>
+			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
 
