@@ -146,7 +146,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 			}).doOnNext(resourceHolder -> {
 
-				mongoTransactionObject.startTransaction(options);
+				mongoTransactionObject.startTransaction(MongoTransactionUtils.extractOptions(definition, options));
 
 				if (logger.isDebugEnabled()) {
 					logger.debug(String.format("Started transaction for session %s.", debugString(resourceHolder.getSession())));
