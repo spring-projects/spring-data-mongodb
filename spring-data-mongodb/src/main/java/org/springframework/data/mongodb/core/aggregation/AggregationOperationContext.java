@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -79,7 +80,30 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	FieldReference getReference(String name);
 
 	/**
-	 * Returns the {@link Fields} exposed by the type. May be a {@literal class} or an {@literal interface}. The default
+	 * Obtain the target field name for a given field/type combination.
+	 *
+	 * @param type The type containing the field.
+	 * @param field The property/field name
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	default String getMappedFieldName(Class<?> type, String field) {
+		return field;
+	}
+
+	/**
+	 * Obtain the collection name for a given {@link Class type} combination.
+	 *
+	 * @param type
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	default String getCollection(Class<?> type) {
+		return MongoCollectionUtils.getPreferredCollectionName(type);
+	}
+
+	/**
+	 * Returns the {@link Fields} exposed by the type. Can be a {@literal class} or an {@literal interface}. The default
 	 * implementation uses {@link BeanUtils#getPropertyDescriptors(Class) property descriptors} discover fields from a
 	 * {@link Class}.
 	 *
@@ -109,7 +133,7 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 
 	/**
 	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
-	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
+	 * its existence. Typically, the {@link AggregationOperationContext} fails when referencing unknown fields, those that
 	 * are not present in one of the previous stages or the input source, throughout the pipeline.
 	 *
 	 * @return a more relaxed {@link AggregationOperationContext}.

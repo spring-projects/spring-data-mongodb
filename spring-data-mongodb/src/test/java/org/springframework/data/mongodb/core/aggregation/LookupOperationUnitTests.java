@@ -25,6 +25,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -92,7 +93,7 @@ public class LookupOperationUnitTests {
 
 	@Test // DATAMONGO-1326
 	public void builderRejectsNullFromField() {
-		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from((String) null));
 	}
 
 	@Test // DATAMONGO-1326
@@ -195,10 +196,10 @@ public class LookupOperationUnitTests {
 	void buildsLookupWithLocalAndForeignFieldAsWellAsLetAndPipeline() {
 
 		LookupOperation lookupOperation = Aggregation.lookup().from("restaurants") //
-				.localField("restaurant_name")
-				.foreignField("name")
+				.localField("restaurant_name") //
+				.foreignField("name") //
 				.let(newVariable("orders_drink").forField("drink")) //
-				.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
+				.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages"))))) //
 				.as("matches");
 
 		assertThat(lookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("""
@@ -215,5 +216,55 @@ public class LookupOperationUnitTests {
 					as: "matches"
 				}}
 				""");
+	}
+
+	@Test // GH-4379
+	void unmappedLookupWithFromExtractedFromType() {
+
+		LookupOperation lookupOperation = Aggregation.lookup().from(Restaurant.class) //
+				.localField("restaurant_name") //
+				.foreignField("name") //
+				.as("restaurants");
+
+		assertThat(lookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("""
+				{ $lookup:
+					{
+						from: "restaurant",
+						localField: "restaurant_name",
+						foreignField: "name",
+						as: "restaurants"
+					}
+				}}
+				""");
+	}
+
+	@Test // GH-4379
+	void mappedLookupWithFromExtractedFromType() {
+
+		LookupOperation lookupOperation = Aggregation.lookup().from(Restaurant.class) //
+				.localField("restaurant_name") //
+				.foreignField("name") //
+				.as("restaurants");
+
+
+		assertThat(lookupOperation.toDocument(AggregationTestUtils.strict(Restaurant.class).ctx())).isEqualTo("""
+				{ $lookup:
+					{
+						from: "sites",
+						localField: "restaurant_name",
+						foreignField: "rs_name",
+						as: "restaurants"
+					}
+				}}
+				""");
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document("sites")
+	static class Restaurant {
+
+		String id;
+
+		@Field("rs_name") //
+		String name;
 	}
 }

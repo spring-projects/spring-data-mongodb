@@ -93,6 +93,20 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	}
 
 	@Override
+	public String getCollection(Class<?> type) {
+
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
+		return persistentEntity != null ? persistentEntity.getCollection() : AggregationOperationContext.super.getCollection(type);
+	}
+
+	@Override
+	public String getMappedFieldName(Class<?> type, String field) {
+
+		PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = mappingContext.getPersistentPropertyPath(field, type);
+		return persistentPropertyPath.getLeafProperty().getFieldName();
+	}
+
+	@Override
 	public Fields getFields(Class<?> type) {
 
 		Assert.notNull(type, "Type must not be null");

@@ -46,7 +46,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	private static final Set<Class<?>> ALLOWED_START_TYPES = new HashSet<Class<?>>(
 			Arrays.<Class<?>> asList(AggregationExpression.class, String.class, Field.class, Document.class));
 
-	private final String from;
+	private final Object from;
 	private final List<Object> startWith;
 	private final Field connectFrom;
 	private final Field connectTo;
@@ -55,7 +55,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	private final @Nullable Field depthField;
 	private final @Nullable CriteriaDefinition restrictSearchWithMatch;
 
-	private GraphLookupOperation(String from, List<Object> startWith, Field connectFrom, Field connectTo, Field as,
+	private GraphLookupOperation(Object from, List<Object> startWith, Field connectFrom, Field connectTo, Field as,
 			@Nullable Long maxDepth, @Nullable Field depthField, @Nullable CriteriaDefinition restrictSearchWithMatch) {
 
 		this.from = from;
@@ -82,7 +82,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		Document graphLookup = new Document();
 
-		graphLookup.put("from", from);
+		graphLookup.put("from", getCollectionName(context));
 
 		List<Object> mappedStartWith = new ArrayList<>(startWith.size());
 
@@ -99,7 +99,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		graphLookup.put("startWith", mappedStartWith.size() == 1 ? mappedStartWith.iterator().next() : mappedStartWith);
 
-		graphLookup.put("connectFromField", connectFrom.getTarget());
+		graphLookup.put("connectFromField", getForeignFieldName(context));
 		graphLookup.put("connectToField", connectTo.getTarget());
 		graphLookup.put("as", as.getName());
 
@@ -118,6 +118,16 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		return new Document(getOperator(), graphLookup);
 	}
 
+	String getCollectionName(AggregationOperationContext context) {
+		return from instanceof Class<?> type ? context.getCollection(type) : from.toString();
+	}
+
+	String getForeignFieldName(AggregationOperationContext context) {
+
+		return from instanceof Class<?> type ? context.getMappedFieldName(type, connectFrom.getTarget())
+				: connectFrom.getTarget();
+	}
+
 	@Override
 	public String getOperator() {
 		return "$graphLookup";
@@ -128,7 +138,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		List<ExposedField> fields = new ArrayList<>(2);
 		fields.add(new ExposedField(as, true));
-		if(depthField != null) {
+		if (depthField != null) {
 			fields.add(new ExposedField(depthField, true));
 		}
 		return ExposedFields.from(fields.toArray(new ExposedField[0]));
@@ -146,6 +156,17 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * @return never {@literal null}.
 		 */
 		StartWithBuilder from(String collectionName);
+
+		/**
+		 * Use the given type to determine name of the foreign collection and map
+		 * {@link ConnectFromBuilder#connectFrom(String)} against it to consider eventually present
+		 * {@link org.springframework.data.mongodb.core.mapping.Field} annotations.
+		 *
+		 * @param type must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 4.2
+		 */
+		StartWithBuilder from(Class<?> type);
 	}
 
 	/**
@@ -218,7 +239,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	static final class GraphLookupOperationFromBuilder
 			implements FromBuilder, StartWithBuilder, ConnectFromBuilder, ConnectToBuilder {
 
-		private @Nullable String from;
+		private @Nullable Object from;
 		private @Nullable List<? extends Object> startWith;
 		private @Nullable String connectFrom;
 
@@ -228,6 +249,14 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.hasText(collectionName, "CollectionName must not be null or empty");
 
 			this.from = collectionName;
+			return this;
+		}
+
+		@Override
+		public StartWithBuilder from(Class<?> type) {
+
+			Assert.notNull(type, "Type must not be null");
+			this.from = type;
 			return this;
 		}
 
@@ -321,7 +350,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 	 */
 	public static final class GraphLookupOperationBuilder {
 
-		private final String from;
+		private final Object from;
 		private final List<Object> startWith;
 		private final Field connectFrom;
 		private final Field connectTo;
@@ -329,7 +358,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private @Nullable Field depthField;
 		private @Nullable CriteriaDefinition restrictSearchWithMatch;
 
-		protected GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
+		protected GraphLookupOperationBuilder(Object from, List<? extends Object> startWith, String connectFrom,
 				String connectTo) {
 
 			this.from = from;

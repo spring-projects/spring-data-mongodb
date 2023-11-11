@@ -39,7 +39,7 @@ import org.springframework.util.Assert;
  */
 public class LookupOperation implements FieldsExposingAggregationOperation, InheritsFieldsAggregationOperation {
 
-	private final String from;
+	private Object from;
 
 	@Nullable //
 	private final Field localField;
@@ -97,6 +97,22 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	 */
 	public LookupOperation(String from, @Nullable Field localField, @Nullable Field foreignField, @Nullable Let let,
 			@Nullable AggregationPipeline pipeline, Field as) {
+		this((Object) from, localField, foreignField, let, pipeline, as);
+	}
+
+	/**
+	 * Creates a new {@link LookupOperation} for the given combination of {@link Field}s and {@link AggregationPipeline
+	 * pipeline}.
+	 *
+	 * @param from must not be {@literal null}. Can be eiter the target collection name or a {@link Class}.
+	 * @param localField can be {@literal null} if {@literal pipeline} is present.
+	 * @param foreignField can be {@literal null} if {@literal pipeline} is present.
+	 * @param let can be {@literal null} if {@literal localField} and {@literal foreignField} are present.
+	 * @param as must not be {@literal null}.
+	 * @since 4.2
+	 */
+	private LookupOperation(Object from, @Nullable Field localField, @Nullable Field foreignField, @Nullable Let let,
+			@Nullable AggregationPipeline pipeline, Field as) {
 
 		Assert.notNull(from, "From must not be null");
 		if (pipeline == null) {
@@ -125,12 +141,14 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		Document lookupObject = new Document();
 
-		lookupObject.append("from", from);
+		lookupObject.append("from", getCollectionName(context));
+
 		if (localField != null) {
 			lookupObject.append("localField", localField.getTarget());
 		}
+
 		if (foreignField != null) {
-			lookupObject.append("foreignField", foreignField.getTarget());
+			lookupObject.append("foreignField", getForeignFieldName(context));
 		}
 		if (let != null) {
 			lookupObject.append("let", let.toDocument(context).get("$let", Document.class).get("vars"));
@@ -142,6 +160,16 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		lookupObject.append("as", as.getTarget());
 
 		return new Document(getOperator(), lookupObject);
+	}
+
+	String getCollectionName(AggregationOperationContext context) {
+		return from instanceof Class<?> type ? context.getCollection(type) : from.toString();
+	}
+
+	String getForeignFieldName(AggregationOperationContext context) {
+
+		return from instanceof Class<?> type ? context.getMappedFieldName(type, foreignField.getTarget())
+				: foreignField.getTarget();
 	}
 
 	@Override
@@ -158,16 +186,28 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		return new LookupOperationBuilder();
 	}
 
-	public static interface FromBuilder {
+	public interface FromBuilder {
 
 		/**
 		 * @param name the collection in the same database to perform the join with, must not be {@literal null} or empty.
 		 * @return never {@literal null}.
 		 */
 		LocalFieldBuilder from(String name);
+
+		/**
+		 * Use the given type to determine name of the foreign collection and map
+		 * {@link ForeignFieldBuilder#foreignField(String)} against it to consider eventually present
+		 * {@link org.springframework.data.mongodb.core.mapping.Field} annotations.
+		 *
+		 * @param type the type of the target collection in the same database to perform the join with, must not be
+		 *          {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 4.2
+		 */
+		LocalFieldBuilder from(Class<?> type);
 	}
 
-	public static interface LocalFieldBuilder extends PipelineBuilder {
+	public interface LocalFieldBuilder extends PipelineBuilder {
 
 		/**
 		 * @param name the field from the documents input to the {@code $lookup} stage, must not be {@literal null} or
@@ -177,7 +217,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		ForeignFieldBuilder localField(String name);
 	}
 
-	public static interface ForeignFieldBuilder {
+	public interface ForeignFieldBuilder {
 
 		/**
 		 * @param name the field from the documents in the {@code from} collection, must not be {@literal null} or empty.
@@ -246,7 +286,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		LookupOperation as(String name);
 	}
 
-	public static interface AsBuilder extends PipelineBuilder {
+	public interface AsBuilder extends PipelineBuilder {
 
 		/**
 		 * @param name the name of the new array field to add to the input documents, must not be {@literal null} or empty.
@@ -264,7 +304,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	public static final class LookupOperationBuilder
 			implements FromBuilder, LocalFieldBuilder, ForeignFieldBuilder, AsBuilder {
 
-		private @Nullable String from;
+		private @Nullable Object from;
 		private @Nullable Field localField;
 		private @Nullable Field foreignField;
 		private @Nullable ExposedField as;
@@ -285,6 +325,14 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 			Assert.hasText(name, "'From' must not be null or empty");
 			from = name;
+			return this;
+		}
+
+		@Override
+		public LocalFieldBuilder from(Class<?> type) {
+
+			Assert.notNull(type, "'From' must not be null");
+			from = type;
 			return this;
 		}
 
