@@ -946,8 +946,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
 	 *          optional fields specification. Must not be {@literal null}.
@@ -965,8 +965,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
 	 *          optional fields specification. Must not be {@literal null}.
@@ -986,8 +986,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
 	 *          optional fields specification.
@@ -1009,8 +1009,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
 	 *          optional fields specification. Must not be {@literal null}.
@@ -1536,8 +1536,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 * <p>
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
 	 * Use {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class, String)} instead.
@@ -1581,8 +1581,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be upserted. Must not be
 	 *          {@literal null}.
@@ -1601,8 +1601,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
 	 * the provided update document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.

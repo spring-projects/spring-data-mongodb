@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.query.Collation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -42,6 +41,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -759,11 +759,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify</a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 * <p>
-	 *A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 *incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
@@ -777,11 +777,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify</a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
@@ -797,11 +797,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification.
 	 * @param update the {@link UpdateDefinition} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
 	 * @param entityClass the parametrized type.
@@ -818,11 +818,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
@@ -844,8 +844,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Options are defaulted to {@link FindAndReplaceOptions#empty()}. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
@@ -864,8 +864,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Options are defaulted to {@link FindAndReplaceOptions#empty()}. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found.
@@ -882,8 +882,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * taking {@link FindAndReplaceOptions} into account. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
@@ -904,8 +904,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * taking {@link FindAndReplaceOptions} into account. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@link Mono#empty()}, if not found. Depending on the value of
@@ -926,8 +926,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * taking {@link FindAndReplaceOptions} into account. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the parametrized type. Must not be {@literal null}.
@@ -950,8 +950,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * taking {@link FindAndReplaceOptions} into account. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
@@ -979,8 +979,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * taking {@link FindAndReplaceOptions} into account. <br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
 	 *
-	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
-	 *          fields specification. Must not be {@literal null}.
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an
+	 *          optional fields specification. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityType the type used for mapping the {@link Query} to domain type fields and deriving the collection
@@ -1290,6 +1290,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <p>
 	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
 	 * operation raises an error in case the document has been modified in between.
+	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the inserted objects.
 	 */
@@ -1437,8 +1438,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 * <p>
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
 	 * Use {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
@@ -1480,8 +1481,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be upserted. Must not be
 	 *          {@literal null}.
@@ -1500,11 +1501,10 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
 	 * the provided update document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
-	 *
-	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
-	 * Use {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update. <strong>NOTE:</strong> {@link Query#getSortObject()
+	 * sorting} is not supported by {@code db.collection.updateOne}. Use
+	 * {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1545,8 +1545,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
 	 * the provided updated document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1565,8 +1565,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1605,8 +1605,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
 	 * <p>
-	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
-	 * incremented if not explicitly specified in the update.
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
+	 * auto-incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1636,7 +1636,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Removes the given object from the given collection.
 	 *
 	 * @param object must not be {@literal null}.
-	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
+	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null}
+	 *          or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
 	 */
 	Mono<DeleteResult> remove(Object object, String collectionName);
@@ -1657,7 +1658,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * {@link org.springframework.data.annotation.Version}.
 	 *
 	 * @param objectToRemove must not be {@literal null}.
-	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
+	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null}
+	 *          or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
 	 */
 	Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove, String collectionName);
@@ -1680,7 +1682,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to remove a document.
 	 * @param entityClass class of the pojo to be operated on. Can be {@literal null}.
-	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
+	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null}
+	 *          or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
 	 */
 	Mono<DeleteResult> remove(Query query, @Nullable Class<?> entityClass, String collectionName);
@@ -1692,7 +1695,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * information. Use {@link #remove(Query, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to remove a document.
-	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
+	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null}
+	 *          or empty.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
 	 */
 	Mono<DeleteResult> remove(Query query, String collectionName);
@@ -1703,7 +1707,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * information. Use {@link #findAllAndRemove(Query, Class, String)} to get full type specific support.
 	 *
 	 * @param query the query document that specifies the criteria used to find and remove documents.
-	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
+	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null}
+	 *          or empty.
 	 * @return the {@link Flux} converted objects deleted by this operation.
 	 */
 	<T> Flux<T> findAllAndRemove(Query query, String collectionName);
@@ -1726,7 +1731,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to find and remove documents.
 	 * @param entityClass class of the pojo to be operated on.
-	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
+	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null}
+	 *          or empty.
 	 * @return the {@link Flux} converted objects deleted by this operation.
 	 */
 	<T> Flux<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName);
