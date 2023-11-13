@@ -294,6 +294,12 @@ Server performance of batch and bulk is identical.
 However bulk operations do not publish xref:mongodb/lifecycle-events.adoc[lifecycle events].
 ====
 
+[IMPORTANT]
+====
+Any `@Version` property that has not been set prior to calling insert will be auto initialized with `1` (in case of a simple type like `int`) or `0` for wrapper types (eg. `Integer`). +
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
 [[mongodb-template-update]]
 == Update
 
@@ -337,6 +343,12 @@ Mono<UpdateResult> result = template.update(Account.class)
 In addition to the `Query` discussed earlier, we provide the update definition by using an `Update` object.
 The `Update` class has methods that match the update modifiers available for MongoDB.
 Most methods return the `Update` object to provide a fluent style for the API.
+
+[IMPORTANT]
+====
+`@Version` properties if not included in the `Update` will be automatically incremented.
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
 
 [[mongodb-template-update.methods]]
 === Methods for Running Updates for Documents
@@ -478,6 +490,12 @@ Mono<UpdateResult> result = template.update(Person.class)
 
 WARNING: `upsert` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
 
+[IMPORTANT]
+====
+`@Version` properties if not included in the `Update` will be automatically initialized.
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
 [[mongo-template.replace]]
 === Replacing Documents in a Collection
 
@@ -575,6 +593,12 @@ Person upserted = template.update(Person.class)
   .findAndModifyValue()
 ----
 
+[IMPORTANT]
+====
+`@Version` properties if not included in the `Update` will be automatically incremented.
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
 [[mongo-template.find-and-replace]]
 == Find and Replace
 
@@ -663,6 +687,8 @@ template.save(tmp); // throws OptimisticLockingFailureException                 
 <3> Update the document with `version = 0`. Set the `lastname` and bump `version` to `1`.
 <4> Try to update the previously loaded document that still has `version = 0`. The operation fails with an `OptimisticLockingFailureException`, as the current `version` is `1`.
 ====
+
+Only certain CRUD operations on `MongoTemplate` do consider and alter version properties. Please consult `MongoOperations` java doc for detailed information.
 
 IMPORTANT: Optimistic Locking requires to set the `WriteConcern` to `ACKNOWLEDGED`. Otherwise `OptimisticLockingFailureException` can be silently swallowed.
 
