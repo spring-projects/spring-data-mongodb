@@ -758,6 +758,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify</a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * <p>
+	 *A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 *incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -773,6 +776,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify</a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -790,6 +796,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify</a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
 	 *          fields specification.
@@ -808,6 +817,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify</a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document and also an optional
 	 *          fields specification. Must not be {@literal null}.
@@ -1190,7 +1202,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
-	 * <br />
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
+	 * <p>
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1206,7 +1220,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
-	 * <br />
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
+	 * <p>
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1218,6 +1234,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Insert a Collection of objects into a collection in a single batch write to the database.
+	 * <p>
+	 * If an object within the batch has an {@literal Id} property which holds a {@literal null} value, it will be set
+	 * with the generated Id from MongoDB.
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
 	 *
 	 * @param batchToSave the batch of objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
@@ -1229,6 +1250,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Insert a batch of objects into the specified collection in a single batch write to the database.
+	 * <p>
+	 * If an object within the batch has an {@literal Id} property which holds a {@literal null} value, it will be set
+	 * with the generated Id from MongoDB.
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
 	 *
 	 * @param batchToSave the list of objects to save. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -1239,6 +1265,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
+	 * <p>
+	 * If an object within the batch has an {@literal Id} property which holds a {@literal null} value, it will be set
+	 * with the generated Id from MongoDB.
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
 	 *
 	 * @param objectsToSave the list of objects to save. Must not be {@literal null}.
 	 * @return the saved objects.
@@ -1256,7 +1287,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details. <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
-	 *
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
+	 * operation raises an error in case the document has been modified in between.
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the inserted objects.
 	 */
@@ -1264,6 +1297,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Insert a Collection of objects into a collection in a single batch write to the database.
+	 * <p>
+	 * If an object within the batch has an {@literal Id} property which holds a {@literal null} value, it will be set
+	 * with the generated Id from MongoDB.
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
 	 *
 	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
@@ -1275,6 +1313,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Insert objects into the specified collection in a single batch write to the database.
+	 * <p>
+	 * If an object within the batch has an {@literal Id} property which holds a {@literal null} value, it will be set
+	 * with the generated Id from MongoDB.
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
 	 *
 	 * @param batchToSave the publisher which provides objects to save. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
@@ -1285,6 +1328,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Insert a mixed Collection of objects into a database collection determining the collection name to use based on the
 	 * class.
+	 * <p>
+	 * If an object within the batch has an {@literal Id} property which holds a {@literal null} value, it will be set
+	 * with the generated Id from MongoDB.
+	 * <p>
+	 * Inserting new objects will trigger {@link org.springframework.data.annotation.Version} property initialization.
 	 *
 	 * @param objectsToSave the publisher which provides objects to save. Must not be {@literal null}.
 	 * @return the inserted objects.
@@ -1300,7 +1348,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
-	 * Type Conversion"</a> for more details. <br />
+	 * Type Conversion"</a> for more details.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
+	 * operation raises an error in case the document has been modified in between.
+	 * <p>
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1308,6 +1360,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given object type.
+	 * @throws org.springframework.dao.OptimisticLockingFailureException in case of version mismatch in case a
+	 *           {@link org.springframework.data.annotation.Version} is defined.
 	 */
 	<T> Mono<T> save(T objectToSave);
 
@@ -1321,11 +1375,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
 	 * Conversion</a> for more details.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
+	 * operation raises an error in case the document has been modified in between.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the saved object.
 	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
+	 * @throws org.springframework.dao.OptimisticLockingFailureException in case of version mismatch in case a
+	 *           {@link org.springframework.data.annotation.Version} is defined.
 	 */
 	<T> Mono<T> save(T objectToSave, String collectionName);
 
@@ -1339,11 +1398,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation"> Spring's Type
 	 * Conversion</a> for more details.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
+	 * operation raises an error in case the document has been modified in between.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
 	 * @throws org.springframework.data.mapping.MappingException if the target collection name cannot be
 	 *           {@link #getCollectionName(Class) derived} from the given object type.
+	 * @throws org.springframework.dao.OptimisticLockingFailureException in case of version mismatch in case a
+	 *           {@link org.springframework.data.annotation.Version} is defined.
 	 */
 	<T> Mono<T> save(Mono<? extends T> objectToSave);
 
@@ -1357,16 +1421,25 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
 	 * Conversion</a> for more details.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} the property will be auto incremented. The
+	 * operation raises an error in case the document has been modified in between.
 	 *
 	 * @param objectToSave the object to store in the collReactiveMongoOperationsection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the saved object.
+	 * @throws org.springframework.dao.OptimisticLockingFailureException in case of version mismatch in case a
+	 *           {@link org.springframework.data.annotation.Version} is defined.
 	 */
 	<T> Mono<T> save(Mono<? extends T> objectToSave, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document. <br />
+	 * combining the query document and the update document.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
+	 * <p>
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
 	 * Use {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
 	 *
@@ -1406,6 +1479,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be upserted. Must not be
 	 *          {@literal null}.
@@ -1422,7 +1498,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
-	 * the provided update document. <br />
+	 * the provided update document.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
+	 *
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
 	 * Use {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
 	 *
@@ -1463,7 +1543,10 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
-	 * the provided updated document. <br />
+	 * the provided updated document.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1481,6 +1564,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1518,6 +1604,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
+	 * <p>
+	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be auto
+	 * incremented if not explicitly specified in the update.
 	 *
 	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
 	 *          {@literal null}.
@@ -1533,7 +1622,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
-	 * Remove the given object from the collection by id.
+	 * Remove the given object from the collection by {@literal id} and (if applicable) its
+	 * {@link org.springframework.data.annotation.Version}.
 	 *
 	 * @param object must not be {@literal null}.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
@@ -1552,7 +1642,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<DeleteResult> remove(Object object, String collectionName);
 
 	/**
-	 * Remove the given object from the collection by id.
+	 * Remove the given object from the collection by {@literal id} and (if applicable) its
+	 * {@link org.springframework.data.annotation.Version}.
 	 *
 	 * @param objectToRemove must not be {@literal null}.
 	 * @return the {@link DeleteResult} which lets you access the results of the previous delete.
@@ -1562,7 +1653,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<DeleteResult> remove(Mono<? extends Object> objectToRemove);
 
 	/**
-	 * Removes the given object from the given collection.
+	 * Removes the given object from the given collection by {@literal id} and (if applicable) its
+	 * {@link org.springframework.data.annotation.Version}.
 	 *
 	 * @param objectToRemove must not be {@literal null}.
 	 * @param collectionName name of the collection where the documents will be removed from, must not be {@literal null} or empty.
@@ -1851,7 +1943,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	@Deprecated
 	<T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, String inputCollectionName, Class<T> resultType,
 			String mapFunction, String reduceFunction, MapReduceOptions options);
-
 
 	/**
 	 * Returns the underlying {@link MongoConverter}.
