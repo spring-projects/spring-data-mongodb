@@ -28,7 +28,7 @@ import org.springframework.util.ErrorHandler;
  */
 class TaskFactory {
 
-	private final MongoTemplate tempate;
+	private final MongoTemplate template;
 
 	/**
 	 * @param template must not be {@literal null}.
@@ -37,7 +37,7 @@ class TaskFactory {
 
 		Assert.notNull(template, "Template must not be null");
 
-		this.tempate = template;
+		this.template = template;
 	}
 
 	/**
@@ -56,9 +56,9 @@ class TaskFactory {
 		Assert.notNull(targetType, "TargetType must not be null");
 
 		if (request instanceof ChangeStreamRequest changeStreamRequest) {
-			return new ChangeStreamTask(tempate, changeStreamRequest, targetType, errorHandler);
+			return new ChangeStreamTask(template, changeStreamRequest, targetType, errorHandler);
 		} else if (request instanceof TailableCursorRequest tailableCursorRequest) {
-			return new TailableCursorTask(tempate, tailableCursorRequest, targetType, errorHandler);
+			return new TailableCursorTask(template, tailableCursorRequest, targetType, errorHandler);
 		}
 
 		throw new IllegalArgumentException(

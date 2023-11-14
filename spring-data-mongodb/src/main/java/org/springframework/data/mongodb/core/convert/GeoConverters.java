@@ -244,7 +244,7 @@ abstract class GeoConverters {
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	static enum DocumentToCircleConverter implements Converter<Document, Circle> {
+	enum DocumentToCircleConverter implements Converter<Document, Circle> {
 
 		INSTANCE;
 
@@ -281,7 +281,7 @@ abstract class GeoConverters {
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	static enum SphereToDocumentConverter implements Converter<Sphere, Document> {
+	enum SphereToDocumentConverter implements Converter<Sphere, Document> {
 
 		INSTANCE;
 
@@ -591,7 +591,7 @@ abstract class GeoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static enum DocumentToGeoJsonMultiPolygonConverter implements Converter<Document, GeoJsonMultiPolygon> {
+	enum DocumentToGeoJsonMultiPolygonConverter implements Converter<Document, GeoJsonMultiPolygon> {
 
 		INSTANCE;
 

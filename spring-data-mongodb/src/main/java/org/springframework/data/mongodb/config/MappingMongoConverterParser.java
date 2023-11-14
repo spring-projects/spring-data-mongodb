@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.mongodb.config.BeanNames.*;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -63,7 +61,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
-
 import org.w3c.dom.Element;
 
 /**
@@ -97,7 +94,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
 
 		String autoIndexCreation = element.getAttribute("auto-index-creation");
-		boolean autoIndexCreationEnabled = StringUtils.hasText(autoIndexCreation) && Boolean.valueOf(autoIndexCreation);
+		boolean autoIndexCreationEnabled = StringUtils.hasText(autoIndexCreation) && Boolean.parseBoolean(autoIndexCreation);
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
@@ -371,7 +368,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 			Assert.notNull(filters, "TypeFilters must not be null");
 
-			this.delegates = new HashSet<>(Arrays.asList(filters));
+			this.delegates = Set.of(filters);
 		}
 
 		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)

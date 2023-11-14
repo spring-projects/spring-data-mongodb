@@ -16,13 +16,10 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -54,7 +51,7 @@ import com.mongodb.MongoException;
  */
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
-	private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
+	private static final Set<Type> GEOSPATIAL_TYPES = Set.of(Type.NEAR, Type.WITHIN);
 	private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
 
 	private final IndexOperationsProvider indexOperationsProvider;

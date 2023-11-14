@@ -64,7 +64,7 @@ class EvaluationContextExpressionEvaluator implements SpELExpressionEvaluator {
 
 		SpelExpression expression = getParsedExpression(expressionString);
 		EvaluationContext ctx = getEvaluationContext(expressionString);
-		variables.entrySet().forEach(entry -> ctx.setVariable(entry.getKey(), entry.getValue()));
+		variables.forEach((key, value) -> ctx.setVariable(key, value));
 
 		Object result = expression.getValue(ctx, Object.class);
 		return (T) result;

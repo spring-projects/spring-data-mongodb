@@ -982,7 +982,7 @@ public class Update implements UpdateDefinition {
 			@Override
 			public String toString() {
 				return super.toString().toLowerCase();
-			};
+			}
 		}
 
 		/**

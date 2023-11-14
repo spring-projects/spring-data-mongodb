@@ -60,7 +60,7 @@ public interface BulkOperations {
 
 		/** Perform bulk operations in parallel. Processing will continue on errors. */
 		UNORDERED
-	};
+	}
 
 	/**
 	 * Add a single insert to the bulk operation.

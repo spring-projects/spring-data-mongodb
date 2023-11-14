@@ -124,7 +124,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	}
 
 	public boolean isTypeKey(String key) {
-		return typeKey == null ? false : typeKey.equals(key);
+		return typeKey != null && typeKey.equals(key);
 	}
 
 	@Override

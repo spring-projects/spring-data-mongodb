@@ -30,7 +30,7 @@ import org.springframework.lang.Nullable;
  */
 public class BasicUpdate extends Update {
 
-	private Document updateObject;
+	private final Document updateObject;
 
 	public BasicUpdate(String updateString) {
 		super();

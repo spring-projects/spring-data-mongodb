@@ -35,10 +35,10 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final ReactiveMongoTemplate tempate;
+	private final ReactiveMongoTemplate template;
 
-	ReactiveRemoveOperationSupport(ReactiveMongoTemplate tempate) {
-		this.tempate = tempate;
+	ReactiveRemoveOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
 	}
 
 	@Override
@@ -46,7 +46,7 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ReactiveRemoveSupport<>(tempate, domainType, ALL_QUERY, null);
+		return new ReactiveRemoveSupport<>(template, domainType, ALL_QUERY, null);
 	}
 
 	static class ReactiveRemoveSupport<T> implements ReactiveRemove<T>, RemoveWithCollection<T> {

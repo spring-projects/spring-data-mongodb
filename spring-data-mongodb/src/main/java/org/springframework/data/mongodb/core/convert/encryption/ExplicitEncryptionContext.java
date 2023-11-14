@@ -20,7 +20,6 @@ import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**

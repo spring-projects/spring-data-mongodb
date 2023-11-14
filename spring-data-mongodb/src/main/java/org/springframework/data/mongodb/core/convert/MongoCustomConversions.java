@@ -151,8 +151,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * List of {@literal java.time} types having different representation when rendered via the native
 		 * {@link org.bson.codecs.Codec} than the Spring Data {@link Converter}.
 		 */
-		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = new HashSet<>(
-				Arrays.asList(LocalDate.class, LocalTime.class, LocalDateTime.class));
+		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Set.of(LocalDate.class, LocalTime.class, LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private final List<Object> customConverters = new ArrayList<>();
@@ -369,12 +368,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 				// Avoid default registrations
 
-				if (JAVA_DRIVER_TIME_SIMPLE_TYPES.contains(convertiblePair.getSourceType())
-						&& Date.class.isAssignableFrom(convertiblePair.getTargetType())) {
-					return false;
-				}
-
-				return true;
+				return !JAVA_DRIVER_TIME_SIMPLE_TYPES.contains(convertiblePair.getSourceType())
+						|| !Date.class.isAssignableFrom(convertiblePair.getTargetType());
 			}, this.propertyValueConversions);
 		}
 

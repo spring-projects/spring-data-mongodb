@@ -88,7 +88,7 @@ public abstract class MongoOperationsUnitTests {
 				return null;
 			}
 
-			public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
+			public DBRef toDBRef(Object object, MongoPersistentProperty referringProperty) {
 				return null;
 			}
 

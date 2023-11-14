@@ -20,7 +20,7 @@ import org.springframework.data.mongodb.core.convert.MongoValueConverter;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 
 /**
- * A specialized {@link MongoValueConverter} for {@literal encryptiong} and {@literal decrypting} properties.
+ * A specialized {@link MongoValueConverter} for {@literal encrypting} and {@literal decrypting} properties.
  *
  * @author Christoph Strobl
  * @since 4.1

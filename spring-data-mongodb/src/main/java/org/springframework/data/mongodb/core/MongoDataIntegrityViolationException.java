@@ -61,7 +61,7 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 	}
 
 	/**
-	 * Returns the {@link MongoActionOperation} in which the current exception occured.
+	 * Returns the {@link MongoActionOperation} in which the current exception occurred.
 	 *
 	 * @return the actionOperation
 	 */

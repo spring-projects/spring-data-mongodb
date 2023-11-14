@@ -15,17 +15,14 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -60,18 +57,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	public static final String ID_FIELD_NAME = FieldName.ID.name();
 	private static final String LANGUAGE_FIELD_NAME = "language";
-	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
-	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
-
-	static {
-
-		SUPPORTED_ID_TYPES.add(ObjectId.class);
-		SUPPORTED_ID_TYPES.add(String.class);
-		SUPPORTED_ID_TYPES.add(BigInteger.class);
-
-		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-		SUPPORTED_ID_PROPERTY_NAMES.add(ID_FIELD_NAME);
-	}
+	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = Set.of("id", ID_FIELD_NAME);
 
 	private final FieldNamingStrategy fieldNamingStrategy;
 
@@ -89,25 +75,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
-
-		if (isIdProperty() && hasExplicitFieldName()) {
-
-			String annotatedName = getAnnotatedFieldName();
-			if (!ID_FIELD_NAME.equals(annotatedName)) {
-				if(LOG.isWarnEnabled()) {
-					LOG.warn(String.format(
-							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
-							owner.getName(), getName(), annotatedName));
-				}
-			}
-		}
 	}
 
 	/**
 	 * Also considers fields as id that are of supported id type and name.
 	 *
 	 * @see #SUPPORTED_ID_PROPERTY_NAMES
-	 * @see #SUPPORTED_ID_TYPES
 	 */
 	@Override
 	public boolean isIdProperty() {
@@ -235,7 +208,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	@Override
 	public boolean isExplicitLanguageProperty() {
 		return isAnnotationPresent(Language.class);
-	};
+	}
 
 	@Override
 	public boolean isTextScoreProperty() {
@@ -337,6 +310,21 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		Field annotation = findAnnotation(Field.class);
 		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
+	}
+
+	protected void validate() {
+
+		if (isIdProperty() && hasExplicitFieldName()) {
+
+			String annotatedName = getAnnotatedFieldName();
+			if (!ID_FIELD_NAME.equals(annotatedName)) {
+				if(LOG.isWarnEnabled()) {
+					LOG.warn(String.format(
+							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
+							getOwner().getName(), getName(), annotatedName));
+				}
+			}
+		}
 	}
 
 }

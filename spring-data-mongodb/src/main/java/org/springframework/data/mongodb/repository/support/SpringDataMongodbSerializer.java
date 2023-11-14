@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -52,16 +50,7 @@ import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 	private static final String ID_KEY = FieldName.ID.name();
-	private static final Set<PathType> PATH_TYPES;
-
-	static {
-
-		Set<PathType> pathTypes = new HashSet<>();
-		pathTypes.add(PathType.VARIABLE);
-		pathTypes.add(PathType.PROPERTY);
-
-		PATH_TYPES = Collections.unmodifiableSet(pathTypes);
-	}
+	private static final Set<PathType> PATH_TYPES = Set.of(PathType.VARIABLE, PathType.PROPERTY);
 
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -117,7 +106,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	protected boolean isReference(@Nullable Path<?> path) {
 
 		MongoPersistentProperty property = getPropertyForPotentialDbRef(path);
-		return property == null ? false : property.isAssociation();
+		return property != null && property.isAssociation();
 	}
 
 	@Override

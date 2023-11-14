@@ -115,7 +115,7 @@ public class MappedDocument {
 	 * @author Christoph Strobl
 	 * @since 2.2
 	 */
-	class MappedUpdate implements UpdateDefinition {
+	static class MappedUpdate implements UpdateDefinition {
 
 		private final Update delegate;
 

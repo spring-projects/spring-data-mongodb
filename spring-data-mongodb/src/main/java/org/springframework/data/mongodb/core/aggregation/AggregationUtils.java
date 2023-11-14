@@ -41,7 +41,7 @@ interface AggregationUtils {
 		List<Long> result = new ArrayList<Long>(2);
 		result.add(range.getLowerBound().getValue()
 				.orElseThrow(() -> new IllegalArgumentException("Lower bound of range must be bounded")));
-		range.getUpperBound().getValue().ifPresent(it -> result.add(it));
+		range.getUpperBound().getValue().ifPresent(result::add);
 
 		return result;
 	}

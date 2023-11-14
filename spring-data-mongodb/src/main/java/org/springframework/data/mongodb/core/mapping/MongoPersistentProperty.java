@@ -158,7 +158,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	default boolean hasExplicitWriteTarget() {
 
 		Field field = findAnnotation(Field.class);
-		return field != null ? !FieldType.IMPLICIT.equals(field.targetType()) : false;
+		return field != null && !FieldType.IMPLICIT.equals(field.targetType());
 	}
 
 	/**

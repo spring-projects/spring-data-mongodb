@@ -48,5 +48,5 @@ public enum SessionSynchronization {
 	 *
 	 * @since 3.2.5
 	 */
-	NEVER;
+	NEVER
 }

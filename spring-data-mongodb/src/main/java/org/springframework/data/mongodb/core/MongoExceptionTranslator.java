@@ -15,13 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.bson.BsonInvalidOperationException;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -55,18 +51,17 @@ import com.mongodb.bulk.BulkWriteError;
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	private static final Set<String> DUPLICATE_KEY_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("MongoException.DuplicateKey", "DuplicateKeyException"));
+	private static final Set<String> DUPLICATE_KEY_EXCEPTIONS = Set.of("MongoException.DuplicateKey",
+			"DuplicateKeyException");
 
-	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("MongoException.Network", "MongoSocketException", "MongoException.CursorNotFound",
-					"MongoCursorNotFoundException", "MongoServerSelectionException", "MongoTimeoutException"));
+	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = Set.of("MongoException.Network",
+			"MongoSocketException", "MongoException.CursorNotFound", "MongoCursorNotFoundException",
+			"MongoServerSelectionException", "MongoTimeoutException");
 
-	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<>(
-			Collections.singletonList("MongoInternalException"));
+	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = Set.of("MongoInternalException");
 
-	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
+	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = Set.of("WriteConcernException", "MongoWriteException",
+			"MongoBulkWriteException");
 
 	private static final Set<String> SECURITY_EXCEPTIONS = Set.of("MongoCryptException");
 

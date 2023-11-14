@@ -72,7 +72,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 */
 	public GeospatialIndex withMin(int min) {
-		this.min = Integer.valueOf(min);
+		this.min = min;
 		return this;
 	}
 
@@ -81,7 +81,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 */
 	public GeospatialIndex withMax(int max) {
-		this.max = Integer.valueOf(max);
+		this.max = max;
 		return this;
 	}
 
@@ -90,7 +90,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 */
 	public GeospatialIndex withBits(int bits) {
-		this.bits = Integer.valueOf(bits);
+		this.bits = bits;
 		return this;
 	}
 
@@ -163,25 +163,16 @@ public class GeospatialIndex implements IndexDefinition {
 		Document document = new Document();
 
 		switch (type) {
-
-			case GEO_2D:
-				document.put(field, "2d");
-				break;
-
-			case GEO_2DSPHERE:
-				document.put(field, "2dsphere");
-				break;
-
-			case GEO_HAYSTACK:
+			case GEO_2D -> document.put(field, "2d");
+			case GEO_2DSPHERE -> document.put(field, "2dsphere");
+			case GEO_HAYSTACK -> {
 				document.put(field, "geoHaystack");
 				if (!StringUtils.hasText(additionalField)) {
-					throw new IllegalArgumentException("When defining geoHaystack index, an additionnal field must be defined");
+					throw new IllegalArgumentException("When defining geoHaystack index, an additional field must be defined");
 				}
 				document.put(additionalField, 1);
-				break;
-
-			default:
-				throw new IllegalArgumentException("Unsupported geospatial index " + type);
+			}
+			default -> throw new IllegalArgumentException("Unsupported geospatial index " + type);
 		}
 
 		return document;

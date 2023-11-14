@@ -68,7 +68,7 @@ public enum MongoRegexCreator {
 		 */
 		REGEX,
 
-		LIKE;
+		LIKE
 	}
 
 	private static final Pattern PUNCTATION_PATTERN = Pattern.compile("\\p{Punct}");

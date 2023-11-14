@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
 /**
  * Encapsulates the aggregation framework {@code $skip}-operation.
  * <p>
- * We recommend to use the static factory method {@link Aggregation#skip(int)} instead of creating instances of this
+ * We recommend to use the static factory method {@link Aggregation#skip(long)} instead of creating instances of this
  * class directly.
  *
  * @author Thomas Darimont

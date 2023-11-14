@@ -21,7 +21,6 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -84,8 +83,8 @@ public class GeoJsonTests {
 
 		@Override
 		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
-			return new HashSet<>(Arrays.asList(Venue2DSphere.class, VenueWithDistanceField.class, OpenGeoJson.class,
-					DocumentWithPropertyUsingGeoJsonType.class));
+			return Set.of(Venue2DSphere.class, VenueWithDistanceField.class, OpenGeoJson.class,
+					DocumentWithPropertyUsingGeoJsonType.class);
 		}
 	}
 

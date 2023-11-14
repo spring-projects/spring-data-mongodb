@@ -49,7 +49,7 @@ public interface CursorPreparer extends ReadPreferenceAware {
 	FindIterable<Document> prepare(FindIterable<Document> iterable);
 
 	/**
-	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
+	 * Apply query specific settings to {@link MongoCollection} and initiate a find operation returning a
 	 * {@link FindIterable} via the given {@link Function find} function.
 	 *
 	 * @param collection must not be {@literal null}.

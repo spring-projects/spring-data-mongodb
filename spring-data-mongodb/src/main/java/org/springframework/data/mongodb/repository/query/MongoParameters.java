@@ -92,7 +92,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.updateIndex = updateIndex;
 	}
 
-	private final int getNearIndex(List<Class<?>> parameterTypes) {
+	private int getNearIndex(List<Class<?>> parameterTypes) {
 
 		for (Class<?> reference : Arrays.asList(Point.class, double[].class)) {
 
@@ -123,7 +123,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 					index = param.getIndex();
 				} else {
 					throw new IllegalStateException(
-							String.format("Found multiple @Near annotations ond method %s; Only one allowed", method.toString()));
+							String.format("Found multiple @Near annotations ond method %s; Only one allowed", method));
 				}
 
 			}
@@ -160,13 +160,13 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	/**
-	 * Returns the index of the parameter to be used as a textquery param
+	 * Returns the index of the parameter to be used as a text query param
 	 *
 	 * @return
 	 * @since 1.6
 	 */
 	public int getFullTextParameterIndex() {
-		return fullTextIndex != null ? fullTextIndex.intValue() : -1;
+		return fullTextIndex != null ? fullTextIndex : -1;
 	}
 
 	/**
@@ -174,7 +174,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 1.6
 	 */
 	public boolean hasFullTextParameter() {
-		return this.fullTextIndex != null && this.fullTextIndex.intValue() >= 0;
+		return this.fullTextIndex != null && this.fullTextIndex >= 0;
 	}
 
 	/**
@@ -192,7 +192,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 2.2
 	 */
 	public int getCollationParameterIndex() {
-		return collationIndex != null ? collationIndex.intValue() : -1;
+		return collationIndex != null ? collationIndex : -1;
 	}
 
 	/**

@@ -21,7 +21,6 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
-import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.ErrorHandler;
 

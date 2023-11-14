@@ -41,7 +41,7 @@ public class Meta {
 	private enum MetaKey {
 		MAX_TIME_MS("$maxTimeMS"), MAX_SCAN("$maxScan"), COMMENT("$comment"), SNAPSHOT("$snapshot");
 
-		private String key;
+		private final String key;
 
 		MetaKey(String key) {
 			this.key = key;

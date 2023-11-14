@@ -433,7 +433,7 @@ class QueryOperations {
 		 * @param consumer must not be {@literal null}.
 		 */
 		void applyCollation(@Nullable Class<?> domainType, Consumer<com.mongodb.client.model.Collation> consumer) {
-			getCollation(domainType).ifPresent(consumer::accept);
+			getCollation(domainType).ifPresent(consumer);
 		}
 
 		/**
@@ -526,7 +526,7 @@ class QueryOperations {
 		}
 
 		/**
-		 * Get the most speficic read target type based on the user {@literal requestedTargetType} an the property type
+		 * Get the most specific read target type based on the user {@literal requestedTargetType} an the property type
 		 * based on meta information extracted from the {@literal domainType}.
 		 *
 		 * @param requestedTargetType must not be {@literal null}.

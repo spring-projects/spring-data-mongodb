@@ -243,30 +243,25 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.within((Shape) parameter);
 			case SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.is(parameters.next())
+				return isSimpleComparisonPossible(part) ? criteria.is(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, false);
 
 			case NEGATING_SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.next())
+				return isSimpleComparisonPossible(part) ? criteria.ne(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
 				throw new IllegalArgumentException("Unsupported keyword");
 		}
 	}
 
-	private boolean isSimpleComparisionPossible(Part part) {
+	private boolean isSimpleComparisonPossible(Part part) {
 
-		switch (part.shouldIgnoreCase()) {
-			case NEVER:
-				return true;
-			case WHEN_POSSIBLE:
-				return part.getProperty().getType() != String.class;
-			case ALWAYS:
-				return false;
-			default:
-				return true;
-		}
+		return switch (part.shouldIgnoreCase()) {
+			case NEVER -> true;
+			case WHEN_POSSIBLE -> part.getProperty().getType() != String.class;
+			case ALWAYS -> false;
+		};
 	}
 
 	/**
@@ -391,7 +386,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
 
 		Streamable<?> streamable = asStreamable(iterator.next());
-		if (!isSimpleComparisionPossible(part)) {
+		if (!isSimpleComparisonPossible(part)) {
 
 			MatchMode matchMode = toMatchMode(part.getType());
 			String regexOptions = toRegexOptions(part);
@@ -479,25 +474,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static MatchMode toMatchMode(Type type) {
 
-		switch (type) {
-			case NOT_CONTAINING:
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING_WITH:
-				return MatchMode.STARTING_WITH;
-			case ENDING_WITH:
-				return MatchMode.ENDING_WITH;
-			case LIKE:
-			case NOT_LIKE:
-				return MatchMode.LIKE;
-			case REGEX:
-				return MatchMode.REGEX;
-			case NEGATING_SIMPLE_PROPERTY:
-			case SIMPLE_PROPERTY:
-			case IN:
-				return MatchMode.EXACT;
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return switch (type) {
+			case NOT_CONTAINING, CONTAINING -> MatchMode.CONTAINING;
+			case STARTING_WITH -> MatchMode.STARTING_WITH;
+			case ENDING_WITH -> MatchMode.ENDING_WITH;
+			case LIKE, NOT_LIKE -> MatchMode.LIKE;
+			case REGEX -> MatchMode.REGEX;
+			case NEGATING_SIMPLE_PROPERTY, SIMPLE_PROPERTY, IN -> MatchMode.EXACT;
+			default -> MatchMode.DEFAULT;
+		};
 	}
 }

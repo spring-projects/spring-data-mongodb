@@ -67,6 +67,6 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 	 */
 	@Override
 	public List<Double> getCoordinates() {
-		return Arrays.asList(Double.valueOf(getX()), Double.valueOf(getY()));
+		return Arrays.asList(getX(), getY());
 	}
 }

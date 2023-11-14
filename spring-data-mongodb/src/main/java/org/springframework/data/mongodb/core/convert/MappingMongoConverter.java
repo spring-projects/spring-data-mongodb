@@ -1488,9 +1488,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				key = doConvert(key, rawKeyType);
 			}
 
-			Object value = v;
-			map.put(key, value == null ? value : context.convert(value, valueType));
-
+			map.put(key, v == null ? v : context.convert(v, valueType));
 		});
 
 		return map;
@@ -1611,11 +1609,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings("unchecked")
 	private Object removeTypeInfo(Object object, boolean recursively) {
 
-		if (!(object instanceof Document)) {
+		if (!(object instanceof Document document)) {
 			return object;
 		}
 
-		Document document = (Document) object;
 		String keyToRemove = null;
 
 		for (String key : document.keySet()) {

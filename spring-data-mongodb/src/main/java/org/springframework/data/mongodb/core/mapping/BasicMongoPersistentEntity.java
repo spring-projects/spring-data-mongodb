@@ -213,7 +213,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 *
 	 * @author Oliver Gierke
 	 */
-	static enum MongoPersistentPropertyComparator implements Comparator<MongoPersistentProperty> {
+	enum MongoPersistentPropertyComparator implements Comparator<MongoPersistentProperty> {
 
 		INSTANCE;
 
@@ -257,7 +257,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		boolean currentIdPropertyIsSet = currentIdProperty != null;
 		@SuppressWarnings("null")
-		boolean currentIdPropertyIsExplicit = currentIdPropertyIsSet ? currentIdProperty.isExplicitIdProperty() : false;
+		boolean currentIdPropertyIsExplicit = currentIdPropertyIsSet && currentIdProperty.isExplicitIdProperty();
 		boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
 
 		if (!currentIdPropertyIsSet) {
@@ -333,7 +333,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			if (existingProperty != null) {
 				throw new MappingException(
-						String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(), existingProperty.toString(), fieldName));
+						String.format(AMBIGUOUS_FIELD_MAPPING, property, existingProperty, fieldName));
 			}
 
 			properties.put(fieldName, property);
@@ -414,7 +414,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			}
 
 			throw new MappingException(
-					String.format("Missmatching types for %s; Found %s expected one of %s", persistentProperty.getField(),
+					String.format("Mismatching types for %s; Found %s expected one of %s", persistentProperty.getField(),
 							persistentProperty.getActualType(), StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}

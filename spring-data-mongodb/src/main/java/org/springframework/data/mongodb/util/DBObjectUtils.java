@@ -15,19 +15,21 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Arrays;
+
 import com.mongodb.BasicDBList;
 
 /**
  * @author Thomas Darimont
+ * @deprecated since 4.2.0
  */
+@Deprecated(since = "4.2.0", forRemoval = true)
 public class DBObjectUtils {
 
 	public static BasicDBList dbList(Object... items) {
 
 		BasicDBList list = new BasicDBList();
-		for (Object item : items) {
-			list.add(item);
-		}
+		list.addAll(Arrays.asList(items));
 		return list;
 	}
 }

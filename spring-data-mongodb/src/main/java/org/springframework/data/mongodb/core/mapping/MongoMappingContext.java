@@ -80,7 +80,10 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	@Override
 	public MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder) {
-		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+
+		CachingMongoPersistentProperty cachingMongoPersistentProperty = new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		cachingMongoPersistentProperty.validate();
+		return cachingMongoPersistentProperty;
 	}
 
 	@Override

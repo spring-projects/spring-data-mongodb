@@ -252,7 +252,7 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	protected Flux<Object> getIds(Class<?> targetType, Mono<Predicate> condition) {
 
 		return condition.flatMapMany(it -> getJoinIds(targetType, it))
-				.switchIfEmpty(Flux.defer(() -> getJoinIds(targetType, (Predicate) null)));
+				.switchIfEmpty(Flux.defer(() -> getJoinIds(targetType, null)));
 	}
 
 	/**

@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -517,8 +516,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 */
 	public static class NumericJsonSchemaObject extends TypedJsonSchemaObject {
 
-		private static final Set<Type> NUMERIC_TYPES = new HashSet<>(
-				Arrays.asList(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigDecimalType()));
+		private static final Set<Type> NUMERIC_TYPES = Set.of(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigDecimalType());
 
 		@Nullable Number multipleOf;
 		@Nullable Range<? extends Number> range;

@@ -1379,12 +1379,7 @@ public class MongoTemplate
 			}
 
 			String collection = getCollectionName(ClassUtils.getUserClass(element));
-			List<T> collectionElements = elementsByCollection.get(collection);
-
-			if (null == collectionElements) {
-				collectionElements = new ArrayList<>();
-				elementsByCollection.put(collection, collectionElements);
-			}
+			List<T> collectionElements = elementsByCollection.computeIfAbsent(collection, k -> new ArrayList<>());
 
 			collectionElements.add(element);
 		}
@@ -2315,11 +2310,9 @@ public class MongoTemplate
 
 	protected String replaceWithResourceIfNecessary(String function) {
 
-		String func = function;
-
 		if (this.resourceLoader != null && ResourceUtils.isUrl(function)) {
 
-			Resource functionResource = resourceLoader.getResource(func);
+			Resource functionResource = resourceLoader.getResource(function);
 
 			if (!functionResource.exists()) {
 				throw new InvalidDataAccessApiUsageException(String.format("Resource %s not found", function));
@@ -2339,7 +2332,7 @@ public class MongoTemplate
 			}
 		}
 
-		return func;
+		return function;
 	}
 
 	@Override
@@ -2698,8 +2691,6 @@ public class MongoTemplate
 	protected <T> T doFindAndRemove(CollectionPreparer collectionPreparer, String collectionName, Document query,
 			Document fields, Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
-		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
-
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
 					serializeToJsonSafely(query), fields, sort, entityClass, collectionName));
@@ -2709,15 +2700,13 @@ public class MongoTemplate
 
 		return executeFindOneInternal(new FindAndRemoveCallback(collectionPreparer,
 				queryMapper.getMappedObject(query, entity), fields, sort, collation),
-				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Document query,
 			Document fields, Document sort, Class<T> entityClass, UpdateDefinition update,
 			@Nullable FindAndModifyOptions options) {
-
-		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
 		if (options == null) {
 			options = new FindAndModifyOptions();
@@ -2742,7 +2731,7 @@ public class MongoTemplate
 		return executeFindOneInternal(
 				new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
 						update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
-				new ReadDocumentCallback<>(readerToUse, entityClass, collectionName), collectionName);
+				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	/**

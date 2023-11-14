@@ -41,7 +41,7 @@ public class MappingContextConfigurer {
 	}
 
 	public void initialEntitySet(Class<?>... initialEntitySet) {
-		this.intitalEntitySet = new HashSet<>(Arrays.asList(initialEntitySet));
+		this.intitalEntitySet = Set.of(initialEntitySet);
 	}
 
 	Set<Class<?>> initialEntitySet() {

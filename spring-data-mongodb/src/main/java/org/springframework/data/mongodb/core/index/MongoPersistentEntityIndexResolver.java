@@ -1115,7 +1115,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	static class TextIndexIncludeOptions {
 
 		enum IncludeStrategy {
-			FORCE, DEFAULT;
+			FORCE, DEFAULT
 		}
 
 		private final IncludeStrategy strategy;

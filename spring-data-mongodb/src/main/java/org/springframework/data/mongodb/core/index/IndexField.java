@@ -39,7 +39,7 @@ public final class IndexField {
 		/**
 		 * @since 3.3
 		 */
-		WILDCARD;
+		WILDCARD
 	}
 
 	private final String key;

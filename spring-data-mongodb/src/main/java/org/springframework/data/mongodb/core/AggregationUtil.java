@@ -43,9 +43,9 @@ import org.springframework.lang.Nullable;
  */
 class AggregationUtil {
 
-	QueryMapper queryMapper;
-	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	Lazy<AggregationOperationContext> untypedMappingContext;
+	final QueryMapper queryMapper;
+	final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	final Lazy<AggregationOperationContext> untypedMappingContext;
 
 	AggregationUtil(QueryMapper queryMapper,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
