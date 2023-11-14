@@ -308,8 +308,24 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param valueConversions must not be {@literal null}.
 		 * @return this.
 		 * @since 3.4
+		 * @deprecated since 4.2. Use {@link #withPropertyValueConversions(PropertyValueConversions)} instead.
 		 */
+		@Deprecated(since = "4.2.0")
 		public MongoConverterConfigurationAdapter setPropertyValueConversions(PropertyValueConversions valueConversions) {
+			return withPropertyValueConversions(valueConversions);
+		}
+
+		/**
+		 * Optionally set the {@link PropertyValueConversions} to be applied during mapping.
+		 * <p>
+		 * Use this method if {@link #configurePropertyConversions(Consumer)} and
+		 * {@link #registerPropertyValueConverterFactory(PropertyValueConverterFactory)} are not sufficient.
+		 *
+		 * @param valueConversions must not be {@literal null}.
+		 * @return this.
+		 * @since 4.2
+		 */
+		public MongoConverterConfigurationAdapter withPropertyValueConversions(PropertyValueConversions valueConversions) {
 
 			Assert.notNull(valueConversions, "PropertyValueConversions must not be null");
 			this.propertyValueConversions = valueConversions;
