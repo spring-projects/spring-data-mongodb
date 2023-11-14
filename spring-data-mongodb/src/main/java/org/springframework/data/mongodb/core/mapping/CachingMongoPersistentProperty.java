@@ -30,16 +30,20 @@ import org.springframework.lang.Nullable;
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
-	private @Nullable Boolean isIdProperty;
-	private @Nullable Boolean isAssociation;
-	private boolean dbRefResolved;
-	private @Nullable DBRef dbref;
-	private @Nullable String fieldName;
-	private @Nullable Boolean writeNullValues;
-	private @Nullable Class<?> fieldType;
-	private @Nullable Boolean usePropertyAccess;
-	private @Nullable Boolean isTransient;
-	private @Nullable Lazy<MongoField> mongoField = Lazy.of(super::getMongoField);
+	private final Lazy<Boolean> isIdProperty = Lazy.of(super::isIdProperty);
+	private final Lazy<Boolean> isAssociation = Lazy.of(super::isAssociation);
+	private final Lazy<DBRef> dbref = Lazy.of(super::getDBRef);
+	private final Lazy<String> fieldName = Lazy.of(super::getFieldName);
+	private final Lazy<Boolean> hasExplicitFieldName = Lazy.of(super::hasExplicitFieldName);
+	private final Lazy<Boolean> writeNullValues = Lazy.of(super::writeNullValues);
+	private final Lazy<Class<?>> fieldType = Lazy.of(super::getFieldType);
+	private final Lazy<Boolean> usePropertyAccess = Lazy.of(super::usePropertyAccess);
+	private final Lazy<Boolean> isTransient = Lazy.of(super::isTransient);
+	private final Lazy<MongoField> mongoField = Lazy.of(super::getMongoField);
+	private final Lazy<Boolean> isTextScoreProperty = Lazy.of(super::isTextScoreProperty);
+	private final Lazy<Boolean> isLanguageProperty = Lazy.of(super::isLanguageProperty);
+	private final Lazy<Boolean> isExplicitLanguageProperty = Lazy.of(super::isExplicitLanguageProperty);
+	private final Lazy<DocumentReference> documentReference = Lazy.of(super::getDocumentReference);
 
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
@@ -56,70 +60,47 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 
 	@Override
 	public boolean isIdProperty() {
-
-		if (this.isIdProperty == null) {
-			this.isIdProperty = super.isIdProperty();
-		}
-
-		return this.isIdProperty;
+		return isIdProperty.get();
 	}
 
 	@Override
 	public boolean isAssociation() {
-		if (this.isAssociation == null) {
-			this.isAssociation = super.isAssociation();
-		}
-		return this.isAssociation;
+		return isAssociation.get();
+	}
+
+	@Override
+	public boolean hasExplicitFieldName() {
+		return hasExplicitFieldName.get();
 	}
 
 	@Override
 	public String getFieldName() {
-
-		if (this.fieldName == null) {
-			this.fieldName = super.getFieldName();
-		}
-
-		return this.fieldName;
+		return fieldName.get();
 	}
 
 	@Override
 	public boolean writeNullValues() {
-
-		if (this.writeNullValues == null) {
-			this.writeNullValues = super.writeNullValues();
-		}
-
-		return this.writeNullValues;
+		return writeNullValues.get();
 	}
 
 	@Override
 	public Class<?> getFieldType() {
-
-		if (this.fieldType == null) {
-			this.fieldType = super.getFieldType();
-		}
-
-		return this.fieldType;
+		return fieldType.get();
 	}
 
 	@Override
 	public boolean usePropertyAccess() {
-
-		if (this.usePropertyAccess == null) {
-			this.usePropertyAccess = super.usePropertyAccess();
-		}
-
-		return this.usePropertyAccess;
+		return usePropertyAccess.get();
 	}
 
 	@Override
 	public boolean isTransient() {
+		return isTransient.get();
+	}
 
-		if (this.isTransient == null) {
-			this.isTransient = super.isTransient();
-		}
-
-		return this.isTransient;
+	@Override
+	public boolean isTextScoreProperty() {
+		return isTextScoreProperty.get();
 	}
 
 	@Override
@@ -129,17 +110,27 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 
 	@Override
 	public DBRef getDBRef() {
+		return dbref.getNullable();
+	}
 
-		if (!dbRefResolved) {
-			this.dbref = super.getDBRef();
-			this.dbRefResolved = true;
-		}
+	@Override
+	public DocumentReference getDocumentReference() {
+		return documentReference.getNullable();
+	}
 
-		return this.dbref;
+	@Override
+	public boolean isLanguageProperty() {
+		return isLanguageProperty.get();
+	}
+
+	@Override
+	public boolean isExplicitLanguageProperty() {
+		return isExplicitLanguageProperty.get();
 	}
 
 	@Override
 	public MongoField getMongoField() {
 		return mongoField.get();
 	}
+
 }
