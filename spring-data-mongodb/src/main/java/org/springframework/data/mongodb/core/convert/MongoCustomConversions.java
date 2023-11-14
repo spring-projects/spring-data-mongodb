@@ -179,6 +179,87 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		}
 
 		/**
+		 * Add a custom {@link Converter} implementation.
+		 *
+		 * @param converter must not be {@literal null}.
+		 * @return this.
+		 */
+		public MongoConverterConfigurationAdapter registerConverter(Converter<?, ?> converter) {
+
+			Assert.notNull(converter, "Converter must not be null");
+			customConverters.add(converter);
+			return this;
+		}
+
+		/**
+		 * Add {@link Converter converters}, {@link ConverterFactory factories}, {@link ConverterBuilder.ConverterAware
+		 * converter-aware objects}, and {@link GenericConverter generic converters}.
+		 *
+		 * @param converters must not be {@literal null} nor contain {@literal null} values.
+		 * @return this.
+		 */
+		public MongoConverterConfigurationAdapter registerConverters(Collection<?> converters) {
+
+			Assert.notNull(converters, "Converters must not be null");
+			Assert.noNullElements(converters, "Converters must not be null nor contain null values");
+
+			customConverters.addAll(converters);
+			return this;
+		}
+
+		/**
+		 * Add a custom {@link ConverterFactory} implementation.
+		 *
+		 * @param converterFactory must not be {@literal null}.
+		 * @return this.
+		 */
+		public MongoConverterConfigurationAdapter registerConverterFactory(ConverterFactory<?, ?> converterFactory) {
+
+			Assert.notNull(converterFactory, "ConverterFactory must not be null");
+			customConverters.add(converterFactory);
+			return this;
+		}
+
+		/**
+		 * Add a custom/default {@link PropertyValueConverterFactory} implementation used to serve
+		 * {@link PropertyValueConverter}.
+		 *
+		 * @param converterFactory must not be {@literal null}.
+		 * @return this.
+		 * @since 3.4
+		 */
+		public MongoConverterConfigurationAdapter registerPropertyValueConverterFactory(
+				PropertyValueConverterFactory converterFactory) {
+
+			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
+					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry");
+
+			((SimplePropertyValueConversions) valueConversions()).setConverterFactory(converterFactory);
+			return this;
+		}
+
+		/**
+		 * Gateway to register property specific converters.
+		 *
+		 * @param configurationAdapter must not be {@literal null}.
+		 * @return this.
+		 * @since 3.4
+		 */
+		public MongoConverterConfigurationAdapter configurePropertyConversions(
+				Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> configurationAdapter) {
+
+			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
+					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry");
+
+			PropertyValueConverterRegistrar propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
+			configurationAdapter.accept(propertyValueConverterRegistrar);
+
+			((SimplePropertyValueConversions) valueConversions())
+					.setValueConverterRegistry(propertyValueConverterRegistrar.buildRegistry());
+			return this;
+		}
+
+		/**
 		 * Set whether to or not to use the native MongoDB Java Driver {@link org.bson.codecs.Codec codes} for
 		 * {@link org.bson.codecs.jsr310.LocalDateCodec LocalDate}, {@link org.bson.codecs.jsr310.LocalTimeCodec LocalTime}
 		 * and {@link org.bson.codecs.jsr310.LocalDateTimeCodec LocalDateTime} using a {@link ZoneOffset#UTC}.
@@ -216,87 +297,6 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 */
 		public MongoConverterConfigurationAdapter useSpringDataJavaTimeCodecs() {
 			return useNativeDriverJavaTimeCodecs(false);
-		}
-
-		/**
-		 * Add a custom {@link Converter} implementation.
-		 *
-		 * @param converter must not be {@literal null}.
-		 * @return this.
-		 */
-		public MongoConverterConfigurationAdapter registerConverter(Converter<?, ?> converter) {
-
-			Assert.notNull(converter, "Converter must not be null");
-			customConverters.add(converter);
-			return this;
-		}
-
-		/**
-		 * Gateway to register property specific converters.
-		 *
-		 * @param configurationAdapter must not be {@literal null}.
-		 * @return this.
-		 * @since 3.4
-		 */
-		public MongoConverterConfigurationAdapter configurePropertyConversions(
-				Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> configurationAdapter) {
-
-			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
-					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry");
-
-			PropertyValueConverterRegistrar propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
-			configurationAdapter.accept(propertyValueConverterRegistrar);
-
-			((SimplePropertyValueConversions) valueConversions())
-					.setValueConverterRegistry(propertyValueConverterRegistrar.buildRegistry());
-			return this;
-		}
-
-		/**
-		 * Add a custom {@link ConverterFactory} implementation.
-		 *
-		 * @param converterFactory must not be {@literal null}.
-		 * @return this.
-		 */
-		public MongoConverterConfigurationAdapter registerConverterFactory(ConverterFactory<?, ?> converterFactory) {
-
-			Assert.notNull(converterFactory, "ConverterFactory must not be null");
-			customConverters.add(converterFactory);
-			return this;
-		}
-
-		/**
-		 * Add {@link Converter converters}, {@link ConverterFactory factories}, {@link ConverterBuilder.ConverterAware
-		 * converter-aware objects}, and {@link GenericConverter generic converters}.
-		 *
-		 * @param converters must not be {@literal null} nor contain {@literal null} values.
-		 * @return this.
-		 */
-		public MongoConverterConfigurationAdapter registerConverters(Collection<?> converters) {
-
-			Assert.notNull(converters, "Converters must not be null");
-			Assert.noNullElements(converters, "Converters must not be null nor contain null values");
-
-			customConverters.addAll(converters);
-			return this;
-		}
-
-		/**
-		 * Add a custom/default {@link PropertyValueConverterFactory} implementation used to serve
-		 * {@link PropertyValueConverter}.
-		 *
-		 * @param converterFactory must not be {@literal null}.
-		 * @return this.
-		 * @since 3.4
-		 */
-		public MongoConverterConfigurationAdapter registerPropertyValueConverterFactory(
-				PropertyValueConverterFactory converterFactory) {
-
-			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
-					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry");
-
-			((SimplePropertyValueConversions) valueConversions()).setConverterFactory(converterFactory);
-			return this;
 		}
 
 		/**
