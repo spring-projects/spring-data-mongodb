@@ -29,7 +29,7 @@ import org.springframework.util.ObjectUtils;
 public class Term {
 
 	public enum Type {
-		WORD, PHRASE;
+		WORD, PHRASE
 	}
 
 	private final Type type;

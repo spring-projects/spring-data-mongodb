@@ -156,7 +156,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 			if (!multiWrapper) {
 				throw new IllegalStateException(String.format(
 						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type; Offending method: %s",
-						method.toString()));
+						method));
 			}
 		}
 

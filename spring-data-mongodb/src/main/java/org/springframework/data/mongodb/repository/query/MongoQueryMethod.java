@@ -477,7 +477,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 3.4
 	 */
 	public Update getUpdateSource() {
-		return lookupUpdateAnnotation().get();
+		return lookupUpdateAnnotation().orElse(null);
 	}
 
 	/**

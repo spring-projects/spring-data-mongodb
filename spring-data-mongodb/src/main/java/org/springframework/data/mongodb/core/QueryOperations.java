@@ -433,7 +433,7 @@ class QueryOperations {
 		 * @param consumer must not be {@literal null}.
 		 */
 		void applyCollation(@Nullable Class<?> domainType, Consumer<com.mongodb.client.model.Collation> consumer) {
-			getCollation(domainType).ifPresent(consumer::accept);
+			getCollation(domainType).ifPresent(consumer);
 		}
 
 		/**

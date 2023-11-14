@@ -114,7 +114,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 * @return
 	 */
 	boolean isOfSameTypeAs(@Nullable ExpressionNode node) {
-		return node == null ? false : this.node.getClass().equals(node.node.getClass());
+		return node != null && this.node.getClass().equals(node.node.getClass());
 	}
 
 	/**

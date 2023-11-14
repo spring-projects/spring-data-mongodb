@@ -135,12 +135,8 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 
 	private static boolean requiresSession(Method method) {
 
-		if (method.getParameterCount() == 0
-				|| !ClassUtils.isAssignable(ClientSession.class, method.getParameterTypes()[0])) {
-			return true;
-		}
-
-		return false;
+		return method.getParameterCount() == 0
+				|| !ClassUtils.isAssignable(ClientSession.class, method.getParameterTypes()[0]);
 	}
 
 	private static Object[] prependSessionToArguments(ClientSession session, MethodInvocation invocation) {

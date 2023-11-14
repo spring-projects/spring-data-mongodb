@@ -199,7 +199,7 @@ class ScrollUtils {
 	}
 
 	/**
-	 * Reverse scrolling director variant applying {@link KeysetScrollPosition.Direction#Backward}. In reverse scrolling,
+	 * Reverse scrolling director variant applying {@link KeysetScrollPosition.Direction#BACKWARD}. In reverse scrolling,
 	 * we need to flip directions for the actual query so that we do not get everything from the top position and apply
 	 * the limit but rather flip the sort direction, apply the limit and then reverse the result to restore the actual
 	 * sort order.

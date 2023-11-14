@@ -329,15 +329,9 @@ public class MapReduceOptions {
 			out.put("inline", 1);
 		} else {
 			switch (getMapReduceAction()) {
-				case REPLACE:
-					out.put("replace", outputCollection);
-					break;
-				case MERGE:
-					out.put("merge", outputCollection);
-					break;
-				case REDUCE:
-					out.put("reduce", outputCollection);
-					break;
+				case REPLACE -> out.put("replace", outputCollection);
+				case MERGE -> out.put("merge", outputCollection);
+				case REDUCE -> out.put("reduce", outputCollection);
 			}
 		}
 

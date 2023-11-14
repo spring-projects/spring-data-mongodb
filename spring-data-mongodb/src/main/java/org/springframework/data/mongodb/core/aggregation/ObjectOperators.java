@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.util.Assert;

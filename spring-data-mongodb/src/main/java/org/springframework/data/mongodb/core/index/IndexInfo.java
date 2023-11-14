@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -42,8 +43,8 @@ import org.springframework.util.ObjectUtils;
  */
 public class IndexInfo {
 
-	private static final Double ONE = Double.valueOf(1);
-	private static final Double MINUS_ONE = Double.valueOf(-1);
+	private static final Double ONE = 1.0;
+	private static final Double MINUS_ONE = (double) -1;
 	private static final Collection<String> TWO_D_IDENTIFIERS = Arrays.asList("2d", "2dsphere");
 
 	private final List<IndexField> indexFields;
@@ -68,7 +69,8 @@ public class IndexInfo {
 		this.hidden = false;
 	}
 
-	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language, boolean hidden) {
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language,
+			boolean hidden) {
 
 		this.indexFields = Collections.unmodifiableList(indexFields);
 		this.name = name;
@@ -188,13 +190,7 @@ public class IndexInfo {
 
 		Assert.notNull(keys, "Collection of keys must not be null");
 
-		List<String> indexKeys = new ArrayList<String>(indexFields.size());
-
-		for (IndexField field : indexFields) {
-			indexKeys.add(field.getKey());
-		}
-
-		return indexKeys.containsAll(keys);
+		return this.indexFields.stream().map(IndexField::getKey).collect(Collectors.toSet()).containsAll(keys);
 	}
 
 	public String getName() {
@@ -275,7 +271,6 @@ public class IndexInfo {
 	public boolean isHidden() {
 		return hidden;
 	}
-
 
 	@Override
 	public String toString() {

@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -66,19 +65,11 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 * Creates a new {@link SpelExpressionTransformer}.
 	 */
 	SpelExpressionTransformer() {
-
-		List<ExpressionNodeConversion<? extends ExpressionNode>> conversions = new ArrayList<ExpressionNodeConversion<? extends ExpressionNode>>();
-		conversions.add(new OperatorNodeConversion(this));
-		conversions.add(new LiteralNodeConversion(this));
-		conversions.add(new IndexerNodeConversion(this));
-		conversions.add(new InlineListNodeConversion(this));
-		conversions.add(new PropertyOrFieldReferenceNodeConversion(this));
-		conversions.add(new CompoundExpressionNodeConversion(this));
-		conversions.add(new MethodReferenceNodeConversion(this));
-		conversions.add(new NotOperatorNodeConversion(this));
-		conversions.add(new ValueRetrievingNodeConversion(this));
-
-		this.conversions = Collections.unmodifiableList(conversions);
+		this.conversions = List.of(new OperatorNodeConversion(this), new LiteralNodeConversion(this),
+				new IndexerNodeConversion(this), new InlineListNodeConversion(this),
+				new PropertyOrFieldReferenceNodeConversion(this), new CompoundExpressionNodeConversion(this),
+				new MethodReferenceNodeConversion(this), new NotOperatorNodeConversion(this),
+				new ValueRetrievingNodeConversion(this));
 	}
 
 	/**
@@ -282,7 +273,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 				@Nullable Object leftResult) {
 
 			Object result = leftResult instanceof Number ? leftResult
-					: new Document("$multiply", Arrays.asList(Integer.valueOf(-1), leftResult));
+					: new Document("$multiply", Arrays.asList(-1, leftResult));
 
 			if (leftResult != null && context.hasPreviousOperation()) {
 				context.addToPreviousOperation(result);
@@ -450,8 +441,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 				args = dbo;
 			} else if (ObjectUtils.nullSafeEquals(methodReference.getArgumentType(), ArgumentType.EMPTY_DOCUMENT)) {
 				args = new Document();
-			}
-			else {
+			} else {
 
 				List<Object> argList = new ArrayList<>();
 

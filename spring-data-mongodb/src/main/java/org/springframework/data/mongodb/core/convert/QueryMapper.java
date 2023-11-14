@@ -301,7 +301,7 @@ public class QueryMapper {
 				PropertyPath path = PropertyPath.from(field.getKey(), entity.getTypeInformation());
 				PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = mappingContext
 						.getPersistentPropertyPath(path);
-				MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getRequiredLeafProperty();
+				MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getLeafProperty();
 
 				if (property.isUnwrapped() && property.isEntity()) {
 
@@ -615,22 +615,17 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (source instanceof Map) {
+		if (source instanceof Map<?,?> sourceMap) {
 
-			Map<String, Object> map = new LinkedHashMap<>();
-
-			((Map<String, Object>) source).entrySet().forEach(it -> {
-
-				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
-
-				if (it.getValue()instanceof Document document) {
-					map.put(key, getMappedObject(document, entity));
-				} else {
-					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
-				}
-			});
-
-			return map;
+			return sourceMap.entrySet().stream().collect(Collectors.toMap(
+					entry -> ObjectUtils.nullSafeToString(converter.convertToMongoType(entry.getKey())),
+					entry -> {
+						if (entry.getValue() instanceof Document document) {
+							return getMappedObject(document, entity);
+						}
+						return delegateConvertToMongoType(entry.getValue(), entity);
+					}
+			));
 		}
 
 		return delegateConvertToMongoType(source, entity);
@@ -879,8 +874,7 @@ public class QueryMapper {
 	 */
 	static class Keyword {
 
-		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = new HashSet<>(
-				Arrays.asList("$", "$size", "$slice", "$gt", "$lt"));
+		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = Set.of("$", "$size", "$slice", "$gt", "$lt");
 
 		private final String key;
 		private final Object value;
@@ -1336,11 +1330,8 @@ public class QueryMapper {
 
 		private boolean isPathToJavaLangClassProperty(PropertyPath path) {
 
-			if ((path.getType() == Class.class || path.getType().equals(Object.class))
-					&& path.getLeafProperty().getType() == Class.class) {
-				return true;
-			}
-			return false;
+			return (path.getType() == Class.class || path.getType().equals(Object.class))
+					&& path.getLeafProperty().getType() == Class.class;
 		}
 
 		private static String resolvePath(String source) {

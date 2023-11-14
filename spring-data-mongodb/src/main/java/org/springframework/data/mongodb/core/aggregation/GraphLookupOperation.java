@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,8 +42,7 @@ import org.springframework.util.ClassUtils;
  */
 public class GraphLookupOperation implements InheritsFieldsAggregationOperation {
 
-	private static final Set<Class<?>> ALLOWED_START_TYPES = new HashSet<Class<?>>(
-			Arrays.<Class<?>> asList(AggregationExpression.class, String.class, Field.class, Document.class));
+	private static final Set<Class<?>> ALLOWED_START_TYPES = Set.of(AggregationExpression.class, String.class, Field.class, Document.class);
 
 	private final String from;
 	private final List<Object> startWith;
@@ -329,7 +327,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private @Nullable Field depthField;
 		private @Nullable CriteriaDefinition restrictSearchWithMatch;
 
-		protected GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
+		private GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
 				String connectTo) {
 
 			this.from = from;

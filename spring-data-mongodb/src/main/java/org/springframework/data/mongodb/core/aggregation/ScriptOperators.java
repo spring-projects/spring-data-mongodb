@@ -224,7 +224,7 @@ public class ScriptOperators {
 			LANG("lang"), //
 			MERGE("merge"); //
 
-			private String field;
+			private final String field;
 
 			Fields(String field) {
 				this.field = field;

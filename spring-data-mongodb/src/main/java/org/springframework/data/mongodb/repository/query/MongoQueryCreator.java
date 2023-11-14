@@ -257,16 +257,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private boolean isSimpleComparisionPossible(Part part) {
 
-		switch (part.shouldIgnoreCase()) {
-			case NEVER:
-				return true;
-			case WHEN_POSSIBLE:
-				return part.getProperty().getType() != String.class;
-			case ALWAYS:
-				return false;
-			default:
-				return true;
-		}
+		return switch (part.shouldIgnoreCase()) {
+			case NEVER -> true;
+			case WHEN_POSSIBLE -> part.getProperty().getType() != String.class;
+			case ALWAYS -> false;
+		};
 	}
 
 	/**
@@ -479,25 +474,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static MatchMode toMatchMode(Type type) {
 
-		switch (type) {
-			case NOT_CONTAINING:
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING_WITH:
-				return MatchMode.STARTING_WITH;
-			case ENDING_WITH:
-				return MatchMode.ENDING_WITH;
-			case LIKE:
-			case NOT_LIKE:
-				return MatchMode.LIKE;
-			case REGEX:
-				return MatchMode.REGEX;
-			case NEGATING_SIMPLE_PROPERTY:
-			case SIMPLE_PROPERTY:
-			case IN:
-				return MatchMode.EXACT;
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return switch (type) {
+			case NOT_CONTAINING, CONTAINING -> MatchMode.CONTAINING;
+			case STARTING_WITH -> MatchMode.STARTING_WITH;
+			case ENDING_WITH -> MatchMode.ENDING_WITH;
+			case LIKE, NOT_LIKE -> MatchMode.LIKE;
+			case REGEX -> MatchMode.REGEX;
+			case NEGATING_SIMPLE_PROPERTY, SIMPLE_PROPERTY, IN -> MatchMode.EXACT;
+			default -> MatchMode.DEFAULT;
+		};
 	}
 }

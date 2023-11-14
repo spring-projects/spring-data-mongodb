@@ -1810,8 +1810,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 					Document updateObj = updateContext.getMappedUpdate(entity);
 					if (containsVersionProperty(queryObj, entity))
-						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
-								+ updateObj.toString() + " to collection " + collectionName);
+						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity %s to collection %s".formatted(entity.getName(),  collectionName));
 				}
 			}
 		});

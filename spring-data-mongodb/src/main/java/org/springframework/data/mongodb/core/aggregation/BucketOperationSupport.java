@@ -368,7 +368,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		SUM("$sum"), AVG("$avg"), FIRST("$first"), LAST("$last"), MAX("$max"), MIN("$min"), PUSH("$push"), ADDTOSET(
 				"$addToSet");
 
-		private String mongoOperator;
+		private final String mongoOperator;
 
 		Accumulators(String mongoOperator) {
 			this.mongoOperator = mongoOperator;
@@ -388,7 +388,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		protected static final Outputs EMPTY = new Outputs();
 
-		private List<Output> outputs;
+		private final List<Output> outputs;
 
 		/**
 		 * Creates a new, empty {@link Outputs}.

@@ -89,7 +89,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 
 	private Query createQueryInternal(ConvertingParameterAccessor accessor, boolean isCountQuery) {
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isCountQuery ? false : isGeoNearQuery);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, !isCountQuery && isGeoNearQuery);
 		Query query = creator.createQuery();
 
 		if (isCountQuery) {

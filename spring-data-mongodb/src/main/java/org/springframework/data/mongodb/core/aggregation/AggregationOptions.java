@@ -31,8 +31,8 @@ import com.mongodb.ReadPreference;
 
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
- * aggregation options can be found in the MongoDB reference documentation
- * https://docs.mongodb.org/manual/reference/command/aggregate/#aggregate
+ * aggregation options can be found in the
+ * <a href="https://docs.mongodb.org/manual/reference/command/aggregate/#aggregate">MongoDB reference documentation</a>.
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -655,7 +655,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		/**
 		 * Read the aggregation result from the cursor.
 		 */
-		READ;
+		READ
 	}
 
 	/**

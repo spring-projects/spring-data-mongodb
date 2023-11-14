@@ -205,11 +205,9 @@ public class TextIndexDefinition implements IndexDefinition {
 			if (obj == null) {
 				return false;
 			}
-			if (!(obj instanceof TextIndexedFieldSpec)) {
+			if (!(obj instanceof TextIndexedFieldSpec other)) {
 				return false;
 			}
-
-			TextIndexedFieldSpec other = (TextIndexedFieldSpec) obj;
 
 			return ObjectUtils.nullSafeEquals(this.fieldname, other.fieldname);
 		}

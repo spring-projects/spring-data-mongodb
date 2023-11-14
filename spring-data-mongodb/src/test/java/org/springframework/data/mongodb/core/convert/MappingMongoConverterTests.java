@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,8 +80,7 @@ public class MappingMongoConverterTests {
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
-		mappingContext.setInitialEntitySet(new HashSet<>(
-				Arrays.asList(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class)));
+		mappingContext.setInitialEntitySet(Set.of(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class));
 		mappingContext.setAutoIndexCreation(false);
 		mappingContext.afterPropertiesSet();
 

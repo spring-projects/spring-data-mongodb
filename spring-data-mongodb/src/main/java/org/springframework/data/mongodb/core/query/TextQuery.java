@@ -72,7 +72,7 @@ public class TextQuery extends Query {
 	 * @param locale can be {@literal null}.
 	 */
 	public TextQuery(String wordsAndPhrases, @Nullable Locale locale) {
-		this(wordsAndPhrases, locale != null ? locale.getLanguage() : (String) null);
+		this(wordsAndPhrases, locale != null ? locale.getLanguage() : null);
 	}
 
 	/**

@@ -31,7 +31,7 @@ import org.springframework.util.ClassUtils;
 public class MongoAotPredicates {
 
 	public static final Predicate<Class<?>> IS_SIMPLE_TYPE = (type) ->  MongoSimpleTypes.HOLDER.isSimpleType(type) || TypeUtils.type(type).isPartOf("org.bson");
-	public static final Predicate<ReactiveLibrary> IS_REACTIVE_LIBARARY_AVAILABLE = (lib) -> ReactiveWrappers.isAvailable(lib);
+	public static final Predicate<ReactiveLibrary> IS_REACTIVE_LIBARARY_AVAILABLE = ReactiveWrappers::isAvailable;
 	public static final Predicate<ClassLoader> IS_SYNC_CLIENT_PRESENT = (classLoader) -> ClassUtils.isPresent("com.mongodb.client.MongoClient", classLoader);
 
 	public static boolean isReactorPresent() {

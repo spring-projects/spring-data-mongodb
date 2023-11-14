@@ -642,7 +642,7 @@ class EntityOperations {
 			PropertyPath from = PropertyPath.from(key, sourceEntity.getTypeInformation());
 			PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = entityOperations.context
 					.getPersistentPropertyPath(from);
-			return BsonUtils.resolveValue(map, persistentPropertyPath.toDotPath(p -> p.getFieldName()));
+			return BsonUtils.resolveValue(map, persistentPropertyPath.toDotPath(MongoPersistentProperty::getFieldName));
 		}
 	}
 

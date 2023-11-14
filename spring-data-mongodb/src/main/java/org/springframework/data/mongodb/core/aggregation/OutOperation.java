@@ -241,7 +241,7 @@ public class OutOperation implements AggregationOperation {
 		 */
 		REPLACE_COLLECTION("replaceCollection");
 
-		private String mode;
+		private final String mode;
 
 		OutMode(String mode) {
 			this.mode = mode;

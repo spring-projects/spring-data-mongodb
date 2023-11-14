@@ -158,7 +158,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		return new LookupOperationBuilder();
 	}
 
-	public static interface FromBuilder {
+	public interface FromBuilder {
 
 		/**
 		 * @param name the collection in the same database to perform the join with, must not be {@literal null} or empty.
@@ -167,7 +167,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		LocalFieldBuilder from(String name);
 	}
 
-	public static interface LocalFieldBuilder extends PipelineBuilder {
+	public interface LocalFieldBuilder extends PipelineBuilder {
 
 		/**
 		 * @param name the field from the documents input to the {@code $lookup} stage, must not be {@literal null} or
@@ -177,7 +177,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		ForeignFieldBuilder localField(String name);
 	}
 
-	public static interface ForeignFieldBuilder {
+	public interface ForeignFieldBuilder {
 
 		/**
 		 * @param name the field from the documents in the {@code from} collection, must not be {@literal null} or empty.
@@ -246,7 +246,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		LookupOperation as(String name);
 	}
 
-	public static interface AsBuilder extends PipelineBuilder {
+	public interface AsBuilder extends PipelineBuilder {
 
 		/**
 		 * @param name the name of the new array field to add to the input documents, must not be {@literal null} or empty.

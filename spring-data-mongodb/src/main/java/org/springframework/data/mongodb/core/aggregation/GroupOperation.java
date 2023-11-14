@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -96,7 +95,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * @return
 	 */
 	protected GroupOperation and(Operation operation) {
-		return new GroupOperation(this, Arrays.asList(operation));
+		return new GroupOperation(this, List.of(operation));
 	}
 
 	/**
@@ -457,12 +456,12 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		String toString();
 	}
 
-	private static enum GroupOps implements Keyword {
+	private enum GroupOps implements Keyword {
 
 		SUM("$sum"), LAST("$last"), FIRST("$first"), PUSH("$push"), AVG("$avg"), MIN("$min"), MAX("$max"), ADD_TO_SET(
 				"$addToSet"), STD_DEV_POP("$stdDevPop"), STD_DEV_SAMP("$stdDevSamp");
 
-		private String mongoOperator;
+		private final String mongoOperator;
 
 		GroupOps(String mongoOperator) {
 			this.mongoOperator = mongoOperator;
