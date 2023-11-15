@@ -218,7 +218,7 @@ public class QueryMapper {
 	 * Also converts and potentially adds missing property {@code $meta} representation.
 	 *
 	 * @param fieldsObject must not be {@literal null}.
-	 * @param entity can be {@litearl null}.
+	 * @param entity can be {@literal null}.
 	 * @return
 	 * @since 1.6
 	 */

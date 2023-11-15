@@ -40,7 +40,7 @@ public class Field {
 
 	private final Map<String, Object> criteria = new HashMap<>();
 	private final Map<String, Object> slices = new HashMap<>();
-	private final Map<String, Criteria> elemMatchs = new HashMap<>();
+	private final Map<String, Criteria> elemMatches = new HashMap<>();
 	private @Nullable String positionKey;
 	private int positionValue;
 
@@ -199,7 +199,7 @@ public class Field {
 
 	public Field elemMatch(String field, Criteria elemMatchCriteria) {
 
-		elemMatchs.put(field, elemMatchCriteria);
+		elemMatches.put(field, elemMatchCriteria);
 		return this;
 	}
 
@@ -229,7 +229,7 @@ public class Field {
 			document.put(entry.getKey(), new Document("$slice", entry.getValue()));
 		}
 
-		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
+		for (Entry<String, Criteria> entry : elemMatches.entrySet()) {
 			document.put(entry.getKey(), new Document("$elemMatch", entry.getValue().getCriteriaObject()));
 		}
 
@@ -259,7 +259,7 @@ public class Field {
 		if (!ObjectUtils.nullSafeEquals(slices, field.slices)) {
 			return false;
 		}
-		if (!ObjectUtils.nullSafeEquals(elemMatchs, field.elemMatchs)) {
+		if (!ObjectUtils.nullSafeEquals(elemMatches, field.elemMatches)) {
 			return false;
 		}
 		return ObjectUtils.nullSafeEquals(positionKey, field.positionKey);
@@ -270,7 +270,7 @@ public class Field {
 
 		int result = ObjectUtils.nullSafeHashCode(criteria);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(slices);
-		result = 31 * result + ObjectUtils.nullSafeHashCode(elemMatchs);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(elemMatches);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(positionKey);
 		result = 31 * result + positionValue;
 		return result;

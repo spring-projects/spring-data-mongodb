@@ -99,7 +99,7 @@ public class AbstractMongoConverterUnitTests {
 		}
 
 		@Override
-		public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
+		public DBRef toDBRef(Object object, MongoPersistentProperty referringProperty) {
 			throw new UnsupportedOperationException();
 		}
 	}

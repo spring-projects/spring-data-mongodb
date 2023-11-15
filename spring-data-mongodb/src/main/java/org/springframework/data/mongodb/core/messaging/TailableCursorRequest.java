@@ -88,7 +88,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 	/**
 	 * Obtain a shiny new {@link TailableCursorRequestBuilder} and start defining options in this fancy fluent way. Just
-	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when your're done.
+	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link TailableCursorRequestBuilder}.
 	 */
@@ -98,7 +98,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 	/**
 	 * Obtain a shiny new {@link TailableCursorRequestBuilder} and start defining options in this fancy fluent way. Just
-	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when your're done.
+	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link TailableCursorRequestBuilder}.
 	 */
@@ -127,7 +127,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 		/**
 		 * Obtain a shiny new {@link TailableCursorRequestOptionsBuilder} and start defining options in this fancy fluent
-		 * way. Just don't forget to call {@link TailableCursorRequestOptionsBuilder#build() build()} when your're done.
+		 * way. Just don't forget to call {@link TailableCursorRequestOptionsBuilder#build() build()} when done.
 		 *
 		 * @return new instance of {@link TailableCursorRequestOptionsBuilder}.
 		 */

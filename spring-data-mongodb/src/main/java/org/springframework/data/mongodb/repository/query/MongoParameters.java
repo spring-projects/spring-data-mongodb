@@ -160,7 +160,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	/**
-	 * Returns the index of the parameter to be used as a textquery param
+	 * Returns the index of the parameter to be used as a text query param
 	 *
 	 * @return
 	 * @since 1.6

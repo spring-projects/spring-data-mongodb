@@ -132,7 +132,7 @@ public class ChangeStreamOptions {
 
 	/**
 	 * Obtain a shiny new {@link ChangeStreamOptionsBuilder} and start defining options in this fancy fluent way. Just
-	 * don't forget to call {@link ChangeStreamOptionsBuilder#build() build()} when your're done.
+	 * don't forget to call {@link ChangeStreamOptionsBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link ChangeStreamOptionsBuilder}.
 	 */

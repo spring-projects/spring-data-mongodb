@@ -243,19 +243,19 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.within((Shape) parameter);
 			case SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.is(parameters.next())
+				return isSimpleComparisonPossible(part) ? criteria.is(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, false);
 
 			case NEGATING_SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.next())
+				return isSimpleComparisonPossible(part) ? criteria.ne(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
 				throw new IllegalArgumentException("Unsupported keyword");
 		}
 	}
 
-	private boolean isSimpleComparisionPossible(Part part) {
+	private boolean isSimpleComparisonPossible(Part part) {
 
 		return switch (part.shouldIgnoreCase()) {
 			case NEVER -> true;
@@ -386,7 +386,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
 
 		Streamable<?> streamable = asStreamable(iterator.next());
-		if (!isSimpleComparisionPossible(part)) {
+		if (!isSimpleComparisonPossible(part)) {
 
 			MatchMode matchMode = toMatchMode(part.getType());
 			String regexOptions = toRegexOptions(part);

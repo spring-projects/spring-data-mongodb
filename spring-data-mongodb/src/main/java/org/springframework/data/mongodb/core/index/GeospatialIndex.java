@@ -168,7 +168,7 @@ public class GeospatialIndex implements IndexDefinition {
 			case GEO_HAYSTACK -> {
 				document.put(field, "geoHaystack");
 				if (!StringUtils.hasText(additionalField)) {
-					throw new IllegalArgumentException("When defining geoHaystack index, an additionnal field must be defined");
+					throw new IllegalArgumentException("When defining geoHaystack index, an additional field must be defined");
 				}
 				document.put(additionalField, 1);
 			}

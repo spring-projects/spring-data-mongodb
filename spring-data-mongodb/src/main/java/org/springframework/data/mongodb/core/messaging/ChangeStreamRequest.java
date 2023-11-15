@@ -131,7 +131,7 @@ public class ChangeStreamRequest<T>
 
 	/**
 	 * Obtain a shiny new {@link ChangeStreamRequestBuilder} and start defining your {@link ChangeStreamRequest} in this
-	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when your're done.
+	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link ChangeStreamRequest}.
 	 */
@@ -141,7 +141,7 @@ public class ChangeStreamRequest<T>
 
 	/**
 	 * Obtain a shiny new {@link ChangeStreamRequestBuilder} and start defining your {@link ChangeStreamRequest} in this
-	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when your're done.
+	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link ChangeStreamRequest}.
 	 */

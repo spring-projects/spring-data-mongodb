@@ -34,7 +34,7 @@ import org.springframework.lang.Nullable;
 public interface ScriptOperations {
 
 	/**
-	 * Store given {@link ExecutableMongoScript} generating a syntheitcal name so that it can be called by it
+	 * Store given {@link ExecutableMongoScript} generating a synthetic name so that it can be called by it
 	 * subsequently.
 	 *
 	 * @param script must not be {@literal null}.

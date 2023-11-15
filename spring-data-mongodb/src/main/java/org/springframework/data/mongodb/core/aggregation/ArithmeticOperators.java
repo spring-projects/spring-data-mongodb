@@ -164,7 +164,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the smallest integer greater than or equal to the
-		 * assoicated number.
+		 * associated number.
 		 *
 		 * @return new instance of {@link Ceil}.
 		 */
@@ -213,7 +213,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that ivides the associated number by number referenced via
+		 * Creates new {@link AggregationExpression} that divides the associated number by number referenced via
 		 * {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -313,7 +313,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the assoicated
+		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the associated
 		 * number.
 		 *
 		 * @return new instance of {@link Ln}.

@@ -414,7 +414,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			}
 
 			throw new MappingException(
-					String.format("Missmatching types for %s; Found %s expected one of %s", persistentProperty.getField(),
+					String.format("Mismatching types for %s; Found %s expected one of %s", persistentProperty.getField(),
 							persistentProperty.getActualType(), StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}

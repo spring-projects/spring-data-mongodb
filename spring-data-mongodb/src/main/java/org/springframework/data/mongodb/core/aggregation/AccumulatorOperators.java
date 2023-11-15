@@ -542,7 +542,7 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link Max} that returns the given number of maxmimum values ({@literal $maxN}).
+		 * Creates new {@link Max} that returns the given number of maximum values ({@literal $maxN}).
 		 * <strong>NOTE</strong>: Cannot be used with more than one {@literal input} value.
 		 *
 		 * @param numberOfResults

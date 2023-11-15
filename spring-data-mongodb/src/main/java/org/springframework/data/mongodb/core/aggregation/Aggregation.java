@@ -381,7 +381,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Factory method to create a new {@link UnwindOperation} for the field with the given nameincluding the name of a new
+	 * Factory method to create a new {@link UnwindOperation} for the field with the given name, including the name of a new
 	 * field to hold the array index of the element as {@code arrayIndex} using {@code preserveNullAndEmptyArrays}. Note
 	 * that extended unwind is supported in MongoDB version 3.2+.
 	 *

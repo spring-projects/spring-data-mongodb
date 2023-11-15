@@ -523,7 +523,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Use the element at the index number traken from the given field.
+		 * Use the element at the index number taken from the given field.
 		 *
 		 * @param arrayFieldReference the field name.
 		 * @return new instance of {@link ArrayElemAt}.
@@ -655,7 +655,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Set the {@link AggregationExpression} resolving to an arry to apply the {@code $filter} to.
+		 * Set the {@link AggregationExpression} resolving to an array to apply the {@code $filter} to.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return never {@literal null}.

@@ -99,7 +99,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	/**
-	 * Specify additional types to be considered wehen rendering the schema for the given path.
+	 * Specify additional types to be considered when rendering the schema for the given path.
 	 *
 	 * @param path path the path using {@literal dot '.'} notation.
 	 * @param types must not be {@literal null}.
