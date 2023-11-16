@@ -1473,13 +1473,6 @@ public class QueryMapper {
 				}
 
 				String nextToken = nextToken();
-				if (isPositionalParameter(nextToken)) {
-
-					mappedName.append(".").append(nextToken);
-					currentIndex += 2;
-					return mappedName.toString();
-				}
-
 				if (property.isMap()) {
 
 					mappedName.append(".").append(nextToken);
@@ -1487,11 +1480,21 @@ public class QueryMapper {
 					return mappedName.toString();
 				}
 
-				currentIndex++;
+				int i = 1;
+				while (isPositionalParameter(nextToken)) {
+					mappedName.append(".").append(nextToken);
+					i++;
+					nextToken = currentIndex + i < pathParts.size() ?  pathParts.get(currentIndex + i) : "";
+				}
+				currentIndex += i;
 				return mappedName.toString();
 			}
 
 			static boolean isPositionalParameter(String partial) {
+
+				if(!StringUtils.hasText(partial)) {
+					return false;
+				}
 
 				if ("$".equals(partial)) {
 					return true;
@@ -1502,12 +1505,12 @@ public class QueryMapper {
 					return true;
 				}
 
-				try {
-					Long.valueOf(partial);
-					return true;
-				} catch (NumberFormatException e) {
-					return false;
+				for (int i = 0; i < partial.length(); i++) {
+					if (!Character.isDigit(partial.charAt(i))) {
+						return false;
+					}
 				}
+				return true;
 			}
 		}
 	}
