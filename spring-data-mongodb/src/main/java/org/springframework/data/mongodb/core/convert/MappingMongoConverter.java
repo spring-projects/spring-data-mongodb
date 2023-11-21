@@ -43,6 +43,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -61,15 +62,7 @@ import org.springframework.data.mapping.PersistentPropertyPathAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.EntityInstantiator;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
-import org.springframework.data.mapping.model.PropertyValueProvider;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
+import org.springframework.data.mapping.model.*;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
@@ -116,11 +109,13 @@ import com.mongodb.DBRef;
  * @author Roman Puchkovskiy
  * @author Heesu Jung
  * @author Divya Srivastava
+ * @author Piotr Kubowicz
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions. Parent object was: %4$s";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
+	private static final String CANNOT_READ = "Failed to read %s";
 
 	public static final ClassTypeInformation<Bson> BSON = ClassTypeInformation.from(Bson.class);
 
@@ -488,7 +483,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException(String.format(INVALID_TYPE_TO_READ, document, rawType));
 		}
 
-		return read(context, (MongoPersistentEntity<S>) entity, document);
+		try {
+			return read(context, (MongoPersistentEntity<S>) entity, document);
+		} catch (ConversionException | MappingInstantiationException e) {
+			throw new MappingException(String.format(CANNOT_READ, document), e);
+		}
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(ConversionContext context,

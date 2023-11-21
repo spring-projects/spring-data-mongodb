@@ -869,8 +869,9 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 
-		assertThatThrownBy(() -> converter.read(DefaultedConstructorArgument.class, document))
-				.isInstanceOf(MappingInstantiationException.class);
+		assertThatThrownBy(() -> converter.read(DefaultedConstructorArgument.class, document)) //
+				.isInstanceOf(MappingException.class) //
+				.hasCauseInstanceOf(MappingInstantiationException.class);
 	}
 
 	@Test // DATAMONGO-358
@@ -1870,8 +1871,9 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
 
-		assertThatExceptionOfType(ConverterNotFoundException.class) //
-				.isThrownBy(() -> converter.read(DocWithInterfacedEnum.class, document));
+		assertThatThrownBy(() -> converter.read(DocWithInterfacedEnum.class, document)) //
+				.isInstanceOf(MappingException.class) //
+				.hasCauseInstanceOf(ConverterNotFoundException.class);
 	}
 
 	@Test // DATAMONGO-1898

@@ -23,6 +23,8 @@ import static org.mockito.Mockito.any;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.Value;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -56,6 +58,7 @@ import com.mongodb.client.MongoDatabase;
  * Integration tests for {@link MappingMongoConverter}.
  *
  * @author Christoph Strobl
+ * @author Piotr Kubowicz
  */
 @ExtendWith(MongoClientExtension.class)
 public class MappingMongoConverterTests {
@@ -77,13 +80,14 @@ public class MappingMongoConverterTests {
 
 		database.getCollection("samples").deleteMany(new Document());
 		database.getCollection("java-time-types").deleteMany(new Document());
+		database.getCollection("with-nonnull").deleteMany(new Document());
 
 		dbRefResolver = spy(new DefaultDbRefResolver(factory));
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 		mappingContext.setInitialEntitySet(new HashSet<>(
-				Arrays.asList(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class)));
+				Arrays.asList(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class, WithNonnullField.class)));
 		mappingContext.setAutoIndexCreation(false);
 		mappingContext.afterPropertiesSet();
 
@@ -145,6 +149,31 @@ public class MappingMongoConverterTests {
 
 		assertThat(converter.read(WithJavaTimeTypes.class, mongoCollection.find(new Document("_id", source.id)).first()))
 				.isEqualTo(source);
+	}
+
+	@Test // DATAMONGO-2511
+	public void reportConversionFailedExceptionContext() {
+
+		configureConverterWithNativeJavaTimeCodec();
+		MongoCollection<Document> mongoCollection = client.getDatabase(DATABASE).getCollection("java-time-types");
+
+		mongoCollection.insertOne(new Document("_id", "id-of-wrong-document").append("localDate", "not-a-date"));
+
+		assertThatThrownBy(() -> converter.read(WithJavaTimeTypes.class,
+				mongoCollection.find(new Document("_id", "id-of-wrong-document")).first()))
+						.hasMessageContaining("id-of-wrong-document");
+	}
+
+	@Test // DATAMONGO-2511
+	public void reportMappingInstantiationExceptionContext() {
+
+		MongoCollection<Document> mongoCollection = client.getDatabase(DATABASE).getCollection("with-nonnull");
+
+		mongoCollection.insertOne(new Document("_id", "id-of-wrong-document"));
+
+		assertThatThrownBy(() -> converter.read(WithNonnullField.class,
+				mongoCollection.find(new Document("_id", "id-of-wrong-document")).first()))
+						.hasMessageContaining("id-of-wrong-document");
 	}
 
 	void configureConverterWithNativeJavaTimeCodec() {
@@ -213,5 +242,11 @@ public class MappingMongoConverterTests {
 			return new Document("_id", id).append("localDate", localDate).append("localTime", localTime)
 					.append("localDateTime", localDateTime);
 		}
+	}
+
+	@Value
+	static class WithNonnullField {
+		@Id String id;
+		@NonNull String field;
 	}
 }
