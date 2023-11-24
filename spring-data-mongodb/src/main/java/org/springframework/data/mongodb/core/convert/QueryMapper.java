@@ -607,11 +607,11 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (source instanceof Map) {
+		if (source instanceof Map<?,?> sourceMap) {
 
-			Map<String, Object> map = new LinkedHashMap<>();
+			Map<String, Object> map = new LinkedHashMap<>(sourceMap.size(), 1F);
 
-			((Map<String, Object>) source).entrySet().forEach(it -> {
+			sourceMap.entrySet().forEach(it -> {
 
 				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
 
