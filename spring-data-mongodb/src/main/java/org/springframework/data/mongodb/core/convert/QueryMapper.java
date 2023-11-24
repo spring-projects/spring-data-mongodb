@@ -617,15 +617,20 @@ public class QueryMapper {
 
 		if (source instanceof Map<?,?> sourceMap) {
 
-			return sourceMap.entrySet().stream().collect(Collectors.toMap(
-					entry -> ObjectUtils.nullSafeToString(converter.convertToMongoType(entry.getKey())),
-					entry -> {
-						if (entry.getValue() instanceof Document document) {
-							return getMappedObject(document, entity);
-						}
-						return delegateConvertToMongoType(entry.getValue(), entity);
-					}
-			));
+			Map<String, Object> map = new LinkedHashMap<>(sourceMap.size(), 1F);
+
+			sourceMap.entrySet().forEach(it -> {
+
+				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
+
+				if (it.getValue() instanceof Document document) {
+					map.put(key, getMappedObject(document, entity));
+				} else {
+					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
+				}
+			});
+
+			return map;
 		}
 
 		return delegateConvertToMongoType(source, entity);

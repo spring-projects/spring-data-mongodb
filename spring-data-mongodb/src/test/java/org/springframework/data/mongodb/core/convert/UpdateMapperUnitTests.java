@@ -762,6 +762,18 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).doesNotContainKey("$set.concreteMap.jasnah._class");
 	}
 
+	@Test // GH-4567
+	void updateShouldAllowNullValuesInMap() {
+
+		Map<Object, NestedDocument> map = Collections.singletonMap("jasnah", new NestedDocument("kholin"));
+
+		Update update = new Update().set("concreteMap", Collections.singletonMap("jasnah", null));
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("concreteMap", Collections.singletonMap("jasnah", null))));
+	}
+
 	@Test // DATAMONGO-1250
 	@SuppressWarnings("unchecked")
 	void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
