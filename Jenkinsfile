@@ -41,7 +41,8 @@ pipeline {
 						sh 'sleep 10'
 						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+						sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
+							"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
 					}
 				}
 			}
@@ -73,7 +74,8 @@ pipeline {
 								sh 'sleep 10'
 								sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 								sh 'sleep 15'
-								sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+								sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
+									"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
 							}
 						}
 					}
@@ -95,7 +97,8 @@ pipeline {
 								sh 'sleep 10'
 								sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 								sh 'sleep 15'
-								sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+								sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
+									"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
 							}
 						}
 					}
@@ -117,7 +120,8 @@ pipeline {
 								sh 'sleep 10'
 								sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 								sh 'sleep 15'
-								sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+								sh 'MAVEN_OPTS="-Duser.name=spring-builds+jenkins -Duser.home=/tmp/jenkins-home" ' +
+									'./mvnw -s settings.xml clean dependency:list test -Dsort -U -B'
 							}
 						}
 					}
@@ -137,23 +141,21 @@ pipeline {
 				label 'data'
 			}
 			options { timeout(time: 20, unit: 'MINUTES') }
-
 			environment {
 				ARTIFACTORY = credentials("${p['artifactory.credentials']}")
 			}
-
 			steps {
 				script {
 					docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -v'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,artifactory ' +
-								'-Dartifactory.server=https://repo.spring.io ' +
+						sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
+								"./mvnw -s settings.xml -Pci,artifactory " +
+								"-Dartifactory.server=${p['artifactory.url']} " +
 								"-Dartifactory.username=${ARTIFACTORY_USR} " +
 								"-Dartifactory.password=${ARTIFACTORY_PSW} " +
-								"-Dartifactory.staging-repository=libs-snapshot-local " +
+								"-Dartifactory.staging-repository=${p['artifactory.repository.snapshot']} " +
 								"-Dartifactory.build-name=spring-data-mongodb " +
 								"-Dartifactory.build-number=${BUILD_NUMBER} " +
-								'-Dmaven.test.skip=true clean deploy -U -B'
+								"-Dmaven.test.skip=true clean deploy -U -B"
 					}
 				}
 			}
