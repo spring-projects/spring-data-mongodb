@@ -274,6 +274,17 @@ calling `get()` before the actual conversion
 |===
 ====
 
+.Collection Handling
+[NOTE]
+====
+Collection handing depends on the actual values retrieved from the MongoDB.
+
+* If a document does **not** contain the field mapped to a collection, the mapping will not touch the property.
+Which means the value will remain `null`, a java default or any value set during object creation.
+* If the document contains the field to be mapped, but the field holds a `null` value (like: `{ 'list' : null }`), the property value is set to `null` overriding any default value set during object creation.
+* If the document contains the field to be mapped to a collection which is **not** `null` (like: `{ 'list' : [ ... ] }`), the collection is populated with the mapped values overriding any default value set during object creation.
+====
+
 [[mapping-configuration]]
 == Mapping Configuration
 
