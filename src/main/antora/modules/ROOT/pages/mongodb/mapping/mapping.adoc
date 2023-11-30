@@ -277,12 +277,15 @@ calling `get()` before the actual conversion
 .Collection Handling
 [NOTE]
 ====
-Collection handing depends on the actual values retrieved from the MongoDB.
+Collection handling depends on the actual values returned by MongoDB.
 
-* If a document does **not** contain the field mapped to a collection, the mapping will not touch the property.
+* If a document does **not** contain a field mapped to a collection, the mapping will not update the property.
 Which means the value will remain `null`, a java default or any value set during object creation.
-* If the document contains the field to be mapped, but the field holds a `null` value (like: `{ 'list' : null }`), the property value is set to `null` overriding any default value set during object creation.
-* If the document contains the field to be mapped to a collection which is **not** `null` (like: `{ 'list' : [ ... ] }`), the collection is populated with the mapped values overriding any default value set during object creation.
+* If a document contains a field to be mapped, but the field holds a `null` value (like: `{ 'list' : null }`), the property value is set to `null`.
+* If a document contains a field to be mapped to a collection which is **not** `null` (like: `{ 'list' : [ ... ] }`), the collection is populated with the mapped values.
+
+Generally, if you use constructor creation, then you can get hold of the value to be set.
+Property population can make use of default initialization values if a property value is not being provided by a query response.
 ====
 
 [[mapping-configuration]]

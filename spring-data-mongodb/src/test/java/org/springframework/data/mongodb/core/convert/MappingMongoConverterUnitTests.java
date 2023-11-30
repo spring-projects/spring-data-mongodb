@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -677,13 +678,142 @@ class MappingMongoConverterUnitTests {
 		assertThat(wrapper.listOfMaps.get(0).get("Foo")).isEqualTo(Locale.ENGLISH);
 	}
 
-	@ParameterizedTest // GH-4571
+	@ParameterizedTest(name = "{4}") // GH-4571
 	@MethodSource("listMapSetReadingSource")
 	<T> void initializesListMapSetPropertiesIfRequiredOnRead(org.bson.Document source, Class<T> type,
-			Function<T, Object> valueFunction, Object expectedValue) {
+			Function<T, Object> valueFunction, Object expectedValue, String displayName) {
 
 		T target = converter.read(type, source);
 		assertThat(target).extracting(valueFunction).isEqualTo(expectedValue);
+	}
+
+	private static Stream<Arguments> listMapSetReadingSource() {
+
+		Stream<Arguments> initialList = fixtureFor("contacts", CollectionWrapper.class, CollectionWrapper::getContacts,
+				builder -> {
+
+					builder.onValue(Collections.emptyList()).expect(Collections.emptyList());
+					builder.onNull().expect(null);
+					builder.onEmpty().expect(null);
+				});
+
+		Stream<Arguments> initializedList = fixtureFor("autoInitList", CollectionWrapper.class,
+				CollectionWrapper::getAutoInitList, builder -> {
+
+					builder.onValue(Collections.emptyList()).expect(Collections.emptyList());
+					builder.onNull().expect(null);
+					builder.onEmpty().expect(Collections.singletonList("spring"));
+				});
+
+		Stream<Arguments> initialSet = fixtureFor("contactsSet", CollectionWrapper.class, CollectionWrapper::getContactsSet,
+				builder -> {
+
+					builder.onValue(Collections.emptyList()).expect(Collections.emptySet());
+					builder.onNull().expect(null);
+					builder.onEmpty().expect(null);
+				});
+
+		Stream<Arguments> initialMap = fixtureFor("map", ClassWithMapProperty.class, ClassWithMapProperty::getMap,
+				builder -> {
+
+					builder.onValue(new org.bson.Document()).expect(Collections.emptyMap());
+					builder.onNull().expect(null);
+					builder.onEmpty().expect(null);
+				});
+
+		Stream<Arguments> initializedMap = fixtureFor("autoInitMap", ClassWithMapProperty.class,
+				ClassWithMapProperty::getAutoInitMap, builder -> {
+
+					builder.onValue(new org.bson.Document()).expect(Collections.emptyMap());
+					builder.onNull().expect(null);
+					builder.onEmpty().expect(Collections.singletonMap("spring", "data"));
+				});
+
+		return Stream.of(initialList, initializedList, initialSet, initialMap, initializedMap).flatMap(Function.identity());
+	}
+
+	static <T> Stream<Arguments> fixtureFor(String field, Class<T> type, Function<T, Object> valueFunction,
+			Consumer<FixtureBuilder> builderConsumer) {
+
+		FixtureBuilder builder = new FixtureBuilder(field, type, valueFunction);
+
+		builderConsumer.accept(builder);
+
+		return builder.fixtures.stream();
+	}
+
+	/**
+	 * Builder for fixtures.
+	 */
+	static class FixtureBuilder {
+
+		private final String field;
+		private final Class<?> typeUnderTest;
+		private final Function<?, Object> valueMappingFunction;
+		final List<Arguments> fixtures = new ArrayList<>();
+
+		FixtureBuilder(String field, Class<?> typeUnderTest, Function<?, Object> valueMappingFunction) {
+			this.field = field;
+			this.typeUnderTest = typeUnderTest;
+			this.valueMappingFunction = valueMappingFunction;
+		}
+
+		/**
+		 * If the document value is {@code null}.
+		 */
+		FixtureStep onNull() {
+			return new FixtureStep(false, null);
+		}
+
+		/**
+		 * If the document value is {@code value}.
+		 */
+		FixtureStep onValue(@Nullable Object value) {
+			return new FixtureStep(false, value);
+		}
+
+		/**
+		 * If the document does not contain the field.
+		 */
+		FixtureStep onEmpty() {
+			return new FixtureStep(true, null);
+		}
+
+		class FixtureStep {
+
+			private final boolean empty;
+			private final @Nullable Object documentValue;
+
+			public FixtureStep(boolean empty, @Nullable Object documentValue) {
+				this.empty = empty;
+				this.documentValue = documentValue;
+			}
+
+			/**
+			 * Then expect {@code expectedValue}.
+			 *
+			 * @param expectedValue
+			 */
+			void expect(@Nullable Object expectedValue) {
+
+				Arguments fixture;
+				if (empty) {
+					fixture = Arguments.of(new org.bson.Document(), typeUnderTest, valueMappingFunction, expectedValue,
+							"Empty document expecting '%s' at type %s".formatted(expectedValue, typeUnderTest.getSimpleName()));
+				} else {
+
+					String valueDescription = (documentValue == null ? "null"
+							: (documentValue + " (" + documentValue.getClass().getSimpleName()) + ")");
+
+					fixture = Arguments.of(new org.bson.Document(field, documentValue), typeUnderTest, valueMappingFunction,
+							expectedValue, "Field '%s' with value %s expecting '%s' at type %s".formatted(field, valueDescription,
+									expectedValue, typeUnderTest.getSimpleName()));
+				}
+
+				fixtures.add(fixture);
+			}
+		}
+
 	}
 
 	@Test // DATAMONGO-259
@@ -2931,7 +3061,8 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document source = new org.bson.Document("nested", new org.bson.Document("field.name.with.dots", "A"));
 
-		WrapperForTypeWithPropertyHavingDotsInFieldName target = converter.read(WrapperForTypeWithPropertyHavingDotsInFieldName.class, source);
+		WrapperForTypeWithPropertyHavingDotsInFieldName target = converter
+				.read(WrapperForTypeWithPropertyHavingDotsInFieldName.class, source);
 		assertThat(target.nested).isNotNull();
 		assertThat(target.nested.value).isEqualTo("A");
 	}
@@ -2964,14 +3095,16 @@ class MappingMongoConverterUnitTests {
 		person.firstname = "bart";
 		person.lastname = "simpson";
 
-		org.bson.Document source = new org.bson.Document("mapOfPersons", new org.bson.Document("map.key.with.dots", write(person)));
+		org.bson.Document source = new org.bson.Document("mapOfPersons",
+				new org.bson.Document("map.key.with.dots", write(person)));
 
 		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
 
 		assertThat(target.mapOfPersons).containsEntry("map.key.with.dots", person);
 	}
 
-	@ValueSource(classes = { ComplexIdAndNoAnnotation.class, ComplexIdAndIdAnnotation.class, ComplexIdAndMongoIdAnnotation.class, ComplexIdAndFieldAnnotation.class })
+	@ValueSource(classes = { ComplexIdAndNoAnnotation.class, ComplexIdAndIdAnnotation.class,
+			ComplexIdAndMongoIdAnnotation.class, ComplexIdAndFieldAnnotation.class })
 	@ParameterizedTest // GH-4524
 	void projectShouldReadComplexIdType(Class<?> projectionTargetType) {
 
@@ -2997,49 +3130,6 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 		return target;
-	}
-
-	private static Stream<Arguments> listMapSetReadingSource() {
-
-		Function<CollectionWrapper, Object> contacts = CollectionWrapper::getContacts;
-		Function<CollectionWrapper, Object> contactsSet = CollectionWrapper::getContactsSet;
-		Function<CollectionWrapper, Object> autoInitList = CollectionWrapper::getAutoInitList;
-		Function<ClassWithMapProperty, Object> map = ClassWithMapProperty::getMap;
-		Function<ClassWithMapProperty, Object> autoInitMap = ClassWithMapProperty::getAutoInitMap;
-
-		return Stream.of( //
-
-				// List
-				Arguments.of(new org.bson.Document("contacts", Collections.emptyList()), CollectionWrapper.class, contacts,
-						Collections.emptyList()),
-				Arguments.of(new org.bson.Document("contacts", null), CollectionWrapper.class, contacts, null),
-				Arguments.of(new org.bson.Document(), CollectionWrapper.class, contacts, null),
-
-				// ctor initialized List
-				Arguments.of(new org.bson.Document("autoInitList", Collections.emptyList()), CollectionWrapper.class,
-						autoInitList, Collections.emptyList()),
-				Arguments.of(new org.bson.Document("autoInitList", null), CollectionWrapper.class, autoInitList, null),
-				Arguments.of(new org.bson.Document(), CollectionWrapper.class, autoInitList,
-						Collections.singletonList("spring")),
-
-				// Set
-				Arguments.of(new org.bson.Document("contactsSet", Collections.emptyList()), CollectionWrapper.class,
-						contactsSet, Collections.emptySet()),
-				Arguments.of(new org.bson.Document("contactsSet", null), CollectionWrapper.class, contactsSet, null),
-				Arguments.of(new org.bson.Document(), CollectionWrapper.class, contactsSet, null),
-
-				// Map
-				Arguments.of(new org.bson.Document("map", new org.bson.Document()), ClassWithMapProperty.class, map,
-						Collections.emptyMap()),
-				Arguments.of(new org.bson.Document("map", null), ClassWithMapProperty.class, map, null),
-				Arguments.of(new org.bson.Document(), ClassWithMapProperty.class, map, null),
-
-				// ctor initialized Map
-				Arguments.of(new org.bson.Document("autoInitMap", new org.bson.Document()), ClassWithMapProperty.class,
-						autoInitMap, Collections.emptyMap()),
-				Arguments.of(new org.bson.Document("autoInitMap", null), ClassWithMapProperty.class, autoInitMap, null),
-				Arguments.of(new org.bson.Document(), ClassWithMapProperty.class, autoInitMap,
-						Collections.singletonMap("spring", "data")));
 	}
 
 	static class GenericType<T> {
@@ -3135,7 +3225,9 @@ class MappingMongoConverterUnitTests {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals(id, person.id) && Objects.equals(birthDate, person.birthDate) && Objects.equals(firstname, person.firstname) && Objects.equals(lastname, person.lastname) && Objects.equals(addresses, person.addresses);
+			return Objects.equals(id, person.id) && Objects.equals(birthDate, person.birthDate)
+					&& Objects.equals(firstname, person.firstname) && Objects.equals(lastname, person.lastname)
+					&& Objects.equals(addresses, person.addresses);
 		}
 
 		@Override
@@ -3922,10 +4014,12 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
 	}
@@ -4157,8 +4251,7 @@ class MappingMongoConverterUnitTests {
 
 	static class WithPropertyHavingDotsInFieldName {
 
-		@Field(name = "field.name.with.dots", nameType = Type.KEY)
-		String value;
+		@Field(name = "field.name.with.dots", nameType = Type.KEY) String value;
 	}
 
 	static class ComplexIdAndFieldAnnotation {
