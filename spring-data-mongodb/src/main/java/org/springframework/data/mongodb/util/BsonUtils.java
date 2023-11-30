@@ -593,7 +593,7 @@ public class BsonUtils {
 
 		Map<String, Object> source = asMap(bson);
 		if (fieldName.isKey()) {
-			return source.get(fieldName.name()) != null;
+			return source.containsKey(fieldName.name());
 		}
 
 		String[] parts = fieldName.parts();
