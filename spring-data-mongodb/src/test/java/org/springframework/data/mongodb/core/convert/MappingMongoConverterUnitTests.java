@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.bson.BsonUndefined;
 import org.bson.types.Binary;
@@ -38,6 +40,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -671,6 +675,15 @@ class MappingMongoConverterUnitTests {
 		assertThat(wrapper.listOfMaps.size()).isEqualTo(1);
 		assertThat(wrapper.listOfMaps.get(0)).isNotNull();
 		assertThat(wrapper.listOfMaps.get(0).get("Foo")).isEqualTo(Locale.ENGLISH);
+	}
+
+	@ParameterizedTest // GH-4571
+	@MethodSource("listMapSetReadingSource")
+	<T> void initializesListMapSetPropertiesIfRequiredOnRead(org.bson.Document source, Class<T> type,
+			Function<T, Object> valueFunction, Object expectedValue) {
+
+		T target = converter.read(type, source);
+		assertThat(target).extracting(valueFunction).isEqualTo(expectedValue);
 	}
 
 	@Test // DATAMONGO-259
@@ -2986,6 +2999,49 @@ class MappingMongoConverterUnitTests {
 		return target;
 	}
 
+	private static Stream<Arguments> listMapSetReadingSource() {
+
+		Function<CollectionWrapper, Object> contacts = CollectionWrapper::getContacts;
+		Function<CollectionWrapper, Object> contactsSet = CollectionWrapper::getContactsSet;
+		Function<CollectionWrapper, Object> autoInitList = CollectionWrapper::getAutoInitList;
+		Function<ClassWithMapProperty, Object> map = ClassWithMapProperty::getMap;
+		Function<ClassWithMapProperty, Object> autoInitMap = ClassWithMapProperty::getAutoInitMap;
+
+		return Stream.of( //
+
+				// List
+				Arguments.of(new org.bson.Document("contacts", Collections.emptyList()), CollectionWrapper.class, contacts,
+						Collections.emptyList()),
+				Arguments.of(new org.bson.Document("contacts", null), CollectionWrapper.class, contacts, null),
+				Arguments.of(new org.bson.Document(), CollectionWrapper.class, contacts, null),
+
+				// ctor initialized List
+				Arguments.of(new org.bson.Document("autoInitList", Collections.emptyList()), CollectionWrapper.class,
+						autoInitList, Collections.emptyList()),
+				Arguments.of(new org.bson.Document("autoInitList", null), CollectionWrapper.class, autoInitList, null),
+				Arguments.of(new org.bson.Document(), CollectionWrapper.class, autoInitList,
+						Collections.singletonList("spring")),
+
+				// Set
+				Arguments.of(new org.bson.Document("contactsSet", Collections.emptyList()), CollectionWrapper.class,
+						contactsSet, Collections.emptySet()),
+				Arguments.of(new org.bson.Document("contactsSet", null), CollectionWrapper.class, contactsSet, null),
+				Arguments.of(new org.bson.Document(), CollectionWrapper.class, contactsSet, null),
+
+				// Map
+				Arguments.of(new org.bson.Document("map", new org.bson.Document()), ClassWithMapProperty.class, map,
+						Collections.emptyMap()),
+				Arguments.of(new org.bson.Document("map", null), ClassWithMapProperty.class, map, null),
+				Arguments.of(new org.bson.Document(), ClassWithMapProperty.class, map, null),
+
+				// ctor initialized Map
+				Arguments.of(new org.bson.Document("autoInitMap", new org.bson.Document()), ClassWithMapProperty.class,
+						autoInitMap, Collections.emptyMap()),
+				Arguments.of(new org.bson.Document("autoInitMap", null), ClassWithMapProperty.class, autoInitMap, null),
+				Arguments.of(new org.bson.Document(), ClassWithMapProperty.class, autoInitMap,
+						Collections.singletonMap("spring", "data")));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3142,11 +3198,20 @@ class MappingMongoConverterUnitTests {
 
 	static class ClassWithMapProperty {
 		Map<Locale, String> map;
+		Map<String, String> autoInitMap = Collections.singletonMap("spring", "data");
 		Map<String, List<String>> mapOfLists;
 		Map<String, Object> mapOfObjects;
 		Map<String, String[]> mapOfStrings;
 		Map<String, Person> mapOfPersons;
 		TreeMap<String, Person> treeMapOfPersons;
+
+		public Map<Locale, String> getMap() {
+			return map;
+		}
+
+		public Map<String, String> getAutoInitMap() {
+			return this.autoInitMap;
+		}
 	}
 
 	static class ClassWithNestedMaps {
@@ -3168,6 +3233,19 @@ class MappingMongoConverterUnitTests {
 		List<List<String>> strings;
 		List<Map<String, Locale>> listOfMaps;
 		Set<Contact> contactsSet;
+		List<String> autoInitList = Collections.singletonList("spring");
+
+		public List<Contact> getContacts() {
+			return contacts;
+		}
+
+		public Set<Contact> getContactsSet() {
+			return contactsSet;
+		}
+
+		public List<String> getAutoInitList() {
+			return autoInitList;
+		}
 	}
 
 	static class LocaleWrapper {
