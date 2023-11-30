@@ -289,6 +289,7 @@ The following example shows the configuration:
 ======
 Java::
 +
+====
 [source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 @Configuration
@@ -323,6 +324,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 <1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`.
 By default the configuration classes package is used.
 <2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
+====
 
 XML::
 +
