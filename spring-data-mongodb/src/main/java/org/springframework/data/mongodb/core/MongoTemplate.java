@@ -103,6 +103,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -1965,7 +1966,10 @@ public class MongoTemplate
 			}
 
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
-				mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
+				if(MongoClientVersion.is5PlusClient()) {
+					throw new UnsupportedOperationException("sharded not supported on Mongo 5 Client");
+				}
+				//mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(mapReduceOptions.getOutputCollection()) && !mapReduceOptions.usesInlineOutput()) {

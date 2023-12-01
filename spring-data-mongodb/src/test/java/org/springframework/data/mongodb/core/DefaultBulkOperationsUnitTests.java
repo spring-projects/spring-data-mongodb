@@ -377,7 +377,7 @@ class DefaultBulkOperationsUnitTests {
 
 		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoBulkWriteException(null,
 				Collections.emptyList(),
-				new WriteConcernError(42, "codename", "writeconcern error happened", new BsonDocument()), new ServerAddress()));
+				new WriteConcernError(42, "codename", "writeconcern error happened", new BsonDocument()), new ServerAddress(), Collections.emptySet()));
 
 		assertThatExceptionOfType(DataIntegrityViolationException.class)
 				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());
@@ -389,7 +389,7 @@ class DefaultBulkOperationsUnitTests {
 
 		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoBulkWriteException(null,
 				Collections.singletonList(new BulkWriteError(42, "a write error happened", new BsonDocument(), 49)), null,
-				new ServerAddress()));
+				new ServerAddress(), Collections.emptySet()));
 
 		assertThatExceptionOfType(BulkOperationException.class)
 				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());

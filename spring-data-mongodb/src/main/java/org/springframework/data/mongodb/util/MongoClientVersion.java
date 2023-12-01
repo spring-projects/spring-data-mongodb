@@ -36,6 +36,7 @@ public class MongoClientVersion {
 	private static final boolean REACTIVE_CLIENT_PRESENT = ClassUtils
 			.isPresent("com.mongodb.reactivestreams.client.MongoClient", MongoClientVersion.class.getClassLoader());
 
+	private static final boolean IS_5PlusClient = ClassUtils.isPresent("com.mongodb.connection.StreamFactoryFactory", MongoClientVersion.class.getClassLoader());
 	/**
 	 * @return {@literal true} if the async MongoDB Java driver is on classpath.
 	 */
@@ -57,5 +58,9 @@ public class MongoClientVersion {
 	 */
 	public static boolean isReactiveClientPresent() {
 		return REACTIVE_CLIENT_PRESENT;
+	}
+
+	public static boolean is5PlusClient() {
+		return IS_5PlusClient;
 	}
 }

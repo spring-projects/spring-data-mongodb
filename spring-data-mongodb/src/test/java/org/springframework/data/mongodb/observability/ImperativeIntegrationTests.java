@@ -82,7 +82,7 @@ public class ImperativeIntegrationTests extends SampleTestRunner {
 				assertThat(span.getTags()).containsEntry("db.system", "mongodb").containsEntry("net.transport", "IP.TCP");
 
 				assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
-						"db.mongodb.collection", "net.peer.name", "net.peer.port", "net.sock.peer.addr", "net.sock.peer.port");
+						"db.mongodb.collection", "net.peer.name", "net.peer.port");
 			}
 		};
 	}

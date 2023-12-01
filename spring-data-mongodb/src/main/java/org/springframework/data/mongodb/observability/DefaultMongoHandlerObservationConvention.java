@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.observability;
 import java.net.InetSocketAddress;
 
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
@@ -78,13 +79,16 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 						LowCardinalityCommandKeyNames.NET_PEER_NAME.withValue(serverAddress.getHost()),
 						LowCardinalityCommandKeyNames.NET_PEER_PORT.withValue("" + serverAddress.getPort()));
 
-				InetSocketAddress socketAddress = serverAddress.getSocketAddress();
+				if(!MongoClientVersion.is5PlusClient()) {
 
-				if (socketAddress != null) {
-
-					keyValues = keyValues.and(
-							LowCardinalityCommandKeyNames.NET_SOCK_PEER_ADDR.withValue(socketAddress.getHostName()),
-							LowCardinalityCommandKeyNames.NET_SOCK_PEER_PORT.withValue("" + socketAddress.getPort()));
+//					InetSocketAddress socketAddress = serverAddress.getSocketAddress();
+//
+//					if (socketAddress != null) {
+//
+//						keyValues = keyValues.and(
+//								LowCardinalityCommandKeyNames.NET_SOCK_PEER_ADDR.withValue(socketAddress.getHostName()),
+//								LowCardinalityCommandKeyNames.NET_SOCK_PEER_PORT.withValue("" + socketAddress.getPort()));
+//					}
 				}
 			}
 
