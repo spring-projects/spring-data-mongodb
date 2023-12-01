@@ -265,6 +265,34 @@ pipeline {
 					}
 				}
 
+				stage("test: MongoDB 7.0 (driver-next)") {
+                	agent {
+                		label 'data'
+                	}
+                	options { timeout(time: 30, unit: 'MINUTES') }
+                	environment {
+                		ARTIFACTORY = credentials("${p['artifactory.credentials']}")
+                		DEVELOCITY_CACHE = credentials("${p['develocity.cache.credentials']}")
+                		DEVELOCITY_ACCESS_KEY = credentials("${p['develocity.access-key']}")
+                	}
+                	steps {
+                		script {
+                			docker.image("harbor-repo.vmware.com/dockerhub-proxy-cache/springci/spring-data-with-mongodb-7.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+                				sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+                				sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+                				sh 'sleep 10'
+                				sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+                				sh 'sleep 15'
+                				sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
+                					"DEVELOCITY_CACHE_USERNAME=${DEVELOCITY_CACHE_USR} " +
+                					"DEVELOCITY_CACHE_PASSWORD=${DEVELOCITY_CACHE_PSW} " +
+                					"GRADLE_ENTERPRISE_ACCESS_KEY=${DEVELOCITY_ACCESS_KEY} " +
+                					"./mvnw -s settings.xml -Pmongo-5.0 clean dependency:list test -Dsort -U -B -Dgradle.cache.local.enabled=false -Dgradle.cache.remote.enabled=false"
+                			}
+                		}
+                	}
+                }
+
 				stage("test: MongoDB 7.0 (next)") {
 					agent {
 						label 'data'

@@ -58,6 +58,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * Unit tests for {@link ReactiveSessionBoundMongoTemplate}.
@@ -82,6 +83,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	@Mock MongoDatabase database;
 	@Mock ClientSession clientSession;
 	@Mock FindPublisher findPublisher;
+	Publisher<String> collectionNamesPublisher;
 	@Mock AggregatePublisher aggregatePublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher resultPublisher;
@@ -92,12 +94,13 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	@Before
 	public void setUp() {
 
+		mock(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(database).collectionNamePublisherType());
 		when(client.getDatabase(anyString())).thenReturn(database);
 		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
 		when(database.getCodecRegistry()).thenReturn(codecRegistry);
 		when(database.getCollection(anyString())).thenReturn(collection);
 		when(database.getCollection(anyString(), any())).thenReturn(collection);
-		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(findPublisher);
+		doReturn(collectionNamesPublisher).when(database).listCollectionNames(any(ClientSession.class));
 		when(database.createCollection(any(ClientSession.class), any(), any())).thenReturn(resultPublisher);
 		when(database.runCommand(any(ClientSession.class), any(), any(Class.class))).thenReturn(resultPublisher);
 		when(collection.find(any(ClientSession.class))).thenReturn(findPublisher);

@@ -17,7 +17,9 @@ package org.springframework.data.mongodb.observability;
 
 import java.net.InetSocketAddress;
 
+import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
@@ -78,7 +80,8 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 						LowCardinalityCommandKeyNames.NET_PEER_NAME.withValue(serverAddress.getHost()),
 						LowCardinalityCommandKeyNames.NET_PEER_PORT.withValue("" + serverAddress.getPort()));
 
-				InetSocketAddress socketAddress = serverAddress.getSocketAddress();
+
+				InetSocketAddress socketAddress = MongoCompatibilityAdapter.serverAddressAdapter(serverAddress).getSocketAddress();
 
 				if (socketAddress != null) {
 

@@ -53,6 +53,7 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
@@ -103,6 +104,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -722,7 +724,7 @@ public class MongoTemplate
 
 		return execute(db -> {
 
-			for (String name : db.listCollectionNames()) {
+			for (String name : MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db).listCollectionNames()) {
 				if (name.equals(collectionName)) {
 					return true;
 				}
@@ -1965,7 +1967,7 @@ public class MongoTemplate
 			}
 
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
-				mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
+				MongoCompatibilityAdapter.mapReduceIterableAdapter(mapReduce).sharded(mapReduceOptions.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(mapReduceOptions.getOutputCollection()) && !mapReduceOptions.usesInlineOutput()) {
@@ -2340,7 +2342,7 @@ public class MongoTemplate
 	public Set<String> getCollectionNames() {
 		return execute(db -> {
 			Set<String> result = new LinkedHashSet<>();
-			for (String name : db.listCollectionNames()) {
+			for (String name : MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db).listCollectionNames()) {
 				result.add(name);
 			}
 			return result;

@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.PersonRepository;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -81,8 +82,13 @@ public class ImperativeIntegrationTests extends SampleTestRunner {
 
 				assertThat(span.getTags()).containsEntry("db.system", "mongodb").containsEntry("net.transport", "IP.TCP");
 
-				assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+				if(MongoClientVersion.is5PlusClient()) {
+					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+							"db.mongodb.collection", "net.peer.name", "net.peer.port");
+				} else {
+					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
 						"db.mongodb.collection", "net.peer.name", "net.peer.port", "net.sock.peer.addr", "net.sock.peer.port");
+				}
 			}
 		};
 	}

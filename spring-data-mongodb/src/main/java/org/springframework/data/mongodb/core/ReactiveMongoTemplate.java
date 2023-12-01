@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.MongoCompatibilityAdapter;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -736,7 +738,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Mono<Boolean> collectionExists(String collectionName) {
-		return createMono(db -> Flux.from(db.listCollectionNames()) //
+		return createMono(db -> Flux.from(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames()) //
 				.filter(s -> s.equals(collectionName)) //
 				.map(s -> true) //
 				.single(false));
@@ -784,7 +786,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Flux<String> getCollectionNames() {
-		return createFlux(MongoDatabase::listCollectionNames);
+		return createFlux(db -> MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames());
 	}
 
 	public Mono<MongoDatabase> getMongoDatabase() {
@@ -2172,7 +2174,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			if (options.getOutputSharded().isPresent()) {
-				publisher = publisher.sharded(options.getOutputSharded().get());
+				MongoCompatibilityAdapter.mapReducePublisherAdapter(publisher).sharded(options.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(options.getOutputCollection()) && !options.usesInlineOutput()) {
