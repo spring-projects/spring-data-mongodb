@@ -1,6 +1,4 @@
-def p = [:]
-node {
-	checkout scm
+	sdgsdcheckout scm
 	p = readProperties interpolate: true, file: 'ci/pipeline.properties'
 }
 
