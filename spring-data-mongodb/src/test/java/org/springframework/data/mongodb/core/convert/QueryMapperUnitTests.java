@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
@@ -1507,6 +1508,20 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(WithPropertyValueConverter.class));
 
 		assertThat(mappedObject).isEqualTo("{ 'text' : { $in : ['gnirps', 'atad'] } }");
+	}
+
+	@Test // GH-4577
+	void mappingShouldRetainMapKeyOrder() {
+
+		TreeMap<String, String> sourceMap = new TreeMap<>(Map.of("test1", "123", "test2", "456"));
+
+		org.bson.Document target = mapper.getMappedObject(query(where("simpleMap").is(sourceMap)).getQueryObject(),
+				context.getPersistentEntity(WithSimpleMap.class));
+		assertThat(target.get("simpleMap", Map.class)).containsExactlyEntriesOf(sourceMap);
+	}
+
+	class WithSimpleMap {
+		Map<String, String> simpleMap;
 	}
 
 	class WithDeepArrayNesting {
