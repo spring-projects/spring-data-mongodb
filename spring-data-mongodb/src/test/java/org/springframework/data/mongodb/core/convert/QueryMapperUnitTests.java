@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
@@ -1515,6 +1516,20 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document mappedObject = mapper.getMappedObject(query(where("value").is("A")).getQueryObject(), context.getPersistentEntity(WithPropertyHavingDotsInFieldName.class));
 		assertThat(mappedObject).isEqualTo("{ 'field.name.with.dots' : 'A' }");
+	}
+
+	@Test // GH-4577
+	void mappingShouldRetainMapKeyOrder() {
+
+		TreeMap<String, String> sourceMap = new TreeMap<>(Map.of("test1", "123", "test2", "456"));
+
+		org.bson.Document target = mapper.getMappedObject(query(where("simpleMap").is(sourceMap)).getQueryObject(),
+				context.getPersistentEntity(WithSimpleMap.class));
+		assertThat(target.get("simpleMap", Map.class)).containsExactlyEntriesOf(sourceMap);
+	}
+
+	class WithSimpleMap {
+		Map<String, String> simpleMap;
 	}
 
 	class WithDeepArrayNesting {
