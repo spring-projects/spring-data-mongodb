@@ -89,7 +89,7 @@ class QueryTests {
 				.parse("{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}"));
 	}
 
-	@Test
+	@Test // GH-4584
 	void testQueryWithLimit() {
 
 		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
@@ -110,6 +110,9 @@ class QueryTests {
 		q.limit(Limit.of(-1));
 		assertThat(q.getLimit()).isZero();
 		assertThat(q.isLimited()).isFalse();
+
+		Query other = new Query(where("name").gte("M")).limit(Limit.of(10));
+		assertThat(new Query(where("name").gte("M")).limit(10)).isEqualTo(other).hasSameHashCodeAs(other);
 	}
 
 	@Test
