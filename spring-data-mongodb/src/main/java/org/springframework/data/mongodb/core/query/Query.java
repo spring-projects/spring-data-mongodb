@@ -750,7 +750,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		boolean sortEqual = this.sort.equals(that.sort);
 		boolean hintEqual = nullSafeEquals(this.hint, that.hint);
 		boolean skipEqual = this.skip == that.skip;
-		boolean limitEqual = this.limit == that.limit;
+		boolean limitEqual = nullSafeEquals(this.limit, that.limit);
 		boolean metaEqual = nullSafeEquals(this.meta, that.meta);
 		boolean collationEqual = nullSafeEquals(this.collation.orElse(null), that.collation.orElse(null));
 
