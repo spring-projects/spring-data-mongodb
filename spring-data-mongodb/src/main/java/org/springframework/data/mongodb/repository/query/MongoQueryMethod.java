@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReactiveWrappers;
@@ -94,8 +95,8 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	@Override
-	protected MongoParameters createParameters(Method method) {
-		return new MongoParameters(method, isGeoNearQuery(method));
+	protected MongoParameters createParameters(ParametersSource parametersSource) {
+		return new MongoParameters(parametersSource, isGeoNearQuery(parametersSource.getMethod()));
 	}
 
 	/**
