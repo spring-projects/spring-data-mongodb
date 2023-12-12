@@ -15,15 +15,13 @@ Imperative::
 ----
 public interface IndexOperations {
 
-    void ensureIndex(IndexDefinition indexDefinition);
+    String ensureIndex(IndexDefinition indexDefinition);
 
-    void alterIndex(String name);
+    void alterIndex(String name, IndexOptions options);
 
     void dropIndex(String name);
 
     void dropAllIndexes();
-
-    void resetIndexCache();
 
     List<IndexInfo> getIndexInfo();
 }
