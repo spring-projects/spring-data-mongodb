@@ -32,14 +32,15 @@ public interface ReactiveIndexOperations {
 	 * class. If not it will be created.
 	 *
 	 * @param indexDefinition must not be {@literal null}.
+	 * @return a {@link Mono} emitting the name of the index on completion.
 	 */
 	Mono<String> ensureIndex(IndexDefinition indexDefinition);
 
 	/**
 	 * Alters the index with given {@literal name}.
 	 *
-	 * @param name name of index to hide.
-	 * @param
+	 * @param name name of index to change.
+	 * @param options index options.
 	 * @since 4.1
 	 */
 	Mono<Void> alterIndex(String name, IndexOptions options);

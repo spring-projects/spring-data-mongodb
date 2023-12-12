@@ -32,13 +32,15 @@ public interface IndexOperations {
 	 * class. If not it will be created.
 	 *
 	 * @param indexDefinition must not be {@literal null}.
+	 * @return the index name.
 	 */
 	String ensureIndex(IndexDefinition indexDefinition);
 
 	/**
-	 * Drops an index from this collection.
+	 * Alters the index with given {@literal name}.
 	 *
-	 * @param name name of index to hide.
+	 * @param name name of index to change.
+	 * @param options index options.
 	 * @since 4.1
 	 */
 	void alterIndex(String name, IndexOptions options);
