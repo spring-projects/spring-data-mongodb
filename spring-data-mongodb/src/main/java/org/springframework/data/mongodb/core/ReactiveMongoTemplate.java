@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -2173,11 +2174,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			if (options.getOutputSharded().isPresent()) {
-
-				if(MongoClientVersion.is5PlusClient()) {
-					throw new UnsupportedOperationException("sharded not supported on Mongo 5 Client");
-				}
-//				publisher = publisher.sharded(options.getOutputSharded().get());
+				MongoCompatibilityAdapter.mapReducePublisherAdapter(publisher).sharded(options.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(options.getOutputCollection()) && !options.usesInlineOutput()) {

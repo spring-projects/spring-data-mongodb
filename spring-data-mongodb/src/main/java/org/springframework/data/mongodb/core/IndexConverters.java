@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.util.MongoClientVersion;
@@ -90,10 +91,7 @@ abstract class IndexConverters {
 				ops = ops.bits((Integer) indexOptions.get("bits"));
 			}
 			if (indexOptions.containsKey("bucketSize")) {
-				if(MongoClientVersion.is5PlusClient()) {
-					throw new UnsupportedOperationException("bucketSize not supported on Mongo 5 Client");
-				}
-				// ops = ops.bucketSize(((Number) indexOptions.get("bucketSize")).doubleValue());
+				MongoCompatibilityAdapter.indexOptionsAdapter(ops).setBucketSize(((Number) indexOptions.get("bucketSize")).doubleValue());
 			}
 			if (indexOptions.containsKey("default_language")) {
 				ops = ops.defaultLanguage(indexOptions.get("default_language").toString());

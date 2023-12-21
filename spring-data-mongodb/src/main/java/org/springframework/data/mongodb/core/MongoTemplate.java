@@ -53,6 +53,7 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
@@ -1966,10 +1967,7 @@ public class MongoTemplate
 			}
 
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
-				if(MongoClientVersion.is5PlusClient()) {
-					throw new UnsupportedOperationException("sharded not supported on Mongo 5 Client");
-				}
-				//mapReduce = mapReduce.sharded(mapReduceOptions.getOutputSharded().get());
+				MongoCompatibilityAdapter.mapReduceIterableAdapter(mapReduce).sharded(mapReduceOptions.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(mapReduceOptions.getOutputCollection()) && !mapReduceOptions.usesInlineOutput()) {
