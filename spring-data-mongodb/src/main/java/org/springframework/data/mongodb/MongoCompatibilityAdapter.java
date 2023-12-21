@@ -16,7 +16,10 @@
 package org.springframework.data.mongodb;
 
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
+import com.mongodb.ServerAddress;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.mongodb.core.MongoClientSettingsFactoryBean;
@@ -99,6 +102,22 @@ public class MongoCompatibilityAdapter {
 		};
 	}
 
+	public static ServerAddressAdapter serverAddressAdapter(ServerAddress serverAddress) {
+		return new ServerAddressAdapter() {
+			@Override
+			public InetSocketAddress getSocketAddress() {
+
+				if(MongoClientVersion.is5PlusClient()) {
+					return null;
+				}
+
+				Method serverAddressMethod = ReflectionUtils.findMethod(serverAddress.getClass(), "getSocketAddress");
+				Object value = ReflectionUtils.invokeMethod(serverAddressMethod, serverAddress);
+				return value != null ? InetSocketAddress.class.cast(value) : null;
+			}
+		};
+	}
+
 	public interface IndexOptionsAdapter {
 		void setBucketSize(Double bucketSize);
 	}
@@ -117,6 +136,10 @@ public class MongoCompatibilityAdapter {
 
 	public interface MapReducePublisherAdapter {
 		void sharded(boolean sharded);
+	}
+
+	public interface ServerAddressAdapter {
+		InetSocketAddress getSocketAddress();
 	}
 
 	static class MongoStreamFactoryFactorySettingsConfigurer {

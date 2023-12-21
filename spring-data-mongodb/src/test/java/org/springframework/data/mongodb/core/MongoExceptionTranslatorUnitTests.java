@@ -21,6 +21,7 @@ import org.bson.BsonDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.mockito.Mockito;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -95,9 +96,9 @@ class MongoExceptionTranslatorUnitTests {
 	@Test
 	void translateCursorNotFound() {
 
-//		expectExceptionWithCauseMessage(
-//				translator.translateExceptionIfPossible(new MongoCursorNotFoundException(1L, new ServerAddress())),
-//				DataAccessResourceFailureException.class);
+		expectExceptionWithCauseMessage(
+				translator.translateExceptionIfPossible(new MongoCursorNotFoundException(1L, new BsonDocument(), Mockito.mock(ServerAddress.class))),
+				DataAccessResourceFailureException.class);
 	}
 
 	@Test
