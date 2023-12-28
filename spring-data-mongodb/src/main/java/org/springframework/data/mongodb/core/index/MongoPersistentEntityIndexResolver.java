@@ -161,7 +161,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return;
 			}
 
-			if (persistentProperty.isEntity()) {
+			if (persistentProperty.isEntity() && !persistentProperty.isAnnotationPresent(IgnoreIndexes.class) ) {
 				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
 						persistentProperty.isUnwrapped() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
 						root.getCollection(), guard));

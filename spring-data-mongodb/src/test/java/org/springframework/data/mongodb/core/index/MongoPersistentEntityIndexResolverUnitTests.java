@@ -16,8 +16,9 @@
 package org.springframework.data.mongodb.core.index;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -288,6 +289,22 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					org.bson.Document.parse("{'value': {'$exists': true}}"));
 		}
 
+		@Test // DATAMONGO-1965
+		public void indexOnLevelOneIsIgnoredCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IgnoreIndexesOnLevelOne.class);
+
+			assertThat(indexDefinitions).hasSize(0);
+		}
+
+		@Test // DATAMONGO-1965
+		public void deeplyNestedIndexIsIgnoredCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IgnoreIndexexOnLevelTwo.class);
+
+			assertThat(indexDefinitions).hasSize(0);
+		}
+
 		@Document("Zero")
 		class IndexOnLevelZero {
 			@Indexed String indexedProperty;
@@ -300,6 +317,18 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		@Document("Two")
 		class IndexOnLevelTwo {
+			IndexOnLevelOne one;
+		}
+
+		@Document("IgnoreOne")
+		class IgnoreIndexesOnLevelOne {
+			@IgnoreIndexes
+			IndexOnLevelZero zero;
+		}
+
+		@Document("IgnoreOne")
+		class IgnoreIndexexOnLevelTwo {
+			@IgnoreIndexes
 			IndexOnLevelOne one;
 		}
 
