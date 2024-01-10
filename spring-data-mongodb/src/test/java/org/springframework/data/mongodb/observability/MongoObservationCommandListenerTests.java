@@ -234,7 +234,7 @@ class MongoObservationCommandListenerTests {
 				customObservationConvention);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0,null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasMeterWithName("custom.name.active");
