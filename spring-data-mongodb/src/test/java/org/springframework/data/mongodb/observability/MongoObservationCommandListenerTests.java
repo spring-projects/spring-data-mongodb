@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.observability;
 import static io.micrometer.core.tck.MeterRegistryAssert.*;
 import static org.mockito.Mockito.*;
 
+import com.mongodb.ConnectionString;
 import io.micrometer.common.KeyValues;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
@@ -49,6 +50,7 @@ import com.mongodb.event.CommandSucceededEvent;
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
  * @author Mark Paluch
+ * @author François Kha
  */
 class MongoObservationCommandListenerTests {
 
@@ -109,8 +111,7 @@ class MongoObservationCommandListenerTests {
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
-								new ServerAddress("localhost", 1234))),
-				"database", "insert", //
+								new ServerAddress("localhost", 1234))), "database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, null, 0));
 
@@ -180,7 +181,8 @@ class MongoObservationCommandListenerTests {
 		assertThatTimerRegisteredWithTags();
 	}
 
-	@Test // GH-4481
+	@Test
+		// GH-4481
 	void completionShouldIgnoreIncompatibleObservationContext() {
 
 		// given
@@ -196,7 +198,8 @@ class MongoObservationCommandListenerTests {
 		verifyNoMoreInteractions(observation);
 	}
 
-	@Test // GH-4481
+	@Test
+		// GH-4481
 	void failureShouldIgnoreIncompatibleObservationContext() {
 
 		// given
@@ -210,6 +213,31 @@ class MongoObservationCommandListenerTests {
 
 		verify(observation).getContext();
 		verifyNoMoreInteractions(observation);
+	}
+
+	@Test
+		// GH-4321
+	void shouldUseObservationConvention() {
+		//given
+		MongoHandlerObservationConvention customObservationConvention = new MongoHandlerObservationConvention() {
+			@Override
+			public boolean supportsContext(Observation.Context context) {
+				return MongoHandlerObservationConvention.super.supportsContext(context);
+			}
+
+			@Override
+			public String getName() {
+				return "custom.name";
+			}
+		};
+		this.listener = new MongoObservationCommandListener(observationRegistry, mock(ConnectionString.class),
+				customObservationConvention);
+
+		// when
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, null, "some name", "", null));
+
+		// then
+		assertThat(meterRegistry).hasMeterWithName("custom.name.active");
 	}
 
 	private RequestContext getContext() {

@@ -39,6 +39,7 @@ import com.mongodb.event.CommandSucceededEvent;
  * @author OpenZipkin Brave Authors
  * @author Marcin Grzejszczak
  * @author Greg Turnquist
+ * @author François Kha
  * @since 4.0
  */
 public class MongoObservationCommandListener implements CommandListener {
@@ -48,7 +49,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	private final ObservationRegistry observationRegistry;
 	private final @Nullable ConnectionString connectionString;
 
-	private final MongoHandlerObservationConvention observationConvention = new DefaultMongoHandlerObservationConvention();
+	private final MongoHandlerObservationConvention observationConvention;
 
 	/**
 	 * Create a new {@link MongoObservationCommandListener} to record {@link Observation}s.
@@ -61,6 +62,7 @@ public class MongoObservationCommandListener implements CommandListener {
 
 		this.observationRegistry = observationRegistry;
 		this.connectionString = null;
+		this.observationConvention = new DefaultMongoHandlerObservationConvention();
 	}
 
 	/**
@@ -77,6 +79,26 @@ public class MongoObservationCommandListener implements CommandListener {
 
 		this.observationRegistry = observationRegistry;
 		this.connectionString = connectionString;
+		this.observationConvention = new DefaultMongoHandlerObservationConvention();
+	}
+
+	/**
+	 * Create a new {@link MongoObservationCommandListener} to record {@link Observation}s. This constructor attaches the
+	 * {@link ConnectionString} to every {@link Observation} and uses the given {@link MongoHandlerObservationConvention}
+	 *
+	 * @param observationRegistry must not be {@literal null}
+	 * @param connectionString must not be {@literal null}
+	 * @param observationConvention must not be {@literal null}
+	 */
+	public MongoObservationCommandListener(ObservationRegistry observationRegistry, ConnectionString connectionString, MongoHandlerObservationConvention observationConvention) {
+
+		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
+		Assert.notNull(connectionString, "ConnectionString must not be null");
+		Assert.notNull(observationConvention, "MongoHandlerObservationConvention must not be null");
+
+		this.observationRegistry = observationRegistry;
+		this.connectionString = connectionString;
+		this.observationConvention = observationConvention;
 	}
 
 	@Override
