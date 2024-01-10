@@ -72,7 +72,7 @@ class MongoObservationCommandListenerTests {
 	void commandStartedShouldNotInstrumentWhenAdminDatabase() {
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(null, 0, null, "admin", "", null));
+		listener.commandStarted(new CommandStartedEvent(null, 0, 0, null, "admin", "", null));
 
 		// then
 		assertThat(meterRegistry).hasNoMetrics();
@@ -82,7 +82,7 @@ class MongoObservationCommandListenerTests {
 	void commandStartedShouldNotInstrumentWhenNoRequestContext() {
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(null, 0, null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(null,0, 0, null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasNoMetrics();
@@ -92,7 +92,7 @@ class MongoObservationCommandListenerTests {
 	void commandStartedShouldNotInstrumentWhenNoParentSampleInRequestContext() {
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(),0, 0, null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasMeterWithName("spring.data.mongodb.command.active");
@@ -106,13 +106,13 @@ class MongoObservationCommandListenerTests {
 		RequestContext traceRequestContext = getContext();
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext,0, 0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
 								new ServerAddress("localhost", 1234))), "database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
-		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0,0, null, "insert", null, 0));
 
 		// then
 		assertThatTimerRegisteredWithTags();
@@ -126,14 +126,14 @@ class MongoObservationCommandListenerTests {
 		RequestContext traceRequestContext = getContext();
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, //
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0,0, //
 				new ConnectionDescription( //
 						new ServerId( //
 								new ClusterId("description"), //
 								new ServerAddress("localhost", 1234))), //
 				"database", "aggregate", //
 				new BsonDocument("aggregate", new BsonString("user"))));
-		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "aggregate", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext,0, 0, null, "aggregate", null, 0));
 
 		// then
 		assertThatTimerRegisteredWithTags();
@@ -147,9 +147,9 @@ class MongoObservationCommandListenerTests {
 		RequestContext traceRequestContext = getContext();
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, null, "database", "insert",
+		listener.commandStarted(new CommandStartedEvent(traceRequestContext, 0, 0, null, "database", "insert",
 				new BsonDocument("collection", new BsonString("user"))));
-		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, 0));
 
 		assertThat(meterRegistry).hasTimerWithNameAndTags(MongoObservation.MONGODB_COMMAND_OBSERVATION.getName(),
 				KeyValues.of(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue("user"),
@@ -174,7 +174,7 @@ class MongoObservationCommandListenerTests {
 				"database", "insert", //
 				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandFailed( //
-				new CommandFailedEvent(traceRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
+				new CommandFailedEvent(traceRequestContext, 0, 0, null, "insert", 0, new IllegalAccessException()));
 
 		// then
 		assertThatTimerRegisteredWithTags();
@@ -191,7 +191,7 @@ class MongoObservationCommandListenerTests {
 		traceRequestContext.put(ObservationThreadLocalAccessor.KEY, observation);
 
 		// when
-		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, null, "insert", null, 0));
+		listener.commandSucceeded(new CommandSucceededEvent(traceRequestContext, 0, 0, null, "insert", null, 0));
 
 		verify(observation).getContext();
 		verifyNoMoreInteractions(observation);
@@ -208,7 +208,7 @@ class MongoObservationCommandListenerTests {
 		traceRequestContext.put(ObservationThreadLocalAccessor.KEY, observation);
 
 		// when
-		listener.commandFailed(new CommandFailedEvent(traceRequestContext, 0, null, "insert", 0, null));
+		listener.commandFailed(new CommandFailedEvent(traceRequestContext, 0, 0, null, "insert", 0, null));
 
 		verify(observation).getContext();
 		verifyNoMoreInteractions(observation);
@@ -233,7 +233,7 @@ class MongoObservationCommandListenerTests {
 				customObservationConvention);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0,null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasMeterWithName("custom.name.active");
