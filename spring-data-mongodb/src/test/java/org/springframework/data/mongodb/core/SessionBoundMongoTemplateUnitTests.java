@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 
+import com.mongodb.client.*;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -44,16 +45,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.DistinctIterable;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -84,6 +75,7 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Mock MongoClient client;
 	@Mock ClientSession clientSession;
 	@Mock FindIterable findIterable;
+	@Mock ListCollectionNamesIterable collectionNamesIterable;
 	@Mock MongoIterable mongoIterable;
 	@Mock DistinctIterable distinctIterable;
 	@Mock AggregateIterable aggregateIterable;
@@ -101,7 +93,7 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
 		when(database.getCodecRegistry()).thenReturn(codecRegistry);
 		when(database.getCollection(anyString(), any())).thenReturn(collection);
-		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(mongoIterable);
+		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(collectionNamesIterable);
 		when(collection.find(any(ClientSession.class), any(), any())).thenReturn(findIterable);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any())).thenReturn(aggregateIterable);
 		when(collection.distinct(any(ClientSession.class), any(), any(), any())).thenReturn(distinctIterable);
@@ -113,6 +105,7 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 		when(mongoIterable.iterator()).thenReturn(cursor);
+		when(collectionNamesIterable.iterator()).thenReturn(cursor);
 		when(distinctIterable.map(any())).thenReturn(distinctIterable);
 		when(distinctIterable.into(any())).thenReturn(Collections.emptyList());
 		when(mapReduceIterable.sort(any())).thenReturn(mapReduceIterable);

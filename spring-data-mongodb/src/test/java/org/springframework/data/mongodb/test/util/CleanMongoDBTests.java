@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.mongodb.client.ListCollectionNamesIterable;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,11 +74,11 @@ class CleanMongoDBTests {
 		when(mongoClientMock.getDatabase(eq("db2"))).thenReturn(db2mock);
 
 		// collections have to exist
-		ListDatabasesIterable<String> collectionIterable = mock(ListDatabasesIterable.class);
+		ListCollectionNamesIterable collectionIterable = mock(ListCollectionNamesIterable.class);
 		when(collectionIterable.into(any(Collection.class))).thenReturn(Arrays.asList("db1collection1", "db1collection2"));
 		when(db1mock.listCollectionNames()).thenReturn(collectionIterable);
 
-		ListDatabasesIterable<String> collectionIterable2 = mock(ListDatabasesIterable.class);
+		ListCollectionNamesIterable collectionIterable2 = mock(ListCollectionNamesIterable.class);
 		when(collectionIterable2.into(any(Collection.class))).thenReturn(Collections.singletonList("db2collection1"));
 		when(db2mock.listCollectionNames()).thenReturn(collectionIterable2);
 

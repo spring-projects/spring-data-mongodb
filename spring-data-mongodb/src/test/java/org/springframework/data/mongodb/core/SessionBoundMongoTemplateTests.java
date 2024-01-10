@@ -96,9 +96,9 @@ public class SessionBoundMongoTemplateTests {
 			@Override
 			public MongoDatabase getMongoDatabase() throws DataAccessException {
 
-				MongoDatabase spiedDatabse = Mockito.spy(super.getMongoDatabase());
-				spiedDatabases.add(spiedDatabse);
-				return spiedDatabse;
+				MongoDatabase spiedDatabase = Mockito.spy(super.getMongoDatabase());
+				spiedDatabases.add(spiedDatabase);
+				return spiedDatabase;
 			}
 		};
 
