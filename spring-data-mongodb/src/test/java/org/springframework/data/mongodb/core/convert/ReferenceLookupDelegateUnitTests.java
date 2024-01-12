@@ -15,17 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Collections;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
@@ -33,7 +27,11 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link ReferenceLookupDelegate}.
@@ -52,9 +50,17 @@ class ReferenceLookupDelegateUnitTests {
 
 	@BeforeEach
 	void beforeEach() {
-
 		lookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
-		when(spELContext.getParser()).thenReturn(new SpelExpressionParser());
+	}
+
+	@Test // GH-4612
+	void shouldResolveEmptyListOnEmptyTargetCollection() {
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
+
+		when(property.isCollectionLike()).thenReturn(true);
+		lookupDelegate.readReference(property, Collections.emptyList(), lookupFunction, entityReader);
+		verify(lookupFunction, never()).apply(any(), any());
 	}
 
 	@Test // GH-3842
