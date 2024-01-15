@@ -2552,6 +2552,30 @@ public class MongoTemplateTests {
 		assertThat(projection.getName()).isEqualTo("Walter");
 	}
 
+	@Test // GH-4609
+	public void shouldReadNestedProjection() {
+
+		MyPerson walter = new MyPerson("Walter");
+		walter.address = new Address("spring", "data");
+		template.save(walter);
+
+		PersonPWA result = template.query(MyPerson.class)
+				.as(PersonPWA.class)
+				.matching(where("id").is(walter.id))
+				.firstValue();
+
+		assertThat(result.getAddress().getCity()).isEqualTo("data");
+	}
+
+	interface PersonPWA {
+		String getName();
+		AdressProjection getAddress();
+	}
+
+	interface AdressProjection {
+		String getCity();
+	}
+
 	@Test // GH-4300
 	public void findAndReplaceShouldAllowNativeDomainTypesAndReturnAProjection() {
 

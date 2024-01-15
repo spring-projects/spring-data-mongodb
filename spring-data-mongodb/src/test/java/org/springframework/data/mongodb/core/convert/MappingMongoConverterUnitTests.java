@@ -2709,6 +2709,44 @@ class MappingMongoConverterUnitTests {
 		assertThat(person.getAddresses()).extracting(AddressProjection::getStreet).hasSize(1).containsOnly("hwy");
 	}
 
+	@Test // GH-4609
+	void projectShouldReadNestedInterfaceProjection() {
+
+		org.bson.Document source = new org.bson.Document("foo", "spring").append("address",
+				new org.bson.Document("s", "data").append("city", "mongodb"));
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<WithNestedInterfaceProjection, Person> projection = introspector.introspect(WithNestedInterfaceProjection.class,
+				Person.class);
+		WithNestedInterfaceProjection person = converter.project(projection, source);
+
+		assertThat(person.getFirstname()).isEqualTo("spring");
+		assertThat(person.getAddress().getStreet()).isEqualTo("data");
+	}
+
+	@Test // GH-4609
+	void projectShouldReadNestedDtoProjection() {
+
+		org.bson.Document source = new org.bson.Document("foo", "spring").append("address",
+				new org.bson.Document("s", "data").append("city", "mongodb"));
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<WithNestedDtoProjection, Person> projection = introspector.introspect(WithNestedDtoProjection.class,
+				Person.class);
+		WithNestedDtoProjection person = converter.project(projection, source);
+
+		assertThat(person.getFirstname()).isEqualTo("spring");
+		assertThat(person.getAddress().getStreet()).isEqualTo("data");
+	}
+
 	@Test // GH-2860
 	void projectShouldReadProjectionWithNestedEntity() {
 
@@ -2958,6 +2996,7 @@ class MappingMongoConverterUnitTests {
 		String lastname;
 
 		Set<Address> addresses;
+		Address address;
 
 		Person() {
 
@@ -2981,6 +3020,16 @@ class MappingMongoConverterUnitTests {
 		Set<AddressProjection> getAddresses();
 	}
 
+	interface WithNestedInterfaceProjection {
+		String getFirstname();
+		AddressProjection getAddress();
+	}
+
+	interface WithNestedDtoProjection {
+		String getFirstname();
+		AddressDto getAddress();
+	}
+
 	interface ProjectionWithNestedEntity {
 
 		Set<Address> getAddresses();
@@ -2989,6 +3038,19 @@ class MappingMongoConverterUnitTests {
 	interface AddressProjection {
 
 		String getStreet();
+	}
+
+	class AddressDto {
+
+		String street;
+
+		public String getStreet() {
+			return street;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
 	}
 
 	static class PersonDto {
