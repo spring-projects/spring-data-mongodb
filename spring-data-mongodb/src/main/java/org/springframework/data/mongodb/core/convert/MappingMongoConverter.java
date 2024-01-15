@@ -595,7 +595,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			ConversionContext propertyContext = context.forProperty(prop);
-			MongoDbPropertyValueProvider valueProviderToUse = valueProvider.withContext(propertyContext);
 
 			if (prop.isAssociation()) {
 
@@ -623,7 +622,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			accessor.setProperty(prop, valueProviderToUse.getPropertyValue(prop));
+			accessor.setProperty(prop, valueProvider.getPropertyValue(prop));
 		}
 	}
 
@@ -2435,6 +2434,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					collectionConverter, mapConverter, dbRefConverter, elementConverter);
 			this.returnedTypeDescriptor = projection;
 		}
+
+
 
 		@Override
 		public ConversionContext forProperty(String name) {
