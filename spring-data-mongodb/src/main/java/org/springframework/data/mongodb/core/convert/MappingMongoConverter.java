@@ -2437,6 +2437,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		@Override
+		public ConversionContext forProperty(MongoPersistentProperty property) {
+
+			if(returnedTypeDescriptor.isProjection() && returnedTypeDescriptor.getDomainType().equals(property.getTypeInformation())) {
+				if(returnedTypeDescriptor.getMappedType().getType().isInterface()) {
+					return this;
+				}
+			 }
+
+			 return super.forProperty(property);
+		}
+
+		@Override
 		public ConversionContext forProperty(String name) {
 
 			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
