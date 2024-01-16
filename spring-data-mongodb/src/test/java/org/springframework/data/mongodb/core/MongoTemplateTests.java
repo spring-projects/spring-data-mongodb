@@ -2558,7 +2558,7 @@ public class MongoTemplateTests {
 	public void shouldReadNestedProjection() {
 
 		MyPerson walter = new MyPerson("Walter");
-		walter.address = new Address("some", "city");
+		walter.address = new Address("spring", "data");
 		template.save(walter);
 
 		PersonPWA result = template.query(MyPerson.class)
@@ -2566,7 +2566,7 @@ public class MongoTemplateTests {
 				.matching(where("id").is(walter.id))
 				.firstValue();
 
-		System.out.println("result: " + result.getAddress().getCity());
+		assertThat(result.getAddress().getCity()).isEqualTo("data");
 	}
 
 	interface PersonPWA {
