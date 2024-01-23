@@ -114,6 +114,7 @@ public class DefaultIndexOperations implements IndexOperations {
 		this.type = type;
 	}
 
+	@Override
 	public String ensureIndex(final IndexDefinition indexDefinition) {
 
 		return execute(collection -> {

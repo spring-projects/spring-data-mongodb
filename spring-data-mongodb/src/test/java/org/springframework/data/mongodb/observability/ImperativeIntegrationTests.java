@@ -17,21 +17,22 @@ package org.springframework.data.mongodb.observability;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.exporter.FinishedSpan;
+import io.micrometer.tracing.test.SampleTestRunner;
+
 import java.util.List;
 
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.PersonRepository;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.tracing.exporter.FinishedSpan;
-import io.micrometer.tracing.test.SampleTestRunner;
 
 /**
  * Collection of tests that log metrics and tracing with an external tracing tool.
@@ -82,7 +83,7 @@ public class ImperativeIntegrationTests extends SampleTestRunner {
 
 				assertThat(span.getTags()).containsEntry("db.system", "mongodb").containsEntry("net.transport", "IP.TCP");
 
-				if(MongoClientVersion.is5PlusClient()) {
+				if (MongoClientVersion.isVersion5OrNewer()) {
 					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
 							"db.mongodb.collection", "net.peer.name", "net.peer.port");
 				} else {

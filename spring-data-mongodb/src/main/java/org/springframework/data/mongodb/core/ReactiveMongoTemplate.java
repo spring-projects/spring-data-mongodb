@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.mongodb.MongoCompatibilityAdapter;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -48,6 +46,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -119,6 +118,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
