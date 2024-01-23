@@ -88,7 +88,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.type = type;
 	}
 
-	public Mono<String> ensureIndex(final IndexDefinition indexDefinition) {
+	@Override
+	public Mono<String> ensureIndex(IndexDefinition indexDefinition) {
 
 		return mongoOperations.execute(collectionName, collection -> {
 
