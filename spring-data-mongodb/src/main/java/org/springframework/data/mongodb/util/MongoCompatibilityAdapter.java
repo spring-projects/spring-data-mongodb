@@ -28,7 +28,9 @@ import org.springframework.util.ReflectionUtils;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
 
 /**
  * Compatibility adapter to bridge functionality across different MongoDB driver versions.
@@ -101,6 +103,7 @@ public class MongoCompatibilityAdapter {
 	 * @param iterable
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static MapReduceIterableAdapter mapReduceIterableAdapter(Object iterable) {
 		return sharded -> {
 
@@ -108,7 +111,9 @@ public class MongoCompatibilityAdapter {
 				throw new UnsupportedOperationException(NO_LONGER_SUPPORTED.formatted("sharded"));
 			}
 
-			Method shardedMethod = ReflectionUtils.findMethod(iterable.getClass(), "sharded", boolean.class);
+			// Use MapReduceIterable to avoid package-protected access violations to
+			// com.mongodb.client.internal.MapReduceIterableImpl
+			Method shardedMethod = ReflectionUtils.findMethod(MapReduceIterable.class, "sharded", boolean.class);
 			ReflectionUtils.invokeMethod(shardedMethod, iterable, sharded);
 		};
 	}
@@ -119,6 +124,7 @@ public class MongoCompatibilityAdapter {
 	 * @param publisher
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static MapReducePublisherAdapter mapReducePublisherAdapter(Object publisher) {
 		return sharded -> {
 
@@ -126,7 +132,8 @@ public class MongoCompatibilityAdapter {
 				throw new UnsupportedOperationException(NO_LONGER_SUPPORTED.formatted("sharded"));
 			}
 
-			Method shardedMethod = ReflectionUtils.findMethod(publisher.getClass(), "sharded", boolean.class);
+			// Use MapReducePublisher to avoid package-protected access violations to MapReducePublisherImpl
+			Method shardedMethod = ReflectionUtils.findMethod(MapReducePublisher.class, "sharded", boolean.class);
 			ReflectionUtils.invokeMethod(shardedMethod, publisher, sharded);
 		};
 	}
