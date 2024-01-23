@@ -18,11 +18,11 @@ package org.springframework.data.mongodb.core;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
-import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 

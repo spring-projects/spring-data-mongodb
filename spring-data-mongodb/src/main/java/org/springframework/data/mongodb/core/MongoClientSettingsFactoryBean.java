@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.lang.reflect.Method;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,17 +23,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.beans.factory.config.AbstractFactoryBean;
-import org.springframework.data.mongodb.MongoCompatibilityAdapter;
-import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.AutoEncryptionSettings;
@@ -62,7 +57,8 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	private CodecRegistry codecRegistry = DEFAULT_MONGO_SETTINGS.getCodecRegistry();
 
-	@Nullable private Object streamFactoryFactory;
+	@Nullable private Object streamFactoryFactory = MongoCompatibilityAdapter
+			.clientSettingsAdapter(DEFAULT_MONGO_SETTINGS).getStreamFactoryFactory();
 	@Nullable private TransportSettings transportSettings;
 
 	private ReadPreference readPreference = DEFAULT_MONGO_SETTINGS.getReadPreference();
@@ -125,13 +121,9 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	private @Nullable AutoEncryptionSettings autoEncryptionSettings;
 	private @Nullable ServerApi serverApi;
 
-	{
-		streamFactoryFactory = MongoCompatibilityAdapter.clientSettingsAdapter(DEFAULT_MONGO_SETTINGS).getStreamFactoryFactory();
-	}
-
 	/**
 	 * @param socketConnectTimeoutMS in msec
-	 * @see com.mongodb.connection.SocketSettings.Builder#connectTimeout(int, TimeUnit)
+	 * @see com.mongodb.connection.SocketSettings.Builder#connectTimeout(long, TimeUnit)
 	 */
 	public void setSocketConnectTimeoutMS(int socketConnectTimeoutMS) {
 		this.socketConnectTimeoutMS = socketConnectTimeoutMS;
@@ -139,7 +131,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	/**
 	 * @param socketReadTimeoutMS in msec
-	 * @see com.mongodb.connection.SocketSettings.Builder#readTimeout(int, TimeUnit)
+	 * @see com.mongodb.connection.SocketSettings.Builder#readTimeout(long, TimeUnit)
 	 */
 	public void setSocketReadTimeoutMS(int socketReadTimeoutMS) {
 		this.socketReadTimeoutMS = socketReadTimeoutMS;
@@ -380,8 +372,11 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	}
 
 	/**
-	 * @param streamFactoryFactory // * @see MongoClientSettings.Builder#streamFactoryFactory(StreamFactoryFactory)
+	 * @param streamFactoryFactory
+	 * @deprecated since 4.3, will be removed in the MongoDB 5.0 driver in favor of
+	 *             {@code com.mongodb.connection.TransportSettings}.
 	 */
+	@Deprecated(since = "4.3")
 	public void setStreamFactoryFactory(Object streamFactoryFactory) {
 		this.streamFactoryFactory = streamFactoryFactory;
 	}
@@ -449,7 +444,6 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 						settings.hosts(clusterHosts);
 					}
 					settings.localThreshold(clusterLocalThresholdMS, TimeUnit.MILLISECONDS);
-					// settings.maxWaitQueueSize(clusterMaxWaitQueueSize);
 					settings.requiredClusterType(custerRequiredClusterType);
 
 					if (StringUtils.hasText(clusterSrvHost)) {
@@ -517,60 +511,5 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 		}
 
 		return builder.build();
-	}
-
-	static class MongoStreamFactoryFactorySettingsConfigurer {
-
-		private static final Log logger = LogFactory.getLog(MongoClientSettingsFactoryBean.class);
-
-		private static final String STREAM_FACTORY_NAME = "com.mongodb.connection.StreamFactoryFactory";
-		private static final boolean STREAM_FACTORY_PRESENT = ClassUtils.isPresent(STREAM_FACTORY_NAME,
-				MongoStreamFactoryFactorySettingsConfigurer.class.getClassLoader());
-		private final MongoClientSettings.Builder settingsBuilder;
-
-		static boolean isStreamFactoryPresent() {
-			return STREAM_FACTORY_PRESENT;
-		}
-
-		static Object getDefaultStreamFactoryFactory() {
-
-			if (MongoClientVersion.is5PlusClient()) {
-				return null;
-			}
-
-			Method getStreamFactoryFactory = ReflectionUtils.findMethod(MongoClientSettings.class, "getStreamFactoryFactory");
-			return getStreamFactoryFactory != null
-					? ReflectionUtils.invokeMethod(getStreamFactoryFactory, DEFAULT_MONGO_SETTINGS)
-					: null;
-		}
-
-		public MongoStreamFactoryFactorySettingsConfigurer(Builder settingsBuilder) {
-			this.settingsBuilder = settingsBuilder;
-		}
-
-		void setStreamFactory(Object streamFactory) {
-
-			if (MongoClientVersion.is5PlusClient()) {
-				logger.warn("StreamFactoryFactory is no longer available. Use TransportSettings instead.");
-			}
-
-			if (isStreamFactoryPresent()) { //
-				try {
-					Class<?> streamFactoryType = ClassUtils.forName(STREAM_FACTORY_NAME,
-							streamFactory.getClass().getClassLoader());
-					if (!ClassUtils.isAssignable(streamFactoryType, streamFactory.getClass())) {
-						throw new IllegalArgumentException("Expected %s but found %s".formatted(streamFactoryType, streamFactory));
-					}
-
-					Method setter = ReflectionUtils.findMethod(settingsBuilder.getClass(), "streamFactoryFactory",
-							streamFactoryType);
-					if (setter != null) {
-						ReflectionUtils.invokeMethod(setter, settingsBuilder, streamFactoryType.cast(streamFactory));
-					}
-				} catch (ClassNotFoundException e) {
-					throw new IllegalArgumentException("Cannot set StreamFactoryFactory for %s".formatted(settingsBuilder), e);
-				}
-			}
-		}
 	}
 }

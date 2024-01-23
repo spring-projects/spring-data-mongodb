@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.common.KeyValues;
+
 import java.net.InetSocketAddress;
 
-import org.springframework.data.mongodb.MongoCompatibilityAdapter;
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
-import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
@@ -27,8 +28,6 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandStartedEvent;
-
-import io.micrometer.common.KeyValues;
 
 /**
  * Default {@link MongoHandlerObservationConvention} implementation.
@@ -80,8 +79,8 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 						LowCardinalityCommandKeyNames.NET_PEER_NAME.withValue(serverAddress.getHost()),
 						LowCardinalityCommandKeyNames.NET_PEER_PORT.withValue("" + serverAddress.getPort()));
 
-
-				InetSocketAddress socketAddress = MongoCompatibilityAdapter.serverAddressAdapter(serverAddress).getSocketAddress();
+				InetSocketAddress socketAddress = MongoCompatibilityAdapter.serverAddressAdapter(serverAddress)
+						.getSocketAddress();
 
 				if (socketAddress != null) {
 
