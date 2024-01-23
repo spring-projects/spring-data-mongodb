@@ -15,12 +15,17 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.transport.Kind;
+import io.micrometer.observation.transport.SenderContext;
+
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
+
 import org.springframework.lang.Nullable;
 
 import com.mongodb.ConnectionString;
@@ -28,10 +33,6 @@ import com.mongodb.RequestContext;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.transport.Kind;
-import io.micrometer.observation.transport.SenderContext;
 
 /**
  * A {@link Observation.Context} that contains MongoDB events.
@@ -41,7 +42,7 @@ import io.micrometer.observation.transport.SenderContext;
  * @author Mark Paluch
  * @since 4.0
  */
-class MongoHandlerContext extends SenderContext<Object> {
+public class MongoHandlerContext extends SenderContext<Object> {
 
 	/**
 	 * @see <a href=
@@ -96,11 +97,11 @@ class MongoHandlerContext extends SenderContext<Object> {
 		return connectionString;
 	}
 
-	public void setCommandSucceededEvent(CommandSucceededEvent commandSucceededEvent) {
+	void setCommandSucceededEvent(CommandSucceededEvent commandSucceededEvent) {
 		this.commandSucceededEvent = commandSucceededEvent;
 	}
 
-	public void setCommandFailedEvent(CommandFailedEvent commandFailedEvent) {
+	void setCommandFailedEvent(CommandFailedEvent commandFailedEvent) {
 		this.commandFailedEvent = commandFailedEvent;
 	}
 
