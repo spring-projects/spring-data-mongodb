@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -53,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
@@ -708,7 +710,21 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
-		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
+		if(MongoClientVersion.isVersion5OrNewer()) {
+
+			Optional<Double> defaultBucketSize = MergedAnnotation.of(GeoSpatialIndexed.class).getDefaultValue("bucketSize", Double.class);
+			if (!defaultBucketSize.isPresent() || index.bucketSize() != defaultBucketSize.get()) {
+				indexDefinition.withBucketSize(index.bucketSize());
+			} else {
+				if(LOGGER.isInfoEnabled()) {
+					LOGGER.info("Ignoring no longer supported default GeoSpatialIndexed.bucketSize on %s for Mongo Client 5 or newer.".formatted(dotPath));
+				}
+			}
+		} else {
+			indexDefinition.withBucketSize(index.bucketSize());
+		}
+
+		indexDefinition.typed(index.type()).withAdditionalField(index.additionalField());
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
