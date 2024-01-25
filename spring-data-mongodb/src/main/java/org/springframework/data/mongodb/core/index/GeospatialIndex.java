@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -40,7 +41,7 @@ public class GeospatialIndex implements IndexDefinition {
 	private @Nullable Integer max;
 	private @Nullable Integer bits;
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
-	private Double bucketSize = 1.0;
+	private Double bucketSize = MongoClientVersion.isVersion5OrNewer() ? null : 1.0;
 	private @Nullable String additionalField;
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
@@ -207,7 +208,9 @@ public class GeospatialIndex implements IndexDefinition {
 
 			case GEO_HAYSTACK:
 
-				document.put("bucketSize", bucketSize);
+				if (bucketSize != null) {
+					document.put("bucketSize", bucketSize);
+				}
 				break;
 		}
 
