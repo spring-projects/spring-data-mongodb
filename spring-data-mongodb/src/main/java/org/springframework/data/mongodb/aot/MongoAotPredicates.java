@@ -25,6 +25,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * Collection of {@link Predicate predicates} to determine dynamic library aspects during AOT computation.
+ * Intended for internal usage only.
+ *
  * @author Christoph Strobl
  * @since 4.0
  */
@@ -39,6 +42,11 @@ public class MongoAotPredicates {
 		return IS_REACTIVE_LIBARARY_AVAILABLE.test(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
 	}
 
+	/**
+	 * @param classLoader can be {@literal null}.
+	 * @return {@literal true} if the {@link com.mongodb.client.MongoClient} is present.
+	 * @since 4.0
+	 */
 	public static boolean isSyncClientPresent(@Nullable ClassLoader classLoader) {
 		return IS_SYNC_CLIENT_PRESENT.test(classLoader);
 	}

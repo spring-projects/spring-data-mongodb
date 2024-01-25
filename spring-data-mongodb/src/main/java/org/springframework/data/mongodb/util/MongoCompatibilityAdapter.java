@@ -151,7 +151,7 @@ public class MongoCompatibilityAdapter {
 				return null;
 			}
 
-			Method serverAddressMethod = ReflectionUtils.findMethod(serverAddress.getClass(), "getSocketAddress");
+			Method serverAddressMethod = ReflectionUtils.findMethod(ServerAddress.class, "getSocketAddress");
 			Object value = ReflectionUtils.invokeMethod(serverAddressMethod, serverAddress);
 			return value != null ? InetSocketAddress.class.cast(value) : null;
 		};
