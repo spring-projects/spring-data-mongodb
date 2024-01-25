@@ -5,6 +5,7 @@
 *** xref:migration-guide/migration-guide-3.x-to-4.x.adoc[]
 
 * xref:mongodb.adoc[]
+** xref:preface.adoc[]
 ** xref:mongodb/getting-started.adoc[]
 ** xref:mongodb/configuration.adoc[]
 
