@@ -28,6 +28,7 @@ import org.springframework.util.ClassUtils;
 public class MongoClientVersion {
 
 	private static final boolean SYNC_CLIENT_PRESENT = ClassUtils.isPresent("com.mongodb.MongoClient",
+			MongoClientVersion.class.getClassLoader()) || ClassUtils.isPresent("com.mongodb.client.MongoClient",
 			MongoClientVersion.class.getClassLoader());
 
 	private static final boolean ASYNC_CLIENT_PRESENT = ClassUtils.isPresent("com.mongodb.async.client.MongoClient",

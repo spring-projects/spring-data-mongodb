@@ -724,7 +724,7 @@ public class MongoTemplate
 
 		return execute(db -> {
 
-			for (String name : db.listCollectionNames()) {
+			for (String name : MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db).listCollectionNames()) {
 				if (name.equals(collectionName)) {
 					return true;
 				}
@@ -2342,7 +2342,7 @@ public class MongoTemplate
 	public Set<String> getCollectionNames() {
 		return execute(db -> {
 			Set<String> result = new LinkedHashSet<>();
-			for (String name : db.listCollectionNames()) {
+			for (String name : MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db).listCollectionNames()) {
 				result.add(name);
 			}
 			return result;

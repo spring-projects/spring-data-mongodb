@@ -23,6 +23,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
 import com.mongodb.UnixServerAddress;
 import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MapReducePublisher;
 import org.springframework.aot.hint.MemberCategory;
@@ -101,6 +102,7 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 		if(MongoAotPredicates.isSyncClientPresent(classLoader)) {
 
 			hints.reflection() //
+					.registerType(MongoDatabase.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(MapReduceIterable.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(TypeReference.of("com.mongodb.client.internal.MapReduceIterableImpl"), MemberCategory.INVOKE_PUBLIC_METHODS);
 		}
@@ -108,6 +110,7 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 		if(MongoAotPredicates.isReactiveClientPresent(classLoader)) {
 
 			hints.reflection() //
+					.registerType(com.mongodb.reactivestreams.client.MongoDatabase.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(MapReducePublisher.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(TypeReference.of("com.mongodb.reactivestreams.client.internal.MapReducePublisherImpl"), MemberCategory.INVOKE_PUBLIC_METHODS);
 		}

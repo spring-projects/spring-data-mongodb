@@ -738,7 +738,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Mono<Boolean> collectionExists(String collectionName) {
-		return createMono(db -> Flux.from(db.listCollectionNames()) //
+		return createMono(db -> Flux.from(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames()) //
 				.filter(s -> s.equals(collectionName)) //
 				.map(s -> true) //
 				.single(false));
@@ -786,7 +786,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Flux<String> getCollectionNames() {
-		return createFlux(MongoDatabase::listCollectionNames);
+		return createFlux(db -> MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames());
 	}
 
 	public Mono<MongoDatabase> getMongoDatabase() {

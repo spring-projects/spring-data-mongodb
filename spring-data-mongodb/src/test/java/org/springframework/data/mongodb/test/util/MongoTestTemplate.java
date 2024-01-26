@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * A {@link MongoTemplate} with configuration hooks and extension suitable for tests.
@@ -94,7 +95,7 @@ public class MongoTestTemplate extends MongoTemplate {
 	}
 
 	public void flushDatabase() {
-		flush(getDb().listCollectionNames());
+		flush(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(getDb()).listCollectionNames());
 	}
 
 	public void flush(Iterable<String> collections) {

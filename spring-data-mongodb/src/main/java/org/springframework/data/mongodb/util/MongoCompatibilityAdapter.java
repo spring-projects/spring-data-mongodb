@@ -20,15 +20,19 @@ import java.net.InetSocketAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.reactivestreams.Publisher;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.MapReducePublisher;
 
@@ -157,6 +161,14 @@ public class MongoCompatibilityAdapter {
 		};
 	}
 
+	public static MongoDatabaseAdapterBuilder mongoDatabaseAdapter() {
+		return MongoDatabaseAdapter::new;
+	}
+
+	public static ReactiveMongoDatabaseAdapterBuilder reactiveMongoDatabaseAdapter() {
+		return ReactiveMongoDatabaseAdapter::new;
+	}
+
 	public interface IndexOptionsAdapter {
 		void setBucketSize(double bucketSize);
 	}
@@ -181,6 +193,144 @@ public class MongoCompatibilityAdapter {
 	public interface ServerAddressAdapter {
 		@Nullable
 		InetSocketAddress getSocketAddress();
+	}
+
+	public interface MongoDatabaseAdapterBuilder {
+		MongoDatabaseAdapter forDb(com.mongodb.client.MongoDatabase db);
+	}
+
+	public static class MongoDatabaseAdapter {
+
+		@Nullable //
+		private static final Method LIST_COLLECTION_NAMES_METHOD;
+
+		@Nullable //
+		private static final Method LIST_COLLECTION_NAMES_METHOD_SESSION;
+
+		private static final Class<?> collectionNamesReturnType;
+
+		private final MongoDatabase db;
+
+		static {
+
+			if (MongoClientVersion.isSyncClientPresent()) {
+
+				LIST_COLLECTION_NAMES_METHOD = ReflectionUtils.findMethod(MongoDatabase.class, "listCollectionNames");
+				LIST_COLLECTION_NAMES_METHOD_SESSION = ReflectionUtils.findMethod(MongoDatabase.class, "listCollectionNames",
+						ClientSession.class);
+
+				if (MongoClientVersion.isVersion5OrNewer()) {
+					try {
+						collectionNamesReturnType = ClassUtils.forName("com.mongodb.client.ListCollectionNamesIterable",
+								MongoDatabaseAdapter.class.getClassLoader());
+					} catch (ClassNotFoundException e) {
+						throw new IllegalStateException("Unable to load com.mongodb.client.ListCollectionNamesIterable", e);
+					}
+				} else {
+					try {
+						collectionNamesReturnType = ClassUtils.forName("com.mongodb.client.MongoIterable",
+								MongoDatabaseAdapter.class.getClassLoader());
+					} catch (ClassNotFoundException e) {
+						throw new IllegalStateException("Unable to load com.mongodb.client.ListCollectionNamesIterable", e);
+					}
+				}
+			} else {
+				LIST_COLLECTION_NAMES_METHOD = null;
+				LIST_COLLECTION_NAMES_METHOD_SESSION = null;
+				collectionNamesReturnType = Object.class;
+			}
+		}
+
+		public MongoDatabaseAdapter(MongoDatabase db) {
+			this.db = db;
+		}
+
+		public Class<? extends MongoIterable<String>> collectionNameIterableType() {
+			return (Class<? extends MongoIterable<String>>) collectionNamesReturnType;
+		}
+
+		public MongoIterable<String> listCollectionNames() {
+
+			Assert.state(LIST_COLLECTION_NAMES_METHOD != null, "No method listCollectionNames present for %s".formatted(db));
+			return (MongoIterable<String>) ReflectionUtils.invokeMethod(LIST_COLLECTION_NAMES_METHOD, db);
+		}
+
+		public MongoIterable<String> listCollectionNames(ClientSession clientSession) {
+			Assert.state(LIST_COLLECTION_NAMES_METHOD != null,
+					"No method listCollectionNames(ClientSession) present for %s".formatted(db));
+			return (MongoIterable<String>) ReflectionUtils.invokeMethod(LIST_COLLECTION_NAMES_METHOD_SESSION, db,
+					clientSession);
+		}
+	}
+
+	public interface ReactiveMongoDatabaseAdapterBuilder {
+		ReactiveMongoDatabaseAdapter forDb(com.mongodb.reactivestreams.client.MongoDatabase db);
+	}
+
+	public static class ReactiveMongoDatabaseAdapter {
+
+		@Nullable //
+		private static final Method LIST_COLLECTION_NAMES_METHOD;
+
+		@Nullable //
+		private static final Method LIST_COLLECTION_NAMES_METHOD_SESSION;
+
+		private static final Class<?> collectionNamesReturnType;
+
+		private final com.mongodb.reactivestreams.client.MongoDatabase db;
+
+		static {
+
+			if (MongoClientVersion.isReactiveClientPresent()) {
+
+				LIST_COLLECTION_NAMES_METHOD = ReflectionUtils
+						.findMethod(com.mongodb.reactivestreams.client.MongoDatabase.class, "listCollectionNames");
+				LIST_COLLECTION_NAMES_METHOD_SESSION = ReflectionUtils.findMethod(
+						com.mongodb.reactivestreams.client.MongoDatabase.class, "listCollectionNames",
+						com.mongodb.reactivestreams.client.ClientSession.class);
+
+				if (MongoClientVersion.isVersion5OrNewer()) {
+					try {
+						collectionNamesReturnType = ClassUtils.forName(
+								"com.mongodb.reactivestreams.client.ListCollectionNamesPublisher",
+								ReactiveMongoDatabaseAdapter.class.getClassLoader());
+					} catch (ClassNotFoundException e) {
+						throw new IllegalStateException("com.mongodb.reactivestreams.client.ListCollectionNamesPublisher", e);
+					}
+				} else {
+					try {
+						collectionNamesReturnType = ClassUtils.forName("org.reactivestreams.Publisher",
+								ReactiveMongoDatabaseAdapter.class.getClassLoader());
+					} catch (ClassNotFoundException e) {
+						throw new IllegalStateException("org.reactivestreams.Publisher", e);
+					}
+				}
+			} else {
+				LIST_COLLECTION_NAMES_METHOD = null;
+				LIST_COLLECTION_NAMES_METHOD_SESSION = null;
+				collectionNamesReturnType = Object.class;
+			}
+		}
+
+		ReactiveMongoDatabaseAdapter(com.mongodb.reactivestreams.client.MongoDatabase db) {
+			this.db = db;
+		}
+
+		public Class<? extends Publisher<String>> collectionNamePublisherType() {
+			return (Class<? extends Publisher<String>>) collectionNamesReturnType;
+
+		}
+
+		public Publisher<String> listCollectionNames() {
+			Assert.state(LIST_COLLECTION_NAMES_METHOD != null, "No method listCollectionNames present for %s".formatted(db));
+			return (Publisher<String>) ReflectionUtils.invokeMethod(LIST_COLLECTION_NAMES_METHOD, db);
+		}
+
+		public Publisher<String> listCollectionNames(com.mongodb.reactivestreams.client.ClientSession clientSession) {
+			Assert.state(LIST_COLLECTION_NAMES_METHOD != null,
+					"No method listCollectionNames(ClientSession) present for %s".formatted(db));
+			return (Publisher<String>) ReflectionUtils.invokeMethod(LIST_COLLECTION_NAMES_METHOD_SESSION, db, clientSession);
+		}
 	}
 
 	static class MongoStreamFactoryFactorySettingsConfigurer {

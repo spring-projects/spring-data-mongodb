@@ -49,6 +49,7 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * Unit test for {@link SessionBoundMongoTemplate} making sure a proxied {@link MongoCollection} and
@@ -75,7 +76,7 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Mock MongoClient client;
 	@Mock ClientSession clientSession;
 	@Mock FindIterable findIterable;
-	@Mock ListCollectionNamesIterable collectionNamesIterable;
+	MongoIterable<String> collectionNamesIterable;
 	@Mock MongoIterable mongoIterable;
 	@Mock DistinctIterable distinctIterable;
 	@Mock AggregateIterable aggregateIterable;
@@ -89,11 +90,12 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Before
 	public void setUp() {
 
+		collectionNamesIterable = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(database).collectionNameIterableType());
 		when(client.getDatabase(anyString())).thenReturn(database);
 		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
 		when(database.getCodecRegistry()).thenReturn(codecRegistry);
 		when(database.getCollection(anyString(), any())).thenReturn(collection);
-		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(collectionNamesIterable);
+		doReturn(collectionNamesIterable).when(database).listCollectionNames(any(ClientSession.class));
 		when(collection.find(any(ClientSession.class), any(), any())).thenReturn(findIterable);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any())).thenReturn(aggregateIterable);
 		when(collection.distinct(any(ClientSession.class), any(), any(), any())).thenReturn(distinctIterable);
