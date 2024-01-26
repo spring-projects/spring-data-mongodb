@@ -132,6 +132,13 @@
 				<module>spring-data-mongodb-benchmarks</module>
 			</modules>
 		</profile>
+		<profile>
+			<id>mongo-5.0</id>
+			<properties>
+				<mongo>5.0.0-beta0</mongo>
+			</properties>
+		</profile>
+
 	</profiles>
 
 	<dependencies>
