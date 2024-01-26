@@ -31,7 +31,7 @@ class MongoCompatibilityAdapterUnitTests {
 	@ExcludeReactiveClientFromClassPath
 	void returnsListCollectionNameIterableTypeCorrectly() {
 
-		String expectedType = MongoClientVersion.isVersion5OrNewer() ? "ListCollectionNamesIterable" : "MongoIterable";
+		String expectedType = MongoClientVersion.isVersion5orNewer() ? "ListCollectionNamesIterable" : "MongoIterable";
 		assertThat(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(null).collectionNameIterableType())
 				.satisfies(type -> assertThat(ClassUtils.getShortName(type)).isEqualTo(expectedType));
 
@@ -41,7 +41,7 @@ class MongoCompatibilityAdapterUnitTests {
 	@ExcludeSyncClientFromClassPath
 	void returnsListCollectionNamePublisherTypeCorrectly() {
 
-		String expectedType = MongoClientVersion.isVersion5OrNewer() ? "ListCollectionNamesPublisher" : "Publisher";
+		String expectedType = MongoClientVersion.isVersion5orNewer() ? "ListCollectionNamesPublisher" : "Publisher";
 		assertThat(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(null).collectionNamePublisherType())
 				.satisfies(type -> assertThat(ClassUtils.getShortName(type)).isEqualTo(expectedType));
 

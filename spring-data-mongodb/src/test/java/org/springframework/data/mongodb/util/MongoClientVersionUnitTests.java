@@ -32,13 +32,13 @@ class MongoClientVersionUnitTests {
 
 	@Test // GH-4578
 	void parsesClientVersionCorrectly() {
-		assertThat(MongoClientVersion.isVersion5OrNewer()).isEqualTo(MongoDriverVersion.VERSION.startsWith("5"));
+		assertThat(MongoClientVersion.isVersion5orNewer()).isEqualTo(MongoDriverVersion.VERSION.startsWith("5"));
 	}
 
 	@Test // GH-4578
 	@ClassPathExclusions(packages = { "com.mongodb.internal.build" })
 	void fallsBackToClassLookupIfDriverVersionNotPresent() {
-		assertThat(MongoClientVersion.isVersion5OrNewer()).isEqualTo(
+		assertThat(MongoClientVersion.isVersion5orNewer()).isEqualTo(
 				ClassUtils.isPresent("com.mongodb.internal.connection.StreamFactoryFactory", this.getClass().getClassLoader()));
 	}
 }

@@ -25,19 +25,25 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
- * Collection of {@link Predicate predicates} to determine dynamic library aspects during AOT computation.
- * Intended for internal usage only.
+ * Collection of {@link Predicate predicates} to determine dynamic library aspects during AOT computation. Intended for
+ * internal usage only.
  *
  * @author Christoph Strobl
  * @since 4.0
  */
 public class MongoAotPredicates {
 
-	public static final Predicate<Class<?>> IS_SIMPLE_TYPE = (type) ->  MongoSimpleTypes.HOLDER.isSimpleType(type) || TypeUtils.type(type).isPartOf("org.bson");
+	public static final Predicate<Class<?>> IS_SIMPLE_TYPE = (type) -> MongoSimpleTypes.HOLDER.isSimpleType(type)
+			|| TypeUtils.type(type).isPartOf("org.bson");
 	public static final Predicate<ReactiveLibrary> IS_REACTIVE_LIBARARY_AVAILABLE = ReactiveWrappers::isAvailable;
-	public static final Predicate<ClassLoader> IS_SYNC_CLIENT_PRESENT = (classLoader) -> ClassUtils.isPresent("com.mongodb.client.MongoClient", classLoader);
-	public static final Predicate<ClassLoader> IS_REACTIVE_CLIENT_PRESENT = (classLoader) -> ClassUtils.isPresent("com.mongodb.reactivestreams.client.MongoClient", classLoader);
+	public static final Predicate<ClassLoader> IS_SYNC_CLIENT_PRESENT = (classLoader) -> ClassUtils
+			.isPresent("com.mongodb.client.MongoClient", classLoader);
+	public static final Predicate<ClassLoader> IS_REACTIVE_CLIENT_PRESENT = (classLoader) -> ClassUtils
+			.isPresent("com.mongodb.reactivestreams.client.MongoClient", classLoader);
 
+	/**
+	 * @return {@literal true} if the Project Reactor is present.
+	 */
 	public static boolean isReactorPresent() {
 		return IS_REACTIVE_LIBARARY_AVAILABLE.test(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
 	}

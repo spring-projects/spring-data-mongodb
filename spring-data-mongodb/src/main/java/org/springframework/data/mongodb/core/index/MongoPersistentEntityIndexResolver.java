@@ -710,14 +710,17 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
-		if(MongoClientVersion.isVersion5OrNewer()) {
+		if (MongoClientVersion.isVersion5orNewer()) {
 
-			Optional<Double> defaultBucketSize = MergedAnnotation.of(GeoSpatialIndexed.class).getDefaultValue("bucketSize", Double.class);
+			Optional<Double> defaultBucketSize = MergedAnnotation.of(GeoSpatialIndexed.class).getDefaultValue("bucketSize",
+					Double.class);
 			if (!defaultBucketSize.isPresent() || index.bucketSize() != defaultBucketSize.get()) {
 				indexDefinition.withBucketSize(index.bucketSize());
 			} else {
-				if(LOGGER.isInfoEnabled()) {
-					LOGGER.info("Ignoring no longer supported default GeoSpatialIndexed.bucketSize on %s for Mongo Client 5 or newer.".formatted(dotPath));
+				if (LOGGER.isInfoEnabled()) {
+					LOGGER.info(
+							"GeoSpatialIndexed.bucketSize no longer supported by Mongo Client 5 or newer. Ignoring bucketSize for path %s."
+									.formatted(dotPath));
 				}
 			}
 		} else {

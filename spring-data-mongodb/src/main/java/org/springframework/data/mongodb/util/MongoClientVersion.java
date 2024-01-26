@@ -48,10 +48,7 @@ public class MongoClientVersion {
 	static {
 
 		ClassLoader classLoader = MongoClientVersion.class.getClassLoader();
-		Version version = readVersionFromClass(classLoader);
-		if (version == null) {
-			version = guessDriverVersionFromClassPath(classLoader);
-		}
+		Version version = getMongoDbDriverVersion(classLoader);
 
 		CLIENT_VERSION = version;
 		IS_VERSION_5_OR_NEWER = CLIENT_VERSION.isGreaterThanOrEqualTo(Version.parse("5.0"));
@@ -84,12 +81,18 @@ public class MongoClientVersion {
 	 * @return {@literal true} if the MongoDB Java driver version is 5 or newer.
 	 * @since 4.3
 	 */
-	public static boolean isVersion5OrNewer() {
+	public static boolean isVersion5orNewer() {
 		return IS_VERSION_5_OR_NEWER;
 	}
 
+	private static Version getMongoDbDriverVersion(ClassLoader classLoader) {
+
+		Version version = getVersionFromPackage(classLoader);
+		return version == null ? guessDriverVersionFromClassPath(classLoader) : version;
+	}
+
 	@Nullable
-	private static Version readVersionFromClass(ClassLoader classLoader) {
+	private static Version getVersionFromPackage(ClassLoader classLoader) {
 
 		if (ClassUtils.isPresent("com.mongodb.internal.build.MongoDriverVersion", classLoader)) {
 			try {

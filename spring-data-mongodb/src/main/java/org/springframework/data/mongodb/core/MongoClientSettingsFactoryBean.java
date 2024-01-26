@@ -123,7 +123,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	/**
 	 * @param socketConnectTimeoutMS in msec
-	 * @see com.mongodb.connection.SocketSettings.Builder#connectTimeout(long, TimeUnit)
+	 * @see com.mongodb.connection.SocketSettings.Builder#connectTimeout(int, TimeUnit)
 	 */
 	public void setSocketConnectTimeoutMS(int socketConnectTimeoutMS) {
 		this.socketConnectTimeoutMS = socketConnectTimeoutMS;
@@ -131,7 +131,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	/**
 	 * @param socketReadTimeoutMS in msec
-	 * @see com.mongodb.connection.SocketSettings.Builder#readTimeout(long, TimeUnit)
+	 * @see com.mongodb.connection.SocketSettings.Builder#readTimeout(int, TimeUnit)
 	 */
 	public void setSocketReadTimeoutMS(int socketReadTimeoutMS) {
 		this.socketReadTimeoutMS = socketReadTimeoutMS;

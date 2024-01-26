@@ -75,7 +75,7 @@ public class MongoCompatibilityAdapter {
 			@Override
 			public <T> T getStreamFactoryFactory() {
 
-				if (MongoClientVersion.isVersion5OrNewer() || getStreamFactoryFactory == null) {
+				if (MongoClientVersion.isVersion5orNewer() || getStreamFactoryFactory == null) {
 					return null;
 				}
 
@@ -93,7 +93,7 @@ public class MongoCompatibilityAdapter {
 	public static IndexOptionsAdapter indexOptionsAdapter(IndexOptions options) {
 		return bucketSize -> {
 
-			if (MongoClientVersion.isVersion5OrNewer() || setBucketSize == null) {
+			if (MongoClientVersion.isVersion5orNewer() || setBucketSize == null) {
 				throw new UnsupportedOperationException(NO_LONGER_SUPPORTED.formatted("IndexOptions.bucketSize"));
 			}
 
@@ -111,7 +111,7 @@ public class MongoCompatibilityAdapter {
 	public static MapReduceIterableAdapter mapReduceIterableAdapter(Object iterable) {
 		return sharded -> {
 
-			if (MongoClientVersion.isVersion5OrNewer()) {
+			if (MongoClientVersion.isVersion5orNewer()) {
 				throw new UnsupportedOperationException(NO_LONGER_SUPPORTED.formatted("sharded"));
 			}
 
@@ -132,7 +132,7 @@ public class MongoCompatibilityAdapter {
 	public static MapReducePublisherAdapter mapReducePublisherAdapter(Object publisher) {
 		return sharded -> {
 
-			if (MongoClientVersion.isVersion5OrNewer()) {
+			if (MongoClientVersion.isVersion5orNewer()) {
 				throw new UnsupportedOperationException(NO_LONGER_SUPPORTED.formatted("sharded"));
 			}
 
@@ -151,7 +151,7 @@ public class MongoCompatibilityAdapter {
 	public static ServerAddressAdapter serverAddressAdapter(ServerAddress serverAddress) {
 		return () -> {
 
-			if (MongoClientVersion.isVersion5OrNewer()) {
+			if (MongoClientVersion.isVersion5orNewer()) {
 				return null;
 			}
 
@@ -199,6 +199,7 @@ public class MongoCompatibilityAdapter {
 		MongoDatabaseAdapter forDb(com.mongodb.client.MongoDatabase db);
 	}
 
+	@SuppressWarnings({ "unchecked", "DataFlowIssue" })
 	public static class MongoDatabaseAdapter {
 
 		@Nullable //
@@ -219,7 +220,7 @@ public class MongoCompatibilityAdapter {
 				LIST_COLLECTION_NAMES_METHOD_SESSION = ReflectionUtils.findMethod(MongoDatabase.class, "listCollectionNames",
 						ClientSession.class);
 
-				if (MongoClientVersion.isVersion5OrNewer()) {
+				if (MongoClientVersion.isVersion5orNewer()) {
 					try {
 						collectionNamesReturnType = ClassUtils.forName("com.mongodb.client.ListCollectionNamesIterable",
 								MongoDatabaseAdapter.class.getClassLoader());
@@ -267,6 +268,7 @@ public class MongoCompatibilityAdapter {
 		ReactiveMongoDatabaseAdapter forDb(com.mongodb.reactivestreams.client.MongoDatabase db);
 	}
 
+	@SuppressWarnings({ "unchecked", "DataFlowIssue" })
 	public static class ReactiveMongoDatabaseAdapter {
 
 		@Nullable //
@@ -289,7 +291,7 @@ public class MongoCompatibilityAdapter {
 						com.mongodb.reactivestreams.client.MongoDatabase.class, "listCollectionNames",
 						com.mongodb.reactivestreams.client.ClientSession.class);
 
-				if (MongoClientVersion.isVersion5OrNewer()) {
+				if (MongoClientVersion.isVersion5orNewer()) {
 					try {
 						collectionNamesReturnType = ClassUtils.forName(
 								"com.mongodb.reactivestreams.client.ListCollectionNamesPublisher",
@@ -352,7 +354,7 @@ public class MongoCompatibilityAdapter {
 
 		void setStreamFactory(Object streamFactory) {
 
-			if (MongoClientVersion.isVersion5OrNewer() && isStreamFactoryPresent()) {
+			if (MongoClientVersion.isVersion5orNewer() && isStreamFactoryPresent()) {
 				logger.warn("StreamFactoryFactory is no longer available. Use TransportSettings instead.");
 				return;
 			}

@@ -38,6 +38,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
  *
  * @author Christoph Strobl
  */
+@SuppressWarnings("deprecation")
 class MongoRuntimeHintsUnitTests {
 
 	@Test // GH-4578
