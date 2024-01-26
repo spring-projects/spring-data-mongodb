@@ -103,6 +103,7 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 
 			hints.reflection() //
 					.registerType(MongoDatabase.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(TypeReference.of("com.mongodb.client.internal.MongoDatabaseImpl"), MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(MapReduceIterable.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(TypeReference.of("com.mongodb.client.internal.MapReduceIterableImpl"), MemberCategory.INVOKE_PUBLIC_METHODS);
 		}
@@ -111,6 +112,7 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 
 			hints.reflection() //
 					.registerType(com.mongodb.reactivestreams.client.MongoDatabase.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(TypeReference.of("com.mongodb.reactivestreams.client.internal.MongoDatabaseImpl"), MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(MapReducePublisher.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 					.registerType(TypeReference.of("com.mongodb.reactivestreams.client.internal.MapReducePublisherImpl"), MemberCategory.INVOKE_PUBLIC_METHODS);
 		}
