@@ -21,10 +21,10 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 |Driver Version
 |Server Version
 
-|2024.0
-|4.3.x
-|4.11.x & 5.x
-|6.x
+|2023.1
+|4.1.x
+|4.9.x
+|7.0.x
 
 |2023.0
 |4.1.x
