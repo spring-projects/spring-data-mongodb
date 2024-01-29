@@ -363,13 +363,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		populateProperties(context, mappedEntity, documentAccessor, evaluator, instance);
 
-		PersistentPropertyAccessor<?> convertingAccessor = new ConvertingPropertyAccessor<>(accessor, conversionService);
-		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(context, documentAccessor, evaluator,
-				spELContext);
-
-		readProperties(context, mappedEntity, convertingAccessor, documentAccessor, valueProvider, evaluator,
-				Predicates.isTrue());
-
 		return accessor.getBean();
 	}
 
@@ -506,15 +499,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
-		if (entity.requiresPropertyPopulation()) {
-			return populateProperties(context, entity, documentAccessor, evaluator, instance);
-		}
-
-		return instance;
+		return populateProperties(context, entity, documentAccessor, evaluator, instance);
 	}
 
 	private <S> S populateProperties(ConversionContext context, MongoPersistentEntity<S> entity,
 			DocumentAccessor documentAccessor, SpELExpressionEvaluator evaluator, S instance) {
+
+		if (!entity.requiresPropertyPopulation()) {
+			return instance;
+		}
 
 		PersistentPropertyAccessor<S> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
 				conversionService);
@@ -566,7 +559,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		String expression = idProperty.getSpelExpression();
 		Object resolvedValue = expression != null ? evaluator.evaluate(expression) : rawId;
 
-		return resolvedValue != null ? readValue(context.forProperty(idProperty), resolvedValue, idProperty.getTypeInformation()) : null;
+		return resolvedValue != null
+				? readValue(context.forProperty(idProperty), resolvedValue, idProperty.getTypeInformation())
+				: null;
 	}
 
 	private void readProperties(ConversionContext context, MongoPersistentEntity<?> entity,
@@ -622,9 +617,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	@Nullable
-	private Object readAssociation(Association<MongoPersistentProperty> association,
-			DocumentAccessor documentAccessor, DbRefProxyHandler handler, DbRefResolverCallback callback,
-			ConversionContext context) {
+	private Object readAssociation(Association<MongoPersistentProperty> association, DocumentAccessor documentAccessor,
+			DbRefProxyHandler handler, DbRefResolverCallback callback, ConversionContext context) {
 
 		MongoPersistentProperty property = association.getInverse();
 		Object value = documentAccessor.get(property);
@@ -647,7 +641,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			} else {
 
 				return dbRefResolver.resolveReference(property,
-								new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)),
+						new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)),
 						referenceLookupDelegate, context.forProperty(property)::convert);
 			}
 		}
@@ -2425,8 +2419,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					collectionConverter, mapConverter, dbRefConverter, elementConverter);
 			this.returnedTypeDescriptor = projection;
 		}
-
-
 
 		@Override
 		public ConversionContext forProperty(String name) {
