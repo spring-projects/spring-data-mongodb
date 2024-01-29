@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -31,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.assertj.core.data.Percentage;
 import org.bson.BsonUndefined;
 import org.bson.types.Binary;
 import org.bson.types.Code;
@@ -129,7 +131,8 @@ class MappingMongoConverterUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions();
+		MongoCustomConversions conversions = new MongoCustomConversions(
+				Arrays.asList(new ByteBufferToDoubleHolderConverter()));
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
@@ -1579,7 +1582,7 @@ class MappingMongoConverterUnitTests {
 		assertThat(document.get("circle")).isInstanceOf(org.bson.Document.class);
 		assertThat(document.get("circle")).isEqualTo((Object) new org.bson.Document("center",
 				new org.bson.Document("x", circle.getCenter().getX()).append("y", circle.getCenter().getY()))
-						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
+				.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1612,7 +1615,7 @@ class MappingMongoConverterUnitTests {
 		assertThat(document.get("sphere")).isInstanceOf(org.bson.Document.class);
 		assertThat(document.get("sphere")).isEqualTo((Object) new org.bson.Document("center",
 				new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
-						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
+				.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1630,7 +1633,7 @@ class MappingMongoConverterUnitTests {
 		assertThat(document.get("sphere")).isInstanceOf(org.bson.Document.class);
 		assertThat(document.get("sphere")).isEqualTo((Object) new org.bson.Document("center",
 				new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
-						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
+				.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1663,7 +1666,7 @@ class MappingMongoConverterUnitTests {
 		assertThat(document.get("shape")).isInstanceOf(org.bson.Document.class);
 		assertThat(document.get("shape")).isEqualTo((Object) new org.bson.Document("center",
 				new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
-						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
+				.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -2673,8 +2676,8 @@ class MappingMongoConverterUnitTests {
 		converter.afterPropertiesSet();
 
 		org.bson.Document source = new org.bson.Document("typeImplementingMap",
-				new org.bson.Document("1st", "one").append("2nd", 2)).append("_class",
-						TypeWrappingTypeImplementingMap.class.getName());
+				new org.bson.Document("1st", "one").append("2nd", 2))
+				.append("_class", TypeWrappingTypeImplementingMap.class.getName());
 
 		TypeWrappingTypeImplementingMap target = converter.read(TypeWrappingTypeImplementingMap.class, source);
 
@@ -2862,8 +2865,8 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<WithNestedInterfaceProjection, Person> projection = introspector.introspect(WithNestedInterfaceProjection.class,
-				Person.class);
+		EntityProjection<WithNestedInterfaceProjection, Person> projection = introspector
+				.introspect(WithNestedInterfaceProjection.class, Person.class);
 		WithNestedInterfaceProjection person = converter.project(projection, source);
 
 		assertThat(person.getFirstname()).isEqualTo("spring");
@@ -2881,12 +2884,33 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<WithNestedDtoProjection, Person> projection = introspector.introspect(WithNestedDtoProjection.class,
-				Person.class);
+		EntityProjection<WithNestedDtoProjection, Person> projection = introspector
+				.introspect(WithNestedDtoProjection.class, Person.class);
 		WithNestedDtoProjection person = converter.project(projection, source);
 
 		assertThat(person.getFirstname()).isEqualTo("spring");
 		assertThat(person.getAddress().getStreet()).isEqualTo("data");
+	}
+
+	@Test // GH-4626
+	void projectShouldReadDtoProjectionPropertiesOnlyOnce() {
+
+		ByteBuffer number = ByteBuffer.allocate(8);
+		number.putDouble(1.2d);
+		number.flip();
+
+		org.bson.Document source = new org.bson.Document("number", number);
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<DoubleHolderDto, WithDoubleHolder> projection = introspector.introspect(DoubleHolderDto.class,
+				WithDoubleHolder.class);
+		DoubleHolderDto result = converter.project(projection, source);
+
+		assertThat(result.number.number).isCloseTo(1.2, Percentage.withPercentage(1));
 	}
 
 	@Test // GH-2860
@@ -3289,11 +3313,13 @@ class MappingMongoConverterUnitTests {
 
 	interface WithNestedInterfaceProjection {
 		String getFirstname();
+
 		AddressProjection getAddress();
 	}
 
 	interface WithNestedDtoProjection {
 		String getFirstname();
+
 		AddressDto getAddress();
 	}
 
@@ -4342,4 +4368,30 @@ class MappingMongoConverterUnitTests {
 		ComplexId id;
 		String value;
 	}
+
+	@ReadingConverter
+	static class ByteBufferToDoubleHolderConverter implements Converter<ByteBuffer, DoubleHolder> {
+
+		@Override
+		public DoubleHolder convert(ByteBuffer source) {
+			return new DoubleHolder(source.getDouble());
+		}
+	}
+
+	record DoubleHolder(double number) {
+
+	}
+
+	static class WithDoubleHolder {
+		DoubleHolder number;
+	}
+
+	static class DoubleHolderDto {
+		DoubleHolder number;
+
+		public DoubleHolderDto(DoubleHolder number) {
+			this.number = number;
+		}
+	}
+
 }
