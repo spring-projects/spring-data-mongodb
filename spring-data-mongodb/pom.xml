@@ -385,6 +385,8 @@
 						<exclude>**/ReactivePerformanceTests.java</exclude>
 					</excludes>
 					<systemPropertyVariables>
+						<mongo.client>${mongo}</mongo.client>
+						<mongo.server>${env.MONGO_VERSION}</mongo.server>
 						<java.util.logging.config.file>
 							src/test/resources/logging.properties
 						</java.util.logging.config.file>
