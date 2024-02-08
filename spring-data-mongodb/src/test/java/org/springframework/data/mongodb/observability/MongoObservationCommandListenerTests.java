@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.observability;
 import static io.micrometer.core.tck.MeterRegistryAssert.*;
 import static org.mockito.Mockito.*;
 
-import com.mongodb.ConnectionString;
 import io.micrometer.common.KeyValues;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
@@ -31,9 +30,9 @@ import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.SynchronousContextProvider;
@@ -181,8 +180,7 @@ class MongoObservationCommandListenerTests {
 		assertThatTimerRegisteredWithTags();
 	}
 
-	@Test
-		// GH-4481
+	@Test // GH-4481
 	void completionShouldIgnoreIncompatibleObservationContext() {
 
 		// given
@@ -198,8 +196,7 @@ class MongoObservationCommandListenerTests {
 		verifyNoMoreInteractions(observation);
 	}
 
-	@Test
-		// GH-4481
+	@Test // GH-4481
 	void failureShouldIgnoreIncompatibleObservationContext() {
 
 		// given
@@ -215,10 +212,10 @@ class MongoObservationCommandListenerTests {
 		verifyNoMoreInteractions(observation);
 	}
 
-	@Test
-		// GH-4321
+	@Test // GH-4321
 	void shouldUseObservationConvention() {
-		//given
+
+		// given
 		MongoHandlerObservationConvention customObservationConvention = new MongoHandlerObservationConvention() {
 			@Override
 			public boolean supportsContext(Observation.Context context) {
@@ -234,7 +231,7 @@ class MongoObservationCommandListenerTests {
 				customObservationConvention);
 
 		// when
-		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0,null, "some name", "", null));
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "", null));
 
 		// then
 		assertThat(meterRegistry).hasMeterWithName("custom.name.active");

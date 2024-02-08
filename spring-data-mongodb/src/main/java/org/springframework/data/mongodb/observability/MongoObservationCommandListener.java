@@ -57,12 +57,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	 * @param observationRegistry must not be {@literal null}
 	 */
 	public MongoObservationCommandListener(ObservationRegistry observationRegistry) {
-
-		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
-
-		this.observationRegistry = observationRegistry;
-		this.connectionString = null;
-		this.observationConvention = new DefaultMongoHandlerObservationConvention();
+		this(observationRegistry, null);
 	}
 
 	/**
@@ -70,31 +65,27 @@ public class MongoObservationCommandListener implements CommandListener {
 	 * {@link ConnectionString} to every {@link Observation}.
 	 *
 	 * @param observationRegistry must not be {@literal null}
-	 * @param connectionString must not be {@literal null}
+	 * @param connectionString can be {@literal null}
 	 */
-	public MongoObservationCommandListener(ObservationRegistry observationRegistry, ConnectionString connectionString) {
-
-		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
-		Assert.notNull(connectionString, "ConnectionString must not be null");
-
-		this.observationRegistry = observationRegistry;
-		this.connectionString = connectionString;
-		this.observationConvention = new DefaultMongoHandlerObservationConvention();
+	public MongoObservationCommandListener(ObservationRegistry observationRegistry,
+			@Nullable ConnectionString connectionString) {
+		this(observationRegistry, connectionString, new DefaultMongoHandlerObservationConvention());
 	}
 
 	/**
 	 * Create a new {@link MongoObservationCommandListener} to record {@link Observation}s. This constructor attaches the
-	 * {@link ConnectionString} to every {@link Observation} and uses the given {@link MongoHandlerObservationConvention}
+	 * {@link ConnectionString} to every {@link Observation} and uses the given {@link MongoHandlerObservationConvention}.
 	 *
 	 * @param observationRegistry must not be {@literal null}
-	 * @param connectionString must not be {@literal null}
+	 * @param connectionString can be {@literal null}
 	 * @param observationConvention must not be {@literal null}
+	 * @since 4.3
 	 */
-	public MongoObservationCommandListener(ObservationRegistry observationRegistry, ConnectionString connectionString, MongoHandlerObservationConvention observationConvention) {
+	public MongoObservationCommandListener(ObservationRegistry observationRegistry,
+			@Nullable ConnectionString connectionString, MongoHandlerObservationConvention observationConvention) {
 
 		Assert.notNull(observationRegistry, "ObservationRegistry must not be null");
-		Assert.notNull(connectionString, "ConnectionString must not be null");
-		Assert.notNull(observationConvention, "MongoHandlerObservationConvention must not be null");
+		Assert.notNull(observationConvention, "ObservationConvention must not be null");
 
 		this.observationRegistry = observationRegistry;
 		this.connectionString = connectionString;
@@ -193,7 +184,7 @@ public class MongoObservationCommandListener implements CommandListener {
 		}
 
 		Observation observation = requestContext.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (observation == null || !(observation.getContext()instanceof MongoHandlerContext context)) {
+		if (observation == null || !(observation.getContext() instanceof MongoHandlerContext context)) {
 			return;
 		}
 
