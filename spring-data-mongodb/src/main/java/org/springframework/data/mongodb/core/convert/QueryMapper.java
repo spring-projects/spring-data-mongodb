@@ -15,8 +15,17 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,6 +36,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -496,7 +506,7 @@ public class QueryMapper {
 
 		Assert.notNull(documentField, "Document field must not be null");
 
-		if (value == null) {
+		if (value == null || documentField.getProperty() == null) {
 			return false;
 		}
 
@@ -552,10 +562,6 @@ public class QueryMapper {
 			return getMappedObject((Document) source, entity);
 		}
 
-		if (source instanceof BasicDBList) {
-			return delegateConvertToMongoType(source, entity);
-		}
-
 		if (isDBObject(source)) {
 			return getMappedObject((BasicDBObject) source, entity);
 		}
@@ -564,20 +570,20 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (source instanceof Map<?,?> sourceMap) {
+		if (source instanceof Map<?, ?> sourceMap) {
 
 			Map<String, Object> map = new LinkedHashMap<>(sourceMap.size(), 1F);
 
-			sourceMap.entrySet().forEach(it -> {
+			for (Entry<?, ?> entry : sourceMap.entrySet()) {
 
-				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(it.getKey()));
+				String key = ObjectUtils.nullSafeToString(converter.convertToMongoType(entry.getKey()));
 
-				if (it.getValue() instanceof Document document) {
+				if (entry.getValue() instanceof Document document) {
 					map.put(key, getMappedObject(document, entity));
 				} else {
-					map.put(key, delegateConvertToMongoType(it.getValue(), entity));
+					map.put(key, delegateConvertToMongoType(entry.getValue(), entity));
 				}
-			});
+			}
 
 			return map;
 		}
@@ -603,6 +609,7 @@ public class QueryMapper {
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
+	@Nullable
 	protected Object convertAssociation(Object source, Field field) {
 		Object value = convertAssociation(source, field.getProperty());
 		if (value != null && field.isIdField() && field.getFieldType() != value.getClass()) {
@@ -627,8 +634,7 @@ public class QueryMapper {
 
 		if (source instanceof DBRef ref) {
 
-			Object id = convertId(ref.getId(),
-					property != null && property.isIdProperty() ? property.getFieldType() : ObjectId.class);
+			Object id = convertId(ref.getId(), property.isIdProperty() ? property.getFieldType() : ObjectId.class);
 
 			if (StringUtils.hasText(ref.getDatabaseName())) {
 				return new DBRef(ref.getDatabaseName(), ref.getCollectionName(), id);
@@ -645,9 +651,8 @@ public class QueryMapper {
 			return result;
 		}
 
-		if (property.isMap()) {
+		if (property.isMap() && source instanceof Document dbObject) {
 			Document result = new Document();
-			Document dbObject = (Document) source;
 			for (String key : dbObject.keySet()) {
 				result.put(key, createReferenceFor(dbObject.get(key), property));
 			}
@@ -661,19 +666,26 @@ public class QueryMapper {
 	private Object convertValue(Field documentField, Object sourceValue, Object value,
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter) {
 
-		MongoConversionContext conversionContext = new MongoConversionContext(new PropertyValueProvider<>() {
-			@Override
-			public <T> T getPropertyValue(MongoPersistentProperty property) {
-				throw new IllegalStateException("No enclosing property available");
-			}
-		}, documentField.getProperty(), converter);
+		MongoPersistentProperty property = documentField.getProperty();
+		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
+				property, converter);
 
 		/* might be an $in clause with multiple entries */
-		if (!documentField.getProperty().isCollectionLike() && sourceValue instanceof Collection<?> collection) {
-			return collection.stream().map(it -> valueConverter.write(it, conversionContext)).collect(Collectors.toList());
+		if (property != null && !property.isCollectionLike() && sourceValue instanceof Collection<?> collection) {
+
+			if (collection.isEmpty()) {
+				return collection;
+			}
+
+			List<Object> converted = new ArrayList<>(collection.size());
+			for (Object o : collection) {
+				converted.add(valueConverter.write(o, conversionContext));
+			}
+
+			return converted;
 		}
 
-		if (!documentField.getProperty().isMap() && sourceValue instanceof Document document) {
+		if (property != null && !documentField.getProperty().isMap() && sourceValue instanceof Document document) {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
@@ -687,6 +699,7 @@ public class QueryMapper {
 	}
 
 	@Nullable
+	@SuppressWarnings("unchecked")
 	private Object convertIdField(Field documentField, Object source) {
 
 		Object value = source;
@@ -714,8 +727,8 @@ public class QueryMapper {
 		} else {
 			return getMappedObject(resultDbo, Optional.empty());
 		}
-		return resultDbo;
 
+		return resultDbo;
 	}
 
 	/**
@@ -1454,7 +1467,6 @@ public class QueryMapper {
 
 			private final Iterator<String> iterator;
 			private int currentIndex;
-			private String currentPropertyRoot;
 			private final List<String> pathParts;
 
 			public KeyMapper(String key,
@@ -1462,7 +1474,6 @@ public class QueryMapper {
 
 				this.pathParts = Arrays.asList(key.split("\\."));
 				this.iterator = pathParts.iterator();
-				this.currentPropertyRoot = iterator.next();
 				this.currentIndex = 0;
 			}
 
@@ -1577,5 +1588,15 @@ public class QueryMapper {
 
 	public MongoConverter getConverter() {
 		return converter;
+	}
+
+	private enum NoPropertyPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
+
+		INSTANCE;
+
+		@Override
+		public <T> T getPropertyValue(MongoPersistentProperty property) {
+			throw new IllegalStateException("No enclosing property source available");
+		}
 	}
 }

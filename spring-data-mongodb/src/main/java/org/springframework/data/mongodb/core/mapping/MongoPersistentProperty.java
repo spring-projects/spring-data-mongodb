@@ -21,6 +21,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
@@ -191,6 +192,8 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 		INSTANCE;
 
+		@NonNull
+		@Override
 		public String convert(MongoPersistentProperty source) {
 			if (!source.isUnwrapped()) {
 				return source.getFieldName();

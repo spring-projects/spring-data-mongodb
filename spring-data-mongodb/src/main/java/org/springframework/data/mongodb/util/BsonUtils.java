@@ -723,14 +723,15 @@ public class BsonUtils {
 		return mapEntries(source, Entry::getKey, entry -> valueMapper.apply(entry.getKey(), entry.getValue()));
 	}
 
-	public static Document mapEntries(Document source, Function<Entry<String,Object>,String> keyMapper, Function<Entry<String,Object>,Object> valueMapper) {
+	public static Document mapEntries(Document source, Function<Entry<String, Object>, String> keyMapper,
+			Function<Entry<String, Object>, Object> valueMapper) {
 
-		if(source.isEmpty()) {
+		if (source.isEmpty()) {
 			return source;
 		}
 
 		Map<String, Object> target = new LinkedHashMap<>(source.size(), 1f);
-		for(Entry<String,Object> entry : source.entrySet()) {
+		for (Entry<String, Object> entry : source.entrySet()) {
 			target.put(keyMapper.apply(entry), valueMapper.apply(entry));
 		}
 		return new Document(target);
