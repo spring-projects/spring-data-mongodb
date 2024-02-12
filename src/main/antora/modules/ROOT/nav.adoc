@@ -26,6 +26,7 @@
 *** xref:mongodb/mapping/document-references.adoc[Object References]
 *** xref:mongodb/mapping/mapping-index-management.adoc[]
 
+** xref:mongodb/value-expressions.adoc[]
 ** xref:mongodb/lifecycle-events.adoc[]
 ** xref:mongodb/auditing.adoc[]
 ** xref:mongodb/client-session-transactions.adoc[]

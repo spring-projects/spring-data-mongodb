@@ -24,6 +24,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.springframework.core.env.Environment;
 import org.springframework.data.mapping.*;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -323,6 +324,11 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 
 	@Override
 	public void setEvaluationContextProvider(EvaluationContextProvider provider) {
+
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
 
 	}
 

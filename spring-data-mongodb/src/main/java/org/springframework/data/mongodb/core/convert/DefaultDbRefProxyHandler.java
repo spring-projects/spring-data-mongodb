@@ -15,12 +15,14 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.function.Function;
+
 import org.bson.Document;
+
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
@@ -37,6 +39,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 	private final SpELContext spELContext;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final ValueResolver resolver;
+	private final Function<Object, ValueExpressionEvaluator> evaluatorFactory;
 
 	/**
 	 * @param spELContext must not be {@literal null}.
@@ -45,11 +48,12 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 	 */
 	public DefaultDbRefProxyHandler(SpELContext spELContext,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			ValueResolver resolver) {
+			ValueResolver resolver, Function<Object, ValueExpressionEvaluator> evaluatorFactory) {
 
 		this.spELContext = spELContext;
 		this.mappingContext = mappingContext;
 		this.resolver = resolver;
+		this.evaluatorFactory = evaluatorFactory;
 	}
 
 	@Override
@@ -66,7 +70,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 			return proxy;
 		}
 
-		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(proxy, spELContext);
+		ValueExpressionEvaluator evaluator = evaluatorFactory.apply(proxy);
 		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(proxy);
 
 		Document object = new Document(idProperty.getFieldName(), source.getId());
