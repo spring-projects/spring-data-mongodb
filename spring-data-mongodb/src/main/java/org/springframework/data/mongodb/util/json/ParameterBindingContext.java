@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
@@ -39,7 +39,7 @@ import org.springframework.lang.Nullable;
 public class ParameterBindingContext {
 
 	private final ValueProvider valueProvider;
-	private final SpELExpressionEvaluator expressionEvaluator;
+	private final ValueExpressionEvaluator expressionEvaluator;
 
 	/**
 	 * @param valueProvider
@@ -67,7 +67,7 @@ public class ParameterBindingContext {
 	 * @param expressionEvaluator
 	 * @since 3.1
 	 */
-	public ParameterBindingContext(ValueProvider valueProvider, SpELExpressionEvaluator expressionEvaluator) {
+	public ParameterBindingContext(ValueProvider valueProvider, ValueExpressionEvaluator expressionEvaluator) {
 		this.valueProvider = valueProvider;
 		this.expressionEvaluator = expressionEvaluator;
 	}

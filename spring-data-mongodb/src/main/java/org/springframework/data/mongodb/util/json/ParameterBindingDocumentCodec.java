@@ -40,7 +40,8 @@ import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
@@ -384,7 +385,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 * @author Christoph Strobl
 	 * @since 3.1
 	 */
-	static class DependencyCapturingExpressionEvaluator implements SpELExpressionEvaluator {
+	static class DependencyCapturingExpressionEvaluator implements ValueExpressionEvaluator {
 
 		private static final Object PLACEHOLDER = new Object();
 

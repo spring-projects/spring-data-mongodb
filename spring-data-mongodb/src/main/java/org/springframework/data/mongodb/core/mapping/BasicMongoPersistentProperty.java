@@ -23,6 +23,9 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -230,6 +233,25 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return rootObject != null ? new StandardEvaluationContext(rootObject) : new StandardEvaluationContext();
 	}
 
+	/**
+	 * Obtain the {@link EvaluationContext} for a specific root object.
+	 *
+	 * @param rootObject can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.3
+	 */
+	public ValueEvaluationContext getValueEvaluationContext(@Nullable Object rootObject) {
+
+		if (getOwner() instanceof BasicMongoPersistentEntity mongoPersistentEntity) {
+			return mongoPersistentEntity.getValueEvaluationContext(rootObject);
+		}
+
+		StandardEvaluationContext standardEvaluationContext = rootObject != null ? new StandardEvaluationContext(rootObject)
+				: new StandardEvaluationContext();
+
+		return ValueEvaluationContext.of(new StandardEnvironment(), standardEvaluationContext);
+	}
+
 	@Override
 	public MongoField getMongoField() {
 		return doGetMongoField();
@@ -318,7 +340,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 			String annotatedName = getAnnotatedFieldName();
 			if (!ID_FIELD_NAME.equals(annotatedName)) {
-				if(LOG.isWarnEnabled()) {
+				if (LOG.isWarnEnabled()) {
 					LOG.warn(String.format(
 							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
 							getOwner().getName(), getName(), annotatedName));

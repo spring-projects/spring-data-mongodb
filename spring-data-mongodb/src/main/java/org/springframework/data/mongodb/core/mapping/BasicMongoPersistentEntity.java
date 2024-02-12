@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.expression.ValueEvaluationContext;
+import org.springframework.data.expression.ValueExpression;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingException;
@@ -38,8 +41,6 @@ import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -61,15 +62,15 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		implements MongoPersistentEntity<T> {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected; Both %s and %s map to the same field name %s; Disambiguate using @Field annotation";
-	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
+	private static final ValueExpressionParser PARSER = ValueExpressionParser.create(SpelExpressionParser::new);
 
 	private final String collection;
 	private final String language;
 
-	private final @Nullable Expression expression;
+	private final @Nullable ValueExpression expression;
 
 	private final @Nullable String collation;
-	private final @Nullable Expression collationExpression;
+	private final @Nullable ValueExpression collationExpression;
 
 	private final ShardKey shardKey;
 
@@ -125,11 +126,12 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
+	@Override
 	public String getCollection() {
 
 		return expression == null //
 				? collection //
-				: expression.getValue(getEvaluationContext(null), String.class);
+				: ObjectUtils.nullSafeToString(expression.evaluate(getValueEvaluationContext(null)));
 	}
 
 	@Override
@@ -152,7 +154,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	public org.springframework.data.mongodb.core.query.Collation getCollation() {
 
 		Object collationValue = collationExpression != null
-				? collationExpression.getValue(getEvaluationContext(null), String.class)
+				? collationExpression.evaluate(getValueEvaluationContext(null))
 				: this.collation;
 
 		if (collationValue == null) {
@@ -194,6 +196,16 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	public EvaluationContext getEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
 		return super.getEvaluationContext(rootObject, dependencies);
+	}
+
+	@Override
+	public ValueEvaluationContext getValueEvaluationContext(Object rootObject) {
+		return super.getValueEvaluationContext(rootObject);
+	}
+
+	@Override
+	public ValueEvaluationContext getValueEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
+		return super.getValueEvaluationContext(rootObject, dependencies);
 	}
 
 	private void verifyFieldUniqueness() {
@@ -290,21 +302,21 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	}
 
 	/**
-	 * Returns a SpEL {@link Expression} if the given {@link String} is actually an expression that does not evaluate to a
-	 * {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
+	 * Returns a Value {@link Expression} if the given {@link String} is actually an expression that does not evaluate to
+	 * a literal expression (indicating that no subsequent evaluation is necessary).
 	 *
 	 * @param potentialExpression can be {@literal null}
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	private static Expression detectExpression(@Nullable String potentialExpression) {
+	private static ValueExpression detectExpression(@Nullable String potentialExpression) {
 
 		if (!StringUtils.hasText(potentialExpression)) {
 			return null;
 		}
 
-		Expression expression = PARSER.parseExpression(potentialExpression, ParserContext.TEMPLATE_EXPRESSION);
-		return expression instanceof LiteralExpression ? null : expression;
+		ValueExpression expression = PARSER.parse(potentialExpression);
+		return expression.isLiteral() ? null : expression;
 	}
 
 	/**
@@ -332,8 +344,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			MongoPersistentProperty existingProperty = properties.get(fieldName);
 
 			if (existingProperty != null) {
-				throw new MappingException(
-						String.format(AMBIGUOUS_FIELD_MAPPING, property, existingProperty, fieldName));
+				throw new MappingException(String.format(AMBIGUOUS_FIELD_MAPPING, property, existingProperty, fieldName));
 			}
 
 			properties.put(fieldName, property);
@@ -398,9 +409,9 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			if (persistentProperty.isDbReference() && persistentProperty.getDBRef().lazy()) {
 				if (persistentProperty.isArray() || Modifier.isFinal(persistentProperty.getActualType().getModifiers())) {
-					throw new MappingException(String.format(
-							"Invalid lazy DBRef property for %s; Found %s which must not be an array nor a final class",
-							persistentProperty.getField(), persistentProperty.getActualType()));
+					throw new MappingException(
+							String.format("Invalid lazy DBRef property for %s; Found %s which must not be an array nor a final class",
+									persistentProperty.getField(), persistentProperty.getActualType()));
 				}
 			}
 		}
