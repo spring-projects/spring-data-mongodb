@@ -34,7 +34,7 @@ class EvaluationContextExpressionEvaluator implements ValueExpressionEvaluator {
 	final ValueProvider valueProvider;
 	final ExpressionParser expressionParser;
 
-	public EvaluationContextExpressionEvaluator(ValueProvider valueProvider, ExpressionParser expressionParser) {
+	EvaluationContextExpressionEvaluator(ValueProvider valueProvider, ExpressionParser expressionParser) {
 
 		this.valueProvider = valueProvider;
 		this.expressionParser = expressionParser;
@@ -46,16 +46,16 @@ class EvaluationContextExpressionEvaluator implements ValueExpressionEvaluator {
 		return evaluateExpression(expression, Collections.emptyMap());
 	}
 
-	public EvaluationContext getEvaluationContext(String expressionString) {
+	EvaluationContext getEvaluationContext(String expressionString) {
 		return new StandardEvaluationContext();
 	}
 
-	public Expression getParsedExpression(String expressionString) {
+	Expression getParsedExpression(String expressionString) {
 		return expressionParser.parseExpression(expressionString);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T evaluateExpression(String expressionString, Map<String, Object> variables) {
+	<T> T evaluateExpression(String expressionString, Map<String, Object> variables) {
 
 		Expression expression = getParsedExpression(expressionString);
 		EvaluationContext ctx = getEvaluationContext(expressionString);

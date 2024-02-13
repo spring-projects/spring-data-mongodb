@@ -43,7 +43,7 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 	 * @param evaluator must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public DefaultDbRefResolverCallback(Bson surroundingObject, ObjectPath path, ValueExpressionEvaluator evaluator,
+	DefaultDbRefResolverCallback(Bson surroundingObject, ObjectPath path, ValueExpressionEvaluator evaluator,
 			ValueResolver resolver) {
 
 		this.surroundingObject = surroundingObject;

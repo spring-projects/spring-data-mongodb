@@ -176,7 +176,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
-		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(spELContext, mappingContext,
+		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(mappingContext,
 				(prop, bson, evaluator, path) -> {
 
 					ConversionContext context = getConversionContext(path);

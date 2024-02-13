@@ -21,7 +21,6 @@ import org.bson.Document;
 
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -36,21 +35,17 @@ import com.mongodb.DBRef;
  */
 class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 
-	private final SpELContext spELContext;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final ValueResolver resolver;
 	private final Function<Object, ValueExpressionEvaluator> evaluatorFactory;
 
 	/**
-	 * @param spELContext must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public DefaultDbRefProxyHandler(SpELContext spELContext,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+	public DefaultDbRefProxyHandler(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			ValueResolver resolver, Function<Object, ValueExpressionEvaluator> evaluatorFactory) {
 
-		this.spELContext = spELContext;
 		this.mappingContext = mappingContext;
 		this.resolver = resolver;
 		this.evaluatorFactory = evaluatorFactory;
