@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -31,14 +32,18 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junitpioneer.jupiter.SetSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.mongodb.CapturingTransactionOptionsResolver;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.data.mongodb.MongoTransactionOptions;
+import org.springframework.data.mongodb.MongoTransactionOptionsResolver;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
@@ -56,7 +61,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadConcernLevel;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -71,6 +79,7 @@ import com.mongodb.client.model.Filters;
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 @ContextConfiguration
 @Transactional(transactionManager = "txManager")
+@SetSystemProperty(key = "tx.read.concern", value = "local")
 public class MongoTemplateTransactionTests {
 
 	static final String DB_NAME = "template-tx-tests";
@@ -98,8 +107,14 @@ public class MongoTemplateTransactionTests {
 		}
 
 		@Bean
-		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory) {
-			return new MongoTransactionManager(dbFactory);
+		CapturingTransactionOptionsResolver txOptionsResolver() {
+			return new CapturingTransactionOptionsResolver(MongoTransactionOptionsResolver.defaultResolver());
+		}
+
+		@Bean
+		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory,
+				MongoTransactionOptionsResolver txOptionsResolver) {
+			return new MongoTransactionManager(dbFactory, txOptionsResolver, MongoTransactionOptions.NONE);
 		}
 
 		@Override
@@ -113,12 +128,10 @@ public class MongoTemplateTransactionTests {
 		}
 	}
 
-	@Autowired
-	MongoTemplate template;
-	@Autowired
-	MongoClient client;
-	@Autowired
-	TransactionOptionsTestService<Assassin> transactionOptionsTestService;
+	@Autowired MongoTemplate template;
+	@Autowired MongoClient client;
+	@Autowired TransactionOptionsTestService<Assassin> transactionOptionsTestService;
+	@Autowired CapturingTransactionOptionsResolver transactionOptionsResolver;
 
 	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
@@ -127,6 +140,7 @@ public class MongoTemplateTransactionTests {
 
 		template.setReadPreference(ReadPreference.primary());
 		assertionList = new CopyOnWriteArrayList<>();
+		transactionOptionsResolver.clear(); // clean out left overs from dirty context
 	}
 
 	@BeforeTransaction
@@ -144,8 +158,8 @@ public class MongoTemplateTransactionTests {
 
 			boolean isPresent = collection.countDocuments(Filters.eq("_id", it.getId())) != 0;
 
-			assertThat(isPresent).isEqualTo(it.shouldBePresent()).withFailMessage(
-					String.format("After transaction entity %s should %s.", it.getPersistable(),
+			assertThat(isPresent).isEqualTo(it.shouldBePresent())
+					.withFailMessage(String.format("After transaction entity %s should %s.", it.getPersistable(),
 							it.shouldBePresent() ? "be present" : "NOT be present"));
 		});
 	}
@@ -205,6 +219,9 @@ public class MongoTemplateTransactionTests {
 
 		transactionOptionsTestService.saveWithinMaxCommitTime(assassin);
 
+		assertThat(transactionOptionsResolver.getLastCapturedOption()).returns(Duration.ofMinutes(1),
+				MongoTransactionOptions::getMaxCommitTime);
+
 		assertAfterTransaction(assassin).isPresent();
 	}
 
@@ -224,6 +241,18 @@ public class MongoTemplateTransactionTests {
 
 		assertThatThrownBy(() -> transactionOptionsTestService.invalidReadConcernFind(randomUUID().toString())) //
 				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Rollback(false)
+	@Test // GH-1628
+	@Transactional(transactionManager = "txManager", propagation = Propagation.NEVER)
+	public void shouldReadTransactionOptionFromSystemProperty() {
+
+		transactionOptionsTestService.environmentReadConcernFind(randomUUID().toString());
+
+		assertThat(transactionOptionsResolver.getLastCapturedOption()).returns(
+				new ReadConcern(ReadConcernLevel.fromString(System.getProperty("tx.read.concern"))),
+				MongoTransactionOptions::getReadConcern);
 	}
 
 	@Rollback(false)
@@ -296,6 +325,9 @@ public class MongoTemplateTransactionTests {
 
 		transactionOptionsTestService.acknowledgedWriteConcernSave(assassin);
 
+		assertThat(transactionOptionsResolver.getLastCapturedOption()).returns(WriteConcern.ACKNOWLEDGED,
+				MongoTransactionOptions::getWriteConcern);
+
 		assertAfterTransaction(assassin).isPresent();
 	}
 
@@ -311,8 +343,7 @@ public class MongoTemplateTransactionTests {
 	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
 	static class Assassin implements Persistable<String> {
 
-		@Id
-		String id;
+		@Id String id;
 		String name;
 
 		public Assassin(String id, String name) {

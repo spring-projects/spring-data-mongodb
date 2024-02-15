@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb;
 
 import static java.util.UUID.*;
+import static org.assertj.core.api.Assertions.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junitpioneer.jupiter.SetSystemProperty;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,6 +55,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadConcernLevel;
+import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
@@ -66,6 +71,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 @EnableIfReplicaSetAvailable
 @DisabledIfSystemProperty(named = "user.name", matches = "jenkins")
+@SetSystemProperty(key = "tx.read.concern", value = "local")
 public class ReactiveTransactionIntegrationTests {
 
 	private static final String DATABASE = "rxtx-test";
@@ -76,6 +82,7 @@ public class ReactiveTransactionIntegrationTests {
 	PersonService personService;
 	ReactiveMongoOperations operations;
 	ReactiveTransactionOptionsTestService<Person> transactionOptionsTestService;
+	CapturingTransactionOptionsResolver transactionOptionsResolver;
 
 	@BeforeAll
 	public static void init() {
@@ -93,6 +100,8 @@ public class ReactiveTransactionIntegrationTests {
 		personService = context.getBean(PersonService.class);
 		operations = context.getBean(ReactiveMongoOperations.class);
 		transactionOptionsTestService = context.getBean(ReactiveTransactionOptionsTestService.class);
+		transactionOptionsResolver = context.getBean(CapturingTransactionOptionsResolver.class);
+		transactionOptionsResolver.clear(); // clean out left overs from dirty context
 
 		try (MongoClient client = MongoTestUtils.reactiveClient()) {
 
@@ -251,6 +260,9 @@ public class ReactiveTransactionIntegrationTests {
 				.expectNext(person) //
 				.verifyComplete();
 
+		assertThat(transactionOptionsResolver.getLastCapturedOption()).returns(Duration.ofMinutes(1),
+				MongoTransactionOptions::getMaxCommitTime);
+
 		operations.count(new Query(), Person.class) //
 				.as(StepVerifier::create) //
 				.expectNext(1L) //
@@ -269,6 +281,17 @@ public class ReactiveTransactionIntegrationTests {
 		transactionOptionsTestService.invalidReadConcernFind(randomUUID().toString()) //
 				.as(StepVerifier::create) //
 				.verifyError(TransactionSystemException.class);
+	}
+
+	@Test // GH-1628
+	public void shouldReadTransactionOptionFromSystemProperty() {
+
+		transactionOptionsTestService.environmentReadConcernFind(randomUUID().toString()).then().as(StepVerifier::create)
+				.verifyComplete();
+
+		assertThat(transactionOptionsResolver.getLastCapturedOption()).returns(
+				new ReadConcern(ReadConcernLevel.fromString(System.getProperty("tx.read.concern"))),
+				MongoTransactionOptions::getReadConcern);
 	}
 
 	@Test // GH-1628
@@ -337,6 +360,9 @@ public class ReactiveTransactionIntegrationTests {
 				.expectNext(person) //
 				.verifyComplete();
 
+		assertThat(transactionOptionsResolver.getLastCapturedOption()).returns(WriteConcern.ACKNOWLEDGED,
+				MongoTransactionOptions::getWriteConcern);
+
 		operations.count(new Query(), Person.class) //
 				.as(StepVerifier::create) //
 				.expectNext(1L) //
@@ -358,8 +384,14 @@ public class ReactiveTransactionIntegrationTests {
 		}
 
 		@Bean
-		public ReactiveMongoTransactionManager txManager(ReactiveMongoDatabaseFactory factory) {
-			return new ReactiveMongoTransactionManager(factory);
+		CapturingTransactionOptionsResolver txOptionsResolver() {
+			return new CapturingTransactionOptionsResolver(MongoTransactionOptionsResolver.defaultResolver());
+		}
+
+		@Bean
+		public ReactiveMongoTransactionManager txManager(ReactiveMongoDatabaseFactory factory,
+				MongoTransactionOptionsResolver txOptionsResolver) {
+			return new ReactiveMongoTransactionManager(factory, txOptionsResolver, MongoTransactionOptions.NONE);
 		}
 
 		@Bean
@@ -421,10 +453,10 @@ public class ReactiveTransactionIntegrationTests {
 					new DefaultTransactionDefinition());
 
 			return Flux.merge(operations.save(new EventLog(new ObjectId(), "beforeConvert")), //
-							operations.save(new EventLog(new ObjectId(), "afterConvert")), //
-							operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
-							operations.save(person), //
-							operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
+					operations.save(new EventLog(new ObjectId(), "afterConvert")), //
+					operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
+					operations.save(person), //
+					operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
 					.thenMany(operations.query(EventLog.class).all()) //
 					.as(transactionalOperator::transactional);
 		}
@@ -435,10 +467,10 @@ public class ReactiveTransactionIntegrationTests {
 					new DefaultTransactionDefinition());
 
 			return Flux.merge(operations.save(new EventLog(new ObjectId(), "beforeConvert")), //
-							operations.save(new EventLog(new ObjectId(), "afterConvert")), //
-							operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
-							operations.save(person), //
-							operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
+					operations.save(new EventLog(new ObjectId(), "afterConvert")), //
+					operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
+					operations.save(person), //
+					operations.save(new EventLog(new ObjectId(), "afterInsert"))) //
 					.<Void> flatMap(it -> Mono.error(new RuntimeException("poof"))) //
 					.as(transactionalOperator::transactional);
 		}
@@ -514,8 +546,8 @@ public class ReactiveTransactionIntegrationTests {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname) && Objects.equals(lastname,
-					person.lastname);
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(lastname, person.lastname);
 		}
 
 		@Override
@@ -524,7 +556,8 @@ public class ReactiveTransactionIntegrationTests {
 		}
 
 		public String toString() {
-			return "ReactiveTransactionIntegrationTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname() + ", lastname=" + this.getLastname() + ")";
+			return "ReactiveTransactionIntegrationTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ", lastname=" + this.getLastname() + ")";
 		}
 	}
 

@@ -59,6 +59,11 @@ public class ReactiveTransactionOptionsTestService<T> {
 		return findByIdFunction.apply(id);
 	}
 
+	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=${tx.read.concern}" })
+	public Mono<T> environmentReadConcernFind(Object id) {
+		return findByIdFunction.apply(id);
+	}
+
 	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=majority" })
 	public Mono<T> majorityReadConcernFind(Object id) {
 		return findByIdFunction.apply(id);

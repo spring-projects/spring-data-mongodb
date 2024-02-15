@@ -65,7 +65,8 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		implements ResourceTransactionManager, InitializingBean {
 
 	private @Nullable MongoDatabaseFactory dbFactory;
-	private @Nullable TransactionOptions options;
+	private MongoTransactionOptions options;
+	private MongoTransactionOptionsResolver transactionOptionsResolver;
 
 	/**
 	 * Create a new {@link MongoTransactionManager} for bean-style usage.
@@ -99,11 +100,25 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @param options can be {@literal null}.
 	 */
 	public MongoTransactionManager(MongoDatabaseFactory dbFactory, @Nullable TransactionOptions options) {
+		this(dbFactory, MongoTransactionOptionsResolver.defaultResolver(), MongoTransactionOptions.of(options));
+	}
+
+	/**
+	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDatabaseFactory}
+	 * applying the given {@link TransactionOptions options}, if present, when starting a new transaction.
+	 *
+	 * @param dbFactory must not be {@literal null}.
+	 * @param transactionOptionsResolver
+	 * @param defaultTransactionOptions can be {@literal null}.
+	 * @since 4.3
+	 */
+	public MongoTransactionManager(MongoDatabaseFactory dbFactory, MongoTransactionOptionsResolver transactionOptionsResolver, MongoTransactionOptions defaultTransactionOptions) {
 
 		Assert.notNull(dbFactory, "DbFactory must not be null");
 
 		this.dbFactory = dbFactory;
-		this.options = options;
+		this.transactionOptionsResolver = transactionOptionsResolver;
+		this.options = defaultTransactionOptions;
 	}
 
 	@Override
@@ -134,7 +149,8 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 
 		try {
-			mongoTransactionObject.startTransaction(MongoTransactionUtils.extractOptions(definition, options));
+			MongoTransactionOptions mongoTransactionOptions = transactionOptionsResolver.resolve(definition).mergeWith(options);
+			mongoTransactionObject.startTransaction(mongoTransactionOptions.toDriverOptions());
 		} catch (MongoException ex) {
 			throw new TransactionSystemException(String.format("Could not start Mongo transaction for session %s.",
 					debugString(mongoTransactionObject.getSession())), ex);
@@ -276,7 +292,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @param options can be {@literal null}.
 	 */
 	public void setOptions(@Nullable TransactionOptions options) {
-		this.options = options;
+		this.options = MongoTransactionOptions.of(options);
 	}
 
 	/**

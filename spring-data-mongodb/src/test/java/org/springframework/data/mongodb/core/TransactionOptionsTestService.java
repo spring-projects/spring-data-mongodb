@@ -61,6 +61,12 @@ public class TransactionOptionsTestService<T> {
 	}
 
 	@Nullable
+	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=${tx.read.concern}" })
+	public T environmentReadConcernFind(Object id) {
+		return findByIdFunction.apply(id);
+	}
+
+	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=majority" })
 	public T majorityReadConcernFind(Object id) {
 		return findByIdFunction.apply(id);

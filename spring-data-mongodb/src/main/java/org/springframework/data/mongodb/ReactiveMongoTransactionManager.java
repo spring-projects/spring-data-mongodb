@@ -67,7 +67,8 @@ import com.mongodb.reactivestreams.client.ClientSession;
 public class ReactiveMongoTransactionManager extends AbstractReactiveTransactionManager implements InitializingBean {
 
 	private @Nullable ReactiveMongoDatabaseFactory databaseFactory;
-	private @Nullable TransactionOptions options;
+	private @Nullable MongoTransactionOptions options;
+	private MongoTransactionOptionsResolver transactionOptionsResolver;
 
 	/**
 	 * Create a new {@link ReactiveMongoTransactionManager} for bean-style usage.
@@ -103,11 +104,27 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 */
 	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
 			@Nullable TransactionOptions options) {
+		this(databaseFactory, MongoTransactionOptionsResolver.defaultResolver(), MongoTransactionOptions.of(options));
+	}
+
+	/**
+	 * Create a new {@link ReactiveMongoTransactionManager} obtaining sessions from the given
+	 * {@link ReactiveMongoDatabaseFactory} applying the given {@link TransactionOptions options}, if present, when
+	 * starting a new transaction.
+	 *
+	 * @param databaseFactory must not be {@literal null}.
+	 * @param transactionOptionsResolver
+	 * @param defaultTransactionOptions can be {@literal null}.
+	 *
+	 */
+	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory, MongoTransactionOptionsResolver transactionOptionsResolver,
+			@Nullable MongoTransactionOptions defaultTransactionOptions) {
 
 		Assert.notNull(databaseFactory, "DatabaseFactory must not be null");
 
 		this.databaseFactory = databaseFactory;
-		this.options = options;
+		this.transactionOptionsResolver = transactionOptionsResolver;
+		this.options = defaultTransactionOptions;
 	}
 
 	@Override
@@ -146,7 +163,8 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 			}).doOnNext(resourceHolder -> {
 
-				mongoTransactionObject.startTransaction(MongoTransactionUtils.extractOptions(definition, options));
+				MongoTransactionOptions mongoTransactionOptions = transactionOptionsResolver.resolve(definition).mergeWith(options);
+				mongoTransactionObject.startTransaction(mongoTransactionOptions.toDriverOptions());
 
 				if (logger.isDebugEnabled()) {
 					logger.debug(String.format("Started transaction for session %s.", debugString(resourceHolder.getSession())));
@@ -291,7 +309,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 * @param options can be {@literal null}.
 	 */
 	public void setOptions(@Nullable TransactionOptions options) {
-		this.options = options;
+		this.options = MongoTransactionOptions.of(options);
 	}
 
 	/**
