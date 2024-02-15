@@ -80,7 +80,7 @@ To only encrypt parts of the `Address`, like `Address#street` the `street` field
 <4> ``Map``-like fields are encrypted as single value and not as a key/value entry.
 ====
 
-Depending on the encryption algorithm, MongoDB supports certain operations on an encrypted field using its https://www.mongodb.com/docs/manual/core/queryable-encryption/[Queryable Encryption] feature.
+Client-Side Field Level Encryption allows you to choose between a deterministic and a randomized algorithm. Depending on the https://www.mongodb.com/docs/v5.0/reference/security-client-side-automatic-json-schema/#std-label-field-level-encryption-json-schema/[chosen algorithm], https://www.mongodb.com/docs/manual/core/csfle/reference/supported-operations/[different operations] may be supported.
 To pick a certain algorithm use `@ExplicitEncrypted(algorithm)`, see `EncryptionAlgorithms` for algorithm constants.
 Please read the https://www.mongodb.com/docs/manual/core/csfle/fundamentals/encryption-algorithms[Encryption Types] manual for more information on algorithms and their usage.
 
