@@ -2268,6 +2268,10 @@ public class MongoTemplate
 				cursor = hintFunction.apply(mongoDbFactory, cursor::hintString, cursor::hint);
 			}
 
+			if (options.hasExecutionTimeLimit()) {
+				cursor = cursor.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
+			}
+
 			Class<?> domainType = aggregation instanceof TypedAggregation typedAggregation ? typedAggregation.getInputType()
 					: null;
 
