@@ -48,6 +48,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -118,7 +119,15 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.MapReduceAction;
+import com.mongodb.client.model.TimeSeriesGranularity;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -496,6 +505,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				Wrapper.class);
 
 		verify(collection).withReadPreference(ReadPreference.secondary());
+	}
+
+	@Test // GH-4644
+	void aggregateStreamShouldHonorMaxTimeIfSet() {
+
+		AggregationOptions options = AggregationOptions.builder().maxTime(Duration.ofSeconds(20)).build();
+
+		template.aggregateStream(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1",
+				Wrapper.class);
+
+		verify(aggregateIterable).maxTime(20000, TimeUnit.MILLISECONDS);
 	}
 
 	@Test // DATAMONGO-2153
@@ -2489,7 +2509,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // GH-4462
 	void replaceShouldUseHintIfPresent() {
 
-		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(),
+				ReplaceOptions.replaceOptions().upsert());
 
 		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
 				.forClass(com.mongodb.client.model.ReplaceOptions.class);
@@ -2509,7 +2530,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 			}
 		});
 
-		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(), ReplaceOptions.replaceOptions().upsert());
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(),
+				ReplaceOptions.replaceOptions().upsert());
 
 		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
@@ -2551,8 +2573,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		@Id String id;
 		String firstname;
 
-		public Person() {
-		}
+		public Person() {}
 
 		public Person(String id, String firstname) {
 			this.id = id;
