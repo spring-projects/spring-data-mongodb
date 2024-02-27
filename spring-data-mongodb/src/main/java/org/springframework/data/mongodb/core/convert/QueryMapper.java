@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bson.BsonRegularExpression;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -833,7 +834,7 @@ public class QueryMapper {
 	 * conversions. In case of a {@link Collection} (used eg. for {@code $in} queries) the individual values will be
 	 * converted one by one.
 	 *
-	 * @param documentField the field and its meta data
+	 * @param documentField the field and its metadata
 	 * @param value the actual value. Can be {@literal null}.
 	 * @return the potentially converted target value.
 	 */
@@ -841,7 +842,8 @@ public class QueryMapper {
 	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
 		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()
-				|| value instanceof Document || value instanceof DBObject) {
+				|| value instanceof Document || value instanceof DBObject || value instanceof Pattern
+				|| value instanceof BsonRegularExpression) {
 			return value;
 		}
 
