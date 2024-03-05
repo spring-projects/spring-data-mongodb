@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.2.4-SNAPSHOT</version>
+		<version>4.2.x-4653-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
