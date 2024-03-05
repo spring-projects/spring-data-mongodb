@@ -23,14 +23,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.jmolecules.ddd.annotation.Identity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
@@ -250,6 +255,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isExplicitIdProperty()).isTrue();
 	}
 
+	@ParameterizedTest // GH-4653
+	@ValueSource(strings = { "objectMap", "stringMap", "mapOfSet", "objectSet", "stringSet", "objectIterable",
+			"stringIterable", "iterableOfSet" })
+	void doesNotConsiderCollectionLikeTypesEntities(String field) {
+
+		MongoPersistentProperty property = getPropertyFor(WithCollectionAndMapTypes.class, field);
+		assertThat(property.isEntity()).isFalse();
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -380,5 +394,17 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class WithJMoleculesIdentity {
 		@Identity ObjectId identifier;
+	}
+
+	static class WithCollectionAndMapTypes {
+
+		Map<String, Object> objectMap;
+		Map<String, String> stringMap;
+		Map<String, HashSet<ComplexId>> mapOfSet;
+		HashSet<Object> objectSet;
+		HashSet<String> stringSet;
+		Iterable<Object> objectIterable;
+		Iterable<String> stringIterable;
+		Iterable<Set<String>> iterableOfSet;
 	}
 }
