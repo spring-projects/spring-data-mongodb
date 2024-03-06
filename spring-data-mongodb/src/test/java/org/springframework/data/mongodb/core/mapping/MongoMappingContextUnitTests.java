@@ -182,8 +182,8 @@ public class MongoMappingContextUnitTests {
 		MongoMappingContext context = new MongoMappingContext();
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(InterfaceWithMethodReturningOptional.class);
 
-		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class)
-				Optional.class).contains((Class)Person.class);
+		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class) Optional.class)
+				.contains((Class) Person.class);
 	}
 
 	@Test // GH-3656
@@ -192,8 +192,8 @@ public class MongoMappingContextUnitTests {
 		MongoMappingContext context = new MongoMappingContext();
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ClassWithOptionalField.class);
 
-		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class)
-				Optional.class).contains((Class)Person.class);
+		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class) Optional.class)
+				.contains((Class) Person.class);
 	}
 
 	@Test // GH-4653
