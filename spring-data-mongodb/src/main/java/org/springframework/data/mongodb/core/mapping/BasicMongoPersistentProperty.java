@@ -23,9 +23,9 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.model.AbstractPersistentProperty;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
@@ -76,17 +76,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
-	}
-
-	/**
-	 * @return {@literal true} if not a collection and qualifies as entity as per
-	 *         {@link AbstractPersistentProperty#isEntity()}
-	 */
-	@Override
-	public boolean isEntity() {
-
-		// TODO: remove in future version once spring-data-commons#3056 is resolved
-		return super.isEntity() && !getActualTypeInformation().isCollectionLike();
 	}
 
 	/**
@@ -330,7 +319,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 			String annotatedName = getAnnotatedFieldName();
 			if (!ID_FIELD_NAME.equals(annotatedName)) {
-				if(LOG.isWarnEnabled()) {
+				if (LOG.isWarnEnabled()) {
 					LOG.warn(String.format(
 							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
 							getOwner().getName(), getName(), annotatedName));

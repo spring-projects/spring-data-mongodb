@@ -261,7 +261,18 @@ public class BasicMongoPersistentPropertyUnitTests {
 	void doesNotConsiderCollectionLikeTypesEntities(String field) {
 
 		MongoPersistentProperty property = getPropertyFor(WithCollectionAndMapTypes.class, field);
+		assertThat(property.getPersistentEntityTypeInformation()).isEmpty();
 		assertThat(property.isEntity()).isFalse();
+	}
+
+	@ParameterizedTest // GH-4653
+	@ValueSource(strings = { "mapOfSetOfComplexId", "mapKeyOfSetOfComplexId", "listOfSetOfComplexId" })
+	void doesConsiderEntityTypeInformation(String field) {
+
+		MongoPersistentProperty property = getPropertyFor(WithCollectionAndMapTypes.class, field);
+		assertThat(property.getPersistentEntityTypeInformation()).hasSize(1).map(TypeInformation::getType)
+				.contains((Class) ComplexId.class);
+		assertThat(property.isEntity()).isTrue();
 	}
 
 	private MongoPersistentProperty getPropertyFor(Field field) {
@@ -404,11 +415,16 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		Map<String, Object> objectMap;
 		Map<String, String> stringMap;
-		Map<String, HashSet<ComplexId>> mapOfSet;
+		Map<String, HashSet<String>> mapOfSet;
 		HashSet<Object> objectSet;
 		HashSet<String> stringSet;
 		Iterable<Object> objectIterable;
 		Iterable<String> stringIterable;
 		Iterable<Set<String>> iterableOfSet;
+		List<Set<String>> listWithNestedObject;
+
+		Map<String, HashSet<ComplexId>> mapOfSetOfComplexId;
+		Map<HashSet<ComplexId>, String> mapKeyOfSetOfComplexId;
+		List<Set<ComplexId>> listOfSetOfComplexId;
 	}
 }

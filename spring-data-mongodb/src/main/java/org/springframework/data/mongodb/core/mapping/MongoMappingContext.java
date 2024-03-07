@@ -74,10 +74,6 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 			return false;
 		}
 
-		if(type.isCollectionLike()) {
-			return false;
-		}
-
 		return !MongoSimpleTypes.HOLDER.isSimpleType(type.getType()) && !AbstractMap.class.isAssignableFrom(type.getType());
 	}
 

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -29,13 +28,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.ResolvableType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.DBRef;
 
@@ -194,15 +192,6 @@ public class MongoMappingContextUnitTests {
 
 		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class) Optional.class)
 				.contains((Class) Person.class);
-	}
-
-	@Test // GH-4653
-	void shouldNotCreatePersistentEntityForMapHoldingCollectionLikeType() {
-
-		ResolvableType sourceType = ResolvableType.forClassWithGenerics(HashSet.class, String.class);
-		MongoMappingContext context = new MongoMappingContext();
-
-		assertThat(context.shouldCreatePersistentEntityFor(TypeInformation.of(sourceType))).isFalse();
 	}
 
 	public class SampleClass {
