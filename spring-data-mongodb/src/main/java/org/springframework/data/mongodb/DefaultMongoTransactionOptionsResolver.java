@@ -18,7 +18,6 @@ package org.springframework.data.mongodb;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 
 /**
@@ -30,13 +29,11 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @since 4.3
  */
-class DefaultMongoTransactionOptionsResolver implements MongoTransactionOptionsResolver {
+enum DefaultMongoTransactionOptionsResolver implements MongoTransactionOptionsResolver {
 
-	static final Lazy<MongoTransactionOptionsResolver> INSTANCE = Lazy.of(DefaultMongoTransactionOptionsResolver::new);
+	INSTANCE;
 
 	private static final String PREFIX = "mongo:";
-
-	private DefaultMongoTransactionOptionsResolver() {}
 
 	@Override
 	public MongoTransactionOptions convert(Map<String, String> options) {
@@ -53,7 +50,7 @@ class DefaultMongoTransactionOptionsResolver implements MongoTransactionOptionsR
 
 	private static void validateKeys(Set<String> keys) {
 
-		if (!keys.stream().allMatch(SimpleMongoTransactionOptions.KNOWN_KEYS::contains)) {
+		if (!SimpleMongoTransactionOptions.KNOWN_KEYS.containsAll(keys)) {
 
 			throw new IllegalArgumentException("Transaction labels contained invalid values. Has to be one of %s"
 					.formatted(SimpleMongoTransactionOptions.KNOWN_KEYS));

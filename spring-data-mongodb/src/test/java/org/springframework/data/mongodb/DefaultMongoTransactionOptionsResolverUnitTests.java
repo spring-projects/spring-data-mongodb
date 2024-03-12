@@ -31,19 +31,22 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 
 /**
+ * Unit tests for {@link DefaultMongoTransactionOptionsResolver}.
+ *
  * @author Yan Kardziyaka
  * @author Christoph Strobl
  */
-class SimpleMongoTransactionOptionsResolverUnitTests {
+class DefaultMongoTransactionOptionsResolverUnitTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = { "mongo:maxCommitTime=-PT5S", "mongo:readConcern=invalidValue",
-			"mongo:readPreference=invalidValue", "mongo:writeConcern=invalidValue", "mongo:invalidPreference=jedi", "mongo:readConcern", "mongo:readConcern:local", "mongo:readConcern=" })
+			"mongo:readPreference=invalidValue", "mongo:writeConcern=invalidValue", "mongo:invalidPreference=jedi",
+			"mongo:readConcern", "mongo:readConcern:local", "mongo:readConcern=" })
 	void shouldThrowExceptionOnInvalidAttribute(String label) {
 
 		TransactionAttribute attribute = transactionAttribute(label);
 
-		assertThatThrownBy(() -> DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute)) //
+		assertThatThrownBy(() -> DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute)) //
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 
@@ -51,7 +54,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 	public void shouldReturnEmptyOptionsIfNotTransactionAttribute() {
 
 		DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(definition))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(definition))
 				.isSameAs(MongoTransactionOptions.NONE);
 	}
 
@@ -60,7 +63,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 
 		TransactionAttribute attribute = new DefaultTransactionAttribute();
 
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute))
 				.isSameAs(MongoTransactionOptions.NONE);
 	}
 
@@ -69,7 +72,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 
 		TransactionAttribute attribute = transactionAttribute("jpa:ignore");
 
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute))
 				.isSameAs(MongoTransactionOptions.NONE);
 	}
 
@@ -78,7 +81,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 
 		TransactionAttribute attribute = transactionAttribute("mongo:maxCommitTime=PT5S");
 
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute))
 				.returns(5L, from(options -> options.getMaxCommitTime().toSeconds())) //
 				.returns(null, from(MongoTransactionOptions::getReadConcern)) //
 				.returns(null, from(MongoTransactionOptions::getReadPreference)) //
@@ -90,7 +93,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 
 		TransactionAttribute attribute = transactionAttribute("mongo:readConcern=majority");
 
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute))
 				.returns(null, from(TransactionMetadata::getMaxCommitTime)) //
 				.returns(ReadConcern.MAJORITY, from(MongoTransactionOptions::getReadConcern)) //
 				.returns(null, from(MongoTransactionOptions::getReadPreference)) //
@@ -102,7 +105,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 
 		TransactionAttribute attribute = transactionAttribute("mongo:readPreference=primaryPreferred");
 
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute))
 				.returns(null, from(TransactionMetadata::getMaxCommitTime)) //
 				.returns(null, from(MongoTransactionOptions::getReadConcern)) //
 				.returns(ReadPreference.primaryPreferred(), from(MongoTransactionOptions::getReadPreference)) //
@@ -114,7 +117,7 @@ class SimpleMongoTransactionOptionsResolverUnitTests {
 
 		TransactionAttribute attribute = transactionAttribute("mongo:writeConcern=w3");
 
-		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.get().resolve(attribute))
+		assertThat(DefaultMongoTransactionOptionsResolver.INSTANCE.resolve(attribute))
 				.returns(null, from(TransactionMetadata::getMaxCommitTime)) //
 				.returns(null, from(MongoTransactionOptions::getReadConcern)) //
 				.returns(null, from(MongoTransactionOptions::getReadPreference)) //

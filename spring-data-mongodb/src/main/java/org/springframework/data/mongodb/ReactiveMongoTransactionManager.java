@@ -37,17 +37,14 @@ import com.mongodb.reactivestreams.client.ClientSession;
 /**
  * A {@link org.springframework.transaction.ReactiveTransactionManager} implementation that manages
  * {@link com.mongodb.reactivestreams.client.ClientSession} based transactions for a single
- * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}.
- * <br />
+ * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}. <br />
  * Binds a {@link ClientSession} from the specified
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory} to the subscriber
- * {@link reactor.util.context.Context}.
- * <br />
+ * {@link reactor.util.context.Context}. <br />
  * {@link org.springframework.transaction.TransactionDefinition#isReadOnly() Readonly} transactions operate on a
  * {@link ClientSession} and enable causal consistency, and also {@link ClientSession#startTransaction() start},
  * {@link com.mongodb.reactivestreams.client.ClientSession#commitTransaction() commit} or
- * {@link ClientSession#abortTransaction() abort} a transaction.
- * <br />
+ * {@link ClientSession#abortTransaction() abort} a transaction. <br />
  * Application code is required to retrieve the {@link com.mongodb.reactivestreams.client.MongoDatabase} via
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseUtils#getDatabase(ReactiveMongoDatabaseFactory)} instead
  * of a standard {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()} call. Spring
@@ -68,11 +65,10 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 	private @Nullable ReactiveMongoDatabaseFactory databaseFactory;
 	private @Nullable MongoTransactionOptions options;
-	private MongoTransactionOptionsResolver transactionOptionsResolver;
+	private final MongoTransactionOptionsResolver transactionOptionsResolver;
 
 	/**
-	 * Create a new {@link ReactiveMongoTransactionManager} for bean-style usage.
-	 * <br />
+	 * Create a new {@link ReactiveMongoTransactionManager} for bean-style usage. <br />
 	 * <strong>Note:</strong>The {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory db factory} has to
 	 * be {@link #setDatabaseFactory(ReactiveMongoDatabaseFactory)} set} before using the instance. Use this constructor
 	 * to prepare a {@link ReactiveMongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}.
@@ -82,7 +78,9 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 *
 	 * @see #setDatabaseFactory(ReactiveMongoDatabaseFactory)
 	 */
-	public ReactiveMongoTransactionManager() {}
+	public ReactiveMongoTransactionManager() {
+		this.transactionOptionsResolver = MongoTransactionOptionsResolver.defaultResolver();
+	}
 
 	/**
 	 * Create a new {@link ReactiveMongoTransactionManager} obtaining sessions from the given
@@ -113,14 +111,16 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 * starting a new transaction.
 	 *
 	 * @param databaseFactory must not be {@literal null}.
-	 * @param transactionOptionsResolver
+	 * @param transactionOptionsResolver must not be {@literal null}.
 	 * @param defaultTransactionOptions can be {@literal null}.
-	 *
+	 * @since 4.3
 	 */
-	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory, MongoTransactionOptionsResolver transactionOptionsResolver,
+	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
+			MongoTransactionOptionsResolver transactionOptionsResolver,
 			@Nullable MongoTransactionOptions defaultTransactionOptions) {
 
 		Assert.notNull(databaseFactory, "DatabaseFactory must not be null");
+		Assert.notNull(transactionOptionsResolver, "MongoTransactionOptionsResolver must not be null");
 
 		this.databaseFactory = databaseFactory;
 		this.transactionOptionsResolver = transactionOptionsResolver;
@@ -163,7 +163,8 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 			}).doOnNext(resourceHolder -> {
 
-				MongoTransactionOptions mongoTransactionOptions = transactionOptionsResolver.resolve(definition).mergeWith(options);
+				MongoTransactionOptions mongoTransactionOptions = transactionOptionsResolver.resolve(definition)
+						.mergeWith(options);
 				mongoTransactionObject.startTransaction(mongoTransactionOptions.toDriverOptions());
 
 				if (logger.isDebugEnabled()) {

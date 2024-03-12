@@ -17,13 +17,13 @@ package org.springframework.data.mongodb;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.WriteConcernAware;
 import org.springframework.lang.Nullable;
 
-import com.mongodb.Function;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
@@ -115,24 +115,23 @@ public interface MongoTransactionOptions
 	}
 
 	/**
-	 * Map the current options using the given mapping {@link Function}.
+	 * Apply the current options using the given mapping {@link Function} and return its result.
 	 *
 	 * @param mappingFunction
-	 * @return instance of T.
-	 * @param <T>
+	 * @return result of the mapping function.
 	 */
-	default <T> T as(Function<MongoTransactionOptions, T> mappingFunction) {
+	default <T> T map(Function<MongoTransactionOptions, T> mappingFunction) {
 		return mappingFunction.apply(this);
 	}
 
 	/**
 	 * @return MongoDB driver native {@link TransactionOptions}.
-	 * @see MongoTransactionOptions#as(Function)
+	 * @see MongoTransactionOptions#map(Function)
 	 */
 	@Nullable
 	default TransactionOptions toDriverOptions() {
 
-		return as(it -> {
+		return map(it -> {
 
 			if (MongoTransactionOptions.NONE.equals(it)) {
 				return null;
@@ -157,7 +156,7 @@ public interface MongoTransactionOptions
 
 	/**
 	 * Factory method to wrap given MongoDB driver native {@link TransactionOptions} into {@link MongoTransactionOptions}.
-	 * 
+	 *
 	 * @param options
 	 * @return {@link MongoTransactionOptions#NONE} if given object is {@literal null}.
 	 */

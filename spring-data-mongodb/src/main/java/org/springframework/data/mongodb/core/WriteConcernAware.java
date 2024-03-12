@@ -17,14 +17,21 @@ package org.springframework.data.mongodb.core;
 
 import org.springframework.lang.Nullable;
 
-import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 
 /**
+ * Interface indicating a component that contains and exposes an {@link WriteConcern}.
+ *
  * @author Christoph Strobl
  * @since 4.3
  */
 public interface WriteConcernAware {
+
+	/**
+	 * @return the {@link WriteConcern} to apply or {@literal null} if none set.
+	 */
+	@Nullable
+	WriteConcern getWriteConcern();
 
 	/**
 	 * @return {@literal true} if a {@link com.mongodb.WriteConcern} is set.
@@ -32,10 +39,4 @@ public interface WriteConcernAware {
 	default boolean hasWriteConcern() {
 		return getWriteConcern() != null;
 	}
-
-	/**
-	 * @return the {@link ReadPreference} to apply or {@literal null} if none set.
-	 */
-	@Nullable
-	WriteConcern getWriteConcern();
 }

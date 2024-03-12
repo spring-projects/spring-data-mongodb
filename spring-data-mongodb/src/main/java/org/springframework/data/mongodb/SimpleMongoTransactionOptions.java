@@ -82,6 +82,13 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 		return writeConcern;
 	}
 
+	@Override
+	public String toString() {
+
+		return "DefaultMongoTransactionOptions{" + "maxCommitTime=" + maxCommitTime + ", readConcern=" + readConcern
+				+ ", readPreference=" + readPreference + ", writeConcern=" + writeConcern + '}';
+	}
+
 	@Nullable
 	private static Duration doGetMaxCommitTime(Map<String, String> options) {
 
@@ -121,13 +128,6 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 
 		String value = options.get(key.getKey());
 		return value != null ? convertFunction.apply(value) : null;
-	}
-
-	@Override
-	public String toString() {
-
-		return "DefaultMongoTransactionOptions{" + "maxCommitTime=" + maxCommitTime + ", readConcern=" + readConcern
-				+ ", readPreference=" + readPreference + ", writeConcern=" + writeConcern + '}';
 	}
 
 	enum OptionKey {

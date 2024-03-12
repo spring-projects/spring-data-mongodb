@@ -28,7 +28,7 @@ import org.springframework.util.StringUtils;
  * A {@link TransactionOptionResolver} reading MongoDB specific {@link MongoTransactionOptions transaction options} from
  * a {@link TransactionDefinition}. Implementations of {@link MongoTransactionOptions} may choose a specific
  * {@link #getLabelPrefix() prefix} for {@link TransactionAttribute#getLabels() transaction attribute labels} to avoid
- * evaluating non store specific ones.
+ * evaluating non-store specific ones.
  * <p>
  * {@link TransactionAttribute#getLabels()} evaluated by default should follow the property style using {@code =} to
  * separate key and value pairs.
@@ -50,11 +50,11 @@ public interface MongoTransactionOptionsResolver extends TransactionOptionResolv
 	/**
 	 * Obtain the default {@link MongoTransactionOptionsResolver} implementation using a {@literal mongo:}
 	 * {@link #getLabelPrefix() prefix}.
-	 * 
+	 *
 	 * @return instance of default {@link MongoTransactionOptionsResolver} implementation.
 	 */
 	static MongoTransactionOptionsResolver defaultResolver() {
-		return DefaultMongoTransactionOptionsResolver.INSTANCE.get();
+		return DefaultMongoTransactionOptionsResolver.INSTANCE;
 	}
 
 	/**
@@ -71,16 +71,16 @@ public interface MongoTransactionOptionsResolver extends TransactionOptionResolv
 	 * <p>
 	 * Splits applicable labels property style using {@literal =} as deliminator and removes a potential
 	 * {@link #getLabelPrefix() prefix} before calling {@link #convert(Map)} with filtered label values.
-	 * 
-	 * @param txDefinition
+	 *
+	 * @param definition
 	 * @return {@link MongoTransactionOptions#NONE} in case the given {@link TransactionDefinition} is not a
 	 *         {@link TransactionAttribute} if no matching {@link TransactionAttribute#getLabels() labels} could be found.
 	 * @throws IllegalArgumentException for options that do not map to valid transactions options or malformatted labels.
 	 */
 	@Override
-	default MongoTransactionOptions resolve(TransactionDefinition txDefinition) {
+	default MongoTransactionOptions resolve(TransactionDefinition definition) {
 
-		if (!(txDefinition instanceof TransactionAttribute attribute)) {
+		if (!(definition instanceof TransactionAttribute attribute)) {
 			return MongoTransactionOptions.NONE;
 		}
 

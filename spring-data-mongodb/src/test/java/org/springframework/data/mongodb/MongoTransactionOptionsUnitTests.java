@@ -29,6 +29,8 @@ import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
 
 /**
+ * Unit tests for {@link MongoTransactionOptions}.
+ *
  * @author Christoph Strobl
  */
 class MongoTransactionOptionsUnitTests {

@@ -12,7 +12,9 @@ Both `MongoOperations` and `ReactiveMongoOperations` provide gateway methods for
 `MongoCollection` and `MongoDatabase` use session proxy objects that implement MongoDB's collection and database interfaces, so you need not add a session on each call.
 This means that a potential call to `MongoCollection#find()` is delegated to `MongoCollection#find(ClientSession)`.
 
-NOTE: Methods such as `(Reactive)MongoOperations#getCollection` return native MongoDB Java Driver gateway objects (such as `MongoCollection`) that themselves offer dedicated methods for `ClientSession`. These methods are *NOT* session-proxied. You should provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not through one of the `#execute` callbacks on `MongoOperations`.
+NOTE: Methods such as `(Reactive)MongoOperations#getCollection` return native MongoDB Java Driver gateway objects (such as `MongoCollection`) that themselves offer dedicated methods for `ClientSession`.
+These methods are *NOT* session-proxied.
+You should provide the `ClientSession` where needed when interacting directly with a `MongoCollection` or `MongoDatabase` and not through one of the `#execute` callbacks on `MongoOperations`.
 
 [[mongo.sessions.sync]]
 [[mongo.sessions.reactive]]
@@ -49,12 +51,15 @@ template.withSession(() -> session)
 
 session.close()                                              <4>
 ----
+
 <1> Obtain a new session from the server.
-<2> Use `MongoOperation` methods as before. The `ClientSession` gets applied automatically.
+<2> Use `MongoOperation` methods as before.
+The `ClientSession` gets applied automatically.
 <3> Make sure to close the `ClientSession`.
 <4> Close the session.
 
-WARNING: When dealing with `DBRef` instances, especially lazily loaded ones, it is essential to *not* close the `ClientSession` before all data is loaded. Otherwise, lazy fetch fails.
+WARNING: When dealing with `DBRef` instances, especially lazily loaded ones, it is essential to *not* close the `ClientSession` before all data is loaded.
+Otherwise, lazy fetch fails.
 ====
 
 Reactive::
@@ -83,25 +88,32 @@ template.withSession(session)
     }, ClientSession::close)                                            <3>
     .subscribe();                                                       <4>
 ----
+
 <1> Obtain a `Publisher` for new session retrieval.
-<2> Use `ReactiveMongoOperation` methods as before. The `ClientSession` is obtained and applied automatically.
+<2> Use `ReactiveMongoOperation` methods as before.
+The `ClientSession` is obtained and applied automatically.
 <3> Make sure to close the `ClientSession`.
-<4> Nothing happens until you subscribe. See https://projectreactor.io/docs/core/release/reference/#reactive.subscribe[the Project Reactor Reference Guide] for details.
+<4> Nothing happens until you subscribe.
+See https://projectreactor.io/docs/core/release/reference/#reactive.subscribe[the Project Reactor Reference Guide] for details.
 
 By using a `Publisher` that provides the actual session, you can defer session acquisition to the point of actual subscription.
-Still, you need to close the session when done, so as to not pollute the server with stale sessions. Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you no longer need the session.
+Still, you need to close the session when done, so as to not pollute the server with stale sessions.
+Use the `doFinally` hook on `execute` to call `ClientSession#close()` when you no longer need the session.
 If you prefer having more control over the session itself, you can obtain the `ClientSession` through the driver and provide it through a `Supplier`.
 
-NOTE: Reactive use of `ClientSession` is limited to Template API usage. There's currently no session integration with reactive repositories.
+NOTE: Reactive use of `ClientSession` is limited to Template API usage.
+There's currently no session integration with reactive repositories.
 ====
 ======
 
 [[mongo.transactions]]
 == MongoDB Transactions
 
-As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions]. Transactions are built on top of xref:mongodb/client-session-transactions.adoc[Sessions] and, consequently, require an active `ClientSession`.
+As of version 4, MongoDB supports https://www.mongodb.com/transactions[Transactions].
+Transactions are built on top of xref:mongodb/client-session-transactions.adoc[Sessions] and, consequently, require an active `ClientSession`.
 
-NOTE: Unless you specify a `MongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
+NOTE: Unless you specify a `MongoTransactionManager` within your application context, transaction support is *DISABLED*.
+You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
 
 To get full programmatic control over transactions, you may want to use the session callback on `MongoOperations`.
 
@@ -138,6 +150,7 @@ template.withSession(session)
         }
     }, ClientSession::close)                                            <5>
 ----
+
 <1> Obtain a new `ClientSession`.
 <2> Start the transaction.
 <3> If everything works out as expected, commit the changes.
@@ -168,17 +181,19 @@ Mono<DeleteResult> result = Mono
             .doFinally(signal -> session.close());                                           <6>
       });
 ----
+
 <1> First we obviously need to initiate the session.
 <2> Once we have the `ClientSession` at hand, start the transaction.
 <3> Operate within the transaction by passing on the `ClientSession` to the operation.
 <4> If the operations completes exceptionally, we need to stop the transaction and preserve the error.
-<5> Or of course, commit the changes in case of success. Still preserving the operations result.
+<5> Or of course, commit the changes in case of success.
+Still preserving the operations result.
 <6> Lastly, we need to make sure to close the session.
 
-The culprit of the above operation is in keeping the main flows `DeleteResult` instead of the transaction outcome
-published via either `commitTransaction()` or `abortTransaction()`, which leads to a rather complicated setup.
+The culprit of the above operation is in keeping the main flows `DeleteResult` instead of the transaction outcome published via either `commitTransaction()` or `abortTransaction()`, which leads to a rather complicated setup.
 
-NOTE: Unless you specify a `ReactiveMongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
+NOTE: Unless you specify a `ReactiveMongoTransactionManager` within your application context, transaction support is *DISABLED*.
+You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
 ====
 ======
 
@@ -213,9 +228,10 @@ txTemplate.execute(new TransactionCallbackWithoutResult() {
         process(step);
 
         template.update(Step.class).apply(Update.set("state", // ...
-    };
+    }
 });
 ----
+
 <1> Enable transaction synchronization during Template API configuration.
 <2> Create the `TransactionTemplate` using the provided `PlatformTransactionManager`.
 <3> Within the callback the `ClientSession` and transaction are already registered.
@@ -244,6 +260,7 @@ Mono<Void> process(step)
     .as(rxtx::transactional)                                                         <3>
     .then();
 ----
+
 <1> Enable transaction synchronization for Transactional participation.
 <2> Create the `TransactionalOperator` using the provided `ReactiveTransactionManager`.
 <3> `TransactionalOperator.transactional(…)` provides transaction management for all upstream operations.
@@ -258,7 +275,8 @@ Mono<Void> process(step)
 It lets applications use link:{springDocsUrl}/data-access.html#transaction[the managed transaction features of Spring].
 The `MongoTransactionManager` binds a `ClientSession` to the thread whereas the `ReactiveMongoTransactionManager` is using the `ReactorContext` for this.
 `MongoTemplate` detects the session and operates on these resources which are associated with the transaction accordingly.
-`MongoTemplate` can also participate in other, ongoing transactions. The following example shows how to create and use transactions with a `MongoTransactionManager`:
+`MongoTemplate` can also participate in other, ongoing transactions.
+The following example shows how to create and use transactions with a `MongoTransactionManager`:
 
 .Transactions with `MongoTransactionManager` / `ReactiveMongoTransactionManager`
 [tabs]
@@ -294,6 +312,7 @@ public class StateService {
 });
 
 ----
+
 <1> Register `MongoTransactionManager` in the application context.
 <2> Mark methods as transactional.
 
@@ -330,12 +349,57 @@ public class StateService {
 });
 
 ----
+
 <1> Register `ReactiveMongoTransactionManager` in the application context.
 <2> Mark methods as transactional.
 
 NOTE: `@Transactional(readOnly = true)` advises `ReactiveMongoTransactionManager` to also start a transaction that adds the `ClientSession` to outgoing requests.
 ====
 ======
+
+[[mongo.transaction.options]]
+=== Controlling MongoDB-specific Transaction Options
+
+Transactional service methods can require specific transaction options to run a transaction.
+Spring Data MongoDB's transaction managers support evaluation of transaction labels such as `@Transactional(label = { "mongo:readConcern=available" })`.
+
+By default, the label namespace using the `mongo:` prefix is evaluated by `MongoTransactionOptionsResolver` that is configured by default.
+Transaction labels are provided by `TransactionAttribute` and available to programmatic transaction control through `TransactionTemplate` and `TransactionalOperator`.
+Due to their declarative nature, `@Transactional(label = …)` provides a good starting point that also can serve as documentation.
+
+Currently, the following options are supported:
+
+Max Commit Time::
+
+Controls the maximum execution time on the server for the commitTransaction operation.
+The format of the value corresponds with ISO-8601 duration format as used with `Duration.parse(…)`.
++
+Usage:
+`mongo:maxCommitTime=PT1S`
+
+Read Concern::
+
+Sets the read concern for the transaction.
++
+Usage:
+`mongo:readConcern=LOCAL|MAJORITY|LINEARIZABLE|SNAPSHOT|AVAILABLE`
+
+Read Preference::
+
+Sets the read preference for the transaction.
++
+Usage:
+`mongo:readPreference=PRIMARY|SECONDARY|SECONDARY_PREFERRED|PRIMARY_PREFERRED|NEAREST`
+
+Write Concern::
+
+Sets the write concern for the transaction.
++
+Usage:
+`mongo:writeConcern=ACKNOWLEDGED|W1|W2|W3|UNACKNOWLEDGED|JOURNALED|MAJORITY`
+
+NOTE: Nested transactions that join the outer transaction do not affect the initial transaction options as the transaction is already started.
+Transaction options are only applied when a new transaction is started.
 
 [[mongo.transactions.behavior]]
 == Special behavior inside transactions
@@ -344,39 +408,42 @@ Inside transactions, MongoDB server has a slightly different behavior.
 
 *Connection Settings*
 
-The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into auto detection
-mode. This option helps identifying the primary replica set nodes and command routing during a transaction.
+The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into auto-detection mode.
+This option helps identify the primary replica set nodes and command routing during a transaction.
 
-NOTE: Make sure to add `replicaSet` to the MongoDB URI. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
+NOTE: Make sure to add `replicaSet` to the MongoDB URI.
+Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
 
 *Collection Operations*
 
-MongoDB does *not* support collection operations, such as collection creation, within a transaction. This also
-affects the on the fly collection creation that happens on first usage. Therefore make sure to have all required
-structures in place.
+MongoDB does *not* support collection operations, such as collection creation, within a transaction.
+This also affects the on the fly collection creation that happens on first usage.
+Therefore make sure to have all required structures in place.
 
 *Transient Errors*
 
-MongoDB can add special labels to errors raised during transactional operations. Those may indicate transient failures
-that might vanish by merely retrying the operation.
-We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes. Nevertheless
-one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
+MongoDB can add special labels to errors raised during transactional operations.
+Those may indicate transient failures that might vanish by merely retrying the operation.
+We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes.
+Nevertheless one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
 behavior as outlined in the MongoDB reference manual.
 
 *Count*
 
 MongoDB `count` operates upon collection statistics which may not reflect the actual situation within a transaction.
 The server responds with _error 50851_ when issuing a `count` command inside of a multi-document transaction.
-Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the
-aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
+Once `MongoTemplate` detects an active transaction, all exposed `count()` methods are converted and delegated to the aggregation framework using `$match` and `$count` operators, preserving `Query` settings, such as `collation`.
 
-Restrictions apply when using geo commands inside of the aggregation count helper. The following operators cannot be used and must be replaced with a different operator:
+Restrictions apply when using geo commands inside of the aggregation count helper.
+The following operators cannot be used and must be replaced with a different operator:
 
 * `$where` -> `$expr`
 * `$near` -> `$geoWithin` with `$center`
 * `$nearSphere` -> `$geoWithin` with `$centerSphere`
 
-Queries using `Criteria.near(…)` and `Criteria.nearSphere(…)` must be rewritten to `Criteria.within(…)` respective `Criteria.withinSphere(…)`. Same applies for the `near` query keyword in repository query methods that must be changed to `within`. See also MongoDB JIRA ticket https://jira.mongodb.org/browse/DRIVERS-518[DRIVERS-518] for further reference.
+Queries using `Criteria.near(…)` and `Criteria.nearSphere(…)` must be rewritten to `Criteria.within(…)` respective `Criteria.withinSphere(…)`.
+Same applies for the `near` query keyword in repository query methods that must be changed to `within`.
+See also MongoDB JIRA ticket https://jira.mongodb.org/browse/DRIVERS-518[DRIVERS-518] for further reference.
 
 The following snippet shows `count` usage inside the session-bound closure:
 

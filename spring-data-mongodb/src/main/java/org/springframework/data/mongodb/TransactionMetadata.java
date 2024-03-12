@@ -20,14 +20,22 @@ import java.time.Duration;
 import org.springframework.lang.Nullable;
 
 /**
+ * MongoDB-specific transaction metadata.
+ *
  * @author Christoph Strobl
  * @since 4.3
  */
 public interface TransactionMetadata {
 
+	/**
+	 * @return the maximum commit time. Can be {@literal null} if not configured.
+	 */
 	@Nullable
 	Duration getMaxCommitTime();
 
+	/**
+	 * @return {@literal true} if the max commit time is configured; {@literal false} otherwise.
+	 */
 	default boolean hasMaxCommitTime() {
 		return getMaxCommitTime() != null;
 	}

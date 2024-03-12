@@ -17,13 +17,22 @@ package org.springframework.data.mongodb;
 
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.interceptor.TransactionAttribute;
 
 /**
+ * Interface that defines a resolver for {@link TransactionMetadata} based on a {@link TransactionDefinition}.
+ * Transaction metadata is used to enrich the MongoDB transaction with additional information.
+ *
  * @author Christoph Strobl
+ * @since 4.3
  */
 interface TransactionOptionResolver<T extends TransactionMetadata> {
 
+	/**
+	 * Resolves the transaction metadata from a given {@link TransactionDefinition}.
+	 *
+	 * @param definition the {@link TransactionDefinition}.
+	 * @return the resolved {@link TransactionMetadata} or {@literal null} if the resolver cannot resolve any metadata.
+	 */
 	@Nullable
-	T resolve(TransactionDefinition attribute);
+	T resolve(TransactionDefinition definition);
 }
