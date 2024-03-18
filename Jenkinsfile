@@ -265,7 +265,7 @@ pipeline {
 					}
 				}
 
-				stage("test: MongoDB 7.0 (driver-next)") {
+				stage("test: MongoDB 7.0 (driver-previous)") {
 					agent {
 						label 'data'
 					}
@@ -287,7 +287,7 @@ pipeline {
 									"DEVELOCITY_CACHE_USERNAME=${DEVELOCITY_CACHE_USR} " +
 									"DEVELOCITY_CACHE_PASSWORD=${DEVELOCITY_CACHE_PSW} " +
 									"GRADLE_ENTERPRISE_ACCESS_KEY=${DEVELOCITY_ACCESS_KEY} " +
-									"./mvnw -s settings.xml -Pmongo-5.0 clean dependency:list test -Dsort -U -B -Dgradle.cache.local.enabled=false -Dgradle.cache.remote.enabled=false"
+									"./mvnw -s settings.xml -Pmongo-4.x clean dependency:list test -Dsort -U -B -Dgradle.cache.local.enabled=false -Dgradle.cache.remote.enabled=false"
 							}
 						}
 					}
