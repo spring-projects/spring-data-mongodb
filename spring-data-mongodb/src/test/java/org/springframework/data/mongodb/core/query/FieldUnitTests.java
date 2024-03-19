@@ -19,12 +19,15 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 /**
  * Unit tests for {@link Field}.
  *
  * @author Oliver Gierke
  * @author Owen Q
  * @author Mark Paluch
+ * @author Kirill Egorov
  */
 class FieldUnitTests {
 
@@ -63,5 +66,23 @@ class FieldUnitTests {
 		Field fields = new Field().exclude("foo", "bar").exclude("baz");
 
 		assertThat(fields.getFieldsObject()).isEqualTo("{foo:0, bar:0, baz:0}");
+	}
+
+	@Test // GH-4625
+	void overriddenInclusionMethodsCreateEqualFields() {
+
+		Field left = new Field().include("foo", "bar");
+		Field right = new Field().include(List.of("foo", "bar"));
+
+		assertThat(left).isEqualTo(right);
+	}
+
+	@Test // GH-4625
+	void overriddenExclusionMethodsCreateEqualFields() {
+
+		Field left = new Field().exclude("foo", "bar");
+		Field right = new Field().exclude(List.of("foo", "bar"));
+
+		assertThat(left).isEqualTo(right);
 	}
 }
