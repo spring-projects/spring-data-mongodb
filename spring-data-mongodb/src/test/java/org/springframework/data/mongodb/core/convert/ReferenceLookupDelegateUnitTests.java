@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Collections;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,11 +32,6 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.expression.EvaluationContext;
-
-import java.util.Collections;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link ReferenceLookupDelegate}.
@@ -53,16 +53,6 @@ class ReferenceLookupDelegateUnitTests {
 		lookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
 	}
 
-	@Test // GH-4612
-	void shouldResolveEmptyListOnEmptyTargetCollection() {
-		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
-		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
-
-		when(property.isCollectionLike()).thenReturn(true);
-		lookupDelegate.readReference(property, Collections.emptyList(), lookupFunction, entityReader);
-		verify(lookupFunction, never()).apply(any(), any());
-	}
-
 	@Test // GH-3842
 	void shouldComputePlainStringTargetCollection() {
 
@@ -81,5 +71,27 @@ class ReferenceLookupDelegateUnitTests {
 			assertThat(referenceCollection.getCollection()).isEqualTo("collection1");
 			return Collections.emptyList();
 		}, entityReader);
+	}
+
+	@Test // GH-4612
+	void shouldResolveEmptyListOnEmptyTargetCollection() {
+
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
+
+		when(property.isCollectionLike()).thenReturn(true);
+		lookupDelegate.readReference(property, Collections.emptyList(), lookupFunction, entityReader);
+		verify(lookupFunction, never()).apply(any(), any());
+	}
+
+	@Test // GH-4612
+	void shouldResolveEmptyMapOnEmptyTargetCollection() {
+
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
+		ReferenceLookupDelegate.LookupFunction lookupFunction = mock(ReferenceLookupDelegate.LookupFunction.class);
+
+		when(property.isMap()).thenReturn(true);
+		lookupDelegate.readReference(property, Collections.emptyMap(), lookupFunction, entityReader);
+		verify(lookupFunction, never()).apply(any(), any());
 	}
 }
