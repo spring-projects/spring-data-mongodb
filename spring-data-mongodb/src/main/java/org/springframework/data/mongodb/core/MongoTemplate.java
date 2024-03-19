@@ -2191,8 +2191,11 @@ public class MongoTemplate
 							.getCollation());
 
 			AggregateIterable<Document> aggregateIterable = delegate.prepare(collection).aggregate(pipeline, Document.class) //
-					.collation(collation.map(Collation::toMongoCollation).orElse(null)) //
-					.allowDiskUse(options.isAllowDiskUse());
+					.collation(collation.map(Collation::toMongoCollation).orElse(null));
+
+			if (options.isAllowDiskUseSet()) {
+				aggregateIterable = aggregateIterable.allowDiskUse(options.isAllowDiskUse());
+			}
 
 			if (options.getCursorBatchSize() != null) {
 				aggregateIterable = aggregateIterable.batchSize(options.getCursorBatchSize());
@@ -2255,8 +2258,11 @@ public class MongoTemplate
 
 			CollectionPreparerDelegate delegate = CollectionPreparerDelegate.of(options);
 
-			AggregateIterable<Document> cursor = delegate.prepare(collection).aggregate(pipeline, Document.class) //
-					.allowDiskUse(options.isAllowDiskUse());
+			AggregateIterable<Document> cursor = delegate.prepare(collection).aggregate(pipeline, Document.class);
+
+			if (options.isAllowDiskUseSet()) {
+				cursor = cursor.allowDiskUse(options.isAllowDiskUse());
+			}
 
 			if (options.getCursorBatchSize() != null) {
 				cursor = cursor.batchSize(options.getCursorBatchSize());

@@ -1027,8 +1027,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			@Nullable Class<?> inputType) {
 
 		ReactiveCollectionPreparerDelegate collectionPreparer = ReactiveCollectionPreparerDelegate.of(options);
-		AggregatePublisher<Document> cursor = collectionPreparer.prepare(collection).aggregate(pipeline, Document.class)
-				.allowDiskUse(options.isAllowDiskUse());
+		AggregatePublisher<Document> cursor = collectionPreparer.prepare(collection).aggregate(pipeline, Document.class);
+
+		if (options.isAllowDiskUseSet()) {
+			cursor = cursor.allowDiskUse(options.isAllowDiskUse());
+		}
 
 		if (options.getCursorBatchSize() != null) {
 			cursor = cursor.batchSize(options.getCursorBatchSize());
