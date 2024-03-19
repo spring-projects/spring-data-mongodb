@@ -33,6 +33,10 @@ import com.mongodb.ReadPreference;
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
  * aggregation options can be found in the
  * <a href="https://docs.mongodb.org/manual/reference/command/aggregate/#aggregate">MongoDB reference documentation</a>.
+ * <p>
+ * As off 4.3 {@link #allowDiskUse} can be {@literal null}, indicating use of server default, and may only be applied if
+ * {@link #isAllowDiskUseSet() explicitly set}. For compatibility reasons {@link #isAllowDiskUse()} will remain
+ * returning {@literal false} if the no value has been set.
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
