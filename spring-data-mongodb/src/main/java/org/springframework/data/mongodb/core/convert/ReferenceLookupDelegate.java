@@ -34,10 +34,10 @@ import org.bson.conversions.Bson;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader.NoResultsFilter;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
-import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -49,6 +49,7 @@ import org.springframework.data.util.Streamable;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
@@ -64,9 +65,6 @@ import com.mongodb.client.MongoCollection;
  * @since 3.3
  */
 public final class ReferenceLookupDelegate {
-
-	private static final Document NO_RESULTS_PREDICATE = new Document(FieldName.ID.name(),
-			new Document("$exists", false));
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final SpELContext spELContext;
@@ -104,18 +102,15 @@ public final class ReferenceLookupDelegate {
 	public Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
 
-		Object value = source instanceof DocumentReferenceSource documentReferenceSource ? documentReferenceSource.getTargetSource()
+		Object value = source instanceof DocumentReferenceSource documentReferenceSource
+				? documentReferenceSource.getTargetSource()
 				: source;
 
-		// GH-4612 no need to query database if target collection is empty
-		if (value != null && property.isCollectionLike() && (value instanceof Collection<?> c) && c.isEmpty()) {
-			return new ArrayList<>();
+		Iterable<Document> result = retrieveRawDocuments(property, source, lookupFunction, value);
+
+		if (result == null) {
+			return null;
 		}
-
-		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
-		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
-
-		Iterable<Document> result = lookupFunction.apply(filter, referenceCollection);
 
 		if (property.isCollectionLike()) {
 			return entityReader.read(result, property.getTypeInformation());
@@ -127,6 +122,19 @@ public final class ReferenceLookupDelegate {
 
 		Object resultValue = result.iterator().next();
 		return resultValue != null ? entityReader.read(resultValue, property.getTypeInformation()) : null;
+	}
+
+	@Nullable
+	private Iterable<Document> retrieveRawDocuments(MongoPersistentProperty property, Object source,
+			LookupFunction lookupFunction, Object value) {
+
+		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
+		if (filter instanceof NoResultsFilter) {
+			return Collections.emptyList();
+		}
+
+		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
+		return lookupFunction.apply(filter, referenceCollection);
 	}
 
 	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,
@@ -278,7 +286,7 @@ public final class ReferenceLookupDelegate {
 			Collection<Object> objects = (Collection<Object>) value;
 
 			if (objects.isEmpty()) {
-				return new ListDocumentReferenceQuery(NO_RESULTS_PREDICATE, sort);
+				return DocumentReferenceQuery.forNoResult();
 			}
 
 			List<Document> ors = new ArrayList<>(objects.size());
@@ -293,11 +301,11 @@ public final class ReferenceLookupDelegate {
 
 		if (property.isMap() && value instanceof Map) {
 
-			Set<Entry<Object, Object>> entries = ((Map<Object, Object>) value).entrySet();
-			if (entries.isEmpty()) {
-				return new MapDocumentReferenceQuery(NO_RESULTS_PREDICATE, sort, Collections.emptyMap());
+			if(ObjectUtils.isEmpty(value)) {
+				return DocumentReferenceQuery.forNoResult();
 			}
 
+			Set<Entry<Object, Object>> entries = ((Map<Object, Object>) value).entrySet();
 			Map<Object, Document> filterMap = new LinkedHashMap<>(entries.size());
 
 			for (Entry<Object, Object> entry : entries) {
@@ -411,8 +419,7 @@ public final class ReferenceLookupDelegate {
 		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
 			Map<String, Object> targetMap = new LinkedHashMap<>();
-			List<Document> collected = documents instanceof List<Document> list ? list
-					: Streamable.of(documents).toList();
+			List<Document> collected = documents instanceof List<Document> list ? list : Streamable.of(documents).toList();
 
 			for (Entry<Object, Document> filterMapping : filterOrderMap.entrySet()) {
 
@@ -444,8 +451,7 @@ public final class ReferenceLookupDelegate {
 		@Override
 		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
-			List<Document> target = documents instanceof List<Document> list ? list
-					: Streamable.of(documents).toList();
+			List<Document> target = documents instanceof List<Document> list ? list : Streamable.of(documents).toList();
 
 			if (!sort.isEmpty() || !query.containsKey("$or")) {
 				return target;
