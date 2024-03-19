@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +36,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Owen Q
+ * @author Kirill Egorov
  */
 public class Field {
 
@@ -124,6 +126,17 @@ public class Field {
 	 */
 	public Field include(String... fields) {
 
+		return include(Arrays.asList(fields));
+	}
+
+	/**
+	 * Include one or more {@code fields} to be returned by the query operation.
+	 *
+	 * @param fields the document field names to be included.
+	 * @return {@code this} field projection instance.
+	 */
+	public Field include(Collection<String> fields) {
+
 		Assert.notNull(fields, "Keys must not be null");
 
 		for (String key : fields) {
@@ -136,7 +149,7 @@ public class Field {
 	/**
 	 * Exclude a single {@code field} from being returned by the query operation.
 	 *
-	 * @param field the document field name to be included.
+	 * @param field the document field name to be excluded.
 	 * @return {@code this} field projection instance.
 	 */
 	public Field exclude(String field) {
@@ -151,11 +164,22 @@ public class Field {
 	/**
 	 * Exclude one or more {@code fields} from being returned by the query operation.
 	 *
-	 * @param fields the document field names to be included.
+	 * @param fields the document field names to be excluded.
 	 * @return {@code this} field projection instance.
 	 * @since 3.1
 	 */
 	public Field exclude(String... fields) {
+
+		return exclude(Arrays.asList(fields));
+	}
+
+	/**
+	 * Exclude one or more {@code fields} from being returned by the query operation.
+	 *
+	 * @param fields the document field names to be excluded.
+	 * @return {@code this} field projection instance.
+	 */
+	public Field exclude(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
 
