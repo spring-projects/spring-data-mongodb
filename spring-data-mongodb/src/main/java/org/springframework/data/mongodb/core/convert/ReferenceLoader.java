@@ -21,6 +21,7 @@ import java.util.Iterator;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.client.MongoCollection;
@@ -125,6 +126,31 @@ public interface ReferenceLoader {
 					return collection.find(getQuery()).sort(getSort());
 				}
 			};
+		}
+
+		/**
+		 * @return a {@link DocumentReferenceQuery} that will not match any documents.
+		 * @since 4.3
+		 */
+		static DocumentReferenceQuery forNoResult() {
+			return NoResultsFilter.INSTANCE;
+		}
+	}
+
+	/**
+	 * A dedicated {@link DocumentReferenceQuery} that will not match any documents.
+	 * 
+	 * @since 4.3
+	 */
+	enum NoResultsFilter implements DocumentReferenceQuery {
+		INSTANCE;
+
+		private static final Document NO_RESULTS_PREDICATE = new Document(FieldName.ID.name(),
+				new Document("$exists", false));
+
+		@Override
+		public Bson getQuery() {
+			return NO_RESULTS_PREDICATE;
 		}
 	}
 }
