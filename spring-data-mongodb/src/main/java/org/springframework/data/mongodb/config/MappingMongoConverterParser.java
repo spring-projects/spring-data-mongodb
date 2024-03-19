@@ -61,6 +61,7 @@ import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventL
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 
@@ -97,8 +98,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
 		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
 
-		String autoIndexCreation = element.getAttribute("auto-index-creation");
-		boolean autoIndexCreationEnabled = StringUtils.hasText(autoIndexCreation) && Boolean.valueOf(autoIndexCreation);
+		boolean autoIndexCreationEnabled = isAutoIndexCreationEnabled(element);
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
@@ -199,11 +199,33 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return new RuntimeBeanReference(validatorName);
 	}
 
+	private static boolean isAutoIndexCreationEnabled(Element element) {
+
+		String autoIndexCreation = element.getAttribute("auto-index-creation");
+		return StringUtils.hasText(autoIndexCreation) && Boolean.parseBoolean(autoIndexCreation);
+	}
+
+	/**
+	 * Create and register the {@link BeanDefinition} for a {@link MongoMappingContext} if not explicitly referenced by a
+	 * given {@literal mapping-context-ref} {@link Element#getAttribute(String) attribuite}.
+	 *
+	 * @return the mapping context bean name.
+	 * @deprecated since 4.3. Use
+	 *             {@link #potentiallyCreateMappingContext(Element, ParserContext, BeanDefinition, String, boolean)}
+	 *             instead.
+	 */
+	@Deprecated(since = "4.3", forRemoval = true)
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId) {
 		return potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, converterId, false);
 	}
 
+	/**
+	 * Create and register the {@link BeanDefinition} for a {@link MongoMappingContext} if not explicitly referenced by a
+	 * given {@literal mapping-context-ref} {@link Element#getAttribute(String) attribuite}.
+	 *
+	 * @return the mapping context bean name.
+	 */
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId, boolean autoIndexCreation) {
 
@@ -283,8 +305,10 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<>();
 			List<Element> converterElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
 
-			for (Element listenerElement : converterElements) {
-				converterBeans.add(parseConverter(listenerElement, parserContext));
+			if (!ObjectUtils.isEmpty(converterElements)) {
+				for (Element listenerElement : converterElements) {
+					converterBeans.add(parseConverter(listenerElement, parserContext));
+				}
 			}
 
 			// Scan for Converter and GenericConverter beans in the given base-package

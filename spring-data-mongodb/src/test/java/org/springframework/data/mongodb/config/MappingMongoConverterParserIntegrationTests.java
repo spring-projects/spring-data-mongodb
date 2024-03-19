@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanReference;
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
@@ -63,20 +62,22 @@ public class MappingMongoConverterParserIntegrationTests {
 		factory.getBean("converter");
 	}
 
-	@Test
+	@Test // GH-4275
+	void defaultsToFalseForAutoIndexCreation() {
+
+		loadValidConfiguration();
+		MongoMappingContext mongoMappingContext = factory.getBean("converter.mongoMappingContext",
+				MongoMappingContext.class);
+		assertThat(mongoMappingContext.isAutoIndexCreation()).isFalse();
+	}
+
+	@Test // GH-4275
 	void allowsToOverrideAutoIndexCreation() {
 
 		loadValidConfiguration();
-		MongoMappingContext mongoMappingContext = factory.getBean("autoIndexCreationConverter.mongoMappingContext", MongoMappingContext.class);
+		MongoMappingContext mongoMappingContext = factory.getBean("autoIndexCreationConverter.mongoMappingContext",
+				MongoMappingContext.class);
 		assertThat(mongoMappingContext.isAutoIndexCreation()).isTrue();
-	}
-
-	@Test
-	void testDefaultValueForAutoIndexCreation() {
-
-		loadValidConfiguration();
-		MongoMappingContext mongoMappingContext = factory.getBean("converter.mongoMappingContext", MongoMappingContext.class);
-		assertThat(mongoMappingContext.isAutoIndexCreation()).isFalse();
 	}
 
 	@Test // DATAMONGO-725
