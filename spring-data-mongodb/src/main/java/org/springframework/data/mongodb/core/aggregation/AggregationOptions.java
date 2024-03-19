@@ -55,7 +55,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	private static final String MAX_TIME = "maxTimeMS";
 	private static final String HINT = "hint";
 
-	private final boolean allowDiskUse;
+	private final Optional<Boolean> allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
@@ -123,10 +123,10 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
 	 * @since 3.1
 	 */
-	private AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+	private AggregationOptions(@Nullable Boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment, @Nullable Object hint) {
 
-		this.allowDiskUse = allowDiskUse;
+		this.allowDiskUse = Optional.ofNullable(allowDiskUse);
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
@@ -159,7 +159,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 
 		Assert.notNull(document, "Document must not be null");
 
-		boolean allowDiskUse = document.getBoolean(ALLOW_DISK_USE, false);
+		Boolean allowDiskUse = document.get(ALLOW_DISK_USE, Boolean.class);
 		boolean explain = document.getBoolean(EXPLAIN, false);
 		Document cursor = document.get(CURSOR, Document.class);
 		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
@@ -185,13 +185,23 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	/**
-	 * Enables writing to temporary files. When set to true, aggregation stages can write data to the _tmp subdirectory in
-	 * the dbPath directory.
+	 * Enables writing to temporary files. When set to {@literal true}, aggregation stages can write data to the
+	 * {@code _tmp} subdirectory in the {@code dbPath} directory.
 	 *
-	 * @return {@literal true} if enabled.
+	 * @return {@literal true} if enabled; {@literal false} otherwise (or if not set).
 	 */
 	public boolean isAllowDiskUse() {
-		return allowDiskUse;
+		return allowDiskUse.orElse(false);
+	}
+
+	/**
+	 * Return whether {@link #isAllowDiskUse} is configured.
+	 *
+	 * @return {@literal true} if is {@code allowDiskUse} is configured, {@literal false} otherwise.
+	 * @since 4.2.5
+	 */
+	public boolean isAllowDiskUseSet() {
+		return allowDiskUse.isPresent();
 	}
 
 	/**
@@ -335,8 +345,8 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 
 		Document result = new Document(command);
 
-		if (allowDiskUse && !result.containsKey(ALLOW_DISK_USE)) {
-			result.put(ALLOW_DISK_USE, allowDiskUse);
+		if (isAllowDiskUseSet() && !result.containsKey(ALLOW_DISK_USE)) {
+			result.put(ALLOW_DISK_USE, isAllowDiskUse());
 		}
 
 		if (explain && !result.containsKey(EXPLAIN)) {
@@ -370,7 +380,9 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	public Document toDocument() {
 
 		Document document = new Document();
-		document.put(ALLOW_DISK_USE, allowDiskUse);
+		if (isAllowDiskUseSet()) {
+			document.put(ALLOW_DISK_USE, isAllowDiskUse());
+		}
 		document.put(EXPLAIN, explain);
 
 		cursor.ifPresent(val -> document.put(CURSOR, val));
@@ -410,7 +422,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public static class Builder {
 
-		private boolean allowDiskUse;
+		private Boolean allowDiskUse;
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;

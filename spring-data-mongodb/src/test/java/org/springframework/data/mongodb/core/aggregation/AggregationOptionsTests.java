@@ -77,6 +77,22 @@ class AggregationOptionsTests {
 		assertThat(aggregationOptions.getHintObject()).contains(dummyHint);
 	}
 
+	@Test // GH-4664
+	void omitsAllowDiskUseByDefault() {
+
+		aggregationOptions = AggregationOptions.fromDocument(new Document());
+
+		assertThat(aggregationOptions.isAllowDiskUse()).isFalse();
+		assertThat(aggregationOptions.isAllowDiskUseSet()).isFalse();
+
+		assertThat(aggregationOptions.toDocument()).doesNotContainKey("allowDiskUse");
+
+		Document empty = new Document();
+		aggregationOptions.applyAndReturnPotentiallyChangedCommand(empty);
+
+		assertThat(empty).doesNotContainKey("allowDiskUse");
+	}
+
 	@Test // DATAMONGO-960, DATAMONGO-2153, DATAMONGO-1836
 	void aggregationOptionsToString() {
 
