@@ -55,11 +55,11 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	private final ReadWriteLock lifecycleMonitor = new ReentrantReadWriteLock();
 	private final Lock lifecycleRead = Lock.of(lifecycleMonitor.readLock());
-	private final Lock lifecycleWrite = Lock.of(lifecycleMonitor.readLock());
+	private final Lock lifecycleWrite = Lock.of(lifecycleMonitor.writeLock());
 
 	private final ReadWriteLock subscriptionMonitor = new ReentrantReadWriteLock();
 	private final Lock subscriptionRead = Lock.of(subscriptionMonitor.readLock());
-	private final Lock subscriptionWrite = Lock.of(subscriptionMonitor.readLock());
+	private final Lock subscriptionWrite = Lock.of(subscriptionMonitor.writeLock());
 
 	private boolean running = false;
 
