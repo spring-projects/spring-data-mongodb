@@ -60,6 +60,7 @@ import com.mongodb.client.MongoCollection;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Stefan Bildl
  * @since 3.3
  */
 public final class ReferenceLookupDelegate {
@@ -105,6 +106,11 @@ public final class ReferenceLookupDelegate {
 
 		Object value = source instanceof DocumentReferenceSource documentReferenceSource ? documentReferenceSource.getTargetSource()
 				: source;
+
+		// GH-4612 no need to query database if target collection is empty
+		if (value != null && property.isCollectionLike() && (value instanceof Collection<?> c) && c.isEmpty()) {
+			return new ArrayList<>();
+		}
 
 		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
 		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
