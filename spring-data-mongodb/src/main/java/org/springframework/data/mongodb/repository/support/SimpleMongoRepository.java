@@ -60,6 +60,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  * @author Mehran Behnam
  * @author Jens Schauder
+ * @author Kirill Egorov
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
@@ -485,7 +486,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			query.limit(getLimit());
 
 			if (!getFieldsToInclude().isEmpty()) {
-				query.fields().include(getFieldsToInclude().toArray(new String[0]));
+				query.fields().include(getFieldsToInclude());
 			}
 
 			getReadPreference().ifPresent(query::withReadPreference);
