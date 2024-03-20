@@ -125,7 +125,6 @@ public class Field {
 	 * @since 3.1
 	 */
 	public Field include(String... fields) {
-
 		return include(Arrays.asList(fields));
 	}
 
@@ -134,15 +133,13 @@ public class Field {
 	 *
 	 * @param fields the document field names to be included.
 	 * @return {@code this} field projection instance.
+	 * @since 4.4
 	 */
 	public Field include(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
 
-		for (String key : fields) {
-			criteria.put(key, 1);
-		}
-
+		fields.forEach(this::include);
 		return this;
 	}
 
@@ -169,7 +166,6 @@ public class Field {
 	 * @since 3.1
 	 */
 	public Field exclude(String... fields) {
-
 		return exclude(Arrays.asList(fields));
 	}
 
@@ -178,15 +174,13 @@ public class Field {
 	 *
 	 * @param fields the document field names to be excluded.
 	 * @return {@code this} field projection instance.
+	 * @since 4.4
 	 */
 	public Field exclude(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
 
-		for (String key : fields) {
-			criteria.put(key, 0);
-		}
-
+		fields.forEach(this::exclude);
 		return this;
 	}
 
