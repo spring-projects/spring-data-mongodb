@@ -127,7 +127,7 @@ public interface ExecutableFindOperation {
 		Stream<T> stream();
 
 		/**
-		 * Return a window of elements either starting or resuming at
+		 * Return a window of elements starting or resuming at
 		 * {@link org.springframework.data.domain.ScrollPosition}.
 		 * <p>
 		 * When using {@link KeysetScrollPosition}, make sure to use non-nullable
@@ -141,6 +141,10 @@ public interface ExecutableFindOperation {
 		 * @see org.springframework.data.domain.KeysetScrollPosition
 		 */
 		Window<T> scroll(ScrollPosition scrollPosition);
+
+		Window<T> scrollStartingAt(ScrollPosition scrollPosition);
+
+		Window<T> scrollStartingAfter(ScrollPosition scrollPosition);
 
 		/**
 		 * Get the number of matching elements. <br />

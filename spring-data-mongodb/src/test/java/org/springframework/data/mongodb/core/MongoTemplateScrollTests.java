@@ -218,6 +218,50 @@ class MongoTemplateScrollTests {
 
 	@ParameterizedTest // GH-4308
 	@MethodSource("positions")
+	public <T> void shouldApplyStartAtCursoringCorrectly(ScrollPosition scrollPosition, Class<T> resultType,
+			Function<Person, T> assertionConverter, @Nullable Comparator<T> comparator) {
+
+		Person john20 = new Person("John", 20);
+		Person john40_1 = new Person("John", 40);
+		Person john40_2 = new Person("John", 40);
+		Person jane_20 = new Person("Jane", 20);
+		Person jane_40 = new Person("Jane", 40);
+		Person jane_42 = new Person("Jane", 42);
+
+		template.insertAll(Arrays.asList(john20, john40_1, john40_2, jane_20, jane_40, jane_42));
+		Query q = new Query(where("firstName").regex("J.*")).with(Sort.by("firstName", "age")).limit(2);
+
+		Window<T> window = template.query(Person.class).inCollection("person").as(resultType).matching(q)
+				.scrollStartingAt(scrollPosition);
+
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertWindow(window, comparator).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
+
+		window = template.query(Person.class).inCollection("person").as(resultType).matching(q.limit(3))
+				.scrollStartingAt(window.positionAt(window.size() - 1));
+
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(3);
+		assertWindow(window, comparator).contains(assertionConverter.apply(jane_40), assertionConverter.apply(jane_42), assertionConverter.apply(john20));
+//		assertWindow(window, comparator).containsAnyOf(assertionConverter.apply(john40_1),
+//				assertionConverter.apply(john40_2));
+
+		window = template.query(Person.class).inCollection("person").as(resultType).matching(q.limit(2))
+				.scrollStartingAt(window.positionAt(window.size() - 1));
+
+		assertThat(window.hasNext()).isTrue();
+		assertThat(window.isLast()).isFalse();
+		assertThat(window).hasSize(2);
+		assertWindow(window, comparator).contains(assertionConverter.apply(john20));
+		assertWindow(window, comparator).containsAnyOf(assertionConverter.apply(john40_1),
+				assertionConverter.apply(john40_2));
+	}
+
+	@ParameterizedTest // GH-4308
+	@MethodSource("positions")
 	public <T> void shouldApplyCursoringCorrectly(ScrollPosition scrollPosition, Class<T> resultType,
 			Function<Person, T> assertionConverter, @Nullable Comparator<T> comparator) {
 

@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.mongodb.core.ScrollOptions.PositionHandling;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -142,7 +143,20 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		public Window<T> scroll(ScrollPosition scrollPosition) {
-			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
+			PositionHandling positionHandling = scrollPosition.isInitial() ? PositionHandling.INCLUDING : PositionHandling.EXCLUDING;
+			return scroll(scrollPosition, new ScrollOptions().positionHandling(positionHandling));
+		}
+
+		public Window<T> scrollStartingAt(ScrollPosition scrollPosition) {
+			return scroll(scrollPosition, new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
+		}
+
+		public Window<T> scrollStartingAfter(ScrollPosition scrollPosition) {
+			return scroll(scrollPosition, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+		}
+
+		private Window<T> scroll(ScrollPosition scrollPosition, ScrollOptions options) {
+			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName(), options);
 		}
 
 		@Override

@@ -67,6 +67,7 @@ import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
 import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
+import org.springframework.data.mongodb.core.ScrollOptions.PositionHandling;
 import org.springframework.data.mongodb.core.ScrollUtils.KeysetScrollQuery;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -134,6 +135,7 @@ import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import reactor.core.publisher.Mono;
 
 /**
  * Primary implementation of {@link MongoOperations}. It simplifies the use of imperative MongoDB usage and helps to
@@ -883,6 +885,10 @@ public class MongoTemplate
 	}
 
 	<T> Window<T> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
+		return doScroll(query, sourceClass, targetClass, collectionName, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+	}
+
+	<T> Window<T> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName, ScrollOptions options) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
@@ -896,7 +902,7 @@ public class MongoTemplate
 		if (query.hasKeyset()) {
 
 			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
-					operations.getIdPropertyName(sourceClass));
+					operations.getIdPropertyName(sourceClass), options);
 
 			List<T> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
 					keysetPaginationQuery.fields(), sourceClass,
@@ -905,6 +911,9 @@ public class MongoTemplate
 			return ScrollUtils.createWindow(query, result, sourceClass, operations);
 		}
 
+		if(options.positionHandling.equals(PositionHandling.EXCLUDING)) {
+			query.skip(query.getSkip() + 1);
+		}
 		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
 				sourceClass, new QueryCursorPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass),
 				callback);
@@ -2596,6 +2605,8 @@ public class MongoTemplate
 		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
+
+//		System.out.println("query: " + query.toJson());
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName));

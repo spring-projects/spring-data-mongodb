@@ -28,6 +28,7 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
+import org.springframework.data.mongodb.core.ScrollOptions.PositionHandling;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
@@ -46,13 +47,13 @@ class ScrollUtils {
 	 * @param idPropertyName
 	 * @return
 	 */
-	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
+	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName, ScrollOptions options) {
 
 		KeysetScrollPosition keyset = query.getKeyset();
 		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
 		Document sortObject = director.getSortObject(idPropertyName, query);
 		Document fieldsObject = director.getFieldsObject(query.getFieldsObject(), sortObject);
-		Document queryObject = director.createQuery(keyset, query.getQueryObject(), sortObject);
+		Document queryObject = director.createQuery(keyset, query.getQueryObject(), sortObject, options);
 
 		return new KeysetScrollQuery(queryObject, fieldsObject, sortObject);
 	}
@@ -137,7 +138,7 @@ class ScrollUtils {
 			return fieldsObject;
 		}
 
-		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject) {
+		public Document createQuery(KeysetScrollPosition keyset, Document queryObject, Document sortObject, ScrollOptions options) {
 
 			Map<String, Object> keysetValues = keyset.getKeys();
 			List<Document> or = (List<Document>) queryObject.getOrDefault("$or", new ArrayList<>());
@@ -182,6 +183,9 @@ class ScrollUtils {
 			}
 
 			if (!or.isEmpty()) {
+				if(options.positionHandling.equals(PositionHandling.INCLUDING)) {
+					or.add(0, new Document(keysetValues));
+				}
 				queryObject.put("$or", or);
 			}
 

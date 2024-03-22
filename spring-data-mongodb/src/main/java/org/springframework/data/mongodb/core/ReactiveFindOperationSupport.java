@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.data.mongodb.core.ScrollOptions.PositionHandling;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -141,7 +142,21 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		@Override
 		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
-			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
+
+			PositionHandling positionHandling = scrollPosition.isInitial() ? PositionHandling.INCLUDING : PositionHandling.EXCLUDING;
+			return scroll(scrollPosition, new ScrollOptions().positionHandling(positionHandling));
+		}
+
+		public Mono<Window<T>> scrollStartingAt(ScrollPosition scrollPosition) {
+			return scroll(scrollPosition, new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
+		}
+
+		public Mono<Window<T>> scrollStartingAfter(ScrollPosition scrollPosition) {
+			return scroll(scrollPosition, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+		}
+
+		private Mono<Window<T>> scroll(ScrollPosition scrollPosition, ScrollOptions options) {
+			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName(), options);
 		}
 
 		@Override

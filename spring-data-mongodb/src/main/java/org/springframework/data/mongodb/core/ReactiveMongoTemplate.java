@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.ScrollOptions.PositionHandling;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -880,6 +881,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	<T> Mono<Window<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
+		return doScroll(query, sourceClass, targetClass, collectionName, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+	}
+
+	<T> Mono<Window<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName, ScrollOptions options) {
+
+
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
@@ -893,7 +900,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		if (query.hasKeyset()) {
 
 			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
-					operations.getIdPropertyName(sourceClass));
+					operations.getIdPropertyName(sourceClass), options);
 
 			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
 					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
@@ -901,6 +908,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 							.collectList();
 
 			return result.map(it -> ScrollUtils.createWindow(query, it, sourceClass, operations));
+		}
+
+		if(options.positionHandling.equals(PositionHandling.EXCLUDING)) {
+			query.skip(query.getSkip() + 1);
 		}
 
 		Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),

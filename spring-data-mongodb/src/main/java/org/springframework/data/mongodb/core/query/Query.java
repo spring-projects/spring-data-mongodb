@@ -312,7 +312,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 		Assert.notNull(position, "ScrollPosition must not be null");
 
-		this.skip = position.getOffset();
+		this.skip =  position.getOffset();
 		this.keysetScrollPosition = null;
 		return this;
 	}

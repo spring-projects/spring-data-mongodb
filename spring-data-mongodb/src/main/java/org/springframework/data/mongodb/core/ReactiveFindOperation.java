@@ -91,7 +91,7 @@ public interface ReactiveFindOperation {
 		Flux<T> all();
 
 		/**
-		 * Return a scroll of elements either starting or resuming at {@link ScrollPosition}.
+		 * Return a scroll of elements ing or resuming at {@link ScrollPosition}.
 		 * <p>
 		 * When using {@link KeysetScrollPosition}, make sure to use non-nullable
 		 * {@link org.springframework.data.domain.Sort sort properties} as MongoDB does not support criteria to reconstruct
