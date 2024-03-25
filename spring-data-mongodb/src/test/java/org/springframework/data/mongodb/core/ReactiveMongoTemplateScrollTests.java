@@ -114,7 +114,7 @@ class ReactiveMongoTemplateScrollTests {
 		assertThat(window).hasSize(2);
 		assertThat(window).containsOnly(assertionConverter.apply(jane_20), assertionConverter.apply(jane_40));
 
-		window = template.scroll(q.limit(3).with(window.positionAt(window.size() - 1)), resultType, "person")
+		window = template.scroll(q.limit(3).excluding(window.positionAt(window.size() - 1)), resultType, "person")
 				.block(Duration.ofSeconds(10));
 
 		assertThat(window.hasNext()).isTrue();
@@ -123,7 +123,7 @@ class ReactiveMongoTemplateScrollTests {
 		assertThat(window).contains(assertionConverter.apply(jane_42), assertionConverter.apply(john20));
 		assertThat(window).containsAnyOf(assertionConverter.apply(john40_1), assertionConverter.apply(john40_2));
 
-		window = template.scroll(q.limit(1).with(window.positionAt(window.size() - 1)), resultType, "person")
+		window = template.scroll(q.limit(1).excluding(window.positionAt(window.size() - 1)), resultType, "person")
 				.block(Duration.ofSeconds(10));
 
 		assertThat(window.hasNext()).isFalse();

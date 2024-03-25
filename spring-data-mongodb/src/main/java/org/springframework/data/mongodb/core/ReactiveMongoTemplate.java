@@ -881,12 +881,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	<T> Mono<Window<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
-		return doScroll(query, sourceClass, targetClass, collectionName, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+		return doScroll(query, sourceClass, targetClass, collectionName, query.getScrollOptions() != null ? query.getScrollOptions() : new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
 	}
 
 	<T> Mono<Window<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName, ScrollOptions options) {
-
-
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
