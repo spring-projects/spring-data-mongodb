@@ -40,6 +40,8 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
+import org.springframework.data.mongodb.core.ScrollOptions;
+import org.springframework.data.mongodb.core.ScrollOptions.PositionHandling;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
@@ -70,6 +72,8 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	private Limit limit = Limit.unlimited();
 
 	private KeysetScrollPosition keysetScrollPosition;
+	private @Nullable ScrollOptions scrollOptions;
+
 	private @Nullable ReadConcern readConcern;
 	private @Nullable ReadPreference readPreference;
 
@@ -288,14 +292,28 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 */
 	public Query with(ScrollPosition position) {
+		return including(position);
+	}
+
+	public Query including(ScrollPosition position) {
+		return with(position, new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
+	}
+
+	public Query excluding(ScrollPosition position) {
+		return with(position, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+	}
+
+	Query with(ScrollPosition position, ScrollOptions options) {
 
 		Assert.notNull(position, "ScrollPosition must not be null");
 
 		if (position instanceof OffsetScrollPosition offset) {
+			this.scrollOptions = options;
 			return with(offset);
 		}
 
 		if (position instanceof KeysetScrollPosition keyset) {
+			this.scrollOptions = options;
 			return with(keyset);
 		}
 
@@ -574,23 +592,23 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 	/**
 	 * @return this.
-	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#NO_TIMEOUT
+	 * @see CursorOption#NO_TIMEOUT
 	 * @since 1.10
 	 */
 	public Query noCursorTimeout() {
 
-		meta.addFlag(Meta.CursorOption.NO_TIMEOUT);
+		meta.addFlag(CursorOption.NO_TIMEOUT);
 		return this;
 	}
 
 	/**
 	 * @return this.
-	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#EXHAUST
+	 * @see CursorOption#EXHAUST
 	 * @since 1.10
 	 */
 	public Query exhaust() {
 
-		meta.addFlag(Meta.CursorOption.EXHAUST);
+		meta.addFlag(CursorOption.EXHAUST);
 		return this;
 	}
 
@@ -598,23 +616,23 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * Allows querying of a replica.
 	 *
 	 * @return this.
-	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SECONDARY_READS
+	 * @see CursorOption#SECONDARY_READS
 	 * @since 3.0.2
 	 */
 	public Query allowSecondaryReads() {
 
-		meta.addFlag(Meta.CursorOption.SECONDARY_READS);
+		meta.addFlag(CursorOption.SECONDARY_READS);
 		return this;
 	}
 
 	/**
 	 * @return this.
-	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#PARTIAL
+	 * @see CursorOption#PARTIAL
 	 * @since 1.10
 	 */
 	public Query partialResults() {
 
-		meta.addFlag(Meta.CursorOption.PARTIAL);
+		meta.addFlag(CursorOption.PARTIAL);
 		return this;
 	}
 
@@ -786,6 +804,11 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	@Deprecated
 	public static boolean isRestrictedTypeKey(String key) {
 		return RESTRICTED_TYPES_KEY.equals(key);
+	}
+
+	@Nullable
+	public ScrollOptions getScrollOptions() {
+		return scrollOptions;
 	}
 
 }

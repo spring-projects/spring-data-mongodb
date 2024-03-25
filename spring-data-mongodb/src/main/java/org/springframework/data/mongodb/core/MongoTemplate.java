@@ -885,7 +885,7 @@ public class MongoTemplate
 	}
 
 	<T> Window<T> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
-		return doScroll(query, sourceClass, targetClass, collectionName, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
+		return doScroll(query, sourceClass, targetClass, collectionName, query.getScrollOptions() != null ? query.getScrollOptions() : new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
 	}
 
 	<T> Window<T> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName, ScrollOptions options) {

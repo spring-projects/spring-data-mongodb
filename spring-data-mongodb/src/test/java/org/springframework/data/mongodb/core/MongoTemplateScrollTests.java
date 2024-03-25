@@ -132,7 +132,7 @@ class MongoTemplateScrollTests {
 		assertThat(window).hasSize(2);
 		assertThat(window).containsOnly(john20, john40);
 
-		window = template.scroll(q.with(window.positionAt(window.size() - 1)), WithNestedDocument.class);
+		window = template.scroll(q.excluding(window.positionAt(window.size() - 1)), WithNestedDocument.class);
 
 		assertThat(window.hasNext()).isFalse();
 		assertThat(window.isLast()).isTrue();
@@ -180,14 +180,14 @@ class MongoTemplateScrollTests {
 		assertThat(window).hasSize(6);
 
 		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) window.positionAt(window.size() - 2);
-		window = template.scroll(q.with(scrollPosition.backward()).limit(2), Person.class);
+		window = template.scroll(q.excluding(scrollPosition.backward()).limit(2), Person.class);
 
 		assertThat(window).hasSize(2);
 		assertThat(window).containsOnly(jane_42, john20);
 		assertThat(window.hasNext()).isTrue();
 		assertThat(window.isLast()).isFalse();
 
-		window = template.scroll(q.with(window.positionAt(0)).limit(2), Person.class);
+		window = template.scroll(q.excluding(window.positionAt(0)).limit(2), Person.class);
 
 		assertThat(window).hasSize(2);
 		assertThat(window).containsOnly(jane_20, jane_40);
@@ -212,7 +212,7 @@ class MongoTemplateScrollTests {
 		Window<Person> window = template.scroll(q, Person.class);
 		assertThat(window).containsExactly(john20, john40_1, john40_2);
 
-		window = template.scroll(q.with(window.positionAt(0)).limit(3), Person.class);
+		window = template.scroll(q.excluding(window.positionAt(0)).limit(3), Person.class);
 		assertThat(window).containsExactly(jane_20, jane_40, jane_42);
 	}
 
@@ -245,9 +245,8 @@ class MongoTemplateScrollTests {
 		assertThat(window.hasNext()).isTrue();
 		assertThat(window.isLast()).isFalse();
 		assertThat(window).hasSize(3);
-		assertWindow(window, comparator).contains(assertionConverter.apply(jane_40), assertionConverter.apply(jane_42), assertionConverter.apply(john20));
-//		assertWindow(window, comparator).containsAnyOf(assertionConverter.apply(john40_1),
-//				assertionConverter.apply(john40_2));
+		assertWindow(window, comparator).contains(assertionConverter.apply(jane_40), assertionConverter.apply(jane_42),
+				assertionConverter.apply(john20));
 
 		window = template.query(Person.class).inCollection("person").as(resultType).matching(q.limit(2))
 				.scrollStartingAt(window.positionAt(window.size() - 1));
