@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -33,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.ExpressionParser;
@@ -48,8 +50,6 @@ import org.springframework.util.ClassUtils;
  */
 public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
-	private final ExpressionParser expressionParser;
-	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 	private final ReactiveMongoOperations reactiveMongoOperations;
 	private final MongoConverter mongoConverter;
 
@@ -58,7 +58,9 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @param reactiveMongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
+	 * @deprecated since 4.4.0, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
+	@Deprecated(since = "4.4.0")
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations reactiveMongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
@@ -67,8 +69,21 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
 		this.reactiveMongoOperations = reactiveMongoOperations;
 		this.mongoConverter = reactiveMongoOperations.getConverter();
-		this.expressionParser = expressionParser;
-		this.evaluationContextProvider = evaluationContextProvider;
+	}
+
+	/**
+	 * @param method must not be {@literal null}.
+	 * @param reactiveMongoOperations must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
+	 * @since 4.4.0
+	 */
+	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
+			ReactiveMongoOperations reactiveMongoOperations, ValueExpressionDelegate delegate) {
+
+		super(method, reactiveMongoOperations, delegate);
+
+		this.reactiveMongoOperations = reactiveMongoOperations;
+		this.mongoConverter = reactiveMongoOperations.getConverter();
 	}
 
 	@Override
@@ -128,8 +143,8 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
 		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
 
-		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
-				expressionParser, evaluationContextProvider);
+		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor,
+				getValueExpressionEvaluator(accessor));
 		AggregationUtils.applyMeta(builder, method);
 		AggregationUtils.applyHint(builder, method);
 		AggregationUtils.applyReadPreference(builder, method);

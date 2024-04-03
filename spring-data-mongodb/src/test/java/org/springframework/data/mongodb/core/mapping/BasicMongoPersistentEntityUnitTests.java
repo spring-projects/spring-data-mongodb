@@ -34,12 +34,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.mock.env.MockEnvironment;
 
 /**
  * Unit tests for {@link BasicMongoPersistentEntity}.
@@ -85,6 +87,19 @@ public class BasicMongoPersistentEntityUnitTests {
 
 		provider.collectionName = "otherReference";
 		assertThat(entity.getCollection()).isEqualTo("otherReference");
+	}
+
+	@Test // GH-2764
+	void collectionAllowsReferencingProperties() {
+
+		MockEnvironment environment = new MockEnvironment();
+		environment.setProperty("collectionName", "reference");
+
+		BasicMongoPersistentEntity<DynamicallyMappedUsingPropertyPlaceholder> entity = new BasicMongoPersistentEntity<>(
+				TypeInformation.of(DynamicallyMappedUsingPropertyPlaceholder.class));
+		entity.setEnvironment(environment);
+
+		assertThat(entity.getCollection()).isEqualTo("reference_cat");
 	}
 
 	@Test // DATAMONGO-937
@@ -324,6 +339,9 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Document("#{@myBean.collectionName}")
 	class DynamicallyMapped {}
+
+	@Document("${collectionName}_cat")
+	class DynamicallyMappedUsingPropertyPlaceholder {}
 
 	class CollectionProvider {
 		String collectionName;

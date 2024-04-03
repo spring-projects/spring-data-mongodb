@@ -41,11 +41,11 @@ import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
 
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
@@ -194,7 +194,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 * @since 3.1
 	 */
 	public ExpressionDependencies captureExpressionDependencies(@Nullable String json, ValueProvider valueProvider,
-			ExpressionParser expressionParser) {
+			ValueExpressionParser expressionParser) {
 
 		if (!StringUtils.hasText(json)) {
 			return ExpressionDependencies.none();
@@ -389,10 +389,10 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 		private static final Object PLACEHOLDER = new Object();
 
-		private final ExpressionParser expressionParser;
+		private final ValueExpressionParser expressionParser;
 		private final List<ExpressionDependencies> dependencies = new ArrayList<>();
 
-		DependencyCapturingExpressionEvaluator(ExpressionParser expressionParser) {
+		DependencyCapturingExpressionEvaluator(ValueExpressionParser expressionParser) {
 			this.expressionParser = expressionParser;
 		}
 
@@ -400,7 +400,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		@Override
 		public <T> T evaluate(String expression) {
 
-			dependencies.add(ExpressionDependencies.discover(expressionParser.parseExpression(expression)));
+			dependencies.add(expressionParser.parse(expression).getExpressionDependencies());
 			return (T) PLACEHOLDER;
 		}
 

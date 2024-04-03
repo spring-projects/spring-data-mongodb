@@ -64,9 +64,9 @@ import org.springframework.util.ObjectUtils;
  */
 public class ParameterBindingJsonReader extends AbstractBsonReader {
 
-	private static final Pattern ENTIRE_QUERY_BINDING_PATTERN = Pattern.compile("^\\?(\\d+)$|^[\\?:]#\\{.*\\}$");
+	private static final Pattern ENTIRE_QUERY_BINDING_PATTERN = Pattern.compile("^\\?(\\d+)$|^[\\?:][#$]\\{.*\\}$");
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
-	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:]#\\{.*\\}");
+	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:][#$]\\{.*\\}");
 	private static final Pattern SPEL_PARAMETER_BINDING_PATTERN = Pattern.compile("('\\?(\\d+)'|\\?(\\d+))");
 
 	private final ParameterBindingContext bindingContext;
@@ -374,6 +374,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 				String binding = regexMatcher.group();
 				String expression = binding.substring(3, binding.length() - 1);
+				String expressionString = binding.substring(1);
 
 				Matcher inSpelMatcher = SPEL_PARAMETER_BINDING_PATTERN.matcher(expression); // ?0 '?0'
 				Map<String, Object> innerSpelVariables = new HashMap<>();
@@ -385,6 +386,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					Object value = getBindableValueForIndex(index);
 					String varName = "__QVar" + innerSpelVariables.size();
 					expression = expression.replace(group, "#" + varName);
+					expressionString = expressionString.replace(group, "#" + varName);
 					if(group.startsWith("'")) { // retain the string semantic
 						innerSpelVariables.put(varName, nullSafeToString(value));
 					} else {
@@ -392,7 +394,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 					}
 				}
 
-				Object value = evaluateExpression(expression, innerSpelVariables);
+				Object value = evaluateExpression(expressionString, innerSpelVariables);
 				bindableValue.setValue(value);
 				bindableValue.setType(bsonTypeForValue(value));
 				return bindableValue;
@@ -421,6 +423,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 			String binding = regexMatcher.group();
 			String expression = binding.substring(3, binding.length() - 1);
+			String expressionString = binding.substring(1);
 
 			Matcher inSpelMatcher = SPEL_PARAMETER_BINDING_PATTERN.matcher(expression);
 			Map<String, Object> innerSpelVariables = new HashMap<>();
@@ -432,6 +435,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				Object value = getBindableValueForIndex(index);
 				String varName = "__QVar" + innerSpelVariables.size();
 				expression = expression.replace(group, "#" + varName);
+				expressionString = expressionString.replace(group, "#" + varName);
 				if(group.startsWith("'")) { // retain the string semantic
 					innerSpelVariables.put(varName, nullSafeToString(value));
 				} else {
@@ -439,7 +443,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				}
 			}
 
-			computedValue = computedValue.replace(binding, nullSafeToString(evaluateExpression(expression, innerSpelVariables)));
+			computedValue = computedValue.replace(binding,
+					nullSafeToString(evaluateExpression(expressionString, innerSpelVariables)));
 
 			bindableValue.setValue(computedValue);
 			bindableValue.setType(BsonType.STRING);
@@ -1081,7 +1086,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		verifyToken(JsonTokenType.RIGHT_PAREN);
-		
+
 		String dateTimeString = token.getValue(String.class);
 
 		try {

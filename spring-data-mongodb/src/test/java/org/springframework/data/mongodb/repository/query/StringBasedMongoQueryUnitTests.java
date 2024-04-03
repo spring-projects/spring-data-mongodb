@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,9 +40,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.DbCallback;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
@@ -59,7 +63,9 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.expression.EvaluationException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.MongoClientSettings;
@@ -77,7 +83,8 @@ import com.mongodb.reactivestreams.client.MongoClients;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class StringBasedMongoQueryUnitTests {
 
-	SpelExpressionParser PARSER = new SpelExpressionParser();
+	ValueExpressionParser PARSER = ValueExpressionParser.create(SpelExpressionParser::new);
+	StandardEnvironment environment = new StandardEnvironment();
 
 	@Mock MongoOperations operations;
 	@Mock ExecutableFind<Object> findOperation;
@@ -85,10 +92,14 @@ public class StringBasedMongoQueryUnitTests {
 
 	MongoConverter converter;
 
+	Map<String, Object> properties = new HashMap<>();
+	MapPropertySource propertySource = new MapPropertySource("mock", properties);
+
 	@BeforeEach
 	public void setUp() {
 
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
+		environment.getPropertySources().addFirst(propertySource);
 
 		doReturn(findOperation).when(operations).query(any());
 		doReturn(MongoClientSettings.getDefaultCodecRegistry()).when(operations).execute(any());
@@ -293,10 +304,46 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
+	@Test // GH-3050
+	public void shouldSupportExpressionsAndPropertiesInCustomQueries() {
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, "Matthews");
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndProperty", String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : 'Matthews', 'firstname' : 'some-default'}");
+
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
+	}
+
+	@Test // GH-3050
+	public void shouldSupportPropertiesInCustomQueries() {
+
+		properties.put("foo", "bar");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithProperty");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'bar'}");
+
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
+	}
+
+	@Test // GH-3050
+	public void shouldFailWhenPropertiesWithNoDefaultValueInCustomQueries() {
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithProperty");
+
+		assertThatThrownBy(() -> mongoQuery.createQuery(accessor))
+				.isInstanceOf(EvaluationException.class)
+				.hasMessageContaining("Could not resolve placeholder 'foo' in value \"${foo}\"");
+	}
+
 	@Test // DATAMONGO-1244
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject", boolean.class,
 				String.class);
 
@@ -707,7 +754,9 @@ public class StringBasedMongoQueryUnitTests {
 			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
 					factory, converter.getMappingContext());
-			return new StringBasedMongoQuery(queryMethod, operations, PARSER, QueryMethodEvaluationContextProvider.DEFAULT);
+			QueryMethodValueEvaluationContextAccessor accessor = new QueryMethodValueEvaluationContextAccessor(
+					environment, Collections.emptySet());
+			return new StringBasedMongoQuery(queryMethod, operations, new ValueExpressionDelegate(accessor, PARSER));
 
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
@@ -775,6 +824,12 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{'lastname': ?#{[0]} }")
 		List<Person> findByQueryWithExpression(String param0);
+
+		@Query("{'lastname': ?#{[0]}, 'firstname': ?${absent-property:some-default} }")
+		List<Person> findByQueryWithExpressionAndProperty(String param0);
+
+		@Query("{'lastname': ?${foo} }")
+		List<Person> findByQueryWithProperty();
 
 		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }}")
 		List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);

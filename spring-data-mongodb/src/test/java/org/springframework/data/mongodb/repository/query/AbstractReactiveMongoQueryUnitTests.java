@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -36,6 +37,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
@@ -58,7 +63,8 @@ import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.MongoClientSettings;
@@ -197,7 +203,7 @@ class AbstractReactiveMongoQueryUnitTests {
 
 		createQueryForMethod("findWithCollationUsingPlaceholdersInDocumentByFirstName", String.class, String.class,
 				int.class) //
-						.executeBlocking(new Object[] { "dalinar", "en_US", 2 });
+				.executeBlocking(new Object[] { "dalinar", "en_US", 2 });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -299,8 +305,12 @@ class AbstractReactiveMongoQueryUnitTests {
 		private boolean isLimitingQuery;
 
 		ReactiveMongoQueryFake(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations) {
-			super(method, operations, new SpelExpressionParser(),
-					ReactiveExtensionAwareQueryMethodEvaluationContextProvider.DEFAULT);
+			super(method, operations,
+					new ValueExpressionDelegate(
+							new QueryMethodValueEvaluationContextAccessor(
+									new StandardEnvironment(),
+									Collections.emptySet()),
+							ValueExpressionParser.create(SpelExpressionParser::new)));
 		}
 
 		@Override

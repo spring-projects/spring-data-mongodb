@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -42,11 +43,10 @@ import org.springframework.data.repository.core.support.RepositoryComposition.Re
 import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -60,11 +60,10 @@ import org.springframework.util.Assert;
  */
 public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySupport {
 
-	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
-
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final ReactiveMongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	@Nullable private QueryMethodValueEvaluationContextAccessor accessor;
 
 	/**
 	 * Creates a new {@link ReactiveMongoRepositoryFactory} with the given {@link ReactiveMongoOperations}.
@@ -133,13 +132,12 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		return targetRepository;
 	}
 
-	@Override
-	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new MongoQueryLookupStrategy(operations,
-				(ReactiveQueryMethodEvaluationContextProvider) evaluationContextProvider, mappingContext));
+	@Override protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+			ValueExpressionDelegate valueExpressionDelegate) {
+		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionDelegate));
 	}
 
+	@Override
 	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
 	}
@@ -160,21 +158,9 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
-
-		private final ReactiveMongoOperations operations;
-		private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
-		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-		private final ExpressionParser expressionParser = new CachingExpressionParser(EXPRESSION_PARSER);
-
-		MongoQueryLookupStrategy(ReactiveMongoOperations operations,
-				ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-
-			this.operations = operations;
-			this.evaluationContextProvider = evaluationContextProvider;
-			this.mappingContext = mappingContext;
-		}
+	private record MongoQueryLookupStrategy(ReactiveMongoOperations operations,
+		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+		ValueExpressionDelegate delegate) implements QueryLookupStrategy {
 
 		@Override
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
@@ -187,14 +173,13 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, expressionParser,
-						evaluationContextProvider);
+				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, delegate);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
-				return new ReactiveStringBasedAggregation(queryMethod, operations, expressionParser, evaluationContextProvider);
+				return new ReactiveStringBasedAggregation(queryMethod, operations, delegate);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveStringBasedMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
+				return new ReactiveStringBasedMongoQuery(queryMethod, operations, delegate);
 			} else {
-				return new ReactivePartTreeMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
+				return new ReactivePartTreeMongoQuery(queryMethod, operations, delegate);
 			}
 		}
 	}

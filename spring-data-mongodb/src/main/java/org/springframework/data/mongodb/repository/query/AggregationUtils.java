@@ -21,8 +21,10 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
@@ -31,8 +33,6 @@ import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -62,15 +62,11 @@ abstract class AggregationUtils {
 	 * @param accessor must not be {@literal null}.
 	 * @return the {@link Query} having proper {@link Collation}.
 	 * @see AggregationOptions#getCollation()
-	 * @see CollationUtils#computeCollation(String, ConvertingParameterAccessor, MongoParameters, ExpressionParser,
-	 *      QueryMethodEvaluationContextProvider)
 	 */
 	static AggregationOptions.Builder applyCollation(AggregationOptions.Builder builder,
-			@Nullable String collationExpression, ConvertingParameterAccessor accessor, MongoParameters parameters,
-			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			@Nullable String collationExpression, ConvertingParameterAccessor accessor, ValueExpressionEvaluator evaluator) {
 
-		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,
-				evaluationContextProvider);
+		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, evaluator);
 		return collation == null ? builder : builder.collation(collation);
 	}
 

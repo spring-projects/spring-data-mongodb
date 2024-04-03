@@ -26,6 +26,8 @@ import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.ParseException;
+import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 
@@ -46,12 +48,23 @@ public class ParameterBindingContext {
 	 * @param valueProvider
 	 * @param expressionParser
 	 * @param evaluationContext
-	 * @deprecated since 4.3, use {@link #ParameterBindingContext(ValueProvider, ExpressionParser, Supplier)} instead.
+	 * @deprecated since 4.4.0, use {@link #ParameterBindingContext(ValueProvider, ExpressionParser, Supplier)} instead.
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
 			EvaluationContext evaluationContext) {
 		this(valueProvider, expressionParser, () -> evaluationContext);
+	}
+
+	/**
+	 * @param valueProvider
+	 * @param expressionEvaluator
+	 * @since 3.1
+	 * @deprecated since 4.4.0, use {@link #ParameterBindingContext(ValueProvider, ValueExpressionEvaluator)} instead.
+	 */
+	@Deprecated(since = "4.4.0")
+	public ParameterBindingContext(ValueProvider valueProvider, SpELExpressionEvaluator expressionEvaluator) {
+		this(valueProvider, (ValueExpressionEvaluator) expressionEvaluator);
 	}
 
 	/**
@@ -62,7 +75,7 @@ public class ParameterBindingContext {
 	 */
 	public ParameterBindingContext(ValueProvider valueProvider, ExpressionParser expressionParser,
 			Supplier<EvaluationContext> evaluationContext) {
-		this(valueProvider, new EvaluationContextExpressionEvaluator(valueProvider, expressionParser) {
+		this(valueProvider, new EvaluationContextExpressionEvaluator(valueProvider, unwrap(expressionParser)) {
 			@Override
 			public EvaluationContext getEvaluationContext(String expressionString) {
 				return evaluationContext.get();
@@ -70,21 +83,30 @@ public class ParameterBindingContext {
 		});
 	}
 
-	/**
-	 * @param valueProvider
-	 * @param expressionEvaluator
-	 * @since 3.1
-	 * @deprecated since 4.3, use {@link #ParameterBindingContext(ValueProvider, ValueExpressionEvaluator)} instead.
-	 */
-	@Deprecated(since = "4.3")
-	public ParameterBindingContext(ValueProvider valueProvider, SpELExpressionEvaluator expressionEvaluator) {
-		this(valueProvider, (ValueExpressionEvaluator) expressionEvaluator);
+	private static ExpressionParser unwrap(ExpressionParser expressionParser) {
+		return new ExpressionParser() {
+			@Override
+			public Expression parseExpression(String expressionString) throws ParseException {
+				return expressionParser.parseExpression(unwrap(expressionString));
+			}
+
+			@Override
+			public Expression parseExpression(String expressionString, ParserContext context) throws ParseException {
+				return expressionParser.parseExpression(unwrap(expressionString), context);
+			}
+		};
+	}
+
+	private static String unwrap(String expressionString) {
+		return expressionString.startsWith("#{") && expressionString.endsWith("}")
+				? expressionString.substring(2, expressionString.length() - 1).trim()
+				: expressionString;
 	}
 
 	/**
 	 * @param valueProvider
 	 * @param expressionEvaluator
-	 * @since 4.3
+	 * @since 4.4.0
 	 */
 	public ParameterBindingContext(ValueProvider valueProvider, ValueExpressionEvaluator expressionEvaluator) {
 		this.valueProvider = valueProvider;
@@ -115,6 +137,20 @@ public class ParameterBindingContext {
 						return contextFunction.apply(dependencies);
 					}
 				});
+	}
+
+	/**
+	 * Create a new {@link ParameterBindingContext} that is capable of expression parsing.
+	 *
+	 * @param valueProvider
+	 * @param expressionEvaluator
+	 * @return
+	 * @since 4.4.0
+	 */
+	public static ParameterBindingContext forExpressions(ValueProvider valueProvider,
+			ValueExpressionEvaluator expressionEvaluator) {
+
+		return new ParameterBindingContext(valueProvider, expressionEvaluator);
 	}
 
 	@Nullable
