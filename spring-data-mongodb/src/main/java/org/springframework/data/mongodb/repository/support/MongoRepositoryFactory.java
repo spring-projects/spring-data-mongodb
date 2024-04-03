@@ -170,13 +170,11 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
+	private record MongoQueryLookupStrategy(MongoOperations operations,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			ValueExpressionSupportHolder expressionSupport) implements QueryLookupStrategy {
 
-		private final MongoOperations operations;
-		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-		private final ValueExpressionSupportHolder expressionSupport;
-
-		public MongoQueryLookupStrategy(MongoOperations operations,
+		private MongoQueryLookupStrategy(MongoOperations operations,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 				ValueExpressionSupportHolder expressionSupport) {
 

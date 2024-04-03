@@ -107,6 +107,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		this.evaluationContextProvider = expressionSupportHolder.createValueContextProvider(method.getParameters());
 	}
 
+	@Override
 	public MongoQueryMethod getQueryMethod() {
 		return method;
 	}

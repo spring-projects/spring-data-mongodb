@@ -59,7 +59,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
+	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
 	 */
+	@Deprecated(since = "4.3")
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations,
@@ -75,6 +77,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionSupport must not be {@literal null}.
+	 * @since 4.3
 	 */
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
 			ValueExpressionSupportHolder expressionSupport) {
@@ -89,6 +92,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionSupport must not be {@literal null}.
+	 * @since 4.3
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
 			ValueExpressionSupportHolder expressionSupport) {

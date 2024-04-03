@@ -55,7 +55,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
 import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
@@ -284,8 +283,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
 
 		return new ReactiveStringBasedMongoQuery(queryMethod, operations, new ValueExpressionSupportHolder(
-				new QueryMethodValueEvaluationContextProviderFactory(environment, QueryMethodEvaluationContextProvider.DEFAULT),
-				PARSER));
+				new QueryMethodValueEvaluationContextProviderFactory(environment, contextProvider), PARSER));
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {

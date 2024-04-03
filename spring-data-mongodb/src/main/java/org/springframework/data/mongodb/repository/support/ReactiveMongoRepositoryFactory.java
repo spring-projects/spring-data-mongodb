@@ -136,9 +136,10 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
 			ValueExpressionSupportHolder valueExpressionSupportHolder) {
-		return Optional.of(new MongoQueryLookupStrategy(operations, valueExpressionSupportHolder, mappingContext));
+		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionSupportHolder));
 	}
 
+	@Override
 	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
 	}
@@ -159,18 +160,17 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
+	private record MongoQueryLookupStrategy(ReactiveMongoOperations operations,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			ValueExpressionSupportHolder expressionSupportHolder) implements QueryLookupStrategy {
 
-		private final ReactiveMongoOperations operations;
-		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-		private final ValueExpressionSupportHolder expressionSupportHolder;
-
-		MongoQueryLookupStrategy(ReactiveMongoOperations operations, ValueExpressionSupportHolder expressionSupportHolder,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		private MongoQueryLookupStrategy(ReactiveMongoOperations operations,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+				ValueExpressionSupportHolder expressionSupportHolder) {
 
 			this.operations = operations;
-			this.expressionSupportHolder = new CachingValueExpressionSupportHolder(expressionSupportHolder);
 			this.mappingContext = mappingContext;
+			this.expressionSupportHolder = new CachingValueExpressionSupportHolder(expressionSupportHolder);
 		}
 
 		@Override

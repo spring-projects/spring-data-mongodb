@@ -66,7 +66,9 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
+	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
 	 */
+	@Deprecated(since = "4.3")
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method, mongoOperations,
