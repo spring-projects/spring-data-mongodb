@@ -36,6 +36,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +45,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -72,6 +75,8 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
+import org.springframework.data.repository.query.ValueExpressionSupportHolder;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.MongoClientSettings;
@@ -566,7 +571,11 @@ class AbstractMongoQueryUnitTests {
 		private boolean isLimitingQuery;
 
 		MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
-			super(method, operations, new SpelExpressionParser(), QueryMethodEvaluationContextProvider.DEFAULT);
+			super(method, operations,
+					new ValueExpressionSupportHolder(
+							new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(),
+									QueryMethodEvaluationContextProvider.DEFAULT),
+							ValueExpressionParser.create(SpelExpressionParser::new)));
 		}
 
 		@Override

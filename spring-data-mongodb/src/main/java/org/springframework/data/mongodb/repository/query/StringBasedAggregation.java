@@ -21,8 +21,11 @@ import java.util.function.LongUnaryOperator;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -34,7 +37,9 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ValueExpressionSupportHolder;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
@@ -53,8 +58,6 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 	private final MongoOperations mongoOperations;
 	private final MongoConverter mongoConverter;
-	private final ExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link StringBasedAggregation} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -66,7 +69,23 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 */
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(method, mongoOperations, expressionParser, evaluationContextProvider);
+		this(method, mongoOperations,
+				new ValueExpressionSupportHolder(
+						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
+						ValueExpressionParser.create(() -> expressionParser)));
+	}
+
+	/**
+	 * Creates a new {@link StringBasedAggregation} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
+	 *
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param expressionSupport must not be {@literal null}.
+	 * @since 4.3
+	 */
+	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
+			ValueExpressionSupportHolder expressionSupport) {
+		super(method, mongoOperations, expressionSupport);
 
 		if (method.isPageQuery()) {
 			throw new InvalidMongoDbApiUsageException(String.format(
@@ -76,8 +95,6 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 		this.mongoOperations = mongoOperations;
 		this.mongoConverter = mongoOperations.getConverter();
-		this.expressionParser = expressionParser;
-		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	@Override
@@ -177,8 +194,8 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
 
-		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
-				expressionParser, evaluationContextProvider);
+		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor,
+				getExpressionEvaluatorFor(accessor));
 		AggregationUtils.applyMeta(builder, method);
 		AggregationUtils.applyHint(builder, method);
 		AggregationUtils.applyReadPreference(builder, method);

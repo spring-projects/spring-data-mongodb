@@ -40,11 +40,11 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.query.CachingValueExpressionSupportHolder;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.expression.ExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionSupportHolder;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -148,8 +148,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
+			ValueExpressionSupportHolder expressionSupport) {
+		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, expressionSupport));
 	}
 
 	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
@@ -173,17 +173,16 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final MongoOperations operations;
-		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-		private final ExpressionParser expressionParser = new CachingExpressionParser(EXPRESSION_PARSER);
+		private final ValueExpressionSupportHolder expressionSupport;
 
 		public MongoQueryLookupStrategy(MongoOperations operations,
-				QueryMethodEvaluationContextProvider evaluationContextProvider,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+				ValueExpressionSupportHolder expressionSupport) {
 
 			this.operations = operations;
-			this.evaluationContextProvider = evaluationContextProvider;
 			this.mappingContext = mappingContext;
+			this.expressionSupport = new CachingValueExpressionSupportHolder(expressionSupport);
 		}
 
 		@Override
@@ -197,14 +196,13 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, expressionParser,
-						evaluationContextProvider);
+				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, expressionSupport);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
-				return new StringBasedAggregation(queryMethod, operations, expressionParser, evaluationContextProvider);
+				return new StringBasedAggregation(queryMethod, operations, expressionSupport);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
+				return new StringBasedMongoQuery(queryMethod, operations, expressionSupport);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
+				return new PartTreeMongoQuery(queryMethod, operations, expressionSupport);
 			}
 		}
 	}

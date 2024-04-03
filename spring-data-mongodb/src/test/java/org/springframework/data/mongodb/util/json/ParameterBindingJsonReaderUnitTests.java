@@ -29,6 +29,8 @@ import org.bson.BsonBinarySubType;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
+
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.EvaluationContext;
@@ -309,7 +311,8 @@ class ParameterBindingJsonReaderUnitTests {
 		String json = "{ $and : [?#{ [0] == null  ? { '$where' : 'true' } : { 'v1' : { '$in' : {[0]} } } }]}";
 
 		ExpressionDependencies expressionDependencies = new ParameterBindingDocumentCodec()
-				.captureExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
+				.captureExpressionDependencies(json, it -> new Object(),
+						ValueExpressionParser.create(SpelExpressionParser::new));
 
 		assertThat(expressionDependencies).isEqualTo(ExpressionDependencies.none());
 	}
@@ -320,7 +323,8 @@ class ParameterBindingJsonReaderUnitTests {
 		String json = "{ hello: ?#{hasRole('foo')} }";
 
 		ExpressionDependencies expressionDependencies = new ParameterBindingDocumentCodec()
-				.captureExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
+				.captureExpressionDependencies(json, it -> new Object(),
+						ValueExpressionParser.create(SpelExpressionParser::new));
 
 		assertThat(expressionDependencies).isNotEmpty();
 		assertThat(expressionDependencies.get()).hasSize(1);
@@ -406,7 +410,7 @@ class ParameterBindingJsonReaderUnitTests {
 		String json = "?#{ true ? { 'name': #name } : { 'name' : #name + 'trouble' } }";
 
 		new ParameterBindingDocumentCodec().captureExpressionDependencies(json, (index) -> args[index],
-				new SpelExpressionParser());
+				ValueExpressionParser.create(SpelExpressionParser::new));
 	}
 
 	@Test // GH-3871, GH-4089

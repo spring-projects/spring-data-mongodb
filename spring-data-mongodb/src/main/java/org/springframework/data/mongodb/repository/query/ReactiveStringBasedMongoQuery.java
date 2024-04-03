@@ -21,14 +21,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
 import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionSupportHolder;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -49,7 +53,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private final String query;
 	private final String fieldSpec;
 
-	private final ExpressionParser expressionParser;
+	private final ValueExpressionParser expressionParser;
 
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
@@ -82,14 +86,44 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
+		this(query, method, mongoOperations,
+				new ValueExpressionSupportHolder(
+						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
+						ValueExpressionParser.create(() -> expressionParser)));
+	}
 
-		super(method, mongoOperations, expressionParser, evaluationContextProvider);
+	/**
+	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link MongoQueryMethod} and
+	 * {@link MongoOperations}.
+	 *
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param expressionSupportHolder must not be {@literal null}.
+	 */
+	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
+			ValueExpressionSupportHolder expressionSupportHolder) {
+		this(method.getAnnotatedQuery(), method, mongoOperations, expressionSupportHolder);
+	}
+
+	/**
+	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
+	 * {@link MongoOperations}, {@link SpelExpressionParser} and
+	 * {@link ReactiveExtensionAwareQueryMethodEvaluationContextProvider}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param expressionSupportHolder must not be {@literal null}.
+	 */
+	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
+			ReactiveMongoOperations mongoOperations, ValueExpressionSupportHolder expressionSupportHolder) {
+
+		super(method, mongoOperations, expressionSupportHolder);
 
 		Assert.notNull(query, "Query must not be null");
-		Assert.notNull(expressionParser, "SpelExpressionParser must not be null");
 
 		this.query = query;
-		this.expressionParser = expressionParser;
+		this.expressionParser = expressionSupportHolder;
 		this.fieldSpec = method.getFieldSpecification();
 
 		if (method.hasAnnotatedQuery()) {
@@ -141,7 +175,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
 				expressionParser);
 
-		return getSpelEvaluatorFor(dependencies, accessor)
+		return getValueExpressionEvaluatorLater(dependencies, accessor)
 				.map(it -> new ParameterBindingContext(accessor::getBindableValue, it));
 	}
 

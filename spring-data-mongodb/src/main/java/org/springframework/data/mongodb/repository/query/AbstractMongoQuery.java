@@ -21,7 +21,11 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 
+import org.springframework.data.expression.ValueEvaluationContext;
+import org.springframework.data.expression.ValueExpression;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -42,13 +46,14 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Upd
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ValueExpressionSupportHolder;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -71,8 +76,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private final MongoOperations operations;
 	private final ExecutableFind<?> executableFind;
 	private final ExecutableUpdate<?> executableUpdate;
-	private final ExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ValueExpressionParser expressionParser;
+	private final QueryMethodValueEvaluationContextProvider evaluationContextProvider;
 	private final Lazy<ParameterBindingDocumentCodec> codec = Lazy
 			.of(() -> new ParameterBindingDocumentCodec(getCodecRegistry()));
 
@@ -81,16 +86,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
-	 * @param expressionParser must not be {@literal null}.
-	 * @param evaluationContextProvider must not be {@literal null}.
+	 * @param expressionSupportHolder must not be {@literal null}.
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, ExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations,
+			ValueExpressionSupportHolder expressionSupportHolder) {
 
 		Assert.notNull(operations, "MongoOperations must not be null");
 		Assert.notNull(method, "MongoQueryMethod must not be null");
-		Assert.notNull(expressionParser, "SpelExpressionParser must not be null");
-		Assert.notNull(evaluationContextProvider, "QueryMethodEvaluationContextProvider must not be null");
+		Assert.notNull(expressionSupportHolder, "ValueExpressionSupportHolder must not be null");
 
 		this.method = method;
 		this.operations = operations;
@@ -100,8 +103,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		this.executableFind = operations.query(type);
 		this.executableUpdate = operations.update(type);
-		this.expressionParser = expressionParser;
-		this.evaluationContextProvider = evaluationContextProvider;
+		this.expressionParser = expressionSupportHolder;
+		this.evaluationContextProvider = expressionSupportHolder.createValueContextProvider(method.getParameters());
 	}
 
 	public MongoQueryMethod getQueryMethod() {
@@ -243,7 +246,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	Query applyAnnotatedCollationIfPresent(Query query, ConvertingParameterAccessor accessor) {
 
 		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
-				accessor, getQueryMethod().getParameters(), expressionParser, evaluationContextProvider);
+				accessor, getExpressionEvaluatorFor(accessor));
 	}
 
 	/**
@@ -346,10 +349,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	protected ParameterBindingContext prepareBindingContext(String source, ConvertingParameterAccessor accessor) {
 
-		ExpressionDependencies dependencies = getParameterBindingCodec().captureExpressionDependencies(source,
-				accessor::getBindableValue, expressionParser);
-
-		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
+		ValueExpressionEvaluator evaluator = getExpressionEvaluatorFor(accessor);
 		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
 
@@ -374,8 +374,31 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	protected SpELExpressionEvaluator getSpELExpressionEvaluatorFor(ExpressionDependencies dependencies,
 			ConvertingParameterAccessor accessor) {
 
-		return new DefaultSpELExpressionEvaluator(expressionParser, evaluationContextProvider
-				.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues(), dependencies));
+		return new DefaultSpELExpressionEvaluator(new SpelExpressionParser(),
+				evaluationContextProvider.getEvaluationContext(accessor.getValues(), dependencies).getEvaluationContext());
+	}
+
+	/**
+	 * Obtain a {@link ValueExpressionEvaluator} suitable to evaluate expressions.
+	 *
+	 * @param accessor must not be {@literal null}.
+	 * @return the {@link ValueExpressionEvaluator}.
+	 * @since 4.3
+	 */
+	protected ValueExpressionEvaluator getExpressionEvaluatorFor(MongoParameterAccessor accessor) {
+
+		return new ValueExpressionEvaluator() {
+
+			@Override
+			public <T> T evaluate(String expressionString) {
+
+				ValueExpression expression = expressionParser.parse(expressionString);
+				ValueEvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(accessor.getValues(),
+						expression.getExpressionDependencies());
+
+				return (T) expression.evaluate(evaluationContext);
+			}
+		};
 	}
 
 	/**

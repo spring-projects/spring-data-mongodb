@@ -19,10 +19,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
+import org.springframework.data.repository.query.ValueExpressionSupportHolder;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
@@ -58,25 +62,40 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 */
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
+		this(method.getAnnotatedQuery(), method, mongoOperations,
+				new ValueExpressionSupportHolder(
+						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
+						ValueExpressionParser.create(() -> expressionParser)));
+	}
+
+	/**
+	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod}, {@link MongoOperations},
+	 * {@link ValueExpressionSupportHolder}.
+	 *
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param expressionSupport must not be {@literal null}.
+	 */
+	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
+			ValueExpressionSupportHolder expressionSupport) {
+		this(method.getAnnotatedQuery(), method, mongoOperations, expressionSupport);
 	}
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
-	 * {@link MongoOperations}, {@link SpelExpressionParser} and {@link QueryMethodEvaluationContextProvider}.
+	 * {@link MongoOperations}, {@link ValueExpressionSupportHolder}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionParser must not be {@literal null}.
+	 * @param expressionSupport must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
-			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ValueExpressionSupportHolder expressionSupport) {
 
-		super(method, mongoOperations, expressionParser, evaluationContextProvider);
+		super(method, mongoOperations, expressionSupport);
 
 		Assert.notNull(query, "Query must not be null");
-		Assert.notNull(expressionParser, "SpelExpressionParser must not be null");
 
 		this.query = query;
 		this.fieldSpec = method.getFieldSpecification();

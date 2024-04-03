@@ -20,11 +20,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -51,16 +51,13 @@ abstract class CollationUtils {
 	 *
 	 * @param collationExpression
 	 * @param accessor
-	 * @param parameters
-	 * @param expressionParser
-	 * @param evaluationContextProvider
+	 * @param expressionEvaluator
 	 * @return can be {@literal null} if neither {@link ConvertingParameterAccessor#getCollation()} nor
 	 *         {@literal collationExpression} are present.
 	 */
 	@Nullable
 	static Collation computeCollation(@Nullable String collationExpression, ConvertingParameterAccessor accessor,
-			MongoParameters parameters, ExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ValueExpressionEvaluator expressionEvaluator) {
 
 		if (accessor.getCollation() != null) {
 			return accessor.getCollation();
@@ -73,8 +70,7 @@ abstract class CollationUtils {
 		if (collationExpression.stripLeading().startsWith("{")) {
 
 			ParameterBindingContext bindingContext = ParameterBindingContext.forExpressions(accessor::getBindableValue,
-					expressionParser, dependencies -> evaluationContextProvider.getEvaluationContext(parameters,
-							accessor.getValues(), dependencies));
+					expressionEvaluator);
 
 			return Collation.from(CODEC.decode(collationExpression, bindingContext));
 		}

@@ -222,7 +222,7 @@ class JsonScanner {
 		while (c == '$' || c == '_' || Character.isLetterOrDigit(c) || c == '#' || c == '{' || c == '['
 				|| (isExpression && isExpressionAllowedChar(c))) {
 
-			if (charCount == 0 && c == '#') {
+			if (charCount == 0 && (c == '#' || c == '$')) {
 				isExpression = true;
 			} else if (isExpression) {
 				if (c == '{') {
