@@ -2595,10 +2595,11 @@ public class MongoTemplate
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
+		Document mappedSort = getMappedSortObject(query, entityClass);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName));
+			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
+					serializeToJsonSafely(mappedQuery), mappedSort, mappedFields, entityClass, collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null),
@@ -2620,10 +2621,11 @@ public class MongoTemplate
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
+		Document mappedSort = getMappedSortObject(query, sourceClass);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName));
+			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
+					serializeToJsonSafely(mappedQuery), mappedSort, mappedFields, sourceClass, collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null), preparer,
