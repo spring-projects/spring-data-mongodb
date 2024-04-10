@@ -564,8 +564,8 @@ public class MongoTemplate
 		Document fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: %s",
-					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
+			LOGGER.debug(String.format("Executing query: %s fields: %s sort: %s in collection: %s",
+					serializeToJsonSafely(queryObject), fieldsObject, serializeToJsonSafely(sortObject), collectionName));
 		}
 
 		this.executeQueryInternal(new FindCallback(createDelegate(query), queryObject, fieldsObject, null),
@@ -2599,7 +2599,8 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
-					serializeToJsonSafely(mappedQuery), mappedSort, mappedFields, entityClass, collectionName));
+					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), entityClass,
+					collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null),
@@ -2625,7 +2626,8 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
-					serializeToJsonSafely(mappedQuery), mappedSort, mappedFields, sourceClass, collectionName));
+					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), sourceClass,
+					collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null), preparer,
@@ -2707,7 +2709,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), fields, sort, entityClass, collectionName));
+					serializeToJsonSafely(query), fields, serializeToJsonSafely(sort), entityClass, collectionName));
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
@@ -2738,7 +2740,8 @@ public class MongoTemplate
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
 					"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s in collection: %s",
-					serializeToJsonSafely(mappedQuery), fields, sort, entityClass, serializeToJsonSafely(mappedUpdate),
+					serializeToJsonSafely(mappedQuery), fields, serializeToJsonSafely(sort), entityClass,
+					serializeToJsonSafely(mappedUpdate),
 					collectionName));
 		}
 
