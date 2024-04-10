@@ -130,7 +130,7 @@ public interface ReferenceLoader {
 
 		/**
 		 * @return a {@link DocumentReferenceQuery} that will not match any documents.
-		 * @since 4.3
+		 * @since 4.2.5
 		 */
 		static DocumentReferenceQuery forNoResult() {
 			return NoResultsFilter.INSTANCE;
@@ -139,8 +139,8 @@ public interface ReferenceLoader {
 
 	/**
 	 * A dedicated {@link DocumentReferenceQuery} that will not match any documents.
-	 * 
-	 * @since 4.3
+	 *
+	 * @since 4.2.5
 	 */
 	enum NoResultsFilter implements DocumentReferenceQuery {
 		INSTANCE;
