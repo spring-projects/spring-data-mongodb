@@ -240,7 +240,8 @@ public final class ReferenceLookupDelegate {
 
 	EvaluationContext evaluationContextFor(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		Object target = source instanceof DocumentReferenceSource documentReferenceSource ? documentReferenceSource.getTargetSource()
+		Object target = source instanceof DocumentReferenceSource documentReferenceSource
+				? documentReferenceSource.getTargetSource()
 				: source;
 
 		if (target == null) {
@@ -285,6 +286,7 @@ public final class ReferenceLookupDelegate {
 
 			Collection<Object> objects = (Collection<Object>) value;
 
+			// optimization: bypass query if the collection pointing to the references is empty
 			if (objects.isEmpty()) {
 				return DocumentReferenceQuery.forNoResult();
 			}
@@ -301,7 +303,7 @@ public final class ReferenceLookupDelegate {
 
 		if (property.isMap() && value instanceof Map) {
 
-			if(ObjectUtils.isEmpty(value)) {
+			if (ObjectUtils.isEmpty(value)) {
 				return DocumentReferenceQuery.forNoResult();
 			}
 
@@ -461,6 +463,7 @@ public final class ReferenceLookupDelegate {
 			return target.stream().sorted((o1, o2) -> compareAgainstReferenceIndex(ors, o1, o2)).collect(Collectors.toList());
 		}
 
+		@Override
 		public Document getQuery() {
 			return query;
 		}
