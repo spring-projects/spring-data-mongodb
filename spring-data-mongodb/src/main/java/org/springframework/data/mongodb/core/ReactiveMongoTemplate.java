@@ -2453,7 +2453,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), fields, sort, entityClass, collectionName));
+					serializeToJsonSafely(query), fields, serializeToJsonSafely(sort), entityClass, collectionName));
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
@@ -2480,7 +2480,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(String.format(
 						"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s " + "in collection: %s",
-						serializeToJsonSafely(mappedQuery), fields, sort, entityClass, serializeToJsonSafely(mappedUpdate),
+						serializeToJsonSafely(mappedQuery), fields, serializeToJsonSafely(sort), entityClass,
+						serializeToJsonSafely(mappedUpdate),
 						collectionName));
 			}
 
@@ -2547,7 +2548,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				LOGGER.debug(String.format(
 						"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
 								+ "in collection: %s",
-						serializeToJsonSafely(mappedQuery), mappedFields, mappedSort, entityType,
+						serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), entityType,
 						serializeToJsonSafely(replacement), collectionName));
 			}
 
