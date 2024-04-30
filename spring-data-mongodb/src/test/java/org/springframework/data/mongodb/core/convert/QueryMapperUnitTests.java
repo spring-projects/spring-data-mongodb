@@ -1529,6 +1529,15 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).isEqualTo("{ $expr : { $expr : { $gt : [ '$foo', '$budget'] } } }");
 	}
 
+	@Test // GH-4687
+	void usageOfUntypedAggregationShouldRenderOperationsAsIs() {
+
+		Query query = query(expr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+			context.getPersistentEntity(Object.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $expr : { $gt : [ '$field', '$budget'] } } }");
+	}
+
 	@Test // GH-2750
 	void usesMongoExpressionDocumentAsIsIfItIsNotAnAggregationExpression() {
 

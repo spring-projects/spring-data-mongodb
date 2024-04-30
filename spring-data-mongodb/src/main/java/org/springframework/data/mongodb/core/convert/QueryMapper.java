@@ -588,8 +588,11 @@ public class QueryMapper {
 		}
 
 		if (source instanceof AggregationExpression age) {
-			return age
-					.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
+
+			if(entity == null) {
+				return age.toDocument();
+			}
+			return age.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
 		}
 
 		if (source instanceof MongoExpression exr) {
