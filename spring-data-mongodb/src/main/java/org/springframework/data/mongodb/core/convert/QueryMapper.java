@@ -540,7 +540,6 @@ public class QueryMapper {
 	 * @return
 	 */
 	@Nullable
-	@SuppressWarnings("unchecked")
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (source instanceof Example<?> example) {
@@ -548,11 +547,8 @@ public class QueryMapper {
 		}
 
 		if (source instanceof AggregationExpression age) {
-
-			if(entity == null) {
-				return age.toDocument();
-			}
-			return age.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
+			return entity == null ? age.toDocument() : //
+					age.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
 		}
 
 		if (source instanceof MongoExpression exr) {
