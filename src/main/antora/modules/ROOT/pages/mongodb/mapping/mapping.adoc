@@ -55,7 +55,7 @@ Additionally, the name of the document field can be customized via the `@Field` 
 | `_id`
 
 | `@Field("x")` `@Id` `String` y
-| `x`
+| `_id` (`@Field(name)` is ignored, `@Id` takes precedence)
 |===
 
 The following outlines what type conversion, if any, will be done on the property mapped to the _id document field.
