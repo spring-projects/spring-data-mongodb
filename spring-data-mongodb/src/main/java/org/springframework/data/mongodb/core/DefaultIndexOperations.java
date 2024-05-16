@@ -208,10 +208,6 @@ public class DefaultIndexOperations implements IndexOperations {
 
 		Assert.notNull(callback, "CollectionCallback must not be null");
 
-		if (type != null) {
-			return mongoOperations.execute(type, callback);
-		}
-
 		return mongoOperations.execute(collectionName, callback);
 	}
 
