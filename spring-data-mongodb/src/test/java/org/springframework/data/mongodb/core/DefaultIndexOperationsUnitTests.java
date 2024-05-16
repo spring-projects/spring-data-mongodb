@@ -43,6 +43,7 @@ import com.mongodb.client.model.IndexOptions;
  * Unit tests for {@link DefaultIndexOperations}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class DefaultIndexOperationsUnitTests {
@@ -119,6 +120,15 @@ public class DefaultIndexOperationsUnitTests {
 		indexOpsFor(Jedi.class).ensureIndex(HashedIndex.hashed("name"));
 
 		verify(collection).createIndex(eq(new Document("firstname", "hashed")), any());
+	}
+
+	@Test // GH-4698
+	void shouldConsiderGivenCollectionName() {
+
+		DefaultIndexOperations operations = new DefaultIndexOperations(template, "foo", Jedi.class);
+
+		operations.ensureIndex(HashedIndex.hashed("name"));
+		verify(db).getCollection(eq("foo"), any(Class.class));
 	}
 
 	private DefaultIndexOperations indexOpsFor(Class<?> type) {
