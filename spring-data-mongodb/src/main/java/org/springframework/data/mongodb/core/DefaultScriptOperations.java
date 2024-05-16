@@ -85,7 +85,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	}
 
 	@Override
-	public Object execute(final ExecutableMongoScript script, final Object... args) {
+	public Object execute(ExecutableMongoScript script, Object... args) {
 
 		Assert.notNull(script, "Script must not be null");
 
@@ -104,7 +104,7 @@ class DefaultScriptOperations implements ScriptOperations {
 	}
 
 	@Override
-	public Object call(final String scriptName, final Object... args) {
+	public Object call(String scriptName, Object... args) {
 
 		Assert.hasText(scriptName, "ScriptName must not be null or empty");
 

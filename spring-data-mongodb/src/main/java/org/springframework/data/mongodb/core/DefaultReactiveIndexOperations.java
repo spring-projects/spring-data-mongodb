@@ -116,8 +116,9 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 			return Flux.from(db.runCommand(new Document("collMod", collectionName).append("index", indexOptions)))
 					.doOnNext(result -> {
-						if(NumberUtils.convertNumberToTargetClass(result.get("ok", (Number) 0), Integer.class) != 1) {
-							throw new UncategorizedMongoDbException("Index '%s' could not be modified. Response was %s".formatted(name, result.toJson()), null);
+						if (NumberUtils.convertNumberToTargetClass(result.get("ok", (Number) 0), Integer.class) != 1) {
+							throw new UncategorizedMongoDbException(
+									"Index '%s' could not be modified. Response was %s".formatted(name, result.toJson()), null);
 						}
 					});
 		}).then();
@@ -134,14 +135,17 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 				.orElse(null);
 	}
 
-	public Mono<Void> dropIndex(final String name) {
+	@Override
+	public Mono<Void> dropIndex(String name) {
 		return mongoOperations.execute(collectionName, collection -> collection.dropIndex(name)).then();
 	}
 
+	@Override
 	public Mono<Void> dropAllIndexes() {
 		return dropIndex("*");
 	}
 
+	@Override
 	public Flux<IndexInfo> getIndexInfo() {
 
 		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
@@ -160,7 +164,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 				queryMapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
 	}
 
-	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops, MongoPersistentEntity<?> entity) {
+	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops,
+			@Nullable MongoPersistentEntity<?> entity) {
 
 		if (ops.getCollation() != null || entity == null || !entity.hasCollation()) {
 			return ops;
