@@ -401,8 +401,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			if (matcher.find()) {
 
 				int index = computeParameterIndex(matcher.group());
-				bindableValue.setValue(getBindableValueForIndex(index));
-				bindableValue.setType(bsonTypeForValue(getBindableValueForIndex(index)));
+				Object bindableValueForIndex = getBindableValueForIndex(index);
+				bindableValue.setValue(bindableValueForIndex);
+				bindableValue.setType(bsonTypeForValue(bindableValueForIndex));
 				return bindableValue;
 			}
 

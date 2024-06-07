@@ -323,7 +323,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	private AggregationOperation computePipelineStage(String source, ConvertingParameterAccessor accessor) {
-		return ctx -> ctx.getMappedObject(bindParameters(source, accessor), getQueryMethod().getDomainClass());
+		return new StringAggregationOperation(source, getQueryMethod().getDomainClass(),
+				(it) -> bindParameters(it, accessor));
 	}
 
 	protected Document decode(String source, ParameterBindingContext bindingContext) {
