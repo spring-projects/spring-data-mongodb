@@ -1101,6 +1101,21 @@ public class QueryMapperUnitTests {
 		assertThat(document.get("text")).isInstanceOf(BsonRegularExpression.class);
 	}
 
+	@Test // GH-4674
+	void shouldRetainRegexPatternForIdProperty() {
+
+		org.bson.Document javaRegex = mapper.getMappedObject(query(where("id").regex("^1234$")).getQueryObject(),
+				context.getPersistentEntity(WithStringId.class));
+
+		assertThat(javaRegex.get("_id")).isInstanceOf(Pattern.class);
+
+		org.bson.Document bsonRegex = mapper.getMappedObject(
+				query(where("id").regex(new BsonRegularExpression("^1234$"))).getQueryObject(),
+				context.getPersistentEntity(WithStringId.class));
+
+		assertThat(bsonRegex.get("_id")).isInstanceOf(BsonRegularExpression.class);
+	}
+
 	@Test // DATAMONGO-2339
 	void findByIdUsesMappedIdFieldNameWithUnderscoreCorrectly() {
 
