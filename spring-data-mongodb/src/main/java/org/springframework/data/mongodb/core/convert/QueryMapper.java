@@ -788,6 +788,11 @@ public class QueryMapper {
 	 */
 	@Nullable
 	public Object convertId(@Nullable Object id, Class<?> targetType) {
+
+		if (!SpecialTypeTreatment.INSTANCE.isConversionCandidate(id)) {
+			return id;
+		}
+
 		return converter.convertId(id, targetType);
 	}
 
@@ -849,8 +854,8 @@ public class QueryMapper {
 	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
 		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()
-				|| value instanceof Document || value instanceof DBObject || value instanceof Pattern
-				|| value instanceof BsonRegularExpression) {
+				|| value instanceof Document || value instanceof DBObject
+				|| !SpecialTypeTreatment.INSTANCE.isConversionCandidate(value)) {
 			return value;
 		}
 
@@ -1568,5 +1573,23 @@ public class QueryMapper {
 
 	public MongoConverter getConverter() {
 		return converter;
+	}
+
+	/*
+	 * Types that must not be converted
+	 */
+	enum SpecialTypeTreatment {
+
+		INSTANCE;
+
+		private final Set<Class<?>> types = Set.of(Pattern.class, BsonRegularExpression.class);
+
+		boolean isConversionCandidate(@Nullable Object value) {
+			if (value == null) {
+				return false;
+			}
+
+			return !types.contains(value.getClass());
+		}
 	}
 }
