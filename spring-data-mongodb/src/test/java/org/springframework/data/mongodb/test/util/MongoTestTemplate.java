@@ -25,11 +25,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * A {@link MongoTemplate} with configuration hooks and extension suitable for tests.
@@ -146,5 +146,12 @@ public class MongoTestTemplate extends MongoTemplate {
 		for (Class<?> entity : entities) {
 			getCollection(getCollectionName(entity)).dropIndexes();
 		}
+	}
+
+	public void doInCollection(Class<?> entityClass, Consumer<MongoCollection<Document>> callback) {
+		execute(entityClass, (collection -> {
+			callback.accept(collection);
+			return null;
+		}));
 	}
 }
