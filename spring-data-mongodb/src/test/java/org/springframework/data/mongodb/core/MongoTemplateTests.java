@@ -1409,12 +1409,13 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).field).isEqualTo("Beauford");
 	}
 
-	@Test // DATAMONGO-447
+	@Test // DATAMONGO-447, GH-4707
 	public void storesAndRemovesTypeWithComplexId() {
 
 		MyId id = new MyId();
 		id.first = "foo";
 		id.second = "bar";
+		id.time = Instant.now().minusSeconds(2);
 
 		TypeWithMyId source = new TypeWithMyId();
 		source.id = id;
@@ -4397,6 +4398,7 @@ public class MongoTemplateTests {
 
 		String first;
 		String second;
+		Instant time;
 	}
 
 	static class TypeWithMyId {

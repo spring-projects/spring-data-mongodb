@@ -728,7 +728,12 @@ public class QueryMapper {
 			} else if (isKeyword(key)) {
 				resultDbo.put(key, convertIdField(documentField, entry.getValue()));
 			} else {
-				resultDbo.put(key, getMappedValue(documentField, entry.getValue()));
+				if(documentField.getProperty() != null && documentField.getProperty().isEntity()) {
+					Field propertyField = createPropertyField(documentField.getPropertyEntity(), key, mappingContext);
+					resultDbo.put(key, getMappedValue(propertyField, entry.getValue()));
+				} else {
+					resultDbo.put(key, getMappedValue(documentField, entry.getValue()));
+				}
 			}
 		}
 
