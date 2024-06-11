@@ -1649,7 +1649,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 				UpdateContext updateContext = queryOperations.replaceSingleContext(mapped, true);
-				Document filter = updateContext.getMappedQuery(entity);
+				Document filter = updateContext.getReplacementQuery();
 				Document replacement = updateContext.getMappedUpdate(entity);
 
 				Mono<Document> deferredFilter;
