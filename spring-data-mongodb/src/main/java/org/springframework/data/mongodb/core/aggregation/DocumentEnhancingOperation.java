@@ -50,7 +50,7 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 	public Document toDocument(AggregationOperationContext context) {
 
 		InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
-				exposedFields, context);
+				exposedFields, context, false);
 
 		if (valueMap.size() == 1) {
 			return context.getMappedObject(

@@ -171,7 +171,7 @@ public class VariableOperators {
 
 			Document map = new Document();
 			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
-					exposedFields, context);
+					exposedFields, context, false);
 
 			Document input;
 			if (sourceArray instanceof Field field) {
@@ -308,8 +308,6 @@ public class VariableOperators {
 
 			Document letExpression = new Document();
 			Document mappedVars = new Document();
-			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
-					exposedFields, context);
 
 			for (ExpressionVariable var : this.vars) {
 				mappedVars.putAll(getMappedVariable(var, context));
@@ -317,6 +315,9 @@ public class VariableOperators {
 
 			letExpression.put("vars", mappedVars);
 			if (expression != null) {
+
+				InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
+					exposedFields, context, false);
 				letExpression.put("in", getMappedIn(operationContext));
 			}
 
