@@ -31,12 +31,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.QAddress;
@@ -244,6 +246,41 @@ public class SpringDataMongodbSerializerUnitTests {
 		Predicate predicate = QPerson.person.spiritAnimal.id.eq("007");
 
 		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal' : '007' }"));
+	}
+
+	@Test // GH-4709
+	void appliesConversionToIdType() {
+
+		Predicate predicate = QSpringDataMongodbSerializerUnitTests_Outer.outer.embeddedObject.id
+				.eq("64268a7b17ac6a00018bf312");
+
+		assertThat(serializer.handle(predicate))
+				.isEqualTo(new Document("embedded_object._id", new ObjectId("64268a7b17ac6a00018bf312")));
+	}
+
+	@Test // GH-4709
+	void appliesConversionToIdTypeForExplicitTypeRef() {
+
+		Predicate predicate = QQuerydslRepositorySupportTests_WithMongoId.withMongoId.id.eq("64268a7b17ac6a00018bf312");
+
+		assertThat(serializer.handle(predicate)).isEqualTo(new Document("_id", "64268a7b17ac6a00018bf312"));
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "record")
+	class Outer {
+
+		@Id private String id;
+
+		@Field("embedded_object") private Inner embeddedObject;
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "embedded_object")
+	class Inner {
+		@Id private String id;
+	}
+
+	public class WithMongoId {
+		@MongoId private String id;
 	}
 
 	class Address {
