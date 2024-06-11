@@ -816,7 +816,7 @@ public class QueryMapper {
 	@Nullable
 	public Object convertId(@Nullable Object id, Class<?> targetType) {
 
-		if (!SpecialTypeTreatment.INSTANCE.isConversionCandidate(id)) {
+		if (Quirks.skipConversion(id)) {
 			return id;
 		}
 
@@ -881,8 +881,7 @@ public class QueryMapper {
 	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
 		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()
-				|| value instanceof Document || value instanceof DBObject
-				|| !SpecialTypeTreatment.INSTANCE.isConversionCandidate(value)) {
+				|| value instanceof Document || value instanceof DBObject || Quirks.skipConversion(value)) {
 			return value;
 		}
 
@@ -1611,20 +1610,19 @@ public class QueryMapper {
 	}
 
 	/*
-	 * Types that must not be converted
+	 * Types that must not be converted.
 	 */
-	enum SpecialTypeTreatment {
+	static class Quirks {
 
-		INSTANCE;
+		private static final Set<Class<?>> types = Set.of(Pattern.class, BsonRegularExpression.class);
 
-		private final Set<Class<?>> types = Set.of(Pattern.class, BsonRegularExpression.class);
+		static boolean skipConversion(@Nullable Object value) {
 
-		boolean isConversionCandidate(@Nullable Object value) {
 			if (value == null) {
 				return false;
 			}
 
-			return !types.contains(value.getClass());
+			return types.contains(value.getClass());
 		}
 	}
 }
