@@ -30,17 +30,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
+import org.springframework.data.mongodb.repository.User;
 
 import com.querydsl.core.types.Ops;
 import com.querydsl.core.types.Predicate;
@@ -50,7 +54,6 @@ import com.querydsl.core.types.dsl.BooleanOperation;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.core.types.dsl.StringPath;
-import org.springframework.data.mongodb.repository.User;
 
 /**
  * Unit tests for {@link SpringDataMongodbSerializer}.
@@ -115,7 +118,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-467, DATAMONGO-1798
-	public void retainsIdPropertyType() {
+	public void appliesImplicitIdConversion() {
 
 		ObjectId id = new ObjectId();
 
@@ -123,7 +126,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		StringPath idPath = builder.getString("id");
 
 		Document result = (Document) serializer.visit((BooleanOperation) idPath.eq(id.toString()), null);
-		assertThat(result.get("_id")).isNotNull().isInstanceOf(String.class).isEqualTo(id.toString());
+		assertThat(result.get("_id")).isNotNull().isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-761
@@ -244,6 +247,41 @@ public class SpringDataMongodbSerializerUnitTests {
 		Predicate predicate = QPerson.person.spiritAnimal.id.eq("007");
 
 		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal' : '007' }"));
+	}
+
+	@Test // GH-4709
+	void appliesConversionToIdType() {
+
+		Predicate predicate = QSpringDataMongodbSerializerUnitTests_Outer.outer.embeddedObject.id
+				.eq("64268a7b17ac6a00018bf312");
+
+		assertThat(serializer.handle(predicate))
+				.isEqualTo(new Document("embedded_object._id", new ObjectId("64268a7b17ac6a00018bf312")));
+	}
+
+	@Test // GH-4709
+	void appliesConversionToIdTypeForExplicitTypeRef() {
+
+		Predicate predicate = QQuerydslRepositorySupportTests_WithMongoId.withMongoId.id.eq("64268a7b17ac6a00018bf312");
+
+		assertThat(serializer.handle(predicate)).isEqualTo(new Document("_id", "64268a7b17ac6a00018bf312"));
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "record")
+	class Outer {
+
+		@Id private String id;
+
+		@Field("embedded_object") private Inner embeddedObject;
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "embedded_object")
+	class Inner {
+		@Id private String id;
+	}
+
+	public class WithMongoId {
+		@MongoId private String id;
 	}
 
 	class Address {

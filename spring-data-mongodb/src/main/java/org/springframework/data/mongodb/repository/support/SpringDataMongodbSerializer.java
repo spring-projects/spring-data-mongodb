@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -137,10 +138,30 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
 	}
 
+	@Override
+	protected boolean isId(Path<?> arg) {
+		MongoPersistentProperty propertyFor = getPropertyFor(arg);
+		return propertyFor == null ? super.isId(arg) : propertyFor.isIdProperty();
+	}
+
 	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
 
 		if (!isReference(path)) {
-			return super.convert(path, constant);
+
+			MongoPersistentProperty property = getPropertyFor(path);
+			if(property == null) {
+				return super.convert(path, constant);
+			}
+
+			if(property.isIdProperty()) {
+				return mapper.convertId(constant.getConstant(), property.getFieldType());
+			}
+
+			if(property.hasExplicitWriteTarget()) {
+				return converter.convertToMongoType(constant.getConstant(), TypeInformation.of(property.getFieldType()));
+			}
+
+			return converter.convertToMongoType(constant.getConstant());
 		}
 
 		MongoPersistentProperty property = getPropertyFor(path);
