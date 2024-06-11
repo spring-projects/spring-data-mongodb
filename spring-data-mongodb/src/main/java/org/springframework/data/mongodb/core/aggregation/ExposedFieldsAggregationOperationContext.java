@@ -37,6 +37,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 	private final ExposedFields exposedFields;
 	private final AggregationOperationContext rootContext;
+	private final boolean relaxedFieldLookup;
 
 	/**
 	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}. Uses the given
@@ -46,13 +47,14 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @param rootContext must not be {@literal null}.
 	 */
 	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields,
-			AggregationOperationContext rootContext) {
+			AggregationOperationContext rootContext, boolean relaxedFieldLookup) {
 
 		Assert.notNull(exposedFields, "ExposedFields must not be null");
 		Assert.notNull(rootContext, "RootContext must not be null");
 
 		this.exposedFields = exposedFields;
 		this.rootContext = rootContext;
+		this.relaxedFieldLookup = relaxedFieldLookup;
 	}
 
 	@Override
@@ -87,7 +89,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @param name must not be {@literal null}.
 	 * @return
 	 */
-	private FieldReference getReference(@Nullable Field field, String name) {
+	protected FieldReference getReference(@Nullable Field field, String name) {
 
 		Assert.notNull(name, "Name must not be null");
 
@@ -96,12 +98,10 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 			return exposedField;
 		}
 
-		if (rootContext instanceof RelaxedTypeBasedAggregationOperationContext) {
-
+		if(relaxedFieldLookup) {
 			if (field != null) {
 				return new DirectFieldReference(new ExposedField(field, true));
 			}
-
 			return new DirectFieldReference(new ExposedField(name, true));
 		}
 
@@ -155,5 +155,13 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	@Override
 	public CodecRegistry getCodecRegistry() {
 		return getRootContext().getCodecRegistry();
+	}
+
+	@Override
+	public AggregationOperationContext continueOnMissingFieldReference() {
+		if(relaxedFieldLookup) {
+			return this;
+		}
+		return new ExposedFieldsAggregationOperationContext(exposedFields, rootContext, true);
 	}
 }

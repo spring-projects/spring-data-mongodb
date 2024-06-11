@@ -38,9 +38,9 @@ class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAg
 	 * @param previousContext must not be {@literal null}.
 	 */
 	public InheritingExposedFieldsAggregationOperationContext(ExposedFields exposedFields,
-			AggregationOperationContext previousContext) {
+			AggregationOperationContext previousContext, boolean continueOnMissingFieldReference) {
 
-		super(exposedFields, previousContext);
+		super(exposedFields, previousContext, continueOnMissingFieldReference);
 
 		this.previousContext = previousContext;
 	}
