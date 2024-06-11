@@ -1603,9 +1603,7 @@ public class MongoTemplate
 				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 				UpdateContext updateContext = queryOperations.replaceSingleContext(mapped, true);
 				Document replacement = updateContext.getMappedUpdate(entity);
-
-				Document filter = updateContext.getMappedQuery(entity);
-
+				Document filter = updateContext.getReplacementQuery();
 				if (updateContext.requiresShardKey(filter, entity)) {
 
 					if (entity.getShardKey().isImmutable()) {

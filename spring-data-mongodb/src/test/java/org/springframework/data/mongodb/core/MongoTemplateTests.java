@@ -1416,7 +1416,7 @@ public class MongoTemplateTests {
 		id.id = Instant.now().minusSeconds(2);
 		id.first = "foo";
 		id.second = "bar";
-		id.time = Instant.now().minusSeconds(3);
+		id.id = Instant.now().minusSeconds(3);
 
 		TypeWithMyId source = new TypeWithMyId();
 		source.id = id;
@@ -4423,7 +4423,7 @@ public class MongoTemplateTests {
 
 		String first;
 		String second;
-		Instant time;
+		Instant id;
 
 		@Field("t") Instant time;
 	}
