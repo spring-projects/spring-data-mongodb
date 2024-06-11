@@ -400,7 +400,7 @@ class QueryOperations {
 
 			for (Entry<String, Object> entry : fields.entrySet()) {
 
-				if (entry.getValue()instanceof MongoExpression mongoExpression) {
+				if (entry.getValue() instanceof MongoExpression mongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
@@ -809,13 +809,23 @@ class QueryOperations {
 
 		@Override
 		<T> Document getMappedQuery(@Nullable MongoPersistentEntity<T> domainType) {
+			return applyIsolation(super.getMappedQuery(domainType));
+		}
 
-			Document mappedQuery = super.getMappedQuery(domainType);
+		/**
+		 * A replacement query that is derived from the already {@link MappedDocument}.
+		 *
+		 * @return
+		 */
+		Document getReplacementQuery() {
+			return applyIsolation(getQueryObject());
+		}
 
+		private Document applyIsolation(Document mappedQuery) {
 			if (multi && update != null && update.isIsolated() && !mappedQuery.containsKey("$isolated")) {
+				mappedQuery = new Document(mappedQuery);
 				mappedQuery.put("$isolated", 1);
 			}
-
 			return mappedQuery;
 		}
 
