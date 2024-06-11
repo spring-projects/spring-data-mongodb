@@ -87,7 +87,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @param name must not be {@literal null}.
 	 * @return
 	 */
-	private FieldReference getReference(@Nullable Field field, String name) {
+	protected FieldReference getReference(@Nullable Field field, String name) {
 
 		Assert.notNull(name, "Name must not be null");
 

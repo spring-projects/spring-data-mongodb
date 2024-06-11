@@ -50,6 +50,7 @@ class AggregationOperationRenderer {
 		List<Document> operationDocuments = new ArrayList<Document>(operations.size());
 
 		AggregationOperationContext contextToUse = rootContext;
+		boolean relaxed = rootContext instanceof RelaxedTypeBasedAggregationOperationContext;
 
 		for (AggregationOperation operation : operations) {
 
@@ -60,12 +61,45 @@ class AggregationOperationRenderer {
 				ExposedFields fields = exposedFieldsOperation.getFields();
 
 				if (operation instanceof InheritsFieldsAggregationOperation || exposedFieldsOperation.inheritsFields()) {
-					contextToUse = new InheritingExposedFieldsAggregationOperationContext(fields, contextToUse);
+					contextToUse = new InheritingExposedFieldsAggregationOperationContext(fields, contextToUse) {
+						@Override
+						protected FieldReference getReference(Field field, String name) {
+							try {
+								return super.getReference(field, name);
+							} catch (Exception e) {
+								if(!relaxed) {
+									throw e;
+								}
+							}
+							if (field != null) {
+								return new DirectFieldReference(new ExposedField(field, true));
+							}
+
+							return new DirectFieldReference(new ExposedField(name, true));
+						}
+					};
 				} else {
 					contextToUse = fields.exposesNoFields() ? DEFAULT_CONTEXT
-							: new ExposedFieldsAggregationOperationContext(fields, contextToUse);
+							: new ExposedFieldsAggregationOperationContext(fields, contextToUse) {
+						@Override
+						protected FieldReference getReference(Field field, String name) {
+							try {
+								return super.getReference(field, name);
+							} catch (Exception e) {
+								if(!relaxed) {
+									throw e;
+								}
+							}
+							if (field != null) {
+								return new DirectFieldReference(new ExposedField(field, true));
+							}
+
+							return new DirectFieldReference(new ExposedField(name, true));
+						}
+					};
 				}
 			}
+
 		}
 
 		return operationDocuments;
