@@ -115,7 +115,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return asReference(constant, null);
 	}
 
-	protected DBRef asReference(Object constant, Path<?> path) {
+	protected DBRef asReference(Object constant, @Nullable Path<?> path) {
 		return converter.toDBRef(constant, getPropertyForPotentialDbRef(path));
 	}
 
@@ -135,7 +135,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		return property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
+		return property != null && property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
 	}
 
 	@Override
@@ -144,20 +144,26 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return propertyFor == null ? super.isId(arg) : propertyFor.isIdProperty();
 	}
 
+	@Override
+	@Nullable
 	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
+
+		if (constant == null) {
+			return null;
+		}
 
 		if (!isReference(path)) {
 
 			MongoPersistentProperty property = getPropertyFor(path);
-			if(property == null) {
+			if (property == null) {
 				return super.convert(path, constant);
 			}
 
-			if(property.isIdProperty()) {
+			if (property.isIdProperty()) {
 				return mapper.convertId(constant.getConstant(), property.getFieldType());
 			}
 
-			if(property.hasExplicitWriteTarget()) {
+			if (property.hasExplicitWriteTarget()) {
 				return converter.convertToMongoType(constant.getConstant(), TypeInformation.of(property.getFieldType()));
 			}
 
@@ -166,17 +172,19 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		if (property.isDocumentReference()) {
-			return converter.toDocumentPointer(constant.getConstant(), property).getPointer();
-		}
-
-		if (property.isIdProperty()) {
-
-			MongoPersistentProperty propertyForPotentialDbRef = getPropertyForPotentialDbRef(path);
-			if (propertyForPotentialDbRef != null && propertyForPotentialDbRef.isDocumentReference()) {
-				return converter.toDocumentPointer(constant.getConstant(), propertyForPotentialDbRef).getPointer();
+		if (property != null) {
+			if (property.isDocumentReference()) {
+				return converter.toDocumentPointer(constant.getConstant(), property).getPointer();
 			}
-			return asReference(constant.getConstant(), path.getMetadata().getParent());
+
+			if (property.isIdProperty()) {
+
+				MongoPersistentProperty propertyForPotentialDbRef = getPropertyForPotentialDbRef(path);
+				if (propertyForPotentialDbRef != null && propertyForPotentialDbRef.isDocumentReference()) {
+					return converter.toDocumentPointer(constant.getConstant(), propertyForPotentialDbRef).getPointer();
+				}
+				return asReference(constant.getConstant(), path.getMetadata().getParent());
+			}
 		}
 
 		return asReference(constant.getConstant(), path);
@@ -203,7 +211,8 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	 * @param path
 	 * @return
 	 */
-	private MongoPersistentProperty getPropertyForPotentialDbRef(Path<?> path) {
+	@Nullable
+	private MongoPersistentProperty getPropertyForPotentialDbRef(@Nullable Path<?> path) {
 
 		if (path == null) {
 			return null;
