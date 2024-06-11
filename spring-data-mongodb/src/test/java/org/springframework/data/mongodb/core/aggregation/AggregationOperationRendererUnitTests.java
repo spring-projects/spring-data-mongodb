@@ -15,15 +15,26 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 
 import java.util.List;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 
 /**
  * @author Christoph Strobl
@@ -115,4 +126,34 @@ public class AggregationOperationRendererUnitTests {
 				.extracting("previousContext").isSameAs(captor.getAllValues().get(1));
 	}
 
+
+
+	record TestRecord(@Id String field1, String field2, LayerOne layerOne) {
+		record LayerOne(List<LayerTwo> layerTwo) {
+		}
+
+		record LayerTwo(LayerThree layerThree) {
+		}
+
+		record LayerThree(int fieldA, int fieldB)
+		{}
+	}
+
+	@Test
+	void xxx() {
+
+		MongoTestMappingContext ctx = new MongoTestMappingContext(cfg -> {
+			cfg.initialEntitySet(TestRecord.class);
+		});
+
+		MappingMongoConverter mongoConverter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, ctx);
+
+		Aggregation agg = Aggregation.newAggregation(
+			Aggregation.unwind("layerOne.layerTwo"),
+			project().and("layerOne.layerTwo.layerThree").as("layerOne.layerThree"),
+			sort(DESC, "layerOne.layerThree.fieldA")
+		);
+
+		AggregationOperationRenderer.toDocument(agg.getPipeline().getOperations(), new RelaxedTypeBasedAggregationOperationContext(TestRecord.class, ctx, new QueryMapper(mongoConverter)));
+	}
 }
