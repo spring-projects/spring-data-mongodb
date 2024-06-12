@@ -558,7 +558,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 			protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName,
 					Class<O> outputType, AggregationOperationContext context) {
 
-				assertThat(context).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
+				assertThat(ReflectionTestUtils.getField(context, "lookupPolicy")).isEqualTo(FieldLookupPolicy.relaxed());
 				return super.doAggregate(aggregation, collectionName, outputType, context);
 			}
 		};

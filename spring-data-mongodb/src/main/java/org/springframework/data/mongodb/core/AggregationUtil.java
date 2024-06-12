@@ -16,15 +16,14 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions.DomainTypeMapping;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -52,8 +51,8 @@ class AggregationUtil {
 
 		this.queryMapper = queryMapper;
 		this.mappingContext = mappingContext;
-		this.untypedMappingContext = Lazy
-				.of(() -> new RelaxedTypeBasedAggregationOperationContext(Object.class, mappingContext, queryMapper));
+		this.untypedMappingContext = Lazy.of(() -> new TypeBasedAggregationOperationContext(Object.class, mappingContext,
+				queryMapper, FieldLookupPolicy.relaxed()));
 	}
 
 	AggregationOperationContext createAggregationContext(Aggregation aggregation, @Nullable Class<?> inputType) {
@@ -64,27 +63,18 @@ class AggregationUtil {
 			return Aggregation.DEFAULT_CONTEXT;
 		}
 
-		if (!(aggregation instanceof TypedAggregation)) {
+		FieldLookupPolicy lookupPolicy = domainTypeMapping == DomainTypeMapping.STRICT
+				&& !aggregation.getPipeline().containsUnionWith() ? FieldLookupPolicy.strict() : FieldLookupPolicy.relaxed();
 
-			if(inputType == null) {
-				return untypedMappingContext.get();
-			}
-
-			if (domainTypeMapping == DomainTypeMapping.STRICT
-					&& !aggregation.getPipeline().containsUnionWith()) {
-				return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
-			}
-
-			return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+		if (aggregation instanceof TypedAggregation<?> ta) {
+			return new TypeBasedAggregationOperationContext(ta.getInputType(), mappingContext, queryMapper, lookupPolicy);
 		}
 
-		inputType = ((TypedAggregation<?>) aggregation).getInputType();
-		if (domainTypeMapping == DomainTypeMapping.STRICT
-				&& !aggregation.getPipeline().containsUnionWith()) {
-			return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+		if (inputType == null) {
+			return untypedMappingContext.get();
 		}
 
-		return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+		return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper, lookupPolicy);
 	}
 
 	/**
@@ -109,9 +99,4 @@ class AggregationUtil {
 		return aggregation.toDocument(collection, context);
 	}
 
-	private List<Document> mapAggregationPipeline(List<Document> pipeline) {
-
-		return pipeline.stream().map(val -> queryMapper.getMappedObject(val, Optional.empty()))
-				.collect(Collectors.toList());
-	}
 }

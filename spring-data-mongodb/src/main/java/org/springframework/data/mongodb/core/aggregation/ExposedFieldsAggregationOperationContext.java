@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -37,7 +38,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 	private final ExposedFields exposedFields;
 	private final AggregationOperationContext rootContext;
-	private final boolean relaxedFieldLookup;
+	private final FieldLookupPolicy lookupPolicy;
 
 	/**
 	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}. Uses the given
@@ -45,16 +46,18 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 *
 	 * @param exposedFields must not be {@literal null}.
 	 * @param rootContext must not be {@literal null}.
+	 * @param lookupPolicy must not be {@literal null}.
 	 */
-	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields,
-			AggregationOperationContext rootContext, boolean relaxedFieldLookup) {
+	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields, AggregationOperationContext rootContext,
+			FieldLookupPolicy lookupPolicy) {
 
 		Assert.notNull(exposedFields, "ExposedFields must not be null");
 		Assert.notNull(rootContext, "RootContext must not be null");
+		Assert.notNull(lookupPolicy, "FieldLookupPolicy must not be null");
 
 		this.exposedFields = exposedFields;
 		this.rootContext = rootContext;
-		this.relaxedFieldLookup = relaxedFieldLookup;
+		this.lookupPolicy = lookupPolicy;
 	}
 
 	@Override
@@ -89,7 +92,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @param name must not be {@literal null}.
 	 * @return
 	 */
-	protected FieldReference getReference(@Nullable Field field, String name) {
+	private FieldReference getReference(@Nullable Field field, String name) {
 
 		Assert.notNull(name, "Name must not be null");
 
@@ -98,14 +101,15 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 			return exposedField;
 		}
 
-		if(relaxedFieldLookup) {
-			if (field != null) {
-				return new DirectFieldReference(new ExposedField(field, true));
-			}
-			return new DirectFieldReference(new ExposedField(name, true));
+		if (lookupPolicy.isStrict()) {
+			throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));
 		}
 
-		throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));
+		if (field != null) {
+			return new DirectFieldReference(new ExposedField(field, true));
+		}
+
+		return new DirectFieldReference(new ExposedField(name, true));
 	}
 
 	/**
@@ -158,10 +162,22 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	}
 
 	@Override
+	@Deprecated(since = "4.2.7", forRemoval = true)
 	public AggregationOperationContext continueOnMissingFieldReference() {
-		if(relaxedFieldLookup) {
+		if (!lookupPolicy.isStrict()) {
 			return this;
 		}
-		return new ExposedFieldsAggregationOperationContext(exposedFields, rootContext, true);
+		return new ExposedFieldsAggregationOperationContext(exposedFields, rootContext, FieldLookupPolicy.relaxed());
 	}
+
+	@Override
+	public AggregationOperationContext expose(ExposedFields fields) {
+		return new ExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
+	}
+
+	@Override
+	public AggregationOperationContext inheritAndExpose(ExposedFields fields) {
+		return new InheritingExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
+	}
+
 }
