@@ -50,7 +50,6 @@ class AggregationOperationRenderer {
 		List<Document> operationDocuments = new ArrayList<Document>(operations.size());
 
 		AggregationOperationContext contextToUse = rootContext;
-		boolean relaxed = rootContext instanceof RelaxedTypeBasedAggregationOperationContext;
 
 		for (AggregationOperation operation : operations) {
 
@@ -61,10 +60,10 @@ class AggregationOperationRenderer {
 				ExposedFields fields = exposedFieldsOperation.getFields();
 
 				if (operation instanceof InheritsFieldsAggregationOperation || exposedFieldsOperation.inheritsFields()) {
-					contextToUse = new InheritingExposedFieldsAggregationOperationContext(fields, contextToUse, relaxed);
+					contextToUse = contextToUse.inherit(fields);
 				} else {
 					contextToUse = fields.exposesNoFields() ? DEFAULT_CONTEXT
-							: new ExposedFieldsAggregationOperationContext(fields, contextToUse, relaxed);
+							: contextToUse.expose(fields);
 				}
 			}
 

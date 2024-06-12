@@ -49,6 +49,30 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 		return getMappedObject(document, null);
 	}
 
+	default AggregationOperationContext expose(ExposedFields fields) {
+		return exposeStrict(fields);
+	}
+
+	default AggregationOperationContext exposeStrict(ExposedFields exposedFields) {
+		return new ExposedFieldsAggregationOperationContext(exposedFields, this, FieldLookupPolicy.strict());
+	}
+
+	default AggregationOperationContext exposeLenient(ExposedFields exposedFields) {
+		return new ExposedFieldsAggregationOperationContext(exposedFields, this, FieldLookupPolicy.lenient());
+	}
+
+	default AggregationOperationContext inherit(ExposedFields fields) {
+		return inheritStrict(fields);
+	}
+
+	default AggregationOperationContext inheritStrict(ExposedFields exposedFields) {
+		return new InheritingExposedFieldsAggregationOperationContext(exposedFields, this, FieldLookupPolicy.strict());
+	}
+
+	default AggregationOperationContext inheritLenient(ExposedFields exposedFields) {
+		return new InheritingExposedFieldsAggregationOperationContext(exposedFields, this, FieldLookupPolicy.lenient());
+	}
+
 	/**
 	 * Returns the mapped {@link Document}, potentially converting the source considering mapping metadata for the given
 	 * type.
@@ -123,4 +147,5 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	default CodecRegistry getCodecRegistry() {
 		return MongoClientSettings.getDefaultCodecRegistry();
 	}
+
 }

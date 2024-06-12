@@ -21,8 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-
 import org.bson.codecs.configuration.CodecRegistry;
+
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -50,6 +51,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final QueryMapper mapper;
 	private final Lazy<MongoPersistentEntity<?>> entity;
+	private final FieldLookupPolicy lookupPolicy;
 
 	/**
 	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
@@ -61,15 +63,32 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	public TypeBasedAggregationOperationContext(Class<?> type,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper) {
+		this(type, mappingContext, mapper, FieldLookupPolicy.strict());
+	}
+
+	/**
+	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
+	 * {@link QueryMapper}.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
+	 * @param mapper must not be {@literal null}.
+	 * @param lookupPolicy must not be {@literal null}.
+	 */
+	public TypeBasedAggregationOperationContext(Class<?> type,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper,
+			FieldLookupPolicy lookupPolicy) {
 
 		Assert.notNull(type, "Type must not be null");
 		Assert.notNull(mappingContext, "MappingContext must not be null");
 		Assert.notNull(mapper, "QueryMapper must not be null");
+		Assert.notNull(lookupPolicy, "FieldLookupPolicy must not be null");
 
 		this.type = type;
 		this.mappingContext = mappingContext;
 		this.mapper = mapper;
 		this.entity = Lazy.of(() -> mappingContext.getPersistentEntity(type));
+		this.lookupPolicy = lookupPolicy;
 	}
 
 	@Override
@@ -128,19 +147,43 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 * @see RelaxedTypeBasedAggregationOperationContext
 	 */
 	public AggregationOperationContext continueOnMissingFieldReference(Class<?> type) {
-		return new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, mapper);
+		return new TypeBasedAggregationOperationContext(type, mappingContext, mapper, FieldLookupPolicy.lenient());
+	}
+
+	@Override
+	public AggregationOperationContext expose(ExposedFields fields) {
+		return new ExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
+	}
+
+	@Override
+	public AggregationOperationContext inherit(ExposedFields fields) {
+		return new InheritingExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
 	}
 
 	protected FieldReference getReferenceFor(Field field) {
 
-		if(entity.getNullable() == null || AggregationVariable.isVariable(field)) {
+		try {
+			return doGetFieldReference(field);
+		} catch (MappingException e) {
+
+			if (lookupPolicy.isStrict()) {
+				throw e;
+			}
+
+			return new DirectFieldReference(new ExposedField(field, true));
+		}
+	}
+
+	private DirectFieldReference doGetFieldReference(Field field) {
+
+		if (entity.getNullable() == null || AggregationVariable.isVariable(field)) {
 			return new DirectFieldReference(new ExposedField(field, true));
 		}
 
 		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
-					.getPersistentPropertyPath(field.getTarget(), type);
+				.getPersistentPropertyPath(field.getTarget(), type);
 		Field mappedField = field(field.getName(),
-					propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
+				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
 
 		return new DirectFieldReference(new ExposedField(mappedField, true));
 	}

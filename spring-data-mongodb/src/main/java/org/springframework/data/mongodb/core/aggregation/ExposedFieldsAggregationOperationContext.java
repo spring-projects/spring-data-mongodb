@@ -15,11 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.function.BiFunction;
+
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -37,7 +40,8 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 	private final ExposedFields exposedFields;
 	private final AggregationOperationContext rootContext;
-	private final boolean relaxedFieldLookup;
+	private final FieldLookupPolicy lookupPolicy;
+	private final ContextualLookupSupport contextualLookup;
 
 	/**
 	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}. Uses the given
@@ -45,16 +49,24 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 *
 	 * @param exposedFields must not be {@literal null}.
 	 * @param rootContext must not be {@literal null}.
+	 * @param lookupPolicy must not be {@literal null}.
 	 */
-	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields,
-			AggregationOperationContext rootContext, boolean relaxedFieldLookup) {
+	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields, AggregationOperationContext rootContext,
+			FieldLookupPolicy lookupPolicy) {
 
 		Assert.notNull(exposedFields, "ExposedFields must not be null");
 		Assert.notNull(rootContext, "RootContext must not be null");
+		Assert.notNull(lookupPolicy, "FieldLookupPolicy must not be null");
 
 		this.exposedFields = exposedFields;
 		this.rootContext = rootContext;
-		this.relaxedFieldLookup = relaxedFieldLookup;
+		this.lookupPolicy = lookupPolicy;
+		this.contextualLookup = ContextualLookupSupport.create(lookupPolicy, this::resolveExposedField, (field, name) -> {
+			if (field != null) {
+				return new DirectFieldReference(new ExposedField(field, true));
+			}
+			return new DirectFieldReference(new ExposedField(name, true));
+		});
 	}
 
 	@Override
@@ -93,19 +105,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 		Assert.notNull(name, "Name must not be null");
 
-		FieldReference exposedField = resolveExposedField(field, name);
-		if (exposedField != null) {
-			return exposedField;
-		}
-
-		if(relaxedFieldLookup) {
-			if (field != null) {
-				return new DirectFieldReference(new ExposedField(field, true));
-			}
-			return new DirectFieldReference(new ExposedField(name, true));
-		}
-
-		throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));
+		return contextualLookup.get(field, name);
 	}
 
 	/**
@@ -159,9 +159,87 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 
 	@Override
 	public AggregationOperationContext continueOnMissingFieldReference() {
-		if(relaxedFieldLookup) {
+		if (!lookupPolicy.isStrict()) {
 			return this;
 		}
-		return new ExposedFieldsAggregationOperationContext(exposedFields, rootContext, true);
+		return new ExposedFieldsAggregationOperationContext(exposedFields, rootContext, FieldLookupPolicy.lenient());
+	}
+
+	@Override
+	public AggregationOperationContext expose(ExposedFields fields) {
+		return new ExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
+	}
+
+	@Override
+	public AggregationOperationContext inherit(ExposedFields fields) {
+		return new InheritingExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
+	}
+
+	static class ContextualLookupSupport {
+
+		private final BiFunction<Field, String, FieldReference> resolver;
+
+		ContextualLookupSupport(BiFunction<Field, String, FieldReference> resolver) {
+			this.resolver = resolver;
+		}
+
+		public static ContextualLookupSupport create(FieldLookupPolicy lookupPolicy,
+				BiFunction<Field, String, FieldReference> resolver, BiFunction<Field, String, FieldReference> fallback) {
+
+			if (lookupPolicy.isStrict()) {
+				return new StrictContextualLookup(resolver);
+			}
+
+			return new FallbackContextualLookup(resolver, fallback);
+
+		}
+
+		public FieldReference get(@Nullable Field field, String name) {
+			return resolver.apply(field, name);
+		}
+	}
+
+	static class StrictContextualLookup extends ContextualLookupSupport {
+
+		StrictContextualLookup(BiFunction<Field, String, FieldReference> resolver) {
+			super(resolver);
+		}
+
+		@Override
+		@NonNull
+		public FieldReference get(Field field, String name) {
+
+			FieldReference lookup = super.get(field, name);
+
+			if (lookup != null) {
+				return lookup;
+			}
+
+			throw new IllegalArgumentException(String.format("Invalid reference '%s'", name));
+		}
+	}
+
+	static class FallbackContextualLookup extends ContextualLookupSupport {
+
+		private final BiFunction<Field, String, FieldReference> fallback;
+
+		FallbackContextualLookup(BiFunction<Field, String, FieldReference> resolver,
+				BiFunction<Field, String, FieldReference> fallback) {
+			super(resolver);
+			this.fallback = fallback;
+		}
+
+		@Override
+		@NonNull
+		public FieldReference get(@Nullable Field field, String name) {
+
+			FieldReference lookup = super.get(field, name);
+
+			if (lookup != null) {
+				return lookup;
+			}
+
+			return fallback.apply(field, name);
+		}
 	}
 }

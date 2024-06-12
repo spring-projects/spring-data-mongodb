@@ -15,12 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -31,7 +27,9 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
  *
  * @author Christoph Strobl
  * @since 3.0
+ * @deprecated since 4.3
  */
+@Deprecated
 public class RelaxedTypeBasedAggregationOperationContext extends TypeBasedAggregationOperationContext {
 
 	/**
@@ -44,16 +42,6 @@ public class RelaxedTypeBasedAggregationOperationContext extends TypeBasedAggreg
 	 */
 	public RelaxedTypeBasedAggregationOperationContext(Class<?> type,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper) {
-		super(type, mappingContext, mapper);
-	}
-
-	@Override
-	protected FieldReference getReferenceFor(Field field) {
-
-		try {
-			return super.getReferenceFor(field);
-		} catch (MappingException e) {
-			return new DirectFieldReference(new ExposedField(field, true));
-		}
+		super(type, mappingContext, mapper, FieldLookupPolicy.lenient());
 	}
 }
