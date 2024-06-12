@@ -60,7 +60,7 @@ class AggregationOperationRenderer {
 				ExposedFields fields = exposedFieldsOperation.getFields();
 
 				if (operation instanceof InheritsFieldsAggregationOperation || exposedFieldsOperation.inheritsFields()) {
-					contextToUse = contextToUse.inherit(fields);
+					contextToUse = contextToUse.inheritAndExpose(fields);
 				} else {
 					contextToUse = fields.exposesNoFields() ? DEFAULT_CONTEXT
 							: contextToUse.expose(fields);

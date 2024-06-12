@@ -171,7 +171,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	}
 
 	@Override
-	public AggregationOperationContext inherit(ExposedFields fields) {
+	public AggregationOperationContext inheritAndExpose(ExposedFields fields) {
 		return new InheritingExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
 	}
 

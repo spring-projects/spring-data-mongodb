@@ -74,6 +74,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 * @param mappingContext must not be {@literal null}.
 	 * @param mapper must not be {@literal null}.
 	 * @param lookupPolicy must not be {@literal null}.
+	 * @since xxx
 	 */
 	public TypeBasedAggregationOperationContext(Class<?> type,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper,
@@ -150,13 +151,17 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return new TypeBasedAggregationOperationContext(type, mappingContext, mapper, FieldLookupPolicy.lenient());
 	}
 
+	public FieldLookupPolicy getLookupPolicy() {
+		return lookupPolicy;
+	}
+
 	@Override
 	public AggregationOperationContext expose(ExposedFields fields) {
 		return new ExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
 	}
 
 	@Override
-	public AggregationOperationContext inherit(ExposedFields fields) {
+	public AggregationOperationContext inheritAndExpose(ExposedFields fields) {
 		return new InheritingExposedFieldsAggregationOperationContext(fields, this, lookupPolicy);
 	}
 

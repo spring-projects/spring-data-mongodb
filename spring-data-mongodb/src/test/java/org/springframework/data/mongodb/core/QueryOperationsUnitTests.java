@@ -25,12 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
@@ -72,27 +73,33 @@ class QueryOperationsUnitTests {
 	void createAggregationContextUsesRelaxedOneForUntypedAggregationsWhenNoInputTypeProvided() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Aggregation.project("name"));
-		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, (Class<?>) null);
+		AggregationDefinition def = queryOperations.createAggregation(aggregation, (Class<?>) null);
+		TypeBasedAggregationOperationContext ctx = (TypeBasedAggregationOperationContext) def
+				.getAggregationOperationContext();
 
-		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
+		assertThat(ctx.getLookupPolicy()).isEqualTo(FieldLookupPolicy.lenient());
 	}
 
 	@Test // GH-3542
 	void createAggregationContextUsesRelaxedOneForTypedAggregationsWhenNoInputTypeProvided() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Person.class, Aggregation.project("name"));
-		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, (Class<?>) null);
+		AggregationDefinition def = queryOperations.createAggregation(aggregation, Person.class);
+		TypeBasedAggregationOperationContext ctx = (TypeBasedAggregationOperationContext) def
+				.getAggregationOperationContext();
 
-		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
+		assertThat(ctx.getLookupPolicy()).isEqualTo(FieldLookupPolicy.lenient());
 	}
 
 	@Test // GH-3542
 	void createAggregationContextUsesRelaxedOneForUntypedAggregationsWhenInputTypeProvided() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Aggregation.project("name"));
-		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, Person.class);
+		AggregationDefinition def = queryOperations.createAggregation(aggregation, Person.class);
+		TypeBasedAggregationOperationContext ctx = (TypeBasedAggregationOperationContext) def
+				.getAggregationOperationContext();
 
-		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
+		assertThat(ctx.getLookupPolicy()).isEqualTo(FieldLookupPolicy.lenient());
 	}
 
 	@Test // GH-3542

@@ -170,7 +170,7 @@ public class VariableOperators {
 		private Document toMap(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document map = new Document();
-			AggregationOperationContext operationContext = context.inheritStrict(exposedFields);
+			AggregationOperationContext operationContext = context.inheritAndExpose(exposedFields);
 
 			Document input;
 			if (sourceArray instanceof Field field) {
@@ -315,7 +315,7 @@ public class VariableOperators {
 			letExpression.put("vars", mappedVars);
 			if (expression != null) {
 
-				AggregationOperationContext operationContext = context.inheritStrict(exposedFields);
+				AggregationOperationContext operationContext = context.inheritAndExpose(exposedFields);
 				letExpression.put("in", getMappedIn(operationContext));
 			}
 

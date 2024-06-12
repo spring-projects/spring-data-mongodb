@@ -21,6 +21,7 @@ package org.springframework.data.mongodb.core.aggregation;
  * our input.
  *
  * @author Mark Paluch
+ * @since xxx
  */
 public abstract class FieldLookupPolicy {
 
@@ -38,6 +39,8 @@ public abstract class FieldLookupPolicy {
 		}
 	};
 
+	private FieldLookupPolicy() {}
+
 	/**
 	 * @return a lenient lookup policy.
 	 */
@@ -52,6 +55,10 @@ public abstract class FieldLookupPolicy {
 		return STRICT;
 	}
 
+	/**
+	 * @return {@code true} if the policy uses a strict lookup; {@code false} to allow references to fields that cannot be
+	 *         determined to be exactly present.
+	 */
 	abstract boolean isStrict();
 
 }
