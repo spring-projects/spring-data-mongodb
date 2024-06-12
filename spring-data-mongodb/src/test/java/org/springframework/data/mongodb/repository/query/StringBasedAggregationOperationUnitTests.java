@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.assertj.core.api.Assertions;
 import org.bson.Document;
@@ -24,27 +24,28 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
+ * Unit tests for {@link StringBasedAggregation}.
+ *
  * @author Christoph Strobl
  */
 public class StringBasedAggregationOperationUnitTests {
 
-    @ParameterizedTest // GH-4712
-    @ValueSource(strings = { "$project", "'$project'", "\"$project\"" })
-    void extractsAggregationOperatorFromAggregationStringWithoutBindingParameters(String operator) {
+	@ParameterizedTest // GH-4712
+	@ValueSource(strings = { "$project", "'$project'", "\"$project\"" })
+	void extractsAggregationOperatorFromAggregationStringWithoutBindingParameters(String operator) {
 
-        StringAggregationOperation agg = new StringAggregationOperation("{ %s : { 'fn' : 1 } }".formatted(operator),
-            Object.class, (it) -> Assertions.fail("o_O Parameter binding"));
+		StringAggregationOperation agg = new StringAggregationOperation("{ %s : { 'fn' : 1 } }".formatted(operator),
+				Object.class, (it) -> Assertions.fail("o_O Parameter binding"));
 
-        assertThat(agg.getOperator()).isEqualTo("$project");
-    }
+		assertThat(agg.getOperator()).isEqualTo("$project");
+	}
 
-    @Test
-        // GH-4712
-    void fallbackToParameterBindingIfAggregationOperatorCannotBeExtractedFromAggregationStringWithoutBindingParameters() {
+	@Test // GH-4712
+	void fallbackToParameterBindingIfAggregationOperatorCannotBeExtractedFromAggregationStringWithoutBindingParameters() {
 
-        StringAggregationOperation agg = new StringAggregationOperation("{ happy-madison : { 'fn' : 1 } }", Object.class,
-            (it) -> new Document("$project", ""));
+		StringAggregationOperation agg = new StringAggregationOperation("{ happy-madison : { 'fn' : 1 } }", Object.class,
+				(it) -> new Document("$project", ""));
 
-        assertThat(agg.getOperator()).isEqualTo("$project");
-    }
+		assertThat(agg.getOperator()).isEqualTo("$project");
+	}
 }
