@@ -687,8 +687,7 @@ public class ArrayOperators {
 		private Document toFilter(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document filterExpression = new Document();
-			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
-					exposedFields, context, false);
+			AggregationOperationContext operationContext = context.inheritAndExpose(exposedFields);
 
 			filterExpression.putAll(context.getMappedObject(new Document("input", getMappedInput(context))));
 			filterExpression.put("as", as.getTarget());

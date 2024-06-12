@@ -35,6 +35,7 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.3
  */
 public interface AggregationOperationContext extends CodecRegistryProvider {
@@ -108,13 +109,45 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	}
 
 	/**
+	 * Create a nested {@link AggregationOperationContext} from this context that exposes {@link ExposedFields fields}.
+	 * <p>
+	 * Implementations of {@link AggregationOperationContext} retain their {@link FieldLookupPolicy}. If no policy is
+	 * specified, then lookup defaults to {@link FieldLookupPolicy#strict()}.
+	 *
+	 * @param fields the fields to expose, must not be {@literal null}.
+	 * @return the new {@link AggregationOperationContext} exposing {@code fields}.
+	 * @since 4.3.1
+	 */
+	default AggregationOperationContext expose(ExposedFields fields) {
+		return new ExposedFieldsAggregationOperationContext(fields, this, FieldLookupPolicy.strict());
+	}
+
+	/**
+	 * Create a nested {@link AggregationOperationContext} from this context that inherits exposed fields from this
+	 * context and exposes {@link ExposedFields fields}.
+	 * <p>
+	 * Implementations of {@link AggregationOperationContext} retain their {@link FieldLookupPolicy}. If no policy is
+	 * specified, then lookup defaults to {@link FieldLookupPolicy#strict()}.
+	 *
+	 * @param fields the fields to expose, must not be {@literal null}.
+	 * @return the new {@link AggregationOperationContext} exposing {@code fields}.
+	 * @since 4.3.1
+	 */
+	default AggregationOperationContext inheritAndExpose(ExposedFields fields) {
+		return new InheritingExposedFieldsAggregationOperationContext(fields, this, FieldLookupPolicy.strict());
+	}
+
+	/**
 	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
-	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
+	 * its existence. Typically, the {@link AggregationOperationContext} fails when referencing unknown fields, those that
 	 * are not present in one of the previous stages or the input source, throughout the pipeline.
 	 *
 	 * @return a more relaxed {@link AggregationOperationContext}.
 	 * @since 3.0
+	 * @deprecated since 4.3.1, {@link FieldLookupPolicy} should be specified explicitly when creating the
+	 *             AggregationOperationContext.
 	 */
+	@Deprecated(since = "4.3.1", forRemoval = true)
 	default AggregationOperationContext continueOnMissingFieldReference() {
 		return this;
 	}
@@ -123,4 +156,5 @@ public interface AggregationOperationContext extends CodecRegistryProvider {
 	default CodecRegistry getCodecRegistry() {
 		return MongoClientSettings.getDefaultCodecRegistry();
 	}
+
 }
