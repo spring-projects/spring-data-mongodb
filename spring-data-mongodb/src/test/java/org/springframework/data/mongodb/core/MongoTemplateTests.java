@@ -1413,15 +1413,17 @@ public class MongoTemplateTests {
 	public void storesAndRemovesTypeWithComplexId() {
 
 		MyId id = new MyId();
+		id.id = Instant.now().minusSeconds(2);
 		id.first = "foo";
 		id.second = "bar";
-		id.id = Instant.now().minusSeconds(2);
+		id.time = Instant.now().minusSeconds(3);
 
 		TypeWithMyId source = new TypeWithMyId();
 		source.id = id;
 
 		template.save(source);
-		template.remove(query(where("id").is(id)), TypeWithMyId.class);
+		assertThat(template.remove(query(where("id").is(id)), TypeWithMyId.class)).extracting(DeleteResult::getDeletedCount)
+				.isEqualTo(1L);
 	}
 
 	@Test // DATAMONGO-506
@@ -2553,6 +2555,29 @@ public class MongoTemplateTests {
 				new MyPerson("Heisenberg"), FindAndReplaceOptions.empty(), MyPerson.class, MyPersonProjection.class);
 
 		assertThat(projection.getName()).isEqualTo("Walter");
+	}
+
+	@Test // GH-4707
+	public void findAndReplaceUpsertsObjectWithComplexId() {
+
+		MyId id = new MyId();
+		id.id = Instant.now().minusSeconds(2);
+		id.first = "foo";
+		id.second = "bar";
+		id.time = Instant.now().minusSeconds(3);
+
+		TypeWithMyId replacement = new TypeWithMyId();
+		replacement.value = "spring";
+
+		template.findAndReplace(query(where("id").is(id)), replacement, FindAndReplaceOptions.options().upsert());
+		template.doInCollection(TypeWithMyId.class, collection -> {
+
+			org.bson.Document dbValue = collection.find(new org.bson.Document("_id.first", "foo")).first();
+
+			assertThat(dbValue).isNotNull();
+			assertThat(dbValue.getEmbedded(List.of("_id", "_id"), Object.class)).isInstanceOf(Date.class);
+			assertThat(dbValue.getEmbedded(List.of("_id", "t"), Object.class)).isInstanceOf(Date.class);
+		});
 	}
 
 	@Test // GH-4609
@@ -4399,11 +4424,14 @@ public class MongoTemplateTests {
 		String first;
 		String second;
 		Instant id;
+
+		@Field("t") Instant time;
 	}
 
 	static class TypeWithMyId {
 
 		@Id MyId id;
+		String value;
 	}
 
 	static class Sample {
