@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +24,7 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -231,7 +231,6 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return method.getTailableAnnotation() != null;
 	}
 
-
 	Query applyQueryMetaAttributesWhenPresent(Query query) {
 
 		if (method.hasQueryMetaAttributes()) {
@@ -290,7 +289,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	}
 
 	/**
-	 * If present apply the {@link com.mongodb.ReadPreference} from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 * If present apply the {@link com.mongodb.ReadPreference} from the
+	 * {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @return never {@literal null}.
@@ -339,8 +339,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 				String updateJson = updateSource.update();
 				return getParameterBindingCodec() //
-						.flatMap(codec -> expressionEvaluator(updateJson, accessor, codec)) //
-						.map(it -> decode(it.getT1(), updateJson, accessor, it.getT2())) //
+						.flatMap(codec -> expressionEvaluator(updateJson, accessor, codec) //
+								.map(evaluator -> decode(evaluator, updateJson, accessor, codec))) //
 						.map(BasicUpdate::fromDocument);
 			}
 			if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
@@ -376,16 +376,17 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private Mono<AggregationOperation> computePipelineStage(String source, MongoParameterAccessor accessor,
 			ParameterBindingDocumentCodec codec) {
 
-		return expressionEvaluator(source, accessor, codec).map(
-            it -> new StringAggregationOperation(source, AbstractReactiveMongoQuery.this.getQueryMethod().getDomainClass(), bsonString -> AbstractReactiveMongoQuery.this.decode(it.getT1(), bsonString, accessor, it.getT2())));
+		return expressionEvaluator(source, accessor, codec).map(evaluator -> new StringAggregationOperation(source,
+				AbstractReactiveMongoQuery.this.getQueryMethod().getDomainClass(),
+				bsonString -> AbstractReactiveMongoQuery.this.decode(evaluator, bsonString, accessor, codec)));
 	}
 
-	private Mono<Tuple2<SpELExpressionEvaluator, ParameterBindingDocumentCodec>> expressionEvaluator(String source,
-			MongoParameterAccessor accessor, ParameterBindingDocumentCodec codec) {
+	private Mono<SpELExpressionEvaluator> expressionEvaluator(String source, MongoParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
 
 		ExpressionDependencies dependencies = codec.captureExpressionDependencies(source, accessor::getBindableValue,
 				expressionParser);
-		return getSpelEvaluatorFor(dependencies, accessor).zipWith(Mono.just(codec));
+		return getSpelEvaluatorFor(dependencies, accessor);
 	}
 
 	private Document decode(SpELExpressionEvaluator expressionEvaluator, String source, MongoParameterAccessor accessor,

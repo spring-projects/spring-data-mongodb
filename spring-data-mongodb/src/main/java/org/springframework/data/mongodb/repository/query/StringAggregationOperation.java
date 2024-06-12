@@ -22,9 +22,13 @@ import java.util.regex.Pattern;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.lang.Nullable;
 
 /**
+ * String-based aggregation operation for a repository query method.
+ *
  * @author Christoph Strobl
+ * @since 4.2.7
  */
 class StringAggregationOperation implements AggregationOperation {
 
@@ -33,12 +37,16 @@ class StringAggregationOperation implements AggregationOperation {
 	private final String source;
 	private final Class<?> domainType;
 	private final Function<String, Document> bindFunction;
+	private final @Nullable String operator;
 
 	StringAggregationOperation(String source, Class<?> domainType, Function<String, Document> bindFunction) {
 
 		this.source = source;
 		this.domainType = domainType;
 		this.bindFunction = bindFunction;
+
+		Matcher matcher = OPERATOR_PATTERN.matcher(source);
+		this.operator = matcher.find() ? matcher.group() : null;
 	}
 
 	@Override
@@ -48,11 +56,6 @@ class StringAggregationOperation implements AggregationOperation {
 
 	@Override
 	public String getOperator() {
-
-		Matcher matcher = OPERATOR_PATTERN.matcher(source);
-		if (matcher.find()) {
-			return matcher.group();
-		}
-		return AggregationOperation.super.getOperator();
+		return operator != null ? operator : AggregationOperation.super.getOperator();
 	}
 }
