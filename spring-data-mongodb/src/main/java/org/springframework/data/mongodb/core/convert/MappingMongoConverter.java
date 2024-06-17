@@ -964,6 +964,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				dbRefObj = proxy.toDBRef();
 			}
 
+			if(obj !=null && conversions.hasCustomWriteTarget(obj.getClass())) {
+				accessor.withCheckFieldMapping(true).put(prop, doConvert(obj, conversions.getCustomWriteTarget(obj.getClass()).get()));
+				return;
+			}
+
 			dbRefObj = dbRefObj != null ? dbRefObj : createDBRef(obj, prop);
 
 			accessor.put(prop, dbRefObj);
@@ -1261,7 +1266,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property,
 			PersistentPropertyAccessor<?> persistentPropertyAccessor) {
-		DocumentAccessor accessor = new DocumentAccessor(bson);
+
+		DocumentAccessor accessor = new DocumentAccessor(bson).withCheckFieldMapping(true);
 
 		if (conversions.hasValueConverter(property)) {
 			accessor.put(property, conversions.getPropertyValueConversions().getValueConverter(property).write(value,
