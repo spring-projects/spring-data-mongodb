@@ -63,6 +63,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.PropertyValueConverterFactory;
@@ -2693,6 +2694,44 @@ class MappingMongoConverterUnitTests {
 		converter.write(fieldWrite, document);
 
 		assertThat(document).containsEntry("writeAlways", null).doesNotContainKey("writeNonNull");
+		assertThat(document).containsEntry("writeAlwaysPersonDBRef", null).doesNotContainKey("writeNonNullPersonDBRef");
+	}
+
+	@Test // GH-4710
+	void shouldWriteSimplePropertyCorrectlyAfterConversionReturnsNull() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Integer.class, String.class, it -> null).andReading(it -> null).getConverters().stream().toList());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		WithFieldWrite fieldWrite = new WithFieldWrite();
+		fieldWrite.writeAlways = 10;
+		fieldWrite.writeNonNull = 20;
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(fieldWrite, document);
+
+		assertThat(document).containsEntry("writeAlways", null).doesNotContainKey("writeNonNull");
+	}
+
+	@Test // GH-4710
+	void shouldWriteComplexPropertyCorrectlyAfterConversionReturnsNull() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Person.class, String.class, it -> null).andReading(it -> null).getConverters().stream().toList());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		WithFieldWrite fieldWrite = new WithFieldWrite();
+		fieldWrite.writeAlwaysPerson = new Person();
+		fieldWrite.writeNonNullPerson = new Person();
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(fieldWrite, document);
+
 		assertThat(document).containsEntry("writeAlwaysPerson", null).doesNotContainKey("writeNonNullPerson");
 	}
 
@@ -4102,13 +4141,19 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef
 		@org.springframework.data.mongodb.core.mapping.Field(
-				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
+			write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
+
+		@org.springframework.data.mongodb.core.mapping.Field(
+			write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
 		@org.springframework.data.mongodb.core.mapping.DBRef
 		@org.springframework.data.mongodb.core.mapping.Field(
-				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPersonDBRef;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPersonDBRef;
 
 	}
 
