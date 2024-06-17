@@ -987,6 +987,11 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				dbRefObj = proxy.toDBRef();
 			}
 
+			if(obj !=null && conversions.hasCustomWriteTarget(obj.getClass())) {
+				accessor.withCheckFieldMapping(true).put(prop, doConvert(obj, conversions.getCustomWriteTarget(obj.getClass()).get()));
+				return;
+			}
+
 			dbRefObj = dbRefObj != null ? dbRefObj : createDBRef(obj, prop);
 
 			accessor.put(prop, dbRefObj);
