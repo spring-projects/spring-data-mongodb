@@ -1284,7 +1284,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property,
 			PersistentPropertyAccessor<?> persistentPropertyAccessor) {
-		DocumentAccessor accessor = new DocumentAccessor(bson);
+
+		DocumentAccessor accessor = new DocumentAccessor(bson).withCheckFieldMapping(true);
 
 		if (conversions.hasValueConverter(property)) {
 			accessor.put(property, conversions.getPropertyValueConversions().getValueConverter(property).write(value,

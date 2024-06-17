@@ -172,4 +172,21 @@ class DocumentAccessor {
 
 		return nested;
 	}
+
+	DocumentAccessor withCheckFieldMapping(boolean checkFieldMapping) {
+
+		if(!checkFieldMapping) {
+			return this;
+		}
+
+		return new DocumentAccessor(this.document) {
+				@Override
+				public void put(MongoPersistentProperty prop, @Nullable Object value) {
+					if(value != null || prop.writeNullValues()) {
+						super.put(prop, value);
+					}
+				}
+			};
+
+	}
 }
