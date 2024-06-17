@@ -2735,6 +2735,44 @@ class MappingMongoConverterUnitTests {
 		assertThat(document).containsEntry("writeAlwaysPerson", null).doesNotContainKey("writeNonNullPerson");
 	}
 
+	@Test // GH-4710
+	void shouldDelegateWriteOfDBRefToCustomConversionIfConfigured() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Person.class, DBRef.class, it -> new DBRef("persons", "n/a")).andReading(it -> null).getConverters().stream().toList());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		WithFieldWrite fieldWrite = new WithFieldWrite();
+		fieldWrite.writeAlwaysPersonDBRef = new Person();
+		fieldWrite.writeNonNullPersonDBRef = new Person();
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(fieldWrite, document);
+
+		assertThat(document).containsEntry("writeAlwaysPersonDBRef", new DBRef("persons", "n/a"));//.doesNotContainKey("writeNonNullPersonDBRef");
+	}
+
+	@Test // GH-4710
+	void shouldDelegateWriteOfDBRefToCustomConversionIfConfiguredAndCheckNulls() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Person.class, DBRef.class, it -> null).andReading(it -> null).getConverters().stream().toList());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		WithFieldWrite fieldWrite = new WithFieldWrite();
+		fieldWrite.writeAlwaysPersonDBRef = new Person();
+		fieldWrite.writeNonNullPersonDBRef = new Person();
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(fieldWrite, document);
+
+		assertThat(document).containsEntry("writeAlwaysPersonDBRef", null).doesNotContainKey("writeNonNullPersonDBRef");
+	}
+
 	@Test // GH-3686
 	void readsCollectionContainingNullValue() {
 
