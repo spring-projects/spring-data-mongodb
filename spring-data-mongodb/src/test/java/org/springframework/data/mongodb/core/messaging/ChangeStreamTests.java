@@ -67,6 +67,7 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Myroslav Kosinskyi
+ * @author Tomasz Forys
  */
 @ExtendWith({ MongoTemplateExtension.class })
 @EnableIfReplicaSetAvailable
@@ -698,6 +699,7 @@ class ChangeStreamTests {
 	}
 
 	@Test // GH-4187
+	@EnableIfMongoServerVersion(isLessThan = "6.0", isGreaterThanEqual = "5.0")
 	@Disabled("Flakey test failing occasionally due to timing issues")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
 
