@@ -20,10 +20,11 @@ import java.util.HashMap;
 import org.springframework.lang.Nullable;
 
 /**
- * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.err}.
+ * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.yml}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author SangHyuk Lee
  * @since 1.8
  */
 public final class MongoDbErrorCodes {
