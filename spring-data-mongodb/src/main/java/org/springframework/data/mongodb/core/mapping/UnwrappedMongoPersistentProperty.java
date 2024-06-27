@@ -362,6 +362,10 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 			return true;
 		}
 
+		if (obj == delegate) {
+			return true;
+		}
+
 		if (obj == null || getClass() != obj.getClass()) {
 			return false;
 		}
