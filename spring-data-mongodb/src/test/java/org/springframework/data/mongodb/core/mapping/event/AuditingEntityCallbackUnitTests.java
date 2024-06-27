@@ -34,6 +34,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 
 /**
  * Unit tests for {@link AuditingEntityCallback}.
@@ -43,13 +44,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 @ExtendWith(MockitoExtension.class)
 public class AuditingEntityCallbackUnitTests {
 
+	private final MongoMappingContext mappingContext = new MongoMappingContext();
+
 	private IsNewAwareAuditingHandler handler;
 	private AuditingEntityCallback callback;
 
 	@BeforeEach
 	void setUp() {
 
-		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.getPersistentEntity(Sample.class);
 
 		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
@@ -105,11 +107,38 @@ public class AuditingEntityCallbackUnitTests {
 		assertThat(result).isSameAs(newSample);
 	}
 
+	@Test // GH-4732
+	void shouldApplyAuditingToUnwrappedImmutableObject() {
+
+		WithUnwrapped sample = new WithUnwrapped();
+		sample.auditingData = new MyAuditingData(null, null);
+
+		IsNewAwareAuditingHandler handler = new IsNewAwareAuditingHandler(PersistentEntities.of(mappingContext));
+
+		AuditingEntityCallback listener = new AuditingEntityCallback(() -> handler);
+		WithUnwrapped result = (WithUnwrapped) listener.onBeforeConvert(sample, "foo");
+
+		assertThat(result.auditingData.created).isNotNull();
+		assertThat(result.auditingData.modified).isNotNull();
+	}
+
 	static class Sample {
 
 		@Id String id;
 		@CreatedDate Date created;
 		@LastModifiedDate Date modified;
+	}
+
+	static class WithUnwrapped {
+
+		@Id String id;
+
+		@Unwrapped(onEmpty = Unwrapped.OnEmpty.USE_NULL) MyAuditingData auditingData;
+
+	}
+
+	record MyAuditingData(@CreatedDate Date created, @LastModifiedDate Date modified) {
+
 	}
 
 	private static final class ImmutableSample {
