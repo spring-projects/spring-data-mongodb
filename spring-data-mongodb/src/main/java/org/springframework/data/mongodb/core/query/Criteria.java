@@ -317,7 +317,7 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria in(Object... values) {
 		if (values.length > 0 && values[0] instanceof Collection) {
 			throw new InvalidMongoDbApiUsageException(
-					"You can only pass in one argument of type " + values[1].getClass().getName());
+					"You can only pass in one argument of type " + values[0].getClass().getName());
 		}
 		criteria.put("$in", Arrays.asList(values));
 		return this;
