@@ -63,6 +63,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Ruben J Garcia
  * @author Jens Schauder
  * @author Clément Petit
+ * @author Kirill Egorov
  * @since 2.0
  */
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
@@ -555,7 +556,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 			query.limit(getLimit());
 
 			if (!getFieldsToInclude().isEmpty()) {
-				query.fields().include(getFieldsToInclude().toArray(new String[0]));
+				query.fields().include(getFieldsToInclude());
 			}
 
 			readPreference.ifPresent(query::withReadPreference);
