@@ -719,7 +719,7 @@ public class QueryMapper {
 		for (Entry<String, Object> entry : valueDbo.entrySet()) {
 
 			String key = entry.getKey();
-			if ("$nin".equals(key) || "$in".equals(key)) {
+			if ("$nin".equals(key) || "$in".equals(key) || "$all".equals(key)) {
 				List<Object> ids = new ArrayList<>();
 				for (Object id : (Iterable<?>) valueDbo.get(key)) {
 					ids.add(convertId(id, getIdTypeForField(documentField)));
