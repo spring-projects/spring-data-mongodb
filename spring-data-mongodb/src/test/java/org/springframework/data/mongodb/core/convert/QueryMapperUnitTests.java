@@ -1684,6 +1684,18 @@ public class QueryMapperUnitTests {
 		assertThat(mappedObject).isEqualTo("{ 'text' : {  $gt : 'gnirps', $in : [ 'atad' ] } }");
 	}
 
+	@Test // GH-4736
+	void allOperatorShouldConvertIdCollection() {
+
+		ObjectId oid = ObjectId.get();
+		Criteria criteria = new Criteria().andOperator(where("name").isNull().and("id").all(List.of(oid.toString())));
+
+		org.bson.Document mappedObject = mapper.getMappedObject(criteria.getCriteriaObject(),
+			context.getPersistentEntity(Customer.class));
+
+		assertThat(mappedObject).containsEntry("$and.[0]._id.$all", List.of(oid));
+	}
+
 	class WithSimpleMap {
 		Map<String, String> simpleMap;
 	}
