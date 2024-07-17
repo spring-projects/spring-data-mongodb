@@ -20,12 +20,10 @@ import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.aop.target.SingletonTargetSource;
-import org.springframework.data.mongodb.core.ReadConcernAware;
-import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
@@ -45,6 +43,8 @@ import org.springframework.util.ClassUtils;
  */
 public class QueryUtils {
 
+	protected static final Log LOGGER = LogFactory.getLog(QueryUtils.class);
+
 	/**
 	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
 	 * {@code sort} may be overwritten by the sort explicitly defined by the {@link Query} itself.
@@ -59,10 +59,19 @@ public class QueryUtils {
 			return query;
 		}
 
-		ProxyFactory factory = new ProxyFactory(query);
-		factory.addAdvice(new MyMethodInterceptor(defaultSort));
-		factory.setInterfaces(new Class[0]);
+		ProxyFactory factory = prepareQueryProxy(query.getClass(), defaultSort);
+		factory.setTarget(query);
 		return (Query) factory.getProxy(query.getClass().getClassLoader());
+	}
+
+	/**
+	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
+	 * {@code sort} may be overwritten by the sort explicitly defined by the {@link Query} itself.
+	 *
+	 * @param classLoader the {@link ClassLoader} to use for generating the proxy type with.
+	 */
+	public static Class<?> queryProxyType(Class<? extends Query> baseType, ClassLoader classLoader) {
+		return prepareQueryProxy(baseType, new Document()).getProxyClass(classLoader);
 	}
 
 	/**
@@ -121,11 +130,20 @@ public class QueryUtils {
 		return -1;
 	}
 
-	static class MyMethodInterceptor implements MethodInterceptor {
+	private static ProxyFactory prepareQueryProxy(Class<? extends Query> query, Document defaultSort) {
+
+		ProxyFactory factory = new ProxyFactory();
+		factory.setTargetClass(query);
+		factory.addAdvice(new DefaultSortingInterceptor(defaultSort));
+		factory.setInterfaces(new Class[0]);
+		return factory;
+	}
+
+	static class DefaultSortingInterceptor implements MethodInterceptor {
 
 		private final Document defaultSort;
 
-		public MyMethodInterceptor(Document defaultSort) {
+		public DefaultSortingInterceptor(Document defaultSort) {
 			this.defaultSort = defaultSort;
 		}
 
