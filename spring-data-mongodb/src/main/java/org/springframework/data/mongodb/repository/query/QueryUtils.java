@@ -19,12 +19,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
@@ -37,7 +41,9 @@ import org.springframework.util.ClassUtils;
  * @since 2.1
  * @currentRead Assassin's Apprentice - Robin Hobb
  */
-class QueryUtils {
+public class QueryUtils {
+
+	protected static final Log LOGGER = LogFactory.getLog(QueryUtils.class);
 
 	/**
 	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
@@ -47,26 +53,25 @@ class QueryUtils {
 	 * @param defaultSort the default sort expression to apply to the query.
 	 * @return the query having the given {@code sort} applied.
 	 */
-	static Query decorateSort(Query query, Document defaultSort) {
+	public static Query decorateSort(Query query, Document defaultSort) {
 
 		if (defaultSort.isEmpty()) {
 			return query;
 		}
 
-		ProxyFactory factory = new ProxyFactory(query);
-		factory.addAdvice((MethodInterceptor) invocation -> {
-
-			if (!invocation.getMethod().getName().equals("getSortObject")) {
-				return invocation.proceed();
-			}
-
-			Document combinedSort = new Document(defaultSort);
-			combinedSort.putAll((Document) invocation.proceed());
-			return combinedSort;
-		});
-		factory.setInterfaces(new Class[0]);
-
+		ProxyFactory factory = prepareQueryProxy(query.getClass(), defaultSort);
+		factory.setTarget(query);
 		return (Query) factory.getProxy(query.getClass().getClassLoader());
+	}
+
+	/**
+	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
+	 * {@code sort} may be overwritten by the sort explicitly defined by the {@link Query} itself.
+	 *
+	 * @param classLoader the {@link ClassLoader} to use for generating the proxy type with.
+	 */
+	public static Class<?> queryProxyType(Class<? extends Query> baseType, ClassLoader classLoader) {
+		return prepareQueryProxy(baseType, new Document()).getProxyClass(classLoader);
 	}
 
 	/**
@@ -123,5 +128,36 @@ class QueryUtils {
 			i++;
 		}
 		return -1;
+	}
+
+	private static ProxyFactory prepareQueryProxy(Class<? extends Query> query, Document defaultSort) {
+
+		ProxyFactory factory = new ProxyFactory();
+		factory.setTargetClass(query);
+		factory.addAdvice(new DefaultSortingInterceptor(defaultSort));
+		factory.setInterfaces(new Class[0]);
+		return factory;
+	}
+
+	static class DefaultSortingInterceptor implements MethodInterceptor {
+
+		private final Document defaultSort;
+
+		public DefaultSortingInterceptor(Document defaultSort) {
+			this.defaultSort = defaultSort;
+		}
+
+		@Nullable
+		@Override
+		public Object invoke(@NonNull MethodInvocation invocation) throws Throwable {
+
+			if (!invocation.getMethod().getName().equals("getSortObject")) {
+				return invocation.proceed();
+			}
+
+			Document combinedSort = new Document(defaultSort);
+			combinedSort.putAll((Document) invocation.proceed());
+			return combinedSort;
+		}
 	}
 }
