@@ -19,12 +19,18 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.bson.Document;
+import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.target.SingletonTargetSource;
+import org.springframework.data.mongodb.core.ReadConcernAware;
+import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
@@ -37,7 +43,7 @@ import org.springframework.util.ClassUtils;
  * @since 2.1
  * @currentRead Assassin's Apprentice - Robin Hobb
  */
-class QueryUtils {
+public class QueryUtils {
 
 	/**
 	 * Decorate {@link Query} and add a default sort expression to the given {@link Query}. Attributes of the given
@@ -47,25 +53,15 @@ class QueryUtils {
 	 * @param defaultSort the default sort expression to apply to the query.
 	 * @return the query having the given {@code sort} applied.
 	 */
-	static Query decorateSort(Query query, Document defaultSort) {
+	public static Query decorateSort(Query query, Document defaultSort) {
 
 		if (defaultSort.isEmpty()) {
 			return query;
 		}
 
 		ProxyFactory factory = new ProxyFactory(query);
-		factory.addAdvice((MethodInterceptor) invocation -> {
-
-			if (!invocation.getMethod().getName().equals("getSortObject")) {
-				return invocation.proceed();
-			}
-
-			Document combinedSort = new Document(defaultSort);
-			combinedSort.putAll((Document) invocation.proceed());
-			return combinedSort;
-		});
+		factory.addAdvice(new MyMethodInterceptor(defaultSort));
 		factory.setInterfaces(new Class[0]);
-
 		return (Query) factory.getProxy(query.getClass().getClassLoader());
 	}
 
@@ -123,5 +119,27 @@ class QueryUtils {
 			i++;
 		}
 		return -1;
+	}
+
+	static class MyMethodInterceptor implements MethodInterceptor {
+
+		private final Document defaultSort;
+
+		public MyMethodInterceptor(Document defaultSort) {
+			this.defaultSort = defaultSort;
+		}
+
+		@Nullable
+		@Override
+		public Object invoke(@NonNull MethodInvocation invocation) throws Throwable {
+
+			if (!invocation.getMethod().getName().equals("getSortObject")) {
+				return invocation.proceed();
+			}
+
+			Document combinedSort = new Document(defaultSort);
+			combinedSort.putAll((Document) invocation.proceed());
+			return combinedSort;
+		}
 	}
 }

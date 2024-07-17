@@ -19,11 +19,15 @@ import static org.springframework.data.mongodb.aot.MongoAotPredicates.*;
 
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
 import org.springframework.data.mongodb.aot.MongoAotPredicates;
+import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.query.QueryUtils;
 import org.springframework.data.mongodb.repository.support.CrudMethodMetadata;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 import org.springframework.data.mongodb.repository.support.ReactiveQuerydslMongoPredicateExecutor;
@@ -44,6 +48,18 @@ class RepositoryRuntimeHints implements RuntimeHintsRegistrar {
 				List.of(TypeReference.of("org.springframework.data.mongodb.repository.support.SimpleMongoRepository")),
 				builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 						MemberCategory.INVOKE_PUBLIC_METHODS));
+
+		Query query = QueryUtils.decorateSort(new BasicQuery("{}", null), new Document("foo", "bar"));
+
+		hints.reflection()
+			.registerType(Query.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+				MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS);
+		hints.reflection()
+			.registerType(BasicQuery.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+				MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS);
+		hints.reflection()
+				.registerType(query.getClass(), MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+						MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS);
 
 		if (isAopPresent(classLoader)) {
 
