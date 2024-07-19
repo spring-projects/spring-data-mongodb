@@ -20,14 +20,15 @@ import java.util.Collection;
 import java.util.List;
 
 import org.bson.Document;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.index.DefaultVectorIndexOperations;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
+import org.springframework.data.mongodb.core.index.VectorIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -51,11 +52,11 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 
-	private final String collectionName;
-	private final QueryMapper mapper;
-	private final @Nullable Class<?> type;
+	protected final String collectionName;
+	protected final QueryMapper mapper;
+	protected final @Nullable Class<?> type;
 
-	private final MongoOperations mongoOperations;
+	protected final MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -133,7 +134,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Nullable
-	private MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
+	protected MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
 
 		if (entityType != null) {
 			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);
@@ -207,6 +208,11 @@ public class DefaultIndexOperations implements IndexOperations {
 				return indexInfoList;
 			}
 		});
+	}
+
+	@Override
+	public VectorIndexOperations vectorIndex() {
+		return new DefaultVectorIndexOperations(mongoOperations, collectionName, type);
 	}
 
 	@Nullable

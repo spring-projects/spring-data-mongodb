@@ -39,7 +39,12 @@ public final class IndexField {
 		/**
 		 * @since 3.3
 		 */
-		WILDCARD
+		WILDCARD,
+
+		/**
+		 * @since ?.?
+		 */
+		VECTOR
 	}
 
 	private final String key;
@@ -58,7 +63,7 @@ public final class IndexField {
 		if (Type.GEO.equals(type) || Type.TEXT.equals(type)) {
 			Assert.isNull(direction, "Geo/Text indexes must not have a direction");
 		} else {
-			if (!(Type.HASH.equals(type) || Type.WILDCARD.equals(type))) {
+			if (!(Type.HASH.equals(type) || Type.WILDCARD.equals(type) || Type.VECTOR.equals(type))) {
 				Assert.notNull(direction, "Default indexes require a direction");
 			}
 		}
@@ -74,6 +79,10 @@ public final class IndexField {
 		Assert.notNull(order, "Direction must not be null");
 
 		return new IndexField(key, order, Type.DEFAULT);
+	}
+
+	public static IndexField vector(String key) {
+		return new IndexField(key, null, Type.VECTOR);
 	}
 
 	/**
