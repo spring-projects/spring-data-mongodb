@@ -262,6 +262,22 @@ public class MongoTestUtils {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public static boolean isVectorSearchEnabled() {
+		try (MongoClient client = MongoTestUtils.client()) {
+
+			return client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1")).get("argv", List.class)
+				.stream().anyMatch(it -> {
+					if(it instanceof String cfgString) {
+						return cfgString.startsWith("searchIndexManagementHostAndPort");
+					}
+					return false;
+				});
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	public static Duration getTimeout() {
 
 		return ObjectUtils.nullSafeEquals("jenkins", ENV.getProperty("user.name")) ? Duration.ofMillis(100)

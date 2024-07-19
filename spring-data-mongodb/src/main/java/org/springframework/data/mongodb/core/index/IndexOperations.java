@@ -25,7 +25,7 @@ import java.util.List;
  * @author Christoph Strobl
  * @author Jens Schauder
  */
-public interface IndexOperations {
+public interface IndexOperations extends VectorIndexOperationsProvider {
 
 	/**
 	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity
