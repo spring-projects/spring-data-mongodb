@@ -42,6 +42,12 @@ public class MongoServerCondition implements ExecutionCondition {
 			}
 		}
 
+		if(context.getTags().contains("vector-search")) {
+			if(!atlasEnvironment(context)) {
+				return ConditionEvaluationResult.disabled("Disabled for servers not supporting Vector Search.");
+			}
+		}
+
 		if (context.getTags().contains("version-specific") && context.getElement().isPresent()) {
 
 			EnableIfMongoServerVersion version = AnnotatedElementUtils.findMergedAnnotation(context.getElement().get(),
@@ -82,5 +88,10 @@ public class MongoServerCondition implements ExecutionCondition {
 
 		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> MongoTestUtils.serverVersion(),
 				Version.class);
+	}
+
+	private boolean atlasEnvironment(ExtensionContext context) {
+		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> MongoTestUtils.isVectorSearchEnabled(),
+			Boolean.class);
 	}
 }
