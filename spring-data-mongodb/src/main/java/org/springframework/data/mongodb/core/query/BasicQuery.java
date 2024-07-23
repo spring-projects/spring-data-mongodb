@@ -85,6 +85,20 @@ public class BasicQuery extends Query {
 		this.sortObject = new Document();
 	}
 
+	/**
+	 * Create a BasicQuery given a {@link Query}. The resulting query is a copy of {@link Query}.
+	 *
+	 * @param query
+	 */
+	public BasicQuery(Query query) {
+
+		super(query);
+		this.queryObject = query.getQueryObject();
+		this.setFieldsObject(query.getFieldsObject());
+		this.setSortObject(query.getSortObject());
+		this.setMeta(query.getMeta());
+	}
+
 	@Override
 	public Query addCriteria(CriteriaDefinition criteria) {
 

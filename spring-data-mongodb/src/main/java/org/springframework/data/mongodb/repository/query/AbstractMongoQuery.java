@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -155,7 +156,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 4.2
 	 */
 	private Query applyAnnotatedReadPreferenceIfPresent(Query query) {
-		
+
 		if (!method.hasAnnotatedReadPreference()) {
 			return query;
 		}

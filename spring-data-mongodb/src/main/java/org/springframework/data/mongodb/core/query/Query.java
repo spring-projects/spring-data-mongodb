@@ -79,6 +79,20 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 	private Optional<Collation> collation = Optional.empty();
 
+	Query(Query query) {
+		this.restrictedTypes = query.restrictedTypes;
+		this.fieldSpec = query.fieldSpec;
+		this.sort = query.sort;
+		this.limit = query.limit;
+		this.skip = query.skip;
+		this.keysetScrollPosition = query.keysetScrollPosition;
+		this.readConcern = query.readConcern;
+		this.readPreference = query.readPreference;
+		this.hint = query.hint;
+		this.meta = query.meta;
+		this.collation = query.collation;
+	}
+
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
 	 *
