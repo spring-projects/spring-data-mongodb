@@ -21,6 +21,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.mongodb.core.index.VectorSearchIndex;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -44,13 +45,10 @@ public class VectorSearchTests {
 
 		if (!hasIndex) {
 
-			System.out.println("Creating index");
-
-			template.execute(db -> {
-				Document index = createSearchIndexDefinition(COLLECTION_NAME, "vector_index", "plot_embedding", 1536);
-				return db.runCommand(index);
-			});
-
+			System.out.print("Creating index: ");
+			String s = template.indexOps(COLLECTION_NAME).ensureIndex(
+					new VectorSearchIndex("vector_name").path("plot_embedding").dimensions(1536).similarity("cosine"));
+			System.out.println(s);
 		}
 
 		VectorSearchOperation $vectorSearch = VectorSearchOperation.search("vector_index").path("plot_embedding")

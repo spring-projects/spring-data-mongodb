@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.bson.Document;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -28,6 +27,8 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
+import org.springframework.data.mongodb.core.index.VectorSearchIndex;
+import org.springframework.data.mongodb.core.index.VectorSearchIndex.Filter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -117,6 +118,40 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	@Override
 	public String ensureIndex(IndexDefinition indexDefinition) {
+
+		if (indexDefinition instanceof VectorSearchIndex vsi) {
+
+			Document cmdResult = mongoOperations.execute(db -> {
+
+				MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
+
+				Document index = new Document(vsi.getIndexOptions());
+				Document definition = new Document();
+
+				List<Document> fields = new ArrayList<>(vsi.getFilters().size() + 1);
+
+				Document vectorField = new Document("type", "vector");
+				vectorField.append("path", getMappedPath(vsi.getPath(), entity, mapper));
+				vectorField.append("numDimensions", vsi.getDimensions());
+				vectorField.append("similarity", vsi.getSimilarity());
+
+				fields.add(vectorField);
+
+				for (Filter filter : vsi.getFilters()) {
+					fields.add(new Document("type", "filter").append("path", getMappedPath(filter.path(), entity, mapper)));
+				}
+
+				definition.append("fields", fields);
+				index.append("definition", definition);
+
+				Document command = new Document().append("createSearchIndexes", collectionName).append("indexes",
+						List.of(index));
+
+				return db.runCommand(command);
+			});
+
+			return cmdResult.get("ok").toString().equalsIgnoreCase("1.0") ? vsi.getName() : cmdResult.toJson();
+		}
 
 		return execute(collection -> {
 
@@ -237,5 +272,9 @@ public class DefaultIndexOperations implements IndexOperations {
 		}
 
 		return ops.collation(entity.getCollation().toMongoCollation());
+	}
+
+	private static String getMappedPath(String path, MongoPersistentEntity<?> entity, QueryMapper mapper) {
+		return mapper.getMappedFields(new Document(path, 1), entity).entrySet().iterator().next().getKey();
 	}
 }
