@@ -21,6 +21,12 @@ package org.springframework.data.mongodb.core.index;
 public interface VectorIndexOperations extends IndexOperations {
 
 
+    default void alterIndex(String name, IndexOptions options) {
+        throw new UnsupportedOperationException();
+    }
+
+    void updateIndex(VectorIndex index);
+
     @Override
     default VectorIndexOperations vectorIndexOperations() {
         return this;

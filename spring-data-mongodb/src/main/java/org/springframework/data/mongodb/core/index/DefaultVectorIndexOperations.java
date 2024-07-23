@@ -35,15 +35,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
 import org.springframework.data.mongodb.core.DefaultIndexOperations;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.index.IndexField.Type;
 import org.springframework.data.mongodb.core.index.VectorIndex.Filter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
@@ -71,40 +70,38 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@Override
+	public void alterIndex(String name, IndexOptions options) {
+		super.alterIndex(name, options);
+	}
+
+	@Override
+	public void updateIndex(VectorIndex index) {
+
+		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
+
+		Document indexDocument = createIndexDocument(index, entity);
+
+		Document cmdResult = mongoOperations.execute(db -> {
+			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName()).append("definition", indexDocument.get("definition"));
+			return db.runCommand(command);
+		});
+	}
+
+	@Override
 	public List<IndexInfo> getIndexInfo() {
 
 		AggregationResults<Document> aggregate = mongoOperations.aggregate(
-			Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document())),
-			collectionName, Document.class);
+				Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document())), collectionName,
+				Document.class);
 
-		String json = aggregate.getRawResults().toJson(JsonWriterSettings.builder().indent(true).build());
-
-		/*
-		{
-      "id": "669e2b40c587f62c3e03ccd0",
-      "name": "vector_index",
-      "type": "vectorSearch",
-      "status": "READY",
-      "queryable": true,
-      "latestVersion": 0,
-      "latestDefinition": {
-        "fields": [
-          {
-            "type": "vector",
-            "path": "plot_embedding",
-            "numDimensions": 1536,
-            "similarity": "cosine"
-          }
-        ]
-		 */
 		ArrayList<IndexInfo> result = new ArrayList<>();
-		for(Document doc : aggregate) {
+		for (Document doc : aggregate) {
 
 			List<IndexField> indexFields = new ArrayList<>();
 			String name = doc.getString("name");
-			for(Object field : doc.get("latestDefinition", Document.class).get("fields", List.class)) {
+			for (Object field : doc.get("latestDefinition", Document.class).get("fields", List.class)) {
 
-				if(field instanceof Document fieldInfo) {
+				if (field instanceof Document fieldInfo) {
 					indexFields.add(IndexField.vector(fieldInfo.getString("path")));
 				}
 			}
@@ -121,35 +118,40 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 			return super.ensureIndex(indexDefinition);
 		}
 
+		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
+
+		Document index = createIndexDocument(vsi, entity);
+
 		Document cmdResult = mongoOperations.execute(db -> {
-
-			MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
-
-			Document index = new Document(vsi.getIndexOptions());
-			Document definition = new Document();
-
-			List<Document> fields = new ArrayList<>(vsi.getFilters().size() + 1);
-
-			Document vectorField = new Document("type", "vector");
-			vectorField.append("path", getMappedPath(vsi.getPath(), entity, mapper));
-			vectorField.append("numDimensions", vsi.getDimensions());
-			vectorField.append("similarity", vsi.getSimilarity());
-
-			fields.add(vectorField);
-
-			for (Filter filter : vsi.getFilters()) {
-				fields.add(new Document("type", "filter").append("path", getMappedPath(filter.path(), entity, mapper)));
-			}
-
-			definition.append("fields", fields);
-			index.append("definition", definition);
-
 			Document command = new Document().append("createSearchIndexes", collectionName).append("indexes", List.of(index));
-
 			return db.runCommand(command);
 		});
 
 		return cmdResult.get("ok").toString().equalsIgnoreCase("1.0") ? vsi.getName() : cmdResult.toJson();
+	}
+
+	@NonNull
+	private Document createIndexDocument(VectorIndex vsi, MongoPersistentEntity<?> entity) {
+
+		Document index = new Document(vsi.getIndexOptions());
+		Document definition = new Document();
+
+		List<Document> fields = new ArrayList<>(vsi.getFilters().size() + 1);
+
+		Document vectorField = new Document("type", "vector");
+		vectorField.append("path", getMappedPath(vsi.getPath(), entity, mapper));
+		vectorField.append("numDimensions", vsi.getDimensions());
+		vectorField.append("similarity", vsi.getSimilarity());
+
+		fields.add(vectorField);
+
+		for (Filter filter : vsi.getFilters()) {
+			fields.add(new Document("type", "filter").append("path", getMappedPath(filter.path(), entity, mapper)));
+		}
+
+		definition.append("fields", fields);
+		index.append("definition", definition);
+		return index;
 	}
 
 	@Override

@@ -59,6 +59,7 @@ public class VectorSearchTests {
 		if(hasIndex) {
 			System.out.println("found the index: vector_index");
 			System.out.println(template.indexOps(COLLECTION_NAME).vectorIndexOperations().getIndexInfo());
+			template.indexOps(COLLECTION_NAME).vectorIndexOperations().updateIndex(new VectorIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("euclidean"));
 //			template.indexOps(COLLECTION_NAME).vectorIndexOperations().dropIndex("vector_name");
 		}
 		else {
