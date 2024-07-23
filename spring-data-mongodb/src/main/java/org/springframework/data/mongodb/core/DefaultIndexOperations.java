@@ -24,11 +24,11 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.index.DefaultVectorIndexOperations;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
-import org.springframework.data.mongodb.core.index.VectorSearchIndex;
-import org.springframework.data.mongodb.core.index.VectorSearchIndex.Filter;
+import org.springframework.data.mongodb.core.index.VectorIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -52,11 +52,11 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 
-	private final String collectionName;
-	private final QueryMapper mapper;
-	private final @Nullable Class<?> type;
+	protected final String collectionName;
+	protected final QueryMapper mapper;
+	protected final @Nullable Class<?> type;
 
-	private final MongoOperations mongoOperations;
+	protected final MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -119,40 +119,6 @@ public class DefaultIndexOperations implements IndexOperations {
 	@Override
 	public String ensureIndex(IndexDefinition indexDefinition) {
 
-		if (indexDefinition instanceof VectorSearchIndex vsi) {
-
-			Document cmdResult = mongoOperations.execute(db -> {
-
-				MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
-
-				Document index = new Document(vsi.getIndexOptions());
-				Document definition = new Document();
-
-				List<Document> fields = new ArrayList<>(vsi.getFilters().size() + 1);
-
-				Document vectorField = new Document("type", "vector");
-				vectorField.append("path", getMappedPath(vsi.getPath(), entity, mapper));
-				vectorField.append("numDimensions", vsi.getDimensions());
-				vectorField.append("similarity", vsi.getSimilarity());
-
-				fields.add(vectorField);
-
-				for (Filter filter : vsi.getFilters()) {
-					fields.add(new Document("type", "filter").append("path", getMappedPath(filter.path(), entity, mapper)));
-				}
-
-				definition.append("fields", fields);
-				index.append("definition", definition);
-
-				Document command = new Document().append("createSearchIndexes", collectionName).append("indexes",
-						List.of(index));
-
-				return db.runCommand(command);
-			});
-
-			return cmdResult.get("ok").toString().equalsIgnoreCase("1.0") ? vsi.getName() : cmdResult.toJson();
-		}
-
 		return execute(collection -> {
 
 			MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
@@ -168,7 +134,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Nullable
-	private MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
+	protected MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
 
 		if (entityType != null) {
 			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);
@@ -244,6 +210,11 @@ public class DefaultIndexOperations implements IndexOperations {
 		});
 	}
 
+	@Override
+	public VectorIndexOperations vectorIndexOperations() {
+		return new DefaultVectorIndexOperations(mongoOperations, collectionName, type);
+	}
+
 	@Nullable
 	public <T> T execute(CollectionCallback<T> callback) {
 
@@ -272,9 +243,5 @@ public class DefaultIndexOperations implements IndexOperations {
 		}
 
 		return ops.collation(entity.getCollation().toMongoCollation());
-	}
-
-	private static String getMappedPath(String path, MongoPersistentEntity<?> entity, QueryMapper mapper) {
-		return mapper.getMappedFields(new Document(path, 1), entity).entrySet().iterator().next().getKey();
 	}
 }

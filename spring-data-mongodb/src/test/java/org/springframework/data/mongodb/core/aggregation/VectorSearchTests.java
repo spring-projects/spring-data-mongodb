@@ -15,16 +15,16 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.data.mongodb.core.index.VectorSearchIndex;
+import org.springframework.data.mongodb.core.index.VectorIndex;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.data.mongodb.util.BsonUtils;
 
 /**
  * @author Christoph Strobl
@@ -40,14 +40,32 @@ public class VectorSearchTests {
 	@Test
 	void xxx() {
 
-		boolean hasIndex = template.indexOps(COLLECTION_NAME).getIndexInfo().stream()
-				.anyMatch(it -> it.getName().endsWith("vector_index"));
+//		boolean hasIndex = template.indexOps(COLLECTION_NAME).getIndexInfo().stream()
+//				.anyMatch(it -> it.getName().endsWith("vector_index"));
 
-		if (!hasIndex) {
+		// TODO: index conversion etc. is missing - should we combine the index info listing?
+//		boolean hasIndex = template.execute(db -> {
+//
+//			Document doc = db.runCommand(new Document("listSearchIndexes", COLLECTION_NAME));
+//			Object searchIndexes = BsonUtils.resolveValue(BsonUtils.asMap(doc), "cursor.firstBatch");
+//			if(searchIndexes instanceof Collection<?> indexes) {
+//				return indexes.stream().anyMatch(it -> it instanceof Document idx && idx.get("name", String.class).equalsIgnoreCase("vector_index"));
+//			}
+//			return false;
+//		});
+
+		boolean hasIndex = template.indexOps(COLLECTION_NAME).vectorIndexOperations().exists("vector_index");
+
+		if(hasIndex) {
+			System.out.println("found the index: vector_index");
+			System.out.println(template.indexOps(COLLECTION_NAME).vectorIndexOperations().getIndexInfo());
+//			template.indexOps(COLLECTION_NAME).vectorIndexOperations().dropIndex("vector_name");
+		}
+		else {
 
 			System.out.print("Creating index: ");
 			String s = template.indexOps(COLLECTION_NAME).ensureIndex(
-					new VectorSearchIndex("vector_name").path("plot_embedding").dimensions(1536).similarity("cosine"));
+					new VectorIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("cosine"));
 			System.out.println(s);
 		}
 
@@ -59,21 +77,6 @@ public class VectorSearchTests {
 		AggregationResults<Document> aggregate = template.aggregate(agg, COLLECTION_NAME, Document.class);
 
 		aggregate.forEach(System.out::println);
-	}
-
-	private org.bson.Document createSearchIndexDefinition(String collection, String name, String path, int dimensions) {
-		List<Document> vectorFields = new ArrayList<>();
-
-		vectorFields.add(new org.bson.Document().append("type", "vector").append("path", path)
-				.append("numDimensions", dimensions).append("similarity", "cosine"));
-
-		// vectorFields.addAll(this.config.metadataFieldsToFilter.stream()
-		// .map(fieldName -> new org.bson.Document().append("type", "filter").append("path", "metadata." + fieldName))
-		// .toList());
-
-		return new org.bson.Document().append("createSearchIndexes", collection).append("indexes",
-				List.of(new org.bson.Document().append("name", name).append("type", "vectorSearch").append("definition",
-						new org.bson.Document("fields", vectorFields))));
 	}
 
 	static Double[] vectors = { -0.0016261312, -0.028070757, -0.011342932, -0.012775794, -0.0027440966, 0.008683807,

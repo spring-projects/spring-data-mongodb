@@ -40,7 +40,7 @@ import org.bson.Document;
  * @author Christoph Strobl
  * @since 2024/07
  */
-public class VectorSearchIndex implements IndexDefinition {
+public class VectorIndex implements IndexDefinition {
 
 	String name;
 	String path;
@@ -48,27 +48,27 @@ public class VectorSearchIndex implements IndexDefinition {
 	String similarity;
 	List<Filter> filters;
 
-	public VectorSearchIndex(String name) {
+	public VectorIndex(String name) {
 		this.name = name;
 	}
 
-	public static VectorSearchIndex cosine(String name) {
-		VectorSearchIndex idx = new VectorSearchIndex(name);
+	public static VectorIndex cosine(String name) {
+		VectorIndex idx = new VectorIndex(name);
 		idx.similarity = "cosine";
 		return idx;
 	}
 
-	public VectorSearchIndex path(String path) {
+	public VectorIndex path(String path) {
 		this.path = path;
 		return this;
 	}
 
-	public VectorSearchIndex dimensions(int dimensions) {
+	public VectorIndex dimensions(int dimensions) {
 		this.dimensions = dimensions;
 		return this;
 	}
 
-	public VectorSearchIndex similarity(String similarity) {
+	public VectorIndex similarity(String similarity) {
 		this.similarity = similarity;
 		return this;
 	}
