@@ -25,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 
@@ -55,7 +56,6 @@ import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationCo
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.spel.spi.ReactiveEvaluationContextExtension;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.util.Base64Utils;
 
 /**
  * Unit tests for {@link ReactiveStringBasedMongoQuery}.
@@ -224,7 +224,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
-				"{'lastname' : { '$binary' : '" + Base64Utils.encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
+				"{'lastname' : { '$binary' : '" + Base64.getEncoder().encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}

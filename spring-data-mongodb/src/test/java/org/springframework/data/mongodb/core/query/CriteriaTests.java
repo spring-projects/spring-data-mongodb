@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.Arrays;
+import java.util.Base64;
 
 import org.bson.types.Binary;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
-import org.springframework.util.Base64Utils;
 
 /**
  * Integration tests for {@link Criteria} usage as part of a {@link Query}.
@@ -50,7 +50,7 @@ class CriteriaTests {
 	static final DocumentWithBitmask TWENTY_FLOAT/*00010100*/ = new DocumentWithBitmask("3", Float.valueOf(20),
 			Integer.toBinaryString(20));
 	static final DocumentWithBitmask ONE_HUNDRED_TWO/*01100110*/ = new DocumentWithBitmask("4",
-			new Binary(Base64Utils.decodeFromString("Zg==")), "01100110");
+			new Binary(Base64.getDecoder().decode("Zg==")), "01100110");
 
 	@BeforeEach
 	void beforeEach() {

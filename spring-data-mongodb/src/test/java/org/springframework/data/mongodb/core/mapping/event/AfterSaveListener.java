@@ -20,11 +20,11 @@ import java.util.ArrayList;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
-public class AfterSaveListener implements ApplicationListener<AfterSaveEvent<Object>> {
+public class AfterSaveListener implements ApplicationListener<AfterSaveEvent<? extends Object>> {
 
 	public final ArrayList<ApplicationEvent> seenEvents = new ArrayList<ApplicationEvent>();
 
-	public void onApplicationEvent(AfterSaveEvent<Object> event) {
+	public void onApplicationEvent(AfterSaveEvent<? extends Object> event) {
 		this.seenEvents.add(event);
 	}
 
