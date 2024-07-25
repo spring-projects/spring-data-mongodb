@@ -1,27 +1,11 @@
 /*
- * Copyright 2024. the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  * Copyright 2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,6 +18,8 @@ package org.springframework.data.mongodb.core.index;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.DefaultIndexOperations;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -49,6 +35,12 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  */
 public class DefaultVectorIndexOperations extends DefaultIndexOperations implements VectorIndexOperations {
+
+	private static final Log LOGGER = LogFactory.getLog(VectorIndexOperations.class);
+
+	public DefaultVectorIndexOperations(MongoOperations mongoOperations, Class<?> type) {
+		this(mongoOperations, mongoOperations.getCollectionName(type), type);
+	}
 
 	public DefaultVectorIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
 		super(mongoOperations, collectionName, type);
@@ -82,7 +74,11 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 		Document indexDocument = createIndexDocument(index, entity);
 
 		Document cmdResult = mongoOperations.execute(db -> {
-			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName()).append("definition", indexDocument.get("definition"));
+			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName())
+					.append("definition", indexDocument.get("definition"));
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Updating VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
+			}
 			return db.runCommand(command);
 		});
 	}
@@ -123,7 +119,11 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 		Document index = createIndexDocument(vsi, entity);
 
 		Document cmdResult = mongoOperations.execute(db -> {
+
 			Document command = new Document().append("createSearchIndexes", collectionName).append("indexes", List.of(index));
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Creating VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
+			}
 			return db.runCommand(command);
 		});
 
@@ -158,6 +158,9 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	public void dropIndex(String name) {
 
 		Document command = new Document().append("dropSearchIndex", collectionName).append("name", name);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Dropping VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
+		}
 		mongoOperations.execute(db -> db.runCommand(command));
 	}
 }

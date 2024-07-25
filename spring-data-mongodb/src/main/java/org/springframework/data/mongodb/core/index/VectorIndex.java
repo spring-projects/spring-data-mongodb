@@ -31,6 +31,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -54,8 +55,17 @@ public class VectorIndex implements IndexDefinition {
 
 	public static VectorIndex cosine(String name) {
 		VectorIndex idx = new VectorIndex(name);
-		idx.similarity = "cosine";
-		return idx;
+		return idx.similarity(SimilarityFunction.COSINE);
+	}
+
+	public static VectorIndex euclidean(String name) {
+		VectorIndex idx = new VectorIndex(name);
+		return idx.similarity(SimilarityFunction.EUCLIDEAN);
+	}
+
+	public static VectorIndex dotProduct(String name) {
+		VectorIndex idx = new VectorIndex(name);
+		return idx.similarity(SimilarityFunction.DOT_PRODUCT);
 	}
 
 	public VectorIndex path(String path) {
@@ -72,6 +82,25 @@ public class VectorIndex implements IndexDefinition {
 		this.similarity = similarity;
 		return this;
 	}
+
+	public VectorIndex similarity(SimilarityFunction similarity) {
+		return similarity(similarity.getFunctionName());
+	}
+
+	public VectorIndex filter(Filter filter) {
+
+		if(this.filters == null) {
+			this.filters = new ArrayList<>(3);
+		}
+
+		this.filters.add(filter);
+		return this;
+	}
+
+	public VectorIndex filter(String path) {
+		return filter(new Filter(path));
+	}
+
 
 	@Override
 	public Document getIndexKeys() {
@@ -111,5 +140,19 @@ public class VectorIndex implements IndexDefinition {
 
 	public record Filter(String path) {
 
+	}
+
+	public enum SimilarityFunction {
+		DOT_PRODUCT("dotProduct"), COSINE("cosine"), EUCLIDEAN("euclidean");
+
+		String functionName;
+
+		SimilarityFunction(String functionName) {
+			this.functionName = functionName;
+		}
+
+		public String getFunctionName() {
+			return functionName;
+		}
 	}
 }
