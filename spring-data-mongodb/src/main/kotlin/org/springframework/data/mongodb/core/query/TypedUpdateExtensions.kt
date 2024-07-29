@@ -134,7 +134,7 @@ fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
     pullAll(key.toDotPath(), values)
 
 /**
- * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
+ * Update given key to current date using {@literal $currentDate} modifier.
  *
  * @author Pawel Matysek
  * @see Update.currentDate
@@ -143,7 +143,7 @@ fun <T> Update.currentDate(key: KProperty<T>) =
     currentDate(key.toDotPath())
 
 /**
- * Update given key to current date using {@literal $currentDate} modifier.
+ * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
  *
  * @author Pawel Matysek
  * @see Update.currentTimestamp
