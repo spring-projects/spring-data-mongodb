@@ -38,12 +38,14 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.DefaultVectorIndexOperations;
 import org.springframework.data.mongodb.core.index.VectorIndex;
+import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
 import org.springframework.data.mongodb.core.index.VectorIndexOperations;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
@@ -272,13 +274,15 @@ class DefaultVectorIndexOperationsTests {
 		template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 		template.save(movie);
 
-		Thread.sleep(500);
+		Thread.sleep(5000);
 
 		indexOps = new DefaultVectorIndexOperations(template, Movie.class);
 	}
 
 	@AfterEach
 	void cleanup() {
+
+		template.indexOps(Movie.class).vectorIndexOperations().dropIndex("vector_index");
 		template.dropCollection(Movie.class);
 	}
 
@@ -299,6 +303,41 @@ class DefaultVectorIndexOperationsTests {
 				.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
 				.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
 				.containsEntry("latestDefinition.fields.[0].similarity", similarityFunction); //
+	}
+
+	@Test
+	@Disabled("""
+		The command is valid according to documentation but even
+		db.movie.updateSearchIndex("vector_index", {"fields": [{"type": "vector", "path": "plot_embedding", "numDimensions": 1536, "similarity": "dotProduct"}]});
+		fails con the shell missing user.mappings.
+		""")
+	void updatesVectorIndex() throws InterruptedException {
+
+		VectorIndex idx = new VectorIndex("vector_index").dimensions(1536).path("plotEmbedding")
+			.similarity("cosine");
+
+		indexOps.ensureIndex(idx);
+		Thread.sleep(5000); // now that's quite some time to build the index
+
+		Document raw = readRawIndexInfo(idx.getName());
+		assertThat(raw).containsEntry("name", idx.getName()) //
+			.containsEntry("type", "vectorSearch") //
+			.containsEntry("latestDefinition.fields.[0].type", "vector") //
+			.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
+			.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
+			.containsEntry("latestDefinition.fields.[0].similarity", "cosine"); //
+
+		idx.similarity(SimilarityFunction.DOT_PRODUCT);
+		indexOps.updateIndex(idx);
+		Thread.sleep(5000);
+
+		raw = readRawIndexInfo(idx.getName());
+		assertThat(raw).containsEntry("name", idx.getName()) //
+			.containsEntry("type", "vectorSearch") //
+			.containsEntry("latestDefinition.fields.[0].type", "vector") //
+			.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
+			.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
+			.containsEntry("latestDefinition.fields.[0].similarity", "dotProduct"); //
 	}
 
 	@Test

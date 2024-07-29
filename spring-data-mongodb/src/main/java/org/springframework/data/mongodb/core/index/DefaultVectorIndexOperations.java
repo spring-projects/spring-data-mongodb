@@ -74,8 +74,11 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 		Document indexDocument = createIndexDocument(index, entity);
 
 		Document cmdResult = mongoOperations.execute(db -> {
-			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName())
-					.append("definition", indexDocument.get("definition"));
+
+			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName());
+			command.putAll(indexDocument);
+			command.remove("type");
+
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Updating VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
 			}
