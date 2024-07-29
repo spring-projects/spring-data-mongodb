@@ -41,7 +41,7 @@ public interface IndexOperationsAdapter extends IndexOperations {
 		return new IndexOperationsAdapter() {
 
 			@Override
-			public VectorIndexOperations vectorIndexOperations() {
+			public VectorIndexOperations vectorIndex() {
 				throw new IllegalStateException("currently not supported");
 			}
 

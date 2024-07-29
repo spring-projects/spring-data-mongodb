@@ -211,7 +211,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public VectorIndexOperations vectorIndexOperations() {
+	public VectorIndexOperations vectorIndex() {
 		return new DefaultVectorIndexOperations(mongoOperations, collectionName, type);
 	}
 

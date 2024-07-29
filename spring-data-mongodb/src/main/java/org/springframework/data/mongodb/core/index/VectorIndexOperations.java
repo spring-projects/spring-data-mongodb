@@ -15,22 +15,25 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.util.List;
+
 /**
  * @author Christoph Strobl
  */
-public interface VectorIndexOperations extends IndexOperations {
+public interface VectorIndexOperations {
 
+	String ensureIndex(IndexDefinition indexDefinition);
 
-    default void alterIndex(String name, IndexOptions options) {
-        throw new UnsupportedOperationException();
-    }
+	void updateIndex(VectorIndex index);
 
-    void updateIndex(VectorIndex index);
+	boolean exists(String indexName);
 
-    @Override
-    default VectorIndexOperations vectorIndexOperations() {
-        return this;
-    }
+	void dropIndex(String name);
 
-    boolean exists(String indexName);
+	/**
+	 * Returns the index information on the collection.
+	 *
+	 * @return index information on the collection
+	 */
+	List<IndexInfo> getIndexInfo();
 }

@@ -282,7 +282,7 @@ class DefaultVectorIndexOperationsTests {
 	@AfterEach
 	void cleanup() {
 
-		template.indexOps(Movie.class).vectorIndexOperations().dropIndex("vector_index");
+		template.indexOps(Movie.class).vectorIndex().dropIndex("vector_index");
 		template.dropCollection(Movie.class);
 	}
 
@@ -307,25 +307,24 @@ class DefaultVectorIndexOperationsTests {
 
 	@Test
 	@Disabled("""
-		The command is valid according to documentation but even
-		db.movie.updateSearchIndex("vector_index", {"fields": [{"type": "vector", "path": "plot_embedding", "numDimensions": 1536, "similarity": "dotProduct"}]});
-		fails con the shell missing user.mappings.
-		""")
+			The command is valid according to documentation but even
+			db.movie.updateSearchIndex("vector_index", {"fields": [{"type": "vector", "path": "plot_embedding", "numDimensions": 1536, "similarity": "dotProduct"}]});
+			fails con the shell missing user.mappings.
+			""")
 	void updatesVectorIndex() throws InterruptedException {
 
-		VectorIndex idx = new VectorIndex("vector_index").dimensions(1536).path("plotEmbedding")
-			.similarity("cosine");
+		VectorIndex idx = new VectorIndex("vector_index").dimensions(1536).path("plotEmbedding").similarity("cosine");
 
 		indexOps.ensureIndex(idx);
 		Thread.sleep(5000); // now that's quite some time to build the index
 
 		Document raw = readRawIndexInfo(idx.getName());
 		assertThat(raw).containsEntry("name", idx.getName()) //
-			.containsEntry("type", "vectorSearch") //
-			.containsEntry("latestDefinition.fields.[0].type", "vector") //
-			.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
-			.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
-			.containsEntry("latestDefinition.fields.[0].similarity", "cosine"); //
+				.containsEntry("type", "vectorSearch") //
+				.containsEntry("latestDefinition.fields.[0].type", "vector") //
+				.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
+				.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
+				.containsEntry("latestDefinition.fields.[0].similarity", "cosine"); //
 
 		idx.similarity(SimilarityFunction.DOT_PRODUCT);
 		indexOps.updateIndex(idx);
@@ -333,11 +332,11 @@ class DefaultVectorIndexOperationsTests {
 
 		raw = readRawIndexInfo(idx.getName());
 		assertThat(raw).containsEntry("name", idx.getName()) //
-			.containsEntry("type", "vectorSearch") //
-			.containsEntry("latestDefinition.fields.[0].type", "vector") //
-			.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
-			.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
-			.containsEntry("latestDefinition.fields.[0].similarity", "dotProduct"); //
+				.containsEntry("type", "vectorSearch") //
+				.containsEntry("latestDefinition.fields.[0].type", "vector") //
+				.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
+				.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
+				.containsEntry("latestDefinition.fields.[0].similarity", "dotProduct"); //
 	}
 
 	@Test

@@ -62,11 +62,6 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@Override
-	public void alterIndex(String name, IndexOptions options) {
-		super.alterIndex(name, options);
-	}
-
-	@Override
 	public void updateIndex(VectorIndex index) {
 
 		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);

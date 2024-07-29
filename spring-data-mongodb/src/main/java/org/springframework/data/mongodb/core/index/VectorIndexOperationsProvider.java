@@ -20,6 +20,6 @@ package org.springframework.data.mongodb.core.index;
  */
 public interface VectorIndexOperationsProvider {
 
-    VectorIndexOperations vectorIndexOperations();
+    VectorIndexOperations vectorIndex();
 
 }

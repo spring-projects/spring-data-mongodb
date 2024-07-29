@@ -38,121 +38,190 @@ import java.util.List;
 import org.bson.Document;
 
 /**
+ * {@link IndexDefinition} for creating MongoDB
+ * <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/">Vector Index</a> required to
+ * run {@code $vectorSearch} queries.
+ *
  * @author Christoph Strobl
- * @since 2024/07
  */
 public class VectorIndex implements IndexDefinition {
 
-	String name;
-	String path;
-	int dimensions;
-	String similarity;
-	List<Filter> filters;
+    private final String name;
+    private String path;
+    private int dimensions;
+    private String similarity;
+    private List<Filter> filters;
 
-	public VectorIndex(String name) {
-		this.name = name;
-	}
+    /**
+     * Create a new {@link VectorIndex} instance.
+     *
+     * @param name The name of the index.
+     */
+    public VectorIndex(String name) {
+        this.name = name;
+    }
 
-	public static VectorIndex cosine(String name) {
-		VectorIndex idx = new VectorIndex(name);
-		return idx.similarity(SimilarityFunction.COSINE);
-	}
+    /**
+     * Create a new {@link VectorIndex} instance using similarity based on the angle between vectors.
+     *
+     * @param name The name of the index.
+     * @return new instance of {@link VectorIndex}.
+     */
+    public static VectorIndex cosine(String name) {
 
-	public static VectorIndex euclidean(String name) {
-		VectorIndex idx = new VectorIndex(name);
-		return idx.similarity(SimilarityFunction.EUCLIDEAN);
-	}
+        VectorIndex idx = new VectorIndex(name);
+        return idx.similarity(SimilarityFunction.COSINE);
+    }
 
-	public static VectorIndex dotProduct(String name) {
-		VectorIndex idx = new VectorIndex(name);
-		return idx.similarity(SimilarityFunction.DOT_PRODUCT);
-	}
+    /**
+     * Create a new {@link VectorIndex} instance using similarity based the distance between vector ends.
+     *
+     * @param name The name of the index.
+     * @return new instance of {@link VectorIndex}.
+     */
+    public static VectorIndex euclidean(String name) {
 
-	public VectorIndex path(String path) {
-		this.path = path;
-		return this;
-	}
+        VectorIndex idx = new VectorIndex(name);
+        return idx.similarity(SimilarityFunction.EUCLIDEAN);
+    }
 
-	public VectorIndex dimensions(int dimensions) {
-		this.dimensions = dimensions;
-		return this;
-	}
+    /**
+     * Create a new {@link VectorIndex} instance using similarity based on based on both angle and magnitude of the
+     * vectors.
+     *
+     * @param name The name of the index.
+     * @return new instance of {@link VectorIndex}.
+     */
+    public static VectorIndex dotProduct(String name) {
 
-	public VectorIndex similarity(String similarity) {
-		this.similarity = similarity;
-		return this;
-	}
+        VectorIndex idx = new VectorIndex(name);
+        return idx.similarity(SimilarityFunction.DOT_PRODUCT);
+    }
 
-	public VectorIndex similarity(SimilarityFunction similarity) {
-		return similarity(similarity.getFunctionName());
-	}
+    /**
+     * The path to the field/property to index.
+     *
+     * @param path The path using dot notation.
+     * @return this.
+     */
+    public VectorIndex path(String path) {
 
-	public VectorIndex filter(Filter filter) {
+        this.path = path;
+        return this;
+    }
 
-		if(this.filters == null) {
-			this.filters = new ArrayList<>(3);
-		}
+    /**
+     * Number of vector dimensions enforced at index- & query-time.
+     *
+     * @param dimensions value between {@code 0} and {@code 4096}.
+     * @return this.
+     */
+    public VectorIndex dimensions(int dimensions) {
+        this.dimensions = dimensions;
+        return this;
+    }
 
-		this.filters.add(filter);
-		return this;
-	}
+    /**
+     * Similarity function used.
+     *
+     * @param similarity should be one of {@literal euclidean | cosine | dotProduct}.
+     * @return this.
+     * @see SimilarityFunction
+     * @see #similarity(SimilarityFunction)
+     */
+    public VectorIndex similarity(String similarity) {
+        this.similarity = similarity;
+        return this;
+    }
 
-	public VectorIndex filter(String path) {
-		return filter(new Filter(path));
-	}
+    /**
+     * Similarity function used.
+     *
+     * @param similarity must not be {@literal null}.
+     * @return this.
+     */
+    public VectorIndex similarity(SimilarityFunction similarity) {
+        return similarity(similarity.getFunctionName());
+    }
 
+    /**
+     * Add a {@link Filter} that can be used to narrow search scope.
+     *
+     * @param filter must not be {@literal null}.
+     * @return this.
+     */
+    public VectorIndex filter(Filter filter) {
 
-	@Override
-	public Document getIndexKeys() {
+        if (this.filters == null) {
+            this.filters = new ArrayList<>(3);
+        }
 
-		// List<Document> fields = new ArrayList<>(filters.size()+1);
-		// fields.
+        this.filters.add(filter);
+        return this;
+    }
 
-		// needs to be wrapped in new Document("definition", before sending to server
-		// return new Document("fields", fields);
-		return new Document();
-	}
+    /**
+     * Add a field that can be used to pre filter data.
+     *
+     * @param path Dot notation to field/property used for filtering.
+     * @return this.
+     * @see #filter(Filter)
+     */
+    public VectorIndex filter(String path) {
+        return filter(new Filter(path));
+    }
 
-	@Override
-	public Document getIndexOptions() {
-		return new Document("name", name).append("type", "vectorSearch");
-	}
+    @Override
+    public Document getIndexKeys() {
 
-	public String getName() {
-		return name;
-	}
+        // List<Document> fields = new ArrayList<>(filters.size()+1);
+        // fields.
 
-	public String getPath() {
-		return path;
-	}
+        // needs to be wrapped in new Document("definition", before sending to server
+        // return new Document("fields", fields);
+        return new Document();
+    }
 
-	public int getDimensions() {
-		return dimensions;
-	}
+    @Override
+    public Document getIndexOptions() {
+        return new Document("name", name).append("type", "vectorSearch");
+    }
 
-	public String getSimilarity() {
-		return similarity;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public List<Filter> getFilters() {
-		return filters == null ? Collections.emptyList() : filters;
-	}
+    public String getPath() {
+        return path;
+    }
 
-	public record Filter(String path) {
+    public int getDimensions() {
+        return dimensions;
+    }
 
-	}
+    public String getSimilarity() {
+        return similarity;
+    }
 
-	public enum SimilarityFunction {
-		DOT_PRODUCT("dotProduct"), COSINE("cosine"), EUCLIDEAN("euclidean");
+    public List<Filter> getFilters() {
+        return filters == null ? Collections.emptyList() : filters;
+    }
 
-		String functionName;
+    public record Filter(String path) {
 
-		SimilarityFunction(String functionName) {
-			this.functionName = functionName;
-		}
+    }
 
-		public String getFunctionName() {
-			return functionName;
-		}
-	}
+    public enum SimilarityFunction {
+        DOT_PRODUCT("dotProduct"), COSINE("cosine"), EUCLIDEAN("euclidean");
+
+        String functionName;
+
+        SimilarityFunction(String functionName) {
+            this.functionName = functionName;
+        }
+
+        public String getFunctionName() {
+            return functionName;
+        }
+    }
 }

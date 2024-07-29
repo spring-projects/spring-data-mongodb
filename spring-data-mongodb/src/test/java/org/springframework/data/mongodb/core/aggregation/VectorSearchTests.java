@@ -15,20 +15,19 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Collection;
-
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.mongodb.core.index.VectorIndex;
+import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
-import org.springframework.data.mongodb.util.BsonUtils;
 
 /**
  * @author Christoph Strobl
  */
+@EnableIfVectorSearchAvailable
 @ExtendWith(MongoTemplateExtension.class)
 public class VectorSearchTests {
 
@@ -54,12 +53,12 @@ public class VectorSearchTests {
 //			return false;
 //		});
 
-		boolean hasIndex = template.indexOps(COLLECTION_NAME).vectorIndexOperations().exists("vector_index");
+		boolean hasIndex = template.indexOps(COLLECTION_NAME).vectorIndex().exists("vector_index");
 
 		if(hasIndex) {
 			System.out.println("found the index: vector_index");
-			System.out.println(template.indexOps(COLLECTION_NAME).vectorIndexOperations().getIndexInfo());
-			template.indexOps(COLLECTION_NAME).vectorIndexOperations().updateIndex(new VectorIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("euclidean"));
+			System.out.println(template.indexOps(COLLECTION_NAME).vectorIndex().getIndexInfo());
+			template.indexOps(COLLECTION_NAME).vectorIndex().updateIndex(new VectorIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("euclidean"));
 //			template.indexOps(COLLECTION_NAME).vectorIndexOperations().dropIndex("vector_name");
 		}
 		else {
