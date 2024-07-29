@@ -404,7 +404,7 @@ public class Update implements UpdateDefinition {
 
 	/**
 	 * Filter elements in an array that match the given criteria for update. {@code expression} is used directly with the
-	 * driver without further further type or field mapping.
+	 * driver without further type or field mapping.
 	 *
 	 * @param identifier the positional operator identifier filter criteria name.
 	 * @param expression the positional operator filter expression.
