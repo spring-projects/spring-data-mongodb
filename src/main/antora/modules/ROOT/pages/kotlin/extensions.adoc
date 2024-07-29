@@ -19,7 +19,7 @@ val characters : Flux<SWCharacter> = template.query().inTable("star-wars").all()
 As in Java, `characters` in Kotlin is strongly typed, but Kotlin's clever type inference allows for shorter syntax.
 
 [[mongo.query.kotlin-support]]
-== Type-safe Queries for Kotlin
+== Type-safe Queries and Updates for Kotlin
 
 Kotlin embraces domain-specific language creation through its language syntax and its extension system.
 Spring Data MongoDB ships with a Kotlin Extension for `Criteria` using https://kotlinlang.org/docs/reference/reflection.html#property-references[Kotlin property references] to build type-safe queries.
@@ -62,4 +62,20 @@ mongoOperations.find<Book>(
 <1> `isEqualTo()` is an infix extension function with receiver type `KProperty<T>` that returns `Criteria`.
 <2> For bitwise operators, pass a lambda argument where you call one of the methods of `Criteria.BitwiseCriteriaOperators`.
 <3> To construct nested properties, use the `/` character (overloaded operator `div`).
+====
+
+Similar syntax can be used while updating a document:
+====
+[source,kotlin]
+----
+mongoOperations.updateMulti<Book>(
+  Query(Book::title isEqualTo "Moby-Dick"),
+  update(Book:title, "The Whale")                        <1>
+    .inc(Book::price, 100)                               <2>
+    .addToSet(Book::authors, "Herman Melville")          <3>
+)
+----
+<1> `update()` is a factory function with receiver type `KProperty<T>` that returns `Update`.
+<2> Most methods from `Update` have a matching Kotlin extension.
+<3> Functions with `KProperty<T>` can be used as well on collections types
 ====
