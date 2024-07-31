@@ -57,7 +57,7 @@ XML::
 ----
 ======
 
-There are several overloaded constructors of `MongoTemplate` and `ReactiveMongoTemplate`:
+There are several overloaded constructors of javadoc:org.springframework.data.mongodb.core.MongoTemplate[] and javadoc:org.springframework.data.mongodb.core.ReactiveMongoTemplate[]:
 
 * `MongoTemplate(MongoClient mongo, String databaseName)`: Takes the `MongoClient` object and the default database name to operate against.
 * `MongoTemplate(MongoDatabaseFactory mongoDbFactory)`: Takes a MongoDbFactory object that encapsulated the `MongoClient` object, database name, and username and password.
@@ -164,4 +164,4 @@ ReactiveMongoOperations mongoTemplate(MongoClient mongoClient) {
 == Document count configuration
 
 By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a xref:mongodb/client-session-transactions.adoc[session].
-Please refer to to the xref:mongodb/template-document-count.adoc#mongo.query.count[Counting Documents] section for more information.
+Please refer to the xref:mongodb/template-document-count.adoc#mongo.query.count[Counting Documents] section for more information.

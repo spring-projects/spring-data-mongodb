@@ -16,8 +16,8 @@ In doubt, use `Document`.
 == Change Streams with `MessageListener`
 
 Listening to a https://docs.mongodb.com/manual/tutorial/change-streams-example/[Change Stream by using a Sync Driver] creates a long running, blocking task that needs to be delegated to a separate component.
-In this case, we need to first create a `MessageListenerContainer`, which will be the main entry point for running the specific `SubscriptionRequest` tasks.
-Spring Data MongoDB already ships with a default implementation that operates on `MongoTemplate` and is capable of creating and running `Task` instances for a `ChangeStreamRequest`.
+In this case, we need to first create a javadoc:org.springframework.data.mongodb.core.messaging.MessageListenerContainer[] which will be the main entry point for running the specific `SubscriptionRequest` tasks.
+Spring Data MongoDB already ships with a default implementation that operates on `MongoTemplate` and is capable of creating and running `Task` instances for a javadoc:org.springframework.data.mongodb.core.messaging.ChangeStreamRequest[].
 
 The following example shows how to use Change Streams with `MessageListener` instances:
 
@@ -73,7 +73,7 @@ Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(User.class) <
 == Resuming Change Streams
 
 Change Streams can be resumed and resume emitting events where you left. To resume the stream, you need to supply either a resume
-token or the last known server time (in UTC). Use `ChangeStreamOptions` to set the value accordingly.
+token or the last known server time (in UTC). Use javadoc:org.springframework.data.mongodb.core.ChangeStreamOptions[] to set the value accordingly.
 
 The following example shows how to set the resume offset using server time:
 

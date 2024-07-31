@@ -8,7 +8,7 @@ For further information, see the full https://docs.mongodb.org/manual/aggregatio
 [[mongo.aggregation.basic-concepts]]
 == Basic Concepts
 
-The Aggregation Framework support in Spring Data MongoDB is based on the following key abstractions: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
+The Aggregation Framework support in Spring Data MongoDB is based on the following key abstractions: javadoc:org.springframework.data.mongodb.core.aggregation.Aggregation[] and javadoc:org.springframework.data.mongodb.core.aggregation.AggregationResults[].
 
 * `Aggregation`
 +
