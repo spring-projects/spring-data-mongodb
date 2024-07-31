@@ -1,7 +1,7 @@
 [[mongo-template]]
 = Template API
 
-The `MongoTemplate` and its reactive counterpart class, located in the `org.springframework.data.mongodb.core` package, is the central class of Spring's MongoDB support and provides a rich feature set for interacting with the database.
+The javadoc:org.springframework.data.mongodb.core.MongoTemplate[] and its javadoc:org.springframework.data.mongodb.core.ReactiveMongoTemplate[reactive] counterpart class, located in the `org.springframework.data.mongodb.core` package, is the central class of Spring's MongoDB support and provides a rich feature set for interacting with the database.
 The template offers convenience operations to create, update, delete, and query MongoDB documents and provides a mapping between your domain objects and MongoDB documents.
 
 NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across multiple instances.
@@ -9,14 +9,14 @@ NOTE: Once configured, `MongoTemplate` is thread-safe and can be reused across m
 [[mongo-template.convenience-methods]]
 == Convenience Methods
 
-The `MongoTemplate` class implements the interface `MongoOperations`.
+The javadoc:org.springframework.data.mongodb.core.MongoTemplate[] class implements the interface javadoc:org.springframework.data.mongodb.core.MongoOperations[].
 In as much as possible, the methods on `MongoOperations` are named after methods available on the MongoDB driver `Collection` object, to make the API familiar to existing MongoDB developers who are used to the driver API.
 For example, you can find methods such as `find`, `findAndModify`, `findAndReplace`, `findOne`, `insert`, `remove`, `save`, `update`, and `updateMulti`.
 The design goal was to make it as easy as possible to transition between the use of the base MongoDB driver and `MongoOperations`.
 A major difference between the two APIs is that `MongoOperations` can be passed domain objects instead of `Document`.
 Also, `MongoOperations` has fluent APIs for `Query`, `Criteria`, and `Update` operations instead of populating a `Document` to specify the parameters for those operations.
 
-For more information please refer to the the xref:mongodb/template-crud-operations.adoc[CRUD] and xref:mongodb/template-query-operations.adoc[Query] sections of the documentation.
+For more information please refer to the xref:mongodb/template-crud-operations.adoc[CRUD] and xref:mongodb/template-query-operations.adoc[Query] sections of the documentation.
 
 NOTE: The preferred way to reference the operations on `MongoTemplate` instance is through its interface, `MongoOperations`.
 
@@ -37,7 +37,7 @@ The `execute` callbacks gives you a reference to either a `MongoCollection` or a
 
 * `<T> T` *executeInSession* `(DbCallback<T> action)`: Runs the given `DbCallback` within the same connection to the database so as to ensure consistency in a write-heavy environment where you may read the data that you wrote.
 
-The following example uses the `CollectionCallback` to return information about an index:
+The following example uses the javadoc:org.springframework.data.mongodb.core.CollectionCallback[] to return information about an index:
 
 [tabs]
 ======
@@ -108,7 +108,7 @@ Flux<Jedi> all = template.query(SWCharacter.class)
 ======
 
 NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required
-by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
+by the projection target type. This applies as long as the javadoc:org.springframework.data.mongodb.core.query.Query[] itself does not contain any field restriction and the
 target type is a closed interface or DTO projection.
 
 WARNING: Projections must not be applied to xref:mongodb/mapping/document-references.adoc[DBRefs].
@@ -158,7 +158,7 @@ Look into the implementation for more details on the mapping.
 [[mongo-template.type-mapping]]
 == Domain Type Mapping
 
-The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the `MongoConverter` interface.
-Spring provides `MappingMongoConverter`, but you can also write your own converter.
+The mapping between MongoDB documents and domain classes is done by delegating to an implementation of the javadoc:org.springframework.data.mongodb.core.convert.MongoConverter[] interface.
+Spring provides javadoc:org.springframework.data.mongodb.core.convert.MappingMongoConverter[], but you can also write your own converter.
 While the `MappingMongoConverter` can use additional metadata to specify the mapping of objects to documents, it can also convert objects that contain no additional metadata by using some conventions for the mapping of IDs and collection names.
 These conventions, as well as the use of mapping annotations, are explained in the xref:mongodb/mapping/mapping.adoc[Mapping] chapter.

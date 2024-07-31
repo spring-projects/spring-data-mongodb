@@ -472,7 +472,7 @@ The `Metrics` enum used here actually implements an interface so that other metr
 A `Metric` is backed by a multiplier to transform the distance value of the given metric into native distances.
 The sample shown here would consider the 10 to be miles. Using one of the built-in metrics (miles and kilometers) automatically triggers the spherical flag to be set on the query.
 If you want to avoid that, pass plain `double` values into `maxDistance(…)`.
-For more information, see the https://docs.spring.io/spring-data/mongodb/docs/{version}/api/index.html[JavaDoc] of `NearQuery` and `Distance`.
+For more information, see the Javadoc of javadoc:org.springframework.data.mongodb.core.query.NearQuery[] and `Distance`.
 
 The geo-near operations return a `GeoResults` wrapper object that encapsulates `GeoResult` instances.
 Wrapping `GeoResults` allows accessing the average distance of all results.
@@ -486,7 +486,7 @@ MongoDB supports https://geojson.org/[GeoJSON] and simple (legacy) coordinate pa
 [[mongo.geo-json.domain.classes]]
 == GeoJSON Types in Domain Classes
 
-Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
+Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a javadoc:org.springframework.data.mongodb.core.geo.GeoJsonPoint[]:
 
 ====
 [source,java]

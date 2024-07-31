@@ -2,7 +2,7 @@
 = GridFS Support
 
 MongoDB supports storing binary files inside its filesystem, GridFS.
-Spring Data MongoDB provides a `GridFsOperations` and `ReactiveGridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate` and `ReactiveGridFsTemplate`, to let you interact with the filesystem.
+Spring Data MongoDB provides a javadoc:org.springframework.data.mongodb.gridfs.GridFsOperations[] and javadoc:org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations[] interface as well as the corresponding implementation, `GridFsTemplate` and `ReactiveGridFsTemplate`, to let you interact with the filesystem.
 You can set up a template instance by handing it a `MongoDatabaseFactory`/`ReactiveMongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
 
 [tabs]
