@@ -5,7 +5,7 @@ The MongoDB mapping framework includes several `org.springframework.context.Appl
 Being based on Spring's `ApplicationContext` event infrastructure enables other products, such as Spring Integration, to easily receive these events, as they are a well known eventing mechanism in Spring-based applications.
 
 Entity lifecycle events can be costly and you may notice a change in the performance profile when loading large result sets.
-You can disable lifecycle events on the link:https://docs.spring.io/spring-data/mongodb/docs/{version}/api/org/springframework/data/mongodb/core/MongoTemplate.html#setEntityLifecycleEventsEnabled(boolean)[Template API].
+You can disable lifecycle events on the javadoc:org.springframework.data.mongodb.core.MongoTemplate#setEntityLifecycleEventsEnabled(boolean)[Template API].
 
 To intercept an object before it goes through the conversion process (which turns your domain object into a `org.bson.Document`), you can register a subclass of `AbstractMongoEventListener` that overrides the `onBeforeConvert` method.
 When the event is dispatched, your listener is called and passed the domain object before it goes into the converter.
@@ -23,7 +23,7 @@ public class BeforeConvertListener extends AbstractMongoEventListener<Person> {
 ----
 ====
 
-To intercept an object before it goes into the database, you can register a subclass of `org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener` that overrides the `onBeforeSave` method. When the event is dispatched, your listener is called and passed the domain object and the converted `com.mongodb.Document`. The following example shows how to do so:
+To intercept an object before it goes into the database, you can register a subclass of javadoc:org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener[] that overrides the `onBeforeSave` method. When the event is dispatched, your listener is called and passed the domain object and the converted `com.mongodb.Document`. The following example shows how to do so:
 
 ====
 [source,java]

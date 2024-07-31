@@ -63,3 +63,6 @@
 ** xref:kotlin/extensions.adoc[]
 ** xref:kotlin/coroutines.adoc[]
 
+* xref:attachment$api/java/index.html[Javadoc,role=link-external,window=_blank]
+* https://github.com/spring-projects/spring-data-commons/wiki[Wiki,role=link-external,window=_blank]
+
