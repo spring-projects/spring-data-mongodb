@@ -22,11 +22,12 @@ import java.util.List;
  */
 public interface VectorIndexOperations {
 
-	String ensureIndex(IndexDefinition indexDefinition);
+
+	String ensureIndex(VectorIndex indexDefinition);
 
 	void updateIndex(VectorIndex index);
 
-	boolean exists(String indexName);
+	boolean exists(String name);
 
 	void dropIndex(String name);
 

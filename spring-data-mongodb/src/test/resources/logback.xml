@@ -14,6 +14,7 @@
 	 -->
 
 	<logger name="org.springframework.data.mongodb.core" level="error"/>
+	<logger name="org.springframework.data.mongodb.core.index.VectorIndexOperations" level="debug"/>
 	<logger name="org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener" level="debug" additivity="false">
 		<appender-ref ref="no-op" />
 	</logger>

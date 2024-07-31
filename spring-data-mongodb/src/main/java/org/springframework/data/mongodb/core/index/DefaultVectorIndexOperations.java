@@ -51,11 +51,11 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@Override
-	public boolean exists(String indexName) {
+	public boolean exists(String name) {
 
 		// https://www.mongodb.com/docs/manual/reference/operator/aggregation/listSearchIndexes/
 		AggregationResults<Document> aggregate = mongoOperations.aggregate(
-				Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document("name", indexName))),
+				Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document("name", name))),
 				collectionName, Document.class);
 
 		return aggregate.iterator().hasNext();
