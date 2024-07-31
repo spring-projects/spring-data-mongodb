@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -116,6 +117,13 @@ public @interface EnableMongoRepositories {
 	 * @since 1.8
 	 */
 	Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
+
+	/**
+	 * Configure a specific {@link BeanNameGenerator} to be used when creating the repository beans.
+	 * @return the {@link BeanNameGenerator} to be used or the base {@link BeanNameGenerator} interface to indicate context default.
+	 * @since 4.4
+	 */
+	Class<? extends BeanNameGenerator> nameGenerator() default BeanNameGenerator.class;
 
 	/**
 	 * Configures the name of the {@link MongoTemplate} bean to be used with the repositories detected.
