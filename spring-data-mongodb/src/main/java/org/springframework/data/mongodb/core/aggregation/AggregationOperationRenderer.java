@@ -62,7 +62,7 @@ class AggregationOperationRenderer {
 				if (operation instanceof InheritsFieldsAggregationOperation || exposedFieldsOperation.inheritsFields()) {
 					contextToUse = contextToUse.inheritAndExpose(fields);
 				} else {
-					contextToUse = fields.exposesNoFields() ? DEFAULT_CONTEXT
+					contextToUse = fields.exposesNoFields() ? ConverterAwareNoOpContext.instance(rootContext)
 							: contextToUse.expose(fields);
 				}
 			}
@@ -70,6 +70,39 @@ class AggregationOperationRenderer {
 		}
 
 		return operationDocuments;
+	}
+
+	private static class ConverterAwareNoOpContext implements AggregationOperationContext {
+
+		AggregationOperationContext ctx;
+
+		static ConverterAwareNoOpContext instance(AggregationOperationContext ctx) {
+
+			if(ctx instanceof ConverterAwareNoOpContext noOpContext) {
+				return noOpContext;
+			}
+
+			return new ConverterAwareNoOpContext(ctx);
+		}
+
+		ConverterAwareNoOpContext(AggregationOperationContext ctx) {
+			this.ctx = ctx;
+		}
+
+		@Override
+		public Document getMappedObject(Document document, @Nullable Class<?> type) {
+			return ctx.getMappedObject(document, null);
+		}
+
+		@Override
+		public FieldReference getReference(Field field) {
+			return new DirectFieldReference(new ExposedField(field, true));
+		}
+
+		@Override
+		public FieldReference getReference(String name) {
+			return new DirectFieldReference(new ExposedField(new AggregationField(name), true));
+		}
 	}
 
 	/**
