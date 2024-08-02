@@ -37,12 +37,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -327,6 +330,20 @@ class AbstractMongoQueryUnitTests {
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
 		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("age", 1));
+	}
+
+	@Test // GH-4758
+	void scrollUsesAnnotatedSortWhenPresent() {
+
+		createQueryForMethod("scrollByAge", Integer.class, ScrollPosition.class) //
+				.execute(new Object[] { 1000, ScrollPosition.keyset()});
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+
+		Query query = captor.getValue();
+		assertThat(query.getSortObject()).isEqualTo(new Document("age", 1));
+		assertThat(query.isSorted()).isTrue();
 	}
 
 	@Test // DATAMONGO-1979
@@ -638,6 +655,9 @@ class AbstractMongoQueryUnitTests {
 		List<Person> findByAge(Integer age);
 
 		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
+		Window<Person> scrollByAge(Integer age, ScrollPosition position);
+
+		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
 		List<Person> findByAge(Integer age, Sort page);
 
 		@org.springframework.data.mongodb.repository.Query(collation = "en_US")
@@ -670,6 +690,7 @@ class AbstractMongoQueryUnitTests {
 
 		@ReadPreference(value = "secondaryPreferred")
 		List<Person> findWithReadPreferenceByFirstname(String firstname);
+
 	}
 
 	// DATAMONGO-1872
