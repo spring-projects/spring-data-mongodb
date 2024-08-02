@@ -117,13 +117,13 @@ public class QueryUtils {
 	 */
 	static int indexOfAssignableParameter(Class<?> type, List<Class<?>> parameters) {
 
-		if(parameters.isEmpty()) {
+		if (parameters.isEmpty()) {
 			return -1;
 		}
 
 		int i = 0;
-		for(Class<?> parameterType : parameters) {
-			if(ClassUtils.isAssignable(type, parameterType)) {
+		for (Class<?> parameterType : parameters) {
+			if (ClassUtils.isAssignable(type, parameterType)) {
 				return i;
 			}
 			i++;
