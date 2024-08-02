@@ -23,6 +23,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
@@ -150,6 +151,12 @@ public class QueryUtils {
 		@Nullable
 		@Override
 		public Object invoke(@NonNull MethodInvocation invocation) throws Throwable {
+
+			if (invocation.getMethod().getName().equals("isSorted")) {
+
+				boolean result = (Boolean) invocation.proceed();
+				return result || !defaultSort.isEmpty();
+			}
 
 			if (!invocation.getMethod().getName().equals("getSortObject")) {
 				return invocation.proceed();
