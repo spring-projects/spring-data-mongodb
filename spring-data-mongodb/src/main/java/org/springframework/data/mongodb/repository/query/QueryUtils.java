@@ -23,6 +23,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
@@ -116,13 +117,13 @@ public class QueryUtils {
 	 */
 	static int indexOfAssignableParameter(Class<?> type, List<Class<?>> parameters) {
 
-		if(parameters.isEmpty()) {
+		if (parameters.isEmpty()) {
 			return -1;
 		}
 
 		int i = 0;
-		for(Class<?> parameterType : parameters) {
-			if(ClassUtils.isAssignable(type, parameterType)) {
+		for (Class<?> parameterType : parameters) {
+			if (ClassUtils.isAssignable(type, parameterType)) {
 				return i;
 			}
 			i++;
@@ -150,6 +151,12 @@ public class QueryUtils {
 		@Nullable
 		@Override
 		public Object invoke(@NonNull MethodInvocation invocation) throws Throwable {
+
+			if (invocation.getMethod().getName().equals("isSorted")) {
+
+				boolean result = (Boolean) invocation.proceed();
+				return result || !defaultSort.isEmpty();
+			}
 
 			if (!invocation.getMethod().getName().equals("getSortObject")) {
 				return invocation.proceed();
