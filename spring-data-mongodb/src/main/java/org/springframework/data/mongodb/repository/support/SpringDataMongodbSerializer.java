@@ -92,7 +92,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(parent.getType());
 		MongoPersistentProperty property = entity.getPersistentProperty(metadata.getName());
 
-		return property == null ? super.getKeyForPath(expr, metadata) : property.getFieldName();
+		return property == null ? super.getKeyForPath(expr, metadata) : property.getName();
 	}
 
 	@Override

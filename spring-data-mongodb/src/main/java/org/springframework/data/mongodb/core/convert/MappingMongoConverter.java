@@ -176,12 +176,11 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
-		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(mappingContext,
-				(prop, bson, evaluator, path) -> {
+		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(mappingContext, (prop, bson, evaluator, path) -> {
 
-					ConversionContext context = getConversionContext(path);
-					return MappingMongoConverter.this.getValueInternal(context, prop, bson, evaluator);
-				}, expressionEvaluatorFactory::create);
+			ConversionContext context = getConversionContext(path);
+			return MappingMongoConverter.this.getValueInternal(context, prop, bson, evaluator);
+		}, expressionEvaluatorFactory::create);
 
 		this.referenceLookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
 		this.documentPointerFactory = new DocumentPointerFactory(conversionService, mappingContext);
@@ -1389,23 +1388,27 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		MongoPersistentEntity<?> entity = targetEntity;
-
 		MongoPersistentProperty idProperty = entity.getIdProperty();
+		Object id = null;
 
-		if (idProperty != null) {
+		if (entity.getType().isInstance(target)) {
 
-			Object id = target.getClass().equals(idProperty.getType()) ? target
-					: entity.getPropertyAccessor(target).getProperty(idProperty);
-
-			if (null == id) {
-				throw new MappingException("Cannot create a reference to an object with a NULL id");
+			if (idProperty == null) {
+				throw new MappingException("No id property found on class " + entity.getType());
 			}
 
-			return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity,
-					idMapper.convertId(id, idProperty != null ? idProperty.getFieldType() : ObjectId.class));
+			id = target.getClass().equals(idProperty.getType()) ? target
+					: entity.getPropertyAccessor(target).getProperty(idProperty);
+		} else {
+			id = target;
 		}
 
-		throw new MappingException("No id property found on class " + entity.getType());
+		if (null == id) {
+			throw new MappingException("Cannot create a reference to an object with a NULL id");
+		}
+
+		return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), entity,
+				idMapper.convertId(id, idProperty != null ? idProperty.getFieldType() : ObjectId.class));
 	}
 
 	@Nullable

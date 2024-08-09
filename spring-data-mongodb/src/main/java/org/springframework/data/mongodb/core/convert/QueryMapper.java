@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,6 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.PropertyValueProvider;
@@ -59,9 +57,9 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.MongoPath;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
@@ -172,6 +170,8 @@ public class QueryMapper {
 
 					Object theNestedObject = BsonUtils.get(query, key);
 					Document mappedValue = (Document) getMappedValue(field, theNestedObject);
+
+					// TODO: Seems a weird condition. Isn't it rather a comparison of nested values vs. document comparison?
 					if (!StringUtils.hasText(field.getMappedKey())) {
 						result.putAll(mappedValue);
 					} else {
@@ -356,7 +356,8 @@ public class QueryMapper {
 			return createMapEntry(key, getMappedObject(mongoExpression.toDocument(), field.getEntity()));
 		}
 
-		if (isNestedKeyword(rawValue) && !field.isIdField()) {
+		// TODO: Seems a weird condition
+		if (isNestedKeyword(rawValue) && (field.isAssociation() || !field.isIdField())) {
 			Keyword keyword = new Keyword((Document) rawValue);
 			value = getMappedKeyword(field, keyword);
 		} else {
@@ -1139,6 +1140,7 @@ public class QueryMapper {
 		private final MongoPersistentProperty property;
 		private final @Nullable PersistentPropertyPath<MongoPersistentProperty> path;
 		private final @Nullable Association<MongoPersistentProperty> association;
+		private final MongoPath mongoPath;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -1173,7 +1175,8 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
-			this.path = getPath(removePlaceholders(POSITIONAL_PARAMETER_PATTERN, name), property);
+			this.mongoPath = MongoPath.parse(name);
+			this.path = getPath(mongoPath, property);
 			this.property = path == null ? property : path.getLeafProperty();
 			this.association = findAssociation();
 		}
@@ -1256,11 +1259,16 @@ public class QueryMapper {
 		@Override
 		public String getMappedKey() {
 
-			if (getProperty() != null && getProperty().getMongoField().getName().isKey()) {
-				return getProperty().getFieldName();
+			// TODO: Switch to MongoPath?!
+			if (isAssociation()) {
+				return path == null ? name : path.toDotPath(getAssociationConverter());
 			}
 
-			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
+			if (entity != null) {
+				return mongoPath.applyFieldNames(mappingContext, entity).toString();
+			}
+
+			return name;
 		}
 
 		@Nullable
@@ -1269,13 +1277,12 @@ public class QueryMapper {
 		}
 
 		/**
-		 * Returns the {@link PersistentPropertyPath} for the given {@code pathExpression}.
+		 * Returns the {@link PersistentPropertyPath} for the given {@code MongoPath}.
 		 *
-		 * @param pathExpression
 		 * @return
 		 */
 		@Nullable
-		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
+		private PersistentPropertyPath<MongoPersistentProperty> getPath(MongoPath mongoPath,
 				@Nullable MongoPersistentProperty sourceProperty) {
 
 			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
@@ -1283,9 +1290,8 @@ public class QueryMapper {
 						PropertyPath.from(Pattern.quote(sourceProperty.getName()), entity.getTypeInformation()));
 			}
 
-			String rawPath = resolvePath(pathExpression);
+			PropertyPath path = mongoPath.toPropertyPath(mappingContext, entity);
 
-			PropertyPath path = forName(rawPath);
 			if (path == null || isPathToJavaLangClassProperty(path)) {
 				return null;
 			}
@@ -1298,9 +1304,8 @@ public class QueryMapper {
 
 					String types = StringUtils.collectionToDelimitedString(
 							path.stream().map(it -> it.getType().getSimpleName()).collect(Collectors.toList()), " -> ");
-					QueryMapper.LOGGER.info(String.format(
-							"Could not map '%s'; Maybe a fragment in '%s' is considered a simple type; Mapper continues with %s",
-							path, types, pathExpression));
+					QueryMapper.LOGGER.info("Could not map '" + path + "'; Maybe a fragment in '" + types
+							+ "' is considered a simple type; Mapper continues with " + mongoPath);
 				}
 				return null;
 			}
@@ -1318,7 +1323,7 @@ public class QueryMapper {
 				}
 
 				if (associationDetected && !property.isIdProperty()) {
-					throw new MappingException(String.format(INVALID_ASSOCIATION_REFERENCE, pathExpression));
+					throw new MappingException(String.format(INVALID_ASSOCIATION_REFERENCE, mongoPath));
 				}
 			}
 
@@ -1335,87 +1340,10 @@ public class QueryMapper {
 			}
 		}
 
-		/**
-		 * Querydsl happens to map id fields directly to {@literal _id} which breaks {@link PropertyPath} resolution. So if
-		 * the first attempt fails we try to replace {@literal _id} with just {@literal id} and see if we can resolve if
-		 * then.
-		 *
-		 * @param path
-		 * @return the path or {@literal null}
-		 */
-		@Nullable
-		private PropertyPath forName(String path) {
-
-			try {
-
-				if (entity.getPersistentProperty(path) != null) {
-					return PropertyPath.from(Pattern.quote(path), entity.getTypeInformation());
-				}
-
-				return PropertyPath.from(path, entity.getTypeInformation());
-			} catch (PropertyReferenceException | InvalidPersistentPropertyPath e) {
-
-				if (path.endsWith("_id")) {
-					return forName(path.substring(0, path.length() - 3) + "id");
-				}
-
-				// Ok give it another try quoting
-				try {
-					return PropertyPath.from(Pattern.quote(path), entity.getTypeInformation());
-				} catch (PropertyReferenceException | InvalidPersistentPropertyPath ex) {
-
-				}
-
-				return null;
-			}
-		}
-
 		private boolean isPathToJavaLangClassProperty(PropertyPath path) {
 
 			return (path.getType() == Class.class || path.getType().equals(Object.class))
 					&& path.getLeafProperty().getType() == Class.class;
-		}
-
-		private static String resolvePath(String source) {
-
-			String[] segments = source.split("\\.");
-			if (segments.length == 1) {
-				return source;
-			}
-
-			List<String> path = new ArrayList<>(segments.length);
-
-			/* always start from a property, so we can skip the first segment.
-			   from there remove any position placeholder */
-			for (int i = 1; i < segments.length; i++) {
-				String segment = segments[i];
-				if (segment.startsWith("[") && segment.endsWith("]")) {
-					continue;
-				}
-				if (NUMERIC_SEGMENT.matcher(segment).matches()) {
-					continue;
-				}
-				path.add(segment);
-			}
-
-			// when property is followed only by placeholders eg. 'values.0.3.90'
-			// or when there is no difference in the number of segments
-			if (path.isEmpty() || segments.length == path.size() + 1) {
-				return source;
-			}
-
-			path.add(0, segments[0]);
-			return StringUtils.collectionToDelimitedString(path, ".");
-		}
-
-		/**
-		 * Return the {@link Converter} to be used to created the mapped key. Default implementation will use
-		 * {@link PropertyToFieldNameConverter}.
-		 *
-		 * @return
-		 */
-		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return new PositionParameterRetainingPropertyKeyConverter(name, mappingContext);
 		}
 
 		/**
@@ -1431,29 +1359,6 @@ public class QueryMapper {
 
 		protected MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 			return mappingContext;
-		}
-
-		private static String removePlaceholders(Pattern pattern, String raw) {
-			return pattern.matcher(raw).replaceAll("");
-		}
-
-		/**
-		 * @author Christoph Strobl
-		 * @since 1.8
-		 */
-		static class PositionParameterRetainingPropertyKeyConverter implements Converter<MongoPersistentProperty, String> {
-
-			private final KeyMapper keyMapper;
-
-			public PositionParameterRetainingPropertyKeyConverter(String rawKey,
-					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> ctx) {
-				this.keyMapper = new KeyMapper(rawKey, ctx);
-			}
-
-			@Override
-			public String convert(MongoPersistentProperty source) {
-				return keyMapper.mapPropertyName(source);
-			}
 		}
 
 		@Override
@@ -1473,83 +1378,6 @@ public class QueryMapper {
 			return NESTED_DOCUMENT;
 		}
 
-		/**
-		 * @author Christoph Strobl
-		 * @since 1.8
-		 */
-		static class KeyMapper {
-
-			private final Iterator<String> iterator;
-			private int currentIndex;
-			private final List<String> pathParts;
-
-			public KeyMapper(String key,
-					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-
-				this.pathParts = Arrays.asList(key.split("\\."));
-				this.iterator = pathParts.iterator();
-				this.currentIndex = 0;
-			}
-
-			String nextToken() {
-				return pathParts.get(currentIndex + 1);
-			}
-
-			boolean hasNexToken() {
-				return pathParts.size() > currentIndex + 1;
-			}
-
-			/**
-			 * Maps the property name while retaining potential positional operator {@literal $}.
-			 *
-			 * @param property
-			 * @return
-			 */
-			protected String mapPropertyName(MongoPersistentProperty property) {
-
-				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
-				if (!hasNexToken()) {
-					return mappedName.toString();
-				}
-
-				String nextToken = nextToken();
-				if (isPositionalParameter(nextToken)) {
-
-					mappedName.append(".").append(nextToken);
-					currentIndex += 2;
-					return mappedName.toString();
-				}
-
-				if (property.isMap()) {
-
-					mappedName.append(".").append(nextToken);
-					currentIndex += 2;
-					return mappedName.toString();
-				}
-
-				currentIndex++;
-				return mappedName.toString();
-			}
-
-			static boolean isPositionalParameter(String partial) {
-
-				if ("$".equals(partial)) {
-					return true;
-				}
-
-				Matcher matcher = POSITIONAL_OPERATOR.matcher(partial);
-				if (matcher.find()) {
-					return true;
-				}
-
-				try {
-					Long.valueOf(partial);
-					return true;
-				} catch (NumberFormatException e) {
-					return false;
-				}
-			}
-		}
 	}
 
 	/**

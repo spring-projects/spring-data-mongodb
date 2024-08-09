@@ -84,7 +84,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	public void uses_idAsKeyForIdProperty() {
 
 		StringPath path = QPerson.person.id;
-		assertThat(serializer.getKeyForPath(path, path.getMetadata())).isEqualTo("_id");
+		assertThat(serializer.getKeyForPath(path, path.getMetadata())).isEqualTo("id");
 	}
 
 	@Test
@@ -126,7 +126,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		StringPath idPath = builder.getString("id");
 
 		Document result = (Document) serializer.visit((BooleanOperation) idPath.eq(id.toString()), null);
-		assertThat(result.get("_id")).isNotNull().isInstanceOf(ObjectId.class);
+		assertThat(result.get("id")).isNotNull().isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-761
@@ -198,7 +198,7 @@ public class SpringDataMongodbSerializerUnitTests {
 				.or(QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.address.street.eq("spring"));
 
 		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse(
-				"{\"$or\": [{\"firstname\": \"firstname_value\"}, {\"lastname\": \"lastname_value\"}, {\"add.street\": \"spring\"}]}"));
+				"{\"$or\": [{\"firstname\": \"firstname_value\"}, {\"lastname\": \"lastname_value\"}, {\"address.street\": \"spring\"}]}"));
 	}
 
 	@Test // DATAMONGO-2475
@@ -218,7 +218,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		Document p1doc = Document.parse("{ \"$or\" : [ { \"firstname\" : \"fn\"}, { \"lastname\" : \"ln\" } ] }");
 		Document p2doc = Document
 				.parse("{ \"$or\" : [ { \"age\" : { \"$gte\" : 20 } }, { \"age\" : { \"$lte\" : 30} } ] }");
-		Document p3doc = Document.parse("{ \"$or\" : [ { \"add.city\" : \"c\"}, { \"add.zipCode\" : \"0\" } ] }");
+		Document p3doc = Document.parse("{ \"$or\" : [ { \"address.city\" : \"c\"}, { \"address.zipCode\" : \"0\" } ] }");
 		Document expected = new Document("$and", Arrays.asList(p1doc, p2doc, p3doc));
 
 		Predicate predicate1 = QPerson.person.firstname.eq("fn").or(QPerson.person.lastname.eq("ln"));
@@ -246,7 +246,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		user.setId("007");
 		Predicate predicate = QPerson.person.spiritAnimal.id.eq("007");
 
-		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal' : '007' }"));
+		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse("{ 'spiritAnimal.id' : '007' }"));
 	}
 
 	@Test // GH-4709
@@ -256,7 +256,7 @@ public class SpringDataMongodbSerializerUnitTests {
 				.eq("64268a7b17ac6a00018bf312");
 
 		assertThat(serializer.handle(predicate))
-				.isEqualTo(new Document("embedded_object._id", new ObjectId("64268a7b17ac6a00018bf312")));
+				.isEqualTo(new Document("embeddedObject.id", new ObjectId("64268a7b17ac6a00018bf312")));
 	}
 
 	@Test // GH-4709
@@ -264,7 +264,7 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		Predicate predicate = QQuerydslRepositorySupportTests_WithMongoId.withMongoId.id.eq("64268a7b17ac6a00018bf312");
 
-		assertThat(serializer.handle(predicate)).isEqualTo(new Document("_id", "64268a7b17ac6a00018bf312"));
+		assertThat(serializer.handle(predicate)).isEqualTo(new Document("id", "64268a7b17ac6a00018bf312"));
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "record")

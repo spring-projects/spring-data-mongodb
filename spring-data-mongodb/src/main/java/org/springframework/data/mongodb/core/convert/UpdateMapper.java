@@ -23,10 +23,9 @@ import java.util.Map.Entry;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.core.convert.converter.Converter;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -300,42 +299,5 @@ public class UpdateMapper extends QueryMapper {
 			return this.getPath() == null ? key : super.getMappedKey();
 		}
 
-		@Override
-		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return new PositionParameterRetainingPropertyKeyConverter(key, getMappingContext());
-		}
-
-		@Override
-		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
-			return new UpdateAssociationConverter(getMappingContext(), getAssociation(), key);
-		}
-
-		/**
-		 * {@link Converter} retaining positional parameter {@literal $} for {@link Association}s.
-		 *
-		 * @author Christoph Strobl
-		 */
-		protected static class UpdateAssociationConverter extends AssociationConverter {
-
-			private final KeyMapper mapper;
-
-			/**
-			 * Creates a new {@link AssociationConverter} for the given {@link Association}.
-			 *
-			 * @param association must not be {@literal null}.
-			 */
-			public UpdateAssociationConverter(
-					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-					Association<MongoPersistentProperty> association, String key) {
-
-				super(key, association);
-				this.mapper = new KeyMapper(key, mappingContext);
-			}
-
-			@Override
-			public String convert(MongoPersistentProperty source) {
-				return super.convert(source) == null ? null : mapper.mapPropertyName(source);
-			}
-		}
 	}
 }
