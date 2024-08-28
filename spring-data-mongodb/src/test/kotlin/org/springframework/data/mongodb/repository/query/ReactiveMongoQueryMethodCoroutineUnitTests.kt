@@ -17,9 +17,11 @@ package org.springframework.data.mongodb.repository.query
 
 import kotlinx.coroutines.flow.Flow
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatNoException
 import org.junit.jupiter.api.Test
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
 import org.springframework.data.mongodb.repository.Person
+import org.springframework.data.mongodb.repository.Update
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
@@ -41,6 +43,9 @@ class ReactiveMongoQueryMethodCoroutineUnitTests {
 		fun findAllByName(): Flow<Person>
 
 		suspend fun findSuspendByName(): List<Person>
+
+		@Update("{ \$inc: { age: 1 } }")
+		suspend fun findAndIncrementAgeByName(name: String)
 	}
 
 	@Test // DATAMONGO-2562
@@ -68,5 +73,14 @@ class ReactiveMongoQueryMethodCoroutineUnitTests {
 		val queryMethod = ReactiveMongoQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, MongoMappingContext())
 
 		assertThat(queryMethod.isCollectionQuery).isTrue()
+	}
+
+	@Test // GH-4772
+	internal fun `should consider suspended update queries`() {
+
+		val method = PersonRepository::class.java.getMethod("findAndIncrementAgeByName", String::class.java, Continuation::class.java)
+		val queryMethod = ReactiveMongoQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, MongoMappingContext())
+
+		assertThatNoException().isThrownBy { queryMethod.verify() }
 	}
 }
