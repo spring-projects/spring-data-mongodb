@@ -280,6 +280,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		this.codecRegistryProvider = codecRegistryProvider;
 	}
 
+	@Override
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
@@ -432,6 +433,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 	}
 
+	@Override
 	public <S extends Object> S read(Class<S> clazz, Bson bson) {
 		return read(TypeInformation.of(clazz), bson);
 	}
@@ -729,6 +731,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		return null;
 	}
 
+	@Override
 	public DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation;
@@ -795,6 +798,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 *
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#write(java.lang.Object, java.lang.Object)
 	 */
+	@Override
 	public void write(Object obj, Bson bson) {
 
 		if (null == obj) {
@@ -933,6 +937,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		writePropertyInternal(value, dbObjectAccessor, inverseProp, accessor);
 	}
 
+	// TODO: Documentaccessor is package-private
 	@SuppressWarnings({ "unchecked" })
 	protected void writePropertyInternal(@Nullable Object obj, DocumentAccessor accessor, MongoPersistentProperty prop,
 			PersistentPropertyAccessor<?> persistentPropertyAccessor) {
@@ -1610,7 +1615,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	}
 
 	@Override
-	public Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity entity) {
+	public Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity<?> entity) {
 		Document newDocument = new Document();
 		writeInternal(obj, newDocument, entity);
 		return newDocument;
@@ -1948,6 +1953,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			this.spELContext = spELContext;
 		}
 
+		@Override
 		@Nullable
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
@@ -2261,6 +2267,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			return null;
 		}
 
+		// TODO: ObjectPath is package-private
 		ObjectPath getPath();
 
 		CustomConversions getCustomConversions();
@@ -2421,6 +2428,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 					collectionConverter, mapConverter, dbRefConverter, elementConverter);
 		}
 
+		// TODO: ObjectPath is package-private
 		@Override
 		public ObjectPath getPath() {
 			return path;
