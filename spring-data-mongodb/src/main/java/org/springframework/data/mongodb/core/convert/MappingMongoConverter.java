@@ -280,6 +280,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		this.codecRegistryProvider = codecRegistryProvider;
 	}
 
+	@Override
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
@@ -432,6 +433,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 	}
 
+	@Override
 	public <S extends Object> S read(Class<S> clazz, Bson bson) {
 		return read(TypeInformation.of(clazz), bson);
 	}
@@ -729,6 +731,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		return null;
 	}
 
+	@Override
 	public DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation;
@@ -795,6 +798,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 *
 	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#write(java.lang.Object, java.lang.Object)
 	 */
+	@Override
 	public void write(Object obj, Bson bson) {
 
 		if (null == obj) {
@@ -934,7 +938,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected void writePropertyInternal(@Nullable Object obj, DocumentAccessor accessor, MongoPersistentProperty prop,
+	void writePropertyInternal(@Nullable Object obj, DocumentAccessor accessor, MongoPersistentProperty prop,
 			PersistentPropertyAccessor<?> persistentPropertyAccessor) {
 
 		if (obj == null) {
@@ -1610,13 +1614,13 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	}
 
 	@Override
-	public Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity entity) {
+	public Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity<?> entity) {
 		Document newDocument = new Document();
 		writeInternal(obj, newDocument, entity);
 		return newDocument;
 	}
 
-	// TODO: hide in 4.0
+	// TODO: hide in 5.0
 	public List<Object> maybeConvertList(Iterable<?> source, @Nullable TypeInformation<?> typeInformation) {
 
 		List<Object> newDbl = new ArrayList<>();
@@ -1948,6 +1952,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			this.spELContext = spELContext;
 		}
 
+		@Override
 		@Nullable
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {

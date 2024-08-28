@@ -40,7 +40,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 1.6
  */
-class ObjectPath {
+public class ObjectPath {
 
 	static final ObjectPath ROOT = new ObjectPath();
 
