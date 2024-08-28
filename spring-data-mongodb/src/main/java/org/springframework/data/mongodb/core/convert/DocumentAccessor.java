@@ -92,6 +92,10 @@ class DocumentAccessor {
 
 		Assert.notNull(prop, "MongoPersistentProperty must not be null");
 
+		if (value == null && !prop.writeNullValues()) {
+			return;
+		}
+
 		Iterator<String> parts = Arrays.asList(prop.getMongoField().getName().parts()).iterator();
 		Bson document = this.document;
 
@@ -173,20 +177,4 @@ class DocumentAccessor {
 		return nested;
 	}
 
-	DocumentAccessor withCheckFieldMapping(boolean checkFieldMapping) {
-
-		if(!checkFieldMapping) {
-			return this;
-		}
-
-		return new DocumentAccessor(this.document) {
-				@Override
-				public void put(MongoPersistentProperty prop, @Nullable Object value) {
-					if(value != null || prop.writeNullValues()) {
-						super.put(prop, value);
-					}
-				}
-			};
-
-	}
 }
