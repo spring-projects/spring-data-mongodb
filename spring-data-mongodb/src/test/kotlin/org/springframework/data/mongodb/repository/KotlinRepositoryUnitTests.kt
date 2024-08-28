@@ -45,7 +45,7 @@ class KotlinRepositoryUnitTests {
 	}
 
 	@Test // DATAMONGO-2601
-	fun should() {
+	fun shouldSupportDeleteMethods() {
 
 		val repository = repositoryFactory.getRepository(PersonRepository::class.java)
 
