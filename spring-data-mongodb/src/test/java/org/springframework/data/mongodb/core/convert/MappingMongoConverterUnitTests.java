@@ -2700,7 +2700,8 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-4710
 	void shouldWriteSimplePropertyCorrectlyAfterConversionReturnsNull() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Integer.class, String.class, it -> null).andReading(it -> null).getConverters().stream().toList());
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder
+				.writing(Integer.class, String.class, it -> null).andReading(it -> null).getConverters().stream().toList());
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(conversions);
@@ -2719,7 +2720,8 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-4710
 	void shouldWriteComplexPropertyCorrectlyAfterConversionReturnsNull() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Person.class, String.class, it -> null).andReading(it -> null).getConverters().stream().toList());
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder
+				.writing(Person.class, String.class, it -> null).andReading(it -> null).getConverters().stream().toList());
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(conversions);
@@ -2738,7 +2740,9 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-4710
 	void shouldDelegateWriteOfDBRefToCustomConversionIfConfigured() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Person.class, DBRef.class, it -> new DBRef("persons", "n/a")).andReading(it -> null).getConverters().stream().toList());
+		MongoCustomConversions conversions = new MongoCustomConversions(
+				ConverterBuilder.writing(Person.class, DBRef.class, it -> new DBRef("persons", "n/a")).andReading(it -> null)
+						.getConverters().stream().toList());
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(conversions);
@@ -2751,13 +2755,14 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(fieldWrite, document);
 
-		assertThat(document).containsEntry("writeAlwaysPersonDBRef", new DBRef("persons", "n/a"));//.doesNotContainKey("writeNonNullPersonDBRef");
+		assertThat(document).containsEntry("writeAlwaysPersonDBRef", new DBRef("persons", "n/a"));// .doesNotContainKey("writeNonNullPersonDBRef");
 	}
 
 	@Test // GH-4710
 	void shouldDelegateWriteOfDBRefToCustomConversionIfConfiguredAndCheckNulls() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder.writing(Person.class, DBRef.class, it -> null).andReading(it -> null).getConverters().stream().toList());
+		MongoCustomConversions conversions = new MongoCustomConversions(ConverterBuilder
+				.writing(Person.class, DBRef.class, it -> null).andReading(it -> null).getConverters().stream().toList());
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(conversions);
@@ -2771,6 +2776,50 @@ class MappingMongoConverterUnitTests {
 		converter.write(fieldWrite, document);
 
 		assertThat(document).containsEntry("writeAlwaysPersonDBRef", null).doesNotContainKey("writeNonNullPersonDBRef");
+	}
+
+	@Test // GH-4710
+	void shouldApplyNullConversionToPropertyValueConverters() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(
+				MongoCustomConversions.MongoConverterConfigurationAdapter.from(Collections.emptyList())
+						.configurePropertyConversions(registrar -> {
+							registrar.registerConverter(Person.class, "firstname", new MongoValueConverter<String, String>() {
+								@Override
+								public String readNull(MongoConversionContext context) {
+									return "NULL";
+								}
+
+								@Override
+								public String writeNull(MongoConversionContext context) {
+									return "NULL";
+								}
+
+								@Override
+								public String read(String value, MongoConversionContext context) {
+									return "";
+								}
+
+								@Override
+								public String write(String value, MongoConversionContext context) {
+									return "";
+								}
+							});
+						}));
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(new Person(), document);
+
+		assertThat(document).containsEntry("foo", "NULL");
+
+		document = new org.bson.Document("foo", null);
+		Person result = converter.read(Person.class, document);
+
+		assertThat(result.firstname).isEqualTo("NULL");
 	}
 
 	@Test // GH-3686
@@ -3086,7 +3135,7 @@ class MappingMongoConverterUnitTests {
 		}));
 		converter.afterPropertiesSet();
 
-		WithValueConverters wvc = new WithValueConverters();
+		WithContextValueConverters wvc = new WithContextValueConverters();
 		wvc.converterBean = "spring";
 
 		org.bson.Document target = new org.bson.Document();
@@ -3097,7 +3146,7 @@ class MappingMongoConverterUnitTests {
 			assertThat((String) it.get("ooo")).startsWith("spring - ");
 		});
 
-		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		WithContextValueConverters read = converter.read(WithContextValueConverters.class, target);
 		assertThat(read.converterBean).startsWith("spring -");
 	}
 
@@ -4180,10 +4229,10 @@ class MappingMongoConverterUnitTests {
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
 		@org.springframework.data.mongodb.core.mapping.Field(
-			write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
 
 		@org.springframework.data.mongodb.core.mapping.Field(
-			write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
 		@org.springframework.data.mongodb.core.mapping.DBRef
 		@org.springframework.data.mongodb.core.mapping.Field(
@@ -4200,6 +4249,11 @@ class MappingMongoConverterUnitTests {
 		@ValueConverter(Converter1.class) String converterWithDefaultCtor;
 
 		@ValueConverter(Converter2.class) String converterEnum;
+
+		String viaRegisteredConverter;
+	}
+
+	static class WithContextValueConverters {
 
 		@ValueConverter(Converter3.class) String converterBean;
 
