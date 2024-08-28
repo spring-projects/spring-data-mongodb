@@ -45,6 +45,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -532,7 +533,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		boolean isUpdateCountReturnType = ClassUtils.isAssignable(Number.class, resultType);
-		boolean isVoidReturnType = ClassUtils.isAssignable(Void.class, resultType);
+		boolean isVoidReturnType = ReflectionUtils.isVoid(resultType);
 
 		return isUpdateCountReturnType || isVoidReturnType;
 	}
