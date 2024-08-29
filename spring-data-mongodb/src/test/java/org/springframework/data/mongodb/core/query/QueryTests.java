@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -364,6 +365,15 @@ class QueryTests {
 		Query target = Query.of((Query) proxyFactory.getProxy());
 
 		compareQueries(target, source);
+	}
+
+	@Test // GH-4771
+	void appliesSortOfUnpagedPageable() {
+
+		Query query = new Query();
+		query.with(Pageable.unpaged(Sort.by("sortMe")));
+
+		assertThat(query.isSorted()).isTrue();
 	}
 
 	private void compareQueries(Query actual, Query expected) {

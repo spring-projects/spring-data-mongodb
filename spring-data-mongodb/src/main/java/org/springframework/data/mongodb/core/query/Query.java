@@ -286,6 +286,9 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	public Query with(Pageable pageable) {
 
 		if (pageable.isUnpaged()) {
+			if(pageable.getSort().isSorted()) {
+				return with(pageable.getSort());
+			}
 			return this;
 		}
 
