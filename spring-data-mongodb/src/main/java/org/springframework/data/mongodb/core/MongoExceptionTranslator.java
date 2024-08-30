@@ -52,6 +52,8 @@ import com.mongodb.bulk.BulkWriteError;
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
+	public static final MongoExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
+
 	private static final Set<String> DUPLICATE_KEY_EXCEPTIONS = Set.of("MongoException.DuplicateKey",
 			"DuplicateKeyException");
 
@@ -183,11 +185,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	 */
 	public boolean isTransientFailure(Exception e) {
 
-		if (!(e instanceof MongoException)) {
+		if (!(e instanceof MongoException mongoException)) {
 			return false;
 		}
-
-		MongoException mongoException = (MongoException) e;
 
 		return mongoException.hasErrorLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL)
 				|| mongoException.hasErrorLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL);

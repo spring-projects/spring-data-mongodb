@@ -36,13 +36,11 @@ import com.mongodb.reactivestreams.client.MongoClients;
 public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoClient>
 		implements PersistenceExceptionTranslator {
 
-	private static final PersistenceExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
-
 	private @Nullable String connectionString;
 	private @Nullable String host;
 	private @Nullable Integer port;
 	private @Nullable MongoClientSettings mongoClientSettings;
-	private PersistenceExceptionTranslator exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
+	private PersistenceExceptionTranslator exceptionTranslator = MongoExceptionTranslator.DEFAULT_EXCEPTION_TRANSLATOR;
 
 	/**
 	 * Configures the host to connect to.
@@ -86,7 +84,13 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param exceptionTranslator
 	 */
 	public void setExceptionTranslator(@Nullable PersistenceExceptionTranslator exceptionTranslator) {
-		this.exceptionTranslator = exceptionTranslator == null ? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
+		this.exceptionTranslator = exceptionTranslator == null ? MongoExceptionTranslator.DEFAULT_EXCEPTION_TRANSLATOR
+				: exceptionTranslator;
+	}
+
+	@Override
+	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 
 	@Override
@@ -123,8 +127,4 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 		instance.close();
 	}
 
-	@Override
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
-		return exceptionTranslator.translateExceptionIfPossible(ex);
-	}
 }
