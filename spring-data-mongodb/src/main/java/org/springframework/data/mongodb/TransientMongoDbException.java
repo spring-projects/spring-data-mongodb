@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb;
 
 import org.springframework.dao.TransientDataAccessException;
-import org.springframework.lang.Nullable;
 
 /**
  * Root of the hierarchy of MongoDB specific data access exceptions that are considered transient such as
@@ -24,17 +23,17 @@ import org.springframework.lang.Nullable;
  * specific labels}.
  *
  * @author Christoph Strobl
- * @since 3.3
+ * @since 4.4
  */
 public class TransientMongoDbException extends TransientDataAccessException {
 
 	/**
 	 * Constructor for {@link TransientMongoDbException}.
 	 *
-	 * @param msg the detail message. Can be {@literal null}.
-	 * @param cause the root cause. Can be {@literal null}.
+	 * @param msg the detail message.
+	 * @param cause the root cause.
 	 */
-	public TransientMongoDbException(String msg, @Nullable Throwable cause) {
+	public TransientMongoDbException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
 }

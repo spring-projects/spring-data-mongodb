@@ -16,24 +16,23 @@
 package org.springframework.data.mongodb;
 
 import org.springframework.dao.TransientDataAccessException;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link TransientDataAccessException} specific to MongoDB {@link com.mongodb.session.ClientSession} related data
  * access failures such as reading data using an already closed session.
  *
  * @author Christoph Strobl
- * @since 3.3
+ * @since 4.4
  */
 public class TransientClientSessionException extends TransientMongoDbException {
 
 	/**
 	 * Constructor for {@link TransientClientSessionException}.
 	 *
-	 * @param msg the detail message. Can be {@literal null}.
-	 * @param cause the root cause. Can be {@literal null}.
+	 * @param msg the detail message.
+	 * @param cause the root cause.
 	 */
-	public TransientClientSessionException(@Nullable String msg, @Nullable Throwable cause) {
+	public TransientClientSessionException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
 }

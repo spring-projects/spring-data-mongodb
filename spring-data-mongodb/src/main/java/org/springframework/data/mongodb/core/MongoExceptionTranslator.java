@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Set;
 
 import org.bson.BsonInvalidOperationException;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,11 +26,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
-import org.springframework.dao.TransientDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.TransientClientSessionException;
-import org.springframework.data.mongodb.TransientMongoDbException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.lang.Nullable;
@@ -70,18 +69,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	@Override
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
-
-		DataAccessException translatedException = doTranslateException(ex);
-		if (translatedException == null) {
-			return null;
-		}
-
-		// Translated exceptions that per se are not be recoverable (eg. WriteConflicts), might still be transient inside a
-		// transaction. Let's wrap those.
-		return (isTransientFailure(ex) && !(translatedException instanceof TransientDataAccessException))
-				? new TransientMongoDbException(ex.getMessage(), translatedException)
-				: translatedException;
-
+		return doTranslateException(ex);
 	}
 
 	@Nullable
@@ -187,13 +175,13 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	/**
 	 * Check if a given exception holds an error label indicating a transient failure.
 	 *
-	 * @param e
+	 * @param e the exception to inspect.
 	 * @return {@literal true} if the given {@link Exception} is a {@link MongoException} holding one of the transient
 	 *         exception error labels.
 	 * @see MongoException#hasErrorLabel(String)
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isTransientFailure(Exception e) {
+	public boolean isTransientFailure(Exception e) {
 
 		if (!(e instanceof MongoException)) {
 			return false;
