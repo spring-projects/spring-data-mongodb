@@ -20,18 +20,16 @@ import static org.assertj.core.api.Assertions.*;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.mockito.Mockito;
+
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
-import org.springframework.data.mongodb.TransientMongoDbException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.lang.Nullable;
 
@@ -41,9 +39,7 @@ import com.mongodb.MongoInternalException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.MongoSocketReadTimeoutException;
 import com.mongodb.MongoSocketWriteException;
-import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
-import com.mongodb.WriteError;
 
 /**
  * Unit tests for {@link MongoExceptionTranslator}.
@@ -180,30 +176,21 @@ class MongoExceptionTranslatorUnitTests {
 		MongoException source = new MongoException(267, "PreparedTransactionInProgress");
 		source.addLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL);
 
-		expectExceptionWithCauseMessage(translator.translateExceptionIfPossible(source), TransientMongoDbException.class,
+		expectExceptionWithCauseMessage(translator.translateExceptionIfPossible(source),
+				UncategorizedMongoDbException.class,
 				"PreparedTransactionInProgress");
+		assertThat(translator.isTransientFailure(source)).isTrue();
+		assertThat(translator.isTransientFailure(translator.translateExceptionIfPossible(source))).isTrue();
 	}
 
 	@Test // DATAMONGO-2073
-	public void translateMongoExceptionWithTransientLabelToTransientMongoDbException() {
+	public void translateMongoExceptionWithTransientLabel() {
 
 		MongoException exception = new MongoException(0, "");
 		exception.addLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL);
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
 
-		expectExceptionWithCauseMessage(translatedException, TransientMongoDbException.class);
-	}
-
-	@Test // DATAMONGO-2073
-	public void wrapsTranslatedExceptionsWhenTransientLabelPresent() {
-
-		MongoException exception = new MongoWriteException(new WriteError(112, "WriteConflict", new BsonDocument()), null);
-		exception.addLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL);
-
-		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
-
-		assertThat(translatedException).isInstanceOf(TransientMongoDbException.class);
-		assertThat(translatedException.getCause()).isInstanceOf(DataIntegrityViolationException.class);
+		expectExceptionWithCauseMessage(translatedException, UncategorizedMongoDbException.class);
 	}
 
 	private void checkTranslatedMongoException(Class<? extends Exception> clazz, int code) {

@@ -51,8 +51,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	private final String databaseName;
 	private final boolean mongoInstanceCreated;
 
-	private final PersistenceExceptionTranslator exceptionTranslator;
-
+	private PersistenceExceptionTranslator exceptionTranslator = MongoExceptionTranslator.DEFAULT_EXCEPTION_TRANSLATOR;
 	private @Nullable WriteConcern writeConcern;
 
 	/**
@@ -85,7 +84,21 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		this.mongo = client;
 		this.databaseName = databaseName;
 		this.mongoInstanceCreated = mongoInstanceCreated;
-		this.exceptionTranslator = new MongoExceptionTranslator();
+	}
+
+	/**
+	 * Configures the {@link PersistenceExceptionTranslator} to be used.
+	 *
+	 * @param exceptionTranslator the exception translator to set.
+	 * @since 4.4
+	 */
+	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
+		this.exceptionTranslator = exceptionTranslator;
+	}
+
+	@Override
+	public PersistenceExceptionTranslator getExceptionTranslator() {
+		return this.exceptionTranslator;
 	}
 
 	/**
@@ -97,10 +110,12 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		this.writeConcern = writeConcern;
 	}
 
+	@Override
 	public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
 		return getMongoDatabase(databaseName);
 	}
 
+	@Override
 	public Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException {
 
 		Assert.hasText(dbName, "Database name must not be empty");
@@ -118,15 +133,12 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 *
 	 * @see DisposableBean#destroy()
 	 */
+	@Override
 	public void destroy() throws Exception {
 
 		if (mongoInstanceCreated) {
 			mongo.close();
 		}
-	}
-
-	public PersistenceExceptionTranslator getExceptionTranslator() {
-		return this.exceptionTranslator;
 	}
 
 	@Override

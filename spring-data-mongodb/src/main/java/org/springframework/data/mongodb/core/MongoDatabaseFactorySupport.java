@@ -32,8 +32,7 @@ import com.mongodb.client.MongoDatabase;
 
 /**
  * Common base class for usage with both {@link com.mongodb.client.MongoClients} defining common properties such as
- * database name and exception translator.
- * <br />
+ * database name and exception translator. <br />
  * Not intended to be used directly.
  *
  * @author Christoph Strobl
@@ -47,8 +46,8 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	private final C mongoClient;
 	private final String databaseName;
 	private final boolean mongoInstanceCreated;
-	private final PersistenceExceptionTranslator exceptionTranslator;
 
+	private PersistenceExceptionTranslator exceptionTranslator;
 	private @Nullable WriteConcern writeConcern;
 
 	/**
@@ -76,14 +75,30 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	}
 
 	/**
+	 * Configures the {@link PersistenceExceptionTranslator} to be used.
+	 *
+	 * @param exceptionTranslator the exception translator to set.
+	 * @since 4.4
+	 */
+	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
+		this.exceptionTranslator = exceptionTranslator;
+	}
+
+	@Override
+	public PersistenceExceptionTranslator getExceptionTranslator() {
+		return this.exceptionTranslator;
+	}
+
+	/**
 	 * Configures the {@link WriteConcern} to be used on the {@link MongoDatabase} instance being created.
 	 *
-	 * @param writeConcern the writeConcern to set
+	 * @param writeConcern the writeConcern to set.
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
 	}
 
+	@Override
 	public MongoDatabase getMongoDatabase() throws DataAccessException {
 		return getMongoDatabase(getDefaultDatabaseName());
 	}
@@ -116,10 +131,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 		}
 	}
 
-	public PersistenceExceptionTranslator getExceptionTranslator() {
-		return this.exceptionTranslator;
-	}
-
+	@Override
 	public MongoDatabaseFactory withSession(ClientSession session) {
 		return new MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory(session, this);
 	}

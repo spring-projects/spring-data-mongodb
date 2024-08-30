@@ -72,7 +72,7 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 	 * @param mongoInstanceCreated
 	 */
 	SimpleMongoClientDatabaseFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
-		super(mongoClient, databaseName, mongoInstanceCreated, new MongoExceptionTranslator());
+		super(mongoClient, databaseName, mongoInstanceCreated, MongoExceptionTranslator.DEFAULT_EXCEPTION_TRANSLATOR);
 	}
 
 	@Override

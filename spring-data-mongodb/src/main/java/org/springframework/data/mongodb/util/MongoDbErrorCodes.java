@@ -128,7 +128,10 @@ public final class MongoDbErrorCodes {
 		clientSessionCodes.put(263, "OperationNotSupportedInTransaction");
 		clientSessionCodes.put(264, "TooManyLogicalSessions");
 
-		errorCodes = new HashMap<>();
+		errorCodes = new HashMap<>(
+				dataAccessResourceFailureCodes.size() + dataIntegrityViolationCodes.size() + duplicateKeyCodes.size()
+						+ invalidDataAccessApiUsageException.size() + permissionDeniedCodes.size() + clientSessionCodes.size(),
+				1f);
 		errorCodes.putAll(dataAccessResourceFailureCodes);
 		errorCodes.putAll(dataIntegrityViolationCodes);
 		errorCodes.putAll(duplicateKeyCodes);
@@ -149,12 +152,12 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isDataIntegrityViolationError(@Nullable Exception exception) {
+	public static boolean isDataIntegrityViolationError(Exception exception) {
 
-		if(exception instanceof MongoException) {
-			return isDataIntegrityViolationCode(((MongoException) exception).getCode());
+		if (exception instanceof MongoException me) {
+			return isDataIntegrityViolationCode(me.getCode());
 		}
 		return false;
 	}
@@ -166,12 +169,12 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isDataAccessResourceError(@Nullable Exception exception) {
+	public static boolean isDataAccessResourceError(Exception exception) {
 
-		if(exception instanceof MongoException) {
-			return isDataAccessResourceFailureCode(((MongoException) exception).getCode());
+		if (exception instanceof MongoException me) {
+			return isDataAccessResourceFailureCode(me.getCode());
 		}
 		return false;
 	}
@@ -183,12 +186,12 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isDuplicateKeyError(@Nullable Exception exception) {
+	public static boolean isDuplicateKeyError(Exception exception) {
 
-		if(exception instanceof MongoException) {
-			return isDuplicateKeyCode(((MongoException) exception).getCode());
+		if (exception instanceof MongoException me) {
+			return isDuplicateKeyCode(me.getCode());
 		}
 		return false;
 	}
@@ -196,14 +199,10 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isDataDuplicateKeyError(@Nullable Exception exception) {
-
-		if(exception instanceof MongoException) {
-			return isDuplicateKeyCode(((MongoException) exception).getCode());
-		}
-		return false;
+	public static boolean isDataDuplicateKeyError(Exception exception) {
+		return isDuplicateKeyError(exception);
 	}
 
 	public static boolean isPermissionDeniedCode(@Nullable Integer errorCode) {
@@ -213,11 +212,11 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isPermissionDeniedError(@Nullable Exception exception) {
+	public static boolean isPermissionDeniedError(Exception exception) {
 
-		if(exception instanceof MongoException) {
+		if (exception instanceof MongoException) {
 			return isPermissionDeniedCode(((MongoException) exception).getCode());
 		}
 		return false;
@@ -230,12 +229,12 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isInvalidDataAccessApiUsageError(@Nullable Exception exception) {
+	public static boolean isInvalidDataAccessApiUsageError(Exception exception) {
 
-		if(exception instanceof MongoException) {
-			return isInvalidDataAccessApiUsageCode(((MongoException) exception).getCode());
+		if (exception instanceof MongoException me) {
+			return isInvalidDataAccessApiUsageCode(me.getCode());
 		}
 		return false;
 	}
@@ -265,12 +264,12 @@ public final class MongoDbErrorCodes {
 	/**
 	 * @param exception can be {@literal null}.
 	 * @return
-	 * @since 3.3
+	 * @since 4.4
 	 */
-	public static boolean isClientSessionFailure(@Nullable Exception exception) {
+	public static boolean isClientSessionFailure(Exception exception) {
 
-		if(exception instanceof MongoException) {
-			return isClientSessionFailureCode(((MongoException) exception).getCode());
+		if (exception instanceof MongoException me) {
+			return isClientSessionFailureCode(me.getCode());
 		}
 		return false;
 	}
