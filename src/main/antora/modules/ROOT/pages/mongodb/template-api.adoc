@@ -31,7 +31,8 @@ The `execute` callbacks gives you a reference to either a `MongoCollection` or a
 
 * `<T> T` *execute* `(String collectionName, CollectionCallback<T> action)`: Runs the given `CollectionCallback` on the collection of the given name.
 
-* `<T> T` *execute* `(DbCallback<T> action)`: Runs a DbCallback, translating any exceptions as necessary. Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
+* `<T> T` *execute* `(DbCallback<T> action)`: Runs a DbCallback, translating any exceptions as necessary.
+Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
 
 * `<T> T` *execute* `(String collectionName, DbCallback<T> action)`: Runs a `DbCallback` on the collection of the given name translating any exceptions as necessary.
 
@@ -90,6 +91,7 @@ List<Jedi> all = template.query(SWCharacter.class) <1>
   .matching(query(where("jedi").is(true))) <4>
   .all();
 ----
+
 <1> The type used to map fields used in the query to.
 <2> The collection name to use if not defined on the domain type.
 <3> Result type if not using the original domain type.
@@ -107,9 +109,8 @@ Flux<Jedi> all = template.query(SWCharacter.class)
 ----
 ======
 
-NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required
-by the projection target type. This applies as long as the javadoc:org.springframework.data.mongodb.core.query.Query[] itself does not contain any field restriction and the
-target type is a closed interface or DTO projection.
+NOTE: Using projections allows `MongoTemplate` to optimize result mapping by limiting the actual response to fields required by the projection target type.
+This applies as long as the javadoc:org.springframework.data.mongodb.core.query.Query[] itself does not contain any field restriction and the target type is a closed interface or DTO projection.
 
 WARNING: Projections must not be applied to xref:mongodb/mapping/document-references.adoc[DBRefs].
 
@@ -143,8 +144,8 @@ Flux<GeoResult<Jedi>> results = template.query(SWCharacter.class)
 [[mongo-template.exception-translation]]
 == Exception Translation
 
-The Spring framework provides exception translation for a wide variety of database and mapping technologies. T
-his has traditionally been for JDBC and JPA.
+The Spring framework provides exception translation for a wide variety of database and mapping technologies.
+This has traditionally been for JDBC and JPA.
 The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
 
 The motivation behind mapping to Spring's link:{springDocsUrl}/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes.
@@ -152,8 +153,24 @@ All of Spring's data access exceptions are inherited from the root `DataAccessEx
 Note that not all exceptions thrown by the MongoDB driver inherit from the `MongoException` class.
 The inner exception and message are preserved so that no information is lost.
 
-Some of the mappings performed by the `MongoExceptionTranslator` are `com.mongodb.Network to DataAccessResourceFailureException` and `MongoException` error codes 1003, 12001, 12010, 12011, and 12012 to `InvalidDataAccessApiUsageException`.
+Some of the mappings performed by the javadoc:org.springframework.data.mongodb.core.MongoExceptionTranslator[] are `com.mongodb.Network` to `DataAccessResourceFailureException` and `MongoException` error codes 1003, 12001, 12010, 12011, and 12012 to `InvalidDataAccessApiUsageException`.
 Look into the implementation for more details on the mapping.
+
+Exception Translation can be configured by setting a customized javadoc:org.springframework.data.mongodb.core.MongoExceptionTranslator[] on your `MongoDatabaseFactory` or its reactive variant.
+You might also want to set the exception translator on the corresponding `MongoClientFactoryBean`.
+
+.Configuring `MongoExceptionTranslator`
+====
+[source,java]
+----
+ConnectionString uri = new ConnectionString("mongodb://username:password@localhost/database");
+SimpleMongoClientDatabaseFactory mongoDbFactory = new SimpleMongoClientDatabaseFactory(uri);
+mongoDbFactory.setExceptionTranslator(myCustomExceptionTranslator);
+----
+====
+
+A motivation to customize exception can be MongoDB's behavior during transactions where some failures (such as write conflicts) can become transient and where a retry could lead to a successful operation.
+In such a case, you could wrap exceptions with a specific MongoDB label and apply a different exception translation stragegy.
 
 [[mongo-template.type-mapping]]
 == Domain Type Mapping
