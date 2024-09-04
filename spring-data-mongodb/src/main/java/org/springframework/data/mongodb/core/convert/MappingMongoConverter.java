@@ -559,7 +559,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(contextToUse, documentAccessor,
 				evaluator, spELContext);
 
-		Predicate<MongoPersistentProperty> propertyFilter = isIdentifier(entity).or(isConstructorArgument(entity)).negate();
+		Predicate<MongoPersistentProperty> propertyFilter = isIdentifier(entity).or(isConstructorArgument(entity))
+				.or(Predicates.negate(PersistentProperty::isReadable)).negate();
 		readProperties(contextToUse, entity, accessor, documentAccessor, valueProvider, evaluator, propertyFilter);
 
 		return accessor.getBean();
