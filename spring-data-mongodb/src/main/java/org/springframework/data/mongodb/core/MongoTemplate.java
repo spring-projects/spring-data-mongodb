@@ -181,6 +181,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Bartłomiej Mazur
  * @author Michael Krog
  * @author Jakub Zurawa
+ * @author Kinjarapu Sriram
  */
 public class MongoTemplate
 		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, ReadPreferenceAware {
@@ -1088,7 +1089,7 @@ public class MongoTemplate
 			operations.forType(entityClass).getCollation(query).ifPresent(optionsToUse::collation);
 		}
 
-		return doFindAndModify(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
+		return doFindAndModify(createDelegate(query), collectionName, query, query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
 	}
 
@@ -2718,7 +2719,7 @@ public class MongoTemplate
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Document query,
+	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Query query,
 			Document fields, Document sort, Class<T> entityClass, UpdateDefinition update,
 			@Nullable FindAndModifyOptions options) {
 
@@ -2728,12 +2729,34 @@ public class MongoTemplate
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		UpdateContext updateContext = queryOperations.updateSingleContext(update, query, false);
+		UpdateContext updateContext = queryOperations.updateSingleContext(update, query.getQueryObject(), false);
 		updateContext.increaseVersionForUpdateIfNecessary(entity);
 
 		Document mappedQuery = updateContext.getMappedQuery(entity);
 		Object mappedUpdate = updateContext.isAggregationUpdate() ? updateContext.getUpdatePipeline(entityClass)
 				: updateContext.getMappedUpdate(entity);
+
+		FindOneAndUpdateOptions opts = new FindOneAndUpdateOptions();
+		opts.sort(sort);
+		if (options.isUpsert()) {
+			opts.upsert(true);
+		}
+		opts.projection(fields);
+		if (options.isReturnNew()) {
+			opts.returnDocument(ReturnDocument.AFTER);
+		}
+		options.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
+		List<Document> arrayFilters = update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList());
+		if (!arrayFilters.isEmpty()) {
+			opts.arrayFilters(arrayFilters);
+		}
+		Meta meta = query.getMeta();
+		if (meta.hasValues()) {
+
+			if (meta.hasMaxTime()) {
+				opts.maxTime(meta.getRequiredMaxTimeMsec(), TimeUnit.MILLISECONDS);
+			}
+		}
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
@@ -2744,8 +2767,7 @@ public class MongoTemplate
 		}
 
 		return executeFindOneInternal(
-				new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
-						update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
+				new FindAndModifyCallback(collectionPreparer, mappedQuery, mappedUpdate, opts),
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
@@ -3157,47 +3179,25 @@ public class MongoTemplate
 
 		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
-		private final Document fields;
-		private final Document sort;
 		private final Object update;
-		private final List<Document> arrayFilters;
-		private final FindAndModifyOptions options;
+		private final FindOneAndUpdateOptions options;
 
 		FindAndModifyCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort, Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
+				Object update, FindOneAndUpdateOptions options) {
 
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
-			this.fields = fields;
-			this.sort = sort;
 			this.update = update;
-			this.arrayFilters = arrayFilters;
 			this.options = options;
 		}
 
 		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
-			FindOneAndUpdateOptions opts = new FindOneAndUpdateOptions();
-			opts.sort(sort);
-			if (options.isUpsert()) {
-				opts.upsert(true);
-			}
-			opts.projection(fields);
-			if (options.isReturnNew()) {
-				opts.returnDocument(ReturnDocument.AFTER);
-			}
-
-			options.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
-
-			if (!arrayFilters.isEmpty()) {
-				opts.arrayFilters(arrayFilters);
-			}
-
 			if (update instanceof Document document) {
-				return collectionPreparer.prepare(collection).findOneAndUpdate(query, document, opts);
+				return collectionPreparer.prepare(collection).findOneAndUpdate(query, document, options);
 			} else if (update instanceof List) {
-				return collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, opts);
+				return collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, options);
 			}
 
 			throw new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update));
