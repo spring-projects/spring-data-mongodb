@@ -141,6 +141,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Roman Puchkovskiy
  * @author Yadhukrishna S Pai
  * @author Jakub Zurawa
+ * @author Kinjarapu Sriram
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -2534,6 +2535,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				ReplaceOptions.replaceOptions().upsert());
 
 		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
+	}
+
+	@Test // GH-4776
+	void findAndModifyConsidersMaxTimeMs() {
+
+		template.findAndModify(new BasicQuery("{ 'spring' : 'data-mongodb' }").maxTimeMsec(5000), new Update(), Human.class);
+
+		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
+		verify(collection).findOneAndUpdate(any(Bson.class), any(Bson.class), options.capture());
+		assertThat(options.getValue().getMaxTime(TimeUnit.MILLISECONDS)).isEqualTo(5000);
 	}
 
 	class AutogenerateableId {
