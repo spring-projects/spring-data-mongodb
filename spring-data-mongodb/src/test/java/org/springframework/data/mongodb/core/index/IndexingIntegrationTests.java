@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -164,6 +165,7 @@ public class IndexingIntegrationTests {
 	}
 
 	@Test // GH-4099
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "6.0")
 	@DirtiesContext
 	public void evaluatesTimeSeriesTimeoutSpelExpresssionWithBeanReference() {
 
