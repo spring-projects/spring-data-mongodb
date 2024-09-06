@@ -1089,7 +1089,7 @@ public class MongoTemplate
 			operations.forType(entityClass).getCollation(query).ifPresent(optionsToUse::collation);
 		}
 
-		return doFindAndModify(createDelegate(query), collectionName, query, query.getFieldsObject(),
+		return doFindAndModify(createDelegate(query), collectionName, query,
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
 	}
 
@@ -2720,8 +2720,7 @@ public class MongoTemplate
 
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Query query,
-			Document fields, Document sort, Class<T> entityClass, UpdateDefinition update,
-			@Nullable FindAndModifyOptions options) {
+			Document sort, Class<T> entityClass, UpdateDefinition update, @Nullable FindAndModifyOptions options) {
 
 		if (options == null) {
 			options = new FindAndModifyOptions();
@@ -2741,6 +2740,7 @@ public class MongoTemplate
 		if (options.isUpsert()) {
 			opts.upsert(true);
 		}
+		Document fields = query.getFieldsObject();
 		opts.projection(fields);
 		if (options.isReturnNew()) {
 			opts.returnDocument(ReturnDocument.AFTER);
