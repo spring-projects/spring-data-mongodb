@@ -491,6 +491,13 @@ public class MongoTemplate
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
 			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
 
+			if (LOGGER.isDebugEnabled()) {
+				Document sort = getMappedSortObject(query, entityType);
+				LOGGER.debug(String.format(
+						"doStream using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
+						serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(sort), entityType, collectionName));
+			}
+
 			CollectionPreparerDelegate readPreference = createDelegate(query);
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
 					col -> readPreference.prepare(col).find(mappedQuery, Document.class).projection(mappedFields));
@@ -511,6 +518,11 @@ public class MongoTemplate
 
 		Assert.hasText(jsonCommand, "JsonCommand must not be null nor empty");
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing command: [%s]", jsonCommand));
+		}
+
 		return execute(db -> db.runCommand(Document.parse(jsonCommand), Document.class));
 	}
 
@@ -520,6 +532,11 @@ public class MongoTemplate
 
 		Assert.notNull(command, "Command must not be null");
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing command: [%s]", command.toJson()));
+		}
+
 		return execute(db -> db.runCommand(command, Document.class));
 	}
 
@@ -528,6 +545,11 @@ public class MongoTemplate
 	public Document executeCommand(Document command, @Nullable ReadPreference readPreference) {
 
 		Assert.notNull(command, "Command must not be null");
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing command: [%s]%s", command.toJson(), readPreference != null ? (" with read preference: [" + readPreference + "]") : ""));
+		}
 
 		return execute(db -> readPreference != null //
 				? db.runCommand(command, readPreference, Document.class) //
@@ -562,7 +584,7 @@ public class MongoTemplate
 		Document fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing query: %s fields: %s sort: %s in collection: %s",
+			LOGGER.debug(String.format("Executing query: [%s] fields: [%s] sort: [%s] in collection: [%s]",
 					serializeToJsonSafely(queryObject), fieldsObject, serializeToJsonSafely(sortObject), collectionName));
 		}
 
@@ -595,6 +617,11 @@ public class MongoTemplate
 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(callback, "CollectionCallback must not be null");
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing collection callback for collection: [%s]", collectionName));
+		}
 
 		try {
 			MongoCollection<Document> collection = getAndPrepareCollection(doGetDatabase(), collectionName);
@@ -956,7 +983,7 @@ public class MongoTemplate
 		MongoIterable<?> result = execute(collectionName, (collection) -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Executing findDistinct using query %s for field: %s in collection: %s",
+				LOGGER.debug(String.format("Executing findDistinct using query [%s] for field: [%s] in collection: [%s]",
 						serializeToJsonSafely(mappedQuery), field, collectionName));
 			}
 
@@ -1188,7 +1215,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
-					.debug(String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
+					.debug(String.format("Executing count: [%s] in collection: [%s]", serializeToJsonSafely(filter), collectionName));
 		}
 
 		return countExecution.countDocuments(collectionPreparer, collectionName, filter, options);
@@ -1524,7 +1551,7 @@ public class MongoTemplate
 	protected Object insertDocument(String collectionName, Document document, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Inserting Document containing fields: %s in collection: %s", document.keySet(),
+			LOGGER.debug(String.format("Inserting Document containing fields: [%s] in collection: [%s]", document.keySet(),
 					collectionName));
 		}
 
@@ -1553,7 +1580,7 @@ public class MongoTemplate
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Inserting list of Documents containing %s items", documents.size()));
+			LOGGER.debug(String.format("Inserting list of Documents containing [%s] items", documents.size()));
 		}
 
 		execute(collectionName, collection -> {
@@ -1577,7 +1604,7 @@ public class MongoTemplate
 	protected Object saveDocument(String collectionName, Document dbDoc, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Saving Document containing fields: %s", dbDoc.keySet()));
+			LOGGER.debug(String.format("Saving Document containing fields: [%s]", dbDoc.keySet()));
 		}
 
 		return execute(collectionName, collection -> {
@@ -1707,7 +1734,7 @@ public class MongoTemplate
 			return execute(collectionName, collection -> {
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+					LOGGER.debug(String.format("Calling update using query: [%s] and update: [%s] in collection: [%s]",
 							serializeToJsonSafely(queryObj), serializeToJsonSafely(pipeline), collectionName));
 				}
 
@@ -1725,7 +1752,7 @@ public class MongoTemplate
 		return execute(collectionName, collection -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+				LOGGER.debug(String.format("Calling update using query: [%s] and update: [%s] in collection: [%s]",
 						serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName));
 			}
 
@@ -1816,7 +1843,7 @@ public class MongoTemplate
 			Document removeQuery = queryObject;
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Remove using query: %s in collection: %s.", serializeToJsonSafely(removeQuery),
+				LOGGER.debug(String.format("Remove using query: [%s] in collection: [%s].", serializeToJsonSafely(removeQuery),
 						collectionName));
 			}
 
@@ -2162,7 +2189,7 @@ public class MongoTemplate
 			Document command = aggregationUtil.createCommand(collectionName, aggregation, context);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Executing aggregation: %s", serializeToJsonSafely(command)));
+				LOGGER.debug(String.format("Executing aggregation: [%s]", serializeToJsonSafely(command)));
 			}
 
 			Document commandResult = executeCommand(command);
@@ -2174,7 +2201,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
-					String.format("Executing aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
+					String.format("Executing aggregation: [%s] in collection [%s]", serializeToJsonSafely(pipeline), collectionName));
 		}
 
 		return execute(collectionName, collection -> {
@@ -2244,7 +2271,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
-					String.format("Streaming aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
+					String.format("Streaming aggregation: [%s] in collection [%s]", serializeToJsonSafely(pipeline), collectionName));
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
@@ -2436,8 +2463,8 @@ public class MongoTemplate
 
 			// TODO: Emit a collection created event
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Created collection [%s]",
-						coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName));
+				LOGGER.debug(String.format("Created collection [%s] with options [%s]",
+						coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName, collectionOptions));
 			}
 			return coll;
 		});
@@ -2533,8 +2560,9 @@ public class MongoTemplate
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("findOne using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
+			Document sort = getMappedSortObject(query, entityClass);
+			LOGGER.debug(String.format("findOne using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
+					serializeToJsonSafely(query), mappedFields, sort, entityClass, collectionName));
 		}
 
 		return executeFindOneInternal(new FindOneCallback(collectionPreparer, mappedQuery, mappedFields, preparer),
@@ -2590,7 +2618,7 @@ public class MongoTemplate
 		Document mappedSort = getMappedSortObject(query, entityClass);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("find using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), entityClass,
 					collectionName));
 		}
@@ -2617,7 +2645,7 @@ public class MongoTemplate
 		Document mappedSort = getMappedSortObject(query, sourceClass);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("find using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), sourceClass,
 					collectionName));
 		}
@@ -2700,7 +2728,7 @@ public class MongoTemplate
 			Document fields, Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("findAndRemove using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(query), fields, serializeToJsonSafely(sort), entityClass, collectionName));
 		}
 
@@ -2731,7 +2759,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
-					"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s in collection: %s",
+					"findAndModify using query: [%s] fields: [%s] sort: [%s] for class: [%s] and update: [%s] in collection: [%s]",
 					serializeToJsonSafely(mappedQuery), fields, serializeToJsonSafely(sort), entityClass,
 					serializeToJsonSafely(mappedUpdate),
 					collectionName));
@@ -2808,8 +2836,8 @@ public class MongoTemplate
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
 					.debug(String.format(
-							"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
-									+ "in collection: %s",
+							"findAndReplace using query: [%s] fields: [%s] sort: [%s] for class: [%s] and replacement: [%s] "
+									+ "in collection: [%s]",
 							serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields),
 							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
@@ -2830,7 +2858,7 @@ public class MongoTemplate
 					it.upsert(options.isUpsert());
 				}));
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("replace one using query: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("replace one using query: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(updateContext.getMappedQuery(persistentEntity)), entityType, collectionName));
 		}
 
@@ -3039,6 +3067,12 @@ public class MongoTemplate
 				iterable = iterable.projection(fields.get());
 			}
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s]. Will return first result.", getClass().getSimpleName(), query.toJson(), fields.map(
+								Document::toJson).orElse("")));
+			}
+
 			return iterable.first();
 		}
 	}
@@ -3080,6 +3114,12 @@ public class MongoTemplate
 			if (collation != null) {
 				findIterable = findIterable.collation(collation);
 			}
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], collation [%s]. Will return first result.", getClass().getSimpleName(), query.toJson(), collation));
+			}
+
 			return findIterable;
 		}
 	}
