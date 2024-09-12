@@ -271,15 +271,10 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 */
 	public Query with(Pageable pageable) {
 
-		if (pageable.isUnpaged()) {
-			if(pageable.getSort().isSorted()) {
-				return with(pageable.getSort());
-			}
-			return this;
+		if (pageable.isPaged()) {
+			this.limit = pageable.toLimit();
+			this.skip = pageable.getOffset();
 		}
-
-		this.limit = pageable.toLimit();
-		this.skip = pageable.getOffset();
 
 		return with(pageable.getSort());
 	}
