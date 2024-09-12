@@ -336,7 +336,27 @@
 	<build>
 
 		<plugins>
-
+			<plugin>
+				<groupId>com.googlecode.maven-download-plugin</groupId>
+				<artifactId>download-maven-plugin</artifactId>
+				<version>1.9.0</version>
+				<executions>
+					<execution>
+						<id>check-mongodb-running</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>wget</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<url>http://localhost:27017</url>
+					<outputDirectory>${maven.multiModuleProjectDirectory}/target</outputDirectory>
+					<outputFileName>mongo-wget.log</outputFileName>
+					<skipCache>true</skipCache>
+					<skip>${skipTests}</skip>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>com.mysema.maven</groupId>
 				<artifactId>apt-maven-plugin</artifactId>
