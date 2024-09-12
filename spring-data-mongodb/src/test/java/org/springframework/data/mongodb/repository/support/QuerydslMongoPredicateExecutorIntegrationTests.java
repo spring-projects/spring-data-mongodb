@@ -141,6 +141,13 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 				.getContent()).containsExactly(dave);
 	}
 
+	@Test // GH-4771
+	public void findUnpagedPage() {
+
+		assertThat(repository.findAll(person.lastname.isNotNull(), Pageable.unpaged(Sort.by("firstname"))))
+				.containsExactly(carter, dave, oliver);
+	}
+
 	@Test // DATAMONGO-362, DATAMONGO-1848
 	public void springDataMongodbQueryShouldAllowJoinOnDBref() {
 
