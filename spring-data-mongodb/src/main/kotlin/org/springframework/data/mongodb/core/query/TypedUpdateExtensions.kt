@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the original author or authors.
+ * Copyright 2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import kotlin.reflect.KProperty
  * Static factory method to create an Update using the provided key
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.update
  */
 fun <T> update(key: KProperty<T>, value: T?) =
@@ -32,6 +33,7 @@ fun <T> update(key: KProperty<T>, value: T?) =
  * Update using the {@literal $set} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.set
  */
 fun <T> Update.set(key: KProperty<T>, value: T?) =
@@ -41,6 +43,7 @@ fun <T> Update.set(key: KProperty<T>, value: T?) =
  * Update using the {@literal $setOnInsert} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.setOnInsert
  */
 fun <T> Update.setOnInsert(key: KProperty<T>, value: T?) =
@@ -50,6 +53,7 @@ fun <T> Update.setOnInsert(key: KProperty<T>, value: T?) =
  * Update using the {@literal $unset} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.unset
  */
 fun <T> Update.unset(key: KProperty<T>) =
@@ -59,6 +63,7 @@ fun <T> Update.unset(key: KProperty<T>) =
  * Update using the {@literal $inc} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.inc
  */
 fun <T> Update.inc(key: KProperty<T>, inc: Number) =
@@ -71,6 +76,7 @@ fun <T> Update.inc(key: KProperty<T>) =
  * Update using the {@literal $push} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.push
  */
 fun <T> Update.push(key: KProperty<Collection<T>>, value: T?) =
@@ -79,9 +85,10 @@ fun <T> Update.push(key: KProperty<Collection<T>>, value: T?) =
 /**
  * Update using {@code $push} modifier. <br/>
  * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values as well as using
- *
  * {@code $position}.
+ *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.push
  */
 fun <T> Update.push(key: KProperty<T>) =
@@ -92,6 +99,7 @@ fun <T> Update.push(key: KProperty<T>) =
  * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values * {@code $position}.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.addToSet
  */
 fun <T> Update.addToSet(key: KProperty<T>) =
@@ -101,6 +109,7 @@ fun <T> Update.addToSet(key: KProperty<T>) =
  * Update using the {@literal $addToSet} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.addToSet
  */
 fun <T> Update.addToSet(key: KProperty<Collection<T>>, value: T?) =
@@ -110,6 +119,7 @@ fun <T> Update.addToSet(key: KProperty<Collection<T>>, value: T?) =
  * Update using the {@literal $pop} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.pop
  */
 fun <T> Update.pop(key: KProperty<T>, pos: Position) =
@@ -119,6 +129,7 @@ fun <T> Update.pop(key: KProperty<T>, pos: Position) =
  * Update using the {@literal $pull} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.pull
  */
 fun <T> Update.pull(key: KProperty<T>, value: Any) =
@@ -128,6 +139,7 @@ fun <T> Update.pull(key: KProperty<T>, value: Any) =
  * Update using the {@literal $pullAll} update modifier
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.pullAll
  */
 fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
@@ -137,6 +149,7 @@ fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
  * Update given key to current date using {@literal $currentDate} modifier.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.currentDate
  */
 fun <T> Update.currentDate(key: KProperty<T>) =
@@ -146,6 +159,7 @@ fun <T> Update.currentDate(key: KProperty<T>) =
  * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.currentTimestamp
  */
 fun <T> Update.currentTimestamp(key: KProperty<T>) =
@@ -155,6 +169,7 @@ fun <T> Update.currentTimestamp(key: KProperty<T>) =
  * Multiply the value of given key by the given number.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.multiply
  */
 fun <T> Update.multiply(key: KProperty<T>, multiplier: Number) =
@@ -164,6 +179,7 @@ fun <T> Update.multiply(key: KProperty<T>, multiplier: Number) =
  * Update given key to the {@code value} if the {@code value} is greater than the current value of the field.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.max
  */
 fun <T : Any> Update.max(key: KProperty<T>, value: T) =
@@ -173,6 +189,7 @@ fun <T : Any> Update.max(key: KProperty<T>, value: T) =
  * Update given key to the {@code value} if the {@code value} is less than the current value of the field.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.min
  */
 fun <T : Any> Update.min(key: KProperty<T>, value: T) =
@@ -182,6 +199,7 @@ fun <T : Any> Update.min(key: KProperty<T>, value: T) =
  * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.bitwise
  */
 fun <T> Update.bitwise(key: KProperty<T>) =
@@ -192,6 +210,7 @@ fun <T> Update.bitwise(key: KProperty<T>) =
  * driver without further type or field mapping.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.filterArray
  */
 fun <T> Update.filterArray(identifier: KProperty<T>, expression: Any) =
@@ -201,6 +220,7 @@ fun <T> Update.filterArray(identifier: KProperty<T>, expression: Any) =
  * Determine if a given {@code key} will be touched on execution.
  *
  * @author Pawel Matysek
+ * @since 4.4
  * @see Update.modifies
  */
 fun <T> Update.modifies(key: KProperty<T>) =

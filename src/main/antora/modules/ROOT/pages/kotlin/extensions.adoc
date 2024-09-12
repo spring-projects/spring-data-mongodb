@@ -19,7 +19,7 @@ val characters : Flux<SWCharacter> = template.query().inTable("star-wars").all()
 As in Java, `characters` in Kotlin is strongly typed, but Kotlin's clever type inference allows for shorter syntax.
 
 [[mongo.query.kotlin-support]]
-== Type-safe Queries and Updates for Kotlin
+== Type-safe Queries for Kotlin
 
 Kotlin embraces domain-specific language creation through its language syntax and its extension system.
 Spring Data MongoDB ships with a Kotlin Extension for `Criteria` using https://kotlinlang.org/docs/reference/reflection.html#property-references[Kotlin property references] to build type-safe queries.
@@ -64,7 +64,11 @@ mongoOperations.find<Book>(
 <3> To construct nested properties, use the `/` character (overloaded operator `div`).
 ====
 
-Similar syntax can be used while updating a document:
+[[mongo.update.kotlin-support]]
+== Type-safe Updates for Kotlin
+
+A syntax similar to <<mongo.query.kotlin-support>> can be used to update documents:
+
 ====
 [source,kotlin]
 ----

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the original author or authors.
+ * Copyright 2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.time.Instant
  */
 class TypedUpdateExtensionsTests {
 
-    @Test
+    @Test // GH-3028
     fun `update() should equal expected Update`() {
 
         val typed = update(Book::title, "Moby-Dick")
@@ -36,7 +36,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `set() should equal expected Update`() {
 
         val typed = Update().set(Book::title, "Moby-Dick")
@@ -45,7 +45,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `setOnInsert() should equal expected Update`() {
 
         val typed = Update().setOnInsert(Book::title, "Moby-Dick")
@@ -54,7 +54,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `unset() should equal expected Update`() {
 
         val typed = Update().unset(Book::title)
@@ -63,7 +63,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `inc(key, inc) should equal expected Update`() {
 
         val typed = Update().inc(Book::price, 5)
@@ -72,7 +72,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `inc(key) should equal expected Update`() {
 
         val typed = Update().inc(Book::price)
@@ -81,7 +81,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `push(key, value) should equal expected Update`() {
 
         val typed = Update().push(Book::categories, "someCategory")
@@ -90,7 +90,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `push(key) should equal expected Update`() {
 
         val typed = Update().push(Book::categories)
@@ -99,7 +99,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `addToSet(key) should equal expected Update`() {
 
         val typed = Update().addToSet(Book::categories).each("category", "category2")
@@ -108,7 +108,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `addToSet(key, value) should equal expected Update`() {
 
         val typed = Update().addToSet(Book::categories, "someCategory")
@@ -117,7 +117,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `pop() should equal expected Update`() {
 
         val typed = Update().pop(Book::categories, Update.Position.FIRST)
@@ -126,7 +126,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `pull() should equal expected Update`() {
 
         val typed = Update().pull(Book::categories, "someCategory")
@@ -135,7 +135,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `pullAll() should equal expected Update`() {
 
         val typed = Update().pullAll(Book::categories, arrayOf("someCategory", "someCategory2"))
@@ -144,7 +144,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `currentDate() should equal expected Update`() {
 
         val typed = Update().currentDate(Book::releaseDate)
@@ -153,7 +153,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `currentTimestamp() should equal expected Update`() {
 
         val typed = Update().currentTimestamp(Book::releaseDate)
@@ -162,7 +162,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `multiply() should equal expected Update`() {
 
         val typed = Update().multiply(Book::price, 2)
@@ -171,7 +171,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `max() should equal expected Update`() {
 
         val typed = Update().max(Book::price, 200)
@@ -180,7 +180,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `min() should equal expected Update`() {
 
         val typed = Update().min(Book::price, 100)
@@ -189,7 +189,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `bitwise() should equal expected Update`() {
 
         val typed = Update().bitwise(Book::price).and(2)
@@ -198,7 +198,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `filterArray() should equal expected Update`() {
 
         val typed = Update().filterArray(Book::categories, "someCategory")
@@ -207,7 +207,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `typed modifies() should equal expected modifies()`() {
 
         val typed = update(Book::title, "Moby-Dick")
@@ -216,7 +216,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed.modifies(Book::price)).isEqualTo(typed.modifies("price"))
     }
 
-    @Test
+    @Test // GH-3028
     fun `One level nested should equal expected Update`() {
 
         val typed = update(Book::author / Author::name, "Herman Melville")
@@ -225,7 +225,7 @@ class TypedUpdateExtensionsTests {
         assertThat(typed).isEqualTo(expected)
     }
 
-    @Test
+    @Test // GH-3028
     fun `Two levels nested should equal expected Update`() {
 
         data class Entity(val book: Book)
