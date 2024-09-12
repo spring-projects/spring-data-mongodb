@@ -22,12 +22,13 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -199,11 +200,10 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	 */
 	private SpringDataMongodbQuery<T> applyPagination(SpringDataMongodbQuery<T> query, Pageable pageable) {
 
-		if (pageable.isUnpaged()) {
-			return query;
+		if (pageable.isPaged()) {
+			query = query.offset(pageable.getOffset()).limit(pageable.getPageSize());
 		}
 
-		query = query.offset(pageable.getOffset()).limit(pageable.getPageSize());
 		return applySorting(query, pageable.getSort());
 	}
 
