@@ -99,6 +99,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
@@ -179,6 +180,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Bartłomiej Mazur
  * @author Michael Krog
  * @author Jakub Zurawa
+ * @author Marcin Grzejszczak
  */
 public class MongoTemplate
 		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, ReadPreferenceAware {
@@ -491,6 +493,13 @@ public class MongoTemplate
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
 			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
 
+			if (LOGGER.isDebugEnabled()) {
+				Document sort = getMappedSortObject(query, entityType);
+				LOGGER.debug(String.format(
+						"doStream using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
+						serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(sort), entityType, collectionName));
+			}
+
 			CollectionPreparerDelegate readPreference = createDelegate(query);
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
 					col -> readPreference.prepare(col).find(mappedQuery, Document.class).projection(mappedFields));
@@ -511,6 +520,11 @@ public class MongoTemplate
 
 		Assert.hasText(jsonCommand, "JsonCommand must not be null nor empty");
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing command: [%s]", jsonCommand));
+		}
+
 		return execute(db -> db.runCommand(Document.parse(jsonCommand), Document.class));
 	}
 
@@ -520,6 +534,11 @@ public class MongoTemplate
 
 		Assert.notNull(command, "Command must not be null");
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing command: [%s]", serializeToJsonSafely(command)));
+		}
+
 		return execute(db -> db.runCommand(command, Document.class));
 	}
 
@@ -528,6 +547,11 @@ public class MongoTemplate
 	public Document executeCommand(Document command, @Nullable ReadPreference readPreference) {
 
 		Assert.notNull(command, "Command must not be null");
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing command: [%s]%s", serializeToJsonSafely(command), readPreference != null ? (" with read preference: [" + readPreference + "]") : ""));
+		}
 
 		return execute(db -> readPreference != null //
 				? db.runCommand(command, readPreference, Document.class) //
@@ -562,7 +586,7 @@ public class MongoTemplate
 		Document fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing query: %s fields: %s sort: %s in collection: %s",
+			LOGGER.debug(String.format("Executing query: [%s] fields: [%s] sort: [%s] in collection: [%s]",
 					serializeToJsonSafely(queryObject), fieldsObject, serializeToJsonSafely(sortObject), collectionName));
 		}
 
@@ -595,6 +619,11 @@ public class MongoTemplate
 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(callback, "CollectionCallback must not be null");
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format(
+					"Executing collection callback for collection: [%s]", collectionName));
+		}
 
 		try {
 			MongoCollection<Document> collection = getAndPrepareCollection(doGetDatabase(), collectionName);
@@ -956,7 +985,7 @@ public class MongoTemplate
 		MongoIterable<?> result = execute(collectionName, (collection) -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Executing findDistinct using query %s for field: %s in collection: %s",
+				LOGGER.debug(String.format("Executing findDistinct using query [%s] for field: [%s] in collection: [%s]",
 						serializeToJsonSafely(mappedQuery), field, collectionName));
 			}
 
@@ -1188,7 +1217,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
-					.debug(String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
+					.debug(String.format("Executing count: [%s] in collection: [%s]", serializeToJsonSafely(filter), collectionName));
 		}
 
 		return countExecution.countDocuments(collectionPreparer, collectionName, filter, options);
@@ -1524,7 +1553,7 @@ public class MongoTemplate
 	protected Object insertDocument(String collectionName, Document document, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Inserting Document containing fields: %s in collection: %s", document.keySet(),
+			LOGGER.debug(String.format("Inserting Document containing fields: [%s] in collection: [%s]", document.keySet(),
 					collectionName));
 		}
 
@@ -1553,7 +1582,7 @@ public class MongoTemplate
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Inserting list of Documents containing %s items", documents.size()));
+			LOGGER.debug(String.format("Inserting list of Documents containing [%s] items", documents.size()));
 		}
 
 		execute(collectionName, collection -> {
@@ -1577,7 +1606,7 @@ public class MongoTemplate
 	protected Object saveDocument(String collectionName, Document dbDoc, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Saving Document containing fields: %s", dbDoc.keySet()));
+			LOGGER.debug(String.format("Saving Document containing fields: [%s]", dbDoc.keySet()));
 		}
 
 		return execute(collectionName, collection -> {
@@ -1707,7 +1736,7 @@ public class MongoTemplate
 			return execute(collectionName, collection -> {
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+					LOGGER.debug(String.format("Calling update using query: [%s] and update: [%s] in collection: [%s]",
 							serializeToJsonSafely(queryObj), serializeToJsonSafely(pipeline), collectionName));
 				}
 
@@ -1725,7 +1754,7 @@ public class MongoTemplate
 		return execute(collectionName, collection -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+				LOGGER.debug(String.format("Calling update using query: [%s] and update: [%s] in collection: [%s]",
 						serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName));
 			}
 
@@ -1816,7 +1845,7 @@ public class MongoTemplate
 			Document removeQuery = queryObject;
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Remove using query: %s in collection: %s.", serializeToJsonSafely(removeQuery),
+				LOGGER.debug(String.format("Remove using query: [%s] in collection: [%s].", serializeToJsonSafely(removeQuery),
 						collectionName));
 			}
 
@@ -2162,7 +2191,7 @@ public class MongoTemplate
 			Document command = aggregationUtil.createCommand(collectionName, aggregation, context);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Executing aggregation: %s", serializeToJsonSafely(command)));
+				LOGGER.debug(String.format("Executing aggregation: [%s]", serializeToJsonSafely(command)));
 			}
 
 			Document commandResult = executeCommand(command);
@@ -2174,7 +2203,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
-					String.format("Executing aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
+					String.format("Executing aggregation: [%s] in collection [%s]", serializeToJsonSafely(pipeline), collectionName));
 		}
 
 		return execute(collectionName, collection -> {
@@ -2244,7 +2273,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
-					String.format("Streaming aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
+					String.format("Streaming aggregation: [%s] in collection [%s]", serializeToJsonSafely(pipeline), collectionName));
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
@@ -2436,8 +2465,8 @@ public class MongoTemplate
 
 			// TODO: Emit a collection created event
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Created collection [%s]",
-						coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName));
+				LOGGER.debug(String.format("Created collection [%s] with options [%s]",
+						coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName, collectionOptions));
 			}
 			return coll;
 		});
@@ -2533,8 +2562,9 @@ public class MongoTemplate
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("findOne using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
+			Document sort = getMappedSortObject(query, entityClass);
+			LOGGER.debug(String.format("findOne using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
+					serializeToJsonSafely(query), mappedFields, sort, entityClass, collectionName));
 		}
 
 		return executeFindOneInternal(new FindOneCallback(collectionPreparer, mappedQuery, mappedFields, preparer),
@@ -2590,7 +2620,7 @@ public class MongoTemplate
 		Document mappedSort = getMappedSortObject(query, entityClass);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("find using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), entityClass,
 					collectionName));
 		}
@@ -2617,7 +2647,7 @@ public class MongoTemplate
 		Document mappedSort = getMappedSortObject(query, sourceClass);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("find using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), sourceClass,
 					collectionName));
 		}
@@ -2700,7 +2730,7 @@ public class MongoTemplate
 			Document fields, Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("findAndRemove using query: [%s] fields: [%s] sort: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(query), fields, serializeToJsonSafely(sort), entityClass, collectionName));
 		}
 
@@ -2731,7 +2761,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
-					"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s in collection: %s",
+					"findAndModify using query: [%s] fields: [%s] sort: [%s] for class: [%s] and update: [%s] in collection: [%s]",
 					serializeToJsonSafely(mappedQuery), fields, serializeToJsonSafely(sort), entityClass,
 					serializeToJsonSafely(mappedUpdate),
 					collectionName));
@@ -2808,8 +2838,8 @@ public class MongoTemplate
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
 					.debug(String.format(
-							"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
-									+ "in collection: %s",
+							"findAndReplace using query: [%s] fields: [%s] sort: [%s] for class: [%s] and replacement: [%s] "
+									+ "in collection: [%s]",
 							serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields),
 							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
@@ -2830,7 +2860,7 @@ public class MongoTemplate
 					it.upsert(options.isUpsert());
 				}));
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("replace one using query: %s for class: %s in collection: %s",
+			LOGGER.debug(String.format("replace one using query: [%s] for class: [%s] in collection: [%s]",
 					serializeToJsonSafely(updateContext.getMappedQuery(persistentEntity)), entityType, collectionName));
 		}
 
@@ -3039,6 +3069,12 @@ public class MongoTemplate
 				iterable = iterable.projection(fields.get());
 			}
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), fields.map(
+								SerializationUtils::serializeToJsonSafely).orElse("")));
+			}
+
 			return iterable.first();
 		}
 	}
@@ -3080,6 +3116,12 @@ public class MongoTemplate
 			if (collation != null) {
 				findIterable = findIterable.collation(collation);
 			}
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], collation [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(collation)));
+			}
+
 			return findIterable;
 		}
 	}
@@ -3107,9 +3149,15 @@ public class MongoTemplate
 
 		@Override
 		public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-
-			return doCount(collectionPreparer, collection.getNamespace().getCollectionName(), mappedQuery,
+			boolean positiveCount = doCount(collectionPreparer, collection.getNamespace().getCollectionName(), mappedQuery,
 					new CountOptions().limit(1).collation(collation)) > 0;
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], collation [%s]", getClass().getSimpleName(), serializeToJsonSafely(mappedQuery), serializeToJsonSafely(collation)));
+			}
+
+			return positiveCount;
 		}
 	}
 
@@ -3143,7 +3191,14 @@ public class MongoTemplate
 			FindOneAndDeleteOptions opts = new FindOneAndDeleteOptions().sort(sort).projection(fields);
 			collation.map(Collation::toMongoCollation).ifPresent(opts::collation);
 
-			return collectionPreparer.prepare(collection).findOneAndDelete(query, opts);
+			Document oneAndDelete = collectionPreparer.prepare(collection).findOneAndDelete(query, opts);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s], sort [%s], collation [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(fields), serializeToJsonSafely(sort), serializeToJsonSafely(collation)));
+			}
+
+			return oneAndDelete;
 		}
 	}
 
@@ -3188,13 +3243,21 @@ public class MongoTemplate
 				opts.arrayFilters(arrayFilters);
 			}
 
+			Document result;
 			if (update instanceof Document document) {
-				return collectionPreparer.prepare(collection).findOneAndUpdate(query, document, opts);
+				result = collectionPreparer.prepare(collection).findOneAndUpdate(query, document, opts);
 			} else if (update instanceof List) {
-				return collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, opts);
+				result = collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, opts);
+			} else {
+				throw new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update));
 			}
 
-			throw new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update));
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s], sort [%s], update [%s], arrayFilters [%s], options [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(fields), serializeToJsonSafely(sort), serializeToJsonSafely(update), serializeToJsonSafely(arrayFilters), serializeToJsonSafely(options)));
+			}
+
+			return result;
 		}
 	}
 
@@ -3243,7 +3306,14 @@ public class MongoTemplate
 				opts.returnDocument(ReturnDocument.AFTER);
 			}
 
-			return collectionPreparer.prepare(collection).findOneAndReplace(query, update, opts);
+			Document document = collectionPreparer.prepare(collection).findOneAndReplace(query, update, opts);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s], sort [%s], update [%s], collation [%s], options [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(fields), serializeToJsonSafely(sort), serializeToJsonSafely(update), serializeToJsonSafely(collation), serializeToJsonSafely(options)));
+			}
+
+			return document;
 		}
 	}
 
@@ -3293,6 +3363,11 @@ public class MongoTemplate
 			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
 			entity = maybeCallAfterConvert(entity, document, collectionName);
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] reader [%s], type [%s], collectionName [%s]", getClass().getSimpleName(), serializeToJsonSafely(reader), serializeToJsonSafely(type), serializeToJsonSafely(collectionName)));
+			}
+
 			return entity;
 		}
 	}
@@ -3335,7 +3410,14 @@ public class MongoTemplate
 			}
 
 			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
-			return (T) maybeCallAfterConvert(entity, document, collectionName);
+			T maybeConverted = (T) maybeCallAfterConvert(entity, document, collectionName);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] converter [%s], projection [%s], collectionName [%s]", getClass().getSimpleName(), serializeToJsonSafely(mongoConverter), serializeToJsonSafely(projection), serializeToJsonSafely(collectionName)));
+			}
+
+			return maybeConverted;
 		}
 	}
 
@@ -3434,6 +3516,11 @@ public class MongoTemplate
 				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Prepared cursor with [%s] query [%s], sortObject [%s], limit [%s], skip [%s], type [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(sortObject), serializeToJsonSafely(limit), serializeToJsonSafely(skip), serializeToJsonSafely(type)));
+			}
+
 			return cursorToUse;
 		}
 
@@ -3479,7 +3566,14 @@ public class MongoTemplate
 
 			T doWith = delegate.doWith(object);
 
-			return new GeoResult<>(doWith, new Distance(distance, metric));
+			GeoResult<T> tGeoResult = new GeoResult<>(doWith, new Distance(distance, metric));
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] distanceField [%s], delegate [%s], metric [%s]", getClass().getSimpleName(), serializeToJsonSafely(distanceField), serializeToJsonSafely(delegate), serializeToJsonSafely(metric)));
+			}
+
+			return tGeoResult;
 		}
 	}
 
@@ -3644,7 +3738,14 @@ public class MongoTemplate
 		@Override
 		public UpdateResult doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
-			return collectionPreparer.prepare(collection).replaceOne(query, update, options);
+			UpdateResult updateResult = collectionPreparer.prepare(collection).replaceOne(query, update, options);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] collectionPreparer [%s], query [%s], update [%s], options [%s]", getClass().getSimpleName(), collectionPreparer.getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(update), serializeToJsonSafely(options)));
+			}
+
+			return updateResult;
 		}
 	}
 }
