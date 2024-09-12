@@ -99,6 +99,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
@@ -179,6 +180,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Bartłomiej Mazur
  * @author Michael Krog
  * @author Jakub Zurawa
+ * @author Marcin Grzejszczak
  */
 public class MongoTemplate
 		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, ReadPreferenceAware {
@@ -534,7 +536,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
-					"Executing command: [%s]", command.toJson()));
+					"Executing command: [%s]", serializeToJsonSafely(command)));
 		}
 
 		return execute(db -> db.runCommand(command, Document.class));
@@ -548,7 +550,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
-					"Executing command: [%s]%s", command.toJson(), readPreference != null ? (" with read preference: [" + readPreference + "]") : ""));
+					"Executing command: [%s]%s", serializeToJsonSafely(command), readPreference != null ? (" with read preference: [" + readPreference + "]") : ""));
 		}
 
 		return execute(db -> readPreference != null //
@@ -3069,8 +3071,8 @@ public class MongoTemplate
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(String.format(
-						"Applied callback [%s] query [%s], fields [%s]. Will return first result.", getClass().getSimpleName(), query.toJson(), fields.map(
-								Document::toJson).orElse("")));
+						"Applied callback [%s] query [%s], fields [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), fields.map(
+								SerializationUtils::serializeToJsonSafely).orElse("")));
 			}
 
 			return iterable.first();
@@ -3117,7 +3119,7 @@ public class MongoTemplate
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(String.format(
-						"Applied callback [%s] query [%s], collation [%s]. Will return first result.", getClass().getSimpleName(), query.toJson(), collation));
+						"Applied callback [%s] query [%s], collation [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(collation)));
 			}
 
 			return findIterable;
@@ -3147,9 +3149,15 @@ public class MongoTemplate
 
 		@Override
 		public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
-
-			return doCount(collectionPreparer, collection.getNamespace().getCollectionName(), mappedQuery,
+			boolean positiveCount = doCount(collectionPreparer, collection.getNamespace().getCollectionName(), mappedQuery,
 					new CountOptions().limit(1).collation(collation)) > 0;
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], collation [%s]", getClass().getSimpleName(), serializeToJsonSafely(mappedQuery), serializeToJsonSafely(collation)));
+			}
+
+			return positiveCount;
 		}
 	}
 
@@ -3183,7 +3191,14 @@ public class MongoTemplate
 			FindOneAndDeleteOptions opts = new FindOneAndDeleteOptions().sort(sort).projection(fields);
 			collation.map(Collation::toMongoCollation).ifPresent(opts::collation);
 
-			return collectionPreparer.prepare(collection).findOneAndDelete(query, opts);
+			Document oneAndDelete = collectionPreparer.prepare(collection).findOneAndDelete(query, opts);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s], sort [%s], collation [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(fields), serializeToJsonSafely(sort), serializeToJsonSafely(collation)));
+			}
+
+			return oneAndDelete;
 		}
 	}
 
@@ -3228,13 +3243,21 @@ public class MongoTemplate
 				opts.arrayFilters(arrayFilters);
 			}
 
+			Document result;
 			if (update instanceof Document document) {
-				return collectionPreparer.prepare(collection).findOneAndUpdate(query, document, opts);
+				result = collectionPreparer.prepare(collection).findOneAndUpdate(query, document, opts);
 			} else if (update instanceof List) {
-				return collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, opts);
+				result = collectionPreparer.prepare(collection).findOneAndUpdate(query, (List<Document>) update, opts);
+			} else {
+				throw new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update));
 			}
 
-			throw new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update));
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s], sort [%s], update [%s], arrayFilters [%s], options [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(fields), serializeToJsonSafely(sort), serializeToJsonSafely(update), serializeToJsonSafely(arrayFilters), serializeToJsonSafely(options)));
+			}
+
+			return result;
 		}
 	}
 
@@ -3283,7 +3306,14 @@ public class MongoTemplate
 				opts.returnDocument(ReturnDocument.AFTER);
 			}
 
-			return collectionPreparer.prepare(collection).findOneAndReplace(query, update, opts);
+			Document document = collectionPreparer.prepare(collection).findOneAndReplace(query, update, opts);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] query [%s], fields [%s], sort [%s], update [%s], collation [%s], options [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(fields), serializeToJsonSafely(sort), serializeToJsonSafely(update), serializeToJsonSafely(collation), serializeToJsonSafely(options)));
+			}
+
+			return document;
 		}
 	}
 
@@ -3333,6 +3363,11 @@ public class MongoTemplate
 			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
 			entity = maybeCallAfterConvert(entity, document, collectionName);
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] reader [%s], type [%s], collectionName [%s]", getClass().getSimpleName(), serializeToJsonSafely(reader), serializeToJsonSafely(type), serializeToJsonSafely(collectionName)));
+			}
+
 			return entity;
 		}
 	}
@@ -3375,7 +3410,14 @@ public class MongoTemplate
 			}
 
 			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
-			return (T) maybeCallAfterConvert(entity, document, collectionName);
+			T maybeConverted = (T) maybeCallAfterConvert(entity, document, collectionName);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] converter [%s], projection [%s], collectionName [%s]", getClass().getSimpleName(), serializeToJsonSafely(mongoConverter), serializeToJsonSafely(projection), serializeToJsonSafely(collectionName)));
+			}
+
+			return maybeConverted;
 		}
 	}
 
@@ -3474,6 +3516,11 @@ public class MongoTemplate
 				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Prepared cursor with [%s] query [%s], sortObject [%s], limit [%s], skip [%s], type [%s]", getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(sortObject), serializeToJsonSafely(limit), serializeToJsonSafely(skip), serializeToJsonSafely(type)));
+			}
+
 			return cursorToUse;
 		}
 
@@ -3519,7 +3566,14 @@ public class MongoTemplate
 
 			T doWith = delegate.doWith(object);
 
-			return new GeoResult<>(doWith, new Distance(distance, metric));
+			GeoResult<T> tGeoResult = new GeoResult<>(doWith, new Distance(distance, metric));
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] distanceField [%s], delegate [%s], metric [%s]", getClass().getSimpleName(), serializeToJsonSafely(distanceField), serializeToJsonSafely(delegate), serializeToJsonSafely(metric)));
+			}
+
+			return tGeoResult;
 		}
 	}
 
@@ -3684,7 +3738,14 @@ public class MongoTemplate
 		@Override
 		public UpdateResult doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
-			return collectionPreparer.prepare(collection).replaceOne(query, update, options);
+			UpdateResult updateResult = collectionPreparer.prepare(collection).replaceOne(query, update, options);
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(String.format(
+						"Applied callback [%s] collectionPreparer [%s], query [%s], update [%s], options [%s]", getClass().getSimpleName(), collectionPreparer.getClass().getSimpleName(), serializeToJsonSafely(query), serializeToJsonSafely(update), serializeToJsonSafely(options)));
+			}
+
+			return updateResult;
 		}
 	}
 }
