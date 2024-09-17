@@ -63,6 +63,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoClientSettings;
+import reactor.util.function.Tuple2;
 
 /**
  * Base class for reactive {@link RepositoryQuery} implementations for MongoDB.
@@ -393,11 +394,11 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return getValueExpressionEvaluatorLater(dependencies, accessor).zipWith(Mono.just(codec));
 	}
 
-	private Document decode(ValueExpressionEvaluator expressionEvaluator, String source, MongoParameterAccessor accessor,
+	private Document decode(Tuple2<ValueExpressionEvaluator, ParameterBindingDocumentCodec> expressionEvaluator, String source, MongoParameterAccessor accessor,
 			ParameterBindingDocumentCodec codec) {
 
 		ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue,
-				expressionEvaluator);
+				expressionEvaluator.getT1());
 		return codec.decode(source, bindingContext);
 	}
 
