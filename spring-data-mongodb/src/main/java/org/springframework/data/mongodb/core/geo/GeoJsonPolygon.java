@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +39,7 @@ import org.springframework.util.ObjectUtils;
  */
 public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineString>> {
 
+	@Serial
 	private static final long serialVersionUID = 3936163018187247185L;
 	private static final String TYPE = "Polygon";
 
