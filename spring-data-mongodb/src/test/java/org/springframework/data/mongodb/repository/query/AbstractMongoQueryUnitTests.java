@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -37,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -74,9 +76,8 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.MongoClientSettings;
@@ -572,9 +573,9 @@ class AbstractMongoQueryUnitTests {
 
 		MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
 			super(method, operations,
-					new ValueExpressionSupportHolder(
-							new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(),
-									QueryMethodEvaluationContextProvider.DEFAULT),
+					new ValueExpressionDelegate(
+							new QueryMethodValueEvaluationContextAccessor(new StandardEnvironment(),
+									Collections.emptySet()),
 							ValueExpressionParser.create(SpelExpressionParser::new)));
 		}
 

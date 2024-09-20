@@ -19,14 +19,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
@@ -59,20 +57,42 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
+	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
 	@Deprecated(since = "4.3")
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		this(method.getAnnotatedQuery(), method, mongoOperations,
-				new ValueExpressionSupportHolder(
-						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
-						ValueExpressionParser.create(() -> expressionParser)));
+		super(method, mongoOperations, expressionParser, evaluationContextProvider);
+
+		String query = method.getAnnotatedQuery();
+		Assert.notNull(query, "Query must not be null");
+
+		this.query = query;
+		this.fieldSpec = method.getFieldSpecification();
+
+		if (method.hasAnnotatedQuery()) {
+
+			org.springframework.data.mongodb.repository.Query queryAnnotation = method.getQueryAnnotation();
+
+			this.isCountQuery = queryAnnotation.count();
+			this.isExistsQuery = queryAnnotation.exists();
+			this.isDeleteQuery = queryAnnotation.delete();
+
+			if (hasAmbiguousProjectionFlags(this.isCountQuery, this.isExistsQuery, this.isDeleteQuery)) {
+				throw new IllegalArgumentException(String.format(COUNT_EXISTS_AND_DELETE, method));
+			}
+
+		} else {
+
+			this.isCountQuery = false;
+			this.isExistsQuery = false;
+			this.isDeleteQuery = false;
+		}
 	}
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod}, {@link MongoOperations},
-	 * {@link ValueExpressionSupportHolder}.
+	 * {@link ValueExpressionDelegate}.
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
@@ -80,13 +100,13 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @since 4.3
 	 */
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			ValueExpressionSupportHolder expressionSupport) {
+			ValueExpressionDelegate expressionSupport) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionSupport);
 	}
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
-	 * {@link MongoOperations}, {@link ValueExpressionSupportHolder}.
+	 * {@link MongoOperations}, {@link ValueExpressionDelegate}, {@link QueryMethodValueEvaluationContextAccessor}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
@@ -95,7 +115,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @since 4.3
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
-			ValueExpressionSupportHolder expressionSupport) {
+			ValueExpressionDelegate expressionSupport) {
 
 		super(method, mongoOperations, expressionSupport);
 

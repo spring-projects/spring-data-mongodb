@@ -22,10 +22,8 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
-import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -37,9 +35,9 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
@@ -66,15 +64,21 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
+	 * @deprecated since 4.3, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
 	 */
 	@Deprecated(since = "4.3")
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		this(method, mongoOperations,
-				new ValueExpressionSupportHolder(
-						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
-						ValueExpressionParser.create(() -> expressionParser)));
+		super(method, mongoOperations, expressionParser, evaluationContextProvider);
+
+		if (method.isPageQuery()) {
+			throw new InvalidMongoDbApiUsageException(String.format(
+					"Repository aggregation method '%s' does not support '%s' return type; Please use 'Slice' or 'List' instead",
+					method.getName(), method.getReturnType().getType().getSimpleName()));
+		}
+
+		this.mongoOperations = mongoOperations;
+		this.mongoConverter = mongoOperations.getConverter();
 	}
 
 	/**
@@ -82,12 +86,12 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionSupport must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
 	 * @since 4.3
 	 */
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
-			ValueExpressionSupportHolder expressionSupport) {
-		super(method, mongoOperations, expressionSupport);
+			ValueExpressionDelegate delegate) {
+		super(method, mongoOperations, delegate);
 
 		if (method.isPageQuery()) {
 			throw new InvalidMongoDbApiUsageException(String.format(

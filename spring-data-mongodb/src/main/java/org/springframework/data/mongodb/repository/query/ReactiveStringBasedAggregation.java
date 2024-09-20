@@ -23,8 +23,6 @@ import java.util.List;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -34,10 +32,9 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.ExpressionParser;
@@ -61,29 +58,29 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @param reactiveMongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
+	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
 	@Deprecated(since = "4.3")
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations reactiveMongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
-		this(method, reactiveMongoOperations,
-				new ValueExpressionSupportHolder(
-						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
-						ValueExpressionParser.create(() -> expressionParser)));
+		super(method, reactiveMongoOperations, expressionParser, evaluationContextProvider);
+
+		this.reactiveMongoOperations = reactiveMongoOperations;
+		this.mongoConverter = reactiveMongoOperations.getConverter();
 	}
 
 	/**
 	 * @param method must not be {@literal null}.
 	 * @param reactiveMongoOperations must not be {@literal null}.
-	 * @param expressionSupportHolder must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
 	 * @since 4.3
 	 */
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations reactiveMongoOperations, ValueExpressionSupportHolder expressionSupportHolder) {
+			ReactiveMongoOperations reactiveMongoOperations, ValueExpressionDelegate delegate) {
 
-		super(method, reactiveMongoOperations, expressionSupportHolder);
+		super(method, reactiveMongoOperations, delegate);
 
 		this.reactiveMongoOperations = reactiveMongoOperations;
 		this.mongoConverter = reactiveMongoOperations.getConverter();

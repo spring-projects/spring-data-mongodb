@@ -40,12 +40,11 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.data.repository.query.CachingValueExpressionSupportHolder;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -59,11 +58,10 @@ import org.springframework.util.Assert;
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
-	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
-
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final MongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	@Nullable private QueryMethodValueEvaluationContextAccessor accessor;
 
 	/**
 	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
@@ -148,8 +146,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
-			ValueExpressionSupportHolder expressionSupport) {
-		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, expressionSupport));
+			ValueExpressionDelegate valueExpressionDelegate) {
+		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionDelegate));
 	}
 
 	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
@@ -172,16 +170,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	private record MongoQueryLookupStrategy(MongoOperations operations,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			ValueExpressionSupportHolder expressionSupport) implements QueryLookupStrategy {
-
-		private MongoQueryLookupStrategy(MongoOperations operations,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-				ValueExpressionSupportHolder expressionSupport) {
-
-			this.operations = operations;
-			this.mappingContext = mappingContext;
-			this.expressionSupport = new CachingValueExpressionSupportHolder(expressionSupport);
-		}
+			ValueExpressionDelegate expressionSupport) implements QueryLookupStrategy {
 
 		@Override
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,

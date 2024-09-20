@@ -21,7 +21,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -29,10 +28,9 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
 import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -67,7 +65,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
+	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
 	@Deprecated(since = "4.3")
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
@@ -84,50 +82,71 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
+	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
 	@Deprecated(since = "4.3")
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
-		this(query, method, mongoOperations,
-				new ValueExpressionSupportHolder(
-						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
-						ValueExpressionParser.create(() -> expressionParser)));
-	}
-
-	/**
-	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link MongoQueryMethod} and
-	 * {@link MongoOperations}.
-	 *
-	 * @param method must not be {@literal null}.
-	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionSupportHolder must not be {@literal null}.
-	 */
-	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			ValueExpressionSupportHolder expressionSupportHolder) {
-		this(method.getAnnotatedQuery(), method, mongoOperations, expressionSupportHolder);
-	}
-
-	/**
-	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
-	 * {@link MongoOperations}, {@link SpelExpressionParser} and
-	 * {@link ReactiveExtensionAwareQueryMethodEvaluationContextProvider}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param method must not be {@literal null}.
-	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionSupportHolder must not be {@literal null}.
-	 */
-	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations mongoOperations, ValueExpressionSupportHolder expressionSupportHolder) {
-
-		super(method, mongoOperations, expressionSupportHolder);
+		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
 		Assert.notNull(query, "Query must not be null");
 
 		this.query = query;
-		this.expressionParser = expressionSupportHolder;
+		this.expressionParser = ValueExpressionParser.create(() -> expressionParser);
+		this.fieldSpec = method.getFieldSpecification();
+
+		if (method.hasAnnotatedQuery()) {
+
+			org.springframework.data.mongodb.repository.Query queryAnnotation = method.getQueryAnnotation();
+
+			this.isCountQuery = queryAnnotation.count();
+			this.isExistsQuery = queryAnnotation.exists();
+			this.isDeleteQuery = queryAnnotation.delete();
+
+			if (hasAmbiguousProjectionFlags(this.isCountQuery, this.isExistsQuery, this.isDeleteQuery)) {
+				throw new IllegalArgumentException(String.format(COUNT_EXISTS_AND_DELETE, method));
+			}
+
+		} else {
+
+			this.isCountQuery = false;
+			this.isExistsQuery = false;
+			this.isDeleteQuery = false;
+		}
+	}
+
+	/**
+	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link MongoQueryMethod},
+	 * {@link MongoOperations} and {@link ValueExpressionDelegate}.
+	 *
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
+	 */
+	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
+			ValueExpressionDelegate delegate) {
+		this(method.getAnnotatedQuery(), method, mongoOperations, delegate);
+	}
+
+	/**
+	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
+	 * {@link MongoOperations}, {@link ValueExpressionDelegate}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
+	 */
+	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
+			ReactiveMongoOperations mongoOperations, ValueExpressionDelegate delegate) {
+
+		super(method, mongoOperations, delegate);
+
+		Assert.notNull(query, "Query must not be null");
+
+		this.query = query;
+		this.expressionParser = delegate.getValueExpressionParser();
 		this.fieldSpec = method.getFieldSpecification();
 
 		if (method.hasAnnotatedQuery()) {

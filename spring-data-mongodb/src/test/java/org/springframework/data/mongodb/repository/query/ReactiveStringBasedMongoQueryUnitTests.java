@@ -55,10 +55,10 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.spel.spi.ReactiveEvaluationContextExtension;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -216,7 +216,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	@Test // DATAMONGO-1444
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() throws Exception {
 
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1");
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject",
 				boolean.class, String.class);
 
@@ -257,11 +257,8 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	@Test // DATAMONGO-1894
 	void shouldConsiderReactiveSpelExtension() throws Exception {
 
-		ReactiveExtensionAwareQueryMethodEvaluationContextProvider contextProvider = new ReactiveExtensionAwareQueryMethodEvaluationContextProvider(
-				Collections.singletonList(ReactiveSpelExtension.INSTANCE));
-
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter);
-		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod(contextProvider, "withReactiveSpelExtensions");
+		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("withReactiveSpelExtensions");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{lastname: true}", "{project: true}");
@@ -269,21 +266,17 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
-	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
-		return createQueryForMethod(ReactiveQueryMethodEvaluationContextProvider.DEFAULT, name, parameters);
-	}
-
 	private ReactiveStringBasedMongoQuery createQueryForMethod(
-			ReactiveQueryMethodEvaluationContextProvider contextProvider, String name, Class<?>... parameters)
+			String name, Class<?>... parameters)
 			throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-
-		return new ReactiveStringBasedMongoQuery(queryMethod, operations, new ValueExpressionSupportHolder(
-				new QueryMethodValueEvaluationContextProviderFactory(environment, contextProvider), PARSER));
+		QueryMethodValueEvaluationContextAccessor accessor = new QueryMethodValueEvaluationContextAccessor(
+				environment, Collections.singletonList(ReactiveSpelExtension.INSTANCE));
+		return new ReactiveStringBasedMongoQuery(queryMethod, operations, new ValueExpressionDelegate(accessor, PARSER));
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {

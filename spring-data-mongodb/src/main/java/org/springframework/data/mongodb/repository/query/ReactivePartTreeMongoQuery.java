@@ -20,8 +20,6 @@ import reactor.core.publisher.Mono;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -30,12 +28,12 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.util.StringUtils;
@@ -61,16 +59,17 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionSupportHolder} instead.
+	 * @deprecated since 4.3, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
 	 */
 	@Deprecated(since = "4.3")
 	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
+		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
-		this(method, mongoOperations,
-				new ValueExpressionSupportHolder(
-						new QueryMethodValueEvaluationContextProviderFactory(new StandardEnvironment(), evaluationContextProvider),
-						ValueExpressionParser.create(() -> expressionParser)));
+		this.processor = method.getResultProcessor();
+		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());
+		this.isGeoNearQuery = method.isGeoNearQuery();
+		this.context = mongoOperations.getConverter().getMappingContext();
 	}
 
 	/**
@@ -78,13 +77,13 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionSupportHolder must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
 	 * @since 4.3
 	 */
 	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			ValueExpressionSupportHolder expressionSupportHolder) {
+			ValueExpressionDelegate delegate) {
 
-		super(method, mongoOperations, expressionSupportHolder);
+		super(method, mongoOperations, delegate);
 
 		this.processor = method.getResultProcessor();
 		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());

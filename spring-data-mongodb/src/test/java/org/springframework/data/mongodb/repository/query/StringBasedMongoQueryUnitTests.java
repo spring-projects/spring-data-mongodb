@@ -63,9 +63,8 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextProviderFactory;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.MongoClientSettings;
@@ -333,7 +332,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Test // DATAMONGO-1244
 	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() {
 
-		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, true, "param1");
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject", boolean.class,
 				String.class);
 
@@ -744,9 +743,9 @@ public class StringBasedMongoQueryUnitTests {
 			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
 					factory, converter.getMappingContext());
-			return new StringBasedMongoQuery(queryMethod, operations,
-					new ValueExpressionSupportHolder(new QueryMethodValueEvaluationContextProviderFactory(environment,
-							QueryMethodEvaluationContextProvider.DEFAULT), PARSER));
+			QueryMethodValueEvaluationContextAccessor accessor = new QueryMethodValueEvaluationContextAccessor(
+					environment, Collections.emptySet());
+			return new StringBasedMongoQuery(queryMethod, operations, new ValueExpressionDelegate(accessor, PARSER));
 
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);

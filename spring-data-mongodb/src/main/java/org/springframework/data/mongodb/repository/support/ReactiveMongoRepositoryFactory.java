@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -40,13 +41,12 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
 import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
 import org.springframework.data.repository.core.support.RepositoryFragment;
-import org.springframework.data.repository.query.CachingValueExpressionSupportHolder;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
+import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.query.ValueExpressionSupportHolder;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -60,11 +60,10 @@ import org.springframework.util.Assert;
  */
 public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySupport {
 
-	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
-
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final ReactiveMongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	@Nullable private QueryMethodValueEvaluationContextAccessor accessor;
 
 	/**
 	 * Creates a new {@link ReactiveMongoRepositoryFactory} with the given {@link ReactiveMongoOperations}.
@@ -133,10 +132,9 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		return targetRepository;
 	}
 
-	@Override
-	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
-			ValueExpressionSupportHolder valueExpressionSupportHolder) {
-		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionSupportHolder));
+	@Override protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+			ValueExpressionDelegate valueExpressionDelegate) {
+		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionDelegate));
 	}
 
 	@Override
@@ -161,17 +159,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @author Christoph Strobl
 	 */
 	private record MongoQueryLookupStrategy(ReactiveMongoOperations operations,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			ValueExpressionSupportHolder expressionSupportHolder) implements QueryLookupStrategy {
-
-		private MongoQueryLookupStrategy(ReactiveMongoOperations operations,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-				ValueExpressionSupportHolder expressionSupportHolder) {
-
-			this.operations = operations;
-			this.mappingContext = mappingContext;
-			this.expressionSupportHolder = new CachingValueExpressionSupportHolder(expressionSupportHolder);
-		}
+		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+		ValueExpressionDelegate delegate) implements QueryLookupStrategy {
 
 		@Override
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
@@ -184,13 +173,13 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, expressionSupportHolder);
+				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, delegate);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
-				return new ReactiveStringBasedAggregation(queryMethod, operations, expressionSupportHolder);
+				return new ReactiveStringBasedAggregation(queryMethod, operations, delegate);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveStringBasedMongoQuery(queryMethod, operations, expressionSupportHolder);
+				return new ReactiveStringBasedMongoQuery(queryMethod, operations, delegate);
 			} else {
-				return new ReactivePartTreeMongoQuery(queryMethod, operations, expressionSupportHolder);
+				return new ReactivePartTreeMongoQuery(queryMethod, operations, delegate);
 			}
 		}
 	}
