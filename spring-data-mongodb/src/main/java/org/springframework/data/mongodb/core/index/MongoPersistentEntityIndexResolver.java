@@ -160,18 +160,22 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		if (entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
 			CompoundWildcardIndexed indexed = entity.getRequiredAnnotation(CompoundWildcardIndexed.class);
 
-			if (!ObjectUtils.isEmpty(indexed.wildcardFieldName()) && !ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+			if (!isWildcardFromRoot(indexed.wildcardFieldName()) && !ObjectUtils.isEmpty(indexed.wildcardProjection())) {
 
 				throw new MappingException(
 						String.format("CompoundWildcardIndex.wildcardProjection is only allowed on \"$**\"; Offending property: %s",
 								indexed.wildcardFieldName()));
 			}
 
-			if (ObjectUtils.isEmpty(indexed.wildcardFieldName()) && ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+			if (isWildcardFromRoot(indexed.wildcardFieldName()) && ObjectUtils.isEmpty(indexed.wildcardProjection())) {
 
-				throw new MappingException(String.format("CompoundWildcardIndex.wildcardProjection is required on \"$**\""));
+				throw new MappingException("CompoundWildcardIndex.wildcardProjection is required on \"$**\"");
 			}
 		}
+	}
+
+	private static boolean isWildcardFromRoot(String fieldName) {
+		return CompoundWildcardIndexed.ALL_FIELDS.equals(fieldName);
 	}
 
 	private void potentiallyAddIndexForProperty(MongoPersistentEntity<?> root, MongoPersistentProperty persistentProperty,
@@ -524,7 +528,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		CompoundWildcardIndexDefinition indexDefinition = new CompoundWildcardIndexDefinition(wildcardField, indexKeys);
 
-		if (StringUtils.hasText(index.wildcardProjection()) && ObjectUtils.isEmpty(wildcardField)) {
+		if (StringUtils.hasText(index.wildcardProjection()) && isWildcardFromRoot(wildcardField)) {
 			indexDefinition.wildcardProjection(evaluateWildcardProjection(index.wildcardProjection(), entity));
 		}
 

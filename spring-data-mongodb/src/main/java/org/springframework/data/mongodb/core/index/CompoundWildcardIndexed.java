@@ -63,16 +63,21 @@ import java.lang.annotation.Target;
 public @interface CompoundWildcardIndexed {
 
 	/**
-	 * The name of the sub-field to which a wildcard index is applied. If empty, the wildcard term will resolve to "$**".
-	 *
-	 * @return empty by default.
+	 * Represents wildcard for all fields starting from the root od the document.
 	 */
-	String wildcardFieldName() default "";
+	String ALL_FIELDS = "$**";
+
+	/**
+	 * The name of the sub-field to which a wildcard index is applied. The default value scans all fields.
+	 *
+	 * @return {@link #ALL_FIELDS} by default.
+	 */
+	String wildcardFieldName() default ALL_FIELDS;
 
 	/**
 	 * Explicitly specify sub-fields to be in-/excluded as a {@link org.bson.Document#parse(String) parsable} String.
 	 * <br />
-	 * <strong>NOTE:</strong> Can only be applied on when wildcard term is "$**"
+	 * <strong>NOTE:</strong> Can only be applied on when wildcard term is {@link #ALL_FIELDS}
 	 *
 	 * @return empty by default.
 	 */

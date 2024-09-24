@@ -117,7 +117,7 @@ public @interface WildcardIndexed {
 	String partialFilter() default "";
 
 	/**
-	 * Explicitly specify sub fields to be in-/excluded as a {@link org.bson.Document#parse(String) prasable} String.
+	 * Explicitly specify sub-fields to be in-/excluded as a {@link org.bson.Document#parse(String) prasable} String.
 	 * <br />
 	 * <strong>NOTE:</strong> Can only be applied on root level documents.
 	 *
