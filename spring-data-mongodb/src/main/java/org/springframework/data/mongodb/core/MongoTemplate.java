@@ -865,7 +865,8 @@ public class MongoTemplate
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
 
-		return doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(), entityClass,
+		return doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
+				query.getSortObject(), entityClass,
 				new QueryCursorPreparer(query, entityClass));
 	}
 
@@ -899,14 +900,15 @@ public class MongoTemplate
 					operations.getIdPropertyName(sourceClass));
 
 			List<T> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
-					keysetPaginationQuery.fields(), sourceClass,
+					keysetPaginationQuery.fields(), keysetPaginationQuery.sort(), sourceClass,
 					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback);
 
 			return ScrollUtils.createWindow(query, result, sourceClass, operations);
 		}
 
 		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
-				sourceClass, new QueryCursorPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass),
+				query.getSortObject(), sourceClass,
+				new QueryCursorPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass),
 				callback);
 
 		return ScrollUtils.createWindow(result, query.getLimit(), OffsetScrollPosition.positionFunction(query.getSkip()));
@@ -2559,8 +2561,8 @@ public class MongoTemplate
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			Document query, Document fields, Class<T> entityClass) {
-		return doFind(collectionName, collectionPreparer, query, fields, entityClass, null,
+			Document query, Document fields, Document sort, Class<T> entityClass) {
+		return doFind(collectionName, collectionPreparer, query, fields, sort, entityClass, null,
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName));
 	}
 
@@ -2579,21 +2581,21 @@ public class MongoTemplate
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			Document query, Document fields, Class<T> entityClass, CursorPreparer preparer) {
-		return doFind(collectionName, collectionPreparer, query, fields, entityClass, preparer,
+			Document query, Document fields, Document sort, Class<T> entityClass, CursorPreparer preparer) {
+		return doFind(collectionName, collectionPreparer, query, fields, sort, entityClass, preparer,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName));
 	}
 
 	protected <S, T> List<T> doFind(String collectionName,
 			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
-			Class<S> entityClass, @Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
+			Document sort, Class<S> entityClass, @Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
-		Document mappedSort = getMappedSortObject(query, entityClass);
+		Document mappedSort = getMappedSortObject(sort, entityClass);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
