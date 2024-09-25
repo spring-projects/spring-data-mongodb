@@ -59,9 +59,9 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
+	 * @deprecated since 4.4.0, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
@@ -78,7 +78,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
-	 * @since 4.3
+	 * @since 4.4.0
 	 */
 	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ValueExpressionDelegate delegate) {

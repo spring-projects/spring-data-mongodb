@@ -124,6 +124,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		Assert.isInstanceOf(ReactiveValueEvaluationContextProvider.class, valueContextProvider, "ValueEvaluationContextProvider must be reactive");
 		this.valueEvaluationContextProvider = (ReactiveValueEvaluationContextProvider) valueContextProvider;
 	}
+
 	/**
 	 * Creates a new {@link AbstractReactiveMongoQuery} from the given {@link MongoQueryMethod} and
 	 * {@link MongoOperations}.
@@ -131,6 +132,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
+	 * @since 4.4.0
 	 */
 	public AbstractReactiveMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations,
 			ValueExpressionDelegate delegate) {
@@ -463,10 +465,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param accessor must not be {@literal null}.
 	 * @return a {@link Mono} emitting the {@link SpELExpressionEvaluator} when ready.
 	 * @since 3.4
-	 * @deprecated since 4.3, use
+	 * @deprecated since 4.4.0, use
 	 *             {@link #getValueExpressionEvaluatorLater(ExpressionDependencies, MongoParameterAccessor)} instead
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	protected Mono<SpELExpressionEvaluator> getSpelEvaluatorFor(ExpressionDependencies dependencies,
 			MongoParameterAccessor accessor) {
 		return valueEvaluationContextProvider.getEvaluationContextLater(accessor.getValues(), dependencies)
@@ -508,18 +510,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			MongoParameterAccessor accessor) {
 
 			return valueEvaluationContextProvider.getEvaluationContextLater(accessor.getValues(), dependencies)
-					.map(evaluationContext -> {
-
-						return new ValueExpressionEvaluator() {
-							@Override
-							public <T> T evaluate(String expressionString) {
-
-								ValueExpression expression = valueExpressionDelegate.parse(expressionString);
-
-								return (T) expression.evaluate(evaluationContext);
-							}
-						};
-					});
+					.map(evaluationContext -> new ValueExpressionDelegateValueExpressionEvaluator(valueExpressionDelegate, valueExpression -> evaluationContext));
 	}
 
 	/**

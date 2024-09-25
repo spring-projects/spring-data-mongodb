@@ -61,9 +61,9 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
+	 * @deprecated since 4.4, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
@@ -80,7 +80,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
-	 * @since 4.3
+	 * @since 4.4.0
 	 */
 	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
 			ValueExpressionDelegate delegate) {

@@ -34,6 +34,7 @@ import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 /**
@@ -65,9 +66,9 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
+	 * @deprecated since 4.4.0, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
@@ -82,9 +83,9 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
+	 * @deprecated since 4.4.0, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
@@ -123,6 +124,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
+	 * @since 4.4.0
 	 */
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ValueExpressionDelegate delegate) {
@@ -137,8 +139,9 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
+	 * @since 4.4.0
 	 */
-	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
+	public ReactiveStringBasedMongoQuery(@NonNull String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, ValueExpressionDelegate delegate) {
 
 		super(method, mongoOperations, delegate);

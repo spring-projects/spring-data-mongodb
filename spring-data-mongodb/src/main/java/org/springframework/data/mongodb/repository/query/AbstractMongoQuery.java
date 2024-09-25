@@ -22,7 +22,6 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.expression.ValueExpressionParser;
@@ -121,6 +120,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}
+	 * @since 4.4.0
 	 */
 	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, ValueExpressionDelegate delegate) {
 
@@ -415,23 +415,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 *
 	 * @param accessor must not be {@literal null}.
 	 * @return the {@link ValueExpressionEvaluator}.
-	 * @since 4.3
+	 * @since 4.4.0
 	 */
 	protected ValueExpressionEvaluator getExpressionEvaluatorFor(MongoParameterAccessor accessor) {
-
-		return new ValueExpressionEvaluator() {
-
-			@Override
-			public <T> T evaluate(String expressionString) {
-
-					ValueExpression expression = valueExpressionDelegate.parse(expressionString);
-					ValueEvaluationContext evaluationContext =
-							valueEvaluationContextProvider.getEvaluationContext(accessor.getValues(), expression.getExpressionDependencies());
-
-					return (T) expression.evaluate(evaluationContext);
-
-			}
-		};
+		return new ValueExpressionDelegateValueExpressionEvaluator(valueExpressionDelegate, (ValueExpression expression) ->
+				valueEvaluationContextProvider.getEvaluationContext(accessor.getValues(), expression.getExpressionDependencies()));
 	}
 
 	/**
@@ -480,4 +468,5 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
+
 }

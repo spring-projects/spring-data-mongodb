@@ -58,9 +58,9 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @param reactiveMongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.3, use the constructors accepting {@link ValueExpressionDelegate} instead.
+	 * @deprecated since 4.4.0, use the constructors accepting {@link ValueExpressionDelegate} instead.
 	 */
-	@Deprecated(since = "4.3")
+	@Deprecated(since = "4.4.0")
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations reactiveMongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
@@ -75,7 +75,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @param method must not be {@literal null}.
 	 * @param reactiveMongoOperations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
-	 * @since 4.3
+	 * @since 4.4.0
 	 */
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations reactiveMongoOperations, ValueExpressionDelegate delegate) {
