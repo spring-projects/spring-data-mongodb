@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 
 import com.mongodb.client.model.IndexOptions;
 
@@ -86,7 +88,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.type = type;
 	}
 
-	public Mono<String> ensureIndex(final IndexDefinition indexDefinition) {
+	@Override
+	public Mono<String> ensureIndex(IndexDefinition indexDefinition) {
 
 		return mongoOperations.execute(collectionName, collection -> {
 
@@ -104,6 +107,23 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		}).next();
 	}
 
+	@Override
+	public Mono<Void> alterIndex(String name, org.springframework.data.mongodb.core.index.IndexOptions options) {
+
+		return mongoOperations.execute(db -> {
+			Document indexOptions = new Document("name", name);
+			indexOptions.putAll(options.toDocument());
+
+			return Flux.from(db.runCommand(new Document("collMod", collectionName).append("index", indexOptions)))
+					.doOnNext(result -> {
+						if (NumberUtils.convertNumberToTargetClass(result.get("ok", (Number) 0), Integer.class) != 1) {
+							throw new UncategorizedMongoDbException(
+									"Index '%s' could not be modified. Response was %s".formatted(name, result.toJson()), null);
+						}
+					});
+		}).then();
+	}
+
 	@Nullable
 	private MongoPersistentEntity<?> lookupPersistentEntity(String collection) {
 
@@ -115,14 +135,17 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 				.orElse(null);
 	}
 
-	public Mono<Void> dropIndex(final String name) {
+	@Override
+	public Mono<Void> dropIndex(String name) {
 		return mongoOperations.execute(collectionName, collection -> collection.dropIndex(name)).then();
 	}
 
+	@Override
 	public Mono<Void> dropAllIndexes() {
 		return dropIndex("*");
 	}
 
+	@Override
 	public Flux<IndexInfo> getIndexInfo() {
 
 		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
@@ -141,7 +164,8 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 				queryMapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
 	}
 
-	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops, MongoPersistentEntity<?> entity) {
+	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops,
+			@Nullable MongoPersistentEntity<?> entity) {
 
 		if (ops.getCollation() != null || entity == null || !entity.hasCollation()) {
 			return ops;

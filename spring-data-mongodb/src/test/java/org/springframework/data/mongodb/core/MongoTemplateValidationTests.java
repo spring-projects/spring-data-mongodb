@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.validation.Validator.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.bson.Document;
@@ -35,8 +33,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions.ValidationOptions;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.lang.Nullable;
@@ -48,11 +48,13 @@ import com.mongodb.client.model.ValidationLevel;
 
 /**
  * Integration tests for {@link CollectionOptions#validation(ValidationOptions)} using
- * {@link org.springframework.data.mongodb.core.validation.CriteriaValidator} and
- * {@link org.springframework.data.mongodb.core.validation.DocumentValidator}.
+ * {@link org.springframework.data.mongodb.core.validation.CriteriaValidator},
+ * {@link org.springframework.data.mongodb.core.validation.DocumentValidator} and
+ * {@link org.springframework.data.mongodb.core.validation.JsonSchemaValidator}.
  *
  * @author Andreas Zink
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class MongoTemplateValidationTests {
@@ -188,6 +190,20 @@ public class MongoTemplateValidationTests {
 		assertThat(getValidatorInfo(COLLECTION_NAME)).isEqualTo(new Document("customName", new Document("$type", "bool")));
 	}
 
+	@Test // GH-4454
+	public void failsJsonSchemaValidationForEncryptedDomainEntityProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create().createSchemaFor(BeanWithEncryptedDomainEntity.class);
+		template.createCollection(COLLECTION_NAME, CollectionOptions.empty().schema(schema));
+
+		BeanWithEncryptedDomainEntity person = new BeanWithEncryptedDomainEntity();
+		person.encryptedDomainEntity = new SimpleBean("some string", 100, null);
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+			.isThrownBy(() -> template.save(person))
+			.withMessageContaining("Document failed validation");
+	}
+
 	private Document getCollectionOptions(String collectionName) {
 		return getCollectionInfo(collectionName).get("options", Document.class);
 	}
@@ -213,13 +229,70 @@ public class MongoTemplateValidationTests {
 		});
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(collection = COLLECTION_NAME)
 	static class SimpleBean {
 
 		private @Nullable String nonNullString;
 		private @Nullable Integer rangedInteger;
 		private @Field("customName") Object customFieldName;
+
+		public SimpleBean(@Nullable String nonNullString, @Nullable Integer rangedInteger, Object customFieldName) {
+			this.nonNullString = nonNullString;
+			this.rangedInteger = rangedInteger;
+			this.customFieldName = customFieldName;
+		}
+
+		@Nullable
+		public String getNonNullString() {
+			return this.nonNullString;
+		}
+
+		@Nullable
+		public Integer getRangedInteger() {
+			return this.rangedInteger;
+		}
+
+		public Object getCustomFieldName() {
+			return this.customFieldName;
+		}
+
+		public void setNonNullString(@Nullable String nonNullString) {
+			this.nonNullString = nonNullString;
+		}
+
+		public void setRangedInteger(@Nullable Integer rangedInteger) {
+			this.rangedInteger = rangedInteger;
+		}
+
+		public void setCustomFieldName(Object customFieldName) {
+			this.customFieldName = customFieldName;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SimpleBean that = (SimpleBean) o;
+			return Objects.equals(nonNullString, that.nonNullString) && Objects.equals(rangedInteger, that.rangedInteger) && Objects.equals(customFieldName, that.customFieldName);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(nonNullString, rangedInteger, customFieldName);
+		}
+
+		public String toString() {
+			return "MongoTemplateValidationTests.SimpleBean(nonNullString=" + this.getNonNullString() + ", rangedInteger=" + this.getRangedInteger() + ", customFieldName=" + this.getCustomFieldName() + ")";
+		}
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = COLLECTION_NAME)
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+	static class BeanWithEncryptedDomainEntity {
+		@Encrypted SimpleBean encryptedDomainEntity;
 	}
 }

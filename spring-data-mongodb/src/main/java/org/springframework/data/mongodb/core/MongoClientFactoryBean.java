@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,6 @@ import com.mongodb.event.ClusterListener;
  */
 public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> implements PersistenceExceptionTranslator {
 
-	private static final PersistenceExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
-
 	private @Nullable MongoClientSettings mongoClientSettings;
 	private @Nullable String host;
 	private @Nullable Integer port;
@@ -64,7 +62,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	private @Nullable ConnectionString connectionString;
 	private @Nullable String replicaSet = null;
 
-	private PersistenceExceptionTranslator exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
+	private PersistenceExceptionTranslator exceptionTranslator = MongoExceptionTranslator.DEFAULT_EXCEPTION_TRANSLATOR;
 
 	/**
 	 * Set the {@link MongoClientSettings} to be used when creating {@link MongoClient}.
@@ -116,21 +114,32 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	 * @param exceptionTranslator
 	 */
 	public void setExceptionTranslator(@Nullable PersistenceExceptionTranslator exceptionTranslator) {
-		this.exceptionTranslator = exceptionTranslator == null ? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
+		this.exceptionTranslator = exceptionTranslator == null ? MongoExceptionTranslator.DEFAULT_EXCEPTION_TRANSLATOR
+				: exceptionTranslator;
 	}
 
-	public Class<? extends MongoClient> getObjectType() {
-		return MongoClient.class;
-	}
-
+	@Override
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 
 	@Override
+	public Class<? extends MongoClient> getObjectType() {
+		return MongoClient.class;
+	}
+
+	@Override
 	protected MongoClient createInstance() throws Exception {
 		return createMongoClient(computeClientSetting());
+	}
+
+	@Override
+	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
+
+		if (instance != null) {
+			instance.close();
+		}
 	}
 
 	/**
@@ -322,14 +331,6 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 			return fromSettings;
 		}
 		return !fromConnectionStringIsDefault ? fromConnectionString : defaultValue;
-	}
-
-	@Override
-	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
-
-		if (instance != null) {
-			instance.close();
-		}
 	}
 
 	private MongoClient createMongoClient(MongoClientSettings settings) throws UnknownHostException {

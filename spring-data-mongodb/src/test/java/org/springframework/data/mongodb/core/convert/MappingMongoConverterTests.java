@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +29,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,8 +80,7 @@ public class MappingMongoConverterTests {
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
-		mappingContext.setInitialEntitySet(new HashSet<>(
-				Arrays.asList(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class)));
+		mappingContext.setInitialEntitySet(Set.of(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class));
 		mappingContext.setAutoIndexCreation(false);
 		mappingContext.afterPropertiesSet();
 
@@ -108,6 +106,98 @@ public class MappingMongoConverterTests {
 		assertThat(target.getLazyList()).contains(new Sample("sample-1", "one"), new Sample("sample-2", "two"));
 
 		verify(dbRefResolver).bulkFetch(any());
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedReferences() {
+
+		Document sampleSource = new Document("_id", "sample-1").append("value", "one");
+		Document source = new Document("_id", "id-1").append("sample", sampleSource);
+
+		WithSingleValueDbRef read = converter.read(WithSingleValueDbRef.class, source);
+
+		assertThat(read.sample).isEqualTo(converter.read(Sample.class, sampleSource));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedListOfReferences() {
+
+		Document sample1Source = new Document("_id", "sample-1").append("value", "one");
+		Document sample2Source = new Document("_id", "sample-2").append("value", "two");
+		Document source = new Document("_id", "id-1").append("lazyList", List.of(sample1Source, sample2Source));
+
+		WithLazyDBRef read = converter.read(WithLazyDBRef.class, source);
+
+		assertThat(read.lazyList).containsExactly(converter.read(Sample.class, sample1Source),
+				converter.read(Sample.class, sample2Source));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedMapOfReferences() {
+
+		Document sample1Source = new Document("_id", "sample-1").append("value", "one");
+		Document sample2Source = new Document("_id", "sample-2").append("value", "two");
+		Document source = new Document("_id", "id-1").append("sampleMap",
+				new Document("s1", sample1Source).append("s2", sample2Source));
+
+		WithMapValueDbRef read = converter.read(WithMapValueDbRef.class, source);
+
+		assertThat(read.sampleMap) //
+				.containsEntry("s1", converter.read(Sample.class, sample1Source)) //
+				.containsEntry("s2", converter.read(Sample.class, sample2Source));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedMapOfLazyReferences() {
+
+		Document sample1Source = new Document("_id", "sample-1").append("value", "one");
+		Document sample2Source = new Document("_id", "sample-2").append("value", "two");
+		Document source = new Document("_id", "id-1").append("sampleMapLazy",
+				new Document("s1", sample1Source).append("s2", sample2Source));
+
+		WithMapValueDbRef read = converter.read(WithMapValueDbRef.class, source);
+
+		assertThat(read.sampleMapLazy) //
+				.containsEntry("s1", converter.read(Sample.class, sample1Source)) //
+				.containsEntry("s2", converter.read(Sample.class, sample2Source));
+		verifyNoInteractions(dbRefResolver);
+	}
+
+	@Test // GH-4312
+	void resolvesLazyDBRefMapOnAccess() {
+
+		client.getDatabase(DATABASE).getCollection("samples")
+				.insertMany(Arrays.asList(new Document("_id", "sample-1").append("value", "one"),
+						new Document("_id", "sample-2").append("value", "two")));
+
+		Document source = new Document("_id", "id-1").append("sampleMapLazy",
+				new Document("s1", new com.mongodb.DBRef("samples", "sample-1")).append("s2",
+						new com.mongodb.DBRef("samples", "sample-2")));
+
+		WithMapValueDbRef target = converter.read(WithMapValueDbRef.class, source);
+
+		verify(dbRefResolver).resolveDbRef(any(), isNull(), any(), any());
+
+		assertThat(target.sampleMapLazy).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.getSampleMapLazy()).containsEntry("s1", new Sample("sample-1", "one")).containsEntry("s2",
+				new Sample("sample-2", "two"));
+
+		verify(dbRefResolver).bulkFetch(any());
+	}
+
+	@Test // GH-4312
+	void conversionShouldAllowReadingAlreadyResolvedLazyReferences() {
+
+		Document sampleSource = new Document("_id", "sample-1").append("value", "one");
+		Document source = new Document("_id", "id-1").append("sampleLazy", sampleSource);
+
+		WithSingleValueDbRef read = converter.read(WithSingleValueDbRef.class, source);
+
+		assertThat(read.sampleLazy).isEqualTo(converter.read(Sample.class, sampleSource));
+		verifyNoInteractions(dbRefResolver);
 	}
 
 	@Test // DATAMONGO-2004
@@ -164,6 +254,87 @@ public class MappingMongoConverterTests {
 		}
 	}
 
+	public static class WithSingleValueDbRef {
+
+		@Id //
+		String id;
+
+		@DBRef //
+		Sample sample;
+
+		@DBRef(lazy = true) //
+		Sample sampleLazy;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Sample getSample() {
+			return this.sample;
+		}
+
+		public Sample getSampleLazy() {
+			return this.sampleLazy;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setSample(Sample sample) {
+			this.sample = sample;
+		}
+
+		public void setSampleLazy(Sample sampleLazy) {
+			this.sampleLazy = sampleLazy;
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.WithSingleValueDbRef(id=" + this.getId() + ", sample=" + this.getSample()
+					+ ", sampleLazy=" + this.getSampleLazy() + ")";
+		}
+	}
+
+	public static class WithMapValueDbRef {
+
+		@Id String id;
+
+		@DBRef //
+		Map<String, Sample> sampleMap;
+
+		@DBRef(lazy = true) //
+		Map<String, Sample> sampleMapLazy;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Map<String, Sample> getSampleMap() {
+			return this.sampleMap;
+		}
+
+		public Map<String, Sample> getSampleMapLazy() {
+			return this.sampleMapLazy;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setSampleMap(Map<String, Sample> sampleMap) {
+			this.sampleMap = sampleMap;
+		}
+
+		public void setSampleMapLazy(Map<String, Sample> sampleMapLazy) {
+			this.sampleMapLazy = sampleMapLazy;
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.WithMapValueDbRef(id=" + this.getId() + ", sampleMap=" + this.getSampleMap()
+					+ ", sampleMapLazy=" + this.getSampleMapLazy() + ")";
+		}
+	}
+
 	public static class WithLazyDBRefAsConstructorArg {
 
 		@Id String id;
@@ -180,22 +351,63 @@ public class MappingMongoConverterTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Sample {
 
 		@Id String id;
 		String value;
+
+		public Sample(String id, String value) {
+
+			this.id = id;
+			this.value = value;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sample sample = (Sample) o;
+			return Objects.equals(id, sample.id) && Objects.equals(value, sample.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.Sample(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	static class WithJavaTimeTypes {
 
 		@Id String id;
 		LocalDate localDate;
 		LocalTime localTime;
 		LocalDateTime localDateTime;
+
+		public WithJavaTimeTypes() {}
 
 		static WithJavaTimeTypes withJavaTimeTypes(Instant instant) {
 
@@ -211,6 +423,61 @@ public class MappingMongoConverterTests {
 		Document toDocument() {
 			return new Document("_id", id).append("localDate", localDate).append("localTime", localTime)
 					.append("localDateTime", localDateTime);
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public LocalDate getLocalDate() {
+			return this.localDate;
+		}
+
+		public LocalTime getLocalTime() {
+			return this.localTime;
+		}
+
+		public LocalDateTime getLocalDateTime() {
+			return this.localDateTime;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setLocalDate(LocalDate localDate) {
+			this.localDate = localDate;
+		}
+
+		public void setLocalTime(LocalTime localTime) {
+			this.localTime = localTime;
+		}
+
+		public void setLocalDateTime(LocalDateTime localDateTime) {
+			this.localDateTime = localDateTime;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithJavaTimeTypes that = (WithJavaTimeTypes) o;
+			return Objects.equals(id, that.id) && Objects.equals(localDate, that.localDate)
+					&& Objects.equals(localTime, that.localTime) && Objects.equals(localDateTime, that.localDateTime);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, localDate, localTime, localDateTime);
+		}
+
+		public String toString() {
+			return "MappingMongoConverterTests.WithJavaTimeTypes(id=" + this.getId() + ", localDate=" + this.getLocalDate()
+					+ ", localTime=" + this.getLocalTime() + ", localDateTime=" + this.getLocalDateTime() + ")";
 		}
 	}
 }

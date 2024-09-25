@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -61,8 +62,10 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -82,6 +85,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -458,7 +462,7 @@ class AbstractMongoQueryUnitTests {
 	void updateExecutionCallsUpdateAllCorrectly() {
 
 		when(terminatingUpdate.all()).thenReturn(updateResultMock);
-		
+
 		createQueryForMethod("findAndIncreaseVisitsByLastname", String.class, int.class) //
 				.execute(new Object[] { "dalinar", 100 });
 
@@ -468,6 +472,74 @@ class AbstractMongoQueryUnitTests {
 
 		assertThat(update.getValue().getUpdateObject()).isEqualTo(Document.parse("{ '$inc' : { 'visits' : 100 } }"));
 	}
+
+	@Test // GH-3230
+	void findShouldApplyHint() {
+
+		createQueryForMethod("findWithHintByFirstname", String.class).execute(new Object[] { "Jasna" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getHint()).isEqualTo("idx-fn");
+	}
+
+	@Test // GH-3230
+	void updateShouldApplyHint() {
+
+		when(terminatingUpdate.all()).thenReturn(updateResultMock);
+
+		createQueryForMethod("findAndIncreaseVisitsByLastname", String.class, int.class) //
+				.execute(new Object[] { "dalinar", 100 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(executableUpdate).matching(captor.capture());
+		assertThat(captor.getValue().getHint()).isEqualTo("idx-ln");
+	}
+
+	@Test // GH-4397
+	void limitShouldBeAppliedToQuery() {
+
+		createQueryForMethod("findWithLimit", String.class, Limit.class).execute(new Object[] { "dalinar", Limit.of(42) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+
+		assertThat(captor.getValue().getLimit()).isEqualTo(42);
+	}
+
+	@Test // GH-4397
+	void sortAndLimitShouldBeAppliedToQuery() {
+
+		createQueryForMethod("findWithSortAndLimit", String.class, Sort.class, Limit.class)
+				.execute(new Object[] { "dalinar", Sort.by("fn"), Limit.of(42) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+
+		assertThat(captor.getValue().getLimit()).isEqualTo(42);
+		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("fn", 1));
+	}
+
+	@Test // GH-2971
+	void findShouldApplyReadPreference() {
+
+		createQueryForMethod("findWithReadPreferenceByFirstname", String.class).execute(new Object[] { "Jasna" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.secondaryPreferred());
+	}
+
+	@Test // GH-2971
+	void findShouldApplyReadPreferenceAtRepository() {
+
+		createQueryForMethod("findWithLimit", String.class, Limit.class).execute(new Object[] { "dalinar", Limit.of(42) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getReadPreference()).isEqualTo(com.mongodb.ReadPreference.primaryPreferred());
+	}
+
 
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
@@ -539,6 +611,7 @@ class AbstractMongoQueryUnitTests {
 		}
 	}
 
+	@ReadPreference(value = "primaryPreferred")
 	private interface Repo extends MongoRepository<Person, Long> {
 
 		List<Person> deleteByLastname(String lastname);
@@ -584,8 +657,19 @@ class AbstractMongoQueryUnitTests {
 		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
 		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
 
+		@Hint("idx-ln")
 		@Update("{ '$inc' : { 'visits' : ?1 } }")
 		void findAndIncreaseVisitsByLastname(String lastname, int value);
+
+		@Hint("idx-fn")
+		void findWithHintByFirstname(String firstname);
+
+		List<Person> findWithLimit(String firstname, Limit limit);
+
+		List<Person> findWithSortAndLimit(String firstname, Sort sort, Limit limit);
+
+		@ReadPreference(value = "secondaryPreferred")
+		List<Person> findWithReadPreferenceByFirstname(String firstname);
 	}
 
 	// DATAMONGO-1872

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -269,6 +269,17 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 
 		assertThat(targetSchema.schemaDocument()) //
 				.containsEntry("properties.value", new Document("type", "string"));
+	}
+
+	@Test // GH-4454
+	void wrapEncryptedEntityTypeLikeProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
+				.createSchemaFor(WithEncryptedEntityLikeProperty.class);
+
+		assertThat(schema.schemaDocument()) //
+				.containsEntry("properties.domainTypeValue", Document.parse("{'encrypt': {'bsonType': 'object' } }"));
 	}
 
 	// --> TYPES AND JSON
@@ -675,5 +686,10 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 
 	static class PropertyClashWithA {
 		Integer aNonEncrypted;
+	}
+
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+	static class WithEncryptedEntityLikeProperty {
+		@Encrypted SomeDomainType domainTypeValue;
 	}
 }

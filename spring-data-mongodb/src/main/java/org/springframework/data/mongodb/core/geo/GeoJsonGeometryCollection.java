@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,11 +70,9 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 			return true;
 		}
 
-		if (!(obj instanceof GeoJsonGeometryCollection)) {
+		if (!(obj instanceof GeoJsonGeometryCollection other)) {
 			return false;
 		}
-
-		GeoJsonGeometryCollection other = (GeoJsonGeometryCollection) obj;
 
 		return ObjectUtils.nullSafeEquals(this.geometries, other.geometries);
 	}

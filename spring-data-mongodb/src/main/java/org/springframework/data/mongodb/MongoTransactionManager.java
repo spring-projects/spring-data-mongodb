@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,46 +64,63 @@ import com.mongodb.client.ClientSession;
 public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		implements ResourceTransactionManager, InitializingBean {
 
-	private @Nullable MongoDatabaseFactory dbFactory;
-	private @Nullable TransactionOptions options;
+	private @Nullable MongoDatabaseFactory databaseFactory;
+	private MongoTransactionOptions options;
+	private final MongoTransactionOptionsResolver transactionOptionsResolver;
 
 	/**
-	 * Create a new {@link MongoTransactionManager} for bean-style usage.
-	 * <br />
+	 * Create a new {@link MongoTransactionManager} for bean-style usage. <br />
 	 * <strong>Note:</strong>The {@link MongoDatabaseFactory db factory} has to be
-	 * {@link #setDbFactory(MongoDatabaseFactory) set} before using the instance. Use this constructor to prepare a
-	 * {@link MongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}.
-	 * <br />
+	 * {@link #setDatabaseFactory(MongoDatabaseFactory) set} before using the instance. Use this constructor to prepare a
+	 * {@link MongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}. <br />
 	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining
 	 * {@link com.mongodb.ReadConcern} and {@link com.mongodb.WriteConcern}.
 	 *
-	 * @see #setDbFactory(MongoDatabaseFactory)
+	 * @see #setDatabaseFactory(MongoDatabaseFactory)
 	 * @see #setTransactionSynchronization(int)
 	 */
-	public MongoTransactionManager() {}
+	public MongoTransactionManager() {
+		this.transactionOptionsResolver = MongoTransactionOptionsResolver.defaultResolver();
+	}
 
 	/**
 	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDatabaseFactory}.
 	 *
-	 * @param dbFactory must not be {@literal null}.
+	 * @param databaseFactory must not be {@literal null}.
 	 */
-	public MongoTransactionManager(MongoDatabaseFactory dbFactory) {
-		this(dbFactory, null);
+	public MongoTransactionManager(MongoDatabaseFactory databaseFactory) {
+		this(databaseFactory, null);
 	}
 
 	/**
 	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDatabaseFactory}
 	 * applying the given {@link TransactionOptions options}, if present, when starting a new transaction.
 	 *
-	 * @param dbFactory must not be {@literal null}.
+	 * @param databaseFactory must not be {@literal null}.
 	 * @param options can be {@literal null}.
 	 */
-	public MongoTransactionManager(MongoDatabaseFactory dbFactory, @Nullable TransactionOptions options) {
+	public MongoTransactionManager(MongoDatabaseFactory databaseFactory, @Nullable TransactionOptions options) {
+		this(databaseFactory, MongoTransactionOptionsResolver.defaultResolver(), MongoTransactionOptions.of(options));
+	}
 
-		Assert.notNull(dbFactory, "DbFactory must not be null");
+	/**
+	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDatabaseFactory}
+	 * applying the given {@link TransactionOptions options}, if present, when starting a new transaction.
+	 *
+	 * @param databaseFactory must not be {@literal null}.
+	 * @param transactionOptionsResolver must not be {@literal null}.
+	 * @param defaultTransactionOptions can be {@literal null}.
+	 * @since 4.3
+	 */
+	public MongoTransactionManager(MongoDatabaseFactory databaseFactory,
+			MongoTransactionOptionsResolver transactionOptionsResolver, MongoTransactionOptions defaultTransactionOptions) {
 
-		this.dbFactory = dbFactory;
-		this.options = options;
+		Assert.notNull(databaseFactory, "MongoDatabaseFactory must not be null");
+		Assert.notNull(transactionOptionsResolver, "MongoTransactionOptionsResolver must not be null");
+
+		this.databaseFactory = databaseFactory;
+		this.transactionOptionsResolver = transactionOptionsResolver;
+		this.options = defaultTransactionOptions;
 	}
 
 	@Override
@@ -134,7 +151,8 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 
 		try {
-			mongoTransactionObject.startTransaction(options);
+			MongoTransactionOptions mongoTransactionOptions = transactionOptionsResolver.resolve(definition).mergeWith(options);
+			mongoTransactionObject.startTransaction(mongoTransactionOptions.toDriverOptions());
 		} catch (MongoException ex) {
 			throw new TransactionSystemException(String.format("Could not start Mongo transaction for session %s.",
 					debugString(mongoTransactionObject.getSession())), ex);
@@ -262,12 +280,12 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	/**
 	 * Set the {@link MongoDatabaseFactory} that this instance should manage transactions for.
 	 *
-	 * @param dbFactory must not be {@literal null}.
+	 * @param databaseFactory must not be {@literal null}.
 	 */
-	public void setDbFactory(MongoDatabaseFactory dbFactory) {
+	public void setDatabaseFactory(MongoDatabaseFactory databaseFactory) {
 
-		Assert.notNull(dbFactory, "DbFactory must not be null");
-		this.dbFactory = dbFactory;
+		Assert.notNull(databaseFactory, "DbFactory must not be null");
+		this.databaseFactory = databaseFactory;
 	}
 
 	/**
@@ -276,7 +294,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @param options can be {@literal null}.
 	 */
 	public void setOptions(@Nullable TransactionOptions options) {
-		this.options = options;
+		this.options = MongoTransactionOptions.of(options);
 	}
 
 	/**
@@ -285,8 +303,8 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	public MongoDatabaseFactory getDbFactory() {
-		return dbFactory;
+	public MongoDatabaseFactory getDatabaseFactory() {
+		return databaseFactory;
 	}
 
 	@Override
@@ -310,14 +328,14 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	}
 
 	/**
-	 * @throws IllegalStateException if {@link #dbFactory} is {@literal null}.
+	 * @throws IllegalStateException if {@link #databaseFactory} is {@literal null}.
 	 */
 	private MongoDatabaseFactory getRequiredDbFactory() {
 
-		Assert.state(dbFactory != null,
+		Assert.state(databaseFactory != null,
 				"MongoTransactionManager operates upon a MongoDbFactory; Did you forget to provide one; It's required");
 
-		return dbFactory;
+		return databaseFactory;
 	}
 
 	private static MongoTransactionObject extractMongoTransaction(Object transaction) {

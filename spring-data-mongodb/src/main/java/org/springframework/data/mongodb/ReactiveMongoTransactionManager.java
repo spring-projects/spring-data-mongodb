@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,17 +37,14 @@ import com.mongodb.reactivestreams.client.ClientSession;
 /**
  * A {@link org.springframework.transaction.ReactiveTransactionManager} implementation that manages
  * {@link com.mongodb.reactivestreams.client.ClientSession} based transactions for a single
- * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}.
- * <br />
+ * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}. <br />
  * Binds a {@link ClientSession} from the specified
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory} to the subscriber
- * {@link reactor.util.context.Context}.
- * <br />
+ * {@link reactor.util.context.Context}. <br />
  * {@link org.springframework.transaction.TransactionDefinition#isReadOnly() Readonly} transactions operate on a
  * {@link ClientSession} and enable causal consistency, and also {@link ClientSession#startTransaction() start},
  * {@link com.mongodb.reactivestreams.client.ClientSession#commitTransaction() commit} or
- * {@link ClientSession#abortTransaction() abort} a transaction.
- * <br />
+ * {@link ClientSession#abortTransaction() abort} a transaction. <br />
  * Application code is required to retrieve the {@link com.mongodb.reactivestreams.client.MongoDatabase} via
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseUtils#getDatabase(ReactiveMongoDatabaseFactory)} instead
  * of a standard {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()} call. Spring
@@ -67,11 +64,11 @@ import com.mongodb.reactivestreams.client.ClientSession;
 public class ReactiveMongoTransactionManager extends AbstractReactiveTransactionManager implements InitializingBean {
 
 	private @Nullable ReactiveMongoDatabaseFactory databaseFactory;
-	private @Nullable TransactionOptions options;
+	private @Nullable MongoTransactionOptions options;
+	private final MongoTransactionOptionsResolver transactionOptionsResolver;
 
 	/**
-	 * Create a new {@link ReactiveMongoTransactionManager} for bean-style usage.
-	 * <br />
+	 * Create a new {@link ReactiveMongoTransactionManager} for bean-style usage. <br />
 	 * <strong>Note:</strong>The {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory db factory} has to
 	 * be {@link #setDatabaseFactory(ReactiveMongoDatabaseFactory)} set} before using the instance. Use this constructor
 	 * to prepare a {@link ReactiveMongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}.
@@ -81,7 +78,9 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 *
 	 * @see #setDatabaseFactory(ReactiveMongoDatabaseFactory)
 	 */
-	public ReactiveMongoTransactionManager() {}
+	public ReactiveMongoTransactionManager() {
+		this.transactionOptionsResolver = MongoTransactionOptionsResolver.defaultResolver();
+	}
 
 	/**
 	 * Create a new {@link ReactiveMongoTransactionManager} obtaining sessions from the given
@@ -103,11 +102,29 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 */
 	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
 			@Nullable TransactionOptions options) {
+		this(databaseFactory, MongoTransactionOptionsResolver.defaultResolver(), MongoTransactionOptions.of(options));
+	}
+
+	/**
+	 * Create a new {@link ReactiveMongoTransactionManager} obtaining sessions from the given
+	 * {@link ReactiveMongoDatabaseFactory} applying the given {@link TransactionOptions options}, if present, when
+	 * starting a new transaction.
+	 *
+	 * @param databaseFactory must not be {@literal null}.
+	 * @param transactionOptionsResolver must not be {@literal null}.
+	 * @param defaultTransactionOptions can be {@literal null}.
+	 * @since 4.3
+	 */
+	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
+			MongoTransactionOptionsResolver transactionOptionsResolver,
+			@Nullable MongoTransactionOptions defaultTransactionOptions) {
 
 		Assert.notNull(databaseFactory, "DatabaseFactory must not be null");
+		Assert.notNull(transactionOptionsResolver, "MongoTransactionOptionsResolver must not be null");
 
 		this.databaseFactory = databaseFactory;
-		this.options = options;
+		this.transactionOptionsResolver = transactionOptionsResolver;
+		this.options = defaultTransactionOptions;
 	}
 
 	@Override
@@ -146,7 +163,9 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 			}).doOnNext(resourceHolder -> {
 
-				mongoTransactionObject.startTransaction(options);
+				MongoTransactionOptions mongoTransactionOptions = transactionOptionsResolver.resolve(definition)
+						.mergeWith(options);
+				mongoTransactionObject.startTransaction(mongoTransactionOptions.toDriverOptions());
 
 				if (logger.isDebugEnabled()) {
 					logger.debug(String.format("Started transaction for session %s.", debugString(resourceHolder.getSession())));
@@ -291,7 +310,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 * @param options can be {@literal null}.
 	 */
 	public void setOptions(@Nullable TransactionOptions options) {
-		this.options = options;
+		this.options = MongoTransactionOptions.of(options);
 	}
 
 	/**

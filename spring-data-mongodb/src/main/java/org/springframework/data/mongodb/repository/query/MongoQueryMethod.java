@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,15 +33,20 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -56,6 +61,7 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 public class MongoQueryMethod extends QueryMethod {
 
@@ -90,8 +96,8 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	@Override
-	protected MongoParameters createParameters(Method method) {
-		return new MongoParameters(method, isGeoNearQuery(method));
+	protected MongoParameters createParameters(ParametersSource parametersSource) {
+		return new MongoParameters(parametersSource, isGeoNearQuery(parametersSource.getMethod()));
 	}
 
 	/**
@@ -290,9 +296,9 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#sort()}.
+	 * Check if the query method is decorated with a non-empty {@link Query#sort()}.
 	 *
-	 * @return true if method annotated with {@link Query} having an non empty sort attribute.
+	 * @return true if method annotated with {@link Query} having a non-empty sort attribute.
 	 * @since 2.1
 	 */
 	public boolean hasAnnotatedSort() {
@@ -314,7 +320,43 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
+	 * Check if the query method is decorated with a non-empty {@link ReadPreference}.
+	 *
+	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
+	 * @since 4.2
+	 */
+	public boolean hasAnnotatedReadPreference() {
+		return doFindReadPreferenceAnnotation().map(ReadPreference::value).filter(StringUtils::hasText).isPresent();
+	}
+
+	/**
+	 * Get the {@link com.mongodb.ReadPreference} extracted from the {@link ReadPreference} annotation.
+	 *
+	 * @return the name of the {@link ReadPreference}.
+	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
+	 *           {@link #hasAnnotatedReadPreference()} first.
+	 * @since 4.2
+	 */
+	public String getAnnotatedReadPreference() {
+
+		return doFindReadPreferenceAnnotation().map(ReadPreference::value).orElseThrow(() -> new IllegalStateException(
+				"Expected to find @ReadPreference annotation but did not; Make sure to check hasAnnotatedReadPreference() before."));
+	}
+
+	/**
+	 * Get {@link com.mongodb.ReadPreference#getName() name} from query. First check if the method is annotated. If not,
+	 * check if the class is annotated. So if the method and the class are annotated with @ReadPreference, the method
+	 * annotation takes precedence.
+	 *
+	 * @return the {@link ReadPreference}
+	 * @since 4.2
+	 */
+	private Optional<ReadPreference> doFindReadPreferenceAnnotation() {
+		return doFindAnnotation(ReadPreference.class).or(() -> doFindAnnotationInClass(ReadPreference.class));
+	}
+
+	/**
+	 * Check if the query method is decorated with a non-empty {@link Query#collation()} or
 	 * {@link Aggregation#collation()}.
 	 *
 	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
@@ -327,7 +369,7 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Get the collation value extracted from the {@link Query} or {@link Aggregation} annotation.
 	 *
-	 * @return the {@link Query#collation()} or or {@link Aggregation#collation()} value.
+	 * @return the {@link Query#collation()} or {@link Aggregation#collation()} value.
 	 * @throws IllegalStateException if method not annotated with {@link Query} or {@link Aggregation}. Make sure to check
 	 *           {@link #hasAnnotatedQuery()} first.
 	 * @since 2.2
@@ -335,8 +377,8 @@ public class MongoQueryMethod extends QueryMethod {
 	public String getAnnotatedCollation() {
 
 		return doFindAnnotation(Collation.class).map(Collation::value) //
-						.orElseThrow(() -> new IllegalStateException(
-								"Expected to find @Collation annotation but did not; Make sure to check hasAnnotatedCollation() before."));
+				.orElseThrow(() -> new IllegalStateException(
+						"Expected to find @Collation annotation but did not; Make sure to check hasAnnotatedCollation() before."));
 	}
 
 	/**
@@ -362,6 +404,26 @@ public class MongoQueryMethod extends QueryMethod {
 				"Expected to find @Aggregation annotation but did not; Make sure to check hasAnnotatedAggregation() before."));
 	}
 
+	/**
+	 * @return {@literal true} if the {@link Hint} annotation is present and the index name is not empty.
+	 * @since 4.1
+	 */
+	public boolean hasAnnotatedHint() {
+		return doFindAnnotation(Hint.class).map(Hint::indexName).filter(StringUtils::hasText).isPresent();
+	}
+
+	/**
+	 * Returns the aggregation pipeline declared via a {@link Hint} annotation.
+	 *
+	 * @return the index name (might be empty).
+	 * @throws IllegalStateException if the method is not annotated with {@link Hint}
+	 * @since 4.1
+	 */
+	public String getAnnotatedHint() {
+		return doFindAnnotation(Hint.class).map(Hint::indexName).orElseThrow(() -> new IllegalStateException(
+				"Expected to find @Hint annotation but did not; Make sure to check hasAnnotatedHint() before."));
+	}
+
 	private Optional<String[]> findAnnotatedAggregation() {
 
 		return lookupAggregationAnnotation() //
@@ -382,6 +444,16 @@ public class MongoQueryMethod extends QueryMethod {
 
 		return (Optional<A>) this.annotationCache.computeIfAbsent(annotationType,
 				it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it)));
+	}
+
+	@SuppressWarnings("unchecked")
+	private <A extends Annotation> Optional<A> doFindAnnotationInClass(Class<A> annotationType) {
+
+		Optional<Annotation> mergedAnnotation = Optional
+				.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), annotationType));
+		annotationCache.put(annotationType, mergedAnnotation);
+
+		return (Optional<A>) mergedAnnotation;
 	}
 
 	@Override
@@ -407,7 +479,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 3.4
 	 */
 	public Update getUpdateSource() {
-		return lookupUpdateAnnotation().get();
+		return lookupUpdateAnnotation().orElse(null);
 	}
 
 	/**
@@ -420,17 +492,35 @@ public class MongoQueryMethod extends QueryMethod {
 
 		if (isModifyingQuery()) {
 
-			if (isCollectionQuery() || isSliceQuery() || isPageQuery() || isGeoNearQuery() || !isNumericOrVoidReturnValue()) { //
+			if (isCollectionQuery() || isScrollQuery() || isSliceQuery() || isPageQuery() || isGeoNearQuery()
+					|| !isNumericOrVoidReturnValue()) { //
 				throw new IllegalStateException(
-						String.format("Update method may be void or return a numeric value (the number of updated documents)."
-								+ "Offending method: %s", method));
+						String.format(
+								"Update method may be void or return a numeric value (the number of updated documents)."
+										+ " Offending Method: %s.%s",
+								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 			}
 
 			if (hasAnnotatedUpdate()) { // must define either an update or an update pipeline
 				if (!StringUtils.hasText(getUpdateSource().update()) && ObjectUtils.isEmpty(getUpdateSource().pipeline())) {
 					throw new IllegalStateException(
-							String.format("Update method must define either 'Update#update' or 'Update#pipeline' attribute;"
-									+ " Offending method: %s", method));
+							String.format(
+									"Update method must define either 'Update#update' or 'Update#pipeline' attribute;"
+											+ " Offending Method: %s.%s",
+									ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
+				}
+			}
+		}
+
+		if (hasAnnotatedAggregation()) {
+			for (String stage : getAnnotatedAggregation()) {
+				if (BsonUtils.isJsonArray(stage)) {
+					throw new IllegalStateException(String.format(
+							"""
+									Invalid aggregation pipeline. Please split the definition from @Aggregation("[{...}, {...}]") to @Aggregation({ "{...}", "{...}" }).
+									Offending Method: %s.%s
+									""",
+							ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
 				}
 			}
 		}
@@ -444,7 +534,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		boolean isUpdateCountReturnType = ClassUtils.isAssignable(Number.class, resultType);
-		boolean isVoidReturnType = ClassUtils.isAssignable(Void.class, resultType);
+		boolean isVoidReturnType = ReflectionUtils.isVoid(resultType);
 
 		return isUpdateCountReturnType || isVoidReturnType;
 	}

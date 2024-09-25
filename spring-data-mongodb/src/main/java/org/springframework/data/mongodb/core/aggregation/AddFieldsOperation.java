@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the original author or authors.
+ * Copyright 2020-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -148,7 +148,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 				@Override
 				public AddFieldsOperationBuilder withValueOf(Object value) {
 
-					valueMap.put(field, value instanceof String ? Fields.fields((String) value) : value);
+					valueMap.put(field, value instanceof String stringValue ? Fields.fields(stringValue) : value);
 					return AddFieldsOperationBuilder.this;
 				}
 

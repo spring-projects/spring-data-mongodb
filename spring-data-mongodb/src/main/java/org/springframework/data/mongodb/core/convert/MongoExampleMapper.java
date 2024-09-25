@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
@@ -177,8 +178,8 @@ public class MongoExampleMapper {
 
 			if (entry.getValue() instanceof String) {
 				applyStringMatcher(entry, stringMatcher, ignoreCase);
-			} else if (entry.getValue() instanceof Document) {
-				applyPropertySpecs(propertyPath, (Document) entry.getValue(), probeType, exampleSpecAccessor);
+			} else if (entry.getValue() instanceof Document document) {
+				applyPropertySpecs(propertyPath, document, probeType, exampleSpecAccessor);
 			}
 		}
 	}
@@ -225,7 +226,7 @@ public class MongoExampleMapper {
 		return StringUtils.collectionToDelimitedString(resultParts, ".");
 	}
 
-	private Document updateTypeRestrictions(Document query, Example example) {
+	private Document updateTypeRestrictions(Document query, Example<?> example) {
 
 		Document result = new Document();
 
@@ -245,7 +246,7 @@ public class MongoExampleMapper {
 		return result;
 	}
 
-	private boolean isTypeRestricting(Example example) {
+	private boolean isTypeRestricting(Example<?> example) {
 
 		if (example.getMatcher() instanceof UntypedExampleMatcher) {
 			return false;
@@ -278,7 +279,8 @@ public class MongoExampleMapper {
 	}
 
 	private static boolean isEmptyIdProperty(Entry<String, Object> entry) {
-		return entry.getKey().equals("_id") && (entry.getValue() == null || entry.getValue().equals(Optional.empty()));
+		return entry.getKey().equals(FieldName.ID.name())
+				&& (entry.getValue() == null || entry.getValue().equals(Optional.empty()));
 	}
 
 	private static void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher,
@@ -324,20 +326,13 @@ public class MongoExampleMapper {
 	 */
 	private static MatchMode toMatchMode(StringMatcher matcher) {
 
-		switch (matcher) {
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING:
-				return MatchMode.STARTING_WITH;
-			case ENDING:
-				return MatchMode.ENDING_WITH;
-			case EXACT:
-				return MatchMode.EXACT;
-			case REGEX:
-				return MatchMode.REGEX;
-			case DEFAULT:
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return switch (matcher) {
+			case CONTAINING -> MatchMode.CONTAINING;
+			case STARTING -> MatchMode.STARTING_WITH;
+			case ENDING -> MatchMode.ENDING_WITH;
+			case EXACT -> MatchMode.EXACT;
+			case REGEX -> MatchMode.REGEX;
+			default -> MatchMode.DEFAULT;
+		};
 	}
 }

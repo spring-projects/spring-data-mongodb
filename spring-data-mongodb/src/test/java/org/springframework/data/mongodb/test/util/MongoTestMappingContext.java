@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,15 @@
 package org.springframework.data.mongodb.test.util;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.MethodInvocationRecorder;
 
 /**
  * @author Christoph Strobl
@@ -43,6 +48,12 @@ public class MongoTestMappingContext extends MongoMappingContext {
 
 		this(new MappingContextConfigurer());
 		contextConfig.accept(contextConfigurer);
+	}
+
+	public <T> MongoPersistentProperty getPersistentPropertyFor(Class<T> type, Function<T, ?> property) {
+
+		MongoPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(type);
+		return persistentEntity.getPersistentProperty(MethodInvocationRecorder.forProxyOf(type).record(property).getPropertyPath().get());
 	}
 
 	public MongoTestMappingContext customConversions(MongoConverterConfigurer converterConfig) {
@@ -75,4 +86,6 @@ public class MongoTestMappingContext extends MongoMappingContext {
 	public void afterPropertiesSet() {
 		init();
 	}
+
+
 }

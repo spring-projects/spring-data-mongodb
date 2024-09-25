@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -88,13 +91,26 @@ public interface ReactiveFindOperation {
 		Flux<T> all();
 
 		/**
+		 * Return a scroll of elements either starting or resuming at {@link ScrollPosition}.
+		 * <p>
+		 * When using {@link KeysetScrollPosition}, make sure to use non-nullable
+		 * {@link org.springframework.data.domain.Sort sort properties} as MongoDB does not support criteria to reconstruct
+		 * a query result from absent document fields or {@code null} values through {@code $gt/$lt} operators.
+		 *
+		 * @param scrollPosition the scroll position.
+		 * @return a scroll of the resulting elements.
+		 * @since 4.1
+		 * @see org.springframework.data.domain.OffsetScrollPosition
+		 * @see org.springframework.data.domain.KeysetScrollPosition
+		 */
+		Mono<Window<T>> scroll(ScrollPosition scrollPosition);
+
+		/**
 		 * Get all matching elements using a {@link com.mongodb.CursorType#TailableAwait tailable cursor}. The stream will
 		 * not be completed unless the {@link org.reactivestreams.Subscription} is
-		 * {@link org.reactivestreams.Subscription#cancel() canceled}.
-		 * <br />
+		 * {@link org.reactivestreams.Subscription#cancel() canceled}. <br />
 		 * However, the stream may become dead, or invalid, if either the query returns no match or the cursor returns the
-		 * document at the "end" of the collection and then the application deletes that document.
-		 * <br />
+		 * document at the "end" of the collection and then the application deletes that document. <br />
 		 * A stream that is no longer in use must be {@link reactor.core.Disposable#dispose()} disposed} otherwise the
 		 * streams will linger and exhaust resources. <br/>
 		 * <strong>NOTE:</strong> Requires a capped collection.
@@ -105,8 +121,7 @@ public interface ReactiveFindOperation {
 		Flux<T> tail();
 
 		/**
-		 * Get the number of matching elements.
-		 * <br />
+		 * Get the number of matching elements. <br />
 		 * This method uses an
 		 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 		 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.Person;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Divya Srivastava
+ * @author Julia Lee
  */
 public class SpelExpressionTransformerUnitTests {
 
@@ -1255,7 +1256,29 @@ public class SpelExpressionTransformerUnitTests {
 	void shouldRenderLocf() {
 		assertThat(transform("locf(price)")).isEqualTo("{ $locf: \"$price\" }");
 	}
-	
+
+	@Test // GH-4473
+	void shouldRenderPercentile() {
+		assertThat(transform("percentile(new String[]{\"$scoreOne\", \"$scoreTwo\" }, new double[]{0.4}, \"approximate\")"))
+			.isEqualTo("{ $percentile : { input : [\"$scoreOne\", \"$scoreTwo\"], p : [0.4], method : \"approximate\" }}");
+
+		assertThat(transform("percentile(score, new double[]{0.4, 0.85}, \"approximate\")"))
+			.isEqualTo("{ $percentile : { input : \"$score\", p : [0.4, 0.85], method : \"approximate\" }}");
+
+		assertThat(transform("percentile(\"$score\", new double[]{0.4, 0.85}, \"approximate\")"))
+			.isEqualTo("{ $percentile : { input : \"$score\", p : [0.4, 0.85], method : \"approximate\" }}");
+	}
+
+	@Test // GH-4472
+	void shouldRenderMedian() {
+
+		assertThat(transform("median(new String[]{\"$scoreOne\", \"$scoreTwo\" }, \"approximate\")"))
+				.isEqualTo("{ $median : { input : [\"$scoreOne\", \"$scoreTwo\"], method : \"approximate\" }}");
+
+		assertThat(transform("median(score, \"approximate\")"))
+				.isEqualTo("{ $median : { input : \"$score\", method : \"approximate\" }}");
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}

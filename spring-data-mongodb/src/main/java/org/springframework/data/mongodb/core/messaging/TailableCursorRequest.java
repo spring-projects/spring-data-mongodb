@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,8 +72,8 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		Assert.notNull(options, "Options must not be null");
 
 		this.messageListener = messageListener;
-		this.options = options instanceof TailableCursorRequestOptions ? (TailableCursorRequestOptions) options
-				: TailableCursorRequestOptions.of(options);
+		this.options = options instanceof TailableCursorRequestOptions tailableCursorRequestOptions ?
+				tailableCursorRequestOptions : TailableCursorRequestOptions.of(options);
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 	/**
 	 * Obtain a shiny new {@link TailableCursorRequestBuilder} and start defining options in this fancy fluent way. Just
-	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when your're done.
+	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link TailableCursorRequestBuilder}.
 	 */
@@ -98,7 +98,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 	/**
 	 * Obtain a shiny new {@link TailableCursorRequestBuilder} and start defining options in this fancy fluent way. Just
-	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when your're done.
+	 * don't forget to call {@link TailableCursorRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link TailableCursorRequestBuilder}.
 	 */
@@ -127,7 +127,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 		/**
 		 * Obtain a shiny new {@link TailableCursorRequestOptionsBuilder} and start defining options in this fancy fluent
-		 * way. Just don't forget to call {@link TailableCursorRequestOptionsBuilder#build() build()} when your're done.
+		 * way. Just don't forget to call {@link TailableCursorRequestOptionsBuilder#build() build()} when done.
 		 *
 		 * @return new instance of {@link TailableCursorRequestOptionsBuilder}.
 		 */

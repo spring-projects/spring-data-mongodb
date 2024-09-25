@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,28 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
+import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.EnvironmentCapable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
@@ -35,6 +44,8 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -44,10 +55,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
+import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.mongodb.util.DurationUtil;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.TargetAware;
 import org.springframework.data.util.Optionals;
+import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -67,13 +82,14 @@ import com.mongodb.client.model.ValidationOptions;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Ben Foster
  * @since 2.1
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
  */
 class EntityOperations {
 
-	private static final String ID_FIELD = "_id";
+	private static final String ID_FIELD = FieldName.ID.name();
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	private final QueryMapper queryMapper;
@@ -81,6 +97,8 @@ class EntityOperations {
 	private final EntityProjectionIntrospector introspector;
 
 	private final MongoJsonSchemaMapper schemaMapper;
+
+	private @Nullable Environment environment;
 
 	EntityOperations(MongoConverter converter) {
 		this(converter, new QueryMapper(converter));
@@ -101,6 +119,9 @@ class EntityOperations {
 						.and(((target, underlyingType) -> !conversions.isSimpleType(target))),
 				context);
 		this.schemaMapper = new MongoJsonSchemaMapper(converter);
+		if (converter instanceof EnvironmentCapable environmentCapable) {
+			this.environment = environmentCapable.getEnvironment();
+		}
 	}
 
 	/**
@@ -114,15 +135,19 @@ class EntityOperations {
 
 		Assert.notNull(entity, "Bean must not be null");
 
+		if (entity instanceof TargetAware targetAware) {
+			return new SimpleMappedEntity((Map<String, Object>) targetAware.getTarget(), this);
+		}
+
 		if (entity instanceof String) {
-			return new UnmappedEntity(parse(entity.toString()));
+			return new UnmappedEntity(parse(entity.toString()), this);
 		}
 
 		if (entity instanceof Map) {
-			return new SimpleMappedEntity((Map<String, Object>) entity);
+			return new SimpleMappedEntity((Map<String, Object>) entity, this);
 		}
 
-		return MappedEntity.of(entity, context);
+		return MappedEntity.of(entity, context, this);
 	}
 
 	/**
@@ -139,14 +164,14 @@ class EntityOperations {
 		Assert.notNull(conversionService, "ConversionService must not be null");
 
 		if (entity instanceof String) {
-			return new UnmappedEntity(parse(entity.toString()));
+			return new UnmappedEntity(parse(entity.toString()), this);
 		}
 
 		if (entity instanceof Map) {
-			return new SimpleMappedEntity((Map<String, Object>) entity);
+			return new SimpleMappedEntity((Map<String, Object>) entity, this);
 		}
 
-		return AdaptibleMappedEntity.of(entity, context, conversionService);
+		return AdaptibleMappedEntity.of(entity, context, conversionService, this);
 	}
 
 	/**
@@ -265,7 +290,7 @@ class EntityOperations {
 			MongoPersistentEntity<?> entity = context.getPersistentEntity(entityClass);
 
 			if (entity != null) {
-				return new TypedEntityOperations(entity);
+				return new TypedEntityOperations(entity, environment);
 			}
 
 		}
@@ -283,6 +308,11 @@ class EntityOperations {
 	 * @see EntityProjectionIntrospector#introspect(Class, Class)
 	 */
 	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType, Class<D> entityType) {
+
+		MongoPersistentEntity<?> persistentEntity = queryMapper.getMappingContext().getPersistentEntity(entityType);
+		if (persistentEntity == null && !resultType.isInterface() || ClassUtils.isAssignable(Document.class, resultType)) {
+			return (EntityProjection) EntityProjection.nonProjecting(resultType);
+		}
 		return introspector.introspect(resultType, entityType);
 	}
 
@@ -338,6 +368,10 @@ class EntityOperations {
 				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
 			}
 
+			if (!it.getExpireAfter().isNegative()) {
+				result.expireAfter(it.getExpireAfter().toSeconds(), TimeUnit.SECONDS);
+			}
+
 			result.timeSeriesOptions(options);
 		});
 
@@ -362,6 +396,7 @@ class EntityOperations {
 	 * A representation of information about an entity.
 	 *
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
 	interface Entity<T> {
@@ -379,6 +414,16 @@ class EntityOperations {
 		 * @return
 		 */
 		Object getId();
+
+		/**
+		 * Returns the property value for {@code key}.
+		 *
+		 * @param key
+		 * @return
+		 * @since 4.1
+		 */
+		@Nullable
+		Object getPropertyValue(String key);
 
 		/**
 		 * Returns the {@link Query} to find the entity by its identifier.
@@ -450,6 +495,15 @@ class EntityOperations {
 		 * @since 2.1.2
 		 */
 		boolean isNew();
+
+		/**
+		 * @param sortObject
+		 * @return
+		 * @since 4.1
+		 * @throws IllegalStateException if a sort key yields {@literal null}.
+		 */
+		Map<String, Object> extractKeys(Document sortObject, Class<?> sourceType);
+
 	}
 
 	/**
@@ -471,7 +525,7 @@ class EntityOperations {
 		T populateIdIfNecessary(@Nullable Object id);
 
 		/**
-		 * Initializes the version property of the of the current entity if available.
+		 * Initializes the version property of the current entity if available.
 		 *
 		 * @return the entity with the version property updated if available.
 		 */
@@ -497,9 +551,11 @@ class EntityOperations {
 	private static class UnmappedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
 
 		private final T map;
+		private final EntityOperations entityOperations;
 
-		protected UnmappedEntity(T map) {
+		protected UnmappedEntity(T map, EntityOperations entityOperations) {
 			this.map = map;
+			this.entityOperations = entityOperations;
 		}
 
 		@Override
@@ -509,7 +565,12 @@ class EntityOperations {
 
 		@Override
 		public Object getId() {
-			return map.get(ID_FIELD);
+			return getPropertyValue(ID_FIELD);
+		}
+
+		@Override
+		public Object getPropertyValue(String key) {
+			return map.get(key);
 		}
 
 		@Override
@@ -533,8 +594,8 @@ class EntityOperations {
 
 		@Override
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
-			return MappedDocument.of(map instanceof Document //
-					? (Document) map //
+			return MappedDocument.of(map instanceof Document document //
+					? document //
 					: new Document(map));
 		}
 
@@ -563,12 +624,50 @@ class EntityOperations {
 		public boolean isNew() {
 			return map.get(ID_FIELD) != null;
 		}
+
+		@Override
+		public Map<String, Object> extractKeys(Document sortObject, Class<?> sourceType) {
+
+			Map<String, Object> keyset = new LinkedHashMap<>();
+			MongoPersistentEntity<?> sourceEntity = entityOperations.context.getPersistentEntity(sourceType);
+			if (sourceEntity != null && sourceEntity.hasIdProperty()) {
+				keyset.put(sourceEntity.getRequiredIdProperty().getName(), getId());
+			} else {
+				keyset.put(ID_FIELD, getId());
+			}
+
+			for (String key : sortObject.keySet()) {
+
+				Object value = resolveValue(key, sourceEntity);
+
+				if (value == null) {
+					throw new IllegalStateException(
+							String.format("Cannot extract value for key %s because its value is null", key));
+				}
+
+				keyset.put(key, value);
+			}
+
+			return keyset;
+		}
+
+		@Nullable
+		private Object resolveValue(String key, @Nullable MongoPersistentEntity<?> sourceEntity) {
+
+			if (sourceEntity == null) {
+				return BsonUtils.resolveValue(map, key);
+			}
+			PropertyPath from = PropertyPath.from(key, sourceEntity.getTypeInformation());
+			PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = entityOperations.context
+					.getPersistentPropertyPath(from);
+			return BsonUtils.resolveValue(map, persistentPropertyPath.toDotPath(MongoPersistentProperty::getFieldName));
+		}
 	}
 
 	private static class SimpleMappedEntity<T extends Map<String, Object>> extends UnmappedEntity<T> {
 
-		protected SimpleMappedEntity(T map) {
-			super(map);
+		protected SimpleMappedEntity(T map, EntityOperations entityOperations) {
+			super(map, entityOperations);
 		}
 
 		@Override
@@ -576,8 +675,8 @@ class EntityOperations {
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
 
 			T bean = getBean();
-			bean = (T) (bean instanceof Document //
-					? (Document) bean //
+			bean = (T) (bean instanceof Document document//
+					? document //
 					: new Document(bean));
 			Document document = new Document();
 			writer.write(bean, document);
@@ -591,23 +690,26 @@ class EntityOperations {
 		private final MongoPersistentEntity<?> entity;
 		private final IdentifierAccessor idAccessor;
 		private final PersistentPropertyAccessor<T> propertyAccessor;
+		private final EntityOperations entityOperations;
 
 		protected MappedEntity(MongoPersistentEntity<?> entity, IdentifierAccessor idAccessor,
-				PersistentPropertyAccessor<T> propertyAccessor) {
+				PersistentPropertyAccessor<T> propertyAccessor, EntityOperations entityOperations) {
 
 			this.entity = entity;
 			this.idAccessor = idAccessor;
 			this.propertyAccessor = propertyAccessor;
+			this.entityOperations = entityOperations;
 		}
 
 		private static <T> MappedEntity<T> of(T bean,
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
+				EntityOperations entityOperations) {
 
 			MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(bean.getClass());
 			IdentifierAccessor identifierAccessor = entity.getIdentifierAccessor(bean);
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
-			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor);
+			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor, entityOperations);
 		}
 
 		@Override
@@ -618,6 +720,11 @@ class EntityOperations {
 		@Override
 		public Object getId() {
 			return idAccessor.getRequiredIdentifier();
+		}
+
+		@Override
+		public Object getPropertyValue(String key) {
+			return propertyAccessor.getProperty(entity.getRequiredPersistentProperty(key));
 		}
 
 		@Override
@@ -697,6 +804,60 @@ class EntityOperations {
 		public boolean isNew() {
 			return entity.isNew(propertyAccessor.getBean());
 		}
+
+		@Override
+		public Map<String, Object> extractKeys(Document sortObject, Class<?> sourceType) {
+
+			Map<String, Object> keyset = new LinkedHashMap<>();
+			MongoPersistentEntity<?> sourceEntity = entityOperations.context.getPersistentEntity(sourceType);
+			if (sourceEntity != null && sourceEntity.hasIdProperty()) {
+				keyset.put(sourceEntity.getRequiredIdProperty().getName(), getId());
+			} else {
+				keyset.put(entity.getRequiredIdProperty().getName(), getId());
+			}
+
+			for (String key : sortObject.keySet()) {
+
+				Object value;
+				if (key.indexOf('.') != -1) {
+
+					// follow the path across nested levels.
+					// TODO: We should have a MongoDB-specific property path abstraction to allow diving into Document.
+					value = getNestedPropertyValue(key);
+				} else {
+					value = getPropertyValue(key);
+				}
+
+				if (value == null) {
+					throw new IllegalStateException(
+							String.format("Cannot extract value for key %s because its value is null", key));
+				}
+
+				keyset.put(key, value);
+			}
+
+			return keyset;
+		}
+
+		@Nullable
+		private Object getNestedPropertyValue(String key) {
+
+			String[] segments = key.split("\\.");
+			Entity<?> currentEntity = this;
+			Object currentValue = BsonNull.VALUE;
+
+			for (int i = 0; i < segments.length; i++) {
+
+				String segment = segments[i];
+				currentValue = currentEntity.getPropertyValue(segment);
+
+				if (i < segments.length - 1) {
+					currentEntity = entityOperations.forEntity(currentValue);
+				}
+			}
+
+			return currentValue != null ? currentValue : BsonNull.VALUE;
+		}
 	}
 
 	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
@@ -706,9 +867,9 @@ class EntityOperations {
 		private final IdentifierAccessor identifierAccessor;
 
 		private AdaptibleMappedEntity(MongoPersistentEntity<?> entity, IdentifierAccessor identifierAccessor,
-				ConvertingPropertyAccessor<T> propertyAccessor) {
+				ConvertingPropertyAccessor<T> propertyAccessor, EntityOperations entityOperations) {
 
-			super(entity, identifierAccessor, propertyAccessor);
+			super(entity, identifierAccessor, propertyAccessor, entityOperations);
 
 			this.entity = entity;
 			this.propertyAccessor = propertyAccessor;
@@ -717,14 +878,14 @@ class EntityOperations {
 
 		private static <T> AdaptibleEntity<T> of(T bean,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-				ConversionService conversionService) {
+				ConversionService conversionService, EntityOperations entityOperations) {
 
 			MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(bean.getClass());
 			IdentifierAccessor identifierAccessor = entity.getIdentifierAccessor(bean);
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
 			return new AdaptibleMappedEntity<>(entity, identifierAccessor,
-					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService));
+					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), entityOperations);
 		}
 
 		@Nullable
@@ -825,6 +986,14 @@ class EntityOperations {
 		 * @since 3.3
 		 */
 		TimeSeriesOptions mapTimeSeriesOptions(TimeSeriesOptions options);
+
+		/**
+		 * @return the name of the id field.
+		 * @since 4.1
+		 */
+		default String getIdKeyName() {
+			return ID_FIELD;
+		}
 	}
 
 	/**
@@ -877,8 +1046,12 @@ class EntityOperations {
 
 		private final MongoPersistentEntity<T> entity;
 
-		protected TypedEntityOperations(MongoPersistentEntity<T> entity) {
+		@Nullable private final Environment environment;
+
+		protected TypedEntityOperations(MongoPersistentEntity<T> entity, @Nullable Environment environment) {
+
 			this.entity = entity;
+			this.environment = environment;
 		}
 
 		@Override
@@ -926,6 +1099,15 @@ class EntityOperations {
 				if (!Granularity.DEFAULT.equals(timeSeries.granularity())) {
 					options = options.granularity(timeSeries.granularity());
 				}
+
+				if (StringUtils.hasText(timeSeries.expireAfter())) {
+
+					Duration timeout = computeIndexTimeout(timeSeries.expireAfter(), getEvaluationContextForEntity(entity));
+					if (!timeout.isNegative()) {
+						options = options.expireAfter(timeout);
+					}
+				}
+
 				collectionOptions = collectionOptions.timeSeries(options);
 			}
 
@@ -940,13 +1122,45 @@ class EntityOperations {
 			if (StringUtils.hasText(source.getMetaField())) {
 				target = target.metaField(mappedNameOrDefault(source.getMetaField()));
 			}
-			return target.granularity(source.getGranularity());
+			return target.granularity(source.getGranularity()).expireAfter(source.getExpireAfter());
+		}
+
+		@Override
+		public String getIdKeyName() {
+			return entity.getIdProperty().getName();
 		}
 
 		private String mappedNameOrDefault(String name) {
 			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(name);
 			return persistentProperty != null ? persistentProperty.getFieldName() : name;
 		}
-	}
 
+		/**
+		 * Get the {@link ValueEvaluationContext} for a given {@link PersistentEntity entity} the default one.
+		 *
+		 * @param persistentEntity can be {@literal null}
+		 * @return the context to use.
+		 */
+		private ValueEvaluationContext getEvaluationContextForEntity(@Nullable PersistentEntity<?, ?> persistentEntity) {
+
+			if (persistentEntity instanceof BasicMongoPersistentEntity<?> mongoEntity) {
+				return mongoEntity.getValueEvaluationContext(null);
+			}
+
+			return ValueEvaluationContext.of(this.environment, SimpleEvaluationContext.forReadOnlyDataBinding().build());
+		}
+
+		/**
+		 * Compute the index timeout value by evaluating a potential
+		 * {@link org.springframework.expression.spel.standard.SpelExpression} and parsing the final value.
+		 *
+		 * @param timeoutValue must not be {@literal null}.
+		 * @param evaluationContext must not be {@literal null}.
+		 * @return never {@literal null}
+		 * @throws IllegalArgumentException for invalid duration values.
+		 */
+		private static Duration computeIndexTimeout(String timeoutValue, ValueEvaluationContext evaluationContext) {
+			return DurationUtil.evaluate(timeoutValue, evaluationContext);
+		}
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import com.mongodb.MongoException;
 
 /**
  * An interface used by {@link MongoTemplate} for processing documents returned from a MongoDB query on a per-document
- * basis. Implementations of this interface perform the actual work of prcoessing each document but don't need to worry
+ * basis. Implementations of this interface perform the actual work of processing each document but don't need to worry
  * about exception handling. {@link MongoException}s will be caught and translated by the calling MongoTemplate An
  * DocumentCallbackHandler is typically stateful: It keeps the result state within the object, to be available later for
  * later inspection.

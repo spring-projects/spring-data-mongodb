@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	/**
-	 * Specify additional types to be considered wehen rendering the schema for the given path.
+	 * Specify additional types to be considered when rendering the schema for the given path.
 	 *
 	 * @param path path the path using {@literal dot '.'} notation.
 	 * @param types must not be {@literal null}.
@@ -203,8 +203,9 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 								target.properties(nestedProperties.toArray(new JsonSchemaProperty[0])), required));
 					}
 				}
-				return targetProperties.size() == 1 ? targetProperties.iterator().next()
+				JsonSchemaProperty schemaProperty = targetProperties.size() == 1 ? targetProperties.iterator().next()
 						: JsonSchemaProperty.merged(targetProperties);
+				return applyEncryptionDataIfNecessary(property, schemaProperty);
 			}
 		}
 
@@ -322,7 +323,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	private TypedJsonSchemaObject createSchemaObject(Object type, Collection<?> possibleValues) {
 
-		TypedJsonSchemaObject schemaObject = type instanceof Type ? JsonSchemaObject.of(Type.class.cast(type))
+		TypedJsonSchemaObject schemaObject = type instanceof Type typeObject ? JsonSchemaObject.of(typeObject)
 				: JsonSchemaObject.of(Class.class.cast(type));
 
 		if (!CollectionUtils.isEmpty(possibleValues)) {
@@ -331,23 +332,22 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return schemaObject;
 	}
 
-	private String computePropertyFieldName(PersistentProperty property) {
+	private String computePropertyFieldName(PersistentProperty<?> property) {
 
-		return property instanceof MongoPersistentProperty ? ((MongoPersistentProperty) property).getFieldName()
-				: property.getName();
+		return property instanceof MongoPersistentProperty  mongoPersistentProperty ?
+				mongoPersistentProperty.getFieldName() : property.getName();
 	}
 
-	private boolean isRequiredProperty(PersistentProperty property) {
+	private boolean isRequiredProperty(PersistentProperty<?> property) {
 		return property.getType().isPrimitive();
 	}
 
 	private Class<?> computeTargetType(PersistentProperty<?> property) {
 
-		if (!(property instanceof MongoPersistentProperty)) {
+		if (!(property instanceof MongoPersistentProperty mongoProperty)) {
 			return property.getType();
 		}
 
-		MongoPersistentProperty mongoProperty = (MongoPersistentProperty) property;
 		if (!mongoProperty.isIdProperty()) {
 			return mongoProperty.getFieldType();
 		}

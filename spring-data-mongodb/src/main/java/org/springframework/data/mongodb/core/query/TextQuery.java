@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class TextQuery extends Query {
 	 * @param locale can be {@literal null}.
 	 */
 	public TextQuery(String wordsAndPhrases, @Nullable Locale locale) {
-		this(wordsAndPhrases, locale != null ? locale.getLanguage() : (String) null);
+		this(wordsAndPhrases, locale != null ? locale.getLanguage() : null);
 	}
 
 	/**

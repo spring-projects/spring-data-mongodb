@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,17 +33,21 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 
 	private final P predicate;
 	private final Sort sort;
+
+	private final int limit;
+
 	private final Class<T> resultType;
 	private final List<String> fieldsToInclude;
 
-	FetchableFluentQuerySupport(P predicate, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+	FetchableFluentQuerySupport(P predicate, Sort sort, int limit, Class<T> resultType, List<String> fieldsToInclude) {
 		this.predicate = predicate;
 		this.sort = sort;
+		this.limit = limit;
 		this.resultType = resultType;
 		this.fieldsToInclude = fieldsToInclude;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#sortBy(org.springframework.data.domain.Sort)
 	 */
@@ -52,10 +56,18 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 
 		Assert.notNull(sort, "Sort must not be null");
 
-		return create(predicate, sort, resultType, fieldsToInclude);
+		return create(predicate, sort, limit, resultType, fieldsToInclude);
 	}
 
-	/* 
+	@Override
+	public FluentQuery.FetchableFluentQuery<T> limit(int limit) {
+
+		Assert.isTrue(limit > 0, "Limit must be greater zero");
+
+		return create(predicate, sort, limit, resultType, fieldsToInclude);
+	}
+
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#as(java.lang.Class)
 	 */
@@ -64,10 +76,10 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 
 		Assert.notNull(projection, "Projection target type must not be null");
 
-		return create(predicate, sort, projection, fieldsToInclude);
+		return create(predicate, sort, limit, projection, fieldsToInclude);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#project(java.util.Collection)
 	 */
@@ -76,11 +88,11 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 
 		Assert.notNull(properties, "Projection properties must not be null");
 
-		return create(predicate, sort, resultType, new ArrayList<>(properties));
+		return create(predicate, sort, limit, resultType, new ArrayList<>(properties));
 	}
 
-	protected abstract <R> FetchableFluentQuerySupport<P, R> create(P predicate, Sort sort, Class<R> resultType,
-			List<String> fieldsToInclude);
+	protected abstract <R> FetchableFluentQuerySupport<P, R> create(P predicate, Sort sort, int limit,
+			Class<R> resultType, List<String> fieldsToInclude);
 
 	P getPredicate() {
 		return predicate;
@@ -88,6 +100,10 @@ abstract class FetchableFluentQuerySupport<P, T> implements FluentQuery.Fetchabl
 
 	Sort getSort() {
 		return sort;
+	}
+
+	int getLimit() {
+		return limit;
 	}
 
 	Class<T> getResultType() {

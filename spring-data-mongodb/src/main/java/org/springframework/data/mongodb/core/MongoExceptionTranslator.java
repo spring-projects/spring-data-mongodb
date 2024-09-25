@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.bson.BsonInvalidOperationException;
@@ -31,7 +28,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
-import org.springframework.data.mongodb.MongoTransactionException;
+import org.springframework.data.mongodb.TransientClientSessionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.lang.Nullable;
@@ -55,21 +52,30 @@ import com.mongodb.bulk.BulkWriteError;
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	private static final Set<String> DUPLICATE_KEY_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("MongoException.DuplicateKey", "DuplicateKeyException"));
+	public static final MongoExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
 
-	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("MongoException.Network", "MongoSocketException", "MongoException.CursorNotFound",
-					"MongoCursorNotFoundException", "MongoServerSelectionException", "MongoTimeoutException"));
+	private static final Set<String> DUPLICATE_KEY_EXCEPTIONS = Set.of("MongoException.DuplicateKey",
+			"DuplicateKeyException");
 
-	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<>(
-			Collections.singletonList("MongoInternalException"));
+	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = Set.of("MongoException.Network",
+			"MongoSocketException", "MongoException.CursorNotFound", "MongoCursorNotFoundException",
+			"MongoServerSelectionException", "MongoTimeoutException");
 
-	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
+	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = Set.of("MongoInternalException");
 
+	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = Set.of("WriteConcernException", "MongoWriteException",
+			"MongoBulkWriteException");
+
+	private static final Set<String> SECURITY_EXCEPTIONS = Set.of("MongoCryptException");
+
+	@Override
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+		return doTranslateException(ex);
+	}
+
+	@Nullable
+	DataAccessException doTranslateException(RuntimeException ex) {
 
 		// Check for well-known MongoException subclasses.
 
@@ -98,12 +104,12 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		if (DATA_INTEGRITY_EXCEPTIONS.contains(exception)) {
 
 			if (ex instanceof MongoServerException) {
-				if (((MongoServerException) ex).getCode() == 11000) {
+				if (MongoDbErrorCodes.isDataDuplicateKeyError(ex)) {
 					return new DuplicateKeyException(ex.getMessage(), ex);
 				}
-				if (ex instanceof MongoBulkWriteException) {
-					for (BulkWriteError x : ((MongoBulkWriteException) ex).getWriteErrors()) {
-						if (x.getCode() == 11000) {
+				if (ex instanceof MongoBulkWriteException bulkException) {
+					for (BulkWriteError writeError : bulkException.getWriteErrors()) {
+						if (MongoDbErrorCodes.isDuplicateKeyCode(writeError.getCode())) {
 							return new DuplicateKeyException(ex.getMessage(), ex);
 						}
 					}
@@ -114,23 +120,32 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		}
 
 		// All other MongoExceptions
-		if (ex instanceof MongoException) {
+		if (ex instanceof MongoException mongoException) {
 
-			int code = ((MongoException) ex).getCode();
+			int code = mongoException.getCode();
 
-			if (MongoDbErrorCodes.isDuplicateKeyCode(code)) {
+			if (MongoDbErrorCodes.isDuplicateKeyError(mongoException)) {
 				return new DuplicateKeyException(ex.getMessage(), ex);
-			} else if (MongoDbErrorCodes.isDataAccessResourceFailureCode(code)) {
+			}
+			if (MongoDbErrorCodes.isDataAccessResourceError(mongoException)) {
 				return new DataAccessResourceFailureException(ex.getMessage(), ex);
-			} else if (MongoDbErrorCodes.isInvalidDataAccessApiUsageCode(code) || code == 10003 || code == 12001
-					|| code == 12010 || code == 12011 || code == 12012) {
+			}
+			if (MongoDbErrorCodes.isInvalidDataAccessApiUsageError(mongoException) || code == 12001 || code == 12010
+					|| code == 12011 || code == 12012) {
 				return new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
-			} else if (MongoDbErrorCodes.isPermissionDeniedCode(code)) {
+			}
+			if (MongoDbErrorCodes.isPermissionDeniedError(mongoException)) {
 				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
-			} else if (MongoDbErrorCodes.isClientSessionFailureCode(code)) {
-				return new ClientSessionException(ex.getMessage(), ex);
-			} else if (MongoDbErrorCodes.isTransactionFailureCode(code)) {
-				return new MongoTransactionException(ex.getMessage(), ex);
+			}
+			if (MongoDbErrorCodes.isDataIntegrityViolationError(mongoException)) {
+				return new DataIntegrityViolationException(mongoException.getMessage(), mongoException);
+			}
+			if (MongoDbErrorCodes.isClientSessionFailure(mongoException)) {
+				return isTransientFailure(mongoException) ? new TransientClientSessionException(ex.getMessage(), ex)
+						: new ClientSessionException(ex.getMessage(), ex);
+			}
+			if (ex.getCause() != null && SECURITY_EXCEPTIONS.contains(ClassUtils.getShortName(ex.getCause().getClass()))) {
+				return new PermissionDeniedDataAccessException(ex.getMessage(), ex);
 			}
 
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
@@ -150,5 +165,28 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		// rather than the persistence provider, so we return null to indicate
 		// that translation should not occur.
 		return null;
+	}
+
+	/**
+	 * Check if a given exception holds an error label indicating a transient failure.
+	 *
+	 * @param e the exception to inspect.
+	 * @return {@literal true} if the given {@link Exception} is a {@link MongoException} holding one of the transient
+	 *         exception error labels.
+	 * @see MongoException#hasErrorLabel(String)
+	 * @since 4.4
+	 */
+	public boolean isTransientFailure(Exception e) {
+
+		if (e instanceof MongoException mongoException) {
+			return mongoException.hasErrorLabel(MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL)
+					|| mongoException.hasErrorLabel(MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL);
+		}
+
+		if (e.getCause() != e && e.getCause() instanceof Exception ex) {
+			return isTransientFailure(ex);
+		}
+
+		return false;
 	}
 }

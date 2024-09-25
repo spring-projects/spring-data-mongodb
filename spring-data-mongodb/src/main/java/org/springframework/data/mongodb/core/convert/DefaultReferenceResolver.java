@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,8 +108,8 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 
 	private Object createLazyLoadingProxy(MongoPersistentProperty property, Object source,
 			ReferenceLookupDelegate referenceLookupDelegate, LookupFunction lookupFunction, MongoEntityReader entityReader) {
-		return proxyFactory.createLazyLoadingProxy(property, it -> {
-			return referenceLookupDelegate.readReference(it, source, lookupFunction, entityReader);
-		}, source instanceof DocumentReferenceSource ? ((DocumentReferenceSource)source).getTargetSource() : source);
+		return proxyFactory.createLazyLoadingProxy(property,
+				it -> referenceLookupDelegate.readReference(it, source, lookupFunction, entityReader),
+				source instanceof DocumentReferenceSource documentSource ? documentSource.getTargetSource() : source);
 	}
 }

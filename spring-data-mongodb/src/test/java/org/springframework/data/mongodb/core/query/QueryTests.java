@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -88,7 +90,7 @@ class QueryTests {
 				.parse("{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}"));
 	}
 
-	@Test
+	@Test // GH-4584
 	void testQueryWithLimit() {
 
 		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
@@ -97,6 +99,21 @@ class QueryTests {
 		assertThat(q.getQueryObject()).isEqualTo(Document
 				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}"));
 		assertThat(q.getLimit()).isEqualTo(50);
+
+		q.limit(Limit.unlimited());
+		assertThat(q.getLimit()).isZero();
+		assertThat(q.isLimited()).isFalse();
+
+		q.limit(Limit.of(10));
+		assertThat(q.getLimit()).isEqualTo(10);
+		assertThat(q.isLimited()).isTrue();
+
+		q.limit(Limit.of(-1));
+		assertThat(q.getLimit()).isZero();
+		assertThat(q.isLimited()).isFalse();
+
+		Query other = new Query(where("name").gte("M")).limit(Limit.of(10));
+		assertThat(new Query(where("name").gte("M")).limit(10)).isEqualTo(other).hasSameHashCodeAs(other);
 	}
 
 	@Test
@@ -342,9 +359,21 @@ class QueryTests {
 		source.limit(10);
 		source.setSortObject(new Document("_id", 1));
 
-		Query target = Query.of((Query) new ProxyFactory(source).getProxy());
+		ProxyFactory proxyFactory = new ProxyFactory(source);
+		proxyFactory.setInterfaces(new Class[0]);
+
+		Query target = Query.of((Query) proxyFactory.getProxy());
 
 		compareQueries(target, source);
+	}
+
+	@Test // GH-4771
+	void appliesSortOfUnpagedPageable() {
+
+		Query query = new Query();
+		query.with(Pageable.unpaged(Sort.by("sortMe")));
+
+		assertThat(query.isSorted()).isTrue();
 	}
 
 	private void compareQueries(Query actual, Query expected) {

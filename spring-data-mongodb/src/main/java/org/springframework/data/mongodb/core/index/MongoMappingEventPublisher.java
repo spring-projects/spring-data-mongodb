@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.util.Assert;
@@ -68,8 +66,8 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 
 	@SuppressWarnings("unchecked")
 	public void publishEvent(ApplicationEvent event) {
-		if (event instanceof MappingContextEvent) {
-			indexCreator.onApplicationEvent((MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>) event);
+		if (event instanceof MappingContextEvent<?,?> mappingContextEvent) {
+			indexCreator.onApplicationEvent(mappingContextEvent);
 		}
 	}
 

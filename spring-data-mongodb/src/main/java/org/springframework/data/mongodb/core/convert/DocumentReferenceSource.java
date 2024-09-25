@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ public class DocumentReferenceSource {
 	 */
 	@Nullable
 	static Object getTargetSource(Object source) {
-		return source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource() : source;
+		return source instanceof DocumentReferenceSource referenceSource ? referenceSource.getTargetSource() : source;
 	}
 
 	/**
@@ -79,6 +79,6 @@ public class DocumentReferenceSource {
 	 * @return
 	 */
 	static Object getSelf(Object self) {
-		return self instanceof DocumentReferenceSource ? ((DocumentReferenceSource) self).getSelf() : self;
+		return self instanceof DocumentReferenceSource referenceSource ? referenceSource.getSelf() : self;
 	}
 }

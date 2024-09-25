@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,16 @@ package org.springframework.data.mongodb.repository;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Value;
-import lombok.With;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -631,8 +627,6 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 	}
 
-	@Data
-	@NoArgsConstructor
 	static class ReactivePerson {
 
 		@Id String id;
@@ -641,29 +635,142 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		String lastname;
 		int age;
 
+		public ReactivePerson() {}
+
 		ReactivePerson(String firstname, String lastname, int age) {
 
 			this.firstname = firstname;
 			this.lastname = lastname;
 			this.age = age;
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ReactivePerson that = (ReactivePerson) o;
+			return age == that.age && Objects.equals(id, that.id) && Objects.equals(firstname, that.firstname)
+					&& Objects.equals(lastname, that.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname, age);
+		}
+
+		public String toString() {
+			return "SimpleReactiveMongoRepositoryTests.ReactivePerson(id=" + this.getId() + ", firstname="
+					+ this.getFirstname() + ", lastname=" + this.getLastname() + ", age=" + this.getAge() + ")";
+		}
 	}
 
-	@With
-	@Value
-	static class ImmutableReactivePerson {
+	static final class ImmutableReactivePerson {
 
-		@Id String id;
+		@Id private final String id;
 
-		String firstname;
-		String lastname;
-		int age;
+		private final String firstname;
+		private final String lastname;
+		private final int age;
 
 		ImmutableReactivePerson(@Nullable String id, String firstname, String lastname, int age) {
+
 			this.id = id;
 			this.firstname = firstname;
 			this.lastname = lastname;
 			this.age = age;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ImmutableReactivePerson that = (ImmutableReactivePerson) o;
+			return age == that.age && Objects.equals(id, that.id) && Objects.equals(firstname, that.firstname)
+					&& Objects.equals(lastname, that.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname, age);
+		}
+
+		public String toString() {
+			return "SimpleReactiveMongoRepositoryTests.ImmutableReactivePerson(id=" + this.getId() + ", firstname="
+					+ this.getFirstname() + ", lastname=" + this.getLastname() + ", age=" + this.getAge() + ")";
+		}
+
+		public ImmutableReactivePerson withId(String id) {
+			return this.id == id ? this : new ImmutableReactivePerson(id, this.firstname, this.lastname, this.age);
+		}
+
+		public ImmutableReactivePerson withFirstname(String firstname) {
+			return this.firstname == firstname ? this
+					: new ImmutableReactivePerson(this.id, firstname, this.lastname, this.age);
+		}
+
+		public ImmutableReactivePerson withLastname(String lastname) {
+			return this.lastname == lastname ? this
+					: new ImmutableReactivePerson(this.id, this.firstname, lastname, this.age);
+		}
+
+		public ImmutableReactivePerson withAge(int age) {
+			return this.age == age ? this : new ImmutableReactivePerson(this.id, this.firstname, this.lastname, age);
 		}
 	}
 

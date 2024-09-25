@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Av
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovariancePop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovarianceSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Max;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Median;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Min;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Percentile;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevPop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
@@ -41,6 +43,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Mushtaq Ahmed
+ * @author Julia Lee
  * @since 1.10
  */
 public class ArithmeticOperators {
@@ -161,7 +164,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates new {@link AggregationExpression} that returns the smallest integer greater than or equal to the
-		 * assoicated number.
+		 * associated number.
 		 *
 		 * @return new instance of {@link Ceil}.
 		 */
@@ -210,7 +213,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that ivides the associated number by number referenced via
+		 * Creates new {@link AggregationExpression} that divides the associated number by number referenced via
 		 * {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
@@ -310,7 +313,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the assoicated
+		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the associated
 		 * number.
 		 *
 		 * @return new instance of {@link Ln}.
@@ -930,6 +933,32 @@ public class ArithmeticOperators {
 		 */
 		public Tanh tanh(AngularUnit unit) {
 			return usesFieldRef() ? Tanh.tanhOf(fieldReference, unit) : Tanh.tanhOf(expression, unit);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
+		 * numeric value.
+		 *
+		 * @return new instance of {@link Percentile}.
+		 * @param percentages must not be {@literal null}.
+		 * @since 4.2
+		 */
+		public Percentile percentile(Double... percentages) {
+			Percentile percentile = usesFieldRef() ? AccumulatorOperators.Percentile.percentileOf(fieldReference)
+					: AccumulatorOperators.Percentile.percentileOf(expression);
+			return percentile.percentages(percentages);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
+		 * numeric value.
+		 *
+		 * @return new instance of {@link Median}.
+		 * @since 4.2
+		 */
+		public Median median() {
+			return usesFieldRef() ? AccumulatorOperators.Median.medianOf(fieldReference)
+					: AccumulatorOperators.Median.medianOf(expression);
 		}
 
 		private boolean usesFieldRef() {

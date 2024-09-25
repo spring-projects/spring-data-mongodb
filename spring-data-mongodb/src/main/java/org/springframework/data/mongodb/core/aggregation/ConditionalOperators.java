@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,10 +278,10 @@ public class ConditionalOperators {
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
-			List<Object> list = new ArrayList<Object>();
+			List<Object> list = new ArrayList<>();
 
-			if (condition instanceof Collection) {
-				for (Object val : ((Collection) this.condition)) {
+			if (condition instanceof Collection<?> collection) {
+				for (Object val : collection) {
 					list.add(mapCondition(val, context));
 				}
 			} else {
@@ -294,10 +294,10 @@ public class ConditionalOperators {
 
 		private Object mapCondition(Object condition, AggregationOperationContext context) {
 
-			if (condition instanceof Field) {
-				return context.getReference((Field) condition).toString();
-			} else if (condition instanceof AggregationExpression) {
-				return ((AggregationExpression) condition).toDocument(context);
+			if (condition instanceof Field field) {
+				return context.getReference(field).toString();
+			} else if (condition instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(context);
 			} else {
 				return condition;
 			}
@@ -305,10 +305,10 @@ public class ConditionalOperators {
 
 		private Object resolve(Object value, AggregationOperationContext context) {
 
-			if (value instanceof Field) {
-				return context.getReference((Field) value).toString();
-			} else if (value instanceof AggregationExpression) {
-				return ((AggregationExpression) value).toDocument(context);
+			if (value instanceof Field field) {
+				return context.getReference(field).toString();
+			} else if (value instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(context);
 			} else if (value instanceof Document) {
 				return value;
 			}
@@ -482,7 +482,7 @@ public class ConditionalOperators {
 		public static Switch switchCases(List<CaseOperator> conditions) {
 
 			Assert.notNull(conditions, "Conditions must not be null");
-			return new Switch(Collections.<String, Object> singletonMap("branches", new ArrayList<CaseOperator>(conditions)));
+			return new Switch(Collections.singletonMap("branches", new ArrayList<>(conditions)));
 		}
 
 		/**
@@ -529,10 +529,10 @@ public class ConditionalOperators {
 
 				Document dbo = new Document("case", when.toDocument(context));
 
-				if (then instanceof AggregationExpression) {
-					dbo.put("then", ((AggregationExpression) then).toDocument(context));
-				} else if (then instanceof Field) {
-					dbo.put("then", context.getReference((Field) then).toString());
+				if (then instanceof AggregationExpression aggregationExpression) {
+					dbo.put("then", aggregationExpression.toDocument(context));
+				} else if (then instanceof Field field) {
+					dbo.put("then", context.getReference(field).toString());
 				} else {
 					dbo.put("then", then);
 				}
@@ -629,8 +629,8 @@ public class ConditionalOperators {
 				return resolve(context, value);
 			}
 
-			if (value instanceof AggregationExpression) {
-				return ((AggregationExpression) value).toDocument(context);
+			if (value instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(context);
 			}
 
 			return context.getMappedObject(new Document("$set", value)).get("$set");
@@ -642,13 +642,13 @@ public class ConditionalOperators {
 				return resolve(context, value);
 			}
 
-			if (value instanceof AggregationExpression) {
-				return ((AggregationExpression) value).toDocument(context);
+			if (value instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(context);
 			}
 
-			if (value instanceof CriteriaDefinition) {
+			if (value instanceof CriteriaDefinition criteriaDefinition) {
 
-				Document mappedObject = context.getMappedObject(((CriteriaDefinition) value).getCriteriaObject());
+				Document mappedObject = context.getMappedObject(criteriaDefinition.getCriteriaObject());
 				List<Object> clauses = getClauses(context, mappedObject);
 				return clauses.size() == 1 ? clauses.get(0) : clauses;
 			}
@@ -659,7 +659,7 @@ public class ConditionalOperators {
 
 		private List<Object> getClauses(AggregationOperationContext context, Document mappedObject) {
 
-			List<Object> clauses = new ArrayList<Object>();
+			List<Object> clauses = new ArrayList<>();
 
 			for (String key : mappedObject.keySet()) {
 
@@ -672,23 +672,20 @@ public class ConditionalOperators {
 
 		private List<Object> getClauses(AggregationOperationContext context, String key, Object predicate) {
 
-			List<Object> clauses = new ArrayList<Object>();
+			List<Object> clauses = new ArrayList<>();
 
-			if (predicate instanceof List) {
+			if (predicate instanceof List<?> predicates) {
 
-				List<?> predicates = (List<?>) predicate;
-				List<Object> args = new ArrayList<Object>(predicates.size());
+				List<Object> args = new ArrayList<>(predicates.size());
 
-				for (Object clause : (List<?>) predicate) {
-					if (clause instanceof Document) {
-						args.addAll(getClauses(context, (Document) clause));
+				for (Object clause : predicates) {
+					if (clause instanceof Document document) {
+						args.addAll(getClauses(context, document));
 					}
 				}
 
 				clauses.add(new Document(key, args));
-			} else if (predicate instanceof Document) {
-
-				Document nested = (Document) predicate;
+			} else if (predicate instanceof Document nested) {
 
 				for (String s : nested.keySet()) {
 
@@ -696,14 +693,14 @@ public class ConditionalOperators {
 						continue;
 					}
 
-					List<Object> args = new ArrayList<Object>(2);
+					List<Object> args = new ArrayList<>(2);
 					args.add("$" + key);
 					args.add(nested.get(s));
 					clauses.add(new Document(s, args));
 				}
 			} else if (!isKeyword(key)) {
 
-				List<Object> args = new ArrayList<Object>(2);
+				List<Object> args = new ArrayList<>(2);
 				args.add("$" + key);
 				args.add(predicate);
 				clauses.add(new Document("$eq", args));
@@ -724,8 +721,8 @@ public class ConditionalOperators {
 
 		private Object resolve(AggregationOperationContext context, Object value) {
 
-			if (value instanceof Document) {
-				return context.getMappedObject((Document) value);
+			if (value instanceof Document document) {
+				return context.getMappedObject(document);
 			}
 
 			return context.getReference((Field) value).toString();

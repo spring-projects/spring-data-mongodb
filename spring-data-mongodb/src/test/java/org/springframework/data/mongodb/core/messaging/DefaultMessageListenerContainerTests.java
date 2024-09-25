@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 
-import lombok.Data;
-
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -373,8 +372,8 @@ public class DefaultMessageListenerContainerTests {
 						new Person("col-2-id-1", "bar"), new Person("col-2-id-2", "foo"));
 	}
 
-	@Data
 	static class Person {
+
 		@Id String id;
 		private String firstname;
 		private String lastname;
@@ -384,6 +383,53 @@ public class DefaultMessageListenerContainerTests {
 		public Person(String id, String firstname) {
 			this.id = id;
 			this.firstname = firstname;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname)
+					&& Objects.equals(lastname, person.lastname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname, lastname);
+		}
+
+		public String toString() {
+			return "DefaultMessageListenerContainerTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ", lastname=" + this.getLastname() + ")";
 		}
 	}
 

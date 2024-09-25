@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ import javax.net.ssl.SSLContext;
 
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -40,7 +42,7 @@ import com.mongodb.ServerApi;
 import com.mongodb.WriteConcern;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterType;
-import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.connection.TransportSettings;
 
 /**
  * A factory bean for construction of a {@link MongoClientSettings} instance to be used with a MongoDB driver.
@@ -54,7 +56,10 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	private static final MongoClientSettings DEFAULT_MONGO_SETTINGS = MongoClientSettings.builder().build();
 
 	private CodecRegistry codecRegistry = DEFAULT_MONGO_SETTINGS.getCodecRegistry();
-	private StreamFactoryFactory streamFactoryFactory = DEFAULT_MONGO_SETTINGS.getStreamFactoryFactory();
+
+	@Nullable private Object streamFactoryFactory = MongoCompatibilityAdapter
+			.clientSettingsAdapter(DEFAULT_MONGO_SETTINGS).getStreamFactoryFactory();
+	@Nullable private TransportSettings transportSettings;
 
 	private ReadPreference readPreference = DEFAULT_MONGO_SETTINGS.getReadPreference();
 	private ReadConcern readConcern = DEFAULT_MONGO_SETTINGS.getReadConcern();
@@ -368,10 +373,16 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	/**
 	 * @param streamFactoryFactory
-	 * @see MongoClientSettings.Builder#streamFactoryFactory(StreamFactoryFactory)
+	 * @deprecated since 4.3, will be removed in the MongoDB 5.0 driver in favor of
+	 *             {@code com.mongodb.connection.TransportSettings}.
 	 */
-	public void setStreamFactoryFactory(StreamFactoryFactory streamFactoryFactory) {
+	@Deprecated(since = "4.3")
+	public void setStreamFactoryFactory(Object streamFactoryFactory) {
 		this.streamFactoryFactory = streamFactoryFactory;
+	}
+
+	public void setTransportSettings(@Nullable TransportSettings transportSettings) {
+		this.transportSettings = transportSettings;
 	}
 
 	/**
@@ -433,7 +444,6 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 						settings.hosts(clusterHosts);
 					}
 					settings.localThreshold(clusterLocalThresholdMS, TimeUnit.MILLISECONDS);
-					// settings.maxWaitQueueSize(clusterMaxWaitQueueSize);
 					settings.requiredClusterType(custerRequiredClusterType);
 
 					if (StringUtils.hasText(clusterSrvHost)) {
@@ -478,12 +488,18 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 					}
 				});
 
-		if (streamFactoryFactory != null) {
-			builder = builder.streamFactoryFactory(streamFactoryFactory);
+		if (transportSettings != null) {
+			builder.transportSettings(transportSettings);
 		}
+
+		if (streamFactoryFactory != null) {
+			MongoCompatibilityAdapter.clientSettingsBuilderAdapter(builder).setStreamFactoryFactory(streamFactoryFactory);
+		}
+
 		if (retryReads != null) {
 			builder = builder.retryReads(retryReads);
 		}
+
 		if (retryWrites != null) {
 			builder = builder.retryWrites(retryWrites);
 		}

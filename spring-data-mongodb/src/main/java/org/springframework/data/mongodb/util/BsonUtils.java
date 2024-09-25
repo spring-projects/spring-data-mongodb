@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,34 +15,38 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.StringJoiner;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
-import org.bson.BSONObject;
-import org.bson.BsonBinary;
-import org.bson.BsonBoolean;
-import org.bson.BsonDouble;
-import org.bson.BsonInt32;
-import org.bson.BsonInt64;
-import org.bson.BsonObjectId;
-import org.bson.BsonString;
-import org.bson.BsonValue;
-import org.bson.Document;
+import org.bson.*;
+import org.bson.codecs.Codec;
 import org.bson.codecs.DocumentCodec;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.configuration.CodecConfigurationException;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
+import org.bson.types.Binary;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -111,7 +115,7 @@ public class BsonUtils {
 			return dbo.toMap();
 		}
 
-		return new Document((Map) bson.toBsonDocument(Document.class, codecRegistry));
+		return new Document(bson.toBsonDocument(Document.class, codecRegistry));
 	}
 
 	/**
@@ -140,8 +144,8 @@ public class BsonUtils {
 
 		Map<String, Object> map = asMap(bson, codecRegistry);
 
-		if (map instanceof Document) {
-			return (Document) map;
+		if (map instanceof Document document) {
+			return document;
 		}
 
 		return new Document(map);
@@ -160,14 +164,14 @@ public class BsonUtils {
 			bson = new Document(asDocument(bson));
 		}
 
-		if (bson instanceof Document) {
-			return (Document) bson;
+		if (bson instanceof Document document) {
+			return document;
 		}
 
 		Map<String, Object> map = asMap(bson);
 
-		if (map instanceof Document) {
-			return (Document) map;
+		if (map instanceof Document document) {
+			return document;
 		}
 
 		return new Document(map);
@@ -175,14 +179,14 @@ public class BsonUtils {
 
 	public static void addToMap(Bson bson, String key, @Nullable Object value) {
 
-		if (bson instanceof Document) {
+		if (bson instanceof Document document) {
 
-			((Document) bson).put(key, value);
+			document.put(key, value);
 			return;
 		}
-		if (bson instanceof BSONObject) {
+		if (bson instanceof BSONObject bsonObject) {
 
-			((BSONObject) bson).put(key, value);
+			bsonObject.put(key, value);
 			return;
 		}
 
@@ -199,15 +203,15 @@ public class BsonUtils {
 	 */
 	public static void addAllToMap(Bson target, Map<String, ?> source) {
 
-		if (target instanceof Document) {
+		if (target instanceof Document document) {
 
-			((Document) target).putAll(source);
+			document.putAll(source);
 			return;
 		}
 
-		if (target instanceof BSONObject) {
+		if (target instanceof BSONObject bsonObject) {
 
-			((BSONObject) target).putAll(source);
+			bsonObject.putAll(source);
 			return;
 		}
 
@@ -226,14 +230,10 @@ public class BsonUtils {
 	 */
 	public static boolean contains(Bson bson, String key, @Nullable Object value) {
 
-		if (bson instanceof Document) {
-
-			Document doc = (Document) bson;
-			return doc.containsKey(key) && ObjectUtils.nullSafeEquals(doc.get(key), value);
+		if (bson instanceof Document document) {
+			return document.containsKey(key) && ObjectUtils.nullSafeEquals(document.get(key), value);
 		}
-		if (bson instanceof BSONObject) {
-
-			BSONObject bsonObject = (BSONObject) bson;
+		if (bson instanceof BSONObject bsonObject) {
 			return bsonObject.containsField(key) && ObjectUtils.nullSafeEquals(bsonObject.get(key), value);
 		}
 
@@ -249,11 +249,11 @@ public class BsonUtils {
 	 */
 	public static boolean removeNullId(Bson bson) {
 
-		if (!contains(bson, "_id", null)) {
+		if (!contains(bson, FieldName.ID.name(), null)) {
 			return false;
 		}
 
-		removeFrom(bson, "_id");
+		removeFrom(bson, FieldName.ID.name());
 		return true;
 	}
 
@@ -266,15 +266,15 @@ public class BsonUtils {
 	 */
 	static void removeFrom(Bson bson, String key) {
 
-		if (bson instanceof Document) {
+		if (bson instanceof Document document) {
 
-			((Document) bson).remove(key);
+			document.remove(key);
 			return;
 		}
 
-		if (bson instanceof BSONObject) {
+		if (bson instanceof BSONObject bsonObject) {
 
-			((BSONObject) bson).removeField(key);
+			bsonObject.removeField(key);
 			return;
 		}
 
@@ -292,36 +292,22 @@ public class BsonUtils {
 	 */
 	public static Object toJavaType(BsonValue value) {
 
-		switch (value.getBsonType()) {
-			case INT32:
-				return value.asInt32().getValue();
-			case INT64:
-				return value.asInt64().getValue();
-			case STRING:
-				return value.asString().getValue();
-			case DECIMAL128:
-				return value.asDecimal128().doubleValue();
-			case DOUBLE:
-				return value.asDouble().getValue();
-			case BOOLEAN:
-				return value.asBoolean().getValue();
-			case OBJECT_ID:
-				return value.asObjectId().getValue();
-			case DB_POINTER:
-				return new DBRef(value.asDBPointer().getNamespace(), value.asDBPointer().getId());
-			case BINARY:
-				return value.asBinary().getData();
-			case DATE_TIME:
-				return new Date(value.asDateTime().getValue());
-			case SYMBOL:
-				return value.asSymbol().getSymbol();
-			case ARRAY:
-				return value.asArray().toArray();
-			case DOCUMENT:
-				return Document.parse(value.asDocument().toJson());
-			default:
-				return value;
-		}
+		return switch (value.getBsonType()) {
+			case INT32 -> value.asInt32().getValue();
+			case INT64 -> value.asInt64().getValue();
+			case STRING -> value.asString().getValue();
+			case DECIMAL128 -> value.asDecimal128().doubleValue();
+			case DOUBLE -> value.asDouble().getValue();
+			case BOOLEAN -> value.asBoolean().getValue();
+			case OBJECT_ID -> value.asObjectId().getValue();
+			case DB_POINTER -> new DBRef(value.asDBPointer().getNamespace(), value.asDBPointer().getId());
+			case BINARY -> value.asBinary().getData();
+			case DATE_TIME -> new Date(value.asDateTime().getValue());
+			case SYMBOL -> value.asSymbol().getSymbol();
+			case ARRAY -> value.asArray().toArray();
+			case DOCUMENT -> Document.parse(value.asDocument().toJson());
+			default -> value;
+		};
 	}
 
 	/**
@@ -333,50 +319,87 @@ public class BsonUtils {
 	 * @since 3.0
 	 */
 	public static BsonValue simpleToBsonValue(Object source) {
+		return simpleToBsonValue(source, MongoClientSettings.getDefaultCodecRegistry());
+	}
 
-		if (source instanceof BsonValue) {
-			return (BsonValue) source;
+	/**
+	 * Convert a given simple value (eg. {@link String}, {@link Long}) to its corresponding {@link BsonValue}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @param codecRegistry The {@link CodecRegistry} used as a fallback to convert types using native {@link Codec}. Must
+	 *          not be {@literal null}.
+	 * @return the corresponding {@link BsonValue} representation.
+	 * @throws IllegalArgumentException if {@literal source} does not correspond to a {@link BsonValue} type.
+	 * @since 4.2
+	 */
+	@SuppressWarnings("unchecked")
+	public static BsonValue simpleToBsonValue(Object source, CodecRegistry codecRegistry) {
+
+		if (source instanceof BsonValue bsonValue) {
+			return bsonValue;
 		}
 
-		if (source instanceof ObjectId) {
-			return new BsonObjectId((ObjectId) source);
+		if (source instanceof ObjectId objectId) {
+			return new BsonObjectId(objectId);
 		}
 
-		if (source instanceof String) {
-			return new BsonString((String) source);
+		if (source instanceof String stringValue) {
+			return new BsonString(stringValue);
 		}
 
-		if (source instanceof Double) {
-			return new BsonDouble((Double) source);
+		if (source instanceof Double doubleValue) {
+			return new BsonDouble(doubleValue);
 		}
 
-		if (source instanceof Integer) {
-			return new BsonInt32((Integer) source);
+		if (source instanceof Integer integerValue) {
+			return new BsonInt32(integerValue);
 		}
 
-		if (source instanceof Long) {
-			return new BsonInt64((Long) source);
+		if (source instanceof Long longValue) {
+			return new BsonInt64(longValue);
 		}
 
-		if (source instanceof byte[]) {
-			return new BsonBinary((byte[]) source);
+		if (source instanceof byte[] byteArray) {
+			return new BsonBinary(byteArray);
 		}
 
-		if (source instanceof Boolean) {
-			return new BsonBoolean((Boolean) source);
+		if (source instanceof Boolean booleanValue) {
+			return new BsonBoolean(booleanValue);
 		}
 
-		if (source instanceof Float) {
-			return new BsonDouble((Float) source);
+		if (source instanceof Float floatValue) {
+			return new BsonDouble(floatValue);
 		}
 
-		throw new IllegalArgumentException(String.format("Unable to convert %s (%s) to BsonValue.", source,
-				source != null ? source.getClass().getName() : "null"));
+		if (source instanceof Binary binary) {
+			return new BsonBinary(binary.getType(), binary.getData());
+		}
+
+		if (source instanceof Date date) {
+			new BsonDateTime(date.getTime());
+		}
+
+		try {
+
+			Object value = source;
+			if (ClassUtils.isPrimitiveArray(source.getClass())) {
+				value = CollectionUtils.arrayToList(source);
+			}
+
+			Codec codec = codecRegistry.get(value.getClass());
+			BsonCapturingWriter writer = new BsonCapturingWriter(value.getClass());
+			codec.encode(writer, value,
+					ObjectUtils.isArray(value) || value instanceof Collection<?> ? EncoderContext.builder().build() : null);
+			return writer.getCapturedValue();
+		} catch (CodecConfigurationException e) {
+			throw new IllegalArgumentException(
+					String.format("Unable to convert %s to BsonValue.", source != null ? source.getClass().getName() : "null"));
+		}
 	}
 
 	/**
 	 * Merge the given {@link Document documents} into on in the given order. Keys contained within multiple documents are
-	 * overwritten by their follow ups.
+	 * overwritten by their follow-ups.
 	 *
 	 * @param documents must not be {@literal null}. Can be empty.
 	 * @return the document containing all key value pairs.
@@ -484,7 +507,7 @@ public class BsonUtils {
 	}
 
 	/**
-	 * Resolve a the value for a given key. If the given {@link Bson} value contains the key the value is immediately
+	 * Resolve the value for a given key. If the given {@link Bson} value contains the key the value is immediately
 	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
 	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
 	 * (wrong) type, {@literal null} is returned.
@@ -496,52 +519,87 @@ public class BsonUtils {
 	 */
 	@Nullable
 	public static Object resolveValue(Bson bson, String key) {
+		return resolveValue(asMap(bson), key);
+	}
 
-		Map<String, Object> source = asMap(bson);
+	/**
+	 * Resolve the value for a given {@link FieldName field name}. If the given name is a {@link Type#KEY} the value is
+	 * obtained from the target {@link Bson} immediately. If the given fieldName is a {@link Type#PATH} maybe using the
+	 * dot ({@code .}) notation it will try to resolve the path by inspecting the individual parts. If one of the
+	 * intermediate ones is {@literal null} or cannot be inspected further (wrong) type, {@literal null} is returned.
+	 *
+	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param fieldName the name to lookup. Must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 * @since 4.2
+	 */
+	public static Object resolveValue(Bson bson, FieldName fieldName) {
+		return resolveValue(asMap(bson), fieldName);
+	}
 
-		if (source.containsKey(key) || !key.contains(".")) {
-			return source.get(key);
+	/**
+	 * Resolve the value for a given {@link FieldName field name}. If the given name is a {@link Type#KEY} the value is
+	 * obtained from the target {@link Bson} immediately. If the given fieldName is a {@link Type#PATH} maybe using the
+	 * dot ({@code .}) notation it will try to resolve the path by inspecting the individual parts. If one of the
+	 * intermediate ones is {@literal null} or cannot be inspected further (wrong) type, {@literal null} is returned.
+	 *
+	 * @param source the source to inspect. Must not be {@literal null}.
+	 * @param fieldName the key to lookup. Must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 * @since 4.2
+	 */
+	@Nullable
+	public static Object resolveValue(Map<String, Object> source, FieldName fieldName) {
+
+		if (fieldName.isKey()) {
+			return source.get(fieldName.name());
 		}
 
-		String[] parts = key.split("\\.");
+		String[] parts = fieldName.parts();
 
 		for (int i = 1; i < parts.length; i++) {
 
 			Object result = source.get(parts[i - 1]);
 
-			if (!(result instanceof Bson)) {
+			if (!(result instanceof Bson resultBson)) {
 				return null;
 			}
 
-			source = asMap((Bson) result);
+			source = asMap(resultBson);
 		}
 
 		return source.get(parts[parts.length - 1]);
 	}
 
 	/**
-	 * Returns whether the underlying {@link Bson bson} has a value ({@literal null} or non-{@literal null}) for the given
-	 * {@code key}.
+	 * Resolve the value for a given key. If the given {@link Map} value contains the key the value is immediately
+	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
+	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
+	 * (wrong) type, {@literal null} is returned.
 	 *
-	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param source the source to inspect. Must not be {@literal null}.
 	 * @param key the key to lookup. Must not be {@literal null}.
-	 * @return {@literal true} if no non {@literal null} value present.
-	 * @since 3.0.8
+	 * @return can be {@literal null}.
+	 * @since 4.1
 	 */
-	public static boolean hasValue(Bson bson, String key) {
+	@Nullable
+	public static Object resolveValue(Map<String, Object> source, String key) {
+
+		if (source.containsKey(key)) {
+			return source.get(key);
+		}
+
+		return resolveValue(source, FieldName.path(key));
+	}
+
+	public static boolean hasValue(Bson bson, FieldName fieldName) {
 
 		Map<String, Object> source = asMap(bson);
-
-		if (source.get(key) != null) {
-			return true;
+		if (fieldName.isKey()) {
+			return source.containsKey(fieldName.name());
 		}
 
-		if (!key.contains(".")) {
-			return false;
-		}
-
-		String[] parts = key.split("\\.");
-
+		String[] parts = fieldName.parts();
 		Object result;
 
 		for (int i = 1; i < parts.length; i++) {
@@ -555,6 +613,20 @@ public class BsonUtils {
 		}
 
 		return source.containsKey(parts[parts.length - 1]);
+
+	}
+
+	/**
+	 * Returns whether the underlying {@link Bson bson} has a value ({@literal null} or non-{@literal null}) for the given
+	 * {@code key}.
+	 *
+	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param key the key to lookup. Must not be {@literal null}.
+	 * @return {@literal true} if no non {@literal null} value present.
+	 * @since 3.0.8
+	 */
+	public static boolean hasValue(Bson bson, String key) {
+		return hasValue(bson, FieldName.path(key));
 	}
 
 	/**
@@ -567,16 +639,16 @@ public class BsonUtils {
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> getAsMap(Object source) {
 
-		if (source instanceof Document) {
-			return (Document) source;
+		if (source instanceof Document document) {
+			return document;
 		}
 
-		if (source instanceof BasicDBObject) {
-			return (BasicDBObject) source;
+		if (source instanceof BasicDBObject basicDBObject) {
+			return basicDBObject;
 		}
 
-		if (source instanceof DBObject) {
-			return ((DBObject) source).toMap();
+		if (source instanceof DBObject dbObject) {
+			return dbObject.toMap();
 		}
 
 		if (source instanceof Map) {
@@ -599,16 +671,16 @@ public class BsonUtils {
 	@SuppressWarnings("unchecked")
 	public static Bson asBson(Object source) {
 
-		if (source instanceof Document) {
-			return (Document) source;
+		if (source instanceof Document document) {
+			return document;
 		}
 
-		if (source instanceof BasicDBObject) {
-			return (BasicDBObject) source;
+		if (source instanceof BasicDBObject basicDBObject) {
+			return basicDBObject;
 		}
 
-		if (source instanceof DBObject) {
-			return new Document(((DBObject) source).toMap());
+		if (source instanceof DBObject dbObject) {
+			return new Document(dbObject.toMap());
 		}
 
 		if (source instanceof Map) {
@@ -640,11 +712,29 @@ public class BsonUtils {
 	 */
 	public static Collection<?> asCollection(Object source) {
 
-		if (source instanceof Collection) {
-			return (Collection<?>) source;
+		if (source instanceof Collection<?> collection) {
+			return collection;
 		}
 
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
+	}
+
+	public static Document mapValues(Document source, BiFunction<String, Object, Object> valueMapper) {
+		return mapEntries(source, Entry::getKey, entry -> valueMapper.apply(entry.getKey(), entry.getValue()));
+	}
+
+	public static Document mapEntries(Document source, Function<Entry<String, Object>, String> keyMapper,
+			Function<Entry<String, Object>, Object> valueMapper) {
+
+		if (source.isEmpty()) {
+			return source;
+		}
+
+		Map<String, Object> target = new LinkedHashMap<>(source.size(), 1f);
+		for (Entry<String, Object> entry : source.entrySet()) {
+			target.put(keyMapper.apply(entry), valueMapper.apply(entry));
+		}
+		return new Document(target);
 	}
 
 	@Nullable
@@ -655,21 +745,21 @@ public class BsonUtils {
 		}
 
 		try {
-			return value instanceof Document
-					? ((Document) value).toJson(MongoClientSettings.getDefaultCodecRegistry().get(Document.class))
+			return value instanceof Document document
+					? document.toJson(MongoClientSettings.getDefaultCodecRegistry().get(Document.class))
 					: serializeValue(value);
 
 		} catch (Exception e) {
 
-			if (value instanceof Collection) {
-				return toString((Collection<?>) value);
-			} else if (value instanceof Map) {
-				return toString((Map<?, ?>) value);
+			if (value instanceof Collection<?> collection) {
+				return toString(collection);
+			} else if (value instanceof Map<?, ?> map) {
+				return toString(map);
 			} else if (ObjectUtils.isArray(value)) {
 				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
 			}
 
-			throw e instanceof JsonParseException ? (JsonParseException) e : new JsonParseException(e);
+			throw e instanceof JsonParseException jsonParseException ? jsonParseException : new JsonParseException(e);
 		}
 	}
 
@@ -685,8 +775,9 @@ public class BsonUtils {
 
 	private static String toString(Map<?, ?> source) {
 
+		// Avoid String.format for performance
 		return iterableToDelimitedString(source.entrySet(), "{ ", " }",
-				entry -> String.format("\"%s\" : %s", entry.getKey(), toJson(entry.getValue())));
+				entry -> "\"" + entry.getKey() + "\" : " + toJson(entry.getValue()));
 	}
 
 	private static String toString(Collection<?> source) {
@@ -701,5 +792,161 @@ public class BsonUtils {
 		StreamSupport.stream(source.spliterator(), false).map(transformer::convert).forEach(joiner::add);
 
 		return joiner.toString();
+	}
+
+	static class BsonCapturingWriter extends AbstractBsonWriter {
+
+		private final List<BsonValue> values = new ArrayList<>(0);
+
+		public BsonCapturingWriter(Class<?> type) {
+			super(new BsonWriterSettings());
+
+			if (ClassUtils.isAssignable(Map.class, type)) {
+				setContext(new Context(null, BsonContextType.DOCUMENT));
+			} else if (ClassUtils.isAssignable(List.class, type) || type.isArray()) {
+				setContext(new Context(null, BsonContextType.ARRAY));
+			} else {
+				setContext(new Context(null, BsonContextType.DOCUMENT));
+			}
+		}
+
+		@Nullable
+		BsonValue getCapturedValue() {
+
+			if (values.isEmpty()) {
+				return null;
+			}
+			if (!getContext().getContextType().equals(BsonContextType.ARRAY)) {
+				return values.get(0);
+			}
+
+			return new BsonArray(values);
+		}
+
+		@Override
+		protected void doWriteStartDocument() {
+
+		}
+
+		@Override
+		protected void doWriteEndDocument() {
+
+		}
+
+		@Override
+		public void writeStartArray() {
+			setState(State.VALUE);
+		}
+
+		@Override
+		public void writeEndArray() {
+			setState(State.NAME);
+		}
+
+		@Override
+		protected void doWriteStartArray() {
+
+		}
+
+		@Override
+		protected void doWriteEndArray() {
+
+		}
+
+		@Override
+		protected void doWriteBinaryData(BsonBinary value) {
+			values.add(value);
+		}
+
+		@Override
+		protected void doWriteBoolean(boolean value) {
+			values.add(BsonBoolean.valueOf(value));
+		}
+
+		@Override
+		protected void doWriteDateTime(long value) {
+			values.add(new BsonDateTime(value));
+		}
+
+		@Override
+		protected void doWriteDBPointer(BsonDbPointer value) {
+			values.add(value);
+		}
+
+		@Override
+		protected void doWriteDouble(double value) {
+			values.add(new BsonDouble(value));
+		}
+
+		@Override
+		protected void doWriteInt32(int value) {
+			values.add(new BsonInt32(value));
+		}
+
+		@Override
+		protected void doWriteInt64(long value) {
+			values.add(new BsonInt64(value));
+		}
+
+		@Override
+		protected void doWriteDecimal128(Decimal128 value) {
+			values.add(new BsonDecimal128(value));
+		}
+
+		@Override
+		protected void doWriteJavaScript(String value) {
+			values.add(new BsonJavaScript(value));
+		}
+
+		@Override
+		protected void doWriteJavaScriptWithScope(String value) {
+			throw new UnsupportedOperationException("Cannot capture JavaScriptWith");
+		}
+
+		@Override
+		protected void doWriteMaxKey() {}
+
+		@Override
+		protected void doWriteMinKey() {}
+
+		@Override
+		protected void doWriteNull() {
+			values.add(new BsonNull());
+		}
+
+		@Override
+		protected void doWriteObjectId(ObjectId value) {
+			values.add(new BsonObjectId(value));
+		}
+
+		@Override
+		protected void doWriteRegularExpression(BsonRegularExpression value) {
+			values.add(value);
+		}
+
+		@Override
+		protected void doWriteString(String value) {
+			values.add(new BsonString(value));
+		}
+
+		@Override
+		protected void doWriteSymbol(String value) {
+			values.add(new BsonSymbol(value));
+		}
+
+		@Override
+		protected void doWriteTimestamp(BsonTimestamp value) {
+			values.add(value);
+		}
+
+		@Override
+		protected void doWriteUndefined() {
+			values.add(new BsonUndefined());
+		}
+
+		@Override
+		public void flush() {
+			values.clear();
+		}
 	}
 }

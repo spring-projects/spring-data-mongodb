@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the original author or authors.
+ * Copyright 2022-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,11 @@ package org.springframework.data.mongodb.util.json;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Supplier;
 
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 
@@ -31,18 +29,15 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @since 3.3.5
  */
-class EvaluationContextExpressionEvaluator implements SpELExpressionEvaluator {
+class EvaluationContextExpressionEvaluator implements ValueExpressionEvaluator {
 
-	ValueProvider valueProvider;
-	ExpressionParser expressionParser;
-	Supplier<EvaluationContext> evaluationContext;
+	final ValueProvider valueProvider;
+	final ExpressionParser expressionParser;
 
-	public EvaluationContextExpressionEvaluator(ValueProvider valueProvider, ExpressionParser expressionParser,
-			Supplier<EvaluationContext> evaluationContext) {
+	EvaluationContextExpressionEvaluator(ValueProvider valueProvider, ExpressionParser expressionParser) {
 
 		this.valueProvider = valueProvider;
 		this.expressionParser = expressionParser;
-		this.evaluationContext = evaluationContext;
 	}
 
 	@Nullable
@@ -51,20 +46,20 @@ class EvaluationContextExpressionEvaluator implements SpELExpressionEvaluator {
 		return evaluateExpression(expression, Collections.emptyMap());
 	}
 
-	public EvaluationContext getEvaluationContext(String expressionString) {
-		return evaluationContext != null ? evaluationContext.get() : new StandardEvaluationContext();
+	EvaluationContext getEvaluationContext(String expressionString) {
+		return new StandardEvaluationContext();
 	}
 
-	public SpelExpression getParsedExpression(String expressionString) {
-		return (SpelExpression) (expressionParser != null ? expressionParser : new SpelExpressionParser())
-				.parseExpression(expressionString);
+	Expression getParsedExpression(String expressionString) {
+		return expressionParser.parseExpression(expressionString);
 	}
 
-	public <T> T evaluateExpression(String expressionString, Map<String, Object> variables) {
+	@SuppressWarnings("unchecked")
+	<T> T evaluateExpression(String expressionString, Map<String, Object> variables) {
 
-		SpelExpression expression = getParsedExpression(expressionString);
+		Expression expression = getParsedExpression(expressionString);
 		EvaluationContext ctx = getEvaluationContext(expressionString);
-		variables.entrySet().forEach(entry -> ctx.setVariable(entry.getKey(), entry.getValue()));
+		variables.forEach(ctx::setVariable);
 
 		Object result = expression.getValue(ctx, Object.class);
 		return (T) result;

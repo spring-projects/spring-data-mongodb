@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.expression.spel.ExpressionState;
@@ -39,22 +37,9 @@ import org.springframework.lang.Nullable;
  */
 public class LiteralNode extends ExpressionNode {
 
-	private static final Set<Class<?>> SUPPORTED_LITERAL_TYPES;
+	private static final Set<Class<?>> SUPPORTED_LITERAL_TYPES = Set.of(BooleanLiteral.class, FloatLiteral.class,
+			IntLiteral.class, LongLiteral.class, NullLiteral.class, RealLiteral.class, StringLiteral.class);
 	private final Literal literal;
-
-	static {
-
-		Set<Class<?>> supportedTypes = new HashSet<Class<?>>(7, 1);
-		supportedTypes.add(BooleanLiteral.class);
-		supportedTypes.add(FloatLiteral.class);
-		supportedTypes.add(IntLiteral.class);
-		supportedTypes.add(LongLiteral.class);
-		supportedTypes.add(NullLiteral.class);
-		supportedTypes.add(RealLiteral.class);
-		supportedTypes.add(StringLiteral.class);
-
-		SUPPORTED_LITERAL_TYPES = Collections.unmodifiableSet(supportedTypes);
-	}
 
 	/**
 	 * Creates a new {@link LiteralNode} from the given {@link Literal} and {@link ExpressionState}.
@@ -75,12 +60,11 @@ public class LiteralNode extends ExpressionNode {
 	 */
 	public boolean isUnaryMinus(@Nullable ExpressionNode parent) {
 
-		if (!(parent instanceof OperatorNode)) {
+		if (!(parent instanceof OperatorNode operatorNode)) {
 			return false;
 		}
 
-		OperatorNode operator = (OperatorNode) parent;
-		return operator.isUnaryMinus();
+		return operatorNode.isUnaryMinus();
 	}
 
 	@Override

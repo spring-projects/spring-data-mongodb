@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 package org.springframework.data.mongodb;
 
 import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.lang.Nullable;
 
 public class UncategorizedMongoDbException extends UncategorizedDataAccessException {
 
 	private static final long serialVersionUID = -2336595514062364929L;
 
-	public UncategorizedMongoDbException(String msg, Throwable cause) {
+	public UncategorizedMongoDbException(String msg, @Nullable Throwable cause) {
 		super(msg, cause);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -106,9 +105,9 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		PersistentEntity<?, ?> entity = event.getPersistentEntity();
 
 		// Double check type as Spring infrastructure does not consider nested generics
-		if (entity instanceof MongoPersistentEntity) {
+		if (entity instanceof MongoPersistentEntity<?> mongoPersistentEntity) {
 
-			checkForIndexes((MongoPersistentEntity<?>) entity);
+			checkForIndexes(mongoPersistentEntity);
 		}
 	}
 
@@ -136,8 +135,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
-				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
-						? (IndexDefinitionHolder) indexDefinition
+				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder definitionHolder
+						? definitionHolder
 						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				createIndex(indexToCreate);
@@ -152,10 +151,10 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 			IndexOperations indexOperations = indexOperationsProvider.indexOps(indexDefinition.getCollection());
 			indexOperations.ensureIndex(indexDefinition);
 
-		} catch (UncategorizedMongoDbException ex) {
+		} catch (DataIntegrityViolationException ex) {
 
-			if (ex.getCause() instanceof MongoException
-					&& MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) ex.getCause()).getCode())) {
+			if (ex.getCause() instanceof MongoException mongoException
+					&& MongoDbErrorCodes.isDataIntegrityViolationCode(mongoException.getCode())) {
 
 				IndexInfo existingIndex = fetchIndexInformation(indexDefinition);
 				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'";

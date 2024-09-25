@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ public class ArrayOperators {
 
 		private final @Nullable String fieldReference;
 		private final @Nullable AggregationExpression expression;
-		private final @Nullable Collection values;
+		private final @Nullable Collection<?> values;
 
 		/**
 		 * Creates new {@link ArrayOperatorFactory} for given {@literal fieldReference}.
@@ -214,6 +214,10 @@ public class ArrayOperators {
 				return Filter.filter(fieldReference);
 			}
 
+			if (usesExpression()) {
+				return Filter.filter(expression);
+			}
+
 			Assert.state(values != null, "Values must not be null");
 			return Filter.filter(new ArrayList<>(values));
 		}
@@ -317,7 +321,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort order}.
+		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort
+		 * order}.
 		 *
 		 * @return new instance of {@link SortArray}.
 		 * @since 4.0
@@ -397,8 +402,8 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that return the last element in the given array.
-		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+		 * Creates new {@link AggregationExpression} that return the last element in the given array. <strong>NOTE:</strong>
+		 * Requires MongoDB 4.4 or later.
 		 *
 		 * @return new instance of {@link Last}.
 		 * @since 3.4
@@ -518,7 +523,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Use the element at the index number traken from the given field.
+		 * Use the element at the index number taken from the given field.
 		 *
 		 * @param arrayFieldReference the field name.
 		 * @return new instance of {@link ArrayElemAt}.
@@ -650,6 +655,19 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Set the {@link AggregationExpression} resolving to an array to apply the {@code $filter} to.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 4.2
+		 */
+		public static AsBuilder filter(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Field must not be null");
+			return new FilterExpressionBuilder().filter(expression);
+		}
+
+		/**
 		 * Set the {@literal values} to apply the {@code $filter} to.
 		 *
 		 * @param values must not be {@literal null}.
@@ -669,8 +687,7 @@ public class ArrayOperators {
 		private Document toFilter(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document filterExpression = new Document();
-			InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
-					exposedFields, context);
+			AggregationOperationContext operationContext = context.inheritAndExpose(exposedFields);
 
 			filterExpression.putAll(context.getMappedObject(new Document("input", getMappedInput(context))));
 			filterExpression.put("as", as.getTarget());
@@ -681,18 +698,27 @@ public class ArrayOperators {
 		}
 
 		private Object getMappedInput(AggregationOperationContext context) {
-			return input instanceof Field ? context.getReference((Field) input).toString() : input;
+
+			if (input instanceof Field field) {
+				return context.getReference(field).toString();
+			}
+
+			if (input instanceof AggregationExpression expression) {
+				return expression.toDocument(context);
+			}
+
+			return input;
 		}
 
 		private Object getMappedCondition(AggregationOperationContext context) {
 
-			if (!(condition instanceof AggregationExpression)) {
+			if (!(condition instanceof AggregationExpression aggregationExpression)) {
 				return condition;
 			}
 
 			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(
 					context, Collections.singleton(as));
-			return ((AggregationExpression) condition).toDocument(nea);
+			return aggregationExpression.toDocument(nea);
 		}
 
 		/**
@@ -715,6 +741,15 @@ public class ArrayOperators {
 			 * @return
 			 */
 			AsBuilder filter(Field field);
+
+			/**
+			 * Set the {@link AggregationExpression} resolving to an array to apply the {@code $filter} to.
+			 *
+			 * @param expression must not be {@literal null}.
+			 * @return
+			 * @since 4.1.1
+			 */
+			AsBuilder filter(AggregationExpression expression);
 		}
 
 		/**
@@ -785,7 +820,7 @@ public class ArrayOperators {
 			public AsBuilder filter(List<?> array) {
 
 				Assert.notNull(array, "Array must not be null");
-				filter.input = new ArrayList<Object>(array);
+				filter.input = new ArrayList<>(array);
 				return this;
 			}
 
@@ -794,6 +829,14 @@ public class ArrayOperators {
 
 				Assert.notNull(field, "Field must not be null");
 				filter.input = field;
+				return this;
+			}
+
+			@Override
+			public AsBuilder filter(AggregationExpression expression) {
+
+				Assert.notNull(expression, "Expression must not be null");
+				filter.input = expression;
 				return this;
 			}
 
@@ -1292,10 +1335,10 @@ public class ArrayOperators {
 			if (value instanceof Document) {
 				return value;
 			}
-			if (value instanceof AggregationExpression) {
-				return ((AggregationExpression) value).toDocument(context);
-			} else if (value instanceof Field) {
-				return context.getReference(((Field) value)).toString();
+			if (value instanceof AggregationExpression aggregationExpression) {
+				return aggregationExpression.toDocument(context);
+			} else if (value instanceof Field field) {
+				return context.getReference(field).toString();
 			} else {
 				return context.getMappedObject(new Document("###val###", value)).get("###val###");
 			}
@@ -1333,7 +1376,7 @@ public class ArrayOperators {
 							Assert.notNull(expressions, "PropertyExpressions must not be null");
 
 							return new Reduce(Fields.field(fieldReference), initialValue,
-									Arrays.<AggregationExpression>asList(expressions));
+									Arrays.<AggregationExpression> asList(expressions));
 						}
 					};
 				}
@@ -1471,22 +1514,13 @@ public class ArrayOperators {
 			}
 		}
 
-		public enum Variable implements Field {
+		public enum Variable implements AggregationVariable {
 
 			THIS {
-				@Override
-				public String getName() {
-					return "$$this";
-				}
 
 				@Override
 				public String getTarget() {
 					return "$$this";
-				}
-
-				@Override
-				public boolean isAliased() {
-					return false;
 				}
 
 				@Override
@@ -1496,10 +1530,6 @@ public class ArrayOperators {
 			},
 
 			VALUE {
-				@Override
-				public String getName() {
-					return "$$value";
-				}
 
 				@Override
 				public String getTarget() {
@@ -1507,15 +1537,15 @@ public class ArrayOperators {
 				}
 
 				@Override
-				public boolean isAliased() {
-					return false;
-				}
-
-				@Override
 				public String toString() {
 					return getName();
 				}
 			};
+
+			@Override
+			public boolean isInternal() {
+				return true;
+			}
 
 			/**
 			 * Create a {@link Field} reference to a given {@literal property} prefixed with the {@link Variable} identifier.
@@ -1547,6 +1577,16 @@ public class ArrayOperators {
 						return getName();
 					}
 				};
+			}
+
+			public static boolean isVariable(Field field) {
+
+				for (Variable var : values()) {
+					if (field.getTarget().startsWith(var.getTarget())) {
+						return true;
+					}
+				}
+				return false;
 			}
 		}
 	}
@@ -1655,7 +1695,7 @@ public class ArrayOperators {
 
 			private ZipBuilder(Object sourceArray) {
 
-				this.sourceArrays = new ArrayList<Object>();
+				this.sourceArrays = new ArrayList<>();
 				this.sourceArrays.add(sourceArray);
 			}
 
@@ -1672,14 +1712,14 @@ public class ArrayOperators {
 				Assert.notNull(arrays, "Arrays must not be null");
 				for (Object value : arrays) {
 
-					if (value instanceof String) {
-						sourceArrays.add(Fields.field((String) value));
+					if (value instanceof String stringValue) {
+						sourceArrays.add(Fields.field(stringValue));
 					} else {
 						sourceArrays.add(value);
 					}
 				}
 
-				return new Zip(Collections.<String, Object>singletonMap("inputs", sourceArrays));
+				return new Zip(Collections.singletonMap("inputs", sourceArrays));
 			}
 		}
 	}
@@ -1690,7 +1730,7 @@ public class ArrayOperators {
 	 * @author Christoph Strobl
 	 * @author Shashank Sharma
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
 	 * @since 2.2
 	 */
 	public static class In extends AbstractAggregationExpression {
@@ -1779,7 +1819,7 @@ public class ArrayOperators {
 	 *
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
 	 * @since 2.1
 	 */
 	public static class ArrayToObject extends AbstractAggregationExpression {
@@ -1976,7 +2016,7 @@ public class ArrayOperators {
 
 		/**
 		 * Set the order to put elements in.
-		 * 
+		 *
 		 * @param sort must not be {@literal null}.
 		 * @return new instance of {@link SortArray}.
 		 */

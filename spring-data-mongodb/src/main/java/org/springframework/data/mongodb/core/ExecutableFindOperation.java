@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -124,12 +127,28 @@ public interface ExecutableFindOperation {
 		Stream<T> stream();
 
 		/**
-		 * Get the number of matching elements.
-		 * <br />
-		 * This method uses an {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions) aggregation
-		 * execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees shard,
-		 * session and transaction compliance. In case an inaccurate count satisfies the applications needs use
-		 * {@link MongoOperations#estimatedCount(String)} for empty queries instead.
+		 * Return a window of elements either starting or resuming at
+		 * {@link org.springframework.data.domain.ScrollPosition}.
+		 * <p>
+		 * When using {@link KeysetScrollPosition}, make sure to use non-nullable
+		 * {@link org.springframework.data.domain.Sort sort properties} as MongoDB does not support criteria to reconstruct
+		 * a query result from absent document fields or {@code null} values through {@code $gt/$lt} operators.
+		 *
+		 * @param scrollPosition the scroll position.
+		 * @return a window of the resulting elements.
+		 * @since 4.1
+		 * @see org.springframework.data.domain.OffsetScrollPosition
+		 * @see org.springframework.data.domain.KeysetScrollPosition
+		 */
+		Window<T> scroll(ScrollPosition scrollPosition);
+
+		/**
+		 * Get the number of matching elements. <br />
+		 * This method uses an
+		 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+		 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but
+		 * guarantees shard, session and transaction compliance. In case an inaccurate count satisfies the applications
+		 * needs use {@link MongoOperations#estimatedCount(String)} for empty queries instead.
 		 *
 		 * @return total number of matching elements.
 		 */

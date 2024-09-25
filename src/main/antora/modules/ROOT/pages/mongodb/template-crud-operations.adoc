@@ -1,0 +1,700 @@
+[[mongo-template.save-update-remove]]
+= Saving, Updating, and Removing Documents
+
+`MongoTemplate` / `ReactiveMongoTemplatge` let you save, update, and delete your domain objects and map those objects to documents stored in MongoDB.
+The API signatures of the imperative and reactive API are mainly the same only differing in their return types.
+While the synchronous API uses `void`, single `Object` and `List` the reactive counterpart consists of `Mono<Void>`, `Mono<Object>` and `Flux`.
+
+Consider the following class:
+
+[source,java]
+----
+include::example$example/Person.java[tags=class]
+----
+
+Given the `Person` class in the preceding example, you can save, update and delete the object, as the following example shows:
+
+[tabs]
+======
+Imperative::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public class MongoApplication {
+
+  private static final Log log = LogFactory.getLog(MongoApplication.class);
+
+  public static void main(String[] args) {
+
+    MongoOperations template = new MongoTemplate(new SimpleMongoClientDbFactory(MongoClients.create(), "database"));
+
+    Person p = new Person("Joe", 34);
+
+    // Insert is used to initially store the object into the database.
+    template.insert(p);
+    log.info("Insert: " + p);
+
+    // Find
+    p = template.findById(p.getId(), Person.class);
+    log.info("Found: " + p);
+
+    // Update
+    template.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class);
+    p = template.findOne(query(where("name").is("Joe")), Person.class);
+    log.info("Updated: " + p);
+
+    // Delete
+    template.remove(p);
+
+    // Check that deletion worked
+    List<Person> people =  template.findAll(Person.class);
+    log.info("Number of people = : " + people.size());
+
+
+    template.dropCollection(Person.class);
+  }
+}
+----
+
+The preceding example would produce the following log output (including debug messages from `MongoTemplate`):
+
+[source]
+----
+DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
+DEBUG work.data.mongodb.core.MongoTemplate: 632 - insert Document containing fields: [_class, age, name] in collection: person
+INFO               org.spring.example.MongoApp:  30 - Insert: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
+DEBUG work.data.mongodb.core.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.person
+INFO               org.spring.example.MongoApp:  34 - Found: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
+DEBUG work.data.mongodb.core.MongoTemplate: 778 - calling update using query: { "name" : "Joe"} and update: { "$set" : { "age" : 35}} in collection: person
+DEBUG work.data.mongodb.core.MongoTemplate:1246 - findOne using query: { "name" : "Joe"} in db.collection: database.person
+INFO               org.spring.example.MongoApp:  39 - Updated: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=35]
+DEBUG work.data.mongodb.core.MongoTemplate: 823 - remove using query: { "id" : "4ddc6e784ce5b1eba3ceaf5c"} in collection: person
+INFO               org.spring.example.MongoApp:  46 - Number of people = : 0
+DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.person]
+----
+====
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public class ReactiveMongoApplication {
+
+  private static final Logger log = LoggerFactory.getLogger(ReactiveMongoApplication.class);
+
+  public static void main(String[] args) throws Exception {
+
+    CountDownLatch latch = new CountDownLatch(1);
+
+    ReactiveMongoTemplate template = new ReactiveMongoTemplate(MongoClients.create(), "database");
+
+    template.insert(new Person("Joe", 34)).doOnNext(person -> log.info("Insert: " + person))
+      .flatMap(person -> template.findById(person.getId(), Person.class))
+      .doOnNext(person -> log.info("Found: " + person))
+      .zipWith(person -> template.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class))
+      .flatMap(tuple -> template.remove(tuple.getT1())).flatMap(deleteResult -> template.findAll(Person.class))
+      .count().doOnSuccess(count -> {
+        log.info("Number of people: " + count);
+        latch.countDown();
+      })
+
+      .subscribe();
+
+    latch.await();
+  }
+}
+----
+======
+
+`MongoConverter` caused implicit conversion between a `String` and an `ObjectId` stored in the database by recognizing (through convention) the `Id` property name.
+
+The preceding example is meant to show the use of save, update, and remove operations on `MongoTemplate` / `ReactiveMongoTemplate` and not to show complex mapping functionality.
+The query syntax used in the preceding example is explained in more detail in the section "`xref:mongodb/template-query-operations.adoc[Querying Documents]`".
+
+IMPORTANT: MongoDB requires that you have an `_id` field for all documents. Please refer to the xref:mongodb/template-crud-operations.adoc[ID handling] section for details on the special treatment of this field.
+
+IMPORTANT: MongoDB collections can contain documents that represent instances of a variety of types. Please refer to the xref:mongodb/converters-type-mapping.adoc[type mapping] for details.
+
+[[mongo-template.save-insert]]
+== Insert / Save
+
+There are several convenient methods on `MongoTemplate` for saving and inserting your objects.
+To have more fine-grained control over the conversion process, you can register Spring converters with the `MappingMongoConverter` -- for example  `Converter<Person, Document>` and `Converter<Document, Person>`.
+
+NOTE: The difference between insert and save operations is that a save operation performs an insert if the object is not already present.
+
+The simple case of using the save operation is to save a POJO.
+In this case, the collection name is determined by name (not fully qualified) of the class.
+You may also call the save operation with a specific collection name. You can use mapping metadata to override the collection in which to store the object.
+
+When inserting or saving, if the `Id` property is not set, the assumption is that its value will be auto-generated by the database.
+Consequently, for auto-generation of an `ObjectId` to succeed, the type of the `Id` property or field in your class must be a `String`, an `ObjectId`, or a `BigInteger`.
+
+The following example shows how to save a document and retrieving its contents:
+
+.Inserting and retrieving documents using the MongoTemplate
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.query;
+
+//...
+
+template.insert(new Person("Bob", 33));
+
+Person person = template.query(Person.class)
+    .matching(query(where("age").is(33)))
+    .oneValue();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.query;
+
+//...
+
+Mono<Person> person = mongoTemplate.insert(new Person("Bob", 33))
+    .then(mongoTemplate.query(Person.class)
+        .matching(query(where("age").is(33)))
+        .one());
+----
+======
+
+The following insert and save operations are available:
+
+* `void` *save* `(Object objectToSave)`: Save the object to the default collection.
+* `void` *save* `(Object objectToSave, String collectionName)`: Save the object to the specified collection.
+
+A similar set of insert operations is also available:
+
+* `void` *insert* `(Object objectToSave)`: Insert the object to the default collection.
+* `void` *insert* `(Object objectToSave, String collectionName)`: Insert the object to the specified collection.
+
+[[mongo-template.id-handling]]
+=== How the `_id` Field is Handled in the Mapping Layer
+
+MongoDB requires that you have an `_id` field for all documents.
+If you do not provide one, the driver assigns an `ObjectId` with a generated value without considering your domain model as the server isn't aware of your identifier type.
+When you use the `MappingMongoConverter`, certain rules govern how properties from the Java class are mapped to this `_id` field:
+
+. A property or field annotated with `@Id` (`org.springframework.data.annotation.Id`) maps to the `_id` field.
+. A property or field without an annotation but named `id` maps to the `_id` field.
+
+The following outlines what type conversion, if any, is done on the property mapped to the `_id` document field when using the `MappingMongoConverter` (the default for `MongoTemplate`).
+
+. If possible, an `id` property or field declared as a `String` in the Java class is converted to and stored as an `ObjectId` by using a Spring `Converter<String, ObjectId>`. Valid conversion rules are delegated to the MongoDB Java driver. If it cannot be converted to an `ObjectId`, then the value is stored as a string in the database.
+. An `id` property or field declared as `BigInteger` in the Java class is converted to and stored as an `ObjectId` by using a Spring `Converter<BigInteger, ObjectId>`.
+
+If no field or property specified in the previous sets of rules is present in the Java class, an implicit `_id` file is generated by the driver but not mapped to a property or field of the Java class.
+
+When querying and updating, `MongoTemplate` uses the converter that corresponds to the preceding rules for saving documents so that field names and types used in your queries can match what is in your domain classes.
+
+Some environments require a customized approach to map `Id` values such as data stored in MongoDB that did not run through the Spring Data mapping layer. Documents can contain `_id` values that can be represented either as `ObjectId` or as `String`.
+Reading documents from the store back to the domain type works just fine. Querying for documents via their `id` can be cumbersome due to the implicit `ObjectId` conversion. Therefore documents cannot be retrieved that way.
+For those cases `@MongoId` provides more control over the actual id mapping attempts.
+
+.`@MongoId` mapping
+====
+[source,java]
+----
+public class PlainStringId {
+  @MongoId String id; <1>
+}
+
+public class PlainObjectId {
+  @MongoId ObjectId id; <2>
+}
+
+public class StringToObjectId {
+  @MongoId(FieldType.OBJECT_ID) String id; <3>
+}
+----
+<1> The id is treated as `String` without further conversion.
+<2> The id is treated as `ObjectId`.
+<3> The id is treated as `ObjectId` if the given `String` is a valid `ObjectId` hex, otherwise as `String`. Corresponds to `@Id` usage.
+====
+
+
+[[mongo-template.save-insert.collection]]
+=== Into Which Collection Are My Documents Saved?
+
+There are two ways to manage the collection name that is used for the documents.
+The default collection name that is used is the class name changed to start with a lower-case letter.
+So a `com.test.Person` class is stored in the `person` collection.
+You can customize this by providing a different collection name with the `@Document` annotation.
+You can also override the collection name by providing your own collection name as the last parameter for the selected `MongoTemplate` method calls.
+
+[[mongo-template.save-insert.individual]]
+=== Inserting or Saving Individual Objects
+
+The MongoDB driver supports inserting a collection of documents in a single operation.
+The following methods in the `MongoOperations` interface support this functionality:
+
+* *insert*: Inserts an object. If there is an existing document with the same `id`, an error is generated.
+* *insertAll*: Takes a `Collection` of objects as the first parameter. This method inspects each object and inserts it into the appropriate collection, based on the rules specified earlier.
+* *save*: Saves the object, overwriting any object that might have the same `id`.
+
+[[mongo-template.save-insert.batch]]
+=== Inserting Several Objects in a Batch
+
+The MongoDB driver supports inserting a collection of documents in one operation.
+The following methods in the `MongoOperations` interface support this functionality via `insert` or a dedicated `BulkOperations` interface.
+
+.Batch Insert
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+Collection<Person> inserted = template.insert(List.of(...), Person.class);
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Flux<Person> inserted = template.insert(List.of(...), Person.class);
+----
+======
+
+.Bulk Insert
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+BulkWriteResult result = template.bulkOps(BulkMode.ORDERED, Person.class)
+    .insert(List.of(...))
+    .execute();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<BulkWriteResult> result = template.bulkOps(BulkMode.ORDERED, Person.class)
+    .insert(List.of(...))
+    .execute();
+----
+======
+
+[NOTE]
+====
+Server performance of batch and bulk is identical.
+However bulk operations do not publish xref:mongodb/lifecycle-events.adoc[lifecycle events].
+====
+
+[IMPORTANT]
+====
+Any `@Version` property that has not been set prior to calling insert will be auto initialized with `1` (in case of a simple type like `int`) or `0` for wrapper types (eg. `Integer`). +
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
+[[mongodb-template-update]]
+== Update
+
+For updates, you can update the first document found by using `MongoOperation.updateFirst` or you can update all documents that were found to match the query by using the `MongoOperation.updateMulti` method or `all` on the fluent API.
+The following example shows an update of all `SAVINGS` accounts where we are adding a one-time $50.00 bonus to the balance by using the `$inc` operator:
+
+.Updating documents by using the `MongoTemplate` / `ReactiveMongoTemplate`
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import org.springframework.data.mongodb.core.query.Update;
+
+// ...
+
+UpdateResult result = template.update(Account.class)
+    .matching(where("accounts.accountType").is(Type.SAVINGS))
+    .apply(new Update().inc("accounts.$.balance", 50.00))
+    .all();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import org.springframework.data.mongodb.core.query.Update;
+
+// ...
+
+Mono<UpdateResult> result = template.update(Account.class)
+    .matching(where("accounts.accountType").is(Type.SAVINGS))
+    .apply(new Update().inc("accounts.$.balance", 50.00))
+    .all();
+----
+======
+
+In addition to the `Query` discussed earlier, we provide the update definition by using an `Update` object.
+The `Update` class has methods that match the update modifiers available for MongoDB.
+Most methods return the `Update` object to provide a fluent style for the API.
+
+[IMPORTANT]
+====
+`@Version` properties if not included in the `Update` will be automatically incremented.
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
+[[mongodb-template-update.methods]]
+=== Methods for Running Updates for Documents
+
+* *updateFirst*: Updates the first document that matches the query document criteria with the updated document.
+* *updateMulti*: Updates all objects that match the query document criteria with the updated document.
+
+WARNING: `updateFirst` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
+
+NOTE: Index hints for the update operation can be provided via `Query.withHint(...)`.
+
+[[mongodb-template-update.update]]
+=== Methods in the `Update` Class
+
+You can use a little "'syntax sugar'" with the `Update` class, as its methods are meant to be chained together.
+Also, you can kick-start the creation of a new `Update` instance by using `public static Update update(String key, Object value)` and using static imports.
+
+The `Update` class contains the following methods:
+
+* `Update` *addToSet* `(String key, Object value)` Update using the `$addToSet` update modifier
+* `Update` *currentDate* `(String key)` Update using the `$currentDate` update modifier
+* `Update` *currentTimestamp* `(String key)` Update using the `$currentDate` update modifier with `$type` `timestamp`
+* `Update` *inc* `(String key, Number inc)` Update using the `$inc` update modifier
+* `Update` *max* `(String key, Object max)` Update using the `$max` update modifier
+* `Update` *min* `(String key, Object min)` Update using the `$min` update modifier
+* `Update` *multiply* `(String key, Number multiplier)` Update using the `$mul` update modifier
+* `Update` *pop* `(String key, Update.Position pos)` Update using the `$pop` update modifier
+* `Update` *pull* `(String key, Object value)` Update using the `$pull` update modifier
+* `Update` *pullAll* `(String key, Object[] values)` Update using the `$pullAll` update modifier
+* `Update` *push* `(String key, Object value)` Update using the `$push` update modifier
+* `Update` *pushAll* `(String key, Object[] values)` Update using the `$pushAll` update modifier
+* `Update` *rename* `(String oldName, String newName)` Update using the `$rename` update modifier
+* `Update` *set* `(String key, Object value)` Update using the `$set` update modifier
+* `Update` *setOnInsert* `(String key, Object value)` Update using the `$setOnInsert` update modifier
+* `Update` *unset* `(String key)` Update using the `$unset` update modifier
+
+Some update modifiers, such as `$push` and `$addToSet`, allow nesting of additional operators.
+
+[source,java]
+----
+// { $push : { "category" : { "$each" : [ "spring" , "data" ] } } }
+new Update().push("category").each("spring", "data")
+
+// { $push : { "key" : { "$position" : 0 , "$each" : [ "Arya" , "Arry" , "Weasel" ] } } }
+new Update().push("key").atPosition(Position.FIRST).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+// { $push : { "key" : { "$slice" : 5 , "$each" : [ "Arya" , "Arry" , "Weasel" ] } } }
+new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+// { $addToSet : { "values" : { "$each" : [ "spring" , "data" , "mongodb" ] } } }
+new Update().addToSet("values").each("spring", "data", "mongodb");
+----
+
+[[mongo-template.aggregation-update]]
+=== Aggregation Pipeline Updates
+
+Update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an xref:mongodb/aggregation-framework.adoc[Aggregation Pipeline] via `AggregationUpdate`.
+Using `AggregationUpdate` allows leveraging https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
+Using aggregations in an update allows updating one or more fields by expressing multiple stages and multiple conditions with a single operation.
+
+The update can consist of the following stages:
+
+* `AggregationUpdate.set(...).toValue(...)` -> `$set : { ... }`
+* `AggregationUpdate.unset(...)` -> `$unset : [ ... ]`
+* `AggregationUpdate.replaceWith(...)` -> `$replaceWith : { ... }`
+
+.Update Aggregation
+====
+[source,java]
+----
+AggregationUpdate update = Aggregation.newUpdate()
+    .set("average").toValue(ArithmeticOperators.valueOf("tests").avg())     <1>
+    .set("grade").toValue(ConditionalOperators.switchCases(                 <2>
+        when(valueOf("average").greaterThanEqualToValue(90)).then("A"),
+        when(valueOf("average").greaterThanEqualToValue(80)).then("B"),
+        when(valueOf("average").greaterThanEqualToValue(70)).then("C"),
+        when(valueOf("average").greaterThanEqualToValue(60)).then("D"))
+        .defaultTo("F")
+    );
+
+template.update(Student.class)                                              <3>
+    .apply(update)
+    .all();                                                                 <4>
+----
+[source,javascript]
+----
+db.students.update(                                                         <3>
+   { },
+   [
+     { $set: { average : { $avg: "$tests" } } },                            <1>
+     { $set: { grade: { $switch: {                                          <2>
+                           branches: [
+                               { case: { $gte: [ "$average", 90 ] }, then: "A" },
+                               { case: { $gte: [ "$average", 80 ] }, then: "B" },
+                               { case: { $gte: [ "$average", 70 ] }, then: "C" },
+                               { case: { $gte: [ "$average", 60 ] }, then: "D" }
+                           ],
+                           default: "F"
+     } } } }
+   ],
+   { multi: true }                                                          <4>
+)
+----
+<1> The 1st `$set` stage calculates a new field _average_ based on the average of the _tests_ field.
+<2> The 2nd `$set` stage calculates a new field _grade_ based on the _average_ field calculated by the first aggregation stage.
+<3> The pipeline is run on the _students_ collection and uses `Student` for the aggregation field mapping.
+<4> Apply the update to all matching documents in the collection.
+====
+
+[[mongo-template.upserts]]
+== Upsert
+
+Related to performing an `updateFirst` operation, you can also perform an `upsert` operation, which will perform an insert if no document is found that matches the query.
+The document that is inserted is a combination of the query document and the update document.
+The following example shows how to use the `upsert` method:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+UpdateResult result = template.update(Person.class)
+  .matching(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update"))
+  .apply(update("address", addr))
+  .upsert();
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+Mono<UpdateResult> result = template.update(Person.class)
+  .matching(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update"))
+  .apply(update("address", addr))
+  .upsert();
+----
+======
+
+WARNING: `upsert` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
+
+[IMPORTANT]
+====
+`@Version` properties if not included in the `Update` will be automatically initialized.
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
+[[mongo-template.replace]]
+=== Replacing Documents in a Collection
+
+The various `replace` methods available via `MongoTemplate` allow to override the first matching Document.
+If no match is found a new one can be upserted (as outlined in the previous section) by providing `ReplaceOptions` with according configuration.
+
+====
+.Replace one
+[source,java]
+----
+Person tom = template.insert(new Person("Motte", 21)); <1>
+Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName())); <2>
+tom.setFirstname("Tom"); <3>
+template.replace(query, tom, ReplaceOptions.none()); <4>
+----
+<1> Insert a new document.
+<2> The query used to identify the single document to replace.
+<3> Set up the replacement document which must hold either the same `_id` as the existing or no `_id` at all.
+<4> Run the replace operation.
+.Replace one with upsert
+[source,java]
+----
+Person tom = new Person("id-123", "Tom", 21) <1>
+Query query = Query.query(Criteria.where("firstName").is(tom.getFirstName()));
+template.replace(query, tom, ReplaceOptions.replaceOptions().upsert()); <2>
+----
+<1> The `_id` value needs to be present for upsert, otherwise MongoDB will create a new potentially with the domain type incompatible `ObjectId`.
+As MongoDB is not aware of your domain type, any `@Field(targetType)` hints are not considered and the resulting `ObjectId` might be not compatible with your domain model.
+<2> Use `upsert` to insert a new document if no match is found
+====
+
+[WARNING]
+====
+It is not possible to change the `_id` of existing documents with a replace operation.
+On `upsert` MongoDB uses 2 ways of determining the new id for the entry:
+* The `_id` is used within the query as in `{"_id" : 1234 }`
+* The `_id` is present in the replacement document.
+If no `_id` is provided in either way, MongoDB will create a new `ObjectId` for the document.
+This may lead to mapping and data lookup malfunctions if the used domain types `id` property has a different type like e.g. `Long`.
+====
+
+[[mongo-template.find-and-upsert]]
+== Find and Modify
+
+The `findAndModify(…)` method on `MongoCollection` can update a document and return either the old or newly updated document in a single operation.
+`MongoTemplate` provides four `findAndModify` overloaded methods that take `Query` and `Update` classes and converts from `Document` to your POJOs:
+
+[source,java]
+----
+<T> T findAndModify(Query query, Update update, Class<T> entityClass);
+
+<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+
+<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+
+<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass, String collectionName);
+----
+
+The following example inserts a few `Person` objects into the container and performs a `findAndUpdate` operation:
+
+[source,java]
+----
+template.insert(new Person("Tom", 21));
+template.insert(new Person("Dick", 22));
+template.insert(new Person("Harry", 23));
+
+Query query = new Query(Criteria.where("firstName").is("Harry"));
+Update update = new Update().inc("age", 1);
+
+Person oldValue = template.update(Person.class)
+  .matching(query)
+  .apply(update)
+  .findAndModifyValue(); // oldValue.age == 23
+
+Person newValue = template.query(Person.class)
+  .matching(query)
+  .findOneValue(); // newValye.age == 24
+
+Person newestValue = template.update(Person.class)
+  .matching(query)
+  .apply(update)
+  .withOptions(FindAndModifyOptions.options().returnNew(true)) // Now return the newly updated document when updating
+  .findAndModifyValue(); // newestValue.age == 25
+----
+
+The `FindAndModifyOptions` method lets you set the options of `returnNew`, `upsert`, and `remove`.
+An example extending from the previous code snippet follows:
+
+[source,java]
+----
+Person upserted = template.update(Person.class)
+  .matching(new Query(Criteria.where("firstName").is("Mary")))
+  .apply(update)
+  .withOptions(FindAndModifyOptions.options().upsert(true).returnNew(true))
+  .findAndModifyValue()
+----
+
+[IMPORTANT]
+====
+`@Version` properties if not included in the `Update` will be automatically incremented.
+Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.optimistic-locking[Optimistic Locking] section.
+====
+
+[[mongo-template.find-and-replace]]
+== Find and Replace
+
+The most straight forward method of replacing an entire `Document` is via its `id` using the `save` method.
+However this might not always be feasible.
+`findAndReplace` offers an alternative that allows to identify the document to replace via a simple query.
+
+.Find and Replace Documents
+====
+[source,java]
+----
+Optional<User> result = template.update(Person.class)      <1>
+    .matching(query(where("firstame").is("Tom")))          <2>
+    .replaceWith(new Person("Dick"))
+    .withOptions(FindAndReplaceOptions.options().upsert()) <3>
+    .as(User.class)                                        <4>
+    .findAndReplace();                                     <5>
+----
+<1> Use the fluent update API with the domain type given for mapping the query and deriving the collection name or just use `MongoOperations#findAndReplace`.
+<2> The actual match query mapped against the given domain type. Provide `sort`, `fields` and `collation` settings via the query.
+<3> Additional optional hook to provide options other than the defaults, like `upsert`.
+<4> An optional projection type used for mapping the operation result. If none given the initial domain type is used.
+<5> Trigger the actual processing. Use `findAndReplaceValue` to obtain the nullable result instead of an `Optional`.
+====
+
+IMPORTANT: Please note that the replacement must not hold an `id` itself as the `id` of the existing `Document` will be
+carried over to the replacement by the store itself. Also keep in mind that `findAndReplace` will only replace the first
+document matching the query criteria depending on a potentially given sort order.
+
+[[mongo-template.delete]]
+== Delete
+
+You can use one of five overloaded methods to remove an object from the database:
+
+====
+[source,java]
+----
+template.remove(tywin, "GOT");                                              <1>
+
+template.remove(query(where("lastname").is("lannister")), "GOT");           <2>
+
+template.remove(new Query().limit(3), "GOT");                               <3>
+
+template.findAllAndRemove(query(where("lastname").is("lannister"), "GOT");  <4>
+
+template.findAllAndRemove(new Query().limit(3), "GOT");                     <5>
+----
+<1> Remove a single entity specified by its `_id` from the associated collection.
+<2> Remove all documents that match the criteria of the query from the `GOT` collection.
+<3> Remove the first three documents in the `GOT` collection. Unlike <2>, the documents to remove are identified by their `_id`, running the given query, applying `sort`, `limit`, and `skip` options first, and then removing all at once in a separate step.
+<4> Remove all documents matching the criteria of the query from the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
+<5> Remove the first three documents in the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
+====
+
+[[mongo-template.optimistic-locking]]
+== Optimistic Locking
+
+The `@Version` annotation provides syntax similar to that of JPA in the context of MongoDB and makes sure updates are only applied to documents with a matching version.
+Therefore, the actual value of the version property is added to the update query in such a way that the update does not have any effect if another operation altered the document in the meantime.
+In that case, an `OptimisticLockingFailureException` is thrown.
+The following example shows these features:
+
+====
+[source,java]
+----
+@Document
+class Person {
+
+  @Id String id;
+  String firstname;
+  String lastname;
+  @Version Long version;
+}
+
+Person daenerys = template.insert(new Person("Daenerys"));                            <1>
+
+Person tmp = template.findOne(query(where("id").is(daenerys.getId())), Person.class); <2>
+
+daenerys.setLastname("Targaryen");
+template.save(daenerys);                                                              <3>
+
+template.save(tmp); // throws OptimisticLockingFailureException                       <4>
+----
+<1> Intially insert document. `version` is set to `0`.
+<2> Load the just inserted document. `version` is still `0`.
+<3> Update the document with `version = 0`. Set the `lastname` and bump `version` to `1`.
+<4> Try to update the previously loaded document that still has `version = 0`. The operation fails with an `OptimisticLockingFailureException`, as the current `version` is `1`.
+====
+
+Only certain CRUD operations on `MongoTemplate` do consider and alter version properties. Please consult `MongoOperations` java doc for detailed information.
+
+IMPORTANT: Optimistic Locking requires to set the `WriteConcern` to `ACKNOWLEDGED`. Otherwise `OptimisticLockingFailureException` can be silently swallowed.
+
+NOTE: As of Version 2.2 `MongoOperations` also includes the `@Version` property when removing an entity from the database.
+To remove a `Document` without version check use `MongoOperations#remove(Query,...)` instead of `MongoOperations#remove(Object)`.
+
+NOTE: As of Version 2.2 repositories check for the outcome of acknowledged deletes when removing versioned entities.
+An `OptimisticLockingFailureException` is raised if a versioned entity cannot be deleted through `CrudRepository.delete(Object)`. In such case, the version was changed or the object was deleted in the meantime. Use `CrudRepository.deleteById(ID)` to bypass optimistic locking functionality and delete objects regardless of their version.
+

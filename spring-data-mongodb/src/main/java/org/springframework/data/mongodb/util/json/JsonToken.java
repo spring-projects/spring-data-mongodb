@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the original author or authors.
+ * Copyright 2008-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,28 +49,28 @@ class JsonToken {
 
 		try {
 			if (Long.class == clazz) {
-				if (value instanceof Integer) {
-					return clazz.cast(((Integer) value).longValue());
-				} else if (value instanceof String) {
-					return clazz.cast(Long.valueOf((String) value));
+				if (value instanceof Integer integerValue) {
+					return clazz.cast(integerValue.longValue());
+				} else if (value instanceof String stringValue) {
+					return clazz.cast(Long.valueOf(stringValue));
 				}
 			} else if (Integer.class == clazz) {
-				if (value instanceof String) {
-					return clazz.cast(Integer.valueOf((String) value));
+				if (value instanceof String stringValue) {
+					return clazz.cast(Integer.valueOf(stringValue));
 				}
 			} else if (Double.class == clazz) {
-				if (value instanceof String) {
-					return clazz.cast(Double.valueOf((String) value));
+				if (value instanceof String stringValue) {
+					return clazz.cast(Double.valueOf(stringValue));
 				}
 			} else if (Decimal128.class == clazz) {
-				if (value instanceof Integer) {
-					return clazz.cast(new Decimal128((Integer) value));
-				} else if (value instanceof Long) {
-					return clazz.cast(new Decimal128((Long) value));
-				} else if (value instanceof Double) {
-					return clazz.cast(new BsonDouble((Double) value).decimal128Value());
-				} else if (value instanceof String) {
-					return clazz.cast(Decimal128.parse((String) value));
+				if (value instanceof Integer integerValue) {
+					return clazz.cast(new Decimal128(integerValue));
+				} else if (value instanceof Long longValue) {
+					return clazz.cast(new Decimal128(longValue));
+				} else if (value instanceof Double doubleValue) {
+					return clazz.cast(new BsonDouble(doubleValue).decimal128Value());
+				} else if (value instanceof String stringValue) {
+					return clazz.cast(Decimal128.parse(stringValue));
 				}
 			}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,10 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	@Override
 	public MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder) {
-		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+
+		CachingMongoPersistentProperty cachingMongoPersistentProperty = new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		cachingMongoPersistentProperty.validate();
+		return cachingMongoPersistentProperty;
 	}
 
 	@Override
@@ -97,11 +100,11 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 	/**
 	 * Returns whether auto-index creation is enabled or disabled. <br />
-	 * <strong>NOTE:</strong>Index creation should happen at a well-defined time that is ideally controlled by the
+	 * <strong>NOTE:</strong> Index creation should happen at a well-defined time that is ideally controlled by the
 	 * application itself.
 	 *
 	 * @return {@literal true} when auto-index creation is enabled; {@literal false} otherwise. <br />
-	 *         <strong>INFO</strong>: As of 3.x the default will is set to {@literal false} was {@literal true} in 2.x.
+	 *         <strong>INFO:</strong> As of 3.x the default will is set to {@literal false} was {@literal true} in 2.x.
 	 * @since 2.2
 	 * @see org.springframework.data.mongodb.core.index.Indexed
 	 */

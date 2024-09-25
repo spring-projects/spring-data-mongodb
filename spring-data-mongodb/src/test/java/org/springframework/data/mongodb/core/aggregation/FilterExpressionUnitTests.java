@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,6 +115,23 @@ class FilterExpressionUnitTests {
 				"}");
 
 		assertThat($filter).isEqualTo(new Document(expected));
+	}
+
+	@Test // GH-4394
+	void filterShouldAcceptExpression() {
+
+		Document $filter = ArrayOperators.arrayOf(ObjectOperators.valueOf("data.metadata").toArray()).filter().as("item")
+				.by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		Document expected = Document.parse("""
+				{ $filter : {
+					input: { $objectToArray: "$data.metadata" },
+					as: "item",
+					cond: { $gt: [ "$$item.price", "$field-1" ] }
+				}}
+				""");
+
+		assertThat($filter).isEqualTo(expected);
 	}
 
 	private Document extractFilterOperatorFromDocument(Document source) {

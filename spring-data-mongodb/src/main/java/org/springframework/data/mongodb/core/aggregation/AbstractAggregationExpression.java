@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,8 +69,8 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	@SuppressWarnings("unchecked")
 	private Object unpack(Object value, AggregationOperationContext context) {
 
-		if (value instanceof AggregationExpression) {
-			return ((AggregationExpression) value).toDocument(context);
+		if (value instanceof AggregationExpression aggregationExpression) {
+			return aggregationExpression.toDocument(context);
 		}
 
 		if (value instanceof Field field) {
@@ -136,8 +136,8 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 			List<Object> clone = new ArrayList<>((List<Object>) this.value);
 
-			if (value instanceof Collection && Expand.EXPAND_VALUES.equals(expandList)) {
-				clone.addAll((Collection<?>) value);
+			if (value instanceof Collection<?> collection && Expand.EXPAND_VALUES.equals(expandList)) {
+				clone.addAll(collection);
 			} else {
 				clone.add(value);
 			}

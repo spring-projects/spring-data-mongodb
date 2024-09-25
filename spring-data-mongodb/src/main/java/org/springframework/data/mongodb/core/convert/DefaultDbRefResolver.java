@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ import java.util.stream.Stream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -87,7 +87,8 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 
 	@Override
 	public Document fetch(DBRef dbRef) {
-		return getReferenceLoader().fetchOne(DocumentReferenceQuery.forSingleDocument(Filters.eq("_id", dbRef.getId())),
+		return getReferenceLoader().fetchOne(
+				DocumentReferenceQuery.forSingleDocument(Filters.eq(FieldName.ID.name(), dbRef.getId())),
 				ReferenceCollection.fromDBRef(dbRef));
 	}
 

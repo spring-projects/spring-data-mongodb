@@ -1,0 +1,340 @@
+[[mapping.index-creation]]
+= Index Creation
+
+Spring Data MongoDB can automatically create indexes for entity types annotated with `@Document`.
+Index creation must be explicitly enabled since version 3.0 to prevent undesired effects with collection lifecyle and performance impact.
+Indexes are automatically created for the initial entity set on application startup and when accessing an entity type for the first time while the application runs.
+
+We generally recommend explicit index creation for application-based control of indexes as Spring Data cannot automatically create indexes for collections that were recreated while the application was running.
+
+`IndexResolver` provides an abstraction for programmatic index definition creation if you want to make use of `@Indexed` annotations such as `@GeoSpatialIndexed`, `@TextIndexed`, `@CompoundIndex` and `@WildcardIndexed`.
+You can use index definitions with `IndexOperations` to create indexes.
+A good point in time for index creation is on application startup, specifically after the application context was refreshed, triggered by observing `ContextRefreshedEvent`.
+This event guarantees that the context is fully initialized.
+Note that at this time other components, especially bean factories might have access to the MongoDB database.
+
+[WARNING]
+====
+``Map``-like properties are skipped by the `IndexResolver` unless annotated with `@WildcardIndexed` because the _map key_ must be part of the index definition. Since the purpose of maps is the usage of dynamic keys and values, the keys cannot be resolved from static mapping metadata.
+====
+
+.Programmatic Index Creation for a single Domain Type
+====
+[source,java]
+----
+class MyListener {
+
+  @EventListener(ContextRefreshedEvent.class)
+  public void initIndicesAfterStartup() {
+
+    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
+                .getConverter().getMappingContext();
+
+    IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+    IndexOperations indexOps = mongoTemplate.indexOps(DomainType.class);
+    resolver.resolveIndexFor(DomainType.class).forEach(indexOps::ensureIndex);
+  }
+}
+----
+====
+
+.Programmatic Index Creation for all Initial Entities
+====
+[source,java]
+----
+class MyListener{
+
+  @EventListener(ContextRefreshedEvent.class)
+  public void initIndicesAfterStartup() {
+
+    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
+        .getConverter().getMappingContext();
+
+    // consider only entities that are annotated with @Document
+    mappingContext.getPersistentEntities()
+                            .stream()
+                            .filter(it -> it.isAnnotationPresent(Document.class))
+                            .forEach(it -> {
+
+    IndexOperations indexOps = mongoTemplate.indexOps(it.getType());
+    resolver.resolveIndexFor(it.getType()).forEach(indexOps::ensureIndex);
+    });
+  }
+}
+----
+====
+
+Alternatively, if you want to ensure index and collection presence before any component is able to access your database from your application, declare a `@Bean` method for `MongoTemplate` and include the code  from above before returning the `MongoTemplate` object.
+
+[NOTE]
+====
+To turn automatic index creation _ON_ please override `autoIndexCreation()` in your configuration.
+[source,java]
+----
+@Configuration
+public class Config extends AbstractMongoClientConfiguration {
+
+  @Override
+  public boolean autoIndexCreation() {
+    return true;
+  }
+
+// ...
+}
+----
+====
+
+IMPORTANT: Automatic index creation is turned _OFF_ by default as of version 3.0.
+
+[[mapping-usage-indexes.compound-index]]
+== Compound Indexes
+
+Compound indexes are also supported. They are defined at the class level, rather than on individual properties.
+
+NOTE: Compound indexes are very important to improve the performance of queries that involve criteria on multiple fields
+
+Here's an example that creates a compound index of `lastName` in ascending order and `age` in descending order:
+
+.Example Compound Index Usage
+====
+[source,java]
+----
+package com.mycompany.domain;
+
+@Document
+@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
+public class Person {
+
+  @Id
+  private ObjectId id;
+  private Integer age;
+  private String firstName;
+  private String lastName;
+
+}
+----
+====
+
+[TIP]
+====
+`@CompoundIndex` is repeatable using `@CompoundIndexes` as its container.
+
+[source,java]
+----
+@Document
+@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
+@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+public class Person {
+
+  String firstname;
+  String lastname;
+
+  Address address;
+
+  // ...
+}
+----
+====
+
+[[mapping-usage-indexes.hashed-index]]
+== Hashed Indexes
+
+Hashed indexes allow hash based sharding within a sharded cluster.
+Using hashed field values to shard collections results in a more random distribution.
+For details, refer to the https://docs.mongodb.com/manual/core/index-hashed/[MongoDB Documentation].
+
+Here's an example that creates a hashed index for `_id`:
+
+.Example Hashed Index Usage
+====
+[source,java]
+----
+@Document
+public class DomainType {
+
+  @HashIndexed @Id String id;
+
+  // ...
+}
+----
+====
+
+Hashed indexes can be created next to other index definitions like shown below, in that case both indices are created:
+
+.Example Hashed Index Usage togehter with simple index
+====
+[source,java]
+----
+@Document
+public class DomainType {
+
+  @Indexed
+  @HashIndexed
+  String value;
+
+  // ...
+}
+----
+====
+
+In case the example above is too verbose, a compound annotation allows to reduce the number of annotations that need to be declared on a property:
+
+.Example Composed Hashed Index Usage
+====
+[source,java]
+----
+@Document
+public class DomainType {
+
+  @IndexAndHash(name = "idx...")                            <1>
+  String value;
+
+  // ...
+}
+
+@Indexed
+@HashIndexed
+@Retention(RetentionPolicy.RUNTIME)
+public @interface IndexAndHash {
+
+  @AliasFor(annotation = Indexed.class, attribute = "name") <1>
+  String name() default "";
+}
+----
+<1> Potentially register an alias for certain attributes of the meta annotation.
+====
+
+[NOTE]
+====
+Although index creation via annotations comes in handy for many scenarios cosider taking over more control by setting up indices manually via `IndexOperations`.
+
+[source,java]
+----
+mongoOperations.indexOpsFor(Jedi.class)
+  .ensureIndex(HashedIndex.hashed("useTheForce"));
+----
+====
+
+[[mapping-usage-indexes.wildcard-index]]
+== Wildcard Indexes
+
+A `WildcardIndex` is an index that can be used to include all fields or specific ones based a given (wildcard) pattern.
+For details, refer to the https://docs.mongodb.com/manual/core/index-wildcard/[MongoDB Documentation].
+
+The index can be set up programmatically using `WildcardIndex` via `IndexOperations`.
+
+.Programmatic WildcardIndex setup
+====
+[source,java]
+----
+mongoOperations
+    .indexOps(User.class)
+    .ensureIndex(new WildcardIndex("userMetadata"));
+----
+[source,javascript]
+----
+db.user.createIndex({ "userMetadata.$**" : 1 }, {})
+----
+====
+
+The `@WildcardIndex` annotation allows a declarative index setup that can used either with a document type or property.
+
+If placed on a type that is a root level domain entity (one annotated with `@Document`) , the index resolver will create a
+wildcard index for it.
+
+.Wildcard index on domain type
+====
+[source,java]
+----
+@Document
+@WildcardIndexed
+public class Product {
+	// …
+}
+----
+[source,javascript]
+----
+db.product.createIndex({ "$**" : 1 },{})
+----
+====
+
+The `wildcardProjection` can be used to specify keys to in-/exclude in the index.
+
+.Wildcard index with `wildcardProjection`
+====
+[source,java]
+----
+@Document
+@WildcardIndexed(wildcardProjection = "{ 'userMetadata.age' : 0 }")
+public class User {
+    private @Id String id;
+    private UserMetadata userMetadata;
+}
+----
+[source,javascript]
+----
+db.user.createIndex(
+  { "$**" : 1 },
+  { "wildcardProjection" :
+    { "userMetadata.age" : 0 }
+  }
+)
+----
+====
+
+Wildcard indexes can also be expressed by adding the annotation directly to the field.
+Please note that `wildcardProjection` is not allowed on nested paths such as properties.
+Projections on types annotated with `@WildcardIndexed` are omitted during index creation.
+
+.Wildcard index on property
+====
+[source,java]
+----
+@Document
+public class User {
+    private @Id String id;
+
+    @WildcardIndexed
+    private UserMetadata userMetadata;
+}
+----
+[source,javascript]
+----
+db.user.createIndex({ "userMetadata.$**" : 1 }, {})
+----
+====
+
+[[mapping-usage-indexes.text-index]]
+== Text Indexes
+
+NOTE: The text index feature is disabled by default for MongoDB v.2.4.
+
+Creating a text index allows accumulating several fields into a searchable full-text index.
+It is only possible to have one text index per collection, so all fields marked with `@TextIndexed` are combined into this index.
+Properties can be weighted to influence the document score for ranking results.
+The default language for the text index is English.To change the default language, set the `language` attribute to whichever language you want (for example,`@Document(language="spanish")`).
+Using a property called `language` or `@Language` lets you define a language override on a per-document base.
+The following example shows how to created a text index and set the language to Spanish:
+
+.Example Text Index Usage
+====
+[source,java]
+----
+@Document(language = "spanish")
+class SomeEntity {
+
+    @TextIndexed String foo;
+
+    @Language String lang;
+
+    Nested nested;
+}
+
+class Nested {
+
+    @TextIndexed(weight=5) String bar;
+    String roo;
+}
+----
+====

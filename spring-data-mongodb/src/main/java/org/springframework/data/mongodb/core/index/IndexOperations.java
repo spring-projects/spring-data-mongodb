@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,18 @@ public interface IndexOperations {
 	 * class. If not it will be created.
 	 *
 	 * @param indexDefinition must not be {@literal null}.
+	 * @return the index name.
 	 */
 	String ensureIndex(IndexDefinition indexDefinition);
+
+	/**
+	 * Alters the index with given {@literal name}.
+	 *
+	 * @param name name of index to change.
+	 * @param options index options.
+	 * @since 4.1
+	 */
+	void alterIndex(String name, IndexOptions options);
 
 	/**
 	 * Drops an index from this collection.

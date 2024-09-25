@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ public enum MongoRegexCreator {
 		 */
 		REGEX,
 
-		LIKE;
+		LIKE
 	}
 
 	private static final Pattern PUNCTATION_PATTERN = Pattern.compile("\\p{Punct}");
@@ -89,27 +89,24 @@ public enum MongoRegexCreator {
 
 		String regex = prepareAndEscapeStringBeforeApplyingLikeRegex(source, matcherType);
 
-		switch (matcherType) {
-			case STARTING_WITH:
-				return String.format("^%s", regex);
-			case ENDING_WITH:
-				return String.format("%s$", regex);
-			case CONTAINING:
-				return String.format(".*%s.*", regex);
-			case EXACT:
-				return String.format("^%s$", regex);
-			default:
-				return regex;
-		}
+		return switch (matcherType) {
+			case STARTING_WITH -> String.format("^%s", regex);
+			case ENDING_WITH -> String.format("%s$", regex);
+			case CONTAINING -> String.format(".*%s.*", regex);
+			case EXACT -> String.format("^%s$", regex);
+			default -> regex;
+		};
 	}
 
 	/**
 	 * @param source
 	 * @return
 	 * @since 2.2.14
+	 * @deprecated since 4.1.1
 	 */
+	@Deprecated(since = "4.1.1", forRemoval = true)
 	public Object toCaseInsensitiveMatch(Object source) {
-		return source instanceof String ? new BsonRegularExpression(Pattern.quote((String) source), "i") : source;
+		return source instanceof String stringValue ? new BsonRegularExpression(Pattern.quote(stringValue), "i") : source;
 	}
 
 	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, MatchMode matcherType) {

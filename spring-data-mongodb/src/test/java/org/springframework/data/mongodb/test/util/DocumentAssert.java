@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,6 @@ import static org.assertj.core.error.ShouldContain.*;
 import static org.assertj.core.error.ShouldContainKeys.*;
 import static org.assertj.core.error.ShouldNotContain.*;
 import static org.assertj.core.error.ShouldNotContainKeys.*;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -323,12 +319,15 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-	@Getter
 	static class Lookup<T> {
 
 		private final T value;
 		private final boolean pathFound;
+
+		private Lookup(T value, boolean pathFound) {
+			this.value = value;
+			this.pathFound = pathFound;
+		}
 
 		/**
 		 * Factory method to construct a lookup with a hit.
@@ -347,6 +346,14 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		 */
 		static <T> Lookup<T> notFound() {
 			return new Lookup<>(null, false);
+		}
+
+		public T getValue() {
+			return this.value;
+		}
+
+		public boolean isPathFound() {
+			return this.pathFound;
 		}
 	}
 }

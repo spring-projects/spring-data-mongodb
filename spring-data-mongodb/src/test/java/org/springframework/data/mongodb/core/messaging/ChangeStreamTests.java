@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,10 @@ import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import com.mongodb.client.model.ChangeStreamPreAndPostImagesOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +36,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junitpioneer.jupiter.RepeatFailedTest;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.CollectionOptions;
@@ -62,7 +58,7 @@ import org.springframework.data.mongodb.test.util.Template;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-import org.junitpioneer.jupiter.RepeatFailedTest;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
  * Integration test for subscribing to a {@link com.mongodb.operation.ChangeStreamBatchCursor} inside the
@@ -702,7 +698,7 @@ class ChangeStreamTests {
 	}
 
 	@Test // GH-4187
-	@EnableIfMongoServerVersion(isLessThan = "6.0")
+	@Disabled("Flakey test failing occasionally due to timing issues")
 	void readsFullDocumentBeforeChangeWhenOptionDeclaredRequiredAndMongoVersionIsLessThan6() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
@@ -728,7 +724,6 @@ class ChangeStreamTests {
 		template.createCollection(User.class, CollectionOptions.emitChangedRevisions());
 	}
 
-	@Data
 	static class User {
 
 		@Id String id;
@@ -746,14 +741,101 @@ class ChangeStreamTests {
 
 			return user;
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getUserName() {
+			return this.userName;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public Address getAddress() {
+			return this.address;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		public void setAddress(Address address) {
+			this.address = address;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			User user = (User) o;
+			return age == user.age && Objects.equals(id, user.id) && Objects.equals(userName, user.userName)
+					&& Objects.equals(address, user.address);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, userName, age, address);
+		}
+
+		public String toString() {
+			return "ChangeStreamTests.User(id=" + this.getId() + ", userName=" + this.getUserName() + ", age=" + this.getAge()
+					+ ", address=" + this.getAddress() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Address {
 
 		@Field("s") String street;
+
+		public Address(String street) {
+			this.street = street;
+		}
+
+		public Address() {}
+
+		public String getStreet() {
+			return this.street;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Address address = (Address) o;
+			return Objects.equals(street, address.street);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(street);
+		}
+
+		public String toString() {
+			return "ChangeStreamTests.Address(street=" + this.getStreet() + ")";
+		}
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.util.encryption;
 
+import java.util.Base64;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -26,7 +27,6 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.Base64Utils;
 
 /**
  * Internal utility class for dealing with encryption related matters.
@@ -67,7 +67,7 @@ public final class EncryptionUtils {
 					new BsonBinary(UUID.fromString(potentialKeyId.toString())).getData());
 		} catch (IllegalArgumentException e) {
 
-			return new Binary(BsonBinarySubType.UUID_STANDARD, Base64Utils.decodeFromString(potentialKeyId.toString()));
+			return new Binary(BsonBinarySubType.UUID_STANDARD, Base64.getDecoder().decode(potentialKeyId.toString()));
 		}
 	}
 }

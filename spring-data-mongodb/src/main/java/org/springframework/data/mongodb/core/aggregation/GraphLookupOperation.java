@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,8 +42,7 @@ import org.springframework.util.ClassUtils;
  */
 public class GraphLookupOperation implements InheritsFieldsAggregationOperation {
 
-	private static final Set<Class<?>> ALLOWED_START_TYPES = new HashSet<Class<?>>(
-			Arrays.<Class<?>> asList(AggregationExpression.class, String.class, Field.class, Document.class));
+	private static final Set<Class<?>> ALLOWED_START_TYPES = Set.of(AggregationExpression.class, String.class, Field.class, Document.class);
 
 	private final String from;
 	private final List<Object> startWith;
@@ -84,14 +82,14 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		graphLookup.put("from", from);
 
-		List<Object> mappedStartWith = new ArrayList<Object>(startWith.size());
+		List<Object> mappedStartWith = new ArrayList<>(startWith.size());
 
 		for (Object startWithElement : startWith) {
 
-			if (startWithElement instanceof AggregationExpression) {
-				mappedStartWith.add(((AggregationExpression) startWithElement).toDocument(context));
-			} else if (startWithElement instanceof Field) {
-				mappedStartWith.add(context.getReference((Field) startWithElement).toString());
+			if (startWithElement instanceof AggregationExpression aggregationExpression) {
+				mappedStartWith.add(aggregationExpression.toDocument(context));
+			} else if (startWithElement instanceof Field field) {
+				mappedStartWith.add(context.getReference(field).toString());
 			} else {
 				mappedStartWith.add(startWithElement);
 			}
@@ -237,7 +235,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			Assert.notNull(fieldReferences, "FieldReferences must not be null");
 			Assert.noNullElements(fieldReferences, "FieldReferences must not contain null elements");
 
-			List<Object> fields = new ArrayList<Object>(fieldReferences.length);
+			List<Object> fields = new ArrayList<>(fieldReferences.length);
 
 			for (String fieldReference : fieldReferences) {
 				fields.add(Fields.field(fieldReference));
@@ -269,14 +267,14 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		private List<Object> verifyAndPotentiallyTransformStartsWithTypes(Object... expressions) {
 
-			List<Object> expressionsToUse = new ArrayList<Object>(expressions.length);
+			List<Object> expressionsToUse = new ArrayList<>(expressions.length);
 
 			for (Object expression : expressions) {
 
 				assertStartWithType(expression);
 
-				if (expression instanceof String) {
-					expressionsToUse.add(Fields.field((String) expression));
+				if (expression instanceof String stringValue) {
+					expressionsToUse.add(Fields.field(stringValue));
 				} else {
 					expressionsToUse.add(expression);
 				}
@@ -329,11 +327,11 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private @Nullable Field depthField;
 		private @Nullable CriteriaDefinition restrictSearchWithMatch;
 
-		protected GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
+		private GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
 				String connectTo) {
 
 			this.from = from;
-			this.startWith = new ArrayList<Object>(startWith);
+			this.startWith = new ArrayList<>(startWith);
 			this.connectFrom = Fields.field(connectFrom);
 			this.connectTo = Fields.field(connectTo);
 		}

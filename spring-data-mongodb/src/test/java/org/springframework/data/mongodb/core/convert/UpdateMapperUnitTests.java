@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +31,8 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
@@ -48,8 +46,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -766,6 +762,18 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).doesNotContainKey("$set.concreteMap.jasnah._class");
 	}
 
+	@Test // GH-4567
+	void updateShouldAllowNullValuesInMap() {
+
+		Map<Object, NestedDocument> map = Collections.singletonMap("jasnah", new NestedDocument("kholin"));
+
+		Update update = new Update().set("concreteMap", Collections.singletonMap("jasnah", null));
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("concreteMap", Collections.singletonMap("jasnah", null))));
+	}
+
 	@Test // DATAMONGO-1250
 	@SuppressWarnings("unchecked")
 	void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
@@ -1213,24 +1221,26 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.a.b.d", "e")));
 	}
 
-	@Test // GH-3775
-	void mapNestedIntegerFieldCorrectly() {
+	@ParameterizedTest // GH-3775, GH-4426
+	@ValueSource(strings = {"levelOne.0.1.3", "levelOne.0.1.32", "levelOne2.0.1.32", "levelOne2.0.1.320"})
+	void mapNestedIntegerFieldCorrectly(String path) {
 
-		Update update = new Update().set("levelOne.0.1.3", "4");
+		Update update = new Update().set(path, "4");
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.3", "4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document(path, "4")));
 	}
 
-	@Test // GH-3775
-	void mapNestedMixedStringIntegerFieldCorrectly() {
+	@ParameterizedTest // GH-3775, GH-4426
+	@ValueSource(strings = {"levelOne.0.1.c", "levelOne.0.1.c.32", "levelOne2.0.1.32.c", "levelOne2.0.1.c.320"})
+	void mapNestedMixedStringIntegerFieldCorrectly(String path) {
 
-		Update update = new Update().set("levelOne.0.1.c", "4");
+		Update update = new Update().set(path, "4");
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.c", "4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document(path, "4")));
 	}
 
 	@Test // GH-3775
@@ -1669,20 +1679,38 @@ class UpdateMapperUnitTests {
 
 	}
 
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class SomeInterfaceImpl extends SomeAbstractType implements SomeInterfaceType {
 
 		String value;
+
+		public SomeInterfaceImpl() {}
+
+		public SomeInterfaceImpl(String value) {
+			this.value = value;
+		}
 	}
 
-	@Data
 	static class TypeWithFieldNameThatCannotBeDecapitalized {
 
 		@Id protected String id;
 
 		@Field("AValue") private Long aValue = 0L;
 
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Long getaValue() {
+			return aValue;
+		}
+
+		public void setaValue(Long aValue) {
+			this.aValue = aValue;
+		}
 	}
 
 	static class WrapperAroundWithUnwrapped {
@@ -1720,6 +1748,7 @@ class UpdateMapperUnitTests {
 
 	static class EntityWithNestedMap {
 		Map<String, Map<String, Map<String, Object>>> levelOne;
+		Map<String, Map<String, Map<String, Object>>> levelOne2;
 	}
 
 	static class Customer {
@@ -1748,20 +1777,52 @@ class UpdateMapperUnitTests {
 		@DocumentReference private List<Sample> samples;
 	}
 
-	@Data
 	private static class TestData {
+
 		@Id private String id;
 		private TestInnerData testInnerData;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public TestInnerData getTestInnerData() {
+			return testInnerData;
+		}
+
+		public void setTestInnerData(TestInnerData testInnerData) {
+			this.testInnerData = testInnerData;
+		}
 	}
 
-	@Data
 	private static class TestInnerData {
+
 		private Map<Integer, TestValue> testMap;
+
+		public Map<Integer, TestValue> getTestMap() {
+			return testMap;
+		}
+
+		public void setTestMap(Map<Integer, TestValue> testMap) {
+			this.testMap = testMap;
+		}
 	}
 
-	@Data
 	private static class TestValue {
+
 		private int intValue;
+
+		public int getIntValue() {
+			return intValue;
+		}
+
+		public void setIntValue(int intValue) {
+			this.intValue = intValue;
+		}
 	}
 
 	static class WithPropertyValueConverter {

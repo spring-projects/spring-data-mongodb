@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -25,8 +23,10 @@ import org.bson.Document;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -50,17 +50,8 @@ import com.querydsl.mongodb.document.MongodbDocumentSerializer;
  */
 class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
-	private static final String ID_KEY = "_id";
-	private static final Set<PathType> PATH_TYPES;
-
-	static {
-
-		Set<PathType> pathTypes = new HashSet<>();
-		pathTypes.add(PathType.VARIABLE);
-		pathTypes.add(PathType.PROPERTY);
-
-		PATH_TYPES = Collections.unmodifiableSet(pathTypes);
-	}
+	private static final String ID_KEY = FieldName.ID.name();
+	private static final Set<PathType> PATH_TYPES = Set.of(PathType.VARIABLE, PathType.PROPERTY);
 
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -107,7 +98,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	@Override
 	protected Document asDocument(@Nullable String key, @Nullable Object value) {
 
-		value = value instanceof Optional ? ((Optional) value).orElse(null) : value;
+		value = value instanceof Optional<?> optional ? optional.orElse(null) : value;
 
 		return super.asDocument(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}
@@ -116,7 +107,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	protected boolean isReference(@Nullable Path<?> path) {
 
 		MongoPersistentProperty property = getPropertyForPotentialDbRef(path);
-		return property == null ? false : property.isAssociation();
+		return property != null && property.isAssociation();
 	}
 
 	@Override
@@ -124,7 +115,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return asReference(constant, null);
 	}
 
-	protected DBRef asReference(Object constant, Path<?> path) {
+	protected DBRef asReference(Object constant, @Nullable Path<?> path) {
 		return converter.toDBRef(constant, getPropertyForPotentialDbRef(path));
 	}
 
@@ -134,11 +125,9 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		Expression<?> arg = expr.getArg(index);
 		String key = super.asDBKey(expr, index);
 
-		if (!(arg instanceof Path)) {
+		if (!(arg instanceof Path<?> path)) {
 			return key;
 		}
-
-		Path<?> path = (Path<?>) arg;
 
 		if (!isReference(path)) {
 			return key;
@@ -146,28 +135,56 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		return property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
+		return property != null && property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
 	}
 
+	@Override
+	protected boolean isId(Path<?> arg) {
+		MongoPersistentProperty propertyFor = getPropertyFor(arg);
+		return propertyFor == null ? super.isId(arg) : propertyFor.isIdProperty();
+	}
+
+	@Override
+	@Nullable
 	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
 
+		if (constant == null) {
+			return null;
+		}
+
 		if (!isReference(path)) {
-			return super.convert(path, constant);
+
+			MongoPersistentProperty property = getPropertyFor(path);
+			if (property == null) {
+				return super.convert(path, constant);
+			}
+
+			if (property.isIdProperty()) {
+				return mapper.convertId(constant.getConstant(), property.getFieldType());
+			}
+
+			if (property.hasExplicitWriteTarget()) {
+				return converter.convertToMongoType(constant.getConstant(), TypeInformation.of(property.getFieldType()));
+			}
+
+			return converter.convertToMongoType(constant.getConstant());
 		}
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		if (property.isDocumentReference()) {
-			return converter.toDocumentPointer(constant.getConstant(), property).getPointer();
-		}
-
-		if (property.isIdProperty()) {
-
-			MongoPersistentProperty propertyForPotentialDbRef = getPropertyForPotentialDbRef(path);
-			if (propertyForPotentialDbRef != null && propertyForPotentialDbRef.isDocumentReference()) {
-				return converter.toDocumentPointer(constant.getConstant(), propertyForPotentialDbRef).getPointer();
+		if (property != null) {
+			if (property.isDocumentReference()) {
+				return converter.toDocumentPointer(constant.getConstant(), property).getPointer();
 			}
-			return asReference(constant.getConstant(), path.getMetadata().getParent());
+
+			if (property.isIdProperty()) {
+
+				MongoPersistentProperty propertyForPotentialDbRef = getPropertyForPotentialDbRef(path);
+				if (propertyForPotentialDbRef != null && propertyForPotentialDbRef.isDocumentReference()) {
+					return converter.toDocumentPointer(constant.getConstant(), propertyForPotentialDbRef).getPointer();
+				}
+				return asReference(constant.getConstant(), path.getMetadata().getParent());
+			}
 		}
 
 		return asReference(constant.getConstant(), path);
@@ -194,7 +211,8 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	 * @param path
 	 * @return
 	 */
-	private MongoPersistentProperty getPropertyForPotentialDbRef(Path<?> path) {
+	@Nullable
+	private MongoPersistentProperty getPropertyForPotentialDbRef(@Nullable Path<?> path) {
 
 		if (path == null) {
 			return null;

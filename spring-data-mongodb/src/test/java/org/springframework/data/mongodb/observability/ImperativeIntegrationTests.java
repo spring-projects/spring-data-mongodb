@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,22 @@ package org.springframework.data.mongodb.observability;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import java.util.List;
-
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.repository.Person;
-import org.springframework.data.mongodb.repository.PersonRepository;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.tracing.exporter.FinishedSpan;
 import io.micrometer.tracing.test.SampleTestRunner;
+
+import java.util.List;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.PersonRepository;
+import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Collection of tests that log metrics and tracing with an external tracing tool.
@@ -81,8 +83,13 @@ public class ImperativeIntegrationTests extends SampleTestRunner {
 
 				assertThat(span.getTags()).containsEntry("db.system", "mongodb").containsEntry("net.transport", "IP.TCP");
 
-				assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+				if (MongoClientVersion.isVersion5orNewer()) {
+					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
+							"db.mongodb.collection", "net.peer.name", "net.peer.port");
+				} else {
+					assertThat(span.getTags()).containsKeys("db.connection_string", "db.name", "db.operation",
 						"db.mongodb.collection", "net.peer.name", "net.peer.port", "net.sock.peer.addr", "net.sock.peer.port");
+				}
 			}
 		};
 	}

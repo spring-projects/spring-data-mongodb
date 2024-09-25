@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.MongoParsingUtils.*;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
@@ -51,16 +49,7 @@ import com.mongodb.ConnectionString;
  */
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
-	private static final Set<String> MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES;
-
-	static {
-
-		Set<String> mongoUriAllowedAdditionalAttributes = new HashSet<String>();
-		mongoUriAllowedAdditionalAttributes.add("id");
-		mongoUriAllowedAdditionalAttributes.add("write-concern");
-
-		MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Collections.unmodifiableSet(mongoUriAllowedAdditionalAttributes);
-	}
+	private static final Set<String> MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Set.of("id", "write-concern");
 
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.springframework.util.ErrorHandler;
  */
 class TaskFactory {
 
-	private final MongoTemplate tempate;
+	private final MongoTemplate template;
 
 	/**
 	 * @param template must not be {@literal null}.
@@ -37,7 +37,7 @@ class TaskFactory {
 
 		Assert.notNull(template, "Template must not be null");
 
-		this.tempate = template;
+		this.template = template;
 	}
 
 	/**
@@ -55,10 +55,10 @@ class TaskFactory {
 		Assert.notNull(request, "Request must not be null");
 		Assert.notNull(targetType, "TargetType must not be null");
 
-		if (request instanceof ChangeStreamRequest) {
-			return new ChangeStreamTask(tempate, (ChangeStreamRequest) request, targetType, errorHandler);
-		} else if (request instanceof TailableCursorRequest) {
-			return new TailableCursorTask(tempate, (TailableCursorRequest) request, targetType, errorHandler);
+		if (request instanceof ChangeStreamRequest changeStreamRequest) {
+			return new ChangeStreamTask(template, changeStreamRequest, targetType, errorHandler);
+		} else if (request instanceof TailableCursorRequest tailableCursorRequest) {
+			return new TailableCursorTask(template, tailableCursorRequest, targetType, errorHandler);
 		}
 
 		throw new IllegalArgumentException(

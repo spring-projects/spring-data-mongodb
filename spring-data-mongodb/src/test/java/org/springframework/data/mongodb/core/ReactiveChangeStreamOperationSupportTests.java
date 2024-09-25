@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.SneakyThrows;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -70,9 +69,8 @@ public class ReactiveChangeStreamOperationSupportTests {
 		MongoTestUtils.dropCollectionNow(DATABASE_NAME, "person", mongoClient);
 	}
 
-	@SneakyThrows
 	@Test // DATAMONGO-2089
-	public void changeStreamEventsShouldBeEmittedCorrectly() {
+	public void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
 
 		BlockingQueue<ChangeStreamEvent<Document>> documents = new LinkedBlockingQueue<>(100);
 

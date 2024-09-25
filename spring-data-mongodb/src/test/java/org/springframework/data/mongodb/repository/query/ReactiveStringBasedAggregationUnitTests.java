@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Value;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -50,6 +48,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
@@ -60,6 +59,8 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+
+import com.mongodb.ReadPreference;
 
 /**
  * Unit tests for {@link ReactiveStringBasedAggregation}.
@@ -78,6 +79,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 	private static final String RAW_SORT_STRING = "{ '$sort' : { 'lastname' : -1 } }";
 	private static final String RAW_GROUP_BY_LASTNAME_STRING = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$firstname' } } }";
+	private static final String RAW_OUT = "{ '$out' : 'authors' }";
 	private static final String GROUP_BY_LASTNAME_STRING_WITH_PARAMETER_PLACEHOLDER = "{ '$group': { '_id' : '$lastname', names : { '$addToSet' : '$?0' } } }";
 	private static final String GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$?#{[0]}' } } }";
 
@@ -173,6 +175,13 @@ public class ReactiveStringBasedAggregationUnitTests {
 		verify(operations).execute(any());
 	}
 
+	@Test // GH-3230
+	void aggregatePicksUpHintFromAnnotation() {
+
+		AggregationInvocation invocation = executeAggregation("withHint");
+		assertThat(hintOf(invocation)).isEqualTo("idx");
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class<?>[size]);
@@ -186,6 +195,29 @@ public class ReactiveStringBasedAggregationUnitTests {
 		verify(operations).aggregate(aggregationCaptor.capture(), targetTypeCaptor.capture());
 
 		return new AggregationInvocation(aggregationCaptor.getValue(), targetTypeCaptor.getValue(), result);
+	}
+
+	@Test // GH-4088
+	void aggregateWithVoidReturnTypeSkipsResultOnOutStage() {
+
+		AggregationInvocation invocation = executeAggregation("outSkipResult");
+
+		assertThat(skipResultsOf(invocation)).isTrue();
+	}
+
+	@Test // GH-4088
+	void aggregateWithOutStageDoesNotSkipResults() {
+
+		AggregationInvocation invocation = executeAggregation("outDoNotSkipResult");
+
+		assertThat(skipResultsOf(invocation)).isFalse();
+	}
+
+	@Test // GH-2971
+	void aggregatePicksUpReadPreferenceFromAnnotation() {
+
+		AggregationInvocation invocation = executeAggregation("withReadPreference");
+		assertThat(readPreferenceOf(invocation)).isEqualTo(ReadPreference.secondaryPreferred());
 	}
 
 	private ReactiveStringBasedAggregation createAggregationForMethod(String name, Class<?>... parameters) {
@@ -216,6 +248,23 @@ public class ReactiveStringBasedAggregationUnitTests {
 				: null;
 	}
 
+	@Nullable
+	private Object hintOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getHintObject().orElse(null)
+				: null;
+	}
+
+	private Boolean skipResultsOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults()
+				: false;
+	}
+
+	@Nullable
+	private ReadPreference readPreferenceOf(AggregationInvocation invocation) {
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference()
+				: null;
+	}
+
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
 		return invocation.getTargetType();
 	}
@@ -243,17 +292,52 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		Mono<PersonAggregate> aggregateWithCollation(Collation collation);
+
+		@Hint("idx")
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		String withHint();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
+		Flux<Person> outDoNotSkipResult();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT })
+		Mono<Void> outSkipResult();
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, RAW_OUT }, readPreference = "secondaryPreferred")
+		Mono<PersonAggregate> withReadPreference();
 	}
 
 	static class PersonAggregate {
 
 	}
 
-	@Value
-	static class AggregationInvocation {
+	static final class AggregationInvocation {
 
-		TypedAggregation<?> aggregation;
-		Class<?> targetType;
-		Object result;
+		private final TypedAggregation<?> aggregation;
+		private final Class<?> targetType;
+		private final Object result;
+
+		public AggregationInvocation(TypedAggregation<?> aggregation, Class<?> targetType, Object result) {
+			this.aggregation = aggregation;
+			this.targetType = targetType;
+			this.result = result;
+		}
+
+		public TypedAggregation<?> getAggregation() {
+			return this.aggregation;
+		}
+
+		public Class<?> getTargetType() {
+			return this.targetType;
+		}
+
+		public Object getResult() {
+			return this.result;
+		}
+
+		public String toString() {
+			return "ReactiveStringBasedAggregationUnitTests.AggregationInvocation(aggregation=" + this.getAggregation()
+					+ ", targetType=" + this.getTargetType() + ", result=" + this.getResult() + ")";
+		}
 	}
 }

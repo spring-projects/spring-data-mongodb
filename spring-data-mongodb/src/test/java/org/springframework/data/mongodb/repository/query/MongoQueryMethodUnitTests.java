@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -52,6 +53,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 public class MongoQueryMethodUnitTests {
 
@@ -274,7 +276,8 @@ public class MongoQueryMethodUnitTests {
 	void queryCreationForUpdateMethodFailsOnInvalidReturnType() throws Exception {
 
 		assertThatExceptionOfType(IllegalStateException.class) //
-				.isThrownBy(() -> queryMethod(InvalidUpdateMethodRepo.class, "findAndIncrementVisitsByFirstname", String.class).verify()) //
+				.isThrownBy(() -> queryMethod(InvalidUpdateMethodRepo.class, "findAndIncrementVisitsByFirstname", String.class)
+						.verify()) //
 				.withMessageContaining("Update") //
 				.withMessageContaining("numeric") //
 				.withMessageContaining("findAndIncrementVisitsByFirstname");
@@ -283,7 +286,8 @@ public class MongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void readsCollationFromAtCollationAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtCollationByFirstname", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtCollationByFirstname",
+				String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
@@ -292,7 +296,8 @@ public class MongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void readsCollationFromAtQueryAnnotation() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtQueryByFirstname", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithCollationFromAtQueryByFirstname",
+				String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("en_US");
@@ -301,10 +306,65 @@ public class MongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void annotatedCollationClashSelectsAtCollationAnnotationValue() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class,
+				"findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceAtQueryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtReadPreferenceByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceFromAtQueryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtQueryByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void annotatedReadPreferenceClashSelectsAtReadPreferenceAnnotationValue() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceAtRepositoryAnnotation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("primaryPreferred");
+	}
+
+	@Test // GH-2971
+	void detectsReadPreferenceForAggregation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregationWithReadPreference");
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-4546
+	void errorsOnInvalidAggregation() {
+
+		assertThatIllegalStateException() //
+				.isThrownBy(() -> queryMethod(InvalidAggregationMethodRepo.class, "findByAggregation").verify()) //
+				.withMessageContaining("Invalid aggregation") //
+				.withMessageContaining("findByAggregation");
 	}
 
 	private MongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters) throws Exception {
@@ -314,6 +374,7 @@ public class MongoQueryMethodUnitTests {
 		return new MongoQueryMethod(method, new DefaultRepositoryMetadata(repository), factory, context);
 	}
 
+	@ReadPreference(value = "primaryPreferred")
 	interface PersonRepository extends Repository<User, Long> {
 
 		// Misses Pageable
@@ -362,6 +423,9 @@ public class MongoQueryMethodUnitTests {
 				collation = "de_AT")
 		List<User> findByAggregationWithCollation();
 
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }", readPreference = "secondaryPreferred")
+		List<User> findByAggregationWithReadPreference();
+
 		void findAndUpdateBy(String firstname, Update update);
 
 		void findAndUpdateBy(String firstname, UpdateDefinition update);
@@ -377,6 +441,16 @@ public class MongoQueryMethodUnitTests {
 		@Collation("de_AT")
 		@Query(collation = "en_US")
 		List<User> findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname(String firstname);
+
+		@ReadPreference("secondaryPreferred")
+		List<User> findWithReadPreferenceFromAtReadPreferenceByFirstname(String firstname);
+
+		@Query(readPreference = "secondaryPreferred")
+		List<User> findWithReadPreferenceFromAtQueryByFirstname(String firstname);
+
+		@ReadPreference("secondaryPreferred")
+		@Query(readPreference = "primaryPreferred")
+		List<User> findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname(String firstname);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {
@@ -398,6 +472,12 @@ public class MongoQueryMethodUnitTests {
 
 		@org.springframework.data.mongodb.repository.Update("{ '$inc' : { 'visits' : 1 } }")
 		Person findAndIncrementVisitsByFirstname(String firstname);
+	}
+
+	interface InvalidAggregationMethodRepo extends Repository<Person, Long> {
+
+		@Aggregation("[{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }]")
+		List<User> findByAggregation();
 	}
 
 	interface Customer {

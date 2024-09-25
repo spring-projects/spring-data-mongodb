@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.bson.BsonRegularExpression;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -52,6 +52,7 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -197,7 +198,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case REGEX:
 
 				Object param = parameters.next();
-				return param instanceof Pattern ? criteria.regex((Pattern) param) : criteria.regex(param.toString());
+				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 			case EXISTS:
 				return criteria.exists((Boolean) parameters.next());
 			case TRUE:
@@ -242,30 +243,25 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.within((Shape) parameter);
 			case SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.is(parameters.next())
+				return isSimpleComparisonPossible(part) ? criteria.is(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, false);
 
 			case NEGATING_SIMPLE_PROPERTY:
 
-				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.next())
+				return isSimpleComparisonPossible(part) ? criteria.ne(parameters.next())
 						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
 				throw new IllegalArgumentException("Unsupported keyword");
 		}
 	}
 
-	private boolean isSimpleComparisionPossible(Part part) {
+	private boolean isSimpleComparisonPossible(Part part) {
 
-		switch (part.shouldIgnoreCase()) {
-			case NEVER:
-				return true;
-			case WHEN_POSSIBLE:
-				return part.getProperty().getType() != String.class;
-			case ALWAYS:
-				return false;
-			default:
-				return true;
-		}
+		return switch (part.shouldIgnoreCase()) {
+			case NEVER -> true;
+			case WHEN_POSSIBLE -> part.getProperty().getType() != String.class;
+			case ALWAYS -> false;
+		};
 	}
 
 	/**
@@ -352,6 +348,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @return the regex options or {@literal null}.
 	 */
+	@Nullable
 	private String toRegexOptions(Part part) {
 
 		String regexOptions = null;
@@ -389,8 +386,19 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
 
 		Streamable<?> streamable = asStreamable(iterator.next());
-		if (!isSimpleComparisionPossible(part)) {
-			streamable = streamable.map(MongoRegexCreator.INSTANCE::toCaseInsensitiveMatch);
+		if (!isSimpleComparisonPossible(part)) {
+
+			MatchMode matchMode = toMatchMode(part.getType());
+			String regexOptions = toRegexOptions(part);
+
+			streamable = streamable.map(it -> {
+				if (it instanceof String value) {
+
+					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(value, matchMode),
+							regexOptions);
+				}
+				return it;
+			});
 		}
 
 		return streamable.toList();
@@ -398,8 +406,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private Streamable<?> asStreamable(Object value) {
 
-		if (value instanceof Collection) {
-			return Streamable.of((Collection<?>) value);
+		if (value instanceof Collection<?> collection) {
+			return Streamable.of(collection);
 		} else if (ObjectUtils.isArray(value)) {
 			return Streamable.of((Object[]) value);
 		}
@@ -436,11 +444,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private static Criteria computeBetweenPart(Criteria criteria, Iterator<Object> parameters) {
 
 		Object value = parameters.next();
-		if (!(value instanceof Range)) {
+		if (!(value instanceof Range<?> range)) {
 			return criteria.gt(value).lt(parameters.next());
 		}
 
-		Range<?> range = (Range<?>) value;
 		Optional<?> min = range.getLowerBound().getValue();
 		Optional<?> max = range.getUpperBound().getValue();
 
@@ -467,24 +474,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static MatchMode toMatchMode(Type type) {
 
-		switch (type) {
-			case NOT_CONTAINING:
-			case CONTAINING:
-				return MatchMode.CONTAINING;
-			case STARTING_WITH:
-				return MatchMode.STARTING_WITH;
-			case ENDING_WITH:
-				return MatchMode.ENDING_WITH;
-			case LIKE:
-			case NOT_LIKE:
-				return MatchMode.LIKE;
-			case REGEX:
-				return MatchMode.REGEX;
-			case NEGATING_SIMPLE_PROPERTY:
-			case SIMPLE_PROPERTY:
-				return MatchMode.EXACT;
-			default:
-				return MatchMode.DEFAULT;
-		}
+		return switch (type) {
+			case NOT_CONTAINING, CONTAINING -> MatchMode.CONTAINING;
+			case STARTING_WITH -> MatchMode.STARTING_WITH;
+			case ENDING_WITH -> MatchMode.ENDING_WITH;
+			case LIKE, NOT_LIKE -> MatchMode.LIKE;
+			case REGEX -> MatchMode.REGEX;
+			case NEGATING_SIMPLE_PROPERTY, SIMPLE_PROPERTY, IN -> MatchMode.EXACT;
+			default -> MatchMode.DEFAULT;
+		};
 	}
 }

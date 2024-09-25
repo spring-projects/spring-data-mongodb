@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.function.Function;
+
 import org.bson.Document;
+
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
@@ -34,22 +35,20 @@ import com.mongodb.DBRef;
  */
 class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 
-	private final SpELContext spELContext;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final ValueResolver resolver;
+	private final Function<Object, ValueExpressionEvaluator> evaluatorFactory;
 
 	/**
-	 * @param spELContext must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public DefaultDbRefProxyHandler(SpELContext spELContext,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			ValueResolver resolver) {
+	public DefaultDbRefProxyHandler(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			ValueResolver resolver, Function<Object, ValueExpressionEvaluator> evaluatorFactory) {
 
-		this.spELContext = spELContext;
 		this.mappingContext = mappingContext;
 		this.resolver = resolver;
+		this.evaluatorFactory = evaluatorFactory;
 	}
 
 	@Override
@@ -66,7 +65,7 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 			return proxy;
 		}
 
-		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(proxy, spELContext);
+		ValueExpressionEvaluator evaluator = evaluatorFactory.apply(proxy);
 		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(proxy);
 
 		Document object = new Document(idProperty.getFieldName(), source.getId());

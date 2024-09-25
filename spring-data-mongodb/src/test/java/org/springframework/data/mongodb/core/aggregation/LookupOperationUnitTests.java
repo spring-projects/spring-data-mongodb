@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,16 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+
+import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Unit tests for {@link LookupOperation}.
@@ -62,7 +67,7 @@ public class LookupOperationUnitTests {
 
 		Document lookupClause = extractDocumentFromLookupOperation(lookupOperation);
 
-		assertThat(lookupClause).containsEntry("from", "a") //
+		org.assertj.core.api.Assertions.assertThat(lookupClause).containsEntry("from", "a") //
 				.containsEntry("localField", "b") //
 				.containsEntry("foreignField", "c") //
 				.containsEntry("as", "d");
@@ -114,7 +119,7 @@ public class LookupOperationUnitTests {
 
 		Document lookupClause = extractDocumentFromLookupOperation(lookupOperation);
 
-		assertThat(lookupClause).containsEntry("from", "a") //
+		org.assertj.core.api.Assertions.assertThat(lookupClause).containsEntry("from", "a") //
 				.containsEntry("localField", "b") //
 				.containsEntry("foreignField", "c") //
 				.containsEntry("as", "d");
@@ -128,5 +133,87 @@ public class LookupOperationUnitTests {
 		assertThat(lookupOperation.getFields().exposesNoFields()).isFalse();
 		assertThat(lookupOperation.getFields().exposesSingleFieldOnly()).isTrue();
 		assertThat(lookupOperation.getFields().getField("d")).isNotNull();
+	}
+
+	@Test // GH-3322
+	void buildsLookupWithLetAndPipeline() {
+
+		LookupOperation lookupOperation = LookupOperation.newLookup().from("warehouses")
+				.let(newVariable("order_item").forField("item"), newVariable("order_qty").forField("ordered"))
+				.pipeline(match(ctx -> new Document("$expr",
+						new Document("$and", List.of(Document.parse("{ $eq: [ \"$stock_item\",  \"$$order_item\" ] }"),
+								Document.parse("{ $gte: [ \"$instock\", \"$$order_qty\" ] }"))))))
+				.as("stockdata");
+
+		assertThat(lookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("""
+				{ $lookup: {
+					from: "warehouses",
+					let: { order_item: "$item", order_qty: "$ordered" },
+					pipeline: [
+						{ $match:
+							{ $expr:
+								{ $and:
+									[
+										{ $eq: [ "$stock_item",  "$$order_item" ] },
+										{ $gte: [ "$instock", "$$order_qty" ] }
+									]
+								}
+							}
+						}
+					],
+					as: "stockdata"
+				}}
+				""");
+	}
+
+	@Test // GH-3322
+	void buildsLookupWithJustPipeline() {
+
+		LookupOperation lookupOperation = LookupOperation.newLookup().from("holidays") //
+				.pipeline( //
+						match(Criteria.where("year").is(2018)), //
+						project().andExclude("_id").and(ctx -> new Document("name", "$name").append("date", "$date")).as("date"), //
+						Aggregation.replaceRoot("date") //
+				).as("holidays");
+
+		assertThat(lookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("""
+				{ $lookup:
+					{
+						from: "holidays",
+						pipeline: [
+							{ $match: { year: 2018 } },
+							{ $project: { _id: 0, date: { name: "$name", date: "$date" } } },
+							{ $replaceRoot: { newRoot: "$date" } }
+						],
+						as: "holidays"
+					}
+				}}
+				""");
+	}
+
+	@Test // GH-3322
+	void buildsLookupWithLocalAndForeignFieldAsWellAsLetAndPipeline() {
+
+		LookupOperation lookupOperation = Aggregation.lookup().from("restaurants") //
+				.localField("restaurant_name")
+				.foreignField("name")
+				.let(newVariable("orders_drink").forField("drink")) //
+				.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
+				.as("matches");
+
+		assertThat(lookupOperation.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("""
+				{ $lookup: {
+					from: "restaurants",
+					localField: "restaurant_name",
+					foreignField: "name",
+					let: { orders_drink: "$drink" },
+					pipeline: [{
+						$match: {
+							$expr: { $in: [ "$$orders_drink", "$beverages" ] }
+						}
+					}],
+					as: "matches"
+				}}
+				""");
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.springframework.core.env.Environment;
 import org.springframework.data.mapping.*;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -212,8 +213,8 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	public void doWithProperties(SimplePropertyHandler handler) {
 
 		delegate.doWithProperties((SimplePropertyHandler) property -> {
-			if (property instanceof MongoPersistentProperty) {
-				handler.doWithPersistentProperty(wrap((MongoPersistentProperty) property));
+			if (property instanceof MongoPersistentProperty mongoPersistentProperty) {
+				handler.doWithPersistentProperty(wrap(mongoPersistentProperty));
 			} else {
 				handler.doWithPersistentProperty(property);
 			}
@@ -323,6 +324,11 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 
 	@Override
 	public void setEvaluationContextProvider(EvaluationContextProvider provider) {
+
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
 
 	}
 

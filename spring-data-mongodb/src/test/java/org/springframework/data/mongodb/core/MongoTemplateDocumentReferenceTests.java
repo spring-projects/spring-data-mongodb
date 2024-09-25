@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,13 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -62,6 +57,7 @@ import com.mongodb.client.model.Filters;
  * {@link DocumentReference} related integration tests for {@link MongoTemplate}.
  *
  * @author Christoph Strobl
+ * @author Julia Lee
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateDocumentReferenceTests {
@@ -1270,7 +1266,32 @@ public class MongoTemplateDocumentReferenceTests {
 				.isEqualTo(new ObjectRefHavingStringIdTargetType(id.toHexString(), "me-the-referenced-object"));
 	}
 
-	@Data
+	@Test // GH-4484
+	void resolveReferenceForOneToManyLookupWithSelfVariableWhenUsedInCtorArgument() {
+
+		OneToManyStylePublisherWithRequiredArgsCtor publisher = new OneToManyStylePublisherWithRequiredArgsCtor("p-100", null);
+		template.save(publisher);
+
+		OneToManyStyleBook book1 = new OneToManyStyleBook();
+		book1.id = "id-1";
+		book1.publisherId = publisher.id;
+
+		OneToManyStyleBook book2 = new OneToManyStyleBook();
+		book2.id = "id-2";
+		book2.publisherId = "p-200";
+
+		OneToManyStyleBook book3 = new OneToManyStyleBook();
+		book3.id = "id-3";
+		book3.publisherId = publisher.id;
+
+		template.save(book1);
+		template.save(book2);
+		template.save(book3);
+
+		OneToManyStylePublisherWithRequiredArgsCtor target = template.findOne(query(where("id").is(publisher.id)), OneToManyStylePublisherWithRequiredArgsCtor.class);
+		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
+	}
+
 	static class SingleRefRoot {
 
 		String id;
@@ -1303,9 +1324,116 @@ public class MongoTemplateDocumentReferenceTests {
 		@DocumentReference ObjectRefHavingCustomizedIdTargetType customIdTargetRef;
 
 		@DocumentReference ObjectRefHavingStringIdTargetType customStringIdTargetRef;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public SimpleObjectRefWithReadingConverter getWithReadingConverter() {
+			return this.withReadingConverter;
+		}
+
+		public SimpleObjectRef getSimpleValueRef() {
+			return this.simpleValueRef;
+		}
+
+		public SimpleObjectRef getSimpleLazyValueRef() {
+			return this.simpleLazyValueRef;
+		}
+
+		public SimpleObjectRef getSimpleValueRefWithAnnotatedFieldName() {
+			return this.simpleValueRefWithAnnotatedFieldName;
+		}
+
+		public ObjectRefOfDocument getObjectValueRef() {
+			return this.objectValueRef;
+		}
+
+		public ObjectRefOfDocumentWithEmbeddedCollectionName getObjectValueRefWithEmbeddedCollectionName() {
+			return this.objectValueRefWithEmbeddedCollectionName;
+		}
+
+		public ObjectRefOnNonIdField getObjectValueRefOnNonIdFields() {
+			return this.objectValueRefOnNonIdFields;
+		}
+
+		public ObjectRefOnNonIdField getLazyObjectValueRefOnNonIdFields() {
+			return this.lazyObjectValueRefOnNonIdFields;
+		}
+
+		public ObjectRefHavingCustomizedIdTargetType getCustomIdTargetRef() {
+			return this.customIdTargetRef;
+		}
+
+		public ObjectRefHavingStringIdTargetType getCustomStringIdTargetRef() {
+			return this.customStringIdTargetRef;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public void setWithReadingConverter(SimpleObjectRefWithReadingConverter withReadingConverter) {
+			this.withReadingConverter = withReadingConverter;
+		}
+
+		public void setSimpleValueRef(SimpleObjectRef simpleValueRef) {
+			this.simpleValueRef = simpleValueRef;
+		}
+
+		public void setSimpleLazyValueRef(SimpleObjectRef simpleLazyValueRef) {
+			this.simpleLazyValueRef = simpleLazyValueRef;
+		}
+
+		public void setSimpleValueRefWithAnnotatedFieldName(SimpleObjectRef simpleValueRefWithAnnotatedFieldName) {
+			this.simpleValueRefWithAnnotatedFieldName = simpleValueRefWithAnnotatedFieldName;
+		}
+
+		public void setObjectValueRef(ObjectRefOfDocument objectValueRef) {
+			this.objectValueRef = objectValueRef;
+		}
+
+		public void setObjectValueRefWithEmbeddedCollectionName(
+				ObjectRefOfDocumentWithEmbeddedCollectionName objectValueRefWithEmbeddedCollectionName) {
+			this.objectValueRefWithEmbeddedCollectionName = objectValueRefWithEmbeddedCollectionName;
+		}
+
+		public void setObjectValueRefOnNonIdFields(ObjectRefOnNonIdField objectValueRefOnNonIdFields) {
+			this.objectValueRefOnNonIdFields = objectValueRefOnNonIdFields;
+		}
+
+		public void setLazyObjectValueRefOnNonIdFields(ObjectRefOnNonIdField lazyObjectValueRefOnNonIdFields) {
+			this.lazyObjectValueRefOnNonIdFields = lazyObjectValueRefOnNonIdFields;
+		}
+
+		public void setCustomIdTargetRef(ObjectRefHavingCustomizedIdTargetType customIdTargetRef) {
+			this.customIdTargetRef = customIdTargetRef;
+		}
+
+		public void setCustomStringIdTargetRef(ObjectRefHavingStringIdTargetType customStringIdTargetRef) {
+			this.customStringIdTargetRef = customStringIdTargetRef;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.SingleRefRoot(id=" + this.getId() + ", value=" + this.getValue()
+					+ ", withReadingConverter=" + this.getWithReadingConverter() + ", simpleValueRef=" + this.getSimpleValueRef()
+					+ ", simpleLazyValueRef=" + this.getSimpleLazyValueRef() + ", simpleValueRefWithAnnotatedFieldName="
+					+ this.getSimpleValueRefWithAnnotatedFieldName() + ", objectValueRef=" + this.getObjectValueRef()
+					+ ", objectValueRefWithEmbeddedCollectionName=" + this.getObjectValueRefWithEmbeddedCollectionName()
+					+ ", objectValueRefOnNonIdFields=" + this.getObjectValueRefOnNonIdFields()
+					+ ", lazyObjectValueRefOnNonIdFields=" + this.getLazyObjectValueRefOnNonIdFields() + ", customIdTargetRef="
+					+ this.getCustomIdTargetRef() + ", customStringIdTargetRef=" + this.getCustomStringIdTargetRef() + ")";
+		}
 	}
 
-	@Data
 	static class CollectionRefRoot {
 
 		String id;
@@ -1342,6 +1470,123 @@ public class MongoTemplateDocumentReferenceTests {
 		@DocumentReference List<ObjectRefHavingCustomizedIdTargetType> customIdTargetRefList;
 
 		@DocumentReference Map<String, ObjectRefHavingCustomizedIdTargetType> customIdTargetRefMap;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public List<SimpleObjectRef> getSimpleValueRef() {
+			return this.simpleValueRef;
+		}
+
+		public List<SimpleObjectRef> getSimplePreinitializedValueRef() {
+			return this.simplePreinitializedValueRef;
+		}
+
+		public List<SimpleObjectRef> getSimpleSortedValueRef() {
+			return this.simpleSortedValueRef;
+		}
+
+		public Map<String, SimpleObjectRef> getMapValueRef() {
+			return this.mapValueRef;
+		}
+
+		public Map<String, SimpleObjectRef> getSimplePreinitializedMapRef() {
+			return this.simplePreinitializedMapRef;
+		}
+
+		public List<SimpleObjectRef> getSimpleValueRefWithAnnotatedFieldName() {
+			return this.simpleValueRefWithAnnotatedFieldName;
+		}
+
+		public List<ObjectRefOfDocument> getObjectValueRef() {
+			return this.objectValueRef;
+		}
+
+		public List<ObjectRefOfDocumentWithEmbeddedCollectionName> getObjectValueRefWithEmbeddedCollectionName() {
+			return this.objectValueRefWithEmbeddedCollectionName;
+		}
+
+		public List<ObjectRefOnNonIdField> getObjectValueRefOnNonIdFields() {
+			return this.objectValueRefOnNonIdFields;
+		}
+
+		public List<ObjectRefHavingCustomizedIdTargetType> getCustomIdTargetRefList() {
+			return this.customIdTargetRefList;
+		}
+
+		public Map<String, ObjectRefHavingCustomizedIdTargetType> getCustomIdTargetRefMap() {
+			return this.customIdTargetRefMap;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public void setSimpleValueRef(List<SimpleObjectRef> simpleValueRef) {
+			this.simpleValueRef = simpleValueRef;
+		}
+
+		public void setSimplePreinitializedValueRef(List<SimpleObjectRef> simplePreinitializedValueRef) {
+			this.simplePreinitializedValueRef = simplePreinitializedValueRef;
+		}
+
+		public void setSimpleSortedValueRef(List<SimpleObjectRef> simpleSortedValueRef) {
+			this.simpleSortedValueRef = simpleSortedValueRef;
+		}
+
+		public void setMapValueRef(Map<String, SimpleObjectRef> mapValueRef) {
+			this.mapValueRef = mapValueRef;
+		}
+
+		public void setSimplePreinitializedMapRef(Map<String, SimpleObjectRef> simplePreinitializedMapRef) {
+			this.simplePreinitializedMapRef = simplePreinitializedMapRef;
+		}
+
+		public void setSimpleValueRefWithAnnotatedFieldName(List<SimpleObjectRef> simpleValueRefWithAnnotatedFieldName) {
+			this.simpleValueRefWithAnnotatedFieldName = simpleValueRefWithAnnotatedFieldName;
+		}
+
+		public void setObjectValueRef(List<ObjectRefOfDocument> objectValueRef) {
+			this.objectValueRef = objectValueRef;
+		}
+
+		public void setObjectValueRefWithEmbeddedCollectionName(
+				List<ObjectRefOfDocumentWithEmbeddedCollectionName> objectValueRefWithEmbeddedCollectionName) {
+			this.objectValueRefWithEmbeddedCollectionName = objectValueRefWithEmbeddedCollectionName;
+		}
+
+		public void setObjectValueRefOnNonIdFields(List<ObjectRefOnNonIdField> objectValueRefOnNonIdFields) {
+			this.objectValueRefOnNonIdFields = objectValueRefOnNonIdFields;
+		}
+
+		public void setCustomIdTargetRefList(List<ObjectRefHavingCustomizedIdTargetType> customIdTargetRefList) {
+			this.customIdTargetRefList = customIdTargetRefList;
+		}
+
+		public void setCustomIdTargetRefMap(Map<String, ObjectRefHavingCustomizedIdTargetType> customIdTargetRefMap) {
+			this.customIdTargetRefMap = customIdTargetRefMap;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.CollectionRefRoot(id=" + this.getId() + ", value=" + this.getValue()
+					+ ", simpleValueRef=" + this.getSimpleValueRef() + ", simplePreinitializedValueRef="
+					+ this.getSimplePreinitializedValueRef() + ", simpleSortedValueRef=" + this.getSimpleSortedValueRef()
+					+ ", mapValueRef=" + this.getMapValueRef() + ", simplePreinitializedMapRef="
+					+ this.getSimplePreinitializedMapRef() + ", simpleValueRefWithAnnotatedFieldName="
+					+ this.getSimpleValueRefWithAnnotatedFieldName() + ", objectValueRef=" + this.getObjectValueRef()
+					+ ", objectValueRefWithEmbeddedCollectionName=" + this.getObjectValueRefWithEmbeddedCollectionName()
+					+ ", objectValueRefOnNonIdFields=" + this.getObjectValueRefOnNonIdFields() + ", customIdTargetRefList="
+					+ this.getCustomIdTargetRefList() + ", customIdTargetRefMap=" + this.getCustomIdTargetRefMap() + ")";
+		}
 	}
 
 	@FunctionalInterface
@@ -1349,17 +1594,56 @@ public class MongoTemplateDocumentReferenceTests {
 		Object toReference();
 	}
 
-	@Data
-	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document("simple-object-ref")
 	static class SimpleObjectRef {
 
 		@Id String id;
 		String value;
+
+		public SimpleObjectRef(String id, String value) {
+			this.id = id;
+			this.value = value;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SimpleObjectRef that = (SimpleObjectRef) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.SimpleObjectRef(id=" + this.getId() + ", value=" + this.getValue()
+					+ ")";
+		}
 	}
 
-	@Getter
-	@Setter
 	static class SimpleObjectRefWithReadingConverter extends SimpleObjectRef {
 
 		public SimpleObjectRefWithReadingConverter(String id, String value) {
@@ -1368,34 +1652,114 @@ public class MongoTemplateDocumentReferenceTests {
 
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class ObjectRefOfDocument implements ReferenceAble {
 
 		@Id String id;
 		String value;
 
+		public ObjectRefOfDocument(String id, String value) {
+			this.id = id;
+			this.value = value;
+		}
+
 		@Override
 		public Object toReference() {
 			return new Document("id", id).append("property", "without-any-meaning");
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ObjectRefOfDocument that = (ObjectRefOfDocument) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.ObjectRefOfDocument(id=" + this.getId() + ", value=" + this.getValue()
+					+ ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class ObjectRefOfDocumentWithEmbeddedCollectionName implements ReferenceAble {
 
 		@Id String id;
 		String value;
 
+		public ObjectRefOfDocumentWithEmbeddedCollectionName(String id, String value) {
+			this.id = id;
+			this.value = value;
+		}
+
 		@Override
 		public Object toReference() {
 			return new Document("id", id).append("collection", "object-ref-of-document-with-embedded-collection-name");
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ObjectRefOfDocumentWithEmbeddedCollectionName that = (ObjectRefOfDocumentWithEmbeddedCollectionName) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.ObjectRefOfDocumentWithEmbeddedCollectionName(id=" + this.getId()
+					+ ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class ObjectRefOnNonIdField implements ReferenceAble {
 
 		@Id String id;
@@ -1403,26 +1767,171 @@ public class MongoTemplateDocumentReferenceTests {
 		String refKey1;
 		String refKey2;
 
+		public ObjectRefOnNonIdField(String id, String value, String refKey1, String refKey2) {
+			this.id = id;
+			this.value = value;
+			this.refKey1 = refKey1;
+			this.refKey2 = refKey2;
+		}
+
 		@Override
 		public Object toReference() {
 			return new Document("refKey1", refKey1).append("refKey2", refKey2);
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public String getRefKey1() {
+			return this.refKey1;
+		}
+
+		public String getRefKey2() {
+			return this.refKey2;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public void setRefKey1(String refKey1) {
+			this.refKey1 = refKey1;
+		}
+
+		public void setRefKey2(String refKey2) {
+			this.refKey2 = refKey2;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ObjectRefOnNonIdField that = (ObjectRefOnNonIdField) o;
+			return Objects.equals(id, that.id) && Objects.equals(value, that.value) && Objects.equals(refKey1, that.refKey1)
+					&& Objects.equals(refKey2, that.refKey2);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value, refKey1, refKey2);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.ObjectRefOnNonIdField(id=" + this.getId() + ", value="
+					+ this.getValue() + ", refKey1=" + this.getRefKey1() + ", refKey2=" + this.getRefKey2() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class ObjectRefHavingCustomizedIdTargetType {
 
 		@MongoId(targetType = FieldType.OBJECT_ID) String id;
 		String name;
+
+		public ObjectRefHavingCustomizedIdTargetType(String id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ObjectRefHavingCustomizedIdTargetType that = (ObjectRefHavingCustomizedIdTargetType) o;
+			return Objects.equals(id, that.id) && Objects.equals(name, that.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.ObjectRefHavingCustomizedIdTargetType(id=" + this.getId() + ", name="
+					+ this.getName() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	static class ObjectRefHavingStringIdTargetType {
 
 		@MongoId(targetType = FieldType.STRING) String id;
 		String name;
+
+		public ObjectRefHavingStringIdTargetType(String id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ObjectRefHavingStringIdTargetType that = (ObjectRefHavingStringIdTargetType) o;
+			return Objects.equals(id, that.id) && Objects.equals(name, that.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.ObjectRefHavingStringIdTargetType(id=" + this.getId() + ", name="
+					+ this.getName() + ")";
+		}
 	}
 
 	static class ReferencableConverter implements Converter<ReferenceAble, DocumentPointer<Object>> {
@@ -1459,8 +1968,6 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 	}
 
-	@Getter
-	@Setter
 	static class WithRefA/* to B */ implements ReferenceAble {
 
 		@Id String id;
@@ -1471,11 +1978,24 @@ public class MongoTemplateDocumentReferenceTests {
 		public Object toReference() {
 			return id;
 		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public WithRefB getToB() {
+			return this.toB;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setToB(WithRefB toB) {
+			this.toB = toB;
+		}
 	}
 
-	@Getter
-	@Setter
-	@ToString
 	static class WithRefB/* to A */ implements ReferenceAble {
 
 		@Id String id;
@@ -1488,6 +2008,35 @@ public class MongoTemplateDocumentReferenceTests {
 		@Override
 		public Object toReference() {
 			return id;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public WithRefA getLazyToA() {
+			return this.lazyToA;
+		}
+
+		public WithRefA getEagerToA() {
+			return this.eagerToA;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setLazyToA(WithRefA lazyToA) {
+			this.lazyToA = lazyToA;
+		}
+
+		public void setEagerToA(WithRefA eagerToA) {
+			this.eagerToA = eagerToA;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.WithRefB(id=" + this.getId() + ", lazyToA=" + this.getLazyToA()
+					+ ", eagerToA=" + this.getEagerToA() + ")";
 		}
 	}
 
@@ -1502,7 +2051,6 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 	}
 
-	@Data
 	static class Book {
 
 		String id;
@@ -1510,6 +2058,25 @@ public class MongoTemplateDocumentReferenceTests {
 		@DocumentReference(lookup = "{ 'acronym' : ?#{acc}, 'name' : ?#{n} }") //
 		Publisher publisher;
 
+		public String getId() {
+			return this.id;
+		}
+
+		public Publisher getPublisher() {
+			return this.publisher;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPublisher(Publisher publisher) {
+			this.publisher = publisher;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.Book(id=" + this.getId() + ", publisher=" + this.getPublisher() + ")";
+		}
 	}
 
 	static class Publisher {
@@ -1543,25 +2110,81 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 	}
 
-	@Data
 	static class UsingAtReference {
 
 		String id;
 
 		@Reference //
 		Publisher publisher;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Publisher getPublisher() {
+			return this.publisher;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPublisher(Publisher publisher) {
+			this.publisher = publisher;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.UsingAtReference(id=" + this.getId() + ", publisher="
+					+ this.getPublisher() + ")";
+		}
 	}
 
-	@Data
 	static class OneToManyStyleBook {
 
 		@Id
 		String id;
 
 		private String publisherId;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getPublisherId() {
+			return this.publisherId;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPublisherId(String publisherId) {
+			this.publisherId = publisherId;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			OneToManyStyleBook that = (OneToManyStyleBook) o;
+			return Objects.equals(id, that.id) && Objects.equals(publisherId, that.publisherId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, publisherId);
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.OneToManyStyleBook(id=" + this.getId() + ", publisherId="
+					+ this.getPublisherId() + ")";
+		}
 	}
 
-	@Data
 	static class OneToManyStylePublisher {
 
 		@Id
@@ -1570,14 +2193,34 @@ public class MongoTemplateDocumentReferenceTests {
 		@ReadOnlyProperty
 		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
 		List<OneToManyStyleBook> books;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<OneToManyStyleBook> getBooks() {
+			return this.books;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setBooks(List<OneToManyStyleBook> books) {
+			this.books = books;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.OneToManyStylePublisher(id=" + this.getId() + ", books="
+					+ this.getBooks() + ")";
+		}
 	}
 
 	static class WithRequiredArgsCtor {
 
 		final String id;
 
-		@DocumentReference
-		final Publisher publisher;
+		@DocumentReference final Publisher publisher;
 
 		public WithRequiredArgsCtor(String id, Publisher publisher) {
 
@@ -1590,8 +2233,7 @@ public class MongoTemplateDocumentReferenceTests {
 
 		final String id;
 
-		@DocumentReference(lazy = true)
-		final Publisher publisher;
+		@DocumentReference(lazy = true) final Publisher publisher;
 
 		public WithLazyRequiredArgsCtor(String id, Publisher publisher) {
 
@@ -1608,10 +2250,66 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 	}
 
-	@Data
 	public static class WithListOfRefs {
+
 		@Id private String id;
 
 		@DocumentReference private List<WithListOfRefs> refs;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<WithListOfRefs> getRefs() {
+			return this.refs;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setRefs(List<WithListOfRefs> refs) {
+			this.refs = refs;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.WithListOfRefs(id=" + this.getId() + ", refs=" + this.getRefs() + ")";
+		}
+	}
+
+	static class OneToManyStylePublisherWithRequiredArgsCtor {
+
+		@Id
+		String id;
+
+		@ReadOnlyProperty
+		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
+		List<OneToManyStyleBook> books;
+
+		public OneToManyStylePublisherWithRequiredArgsCtor(String id, List<OneToManyStyleBook> books) {
+			this.id = id;
+			this.books = books;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<OneToManyStyleBook> getBooks() {
+			return this.books;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setBooks(List<OneToManyStyleBook> books) {
+			this.books = books;
+		}
+
+		public String toString() {
+			return "MongoTemplateDocumentReferenceTests.OneToManyStylePublisherWithRequiredArgsCtor(id=" + this.getId() + ", book="
+				+ this.getBooks() + ")";
+		}
 	}
 }

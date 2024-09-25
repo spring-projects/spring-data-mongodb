@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,21 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Arrays;
+
 import com.mongodb.BasicDBList;
 
 /**
  * @author Thomas Darimont
+ * @deprecated since 4.2.0
  */
+@Deprecated(since = "4.2.0", forRemoval = true)
 public class DBObjectUtils {
 
 	public static BasicDBList dbList(Object... items) {
 
 		BasicDBList list = new BasicDBList();
-		for (Object item : items) {
-			list.add(item);
-		}
+		list.addAll(Arrays.asList(items));
 		return list;
 	}
 }

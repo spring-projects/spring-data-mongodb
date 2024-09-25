@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 
+import com.mongodb.client.*;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -44,20 +45,11 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.DistinctIterable;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * Unit test for {@link SessionBoundMongoTemplate} making sure a proxied {@link MongoCollection} and
@@ -84,6 +76,7 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Mock MongoClient client;
 	@Mock ClientSession clientSession;
 	@Mock FindIterable findIterable;
+	MongoIterable<String> collectionNamesIterable;
 	@Mock MongoIterable mongoIterable;
 	@Mock DistinctIterable distinctIterable;
 	@Mock AggregateIterable aggregateIterable;
@@ -97,11 +90,12 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Before
 	public void setUp() {
 
+		collectionNamesIterable = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(database).collectionNameIterableType());
 		when(client.getDatabase(anyString())).thenReturn(database);
 		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
 		when(database.getCodecRegistry()).thenReturn(codecRegistry);
 		when(database.getCollection(anyString(), any())).thenReturn(collection);
-		when(database.listCollectionNames(any(ClientSession.class))).thenReturn(mongoIterable);
+		doReturn(collectionNamesIterable).when(database).listCollectionNames(any(ClientSession.class));
 		when(collection.find(any(ClientSession.class), any(), any())).thenReturn(findIterable);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any())).thenReturn(aggregateIterable);
 		when(collection.distinct(any(ClientSession.class), any(), any(), any())).thenReturn(distinctIterable);
@@ -113,6 +107,7 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 		when(mongoIterable.iterator()).thenReturn(cursor);
+		when(collectionNamesIterable.iterator()).thenReturn(cursor);
 		when(distinctIterable.map(any())).thenReturn(distinctIterable);
 		when(distinctIterable.into(any())).thenReturn(Collections.emptyList());
 		when(mapReduceIterable.sort(any())).thenReturn(mapReduceIterable);

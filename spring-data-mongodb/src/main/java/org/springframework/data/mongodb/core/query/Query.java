@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,23 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.ReadConcernAware;
+import org.springframework.data.mongodb.core.ReadPreferenceAware;
+import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 
 /**
  * MongoDB Query object representing criteria, projection, sorting and query hints.
@@ -48,7 +58,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Anton Barkan
  */
-public class Query {
+public class Query implements ReadConcernAware, ReadPreferenceAware {
 
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
@@ -57,12 +67,31 @@ public class Query {
 	private @Nullable Field fieldSpec = null;
 	private Sort sort = Sort.unsorted();
 	private long skip;
-	private int limit;
+	private Limit limit = Limit.unlimited();
+
+	private KeysetScrollPosition keysetScrollPosition;
+	private @Nullable ReadConcern readConcern;
+	private @Nullable ReadPreference readPreference;
+
 	private @Nullable String hint;
 
 	private Meta meta = new Meta();
 
 	private Optional<Collation> collation = Optional.empty();
+
+	Query(Query query) {
+		this.restrictedTypes = query.restrictedTypes;
+		this.fieldSpec = query.fieldSpec;
+		this.sort = query.sort;
+		this.limit = query.limit;
+		this.skip = query.skip;
+		this.keysetScrollPosition = query.keysetScrollPosition;
+		this.readConcern = query.readConcern;
+		this.readPreference = query.readPreference;
+		this.hint = query.hint;
+		this.meta = query.meta;
+		this.collation = query.collation;
+	}
 
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
@@ -141,8 +170,28 @@ public class Query {
 	 * @return this.
 	 */
 	public Query limit(int limit) {
-		this.limit = limit;
+		this.limit = limit > 0 ? Limit.of(limit) : Limit.unlimited();
 		return this;
+	}
+
+	/**
+	 * Limit the number of returned documents to {@link Limit}.
+	 *
+	 * @param limit number of documents to return.
+	 * @return this.
+	 * @since 4.2
+	 */
+	public Query limit(Limit limit) {
+
+		Assert.notNull(limit, "Limit must not be null");
+
+		if (limit.isUnlimited()) {
+			this.limit = limit;
+			return this;
+		}
+
+		// retain zero/negative semantics for unlimited.
+		return limit(limit.max());
 	}
 
 	/**
@@ -158,6 +207,59 @@ public class Query {
 		Assert.hasText(hint, "Hint must not be empty or null");
 		this.hint = hint;
 		return this;
+	}
+
+	/**
+	 * Configures the query to use the given {@link ReadConcern} when being executed.
+	 *
+	 * @param readConcern must not be {@literal null}.
+	 * @return this.
+	 * @since 3.1
+	 */
+	public Query withReadConcern(ReadConcern readConcern) {
+
+		Assert.notNull(readConcern, "ReadConcern must not be null");
+		this.readConcern = readConcern;
+		return this;
+	}
+
+	/**
+	 * Configures the query to use the given {@link ReadPreference} when being executed.
+	 *
+	 * @param readPreference must not be {@literal null}.
+	 * @return this.
+	 * @since 4.1
+	 */
+	public Query withReadPreference(ReadPreference readPreference) {
+
+		Assert.notNull(readPreference, "ReadPreference must not be null");
+		this.readPreference = readPreference;
+		return this;
+	}
+
+	@Override
+	public boolean hasReadConcern() {
+		return this.readConcern != null;
+	}
+
+	@Override
+	public ReadConcern getReadConcern() {
+		return this.readConcern;
+	}
+
+	@Override
+	public boolean hasReadPreference() {
+		return this.readPreference != null || getMeta().getFlags().contains(CursorOption.SECONDARY_READS);
+	}
+
+	@Override
+	public ReadPreference getReadPreference() {
+
+		if (readPreference == null) {
+			return getMeta().getFlags().contains(CursorOption.SECONDARY_READS) ? ReadPreference.primaryPreferred() : null;
+		}
+
+		return this.readPreference;
 	}
 
 	/**
@@ -183,14 +285,73 @@ public class Query {
 	 */
 	public Query with(Pageable pageable) {
 
-		if (pageable.isUnpaged()) {
-			return this;
+		if (pageable.isPaged()) {
+			this.limit = pageable.toLimit();
+			this.skip = pageable.getOffset();
 		}
 
-		this.limit = pageable.getPageSize();
-		this.skip = pageable.getOffset();
-
 		return with(pageable.getSort());
+	}
+
+	/**
+	 * Sets the given cursor position on the {@link Query} instance. Will transparently set {@code skip}.
+	 *
+	 * @param position must not be {@literal null}.
+	 * @return this.
+	 */
+	public Query with(ScrollPosition position) {
+
+		Assert.notNull(position, "ScrollPosition must not be null");
+
+		if (position instanceof OffsetScrollPosition offset) {
+			return with(offset);
+		}
+
+		if (position instanceof KeysetScrollPosition keyset) {
+			return with(keyset);
+		}
+
+		throw new IllegalArgumentException(String.format("ScrollPosition %s not supported", position));
+	}
+
+	/**
+	 * Sets the given cursor position on the {@link Query} instance. Will transparently set {@code skip}.
+	 *
+	 * @param position must not be {@literal null}.
+	 * @return this.
+	 */
+	public Query with(OffsetScrollPosition position) {
+
+		Assert.notNull(position, "ScrollPosition must not be null");
+
+		this.skip = position.isInitial() ? 0 : position.getOffset() + 1;
+		this.keysetScrollPosition = null;
+		return this;
+	}
+
+	/**
+	 * Sets the given cursor position on the {@link Query} instance. Will transparently reset {@code skip}.
+	 *
+	 * @param position must not be {@literal null}.
+	 * @return this.
+	 */
+	public Query with(KeysetScrollPosition position) {
+
+		Assert.notNull(position, "ScrollPosition must not be null");
+
+		this.skip = 0;
+		this.keysetScrollPosition = position;
+
+		return this;
+	}
+
+	public boolean hasKeyset() {
+		return keysetScrollPosition != null;
+	}
+
+	@Nullable
+	public KeysetScrollPosition getKeyset() {
+		return keysetScrollPosition;
 	}
 
 	/**
@@ -323,13 +484,24 @@ public class Query {
 	}
 
 	/**
+	 * Returns whether the query is {@link #limit(int) limited}.
+	 *
+	 * @return {@code true} if the query is limited; {@code false} otherwise.
+	 * @since 4.1
+	 */
+	public boolean isLimited() {
+		return this.limit.isLimited();
+	}
+
+	/**
 	 * Get the maximum number of documents to be return. {@literal Zero} or a {@literal negative} value indicates no
 	 * limit.
 	 *
 	 * @return number of documents to return.
+	 * @see #isLimited()
 	 */
 	public int getLimit() {
-		return this.limit;
+		return limit.isUnlimited() ? 0 : this.limit.max();
 	}
 
 	/**
@@ -544,7 +716,8 @@ public class Query {
 		};
 
 		target.skip = source.getSkip();
-		target.limit = source.getLimit();
+
+		target.limit = source.isLimited() ? Limit.of(source.getLimit()) : Limit.unlimited();
 		target.hint = source.getHint();
 		target.collation = source.getCollation();
 		target.restrictedTypes = new HashSet<>(source.getRestrictedTypes());
@@ -589,7 +762,7 @@ public class Query {
 		boolean sortEqual = this.sort.equals(that.sort);
 		boolean hintEqual = nullSafeEquals(this.hint, that.hint);
 		boolean skipEqual = this.skip == that.skip;
-		boolean limitEqual = this.limit == that.limit;
+		boolean limitEqual = nullSafeEquals(this.limit, that.limit);
 		boolean metaEqual = nullSafeEquals(this.meta, that.meta);
 		boolean collationEqual = nullSafeEquals(this.collation.orElse(null), that.collation.orElse(null));
 
@@ -607,7 +780,7 @@ public class Query {
 		result += 31 * nullSafeHashCode(sort);
 		result += 31 * nullSafeHashCode(hint);
 		result += 31 * skip;
-		result += 31 * limit;
+		result += 31 * limit.hashCode();
 		result += 31 * nullSafeHashCode(meta);
 		result += 31 * nullSafeHashCode(collation.orElse(null));
 
@@ -626,4 +799,5 @@ public class Query {
 	public static boolean isRestrictedTypeKey(String key) {
 		return RESTRICTED_TYPES_KEY.equals(key);
 	}
+
 }

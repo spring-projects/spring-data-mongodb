@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the original author or authors.
+ * Copyright 2008-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,9 @@ import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
@@ -66,7 +68,7 @@ import org.springframework.util.StringUtils;
  */
 public class ParameterBindingDocumentCodec implements CollectibleCodec<Document> {
 
-	private static final String ID_FIELD_NAME = "_id";
+	private static final String ID_FIELD_NAME = FieldName.ID.name();
 	private static final CodecRegistry DEFAULT_REGISTRY = fromProviders(
 			asList(new ValueCodecProvider(), new BsonValueCodecProvider(), new DocumentCodecProvider()));
 	private static final BsonTypeClassMap DEFAULT_BSON_TYPE_CLASS_MAP = new BsonTypeClassMap();
@@ -138,8 +140,8 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		}
 
 		Object id = document.get(ID_FIELD_NAME);
-		if (id instanceof BsonValue) {
-			return (BsonValue) id;
+		if (id instanceof BsonValue bsonValue) {
+			return bsonValue;
 		}
 
 		BsonDocument idHoldingDocument = new BsonDocument();
@@ -210,16 +212,15 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	@Override
 	public Document decode(final BsonReader reader, final DecoderContext decoderContext) {
 
-		if (reader instanceof ParameterBindingJsonReader) {
-			ParameterBindingJsonReader bindingReader = (ParameterBindingJsonReader) reader;
+		if (reader instanceof ParameterBindingJsonReader bindingReader) {
 
 			// check if the reader has actually found something to replace on top level and did so.
 			// binds just placeholder queries like: `@Query(?0)`
-			if (bindingReader.currentValue instanceof org.bson.Document) {
-				return (Document) bindingReader.currentValue;
-			} else if (bindingReader.currentValue instanceof String) {
+			if (bindingReader.currentValue instanceof org.bson.Document document) {
+				return document;
+			} else if (bindingReader.currentValue instanceof String stringValue) {
 				try {
-					return decode((String) bindingReader.currentValue, new Object[0]);
+					return decode(stringValue, new Object[0]);
 				} catch (JsonParseException jsonParseException) {
 					throw new IllegalArgumentException("Expression result is not a valid json document", jsonParseException);
 				}
@@ -246,8 +247,8 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			try {
 
 				Object value = readValue(reader, decoderContext);
-				if (value instanceof Map<?, ?>) {
-					if (!((Map) value).isEmpty()) {
+				if (value instanceof Map<?, ?> map) {
+					if (!map.isEmpty()) {
 						return new Document((Map<String, Object>) value);
 					}
 				}
@@ -320,9 +321,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	private Object readValue(final BsonReader reader, final DecoderContext decoderContext) {
 
 		// Spring Data Customization START
-		if (reader instanceof ParameterBindingJsonReader) {
-
-			ParameterBindingJsonReader bindingReader = (ParameterBindingJsonReader) reader;
+		if (reader instanceof ParameterBindingJsonReader bindingReader) {
 
 			// check if the reader has actually found something to replace and did so.
 			// resets the reader state to move on after the actual value
@@ -334,10 +333,10 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 				if (ObjectUtils.nullSafeEquals(BsonType.DATE_TIME, bindingReader.getCurrentBsonType())
 						&& !(value instanceof Date)) {
 
-					if (value instanceof Number) {
-						value = new Date(NumberUtils.convertNumberToTargetClass((Number) value, Long.class));
-					} else if (value instanceof String) {
-						value = new Date(DateTimeFormatter.parse((String) value));
+					if (value instanceof Number numberValue) {
+						value = new Date(NumberUtils.convertNumberToTargetClass(numberValue, Long.class));
+					} else if (value instanceof String stringValue) {
+						value = new Date(DateTimeFormatter.parse(stringValue));
 					}
 				}
 
@@ -386,7 +385,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 * @author Christoph Strobl
 	 * @since 3.1
 	 */
-	static class DependencyCapturingExpressionEvaluator implements SpELExpressionEvaluator {
+	static class DependencyCapturingExpressionEvaluator implements ValueExpressionEvaluator {
 
 		private static final Object PLACEHOLDER = new Object();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the original author or authors.
+ * Copyright 2020-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -107,26 +105,64 @@ class MongoTemplateUnwrappedTests {
 						WithPrefixedUnwrapped.class)).isEqualTo(source);
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class WithUnwrapped {
 
 		String id;
 
 		@Unwrapped.Nullable UnwrappableType embeddableValue;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithUnwrapped that = (WithUnwrapped) o;
+			return Objects.equals(id, that.id) && Objects.equals(embeddableValue, that.embeddableValue);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, embeddableValue);
+		}
+
+		public String toString() {
+			return "MongoTemplateUnwrappedTests.WithUnwrapped(id=" + this.id + ", embeddableValue=" + this.embeddableValue
+					+ ")";
+		}
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class WithPrefixedUnwrapped {
 
 		String id;
 
 		@Unwrapped.Nullable("prefix-") UnwrappableType embeddableValue;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithPrefixedUnwrapped that = (WithPrefixedUnwrapped) o;
+			return Objects.equals(id, that.id) && Objects.equals(embeddableValue, that.embeddableValue);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, embeddableValue);
+		}
+
+		public String toString() {
+			return "MongoTemplateUnwrappedTests.WithPrefixedUnwrapped(id=" + this.id + ", embeddableValue="
+					+ this.embeddableValue + ")";
+		}
 	}
 
-	@EqualsAndHashCode
-	@ToString
 	static class UnwrappableType {
 
 		String stringValue;
@@ -134,5 +170,28 @@ class MongoTemplateUnwrappedTests {
 
 		@Field("with-at-field-annotation") //
 		String atFieldAnnotatedValue;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			UnwrappableType that = (UnwrappableType) o;
+			return Objects.equals(stringValue, that.stringValue) && Objects.equals(listValue, that.listValue)
+					&& Objects.equals(atFieldAnnotatedValue, that.atFieldAnnotatedValue);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(stringValue, listValue, atFieldAnnotatedValue);
+		}
+
+		public String toString() {
+			return "MongoTemplateUnwrappedTests.UnwrappableType(stringValue=" + this.stringValue + ", listValue="
+					+ this.listValue + ", atFieldAnnotatedValue=" + this.atFieldAnnotatedValue + ")";
+		}
 	}
 }

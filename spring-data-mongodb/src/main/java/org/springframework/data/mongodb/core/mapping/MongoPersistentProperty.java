@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
@@ -158,7 +159,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	default boolean hasExplicitWriteTarget() {
 
 		Field field = findAnnotation(Field.class);
-		return field != null ? !FieldType.IMPLICIT.equals(field.targetType()) : false;
+		return field != null && !FieldType.IMPLICIT.equals(field.targetType());
 	}
 
 	/**
@@ -177,6 +178,12 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	Collection<Object> getEncryptionKeyIds();
 
 	/**
+	 * @return the {@link MongoField} representing the raw field to read/write in a MongoDB document.
+	 * @since 4.2
+	 */
+	MongoField getMongoField();
+
+	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
 	 *
 	 * @author Oliver Gierke
@@ -185,6 +192,8 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 		INSTANCE;
 
+		@NonNull
+		@Override
 		public String convert(MongoPersistentProperty source) {
 			if (!source.isUnwrapped()) {
 				return source.getFieldName();

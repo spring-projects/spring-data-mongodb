@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 /**
  * The {@link Aggregation} annotation can be used to annotate a {@link org.springframework.data.repository.Repository}
  * query method so that it runs the {@link Aggregation#pipeline()} on invocation.
- * <br />
+ * <p>
  * Pipeline stages are mapped against the {@link org.springframework.data.repository.Repository} domain type to consider
  * {@link org.springframework.data.mongodb.core.mapping.Field field} mappings and may contain simple placeholders
  * {@code ?0} as well as {@link org.springframework.expression.spel.standard.SpelExpression SpelExpressions}.
- * <br />
+ * <p>
  * Query method {@link org.springframework.data.domain.Sort} and {@link org.springframework.data.domain.Pageable}
  * arguments are applied at the end of the pipeline or can be defined manually as part of it.
  *
@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 @QueryAnnotation
+@ReadPreference
 public @interface Aggregation {
 
 	/**
@@ -127,4 +128,21 @@ public @interface Aggregation {
 	 */
 	@AliasFor(annotation = Collation.class, attribute = "value")
 	String collation() default "";
+
+	/**
+	 * The mode of the read preference to use. This attribute ({@code @Aggregation(pipeline = { ... }, readPreference =
+	 * "secondary")}) is an alias for:
+	 *
+	 * <pre class="code">
+	 * &#64;@Aggregation(pipeline = { ... })
+	 * &#64;ReadPreference("secondary")
+	 * List&lt;PersonAggregate&gt; groupByLastnameAnd(String property);
+	 * </pre>
+	 *
+	 * @return the index name.
+	 * @since 4.2
+	 * @see ReadPreference#value()
+	 */
+	@AliasFor(annotation = ReadPreference.class, attribute = "value")
+	String readPreference() default "";
 }

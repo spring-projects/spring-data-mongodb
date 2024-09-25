@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public interface FindPublisherPreparer extends ReadPreferenceAware {
 	FindPublisher<Document> prepare(FindPublisher<Document> findPublisher);
 
 	/**
-	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
+	 * Apply query specific settings to {@link MongoCollection} and initiate a find operation returning a
 	 * {@link FindPublisher} via the given {@link Function find} function.
 	 *
 	 * @param collection must not be {@literal null}.

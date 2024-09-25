@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -435,7 +434,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			if (additionalProperties != null) {
 
 				doc.append("additionalProperties",
-						additionalProperties instanceof JsonSchemaObject ? ((JsonSchemaObject) additionalProperties).toDocument()
+						additionalProperties instanceof JsonSchemaObject schemaObject ? schemaObject.toDocument()
 								: additionalProperties);
 			}
 			return doc;
@@ -488,8 +487,8 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 							StringUtils.collectionToDelimitedString(requiredProperties, ", "));
 				}
 			}
-			if (additionalProperties instanceof Boolean) {
-				description += (((Boolean) additionalProperties) ? " " : " not ") + "allowing additional properties";
+			if (additionalProperties instanceof Boolean booleanValue) {
+				description += (booleanValue ? " " : " not ") + "allowing additional properties";
 			}
 
 			if (!CollectionUtils.isEmpty(properties)) {
@@ -517,8 +516,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 */
 	public static class NumericJsonSchemaObject extends TypedJsonSchemaObject {
 
-		private static final Set<Type> NUMERIC_TYPES = new HashSet<>(
-				Arrays.asList(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigDecimalType()));
+		private static final Set<Type> NUMERIC_TYPES = Set.of(Type.doubleType(), Type.intType(), Type.longType(), Type.numberType(), Type.bigDecimalType());
 
 		@Nullable Number multipleOf;
 		@Nullable Range<? extends Number> range;
@@ -714,20 +712,20 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 		private static Bound<?> createBound(Number number, boolean inclusive) {
 
-			if (number instanceof Long) {
-				return inclusive ? Bound.inclusive((Long) number) : Bound.exclusive((Long) number);
+			if (number instanceof Long longValue) {
+				return inclusive ? Bound.inclusive(longValue) : Bound.exclusive(longValue);
 			}
-			if (number instanceof Double) {
-				return inclusive ? Bound.inclusive((Double) number) : Bound.exclusive((Double) number);
+			if (number instanceof Double doubleValue) {
+				return inclusive ? Bound.inclusive(doubleValue) : Bound.exclusive(doubleValue);
 			}
-			if (number instanceof Float) {
-				return inclusive ? Bound.inclusive((Float) number) : Bound.exclusive((Float) number);
+			if (number instanceof Float floatValue) {
+				return inclusive ? Bound.inclusive(floatValue) : Bound.exclusive(floatValue);
 			}
-			if (number instanceof Integer) {
-				return inclusive ? Bound.inclusive((Integer) number) : Bound.exclusive((Integer) number);
+			if (number instanceof Integer integerValue) {
+				return inclusive ? Bound.inclusive(integerValue) : Bound.exclusive(integerValue);
 			}
-			if (number instanceof BigDecimal) {
-				return inclusive ? Bound.inclusive((BigDecimal) number) : Bound.exclusive((BigDecimal) number);
+			if (number instanceof BigDecimal bigDecimalValue) {
+				return inclusive ? Bound.inclusive(bigDecimalValue) : Bound.exclusive(bigDecimalValue);
 			}
 
 			throw new IllegalArgumentException("Unsupported numeric value");

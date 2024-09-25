@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -90,6 +92,10 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 		return createQuery().flatMapMany(it -> find.matching(it).all());
 	}
 
+	Mono<Window<K>> scroll(ScrollPosition scrollPosition) {
+		return createQuery().flatMap(it -> find.matching(it).scroll(scrollPosition));
+	}
+
 	/**
 	 * Fetch all matching query results as page.
 	 *
@@ -97,8 +103,8 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	 */
 	Mono<Page<K>> fetchPage(Pageable pageable) {
 
-		Mono<List<K>> content = createQuery().map(it -> it.with(pageable))
-						     .flatMapMany(it -> find.matching(it).all()).collectList();
+		Mono<List<K>> content = createQuery().map(it -> it.with(pageable)).flatMapMany(it -> find.matching(it).all())
+				.collectList();
 
 		return content.flatMap(it -> ReactivePageableExecutionUtils.getPage(it, pageable, fetchCount()));
 	}
@@ -246,7 +252,7 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	protected Flux<Object> getIds(Class<?> targetType, Mono<Predicate> condition) {
 
 		return condition.flatMapMany(it -> getJoinIds(targetType, it))
-				.switchIfEmpty(Flux.defer(() -> getJoinIds(targetType, (Predicate) null)));
+				.switchIfEmpty(Flux.defer(() -> getJoinIds(targetType, null)));
 	}
 
 	/**
@@ -259,7 +265,7 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	protected Flux<Object> getJoinIds(Class<?> targetType, @Nullable Predicate condition) {
 
 		return createQuery(Mono.justOrEmpty(condition), null, QueryModifiers.EMPTY, Collections.emptyList())
-				.flatMapMany(query -> mongoOperations.findDistinct(query, "_id", targetType, Object.class));
+				.flatMapMany(query -> mongoOperations.findDistinct(query, FieldName.ID.name(), targetType, Object.class));
 	}
 
 	@Override

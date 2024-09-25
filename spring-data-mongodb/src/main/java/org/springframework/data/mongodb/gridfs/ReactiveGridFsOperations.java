@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -173,7 +173,7 @@ public interface ReactiveGridFsOperations {
 
 	/**
 	 * Returns a {@link Flux} emitting all files matching the given query. <br />
-	 * <strong>Note:</strong> Currently {@link Sort} criteria defined at the {@link Query} will not be regarded as MongoDB
+	 * <strong>NOTE:</strong> Currently {@link Sort} criteria defined at the {@link Query} will not be regarded as MongoDB
 	 * does not support ordering for GridFS file access.
 	 *
 	 * @see <a href="https://jira.mongodb.org/browse/JAVA-431">MongoDB Jira: JAVA-431</a>
@@ -185,7 +185,7 @@ public interface ReactiveGridFsOperations {
 	/**
 	 * Returns a {@link Mono} emitting a single {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
 	 * query or {@link Mono#empty()} in case no file matches. <br />
-	 * <strong>NOTE</strong> If more than one file matches the given query the resulting {@link Mono} emits an error. If
+	 * <strong>NOTE:</strong> If more than one file matches the given query the resulting {@link Mono} emits an error. If
 	 * you want to obtain the first found file use {@link #findFirst(Query)}.
 	 *
 	 * @param query must not be {@literal null}.

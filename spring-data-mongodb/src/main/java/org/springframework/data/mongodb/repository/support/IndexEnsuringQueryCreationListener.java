@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,15 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
@@ -54,7 +51,7 @@ import com.mongodb.MongoException;
  */
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
-	private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
+	private static final Set<Type> GEOSPATIAL_TYPES = Set.of(Type.NEAR, Type.WITHIN);
 	private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
 
 	private final IndexOperationsProvider indexOperationsProvider;
@@ -114,9 +111,9 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		MongoEntityMetadata<?> metadata = query.getQueryMethod().getEntityInformation();
 		try {
 			indexOperationsProvider.indexOps(metadata.getCollectionName(), metadata.getJavaType()).ensureIndex(index);
-		} catch (UncategorizedMongoDbException e) {
+		} catch (DataIntegrityViolationException e) {
 
-			if (e.getCause() instanceof MongoException) {
+			if (e.getCause() instanceof MongoException mongoException) {
 
 				/*
 				 * As of MongoDB 4.2 index creation raises an error when creating an index for the very same keys with
@@ -127,7 +124,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 				 *
 				 * For details please see: https://docs.mongodb.com/master/release-notes/4.2-compatibility/#indexes
 				 */
-				if (((MongoException) e.getCause()).getCode() != 85) {
+				if (mongoException.getCode() != 85) {
 					throw e;
 				}
 			}

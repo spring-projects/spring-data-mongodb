@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,30 @@
 package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
-import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -47,8 +47,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -64,6 +66,8 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesState;
+import org.springframework.data.mongodb.test.util.DirtiesStateExtension.ProvidesState;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
@@ -285,6 +289,36 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		cappedRepository.findDtoProjectionByKey("value").as(StepVerifier::create).expectNextCount(1).thenCancel().verify();
 	}
 
+	@Test // GH-4308
+	void appliesScrollingCorrectly() {
+
+		Window<Person> scroll = repository
+				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", ScrollPosition.keyset()).block();
+
+		assertThat(scroll).hasSize(2);
+		assertThat(scroll).containsSequence(alicia, boyd);
+		assertThat(scroll.isLast()).isFalse();
+
+		Window<Person> nextScroll = repository
+				.findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc("*", scroll.positionAt(scroll.size() - 1)).block();
+
+		assertThat(nextScroll).hasSize(2);
+		assertThat(nextScroll).containsSequence(carter, dave);
+		assertThat(nextScroll.isLast()).isFalse();
+	}
+
+	@Test // GH-4308
+	void appliesScrollingWithProjectionCorrectly() {
+
+		repository
+				.findCursorProjectionByLastnameLike("*", PageRequest.of(0, 2, Sort.by(Direction.ASC, "firstname", "lastname"))) //
+				.flatMapIterable(Function.identity()) //
+				.as(StepVerifier::create) //
+				.expectNext(new PersonSummaryDto(alicia.getFirstname(), alicia.getLastname())) //
+				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
 	@Test // DATAMONGO-1444
 	@DirtiesState
 	void findsPeopleByLocationWithinCircle() {
@@ -433,6 +467,27 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
 					assertThat(actual).containsExactlyInAnyOrder(dave, carter);
+				}).verifyComplete();
+	}
+
+	@Test // GH-4308
+	void shouldScrollWithId() {
+
+		List<Window<Person>> capture = new ArrayList<>();
+		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(ScrollPosition.keyset())) //
+				.as(StepVerifier::create) //
+				.recordWith(() -> capture).assertNext(actual -> {
+					assertThat(actual).hasSize(2).containsExactly(boyd, carter);
+				}).verifyComplete();
+
+		Window<Person> scroll = capture.get(0);
+
+		repository.findBy(person.id.in(Arrays.asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(scroll.positionAt(scroll.size() - 1))) //
+				.as(StepVerifier::create) //
+				.recordWith(() -> capture).assertNext(actual -> {
+					assertThat(actual).containsOnly(dave);
 				}).verifyComplete();
 	}
 
@@ -712,6 +767,11 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		@Query("{ lastname: { $in: ?0 }, age: { $gt : ?1 } }")
 		Flux<Person> findStringQuery(Flux<String> lastname, Mono<Integer> age);
 
+		Mono<Window<Person>> findTop2ByLastnameLikeOrderByFirstnameAscLastnameAsc(String lastname,
+				ScrollPosition scrollPosition);
+
+		Mono<Window<PersonSummaryDto>> findCursorProjectionByLastnameLike(String lastname, Pageable pageable);
+
 		Flux<Person> findByLocationWithin(Circle circle);
 
 		Flux<Person> findByLocationWithin(Circle circle, Pageable pageable);
@@ -804,12 +864,13 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 	}
 
 	@Document
-	@NoArgsConstructor
 	static class Capped {
 
 		String id;
 		String key;
 		double random;
+
+		public Capped() {}
 
 		Capped(String key, double random) {
 			this.key = key;
@@ -821,9 +882,29 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		double getRandom();
 	}
 
-	@Data
 	static class DtoProjection {
+
 		String id;
 		double unknown;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public double getUnknown() {
+			return this.unknown;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setUnknown(double unknown) {
+			this.unknown = unknown;
+		}
+
+		public String toString() {
+			return "ReactiveMongoRepositoryTests.DtoProjection(id=" + this.getId() + ", unknown=" + this.getUnknown() + ")";
+		}
 	}
 }

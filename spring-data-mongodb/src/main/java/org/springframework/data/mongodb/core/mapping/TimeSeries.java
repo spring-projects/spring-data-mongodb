@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.timeseries.Granularity;
  * Identifies a domain object to be persisted to a MongoDB Time Series collection.
  *
  * @author Christoph Strobl
+ * @author Ben Foster
  * @since 3.3
  * @see <a href="https://docs.mongodb.com/manual/core/timeseries-collections">https://docs.mongodb.com/manual/core/timeseries-collections</a>
  */
@@ -83,4 +84,30 @@ public @interface TimeSeries {
 	@AliasFor(annotation = Document.class, attribute = "collation")
 	String collation() default "";
 
+	/**
+	 * Configure the timeout after which the document should expire.
+	 * Defaults to an empty {@link String} for no expiry. Accepts numeric values followed by their unit of measure:
+	 * <ul>
+	 * <li><b>d</b>: Days</li>
+	 * <li><b>h</b>: Hours</li>
+	 * <li><b>m</b>: Minutes</li>
+	 * <li><b>s</b>: Seconds</li>
+	 * <li>Alternatively: A Spring {@literal template expression}. The expression can result in a
+	 * {@link java.time.Duration} or a valid expiration {@link String} according to the already mentioned
+	 * conventions.</li>
+	 * </ul>
+	 * Supports ISO-8601 style.
+	 *
+	 * <pre class="code">
+	 * &#0064;TimeSeries(expireAfter = "10s") String expireAfterTenSeconds;
+	 * &#0064;TimeSeries(expireAfter = "1d") String expireAfterOneDay;
+	 * &#0064;TimeSeries(expireAfter = "P2D") String expireAfterTwoDays;
+	 * &#0064;TimeSeries(expireAfter = "#{&#0064;mySpringBean.timeout}") String expireAfterTimeoutObtainedFromSpringBean;
+	 * &#0064;TimeSeries(expireAfter = "&#36;{my.property.timeout}") String expireAfterTimeoutObtainedFromProperty;
+	 * </pre>
+	 *
+	 * @return empty by default.
+	 * @since 4.4
+	 */
+	String expireAfter() default "";
 }

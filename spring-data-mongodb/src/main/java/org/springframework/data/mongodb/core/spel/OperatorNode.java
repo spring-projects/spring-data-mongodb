@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,47 +31,15 @@ import org.springframework.expression.spel.ast.*;
  */
 public class OperatorNode extends ExpressionNode {
 
-	private static final Map<String, String> OPERATORS;
-	private static final Set<Class> SUPPORTED_MATH_OPERATORS;
+	private static final Map<String, String> OPERATORS = Map.ofEntries(Map.entry("+", "$add"),
+			Map.entry("-", "$subtract"), Map.entry("*", "$multiply"), Map.entry("/", "$divide"), Map.entry("%", "$mod"),
+			Map.entry("^", "$pow"), Map.entry("==", "$eq"), Map.entry("!=", "$ne"), Map.entry(">", "$gt"),
+			Map.entry(">=", "$gte"), Map.entry("<", "$lt"), Map.entry("<=", "$lte"), Map.entry("and", "$and"),
+			Map.entry("or", "$or"));
 
-	static {
-
-		Map<String, String> map = new HashMap<String, String>(14, 1);
-
-		map.put("+", "$add");
-		map.put("-", "$subtract");
-		map.put("*", "$multiply");
-		map.put("/", "$divide");
-		map.put("%", "$mod");
-		map.put("^", "$pow");
-		map.put("==", "$eq");
-		map.put("!=", "$ne");
-		map.put(">", "$gt");
-		map.put(">=", "$gte");
-		map.put("<", "$lt");
-		map.put("<=", "$lte");
-
-		map.put("and", "$and");
-		map.put("or", "$or");
-
-		OPERATORS = Collections.unmodifiableMap(map);
-
-		Set<Class> set = new HashSet<Class>(12, 1);
-		set.add(OpMinus.class);
-		set.add(OpPlus.class);
-		set.add(OpMultiply.class);
-		set.add(OpDivide.class);
-		set.add(OpModulus.class);
-		set.add(OperatorPower.class);
-		set.add(OpNE.class);
-		set.add(OpEQ.class);
-		set.add(OpGT.class);
-		set.add(OpGE.class);
-		set.add(OpLT.class);
-		set.add(OpLE.class);
-
-		SUPPORTED_MATH_OPERATORS = Collections.unmodifiableSet(set);
-	}
+	private static final Set<Class> SUPPORTED_MATH_OPERATORS = Set.of(OpMinus.class, OpPlus.class, OpMultiply.class,
+			OpDivide.class, OpModulus.class, OperatorPower.class, OpNE.class, OpEQ.class, OpGT.class, OpGE.class, OpLT.class,
+			OpLE.class);
 
 	private final Operator operator;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,9 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -46,6 +48,7 @@ import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ReadPreference;
 import com.mongodb.client.result.DeleteResult;
 
 /**
@@ -57,11 +60,13 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  * @author Mehran Behnam
  * @author Jens Schauder
+ * @author Kirill Egorov
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
-	private final MongoOperations mongoOperations;
+	private @Nullable CrudMethodMetadata crudMethodMetadata;
 	private final MongoEntityInformation<T, ID> entityInformation;
+	private final MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
@@ -116,8 +121,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(id, "The given id must not be null");
 
+		Query query = getIdQuery(id);
+		getReadPreference().ifPresent(query::withReadPreference);
+
 		return Optional.ofNullable(
-				mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
+				mongoOperations.findOne(query, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
 	@Override
@@ -125,7 +133,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(id, "The given id must not be null");
 
-		return mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
+		Query query = getIdQuery(id);
+		getReadPreference().ifPresent(query::withReadPreference);
+
+		return mongoOperations.exists(query, entityInformation.getJavaType(),
 				entityInformation.getCollectionName());
 	}
 
@@ -144,7 +155,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	@Override
 	public long count() {
-		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
+
+		Query query = new Query();
+		getReadPreference().ifPresent(query::withReadPreference);
+		return mongoOperations.count(query, entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -152,7 +166,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(id, "The given id must not be null");
 
-		mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName());
+		Query query = getIdQuery(id);
+		getReadPreference().ifPresent(query::withReadPreference);
+		mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -175,7 +191,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(ids, "The given Iterable of ids must not be null");
 
-		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName());
+		Query query = getIdQuery(ids);
+		getReadPreference().ifPresent(query::withReadPreference);
+		mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -188,7 +206,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	@Override
 	public void deleteAll() {
-		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
+
+		Query query = new Query();
+		getReadPreference().ifPresent(query::withReadPreference);
+
+		mongoOperations.remove(query, entityInformation.getCollectionName());
 	}
 
 	// -------------------------------------------------------------------------
@@ -211,7 +233,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(sort, "Sort must not be null");
 
-		return findAll(new Query().with(sort));
+		Query query = new Query().with(sort);
+		return findAll(query);
 	}
 
 	// -------------------------------------------------------------------------
@@ -251,6 +274,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return Optional
 				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
@@ -270,6 +294,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()) //
 				.with(sort);
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -282,6 +307,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation()).with(pageable); //
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 
@@ -296,6 +322,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -307,6 +334,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Query query = new Query(new Criteria().alike(example)) //
 				.collation(entityInformation.getCollation());
+		getReadPreference().ifPresent(query::withReadPreference);
 
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -325,6 +353,26 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	// Utility methods
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Configures a custom {@link CrudMethodMetadata} to be used to detect {@link ReadPreference}s and query hints to be
+	 * applied to queries.
+	 *
+	 * @param crudMethodMetadata
+	 * @since 4.2
+	 */
+	void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
+		this.crudMethodMetadata = crudMethodMetadata;
+	}
+
+	private Optional<ReadPreference> getReadPreference() {
+
+		if (crudMethodMetadata == null) {
+			return Optional.empty();
+		}
+
+		return crudMethodMetadata.getReadPreference();
+	}
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
@@ -335,11 +383,13 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 
-		return new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		Query query = new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
+		getReadPreference().ifPresent(query::withReadPreference);
+		return query;
 	}
 
 	private static <E> Collection<E> toCollection(Iterable<E> ids) {
-		return ids instanceof Collection ? (Collection<E>) ids
+		return ids instanceof Collection<E> collection ? collection
 				: StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
 	}
 
@@ -349,6 +399,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return Collections.emptyList();
 		}
 
+		getReadPreference().ifPresent(query::withReadPreference);
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
@@ -361,17 +412,17 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	class FluentQueryByExample<S, T> extends FetchableFluentQuerySupport<Example<S>, T> {
 
 		FluentQueryByExample(Example<S> example, Class<T> resultType) {
-			this(example, Sort.unsorted(), resultType, Collections.emptyList());
+			this(example, Sort.unsorted(), 0, resultType, Collections.emptyList());
 		}
 
-		FluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
-			super(example, sort, resultType, fieldsToInclude);
+		FluentQueryByExample(Example<S> example, Sort sort, int limit, Class<T> resultType, List<String> fieldsToInclude) {
+			super(example, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
-		protected <R> FluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, Class<R> resultType,
+		protected <R> FluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, int limit, Class<R> resultType,
 				List<String> fieldsToInclude) {
-			return new FluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
+			return new FluentQueryByExample<>(predicate, sort, limit, resultType, fieldsToInclude);
 		}
 
 		@Override
@@ -387,6 +438,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		@Override
 		public List<T> all() {
 			return createQuery().all();
+		}
+
+		@Override
+		public Window<T> scroll(ScrollPosition scrollPosition) {
+			return createQuery().scroll(scrollPosition);
 		}
 
 		@Override
@@ -427,9 +483,13 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				query.with(getSort());
 			}
 
+			query.limit(getLimit());
+
 			if (!getFieldsToInclude().isEmpty()) {
-				query.fields().include(getFieldsToInclude().toArray(new String[0]));
+				query.fields().include(getFieldsToInclude());
 			}
+
+			getReadPreference().ifPresent(query::withReadPreference);
 
 			query = queryCustomizer.apply(query);
 
@@ -438,5 +498,4 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 
 	}
-
 }

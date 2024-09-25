@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,8 +113,8 @@ public class ChangeStreamRequest<T>
 		Assert.notNull(messageListener, "MessageListener must not be null");
 		Assert.notNull(options, "Options must not be null");
 
-		this.options = options instanceof ChangeStreamRequestOptions ? (ChangeStreamRequestOptions) options
-				: ChangeStreamRequestOptions.of(options);
+		this.options = options instanceof ChangeStreamRequestOptions changeStreamRequestOptions ?
+				changeStreamRequestOptions : ChangeStreamRequestOptions.of(options);
 
 		this.messageListener = messageListener;
 	}
@@ -131,7 +131,7 @@ public class ChangeStreamRequest<T>
 
 	/**
 	 * Obtain a shiny new {@link ChangeStreamRequestBuilder} and start defining your {@link ChangeStreamRequest} in this
-	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when your're done.
+	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link ChangeStreamRequest}.
 	 */
@@ -141,7 +141,7 @@ public class ChangeStreamRequest<T>
 
 	/**
 	 * Obtain a shiny new {@link ChangeStreamRequestBuilder} and start defining your {@link ChangeStreamRequest} in this
-	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when your're done.
+	 * fancy fluent way. Just don't forget to call {@link ChangeStreamRequestBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link ChangeStreamRequest}.
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.data.mongodb.test.util.CleanMongoDB.Struct;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 
 /**
  * @author Christoph Strobl
@@ -62,7 +63,7 @@ class CleanMongoDBTests {
 
 	@SuppressWarnings({ "serial", "unchecked" })
 	@BeforeEach
-	void setUp() {
+	void setUp() throws ClassNotFoundException {
 
 		// DB setup
 
@@ -73,13 +74,13 @@ class CleanMongoDBTests {
 		when(mongoClientMock.getDatabase(eq("db2"))).thenReturn(db2mock);
 
 		// collections have to exist
-		ListDatabasesIterable<String> collectionIterable = mock(ListDatabasesIterable.class);
+		MongoIterable<String> collectionIterable = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db1mock).collectionNameIterableType());
 		when(collectionIterable.into(any(Collection.class))).thenReturn(Arrays.asList("db1collection1", "db1collection2"));
-		when(db1mock.listCollectionNames()).thenReturn(collectionIterable);
+		doReturn(collectionIterable).when(db1mock).listCollectionNames();
 
-		ListDatabasesIterable<String> collectionIterable2 = mock(ListDatabasesIterable.class);
+		MongoIterable<String> collectionIterable2 = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db2mock).collectionNameIterableType());
 		when(collectionIterable2.into(any(Collection.class))).thenReturn(Collections.singletonList("db2collection1"));
-		when(db2mock.listCollectionNames()).thenReturn(collectionIterable2);
+		doReturn(collectionIterable2).when(db2mock).listCollectionNames();
 
 		// return collections according to names
 		when(db1mock.getCollection(eq("db1collection1"))).thenReturn(db1collection1mock);

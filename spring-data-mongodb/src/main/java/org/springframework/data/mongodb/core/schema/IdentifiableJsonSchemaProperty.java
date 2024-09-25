@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Timest
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link JsonSchemaProperty} implementation.
@@ -1139,7 +1140,9 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 				enc.append("bsonType", type.toBsonType().value()); // TODO: no samples with type -> is it bson type all the way?
 			}
 
-			enc.append("algorithm", algorithm);
+			if (StringUtils.hasText(algorithm)) {
+				enc.append("algorithm", algorithm);
+			}
 
 			propertySpecification.append("encrypt", enc);
 

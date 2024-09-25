@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,10 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
+import java.util.Map;
 
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
@@ -29,11 +30,13 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 
 /**
  * Unit tests for {@link EntityOperations}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 class EntityOperationsUnitTests {
 
@@ -61,6 +64,81 @@ class EntityOperationsUnitTests {
 		assertThat(initAdaptibleEntity(new DomainTypeWithIdProperty()).populateIdIfNecessary(null)).isNotNull();
 	}
 
+	@Test // GH-4308
+	void shouldExtractKeysFromEntity() {
+
+		WithNestedDocument object = new WithNestedDocument("foo");
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1),
+				WithNestedDocument.class);
+
+		assertThat(keys).containsEntry("id", "foo");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromDocument() {
+
+		Document object = new Document("id", "foo");
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("id", 1), Document.class);
+
+		assertThat(keys).containsEntry("id", "foo");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromNestedEntity() {
+
+		WithNestedDocument object = new WithNestedDocument("foo", new WithNestedDocument("bar"), null);
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("nested.id", 1),
+				WithNestedDocument.class);
+
+		assertThat(keys).containsEntry("nested.id", "bar");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromNestedEntityDocument() {
+
+		WithNestedDocument object = new WithNestedDocument("foo", new WithNestedDocument("bar"),
+				new Document("john", "doe"));
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1),
+				WithNestedDocument.class);
+
+		assertThat(keys).containsEntry("document.john", "doe");
+	}
+
+	@Test // GH-4308
+	void shouldExtractKeysFromNestedDocument() {
+
+		Document object = new Document("document", new Document("john", "doe"));
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("document.john", 1),
+				Document.class);
+
+		assertThat(keys).containsEntry("document.john", "doe");
+	}
+
+	@Test // GH-4308
+	void shouldExtractIdPropertyNameFromRawDocument() {
+
+		Document object = new Document("_id", "id-1").append("value", "val");
+
+		Map<String, Object> keys = operations.forEntity(object).extractKeys(new Document("value", 1), DomainTypeWithIdProperty.class);
+
+		assertThat(keys).containsEntry("id", "id-1");
+	}
+
+	@Test // GH-4308
+	void shouldExtractValuesFromProxy() {
+
+		ProjectionInterface source = new SpelAwareProxyProjectionFactory().createProjection(ProjectionInterface.class, new Document("_id", "id-1").append("value", "val"));
+
+		Map<String, Object> keys = operations.forEntity(source).extractKeys(new Document("value", 1), DomainTypeWithIdProperty.class);
+
+		assertThat(keys).isEqualTo(new Document("id", "id-1").append("value", "val"));
+	}
+
 	<T> EntityOperations.AdaptibleEntity<T> initAdaptibleEntity(T source) {
 		return operations.forEntity(source, conversionService);
 	}
@@ -79,5 +157,31 @@ class EntityOperationsUnitTests {
 	@TimeSeries(timeField = "time", metaField = "foo")
 	static class InvalidMetaField {
 		Instant time;
+	}
+
+	class WithNestedDocument {
+
+		String id;
+
+		WithNestedDocument nested;
+
+		Document document;
+
+		public WithNestedDocument() {}
+
+		public WithNestedDocument(String id) {
+			this.id = id;
+		}
+
+		public WithNestedDocument(String id, WithNestedDocument nested, Document document) {
+
+			this.id = id;
+			this.nested = nested;
+			this.document = document;
+		}
+	}
+
+	interface ProjectionInterface {
+		String getValue();
 	}
 }

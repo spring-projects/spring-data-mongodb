@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,59 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.util.Objects;
 
 /**
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@lombok.Data
-@AllArgsConstructor
-@NoArgsConstructor
 class City {
 
 	String name;
 	int population;
 
+	public City() {}
+
+	public City(String name, int population) {
+
+		this.name = name;
+		this.population = population;
+	}
+
 	public String toString() {
 		return "City [name=" + name + ", population=" + population + "]";
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public int getPopulation() {
+		return this.population;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setPopulation(int population) {
+		this.population = population;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		City city = (City) o;
+		return population == city.population && Objects.equals(name, city.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, population);
 	}
 }

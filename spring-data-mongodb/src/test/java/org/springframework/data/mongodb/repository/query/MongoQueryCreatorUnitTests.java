@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.repository.query.StubParameterAccessor.*;
@@ -25,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -271,6 +271,17 @@ class MongoQueryCreatorUnitTests {
 
 		Query query = creator.createQuery();
 		assertThat(query).isEqualTo(query(where("firstName").regex("^dave$", "i")));
+	}
+
+	@Test // GH-4404
+	void createsQueryWithFindByInClauseHavingIgnoreCaseCorrectly() {
+
+		PartTree tree = new PartTree("findAllByFirstNameInIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, List.of("da've", "carter")), context);
+
+		Query query = creator.createQuery();
+		assertThat(query).isEqualTo(query(where("firstName")
+				.in(List.of(new BsonRegularExpression("^\\Qda've\\E$", "i"), new BsonRegularExpression("^carter$", "i")))));
 	}
 
 	@Test // DATAMONGO-770

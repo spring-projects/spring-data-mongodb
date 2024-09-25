@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,6 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.util.Base64Utils;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.reactivestreams.client.MongoClients;
@@ -329,7 +329,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BsonBinarySubType.BINARY.getValue() + "'}}");
+				+ Base64.getEncoder().encodeToString(binaryData) + "', '$type' : '" + BsonBinarySubType.BINARY.getValue() + "'}}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
@@ -344,7 +344,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { $in: [{'$binary' : '"
-				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BsonBinarySubType.BINARY.getValue() + "'}] }}");
+				+ Base64.getEncoder().encodeToString(binaryData) + "', '$type' : '" + BsonBinarySubType.BINARY.getValue() + "'}] }}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}

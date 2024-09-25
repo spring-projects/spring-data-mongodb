@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	}
 
 	public boolean isTypeKey(String key) {
-		return typeKey == null ? false : typeKey.equals(key);
+		return typeKey != null && typeKey.equals(key);
 	}
 
 	@Override
@@ -177,10 +177,10 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 				return Alias.NONE;
 			}
 
-			if (source instanceof Document) {
-				return Alias.ofNullable(((Document) source).get(typeKey));
-			} else if (source instanceof DBObject) {
-				return Alias.ofNullable(((DBObject) source).get(typeKey));
+			if (source instanceof Document document) {
+				return Alias.ofNullable(document.get(typeKey));
+			} else if (source instanceof DBObject dbObject) {
+				return Alias.ofNullable(dbObject.get(typeKey));
 			}
 
 			throw new IllegalArgumentException("Cannot read alias from " + source.getClass());
@@ -190,10 +190,10 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 			if (typeKey != null) {
 
-				if (sink instanceof Document) {
-					((Document) sink).put(typeKey, alias);
-				} else if (sink instanceof DBObject) {
-					((DBObject) sink).put(typeKey, alias);
+				if (sink instanceof Document document) {
+					document.put(typeKey, alias);
+				} else if (sink instanceof DBObject dbObject) {
+					dbObject.put(typeKey, alias);
 				}
 			}
 		}

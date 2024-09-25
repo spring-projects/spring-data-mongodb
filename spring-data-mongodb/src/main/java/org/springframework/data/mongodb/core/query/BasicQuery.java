@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,6 +85,21 @@ public class BasicQuery extends Query {
 		this.sortObject = new Document();
 	}
 
+	/**
+	 * Create a BasicQuery given a {@link Query}. The resulting query is a copy of {@link Query}.
+	 *
+	 * @param query the query to copy.
+	 * @since 4.4
+	 */
+	public BasicQuery(Query query) {
+
+		super(query);
+		this.queryObject = query.getQueryObject();
+		this.setFieldsObject(query.getFieldsObject());
+		this.setSortObject(query.getSortObject());
+		this.setMeta(query.getMeta());
+	}
+
 	@Override
 	public Query addCriteria(CriteriaDefinition criteria) {
 
@@ -158,11 +173,9 @@ public class BasicQuery extends Query {
 			return true;
 		}
 
-		if (!(o instanceof BasicQuery)) {
+		if (!(o instanceof BasicQuery that)) {
 			return false;
 		}
-
-		BasicQuery that = (BasicQuery) o;
 
 		return querySettingsEquals(that) && //
 				nullSafeEquals(fieldsObject, that.fieldsObject) && //

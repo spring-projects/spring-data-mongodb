@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,14 @@ import java.util.HashMap;
 
 import org.springframework.lang.Nullable;
 
+import com.mongodb.MongoException;
+
 /**
- * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.err}.
+ * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.yml}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author SangHyuk Lee
  * @since 1.8
  */
 public final class MongoDbErrorCodes {
@@ -31,7 +34,7 @@ public final class MongoDbErrorCodes {
 	static HashMap<Integer, String> dataAccessResourceFailureCodes;
 	static HashMap<Integer, String> dataIntegrityViolationCodes;
 	static HashMap<Integer, String> duplicateKeyCodes;
-	static HashMap<Integer, String> invalidDataAccessApiUsageExeption;
+	static HashMap<Integer, String> invalidDataAccessApiUsageException;
 	static HashMap<Integer, String> permissionDeniedCodes;
 	static HashMap<Integer, String> clientSessionCodes;
 	static HashMap<Integer, String> transactionCodes;
@@ -68,37 +71,38 @@ public final class MongoDbErrorCodes {
 		duplicateKeyCodes.put(11000, "DuplicateKey");
 		duplicateKeyCodes.put(11001, "DuplicateKey");
 
-		invalidDataAccessApiUsageExeption = new HashMap<>(31, 1f);
-		invalidDataAccessApiUsageExeption.put(5, "GraphContainsCycle");
-		invalidDataAccessApiUsageExeption.put(9, "FailedToParse");
-		invalidDataAccessApiUsageExeption.put(14, "TypeMismatch");
-		invalidDataAccessApiUsageExeption.put(15, "Overflow");
-		invalidDataAccessApiUsageExeption.put(16, "InvalidLength");
-		invalidDataAccessApiUsageExeption.put(20, "IllegalOperation");
-		invalidDataAccessApiUsageExeption.put(21, "EmptyArrayOperation");
-		invalidDataAccessApiUsageExeption.put(22, "InvalidBSON");
-		invalidDataAccessApiUsageExeption.put(23, "AlreadyInitialized");
-		invalidDataAccessApiUsageExeption.put(29, "NonExistentPath");
-		invalidDataAccessApiUsageExeption.put(30, "InvalidPath");
-		invalidDataAccessApiUsageExeption.put(40, "ConflictingUpdateOperators");
-		invalidDataAccessApiUsageExeption.put(45, "UserDataInconsistent");
-		invalidDataAccessApiUsageExeption.put(52, "DollarPrefixedFieldName");
-		invalidDataAccessApiUsageExeption.put(53, "InvalidIdField");
-		invalidDataAccessApiUsageExeption.put(54, "NotSingleValueField");
-		invalidDataAccessApiUsageExeption.put(55, "InvalidDBRef");
-		invalidDataAccessApiUsageExeption.put(56, "EmptyFieldName");
-		invalidDataAccessApiUsageExeption.put(57, "DottedFieldName");
-		invalidDataAccessApiUsageExeption.put(59, "CommandNotFound");
-		invalidDataAccessApiUsageExeption.put(60, "DatabaseNotFound");
-		invalidDataAccessApiUsageExeption.put(61, "ShardKeyNotFound");
-		invalidDataAccessApiUsageExeption.put(62, "OplogOperationUnsupported");
-		invalidDataAccessApiUsageExeption.put(66, "ImmutableField");
-		invalidDataAccessApiUsageExeption.put(72, "InvalidOptions");
-		invalidDataAccessApiUsageExeption.put(115, "CommandNotSupported");
-		invalidDataAccessApiUsageExeption.put(116, "DocTooLargeForCapped");
-		invalidDataAccessApiUsageExeption.put(130, "SymbolNotFound");
-		invalidDataAccessApiUsageExeption.put(17280, "KeyTooLong");
-		invalidDataAccessApiUsageExeption.put(13334, "ShardKeyTooBig");
+		invalidDataAccessApiUsageException = new HashMap<>(31, 1f);
+		invalidDataAccessApiUsageException.put(5, "GraphContainsCycle");
+		invalidDataAccessApiUsageException.put(9, "FailedToParse");
+		invalidDataAccessApiUsageException.put(14, "TypeMismatch");
+		invalidDataAccessApiUsageException.put(15, "Overflow");
+		invalidDataAccessApiUsageException.put(16, "InvalidLength");
+		invalidDataAccessApiUsageException.put(20, "IllegalOperation");
+		invalidDataAccessApiUsageException.put(21, "EmptyArrayOperation");
+		invalidDataAccessApiUsageException.put(22, "InvalidBSON");
+		invalidDataAccessApiUsageException.put(23, "AlreadyInitialized");
+		invalidDataAccessApiUsageException.put(29, "NonExistentPath");
+		invalidDataAccessApiUsageException.put(30, "InvalidPath");
+		invalidDataAccessApiUsageException.put(40, "ConflictingUpdateOperators");
+		invalidDataAccessApiUsageException.put(45, "UserDataInconsistent");
+		invalidDataAccessApiUsageException.put(52, "DollarPrefixedFieldName");
+		invalidDataAccessApiUsageException.put(53, "InvalidIdField");
+		invalidDataAccessApiUsageException.put(54, "NotSingleValueField");
+		invalidDataAccessApiUsageException.put(55, "InvalidDBRef");
+		invalidDataAccessApiUsageException.put(56, "EmptyFieldName");
+		invalidDataAccessApiUsageException.put(57, "DottedFieldName");
+		invalidDataAccessApiUsageException.put(59, "CommandNotFound");
+		invalidDataAccessApiUsageException.put(60, "DatabaseNotFound");
+		invalidDataAccessApiUsageException.put(61, "ShardKeyNotFound");
+		invalidDataAccessApiUsageException.put(62, "OplogOperationUnsupported");
+		invalidDataAccessApiUsageException.put(66, "ImmutableField");
+		invalidDataAccessApiUsageException.put(72, "InvalidOptions");
+		invalidDataAccessApiUsageException.put(115, "CommandNotSupported");
+		invalidDataAccessApiUsageException.put(116, "DocTooLargeForCapped");
+		invalidDataAccessApiUsageException.put(10003, "CannotGrowDocumentInCappedNamespace");
+		invalidDataAccessApiUsageException.put(130, "SymbolNotFound");
+		invalidDataAccessApiUsageException.put(17280, "KeyTooLong");
+		invalidDataAccessApiUsageException.put(13334, "ShardKeyTooBig");
 
 		permissionDeniedCodes = new HashMap<>(8, 1f);
 		permissionDeniedCodes.put(11, "UserNotFound");
@@ -113,50 +117,126 @@ public final class MongoDbErrorCodes {
 		clientSessionCodes = new HashMap<>(4, 1f);
 		clientSessionCodes.put(206, "NoSuchSession");
 		clientSessionCodes.put(213, "DuplicateSession");
+		clientSessionCodes.put(217, "IncompleteTransactionHistory");
+		clientSessionCodes.put(225, "TransactionTooOld");
 		clientSessionCodes.put(228, "SessionTransferIncomplete");
+		clientSessionCodes.put(244, "TransactionAborted");
+		clientSessionCodes.put(251, "NoSuchTransaction");
+		clientSessionCodes.put(256, "TransactionCommitted");
+		clientSessionCodes.put(257, "TransactionToLarge");
+		clientSessionCodes.put(261, "TooManyLogicalSessions");
+		clientSessionCodes.put(263, "OperationNotSupportedInTransaction");
 		clientSessionCodes.put(264, "TooManyLogicalSessions");
 
-		transactionCodes = new HashMap<>(8, 1f);
-		transactionCodes.put(217, "IncompleteTransactionHistory");
-		transactionCodes.put(225, "TransactionTooOld");
-		transactionCodes.put(244, "TransactionAborted");
-		transactionCodes.put(251, "NoSuchTransaction");
-		transactionCodes.put(256, "TransactionCommitted");
-		transactionCodes.put(257, "TransactionToLarge");
-		transactionCodes.put(263, "OperationNotSupportedInTransaction");
-		transactionCodes.put(267, "PreparedTransactionInProgress");
-
-		errorCodes = new HashMap<>();
+		errorCodes = new HashMap<>(
+				dataAccessResourceFailureCodes.size() + dataIntegrityViolationCodes.size() + duplicateKeyCodes.size()
+						+ invalidDataAccessApiUsageException.size() + permissionDeniedCodes.size() + clientSessionCodes.size(),
+				1f);
 		errorCodes.putAll(dataAccessResourceFailureCodes);
 		errorCodes.putAll(dataIntegrityViolationCodes);
 		errorCodes.putAll(duplicateKeyCodes);
-		errorCodes.putAll(invalidDataAccessApiUsageExeption);
+		errorCodes.putAll(invalidDataAccessApiUsageException);
 		errorCodes.putAll(permissionDeniedCodes);
 		errorCodes.putAll(clientSessionCodes);
 	}
 
+	@Nullable
+	public static String getErrorDescription(@Nullable Integer errorCode) {
+		return errorCode == null ? null : errorCodes.get(errorCode);
+	}
+
 	public static boolean isDataIntegrityViolationCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : dataIntegrityViolationCodes.containsKey(errorCode);
+		return errorCode != null && dataIntegrityViolationCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isDataIntegrityViolationError(Exception exception) {
+
+		if (exception instanceof MongoException me) {
+			return isDataIntegrityViolationCode(me.getCode());
+		}
+		return false;
 	}
 
 	public static boolean isDataAccessResourceFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : dataAccessResourceFailureCodes.containsKey(errorCode);
+		return errorCode != null && dataAccessResourceFailureCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isDataAccessResourceError(Exception exception) {
+
+		if (exception instanceof MongoException me) {
+			return isDataAccessResourceFailureCode(me.getCode());
+		}
+		return false;
 	}
 
 	public static boolean isDuplicateKeyCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : duplicateKeyCodes.containsKey(errorCode);
+		return errorCode != null && duplicateKeyCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isDuplicateKeyError(Exception exception) {
+
+		if (exception instanceof MongoException me) {
+			return isDuplicateKeyCode(me.getCode());
+		}
+		return false;
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isDataDuplicateKeyError(Exception exception) {
+		return isDuplicateKeyError(exception);
 	}
 
 	public static boolean isPermissionDeniedCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : permissionDeniedCodes.containsKey(errorCode);
+		return errorCode != null && permissionDeniedCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isPermissionDeniedError(Exception exception) {
+
+		if (exception instanceof MongoException) {
+			return isPermissionDeniedCode(((MongoException) exception).getCode());
+		}
+		return false;
 	}
 
 	public static boolean isInvalidDataAccessApiUsageCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : invalidDataAccessApiUsageExeption.containsKey(errorCode);
+		return errorCode != null && invalidDataAccessApiUsageException.containsKey(errorCode);
 	}
 
-	public static String getErrorDescription(@Nullable Integer errorCode) {
-		return errorCode == null ? null : errorCodes.get(errorCode);
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isInvalidDataAccessApiUsageError(Exception exception) {
+
+		if (exception instanceof MongoException me) {
+			return isInvalidDataAccessApiUsageCode(me.getCode());
+		}
+		return false;
 	}
 
 	/**
@@ -167,7 +247,7 @@ public final class MongoDbErrorCodes {
 	 * @since 2.1
 	 */
 	public static boolean isClientSessionFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : clientSessionCodes.containsKey(errorCode);
+		return errorCode != null && clientSessionCodes.containsKey(errorCode);
 	}
 
 	/**
@@ -178,6 +258,19 @@ public final class MongoDbErrorCodes {
 	 * @since 2.1
 	 */
 	public static boolean isTransactionFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : transactionCodes.containsKey(errorCode);
+		return errorCode != null && transactionCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 4.4
+	 */
+	public static boolean isClientSessionFailure(Exception exception) {
+
+		if (exception instanceof MongoException me) {
+			return isClientSessionFailureCode(me.getCode());
+		}
+		return false;
 	}
 }

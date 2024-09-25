@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,6 +139,13 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 				.findAll(person.lastname.startsWith(oliver.getLastname()).and(person.firstname.startsWith(dave.getFirstname())),
 						Pageable.unpaged())
 				.getContent()).containsExactly(dave);
+	}
+
+	@Test // GH-4771
+	public void findUnpagedPage() {
+
+		assertThat(repository.findAll(person.lastname.isNotNull(), Pageable.unpaged(Sort.by("firstname"))))
+				.containsExactly(carter, dave, oliver);
 	}
 
 	@Test // DATAMONGO-362, DATAMONGO-1848

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,8 +84,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 			return null;
 		}
 
-		if (value instanceof double[]) {
-			double[] typedValue = (double[]) value;
+		if (value instanceof double[] typedValue) {
 			if (typedValue.length != 2) {
 				throw new IllegalArgumentException("The given double[] must have exactly 2 elements");
 			} else {
@@ -107,16 +106,16 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 
 		Assert.notNull(fullText, "Fulltext parameter must not be 'null'.");
 
-		if (fullText instanceof String) {
-			return TextCriteria.forDefaultLanguage().matching((String) fullText);
+		if (fullText instanceof String stringValue) {
+			return TextCriteria.forDefaultLanguage().matching(stringValue);
 		}
 
-		if (fullText instanceof Term) {
-			return TextCriteria.forDefaultLanguage().matching((Term) fullText);
+		if (fullText instanceof Term term) {
+			return TextCriteria.forDefaultLanguage().matching(term);
 		}
 
-		if (fullText instanceof TextCriteria) {
-			return ((TextCriteria) fullText);
+		if (fullText instanceof TextCriteria textCriteria) {
+			return textCriteria;
 		}
 
 		throw new IllegalArgumentException(

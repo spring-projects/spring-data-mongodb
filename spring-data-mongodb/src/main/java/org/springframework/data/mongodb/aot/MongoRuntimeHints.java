@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the original author or authors.
+ * Copyright 2022-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,14 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCal
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerAddress;
+import com.mongodb.UnixServerAddress;
+import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
+
 /**
  * {@link RuntimeHintsRegistrar} for repository types and entity callbacks.
  *
@@ -53,6 +61,7 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 						MemberCategory.INVOKE_PUBLIC_METHODS));
 
 		registerTransactionProxyHints(hints, classLoader);
+		registerMongoCompatibilityAdapterHints(hints, classLoader);
 
 		if (isReactorPresent()) {
 
@@ -62,13 +71,13 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 							TypeReference.of(ReactiveAfterSaveCallback.class)),
 							builder -> builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 									MemberCategory.INVOKE_PUBLIC_METHODS));
-
 		}
 	}
 
 	private static void registerTransactionProxyHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
-		if (MongoAotPredicates.isSyncClientPresent(classLoader) && ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
+		if (MongoAotPredicates.isSyncClientPresent(classLoader)
+				&& ClassUtils.isPresent("org.springframework.aop.SpringProxy", classLoader)) {
 
 			hints.proxies().registerJdkProxy(TypeReference.of("com.mongodb.client.MongoDatabase"),
 					TypeReference.of("org.springframework.aop.SpringProxy"),
@@ -78,4 +87,43 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 					TypeReference.of("org.springframework.core.DecoratingProxy"));
 		}
 	}
+
+	@SuppressWarnings("deprecation")
+	private static void registerMongoCompatibilityAdapterHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+
+		hints.reflection() //
+				.registerType(MongoClientSettings.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+				.registerType(MongoClientSettings.Builder.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+				.registerType(IndexOptions.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+				.registerType(ServerAddress.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+				.registerType(UnixServerAddress.class, MemberCategory.INVOKE_PUBLIC_METHODS) //
+				.registerType(TypeReference.of("com.mongodb.connection.StreamFactoryFactory"),
+						MemberCategory.INTROSPECT_PUBLIC_METHODS)
+				.registerType(TypeReference.of("com.mongodb.internal.connection.StreamFactoryFactory"),
+						MemberCategory.INTROSPECT_PUBLIC_METHODS)
+				.registerType(TypeReference.of("com.mongodb.internal.build.MongoDriverVersion"), MemberCategory.PUBLIC_FIELDS);
+
+		if (MongoAotPredicates.isSyncClientPresent(classLoader)) {
+
+			hints.reflection() //
+					.registerType(MongoDatabase.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(TypeReference.of("com.mongodb.client.internal.MongoDatabaseImpl"),
+							MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(MapReduceIterable.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(TypeReference.of("com.mongodb.client.internal.MapReduceIterableImpl"),
+							MemberCategory.INVOKE_PUBLIC_METHODS);
+		}
+
+		if (MongoAotPredicates.isReactiveClientPresent(classLoader)) {
+
+			hints.reflection() //
+					.registerType(com.mongodb.reactivestreams.client.MongoDatabase.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(TypeReference.of("com.mongodb.reactivestreams.client.internal.MongoDatabaseImpl"),
+							MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(MapReducePublisher.class, MemberCategory.INVOKE_PUBLIC_METHODS)
+					.registerType(TypeReference.of("com.mongodb.reactivestreams.client.internal.MapReducePublisherImpl"),
+							MemberCategory.INVOKE_PUBLIC_METHODS);
+		}
+	}
+
 }

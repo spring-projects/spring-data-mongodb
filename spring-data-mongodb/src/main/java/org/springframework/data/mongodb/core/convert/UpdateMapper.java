@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,17 +161,17 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {
-		Object value = null;
+		Object value;
 
-		if (rawValue instanceof Modifier) {
+		if (rawValue instanceof Modifier modifier) {
 
-			value = getMappedValue(field, (Modifier) rawValue);
+			value = getMappedValue(field, modifier);
 
-		} else if (rawValue instanceof Modifiers) {
+		} else if (rawValue instanceof Modifiers modifiers) {
 
 			Document modificationOperations = new Document();
 
-			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
+			for (Modifier modifier : modifiers.getModifiers()) {
 				modificationOperations.putAll(getMappedValue(field, modifier));
 			}
 

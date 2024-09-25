@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,17 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
 
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -34,6 +33,8 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.data.mongodb.core.mapping.MongoField.MongoFieldBuilder;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
@@ -57,20 +58,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private static final Log LOG = LogFactory.getLog(BasicMongoPersistentProperty.class);
 
-	public static final String ID_FIELD_NAME = "_id";
+	public static final String ID_FIELD_NAME = FieldName.ID.name();
 	private static final String LANGUAGE_FIELD_NAME = "language";
-	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
-	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
-
-	static {
-
-		SUPPORTED_ID_TYPES.add(ObjectId.class);
-		SUPPORTED_ID_TYPES.add(String.class);
-		SUPPORTED_ID_TYPES.add(BigInteger.class);
-
-		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
-	}
+	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = Set.of("id", ID_FIELD_NAME);
 
 	private final FieldNamingStrategy fieldNamingStrategy;
 
@@ -88,25 +78,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		super(property, owner, simpleTypeHolder);
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
-
-		if (isIdProperty() && hasExplicitFieldName()) {
-
-			String annotatedName = getAnnotatedFieldName();
-			if (!ID_FIELD_NAME.equals(annotatedName)) {
-				if(LOG.isWarnEnabled()) {
-					LOG.warn(String.format(
-							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
-							owner.getName(), getName(), annotatedName));
-				}
-			}
-		}
 	}
 
 	/**
 	 * Also considers fields as id that are of supported id type and name.
 	 *
 	 * @see #SUPPORTED_ID_PROPERTY_NAMES
-	 * @see #SUPPORTED_ID_TYPES
 	 */
 	@Override
 	public boolean isIdProperty() {
@@ -130,31 +107,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 *
 	 * @return
 	 */
+	@Override
 	public String getFieldName() {
-
-		if (isIdProperty()) {
-
-			if (getOwner().getIdProperty() == null) {
-				return ID_FIELD_NAME;
-			}
-
-			if (getOwner().isIdProperty(this)) {
-				return ID_FIELD_NAME;
-			}
-		}
-
-		if (hasExplicitFieldName()) {
-			return getAnnotatedFieldName();
-		}
-
-		String fieldName = fieldNamingStrategy.getFieldName(this);
-
-		if (!StringUtils.hasText(fieldName)) {
-			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s",
-					this, fieldNamingStrategy.getClass()));
-		}
-
-		return fieldName;
+		return getMongoField().getName().name();
 	}
 
 	@Override
@@ -175,7 +130,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			return FieldType.OBJECT_ID.getJavaClass();
 		}
 
-		FieldType fieldType = fieldAnnotation.targetType();
+		FieldType fieldType = getMongoField().getFieldType();
 		if (fieldType == FieldType.IMPLICIT) {
 
 			if (isEntity()) {
@@ -193,6 +148,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 *         {@link org.springframework.data.mongodb.core.mapping.Field#value()} present.
 	 * @since 1.7
 	 */
+	@Override
 	public boolean hasExplicitFieldName() {
 		return StringUtils.hasText(getAnnotatedFieldName());
 	}
@@ -206,12 +162,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null ? annotation.value() : null;
 	}
 
+	@Override
 	public int getFieldOrder() {
-
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
-				org.springframework.data.mongodb.core.mapping.Field.class);
-
-		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
+		return getMongoField().getOrder();
 	}
 
 	@Override
@@ -225,9 +178,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	@Override
 	protected Association<MongoPersistentProperty> createAssociation() {
-		return new Association<MongoPersistentProperty>(this, null);
+		return new Association<>(this, null);
 	}
 
+	@Override
 	public boolean isDbReference() {
 		return isAnnotationPresent(DBRef.class);
 	}
@@ -237,6 +191,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return isAnnotationPresent(DocumentReference.class);
 	}
 
+	@Override
 	@Nullable
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
@@ -256,7 +211,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	@Override
 	public boolean isExplicitLanguageProperty() {
 		return isAnnotationPresent(Language.class);
-	};
+	}
 
 	@Override
 	public boolean isTextScoreProperty() {
@@ -272,10 +227,34 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public EvaluationContext getEvaluationContext(@Nullable Object rootObject) {
 
-		if (getOwner() instanceof BasicMongoPersistentEntity) {
-			return ((BasicMongoPersistentEntity) getOwner()).getEvaluationContext(rootObject);
+		if (getOwner() instanceof BasicMongoPersistentEntity mongoPersistentEntity) {
+			return mongoPersistentEntity.getEvaluationContext(rootObject);
 		}
 		return rootObject != null ? new StandardEvaluationContext(rootObject) : new StandardEvaluationContext();
+	}
+
+	/**
+	 * Obtain the {@link EvaluationContext} for a specific root object.
+	 *
+	 * @param rootObject can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.3
+	 */
+	public ValueEvaluationContext getValueEvaluationContext(@Nullable Object rootObject) {
+
+		if (getOwner() instanceof BasicMongoPersistentEntity mongoPersistentEntity) {
+			return mongoPersistentEntity.getValueEvaluationContext(rootObject);
+		}
+
+		StandardEvaluationContext standardEvaluationContext = rootObject != null ? new StandardEvaluationContext(rootObject)
+				: new StandardEvaluationContext();
+
+		return ValueEvaluationContext.of(new StandardEnvironment(), standardEvaluationContext);
+	}
+
+	@Override
+	public MongoField getMongoField() {
+		return doGetMongoField();
 	}
 
 	@Override
@@ -302,4 +281,72 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 		return target;
 	}
+
+	protected MongoField doGetMongoField() {
+
+		MongoFieldBuilder builder = MongoField.builder();
+		if (isAnnotationPresent(Field.class) && Type.KEY.equals(findAnnotation(Field.class).nameType())) {
+			builder.name(doGetFieldName());
+		} else {
+			builder.path(doGetFieldName());
+		}
+		builder.fieldType(doGetFieldType());
+		builder.order(doGetFieldOrder());
+		return builder.build();
+	}
+
+	private String doGetFieldName() {
+
+		if (isIdProperty()) {
+
+			if (getOwner().getIdProperty() == null) {
+				return ID_FIELD_NAME;
+			}
+
+			if (getOwner().isIdProperty(this)) {
+				return ID_FIELD_NAME;
+			}
+		}
+
+		if (hasExplicitFieldName()) {
+			return getAnnotatedFieldName();
+		}
+
+		String fieldName = fieldNamingStrategy.getFieldName(this);
+
+		if (!StringUtils.hasText(fieldName)) {
+			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s",
+					this, fieldNamingStrategy.getClass()));
+		}
+
+		return fieldName;
+	}
+
+	private FieldType doGetFieldType() {
+
+		Field fieldAnnotation = findAnnotation(Field.class);
+		return fieldAnnotation != null ? fieldAnnotation.targetType() : FieldType.IMPLICIT;
+	}
+
+	private int doGetFieldOrder() {
+
+		Field annotation = findAnnotation(Field.class);
+		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
+	}
+
+	protected void validate() {
+
+		if (isIdProperty() && hasExplicitFieldName()) {
+
+			String annotatedName = getAnnotatedFieldName();
+			if (!ID_FIELD_NAME.equals(annotatedName)) {
+				if (LOG.isWarnEnabled()) {
+					LOG.warn(String.format(
+							"Customizing field name for id property '%s.%s' is not allowed; Custom name ('%s') will not be considered",
+							getOwner().getName(), getName(), annotatedName));
+				}
+			}
+		}
+	}
+
 }

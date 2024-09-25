@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
 import reactor.test.StepVerifier;
+
+import java.util.Objects;
 
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
@@ -258,21 +259,99 @@ class ReactiveUpdateOperationSupportTests {
 		return query(where("id").is(han.getId()));
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
+
 		@Id String id;
 		String firstname;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname);
+		}
+
+		public String toString() {
+			return "ReactiveUpdateOperationSupportTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ")";
+		}
 	}
 
-	@Data
 	static class Human {
+
 		@Id String id;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String toString() {
+			return "ReactiveUpdateOperationSupportTests.Human(id=" + this.getId() + ")";
+		}
 	}
 
-	@Data
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Jedi jedi = (Jedi) o;
+			return Objects.equals(name, jedi.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
+
+		public String toString() {
+			return "ReactiveUpdateOperationSupportTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 }

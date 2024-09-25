@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,9 @@ package org.springframework.data.mongodb.core;
  * @author Christoph Strobl
  * @since 2.1
  */
-public class FindAndReplaceOptions {
+public class FindAndReplaceOptions extends ReplaceOptions {
 
 	private boolean returnNew;
-	private boolean upsert;
 
 	private static final FindAndReplaceOptions NONE = new FindAndReplaceOptions() {
 
@@ -109,7 +108,7 @@ public class FindAndReplaceOptions {
 	 */
 	public FindAndReplaceOptions upsert() {
 
-		this.upsert = true;
+		super.upsert();
 		return this;
 	}
 
@@ -120,15 +119,6 @@ public class FindAndReplaceOptions {
 	 */
 	public boolean isReturnNew() {
 		return returnNew;
-	}
-
-	/**
-	 * Get the bit indicating if to create a new document if not exists.
-	 *
-	 * @return {@literal true} if set.
-	 */
-	public boolean isUpsert() {
-		return upsert;
 	}
 
 }

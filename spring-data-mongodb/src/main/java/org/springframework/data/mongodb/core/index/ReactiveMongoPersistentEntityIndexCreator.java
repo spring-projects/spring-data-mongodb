@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,8 +130,8 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 			String collection = entity.getCollection();
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
-				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
-						? (IndexDefinitionHolder) indexDefinition
+				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder definitionHolder
+						? definitionHolder
 						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				publishers.add(createIndex(indexToCreate));
@@ -187,8 +187,8 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 
 		if (t instanceof UncategorizedMongoDbException) {
 
-			return t.getCause() instanceof MongoException
-					&& MongoDbErrorCodes.isDataIntegrityViolationCode(((MongoException) t.getCause()).getCode());
+			return t.getCause() instanceof MongoException mongoException
+					&& MongoDbErrorCodes.isDataIntegrityViolationCode(mongoException.getCode());
 		}
 
 		return false;

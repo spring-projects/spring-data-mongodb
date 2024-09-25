@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 
 	@Override
 	public Object getFileId() {
-		return id instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) id) : id;
+		return id instanceof BsonValue bsonValue ? BsonUtils.toJavaType(bsonValue) : id;
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 
 	/**
 	 * Obtain the data as {@link InputStream}. <br />
-	 * <strong>NOTE</strong> Buffers data in memory. Use {@link #getDownloadStream()} for large files.
+	 * <strong>NOTE:</strong> Buffers data in memory. Use {@link #getDownloadStream()} for large files.
 	 *
 	 * @throws IllegalStateException if the underlying {@link Publisher} has already been consumed.
 	 * @see org.springframework.core.io.InputStreamResource#getInputStream()

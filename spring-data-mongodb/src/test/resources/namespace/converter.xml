@@ -13,6 +13,8 @@
 	
 	<mongo:mapping-converter id="abbreviatingConverter" abbreviate-field-names="true" />
 	
+	<mongo:mapping-converter id="autoIndexCreationConverter" db-factory-ref="factory" auto-index-creation="true" />
+	
 	<bean name="customMongoTypeMapper" class="org.springframework.data.mongodb.config.CustomMongoTypeMapper"/>
 
 </beans>

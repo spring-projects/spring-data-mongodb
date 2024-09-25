@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,12 +66,22 @@ public class MongoRegexCreatorUnitTests {
 		parameter.check();
 	}
 
-	@lombok.RequiredArgsConstructor(staticName = "test")
 	static class TestParameter {
 
 		private final String source;
 		private final MatchMode mode;
 		private final String expectedResult, comment;
+
+		private TestParameter(String source, MatchMode mode, String expectedResult, String comment) {
+			this.source = source;
+			this.mode = mode;
+			this.expectedResult = expectedResult;
+			this.comment = comment;
+		}
+
+		public static TestParameter test(String source, MatchMode mode, String expectedResult, String comment) {
+			return new TestParameter(source, mode, expectedResult, comment);
+		}
 
 		void check() {
 

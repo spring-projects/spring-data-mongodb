@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import com.mongodb.BasicDBList;
  *
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Jongwoo Han
  */
 public abstract class DocumentTestUtils {
 
@@ -38,7 +39,7 @@ public abstract class DocumentTestUtils {
 	 * Expects the field with the given key to be not {@literal null} and a {@link Document} in turn and returns it.
 	 *
 	 * @param source the {@link Document} to lookup the nested one
-	 * @param key the key of the field to lokup the nested {@link Document}
+	 * @param key the key of the field to lookup the nested {@link Document}
 	 * @return
 	 */
 	public static Document getAsDocument(Document source, String key) {

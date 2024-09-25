@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.util.json;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +24,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
@@ -207,6 +206,46 @@ class ParameterBindingJsonReaderUnitTests {
 		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", time);
 
 		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + time + " } } } "));
+	}
+
+	@Test // GH-3750
+	public void shouldParseISODate() {
+
+		String json = "{ 'value' : ISODate(\"1970-01-01T00:00:00Z\") }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isZero();
+	}
+
+	@Test // GH-3750
+	public void shouldParseISODateWith24HourTimeSpecification() {
+
+		String json = "{ 'value' : ISODate(\"2013-10-04T12:07:30.443Z\") }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isEqualTo(1380888450443L);
+	}
+
+	@Test // GH-3750
+	public void shouldParse$date() {
+
+		String json = "{ 'value' : { \"$date\" : \"2015-04-16T14:55:57.626Z\" } }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isEqualTo(1429196157626L);
+	}
+
+	@Test // GH-3750
+	public void shouldParse$dateWithTimeOffset() {
+
+		String json = "{ 'value' :{ \"$date\" : \"2015-04-16T16:55:57.626+02:00\" } }";
+		Date value = parse(json).get("value", Date.class);
+		assertThat(value.getTime()).isEqualTo(1429196157626L);
+	}
+
+	@Test // GH-4282
+	public void shouldReturnNullAsSuch() {
+
+		String json = "{ 'value' : ObjectId(?0) }";
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> parse(json, new Object[] { null }))
+				.withMessageContaining("hexString");
 	}
 
 	@Test // DATAMONGO-2418
@@ -484,7 +523,6 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(new Document("parent", null));
 	}
 
-
 	@Test // GH-4089
 	void retainsSpelArgumentTypeViaArgumentIndex() {
 
@@ -547,6 +585,23 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target.get("arg0")).isEqualTo(source);
 	}
 
+	@Test // GH-3750
+	void shouldParseUUIDasStandardRepresentation() {
+
+		String json = "{ 'value' : UUID(\"b5f21e0c-2a0d-42d6-ad03-d827008d8ab6\") }";
+
+		BsonBinary value = parse(json).get("value", BsonBinary.class);
+		assertThat(value.getType()).isEqualTo(BsonBinarySubType.UUID_STANDARD.getValue());
+	}
+
+	@Test // GH-3750
+	public void shouldParse$uuidAsStandardRepresentation() {
+
+		String json = "{ 'value' : { '$uuid' : \"73ff-d26444b-34c6-990e8e-7d1dfc035d4\" } } }";
+		BsonBinary value = parse(json).get("value", BsonBinary.class);
+		assertThat(value.getType()).isEqualTo(BsonBinarySubType.UUID_STANDARD.getValue());
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
@@ -567,16 +622,46 @@ class ParameterBindingJsonReaderUnitTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	public static class DummySecurityObject {
+
 		DummyWithId principal;
+
+		public DummySecurityObject(DummyWithId principal) {
+			this.principal = principal;
+		}
+
+		public DummyWithId getPrincipal() {
+			return this.principal;
+		}
+
+		public void setPrincipal(DummyWithId principal) {
+			this.principal = principal;
+		}
+
+		public String toString() {
+			return "ParameterBindingJsonReaderUnitTests.DummySecurityObject(principal=" + this.getPrincipal() + ")";
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
 	public static class DummyWithId {
+
 		String id;
+
+		public DummyWithId(String id) {
+			this.id = id;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String toString() {
+			return "ParameterBindingJsonReaderUnitTests.DummyWithId(id=" + this.getId() + ")";
+		}
 	}
 
 }

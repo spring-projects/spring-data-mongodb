@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -86,8 +83,8 @@ public class GeoJsonTests {
 
 		@Override
 		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
-			return new HashSet<>(Arrays.asList(Venue2DSphere.class, VenueWithDistanceField.class, OpenGeoJson.class,
-					DocumentWithPropertyUsingGeoJsonType.class));
+			return Set.of(Venue2DSphere.class, VenueWithDistanceField.class, OpenGeoJson.class,
+					DocumentWithPropertyUsingGeoJsonType.class);
 		}
 	}
 
@@ -593,18 +590,58 @@ public class GeoJsonTests {
 		GeoJsonGeometryCollection geoJsonGeometryCollection;
 	}
 
-	@Data
 	@Document("geo-json-shapes")
 	static class ConcreteGeoJson {
+
 		String id;
 		GeoJsonPolygon shape;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public GeoJsonPolygon getShape() {
+			return this.shape;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setShape(GeoJsonPolygon shape) {
+			this.shape = shape;
+		}
+
+		public String toString() {
+			return "GeoJsonTests.ConcreteGeoJson(id=" + this.getId() + ", shape=" + this.getShape() + ")";
+		}
 	}
 
-	@Data
 	@Document("geo-json-shapes")
 	static class OpenGeoJson {
+
 		String id;
 		GeoJson shape;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public GeoJson getShape() {
+			return this.shape;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setShape(GeoJson shape) {
+			this.shape = shape;
+		}
+
+		public String toString() {
+			return "GeoJsonTests.OpenGeoJson(id=" + this.getId() + ", shape=" + this.getShape() + ")";
+		}
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
@@ -39,13 +40,15 @@ import org.springframework.lang.Nullable;
 public class ParameterBindingContext {
 
 	private final ValueProvider valueProvider;
-	private final SpELExpressionEvaluator expressionEvaluator;
+	private final ValueExpressionEvaluator expressionEvaluator;
 
 	/**
 	 * @param valueProvider
 	 * @param expressionParser
 	 * @param evaluationContext
+	 * @deprecated since 4.3, use {@link #ParameterBindingContext(ValueProvider, ExpressionParser, Supplier)} instead.
 	 */
+	@Deprecated(since = "4.3")
 	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
 			EvaluationContext evaluationContext) {
 		this(valueProvider, expressionParser, () -> evaluationContext);
@@ -59,15 +62,31 @@ public class ParameterBindingContext {
 	 */
 	public ParameterBindingContext(ValueProvider valueProvider, ExpressionParser expressionParser,
 			Supplier<EvaluationContext> evaluationContext) {
-		this(valueProvider, new EvaluationContextExpressionEvaluator(valueProvider, expressionParser, evaluationContext));
+		this(valueProvider, new EvaluationContextExpressionEvaluator(valueProvider, expressionParser) {
+			@Override
+			public EvaluationContext getEvaluationContext(String expressionString) {
+				return evaluationContext.get();
+			}
+		});
 	}
 
 	/**
 	 * @param valueProvider
 	 * @param expressionEvaluator
 	 * @since 3.1
+	 * @deprecated since 4.3, use {@link #ParameterBindingContext(ValueProvider, ValueExpressionEvaluator)} instead.
 	 */
+	@Deprecated(since = "4.3")
 	public ParameterBindingContext(ValueProvider valueProvider, SpELExpressionEvaluator expressionEvaluator) {
+		this(valueProvider, (ValueExpressionEvaluator) expressionEvaluator);
+	}
+
+	/**
+	 * @param valueProvider
+	 * @param expressionEvaluator
+	 * @since 4.3
+	 */
+	public ParameterBindingContext(ValueProvider valueProvider, ValueExpressionEvaluator expressionEvaluator) {
 		this.valueProvider = valueProvider;
 		this.expressionEvaluator = expressionEvaluator;
 	}
@@ -86,7 +105,7 @@ public class ParameterBindingContext {
 			Function<ExpressionDependencies, EvaluationContext> contextFunction) {
 
 		return new ParameterBindingContext(valueProvider,
-				new EvaluationContextExpressionEvaluator(valueProvider, expressionParser, null) {
+				new EvaluationContextExpressionEvaluator(valueProvider, expressionParser) {
 
 					@Override
 					public EvaluationContext getEvaluationContext(String expressionString) {
@@ -111,9 +130,8 @@ public class ParameterBindingContext {
 	@Nullable
 	public Object evaluateExpression(String expressionString, Map<String, Object> variables) {
 
-		if (expressionEvaluator instanceof EvaluationContextExpressionEvaluator) {
-			return ((EvaluationContextExpressionEvaluator) expressionEvaluator).evaluateExpression(expressionString,
-					variables);
+		if (expressionEvaluator instanceof EvaluationContextExpressionEvaluator expressionEvaluator) {
+			return expressionEvaluator.evaluateExpression(expressionString, variables);
 		}
 		return expressionEvaluator.evaluate(expressionString);
 	}

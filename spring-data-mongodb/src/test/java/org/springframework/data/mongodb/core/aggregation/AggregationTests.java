@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.Builder;
-
 import java.io.BufferedInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -38,12 +36,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
 import org.assertj.core.data.Offset;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,6 +59,7 @@ import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
+import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -75,6 +74,7 @@ import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.MongoCollection;
 
@@ -90,6 +90,8 @@ import com.mongodb.client.MongoCollection;
  * @author Maninder Singh
  * @author Sergey Shcherbakov
  * @author Minsu Kim
+ * @author Sangyong Choi
+ * @author Julia Lee
  */
 @ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
@@ -118,7 +120,7 @@ public class AggregationTests {
 
 		mongoTemplate.flush(Product.class, UserWithLikes.class, DATAMONGO753.class, Data.class, DATAMONGO788.class,
 				User.class, Person.class, Reservation.class, Venue.class, MeterData.class, LineItem.class, InventoryItem.class,
-				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class);
+				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class, Item.class);
 
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
 		mongoTemplate.dropCollection("personQueryTemp");
@@ -499,7 +501,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-
+		
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -1518,8 +1520,47 @@ public class AggregationTests {
 		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
+	@Test // GH-3322
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
+	void shouldLookupPeopleCorrectlyWithPipeline() {
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				lookup().from("person").localField("_id").foreignField("firstname").pipeline(match(where("firstname").is("u1"))).as("linkedPerson"), //
+				sort(ASC, "id"));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
+
+		List<Document> mappedResults = results.getMappedResults();
+
+		Document firstItem = mappedResults.get(0);
+
+		assertThat(firstItem).containsEntry("_id", "u1");
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
+	}
+
+	@Test // GH-3322
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
+	void shouldLookupPeopleCorrectlyWithPipelineAndLet() {
+		createUsersWithReferencedPersons();
+
+		TypedAggregation<User> agg = newAggregation(User.class, //
+				lookup().from("person").localField("_id").foreignField("firstname").let(Let.ExpressionVariable.newVariable("the_id").forField("_id")).pipeline(
+						match(ctx -> new Document("$expr", new Document("$eq", List.of("$$the_id", "u1"))))).as("linkedPerson"),
+				sort(ASC, "id"));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, User.class, Document.class);
+
+		List<Document> mappedResults = results.getMappedResults();
+
+		Document firstItem = mappedResults.get(0);
+
+		assertThat(firstItem).containsEntry("_id", "u1");
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
+	}
+
 	@Test // DATAMONGO-1326
-	void shouldGroupByAndLookupPeopleCorectly() {
+	void shouldGroupByAndLookupPeopleCorrectly() {
 
 		createUsersWithReferencedPersons();
 
@@ -1852,6 +1893,50 @@ public class AggregationTests {
 		assertThat(categorizeByYear).hasSize(3);
 	}
 
+	@Test // GH-4473
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "7.0")
+	void percentileShouldBeAppliedCorrectly() {
+
+		DATAMONGO788 objectToSave = new DATAMONGO788(62, 81, 80);
+		DATAMONGO788 objectToSave2 = new DATAMONGO788(60, 83, 79);
+
+		mongoTemplate.insert(objectToSave);
+		mongoTemplate.insert(objectToSave2);
+
+		Aggregation agg = Aggregation.newAggregation(
+				project().and(ArithmeticOperators.valueOf("x").percentile(0.9, 0.4).and("y").and("xField"))
+				.as("percentileValues"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
+
+		// MongoDB server returns $percentile as an array of doubles
+		List<Document> rawResults = (List<Document>) result.getRawResults().get("results");
+		assertThat((List<Object>) rawResults.get(0).get("percentileValues")).containsExactly(81.0, 80.0);
+		assertThat((List<Object>) rawResults.get(1).get("percentileValues")).containsExactly(83.0, 79.0);
+	}
+
+	@Test // GH-4472
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "7.0")
+	void medianShouldBeAppliedCorrectly() {
+
+		DATAMONGO788 objectToSave = new DATAMONGO788(62, 81, 80);
+		DATAMONGO788 objectToSave2 = new DATAMONGO788(60, 83, 79);
+
+		mongoTemplate.insert(objectToSave);
+		mongoTemplate.insert(objectToSave2);
+
+		Aggregation agg = Aggregation.newAggregation(
+				project().and(ArithmeticOperators.valueOf("x").median().and("y").and("xField"))
+				.as("medianValue"));
+
+		AggregationResults<Document> result = mongoTemplate.aggregate(agg, DATAMONGO788.class, Document.class);
+
+		// MongoDB server returns $median a Double
+		List<Document> rawResults = (List<Document>) result.getRawResults().get("results");
+		assertThat(rawResults.get(0).get("medianValue")).isEqualTo(80.0);
+		assertThat(rawResults.get(1).get("medianValue")).isEqualTo(79.0);
+	}
+
 	@Test // DATAMONGO-1986
 	void runMatchOperationCriteriaThroughQueryMapperForTypedAggregation() {
 
@@ -1950,6 +2035,42 @@ public class AggregationTests {
 		Criteria criteria = Criteria.where("users").elemMatch(Criteria.where("id").is("4ee921aca44fd11b3254e001"));
 		AggregationResults<Widget> aggregate = mongoTemplate.aggregate(newAggregation(match(criteria)), Widget.class, Widget.class);
 		assertThat(aggregate.getMappedResults()).contains(widget);
+	}
+
+	@Test // GH-4443
+	void shouldHonorFieldAliasesForFieldReferencesUsingFieldExposingOperation() {
+
+		Item item1 = Item.builder().itemId("1").tags(Arrays.asList("a", "b")).build();
+		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
+		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
+
+		TypedAggregation<Item> aggregation = newAggregation(Item.class,
+				match(where("itemId").is("1")),
+				unwind("tags"),
+				match(where("itemId").is("1").and("tags").is("c")));
+		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Document.class);
+		List<Document> mappedResults = results.getMappedResults();
+		assertThat(mappedResults).hasSize(1);
+		assertThat(mappedResults.get(0)).containsEntry("item_id", "1");
+	}
+
+	@Test // GH-4443
+	void projectShouldResetContextToAvoidMappingFieldsAgainstANoLongerExistingTarget() {
+
+		Item item1 = Item.builder().itemId("1").tags(Arrays.asList("a", "b")).build();
+		Item item2 = Item.builder().itemId("1").tags(Arrays.asList("a", "c")).build();
+		mongoTemplate.insert(Arrays.asList(item1, item2), Item.class);
+
+		TypedAggregation<Item> aggregation = newAggregation(Item.class,
+				match(where("itemId").is("1")),
+				unwind("tags"),
+				project().and("itemId").as("itemId").and("tags").as("tags"),
+				match(where("itemId").is("1").and("tags").is("c")));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(aggregation, Document.class);
+		List<Document> mappedResults = results.getMappedResults();
+		assertThat(mappedResults).hasSize(1);
+		assertThat(mappedResults.get(0)).containsEntry("itemId", "1");
 	}
 
 	private void createUsersWithReferencedPersons() {
@@ -2055,6 +2176,12 @@ public class AggregationTests {
 			this.xField = x;
 			this.y = y;
 			this.yField = y;
+		}
+
+		public DATAMONGO788(int x, int y, int xField) {
+			this.x = x;
+			this.y = y;
+			this.xField = xField;
 		}
 	}
 
@@ -2196,49 +2323,402 @@ public class AggregationTests {
 	}
 
 	// DATAMONGO-1491
-	@lombok.Data
-	@Builder
 	static class Sales {
 
 		@Id String id;
 		List<Item> items;
+
+		Sales(String id, List<Item> items) {
+			this.id = id;
+			this.items = items;
+		}
+
+		public static SalesBuilder builder() {
+			return new SalesBuilder();
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public List<Item> getItems() {
+			return this.items;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setItems(List<Item> items) {
+			this.items = items;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sales sales = (Sales) o;
+			return Objects.equals(id, sales.id) && Objects.equals(items, sales.items);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, items);
+		}
+
+		public String toString() {
+			return "AggregationTests.Sales(id=" + this.getId() + ", items=" + this.getItems() + ")";
+		}
+
+		public static class SalesBuilder {
+
+			private String id;
+			private List<Item> items;
+
+			SalesBuilder() {}
+
+			public SalesBuilder id(String id) {
+				this.id = id;
+				return this;
+			}
+
+			public SalesBuilder items(List<Item> items) {
+				this.items = items;
+				return this;
+			}
+
+			public Sales build() {
+				return new Sales(id, items);
+			}
+
+			public String toString() {
+				return "AggregationTests.Sales.SalesBuilder(id=" + this.id + ", items=" + this.items + ")";
+			}
+		}
 	}
 
-	// DATAMONGO-1491
-	@lombok.Data
-	@Builder
+	// DATAMONGO-1491, GH-4443
 	static class Item {
 
 		@org.springframework.data.mongodb.core.mapping.Field("item_id") //
 		String itemId;
 		Integer quantity;
 		Long price;
+		List<String> tags = new ArrayList<>();
+
+		Item(String itemId, Integer quantity, Long price, List<String> tags) {
+
+			this.itemId = itemId;
+			this.quantity = quantity;
+			this.price = price;
+			this.tags = tags;
+		}
+
+		public static ItemBuilder builder() {
+			return new ItemBuilder();
+		}
+
+		public String getItemId() {
+			return this.itemId;
+		}
+
+		public Integer getQuantity() {
+			return this.quantity;
+		}
+
+		public Long getPrice() {
+			return this.price;
+		}
+
+		public void setItemId(String itemId) {
+			this.itemId = itemId;
+		}
+
+		public void setQuantity(Integer quantity) {
+			this.quantity = quantity;
+		}
+
+		public void setPrice(Long price) {
+			this.price = price;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Item item = (Item) o;
+			return Objects.equals(itemId, item.itemId) && Objects.equals(quantity, item.quantity)
+					&& Objects.equals(price, item.price);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(itemId, quantity, price);
+		}
+
+		public String toString() {
+			return "AggregationTests.Item(itemId=" + this.getItemId() + ", quantity=" + this.getQuantity() + ", price="
+					+ this.getPrice() + ")";
+		}
+
+		public static class ItemBuilder {
+
+			private String itemId;
+			private Integer quantity;
+			private Long price;
+			private List<String> tags;
+
+			ItemBuilder() {}
+
+			public ItemBuilder itemId(String itemId) {
+				this.itemId = itemId;
+				return this;
+			}
+
+			public ItemBuilder quantity(Integer quantity) {
+				this.quantity = quantity;
+				return this;
+			}
+
+			public ItemBuilder price(Long price) {
+				this.price = price;
+				return this;
+			}
+
+			public ItemBuilder tags(List<String> tags) {
+				this.tags = tags;
+				return this;
+			}
+
+			public Item build() {
+				return new Item(itemId, quantity, price, tags);
+			}
+
+			public String toString() {
+				return "AggregationTests.Item.ItemBuilder(itemId=" + this.itemId + ", quantity=" + this.quantity + ", price="
+						+ this.price + ")";
+			}
+		}
 	}
 
 	// DATAMONGO-1538
-	@lombok.Data
-	@Builder
 	static class Sales2 {
 
 		String id;
 		Integer price;
 		Float tax;
 		boolean applyDiscount;
+
+		Sales2(String id, Integer price, Float tax, boolean applyDiscount) {
+
+			this.id = id;
+			this.price = price;
+			this.tax = tax;
+			this.applyDiscount = applyDiscount;
+		}
+
+		public static Sales2Builder builder() {
+			return new Sales2Builder();
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Integer getPrice() {
+			return this.price;
+		}
+
+		public Float getTax() {
+			return this.tax;
+		}
+
+		public boolean isApplyDiscount() {
+			return this.applyDiscount;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPrice(Integer price) {
+			this.price = price;
+		}
+
+		public void setTax(Float tax) {
+			this.tax = tax;
+		}
+
+		public void setApplyDiscount(boolean applyDiscount) {
+			this.applyDiscount = applyDiscount;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Sales2 sales2 = (Sales2) o;
+			return applyDiscount == sales2.applyDiscount && Objects.equals(id, sales2.id)
+					&& Objects.equals(price, sales2.price) && Objects.equals(tax, sales2.tax);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, price, tax, applyDiscount);
+		}
+
+		public String toString() {
+			return "AggregationTests.Sales2(id=" + this.getId() + ", price=" + this.getPrice() + ", tax=" + this.getTax()
+					+ ", applyDiscount=" + this.isApplyDiscount() + ")";
+		}
+
+		public static class Sales2Builder {
+
+			private String id;
+			private Integer price;
+			private Float tax;
+			private boolean applyDiscount;
+
+			public Sales2Builder id(String id) {
+				this.id = id;
+				return this;
+			}
+
+			public Sales2Builder price(Integer price) {
+				this.price = price;
+				return this;
+			}
+
+			public Sales2Builder tax(Float tax) {
+				this.tax = tax;
+				return this;
+			}
+
+			public Sales2Builder applyDiscount(boolean applyDiscount) {
+				this.applyDiscount = applyDiscount;
+				return this;
+			}
+
+			public Sales2 build() {
+				return new Sales2(id, price, tax, applyDiscount);
+			}
+
+			public String toString() {
+				return "AggregationTests.Sales2.Sales2Builder(id=" + this.id + ", price=" + this.price + ", tax=" + this.tax
+						+ ", applyDiscount=" + this.applyDiscount + ")";
+			}
+		}
 	}
 
 	// DATAMONGO-1551
-	@lombok.Data
-	@Builder
 	static class Employee {
 
 		int id;
 		String name;
 		String reportsTo;
+
+		Employee(int id, String name, String reportsTo) {
+
+			this.id = id;
+			this.name = name;
+			this.reportsTo = reportsTo;
+		}
+
+		public static EmployeeBuilder builder() {
+			return new EmployeeBuilder();
+		}
+
+		public int getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public String getReportsTo() {
+			return this.reportsTo;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setReportsTo(String reportsTo) {
+			this.reportsTo = reportsTo;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Employee employee = (Employee) o;
+			return id == employee.id && Objects.equals(name, employee.name) && Objects.equals(reportsTo, employee.reportsTo);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name, reportsTo);
+		}
+
+		public String toString() {
+			return "AggregationTests.Employee(id=" + this.getId() + ", name=" + this.getName() + ", reportsTo="
+					+ this.getReportsTo() + ")";
+		}
+
+		public static class EmployeeBuilder {
+
+			private int id;
+			private String name;
+			private String reportsTo;
+
+			public EmployeeBuilder id(int id) {
+				this.id = id;
+				return this;
+			}
+
+			public EmployeeBuilder name(String name) {
+				this.name = name;
+				return this;
+			}
+
+			public EmployeeBuilder reportsTo(String reportsTo) {
+				this.reportsTo = reportsTo;
+				return this;
+			}
+
+			public Employee build() {
+				return new Employee(id, name, reportsTo);
+			}
+
+			public String toString() {
+				return "AggregationTests.Employee.EmployeeBuilder(id=" + this.id + ", name=" + this.name + ", reportsTo="
+						+ this.reportsTo + ")";
+			}
+		}
 	}
 
 	// DATAMONGO-1552
-	@lombok.Data
-	@Builder
 	static class Art {
 
 		int id;
@@ -2246,41 +2726,322 @@ public class AggregationTests {
 		String artist;
 		Integer year;
 		double price;
+
+		Art(int id, String title, String artist, Integer year, double price) {
+
+			this.id = id;
+			this.title = title;
+			this.artist = artist;
+			this.year = year;
+			this.price = price;
+		}
+
+		public static ArtBuilder builder() {
+			return new ArtBuilder();
+		}
+
+		public int getId() {
+			return this.id;
+		}
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public String getArtist() {
+			return this.artist;
+		}
+
+		public Integer getYear() {
+			return this.year;
+		}
+
+		public double getPrice() {
+			return this.price;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setArtist(String artist) {
+			this.artist = artist;
+		}
+
+		public void setYear(Integer year) {
+			this.year = year;
+		}
+
+		public void setPrice(double price) {
+			this.price = price;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Art art = (Art) o;
+			return id == art.id && Double.compare(art.price, price) == 0 && Objects.equals(title, art.title)
+					&& Objects.equals(artist, art.artist) && Objects.equals(year, art.year);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, title, artist, year, price);
+		}
+
+		public String toString() {
+			return "AggregationTests.Art(id=" + this.getId() + ", title=" + this.getTitle() + ", artist=" + this.getArtist()
+					+ ", year=" + this.getYear() + ", price=" + this.getPrice() + ")";
+		}
+
+		public static class ArtBuilder {
+
+			private int id;
+			private String title;
+			private String artist;
+			private Integer year;
+			private double price;
+
+			public ArtBuilder id(int id) {
+				this.id = id;
+				return this;
+			}
+
+			public ArtBuilder title(String title) {
+				this.title = title;
+				return this;
+			}
+
+			public ArtBuilder artist(String artist) {
+				this.artist = artist;
+				return this;
+			}
+
+			public ArtBuilder year(Integer year) {
+				this.year = year;
+				return this;
+			}
+
+			public ArtBuilder price(double price) {
+				this.price = price;
+				return this;
+			}
+
+			public Art build() {
+				return new Art(id, title, artist, year, price);
+			}
+
+			public String toString() {
+				return "AggregationTests.Art.ArtBuilder(id=" + this.id + ", title=" + this.title + ", artist=" + this.artist
+						+ ", year=" + this.year + ", price=" + this.price + ")";
+			}
+		}
 	}
 
-	@lombok.Data
 	static class WithComplexId {
 		@Id ComplexId id;
+
+		public ComplexId getId() {
+			return this.id;
+		}
+
+		public void setId(ComplexId id) {
+			this.id = id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithComplexId that = (WithComplexId) o;
+			return Objects.equals(id, that.id);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id);
+		}
+
+		public String toString() {
+			return "AggregationTests.WithComplexId(id=" + this.getId() + ")";
+		}
 	}
 
-	@lombok.Data
 	static class ComplexId {
+
 		String p1;
 		String p2;
+
+		public String getP1() {
+			return this.p1;
+		}
+
+		public String getP2() {
+			return this.p2;
+		}
+
+		public void setP1(String p1) {
+			this.p1 = p1;
+		}
+
+		public void setP2(String p2) {
+			this.p2 = p2;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ComplexId complexId = (ComplexId) o;
+			return Objects.equals(p1, complexId.p1) && Objects.equals(p2, complexId.p2);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(p1, p2);
+		}
+
+		public String toString() {
+			return "AggregationTests.ComplexId(p1=" + this.getP1() + ", p2=" + this.getP2() + ")";
+		}
 	}
 
 	static enum MyEnum {
 		ONE, TWO
 	}
 
-	@lombok.Data
 	static class WithEnum {
 
 		@Id String id;
 		MyEnum enumValue;
+
+		public WithEnum() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public MyEnum getEnumValue() {
+			return this.enumValue;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setEnumValue(MyEnum enumValue) {
+			this.enumValue = enumValue;
+		}
+
+		public String toString() {
+			return "AggregationTests.WithEnum(id=" + this.getId() + ", enumValue=" + this.getEnumValue() + ")";
+		}
 	}
 
-	@lombok.Data
 	static class Widget {
-		@Id
-		String id;
+
+		@Id String id;
 		List<UserRef> users;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public List<UserRef> getUsers() {
+			return users;
+		}
+
+		public void setUsers(List<UserRef> users) {
+			this.users = users;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			Widget widget = (Widget) o;
+
+			if (!ObjectUtils.nullSafeEquals(id, widget.id)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(users, widget.users);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(id);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(users);
+			return result;
+		}
 	}
 
-	@lombok.Data
 	static class UserRef {
-		@MongoId
-		String id;
+
+		@MongoId String id;
 		String name;
+
+		public UserRef() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			UserRef userRef = (UserRef) o;
+			return Objects.equals(id, userRef.id) && Objects.equals(name, userRef.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, name);
+		}
+
+		public String toString() {
+			return "AggregationTests.UserRef(id=" + this.getId() + ", name=" + this.getName() + ")";
+		}
 	}
 }

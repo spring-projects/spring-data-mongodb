@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,6 +127,17 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		public TerminatingReplace withOptions(ReplaceOptions options) {
+
+			FindAndReplaceOptions target = new FindAndReplaceOptions();
+			if (options.isUpsert()) {
+				target.upsert();
+			}
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					target, replacement, targetType);
+		}
+
+		@Override
 		public UpdateWithUpdate<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");
@@ -173,6 +184,18 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			return (T) template.findAndReplace(query, replacement,
 					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.empty(), domainType,
 					getCollectionName(), targetType);
+		}
+
+		@Override
+		public UpdateResult replaceFirst() {
+
+			if (replacement != null) {
+				return template.replace(query, domainType, replacement,
+						findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
+			}
+
+			return template.replace(query, domainType, update,
+					findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {

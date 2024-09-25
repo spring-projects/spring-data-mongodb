@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class SetWindowFieldsOperation
 
 	@Override
 	public ExposedFields getFields() {
-		return ExposedFields.nonSynthetic(Fields.from(output.fields.toArray(new Field[0])));
+		return ExposedFields.synthetic(Fields.from(output.fields.toArray(new Field[0])));
 	}
 
 	@Override
@@ -78,10 +78,10 @@ public class SetWindowFieldsOperation
 
 		Document $setWindowFields = new Document();
 		if (partitionBy != null) {
-			if (partitionBy instanceof AggregationExpression) {
-				$setWindowFields.append("partitionBy", ((AggregationExpression) partitionBy).toDocument(context));
-			} else if (partitionBy instanceof Field) {
-				$setWindowFields.append("partitionBy", context.getReference((Field) partitionBy).toString());
+			if (partitionBy instanceof AggregationExpression aggregationExpression) {
+				$setWindowFields.append("partitionBy", aggregationExpression.toDocument(context));
+			} else if (partitionBy instanceof Field field) {
+				$setWindowFields.append("partitionBy", context.getReference(field).toString());
 			} else {
 				$setWindowFields.append("partitionBy", partitionBy);
 			}
@@ -175,7 +175,7 @@ public class SetWindowFieldsOperation
 		/**
 		 * Tiny little helper to allow fluent API usage for {@link #append(ComputedField)}.
 		 */
-		interface ComputedFieldAppender {
+		public interface ComputedFieldAppender {
 
 			/**
 			 * Specify the target field name.
@@ -249,6 +249,7 @@ public class SetWindowFieldsOperation
 			return windowOperator;
 		}
 
+		@Nullable
 		public Window getWindow() {
 			return window;
 		}
@@ -638,20 +639,15 @@ public class SetWindowFieldsOperation
 
 			Assert.notNull(timeUnit, "TimeUnit must not be null");
 
-			switch (timeUnit) {
-				case DAYS:
-					return WindowUnits.DAY;
-				case HOURS:
-					return WindowUnits.HOUR;
-				case MINUTES:
-					return WindowUnits.MINUTE;
-				case SECONDS:
-					return WindowUnits.SECOND;
-				case MILLISECONDS:
-					return WindowUnits.MILLISECOND;
-			}
+			return switch (timeUnit) {
+				case DAYS -> WindowUnits.DAY;
+				case HOURS -> WindowUnits.HOUR;
+				case MINUTES -> WindowUnits.MINUTE;
+				case SECONDS -> WindowUnits.SECOND;
+				case MILLISECONDS -> WindowUnits.MILLISECOND;
+				default -> throw new IllegalArgumentException(String.format("Cannot create WindowUnit from %s", timeUnit));
+			};
 
-			throw new IllegalArgumentException(String.format("Cannot create WindowUnit from %s", timeUnit));
 		}
 
 		/**
@@ -664,26 +660,18 @@ public class SetWindowFieldsOperation
 		 */
 		static WindowUnit from(ChronoUnit chronoUnit) {
 
-			switch (chronoUnit) {
-				case YEARS:
-					return WindowUnits.YEAR;
-				case WEEKS:
-					return WindowUnits.WEEK;
-				case MONTHS:
-					return WindowUnits.MONTH;
-				case DAYS:
-					return WindowUnits.DAY;
-				case HOURS:
-					return WindowUnits.HOUR;
-				case MINUTES:
-					return WindowUnits.MINUTE;
-				case SECONDS:
-					return WindowUnits.SECOND;
-				case MILLIS:
-					return WindowUnits.MILLISECOND;
-			}
+			return switch (chronoUnit) {
+				case YEARS -> WindowUnits.YEAR;
+				case WEEKS -> WindowUnits.WEEK;
+				case MONTHS -> WindowUnits.MONTH;
+				case DAYS -> WindowUnits.DAY;
+				case HOURS -> WindowUnits.HOUR;
+				case MINUTES -> WindowUnits.MINUTE;
+				case SECONDS -> WindowUnits.SECOND;
+				case MILLIS -> WindowUnits.MILLISECOND;
+				default -> throw new IllegalArgumentException(String.format("Cannot create WindowUnit from %s", chronoUnit));
+			};
 
-			throw new IllegalArgumentException(String.format("Cannot create WindowUnit from %s", chronoUnit));
 		}
 	}
 

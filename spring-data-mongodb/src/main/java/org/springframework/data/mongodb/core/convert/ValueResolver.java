@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 
@@ -32,7 +33,7 @@ interface ValueResolver {
 
 	/**
 	 * Resolves the value for the given {@link MongoPersistentProperty} within the given {@link Document} using the given
-	 * {@link SpELExpressionEvaluator} and {@link ObjectPath}.
+	 * {@link ValueExpressionEvaluator} and {@link ObjectPath}.
 	 *
 	 * @param prop
 	 * @param bson
@@ -41,5 +42,5 @@ interface ValueResolver {
 	 * @return
 	 */
 	@Nullable
-	Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator, ObjectPath path);
+	Object getValueInternal(MongoPersistentProperty prop, Bson bson, ValueExpressionEvaluator evaluator, ObjectPath path);
 }

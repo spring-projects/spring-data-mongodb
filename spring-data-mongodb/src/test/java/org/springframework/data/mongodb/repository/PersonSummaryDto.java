@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import java.util.Objects;
+
 /**
  * @author Oliver Gierke
  */
@@ -22,4 +24,32 @@ public class PersonSummaryDto {
 
 	String firstname;
 	String lastname;
+
+	public PersonSummaryDto() {}
+
+	public PersonSummaryDto(String firstname, String lastname) {
+		this.firstname = firstname;
+		this.lastname = lastname;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		PersonSummaryDto that = (PersonSummaryDto) o;
+		return Objects.equals(firstname, that.firstname) && Objects.equals(lastname, that.lastname);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(firstname, lastname);
+	}
+
+	public String toString() {
+		return "PersonSummaryDto(firstname=" + this.firstname + ", lastname=" + this.lastname + ")";
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,24 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.ReadConcernAware;
+import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
+
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
- * aggregation options can be found in the MongoDB reference documentation
- * https://docs.mongodb.org/manual/reference/command/aggregate/#aggregate
+ * aggregation options can be found in the
+ * <a href="https://docs.mongodb.org/manual/reference/command/aggregate/#aggregate">MongoDB reference documentation</a>.
+ * <p>
+ * As off 4.3 {@link #allowDiskUse} can be {@literal null}, indicating use of server default, and may only be applied if
+ * {@link #isAllowDiskUseSet() explicitly set}. For compatibility reasons {@link #isAllowDiskUse()} will remain
+ * returning {@literal false} if the no value has been set.
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -39,7 +48,7 @@ import org.springframework.util.Assert;
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
  */
-public class AggregationOptions {
+public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware {
 
 	private static final String BATCH_SIZE = "batchSize";
 	private static final String CURSOR = "cursor";
@@ -50,12 +59,16 @@ public class AggregationOptions {
 	private static final String MAX_TIME = "maxTimeMS";
 	private static final String HINT = "hint";
 
-	private final boolean allowDiskUse;
+	private final Optional<Boolean> allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
 	private final Optional<Object> hint;
+
+	private Optional<ReadConcern> readConcern;
+
+	private Optional<ReadPreference> readPreference;
 	private Duration maxTime = Duration.ZERO;
 	private ResultOptions resultOptions = ResultOptions.READ;
 	private DomainTypeMapping domainTypeMapping = DomainTypeMapping.RELAXED;
@@ -114,15 +127,17 @@ public class AggregationOptions {
 	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
 	 * @since 3.1
 	 */
-	private AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+	private AggregationOptions(@Nullable Boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment, @Nullable Object hint) {
 
-		this.allowDiskUse = allowDiskUse;
+		this.allowDiskUse = Optional.ofNullable(allowDiskUse);
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
 		this.comment = Optional.ofNullable(comment);
 		this.hint = Optional.ofNullable(hint);
+		this.readConcern = Optional.empty();
+		this.readPreference = Optional.empty();
 	}
 
 	/**
@@ -148,7 +163,7 @@ public class AggregationOptions {
 
 		Assert.notNull(document, "Document must not be null");
 
-		boolean allowDiskUse = document.getBoolean(ALLOW_DISK_USE, false);
+		Boolean allowDiskUse = document.get(ALLOW_DISK_USE, Boolean.class);
 		boolean explain = document.getBoolean(EXPLAIN, false);
 		Document cursor = document.get(CURSOR, Document.class);
 		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
@@ -174,13 +189,23 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Enables writing to temporary files. When set to true, aggregation stages can write data to the _tmp subdirectory in
-	 * the dbPath directory.
+	 * Enables writing to temporary files. When set to {@literal true}, aggregation stages can write data to the
+	 * {@code _tmp} subdirectory in the {@code dbPath} directory.
 	 *
-	 * @return {@literal true} if enabled.
+	 * @return {@literal true} if enabled; {@literal false} otherwise (or if not set).
 	 */
 	public boolean isAllowDiskUse() {
-		return allowDiskUse;
+		return allowDiskUse.orElse(false);
+	}
+
+	/**
+	 * Return whether {@link #isAllowDiskUse} is configured.
+	 *
+	 * @return {@literal true} if is {@code allowDiskUse} is configured, {@literal false} otherwise.
+	 * @since 4.2.5
+	 */
+	public boolean isAllowDiskUseSet() {
+		return allowDiskUse.isPresent();
 	}
 
 	/**
@@ -268,6 +293,26 @@ public class AggregationOptions {
 		return hint;
 	}
 
+	@Override
+	public boolean hasReadConcern() {
+		return readConcern.isPresent();
+	}
+
+	@Override
+	public ReadConcern getReadConcern() {
+		return readConcern.orElse(null);
+	}
+
+	@Override
+	public boolean hasReadPreference() {
+		return readPreference.isPresent();
+	}
+
+	@Override
+	public ReadPreference getReadPreference() {
+		return readPreference.orElse(null);
+	}
+
 	/**
 	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
 	 * @since 3.0
@@ -304,8 +349,8 @@ public class AggregationOptions {
 
 		Document result = new Document(command);
 
-		if (allowDiskUse && !result.containsKey(ALLOW_DISK_USE)) {
-			result.put(ALLOW_DISK_USE, allowDiskUse);
+		if (isAllowDiskUseSet() && !result.containsKey(ALLOW_DISK_USE)) {
+			result.put(ALLOW_DISK_USE, isAllowDiskUse());
 		}
 
 		if (explain && !result.containsKey(EXPLAIN)) {
@@ -339,7 +384,9 @@ public class AggregationOptions {
 	public Document toDocument() {
 
 		Document document = new Document();
-		document.put(ALLOW_DISK_USE, allowDiskUse);
+		if (isAllowDiskUseSet()) {
+			document.put(ALLOW_DISK_USE, isAllowDiskUse());
+		}
 		document.put(EXPLAIN, explain);
 
 		cursor.ifPresent(val -> document.put(CURSOR, val));
@@ -379,12 +426,14 @@ public class AggregationOptions {
 	 */
 	public static class Builder {
 
-		private boolean allowDiskUse;
+		private Boolean allowDiskUse;
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
 		private @Nullable String comment;
 		private @Nullable Object hint;
+		private @Nullable ReadConcern readConcern;
+		private @Nullable ReadPreference readPreference;
 		private @Nullable Duration maxTime;
 		private @Nullable ResultOptions resultOptions;
 		private @Nullable DomainTypeMapping domainTypeMapping;
@@ -491,6 +540,32 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Define a {@link ReadConcern} to apply to the aggregation.
+		 *
+		 * @param readConcern can be {@literal null}.
+		 * @return this.
+		 * @since 4.1
+		 */
+		public Builder readConcern(@Nullable ReadConcern readConcern) {
+
+			this.readConcern = readConcern;
+			return this;
+		}
+
+		/**
+		 * Define a {@link ReadPreference} to apply to the aggregation.
+		 *
+		 * @param readPreference can be {@literal null}.
+		 * @return this.
+		 * @since 4.1
+		 */
+		public Builder readPreference(@Nullable ReadPreference readPreference) {
+
+			this.readPreference = readPreference;
+			return this;
+		}
+
+		/**
 		 * Set the time limit for processing.
 		 *
 		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
@@ -573,6 +648,12 @@ public class AggregationOptions {
 			if (domainTypeMapping != null) {
 				options.domainTypeMapping = domainTypeMapping;
 			}
+			if (readConcern != null) {
+				options.readConcern = Optional.of(readConcern);
+			}
+			if (readPreference != null) {
+				options.readPreference = Optional.of(readPreference);
+			}
 
 			return options;
 		}
@@ -590,7 +671,7 @@ public class AggregationOptions {
 		/**
 		 * Read the aggregation result from the cursor.
 		 */
-		READ;
+		READ
 	}
 
 	/**

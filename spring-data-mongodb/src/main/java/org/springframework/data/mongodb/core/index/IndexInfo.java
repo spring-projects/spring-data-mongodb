@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2023 the original author or authors.
+ * Copyright 2002-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -42,8 +43,8 @@ import org.springframework.util.ObjectUtils;
  */
 public class IndexInfo {
 
-	private static final Double ONE = Double.valueOf(1);
-	private static final Double MINUS_ONE = Double.valueOf(-1);
+	private static final Double ONE = 1.0;
+	private static final Double MINUS_ONE = (double) -1;
 	private static final Collection<String> TWO_D_IDENTIFIERS = Arrays.asList("2d", "2dsphere");
 
 	private final List<IndexField> indexFields;
@@ -52,6 +53,7 @@ public class IndexInfo {
 	private final boolean unique;
 	private final boolean sparse;
 	private final String language;
+	private final boolean hidden;
 	private @Nullable Duration expireAfter;
 	private @Nullable String partialFilterExpression;
 	private @Nullable Document collation;
@@ -64,6 +66,18 @@ public class IndexInfo {
 		this.unique = unique;
 		this.sparse = sparse;
 		this.language = language;
+		this.hidden = false;
+	}
+
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language,
+			boolean hidden) {
+
+		this.indexFields = Collections.unmodifiableList(indexFields);
+		this.name = name;
+		this.unique = unique;
+		this.sparse = sparse;
+		this.language = language;
+		this.hidden = hidden;
 	}
 
 	/**
@@ -117,14 +131,15 @@ public class IndexInfo {
 
 		String name = sourceDocument.get("name").toString();
 
-		boolean unique = sourceDocument.containsKey("unique") ? (Boolean) sourceDocument.get("unique") : false;
-		boolean sparse = sourceDocument.containsKey("sparse") ? (Boolean) sourceDocument.get("sparse") : false;
-		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
+		boolean unique = sourceDocument.get("unique", false);
+		boolean sparse = sourceDocument.get("sparse", false);
+		boolean hidden = sourceDocument.getBoolean("hidden", false);
+		String language = sourceDocument.containsKey("default_language") ? sourceDocument.getString("default_language")
 				: "";
 
 		String partialFilter = extractPartialFilterString(sourceDocument);
 
-		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
+		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language, hidden);
 		info.partialFilterExpression = partialFilter;
 		info.collation = sourceDocument.get("collation", Document.class);
 
@@ -175,13 +190,7 @@ public class IndexInfo {
 
 		Assert.notNull(keys, "Collection of keys must not be null");
 
-		List<String> indexKeys = new ArrayList<String>(indexFields.size());
-
-		for (IndexField field : indexFields) {
-			indexKeys.add(field.getKey());
-		}
-
-		return indexKeys.containsAll(keys);
+		return this.indexFields.stream().map(IndexField::getKey).collect(Collectors.toSet()).containsAll(keys);
 	}
 
 	public String getName() {
@@ -259,12 +268,16 @@ public class IndexInfo {
 		return getIndexFields().stream().anyMatch(IndexField::isWildcard);
 	}
 
+	public boolean isHidden() {
+		return hidden;
+	}
+
 	@Override
 	public String toString() {
 
 		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse
 				+ ", language=" + language + ", partialFilterExpression=" + partialFilterExpression + ", collation=" + collation
-				+ ", expireAfterSeconds=" + ObjectUtils.nullSafeToString(expireAfter) + "]";
+				+ ", expireAfterSeconds=" + ObjectUtils.nullSafeToString(expireAfter) + ", hidden=" + hidden + "]";
 	}
 
 	@Override
@@ -279,6 +292,7 @@ public class IndexInfo {
 		result += 31 * ObjectUtils.nullSafeHashCode(partialFilterExpression);
 		result += 31 * ObjectUtils.nullSafeHashCode(collation);
 		result += 31 * ObjectUtils.nullSafeHashCode(expireAfter);
+		result += 31 * ObjectUtils.nullSafeHashCode(hidden);
 		return result;
 	}
 
@@ -324,6 +338,9 @@ public class IndexInfo {
 			return false;
 		}
 		if (!ObjectUtils.nullSafeEquals(expireAfter, other.expireAfter)) {
+			return false;
+		}
+		if (hidden != other.hidden) {
 			return false;
 		}
 		return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
-
-import org.springframework.beans.DirectFieldAccessor;
 
 import com.mongodb.MongoClientSettings;
 import com.querydsl.core.support.QueryMixin;
@@ -49,11 +47,10 @@ abstract class SpringDataMongodbQuerySupport<Q extends SpringDataMongodbQuerySup
 
 	@SuppressWarnings("unchecked")
 	SpringDataMongodbQuerySupport(MongodbDocumentSerializer serializer) {
+
 		super(serializer);
 		this.serializer = serializer;
-
-		DirectFieldAccessor fieldAccessor = new DirectFieldAccessor(this);
-		this.superQueryMixin = (QueryMixin<Q>) fieldAccessor.getPropertyValue("queryMixin");
+		this.superQueryMixin = super.getQueryMixin();
 	}
 
 	/**

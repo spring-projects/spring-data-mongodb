@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,6 +73,29 @@ class SetWindowFieldsOperationTests {
 				238, 378);
 	}
 
+	@Test // GH-4745
+	void exposesFieldsToNextStageCorrectly() {
+
+		initCakeSales();
+
+		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //
+				.partitionByField("state") // resolves to field ref "$state"
+				.sortBy(Sort.by(Direction.ASC, "date")) // resolves to "orderDate"
+				.output(AccumulatorOperators.valueOf("qty").sum()) // resolves to "$quantity"
+				.within(Windows.documents().fromUnbounded().toCurrent().build()) //
+				.as("cumulativeQuantityForState") //
+				.build(); //
+
+		AggregationResults<Document> results = mongoTemplate.aggregateAndReturn(Document.class)
+				.by(Aggregation.newAggregation(CakeSale.class, setWindowFieldsOperation,
+						/* and now project on the field to see it can be referenced */
+						Aggregation.project("cumulativeQuantityForState")))
+				.all();
+
+		assertThat(results.getMappedResults()).map(it -> it.get("cumulativeQuantityForState")).contains(162, 282, 427, 134,
+				238, 378);
+	}
+
 	@Test // GH-3711
 	void executesSetWindowFieldsOperationWithPartitionExpressionCorrectly() {
 
@@ -115,7 +138,6 @@ class SetWindowFieldsOperationTests {
 		});
 	}
 
-	@lombok.Data
 	static class CakeSale {
 
 		@Id Integer id;
@@ -129,6 +151,51 @@ class SetWindowFieldsOperationTests {
 		Integer qty;
 
 		String type;
+
+		public Integer getId() {
+			return this.id;
+		}
+
+		public String getState() {
+			return this.state;
+		}
+
+		public Date getDate() {
+			return this.date;
+		}
+
+		public Integer getQty() {
+			return this.qty;
+		}
+
+		public String getType() {
+			return this.type;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public void setState(String state) {
+			this.state = state;
+		}
+
+		public void setDate(Date date) {
+			this.date = date;
+		}
+
+		public void setQty(Integer qty) {
+			this.qty = qty;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		public String toString() {
+			return "SetWindowFieldsOperationTests.CakeSale(id=" + this.getId() + ", state=" + this.getState() + ", date="
+					+ this.getDate() + ", qty=" + this.getQty() + ", type=" + this.getType() + ")";
+		}
 	}
 
 }

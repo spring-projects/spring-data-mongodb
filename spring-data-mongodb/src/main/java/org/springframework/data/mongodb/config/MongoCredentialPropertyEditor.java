@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -228,10 +228,6 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	}
 
 	private static String decodeParameter(String it) {
-		try {
-			return URLDecoder.decode(it, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new IllegalArgumentException("o_O UTF-8 not supported", e);
-		}
+		return URLDecoder.decode(it, StandardCharsets.UTF_8);
 	}
 }

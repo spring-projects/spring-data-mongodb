@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -53,6 +54,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
+import org.springframework.data.mongodb.util.DurationUtil;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
@@ -493,7 +496,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Object keyDefToUse = ExpressionUtils.evaluate(keyDefinitionString, () -> getEvaluationContextForProperty(entity));
 
-		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document) ? (org.bson.Document) keyDefToUse
+		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document document) ? document
 				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
 
 		if (!StringUtils.hasText(dotPath)) {
@@ -578,8 +581,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Object result = ExpressionUtils.evaluate(filterExpression, () -> getEvaluationContextForProperty(entity));
 
-		if (result instanceof org.bson.Document) {
-			return PartialIndexFilter.of((org.bson.Document) result);
+		if (result instanceof org.bson.Document document) {
+			return PartialIndexFilter.of(document);
 		}
 
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
@@ -589,8 +592,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getEvaluationContextForProperty(entity));
 
-		if (result instanceof org.bson.Document) {
-			return (org.bson.Document) result;
+		if (result instanceof org.bson.Document document) {
+			return document;
 		}
 
 		return BsonUtils.parse(projectionExpression, null);
@@ -599,14 +602,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private Collation evaluateCollation(String collationExpression, PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(collationExpression, () -> getEvaluationContextForProperty(entity));
-		if (result instanceof org.bson.Document) {
-			return Collation.from((org.bson.Document) result);
+		if (result instanceof org.bson.Document document) {
+			return Collation.from(document);
 		}
-		if (result instanceof Collation) {
-			return (Collation) result;
+		if (result instanceof Collation collation) {
+			return collation;
 		}
-		if (result instanceof String) {
-			return Collation.parse(result.toString());
+		if (result instanceof String stringValue) {
+			return Collation.parse(stringValue);
 		}
 		if (result instanceof Map) {
 			return Collation.from(new org.bson.Document((Map<String, ?>) result));
@@ -708,7 +711,24 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
-		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
+		if (MongoClientVersion.isVersion5orNewer()) {
+
+			Optional<Double> defaultBucketSize = MergedAnnotation.of(GeoSpatialIndexed.class).getDefaultValue("bucketSize",
+					Double.class);
+			if (!defaultBucketSize.isPresent() || index.bucketSize() != defaultBucketSize.get()) {
+				indexDefinition.withBucketSize(index.bucketSize());
+			} else {
+				if (LOGGER.isInfoEnabled()) {
+					LOGGER.info(
+							"GeoSpatialIndexed.bucketSize no longer supported by Mongo Client 5 or newer. Ignoring bucketSize for path %s."
+									.formatted(dotPath));
+				}
+			}
+		} else {
+			indexDefinition.withBucketSize(index.bucketSize());
+		}
+
+		indexDefinition.typed(index.type()).withAdditionalField(index.additionalField());
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
@@ -781,24 +801,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @throws IllegalArgumentException for invalid duration values.
 	 */
 	private static Duration computeIndexTimeout(String timeoutValue, Supplier<EvaluationContext> evaluationContext) {
-
-		Object evaluatedTimeout = ExpressionUtils.evaluate(timeoutValue, evaluationContext);
-
-		if (evaluatedTimeout == null) {
-			return Duration.ZERO;
-		}
-
-		if (evaluatedTimeout instanceof Duration) {
-			return (Duration) evaluatedTimeout;
-		}
-
-		String val = evaluatedTimeout.toString();
-
-		if (val == null) {
-			return Duration.ZERO;
-		}
-
-		return DurationStyle.detectAndParse(val);
+		return DurationUtil.evaluate(timeoutValue, evaluationContext);
 	}
 
 	/**
@@ -1115,7 +1118,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	static class TextIndexIncludeOptions {
 
 		enum IncludeStrategy {
-			FORCE, DEFAULT;
+			FORCE, DEFAULT
 		}
 
 		private final IncludeStrategy strategy;

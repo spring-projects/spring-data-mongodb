@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,12 +33,14 @@ abstract class ReactiveFluentQuerySupport<P, T> implements FluentQuery.ReactiveF
 
 	private final P predicate;
 	private final Sort sort;
+	private final int limit;
 	private final Class<T> resultType;
 	private final List<String> fieldsToInclude;
 
-	ReactiveFluentQuerySupport(P predicate, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+	ReactiveFluentQuerySupport(P predicate, Sort sort, int limit, Class<T> resultType, List<String> fieldsToInclude) {
 		this.predicate = predicate;
 		this.sort = sort;
+		this.limit = limit;
 		this.resultType = resultType;
 		this.fieldsToInclude = fieldsToInclude;
 	}
@@ -52,7 +54,15 @@ abstract class ReactiveFluentQuerySupport<P, T> implements FluentQuery.ReactiveF
 
 		Assert.notNull(sort, "Sort must not be null");
 
-		return create(predicate, sort, resultType, fieldsToInclude);
+		return create(predicate, sort, limit, resultType, fieldsToInclude);
+	}
+
+	@Override
+	public ReactiveFluentQuery<T> limit(int limit) {
+
+		Assert.isTrue(limit > 0, "Limit must be greater zero");
+
+		return create(predicate, sort, limit, resultType, fieldsToInclude);
 	}
 
 	/*
@@ -64,7 +74,7 @@ abstract class ReactiveFluentQuerySupport<P, T> implements FluentQuery.ReactiveF
 
 		Assert.notNull(projection, "Projection target type must not be null");
 
-		return create(predicate, sort, projection, fieldsToInclude);
+		return create(predicate, sort, limit, projection, fieldsToInclude);
 	}
 
 	/*
@@ -76,10 +86,10 @@ abstract class ReactiveFluentQuerySupport<P, T> implements FluentQuery.ReactiveF
 
 		Assert.notNull(properties, "Projection properties must not be null");
 
-		return create(predicate, sort, resultType, new ArrayList<>(properties));
+		return create(predicate, sort, limit, resultType, new ArrayList<>(properties));
 	}
 
-	protected abstract <R> ReactiveFluentQuerySupport<P, R> create(P predicate, Sort sort, Class<R> resultType,
+	protected abstract <R> ReactiveFluentQuerySupport<P, R> create(P predicate, Sort sort, int limit, Class<R> resultType,
 			List<String> fieldsToInclude);
 
 	P getPredicate() {
@@ -88,6 +98,10 @@ abstract class ReactiveFluentQuerySupport<P, T> implements FluentQuery.ReactiveF
 
 	Sort getSort() {
 		return sort;
+	}
+
+	int getLimit() {
+		return limit;
 	}
 
 	Class<T> getResultType() {

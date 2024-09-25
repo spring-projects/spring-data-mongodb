@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -141,7 +141,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 		Assert.notNull(field, "Exposed field must not be null");
 
-		ArrayList<ExposedField> result = new ArrayList<ExposedField>();
+		ArrayList<ExposedField> result = new ArrayList<>();
 		result.addAll(field.synthetic ? syntheticFields : originalFields);
 		result.add(field);
 
@@ -300,11 +300,9 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof ExposedField)) {
+			if (!(obj instanceof ExposedField that)) {
 				return false;
 			}
-
-			ExposedField that = (ExposedField) obj;
 
 			return this.field.equals(that.field) && this.synthetic == that.synthetic;
 		}
@@ -393,13 +391,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof DirectFieldReference)) {
+			if (!(obj instanceof DirectFieldReference fieldReference)) {
 				return false;
 			}
 
-			DirectFieldReference that = (DirectFieldReference) obj;
-
-			return this.field.equals(that.field);
+			return this.field.equals(fieldReference.field);
 		}
 
 		@Override
@@ -460,12 +456,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 				return true;
 			}
 
-			if (!(obj instanceof ExpressionFieldReference)) {
+			if (!(obj instanceof ExpressionFieldReference fieldReference)) {
 				return false;
 			}
 
-			ExpressionFieldReference that = (ExpressionFieldReference) obj;
-			return ObjectUtils.nullSafeEquals(this.delegate, that.delegate);
+			return ObjectUtils.nullSafeEquals(this.delegate, fieldReference.delegate);
 		}
 
 		@Override

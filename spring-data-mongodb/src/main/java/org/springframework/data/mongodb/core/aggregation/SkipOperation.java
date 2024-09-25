@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
 /**
  * Encapsulates the aggregation framework {@code $skip}-operation.
  * <p>
- * We recommend to use the static factory method {@link Aggregation#skip(int)} instead of creating instances of this
+ * We recommend to use the static factory method {@link Aggregation#skip(long)} instead of creating instances of this
  * class directly.
  *
  * @author Thomas Darimont

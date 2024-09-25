@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.AllArgsConstructor;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,8 +37,11 @@ import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.SetOperators.SetUnion;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -455,14 +456,44 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				.isEqualTo(new Document("val", "$withUnwrapped.prefix-with-at-field-annotation"));
 	}
 
+	@Test // GH-4070
+	void rendersLocalVariables() {
+
+		AggregationOperationContext context = getContext(WithLists.class);
+
+		Document agg = newAggregation(WithLists.class,
+				project()
+						.and(Reduce.arrayOf("listOfListOfString").withInitialValue(field("listOfString"))
+								.reduce(SetUnion.arrayAsSet(Variable.VALUE.getTarget()).union(Variable.THIS.getTarget())))
+						.as("listOfString")).toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project")).isEqualTo(Document.parse("""
+				{
+					"listOfString" : {
+						"$reduce" : {
+							"in" : { "$setUnion" : ["$$value", "$$this"] },
+							"initialValue" : "$listOfString",
+							"input" : "$listOfListOfString"
+						}
+					}
+				}
+				"""));
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")
-	@AllArgsConstructor
 	public static class FooPerson {
 
 		final ObjectId id;
 		final String name;
 		@org.springframework.data.mongodb.core.mapping.Field("last_name") final String lastName;
 		final Age age;
+
+		public FooPerson(ObjectId id, String name, String lastName, Age age) {
+			this.id = id;
+			this.name = name;
+			this.lastName = lastName;
+			this.age = age;
+		}
 	}
 
 	public static class Age {
@@ -552,5 +583,10 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		@org.springframework.data.mongodb.core.mapping.Field("with-at-field-annotation") //
 		String atFieldAnnotatedValue;
+	}
+
+	static class WithLists {
+		public List<String> listOfString;
+		public List<List<String>> listOfListOfString;
 	}
 }

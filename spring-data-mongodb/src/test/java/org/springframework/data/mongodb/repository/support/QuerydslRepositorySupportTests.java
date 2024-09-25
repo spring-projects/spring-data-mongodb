@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,13 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Data;
-
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -280,25 +278,125 @@ public class QuerydslRepositorySupportTests {
 				"find({\"lastname\":\"Matthews\",\"coworker\":{\"$ref\":\"user\",\"$id\":\"id\"}}).sort({\"firstname\":1}).skip(1).limit(5)");
 	}
 
-	@Data
 	@Document
 	public static class Outer {
 
 		@Id String id;
 		Inner inner;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Inner getInner() {
+			return this.inner;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setInner(Inner inner) {
+			this.inner = inner;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Outer outer = (Outer) o;
+			return Objects.equals(id, outer.id) && Objects.equals(inner, outer.inner);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, inner);
+		}
+
+		public String toString() {
+			return "QuerydslRepositorySupportTests.Outer(id=" + this.getId() + ", inner=" + this.getInner() + ")";
+		}
 	}
 
-	@Data
 	public static class Inner {
 
 		@Id String id;
 		String value;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Inner inner = (Inner) o;
+			return Objects.equals(id, inner.id) && Objects.equals(value, inner.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, value);
+		}
+
+		public String toString() {
+			return "QuerydslRepositorySupportTests.Inner(id=" + this.getId() + ", value=" + this.getValue() + ")";
+		}
 	}
 
-	@Data
 	@Document
 	public static class WithMongoId {
 
 		@MongoId(FieldType.STRING) String id;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			WithMongoId that = (WithMongoId) o;
+			return Objects.equals(id, that.id);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id);
+		}
+
+		public String toString() {
+			return "QuerydslRepositorySupportTests.WithMongoId(id=" + this.getId() + ")";
+		}
 	}
 }

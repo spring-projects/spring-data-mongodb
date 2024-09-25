@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,6 +29,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.util.Lock;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
@@ -35,8 +38,7 @@ import org.springframework.util.ObjectUtils;
 /**
  * Simple {@link Executor} based {@link MessageListenerContainer} implementation for running {@link Task tasks} like
  * listening to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> and tailable
- * cursors.
- * <br />
+ * cursors. <br />
  * This message container creates long-running tasks that are executed on {@link Executor}.
  *
  * @author Christoph Strobl
@@ -49,8 +51,15 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	private final TaskFactory taskFactory;
 	private final Optional<ErrorHandler> errorHandler;
 
-	private final Object lifecycleMonitor = new Object();
 	private final Map<SubscriptionRequest, Subscription> subscriptions = new LinkedHashMap<>();
+
+	private final ReadWriteLock lifecycleMonitor = new ReentrantReadWriteLock();
+	private final Lock lifecycleRead = Lock.of(lifecycleMonitor.readLock());
+	private final Lock lifecycleWrite = Lock.of(lifecycleMonitor.writeLock());
+
+	private final ReadWriteLock subscriptionMonitor = new ReentrantReadWriteLock();
+	private final Lock subscriptionRead = Lock.of(subscriptionMonitor.readLock());
+	private final Lock subscriptionWrite = Lock.of(subscriptionMonitor.writeLock());
 
 	private boolean running = false;
 
@@ -109,43 +118,33 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	@Override
 	public void start() {
 
-		synchronized (lifecycleMonitor) {
+		lifecycleWrite.executeWithoutResult(() -> {
+			if (!this.running) {
+				subscriptions.values().stream() //
+						.filter(it -> !it.isActive()) //
+						.filter(TaskSubscription.class::isInstance) //
+						.map(TaskSubscription.class::cast) //
+						.map(TaskSubscription::getTask) //
+						.forEach(taskExecutor::execute);
 
-			if (this.running) {
-				return;
+				running = true;
 			}
-
-			subscriptions.values().stream() //
-					.filter(it -> !it.isActive()) //
-					.filter(it -> it instanceof TaskSubscription) //
-					.map(TaskSubscription.class::cast) //
-					.map(TaskSubscription::getTask) //
-					.forEach(taskExecutor::execute);
-
-			running = true;
-		}
+		});
 	}
 
 	@Override
 	public void stop() {
-
-		synchronized (lifecycleMonitor) {
-
+		lifecycleWrite.executeWithoutResult(() -> {
 			if (this.running) {
-
 				subscriptions.values().forEach(Cancelable::cancel);
-
 				running = false;
 			}
-		}
+		});
 	}
 
 	@Override
 	public boolean isRunning() {
-
-		synchronized (this.lifecycleMonitor) {
-			return running;
-		}
+		return lifecycleRead.execute(() -> running);
 	}
 
 	@Override
@@ -170,36 +169,30 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
-
-		synchronized (lifecycleMonitor) {
-			return Optional.ofNullable(subscriptions.get(request));
-		}
+		return subscriptionRead.execute(() -> Optional.ofNullable(subscriptions.get(request)));
 	}
 
 	public Subscription register(SubscriptionRequest request, Task task) {
 
-		Subscription subscription = new TaskSubscription(task);
-
-		synchronized (lifecycleMonitor) {
-
+		return subscriptionWrite.execute(() -> {
 			if (subscriptions.containsKey(request)) {
 				return subscriptions.get(request);
 			}
 
+			Subscription subscription = new TaskSubscription(task);
 			this.subscriptions.put(request, subscription);
 
-			if (this.running) {
+			if (this.isRunning()) {
 				taskExecutor.execute(task);
 			}
-		}
+			return subscription;
+		});
 
-		return subscription;
 	}
 
 	@Override
 	public void remove(Subscription subscription) {
-
-		synchronized (lifecycleMonitor) {
+		subscriptionWrite.executeWithoutResult(() -> {
 
 			if (subscriptions.containsValue(subscription)) {
 
@@ -209,7 +202,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 				subscriptions.values().remove(subscription);
 			}
-		}
+		});
 	}
 
 	/**

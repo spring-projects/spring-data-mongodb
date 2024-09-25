@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,6 +145,16 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public MongoField getMongoField() {
+
+		if (!context.getProperty().isUnwrapped()) {
+			return delegate.getMongoField();
+		}
+
+		return delegate.getMongoField().withPrefix(context.getProperty().findAnnotation(Unwrapped.class).prefix());
+	}
+
+	@Override
 	public TypeInformation<?> getTypeInformation() {
 		return delegate.getTypeInformation();
 	}
@@ -256,6 +266,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public boolean isReadable() {
+		return delegate.isReadable();
+	}
+
+	@Override
 	public boolean isImmutable() {
 		return delegate.isImmutable();
 	}
@@ -344,6 +359,10 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	public boolean equals(@Nullable Object obj) {
 
 		if (this == obj) {
+			return true;
+		}
+
+		if (obj == delegate) {
 			return true;
 		}
 

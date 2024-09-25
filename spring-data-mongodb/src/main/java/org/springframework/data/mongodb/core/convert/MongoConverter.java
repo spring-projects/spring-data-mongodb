@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,39 +112,35 @@ public interface MongoConverter
 			return (T) source;
 		}
 
-		if (source instanceof BsonValue) {
+		if (source instanceof BsonValue bson) {
 
-			Object value = BsonUtils.toJavaType((BsonValue) source);
+			Object value = BsonUtils.toJavaType(bson);
 
-			if (value instanceof Document) {
+			if (value instanceof Document document) {
 
-				Document sourceDocument = (Document) value;
+				if (document.containsKey("$ref") && document.containsKey("$id")) {
 
-				if (sourceDocument.containsKey("$ref") && sourceDocument.containsKey("$id")) {
-
-					Object id = sourceDocument.get("$id");
-					String collection = sourceDocument.getString("$ref");
+					Object id = document.get("$id");
+					String collection = document.getString("$ref");
 
 					MongoPersistentEntity<?> entity = getMappingContext().getPersistentEntity(targetType);
 					if (entity != null && entity.hasIdProperty()) {
 						id = convertId(id, entity.getIdProperty().getFieldType());
 					}
 
-					DBRef ref = sourceDocument.containsKey("$db") ? new DBRef(sourceDocument.getString("$db"), collection, id)
+					DBRef ref = document.containsKey("$db") ? new DBRef(document.getString("$db"), collection, id)
 							: new DBRef(collection, id);
 
-					sourceDocument = dbRefResolver.fetch(ref);
-					if (sourceDocument == null) {
+					document = dbRefResolver.fetch(ref);
+					if (document == null) {
 						return null;
 					}
 				}
 
-				return read(targetType, sourceDocument);
+				return read(targetType, document);
 			} else {
-				if (!ClassUtils.isAssignable(targetType, value.getClass())) {
-					if (getConversionService().canConvert(value.getClass(), targetType)) {
-						return getConversionService().convert(value, targetType);
-					}
+				if (!ClassUtils.isAssignable(targetType, value.getClass()) && getConversionService().canConvert(value.getClass(), targetType)) {
+					return getConversionService().convert(value, targetType);
 				}
 			}
 

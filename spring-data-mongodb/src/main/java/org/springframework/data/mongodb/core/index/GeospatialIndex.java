@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -40,7 +41,7 @@ public class GeospatialIndex implements IndexDefinition {
 	private @Nullable Integer max;
 	private @Nullable Integer bits;
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
-	private Double bucketSize = 1.0;
+	private Double bucketSize = MongoClientVersion.isVersion5orNewer() ? null : 1.0;
 	private @Nullable String additionalField;
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
@@ -72,7 +73,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 */
 	public GeospatialIndex withMin(int min) {
-		this.min = Integer.valueOf(min);
+		this.min = min;
 		return this;
 	}
 
@@ -81,7 +82,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 */
 	public GeospatialIndex withMax(int max) {
-		this.max = Integer.valueOf(max);
+		this.max = max;
 		return this;
 	}
 
@@ -90,7 +91,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 */
 	public GeospatialIndex withBits(int bits) {
-		this.bits = Integer.valueOf(bits);
+		this.bits = bits;
 		return this;
 	}
 
@@ -163,25 +164,16 @@ public class GeospatialIndex implements IndexDefinition {
 		Document document = new Document();
 
 		switch (type) {
-
-			case GEO_2D:
-				document.put(field, "2d");
-				break;
-
-			case GEO_2DSPHERE:
-				document.put(field, "2dsphere");
-				break;
-
-			case GEO_HAYSTACK:
+			case GEO_2D -> document.put(field, "2d");
+			case GEO_2DSPHERE -> document.put(field, "2dsphere");
+			case GEO_HAYSTACK -> {
 				document.put(field, "geoHaystack");
 				if (!StringUtils.hasText(additionalField)) {
-					throw new IllegalArgumentException("When defining geoHaystack index, an additionnal field must be defined");
+					throw new IllegalArgumentException("When defining geoHaystack index, an additional field must be defined");
 				}
 				document.put(additionalField, 1);
-				break;
-
-			default:
-				throw new IllegalArgumentException("Unsupported geospatial index " + type);
+			}
+			default -> throw new IllegalArgumentException("Unsupported geospatial index " + type);
 		}
 
 		return document;
@@ -216,7 +208,9 @@ public class GeospatialIndex implements IndexDefinition {
 
 			case GEO_HAYSTACK:
 
-				document.put("bucketSize", bucketSize);
+				if (bucketSize != null) {
+					document.put("bucketSize", bucketSize);
+				}
 				break;
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.springframework.util.ObjectUtils;
  * @author Sebastien Gerard
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Julia Lee
  */
 public class MethodReferenceNode extends ExpressionNode {
 
@@ -228,6 +229,10 @@ public class MethodReferenceNode extends ExpressionNode {
 				.mappingParametersTo("n", "input"));
 		map.put("minN", mapArgRef().forOperator("$minN") //
 				.mappingParametersTo("n", "input"));
+		map.put("percentile", mapArgRef().forOperator("$percentile") //
+				.mappingParametersTo("input", "p", "method"));
+		map.put("median", mapArgRef().forOperator("$median") //
+				.mappingParametersTo("input", "method"));
 
 		// TYPE OPERATORS
 		map.put("type", singleArgRef().forOperator("$type"));

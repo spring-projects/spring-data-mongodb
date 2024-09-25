@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanReference;
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
@@ -38,6 +37,7 @@ import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingSt
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.Account;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +48,7 @@ import org.springframework.stereotype.Component;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Ryan Tenney
+ * @author Tomasz Forys
  */
 public class MappingMongoConverterParserIntegrationTests {
 
@@ -59,6 +60,24 @@ public class MappingMongoConverterParserIntegrationTests {
 		loadValidConfiguration();
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
+	}
+
+	@Test // GH-4275
+	void defaultsToFalseForAutoIndexCreation() {
+
+		loadValidConfiguration();
+		MongoMappingContext mongoMappingContext = factory.getBean("converter.mongoMappingContext",
+				MongoMappingContext.class);
+		assertThat(mongoMappingContext.isAutoIndexCreation()).isFalse();
+	}
+
+	@Test // GH-4275
+	void allowsToOverrideAutoIndexCreation() {
+
+		loadValidConfiguration();
+		MongoMappingContext mongoMappingContext = factory.getBean("autoIndexCreationConverter.mongoMappingContext",
+				MongoMappingContext.class);
+		assertThat(mongoMappingContext.isAutoIndexCreation()).isTrue();
 	}
 
 	@Test // DATAMONGO-725

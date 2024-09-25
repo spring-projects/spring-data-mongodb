@@ -5,6 +5,7 @@ ARG MONGODB
 
 ENV TZ=Etc/UTC
 ENV DEBIAN_FRONTEND=noninteractive
+ENV MONGO_VERSION=${MONGODB}
 
 RUN set -eux; \
 	sed -i -e 's/archive.ubuntu.com/mirror.one.com/g' /etc/apt/sources.list && \

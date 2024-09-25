@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
  */
 package org.springframework.data.mongodb.test.util;
 
-import lombok.Data;
-
 import org.springframework.data.domain.Persistable;
 
 /**
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@Data
 public class AfterTransactionAssertion<T extends Persistable> {
 
 	private final T persistable;
 	private boolean expectToBePresent;
+
+	public AfterTransactionAssertion(T persistable) {
+		this.persistable = persistable;
+	}
 
 	public void isPresent() {
 		expectToBePresent = true;
@@ -43,5 +44,17 @@ public class AfterTransactionAssertion<T extends Persistable> {
 
 	public boolean shouldBePresent() {
 		return expectToBePresent;
+	}
+
+	public T getPersistable() {
+		return this.persistable;
+	}
+
+	public boolean isExpectToBePresent() {
+		return this.expectToBePresent;
+	}
+
+	public void setExpectToBePresent(boolean expectToBePresent) {
+		this.expectToBePresent = expectToBePresent;
 	}
 }

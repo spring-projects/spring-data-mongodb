@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,10 +93,10 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 
 			return withOptions(builder -> {
 
-				if (token instanceof Instant) {
-					builder.resumeAt((Instant) token);
-				} else if (token instanceof BsonTimestamp) {
-					builder.resumeAt((BsonTimestamp) token);
+				if (token instanceof Instant instant) {
+					builder.resumeAt(instant);
+				} else if (token instanceof BsonTimestamp bsonTimestamp) {
+					builder.resumeAt(bsonTimestamp);
 				}
 			});
 		}
@@ -161,13 +161,14 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 			}
 
 			options.getFilter().ifPresent(it -> {
-				if (it instanceof Aggregation) {
-					builder.filter((Aggregation) it);
+				if (it instanceof Aggregation aggregation) {
+					builder.filter(aggregation);
 				} else {
 					builder.filter(((List<Document>) it).toArray(new Document[0]));
 				}
 			});
 			options.getFullDocumentLookup().ifPresent(builder::fullDocumentLookup);
+			options.getFullDocumentBeforeChangeLookup().ifPresent(builder::fullDocumentBeforeChangeLookup);
 			options.getCollation().ifPresent(builder::collation);
 
 			if (options.isResumeAfter()) {

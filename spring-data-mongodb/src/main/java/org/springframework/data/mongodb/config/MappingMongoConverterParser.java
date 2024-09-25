@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.mongodb.config.BeanNames.*;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,9 +59,9 @@ import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventL
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
-
 import org.w3c.dom.Element;
 
 /**
@@ -76,6 +74,7 @@ import org.w3c.dom.Element;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Zied Yaich
+ * @author Tomasz Forys
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -96,13 +95,12 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
 		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
 
-		String autoIndexCreation = element.getAttribute("auto-index-creation");
-		boolean autoIndexCreationEnabled = StringUtils.hasText(autoIndexCreation) && Boolean.valueOf(autoIndexCreation);
+		boolean autoIndexCreationEnabled = isAutoIndexCreationEnabled(element);
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
-		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, id);
+		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, id, autoIndexCreationEnabled);
 
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
@@ -198,11 +196,33 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return new RuntimeBeanReference(validatorName);
 	}
 
+	private static boolean isAutoIndexCreationEnabled(Element element) {
+
+		String autoIndexCreation = element.getAttribute("auto-index-creation");
+		return StringUtils.hasText(autoIndexCreation) && Boolean.parseBoolean(autoIndexCreation);
+	}
+
+	/**
+	 * Create and register the {@link BeanDefinition} for a {@link MongoMappingContext} if not explicitly referenced by a
+	 * given {@literal mapping-context-ref} {@link Element#getAttribute(String) attribuite}.
+	 * 
+	 * @return the mapping context bean name.
+	 * @deprecated since 4.3. Use
+	 *             {@link #potentiallyCreateMappingContext(Element, ParserContext, BeanDefinition, String, boolean)}
+	 *             instead.
+	 */
+	@Deprecated(since = "4.3", forRemoval = true)
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId) {
 		return potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, converterId, false);
 	}
 
+	/**
+	 * Create and register the {@link BeanDefinition} for a {@link MongoMappingContext} if not explicitly referenced by a
+	 * given {@literal mapping-context-ref} {@link Element#getAttribute(String) attribuite}.
+	 * 
+	 * @return the mapping context bean name.
+	 */
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId, boolean autoIndexCreation) {
 
@@ -282,7 +302,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<>();
 			List<Element> converterElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
 
-			if (converterElements != null) {
+			if (!ObjectUtils.isEmpty(converterElements)) {
 				for (Element listenerElement : converterElements) {
 					converterBeans.add(parseConverter(listenerElement, parserContext));
 				}
@@ -371,7 +391,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 			Assert.notNull(filters, "TypeFilters must not be null");
 
-			this.delegates = new HashSet<>(Arrays.asList(filters));
+			this.delegates = Set.of(filters);
 		}
 
 		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)

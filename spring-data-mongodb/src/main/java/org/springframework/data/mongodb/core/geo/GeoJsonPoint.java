@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,6 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 	 */
 	@Override
 	public List<Double> getCoordinates() {
-		return Arrays.asList(Double.valueOf(getX()), Double.valueOf(getY()));
+		return Arrays.asList(getX(), getY());
 	}
 }

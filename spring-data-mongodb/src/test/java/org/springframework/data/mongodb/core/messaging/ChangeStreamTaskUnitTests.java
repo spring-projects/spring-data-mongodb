@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -39,20 +38,24 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 
 /**
+ * Unit tests for {@link ChangeStreamTask}.
+ *
  * @author Christoph Strobl
  * @author Myroslav Kosinskyi
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({ "unchecked", "rawtypes" })
 class ChangeStreamTaskUnitTests {
 
-	ChangeStreamTask task;
 	@Mock MongoTemplate template;
 	@Mock MongoDatabase mongoDatabase;
 	@Mock MongoCollection<Document> mongoCollection;
 	@Mock ChangeStreamIterable<Document> changeStreamIterable;
-	private MongoConverter converter;
+
+	MongoConverter converter;
 
 	@BeforeEach
 	void setUp() {
@@ -64,12 +67,8 @@ class ChangeStreamTaskUnitTests {
 		when(template.getDb()).thenReturn(mongoDatabase);
 
 		when(mongoDatabase.getCollection(any())).thenReturn(mongoCollection);
-
 		when(mongoCollection.watch(eq(Document.class))).thenReturn(changeStreamIterable);
-
 		when(changeStreamIterable.fullDocument(any())).thenReturn(changeStreamIterable);
-
-		when(changeStreamIterable.fullDocumentBeforeChange(any())).thenReturn(changeStreamIterable);
 	}
 
 	@Test // DATAMONGO-2258
@@ -86,7 +85,7 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).resumeAfter(eq(resumeToken));
+		verify(changeStreamIterable).resumeAfter(resumeToken);
 	}
 
 	@Test // DATAMONGO-2258
@@ -104,7 +103,7 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).resumeAfter(eq(resumeToken));
+		verify(changeStreamIterable).resumeAfter(resumeToken);
 	}
 
 	@Test // DATAMONGO-2258
@@ -122,7 +121,23 @@ class ChangeStreamTaskUnitTests {
 
 		initTask(request, Document.class);
 
-		verify(changeStreamIterable).startAfter(eq(resumeToken));
+		verify(changeStreamIterable).startAfter(resumeToken);
+	}
+
+	@Test // GH-4495
+	void shouldApplyFullDocumentBeforeChangeToChangeStream() {
+
+		when(changeStreamIterable.fullDocumentBeforeChange(any())).thenReturn(changeStreamIterable);
+
+		ChangeStreamRequest request = ChangeStreamRequest.builder() //
+				.collection("start-wars") //
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED) //
+				.publishTo(message -> {}) //
+				.build();
+
+		initTask(request, Document.class);
+
+		verify(changeStreamIterable).fullDocumentBeforeChange(FullDocumentBeforeChange.REQUIRED);
 	}
 
 	private MongoCursor<ChangeStreamDocument<Document>> initTask(ChangeStreamRequest request, Class<?> targetType) {

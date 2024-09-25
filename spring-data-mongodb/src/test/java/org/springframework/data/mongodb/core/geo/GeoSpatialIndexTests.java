@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
@@ -36,6 +38,7 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
@@ -85,6 +88,8 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 	@Test // DATAMONGO-778
 	@EnableIfMongoServerVersion(isLessThan = "5.0")
 	public void testHaystackIndex() {
+
+		Assumptions.assumeThat(MongoClientVersion.isVersion5orNewer()).isFalse();
 
 		try {
 			template.save(new GeoSpatialEntityHaystack(45.2, 4.6, "Paris"));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationExpressionCriteria.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
@@ -27,12 +28,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
 
+import org.bson.BsonRegularExpression;
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -43,8 +48,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.Expr;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
@@ -52,6 +59,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -76,6 +84,7 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author David Julia
+ * @author Gyungrai Wang
  */
 public class QueryMapperUnitTests {
 
@@ -131,6 +140,80 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = new org.bson.Document("id", new BigInteger(id.toString(), 16));
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result).containsEntry("_id", id);
+	}
+
+	@Test // GH-4490
+	void translates$GtCorrectly() {
+
+		Criteria criteria = where("id").gt(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$gt")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // GH-4490
+	void translates$GteCorrectly() {
+
+		Criteria criteria = where("id").gte(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$gte")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // GH-4490
+	void translates$LteCorrectly() {
+
+		Criteria criteria = where("id").lte(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$lte")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // GH-4490
+	void translates$LtCorrectly() {
+
+		Criteria criteria = where("id").lt(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$lt")).isInstanceOf(ObjectId.class);
+	}
+
+	@Test // GH-4490
+	void translatesMultipleCompareOperatorsCorrectly() {
+
+		Criteria criteria = where("id").lt(new ObjectId().toString()).lte(new ObjectId().toString())
+				.gt(new ObjectId().toString()).gte(new ObjectId().toString());
+
+		org.bson.Document query = new org.bson.Document("id", new ObjectId().toString());
+		org.bson.Document result = mapper.getMappedObject(criteria.getCriteriaObject(),
+				context.getPersistentEntity(IdWrapper.class));
+		Object object = result.get("_id");
+		assertThat(object).isInstanceOf(org.bson.Document.class);
+		org.bson.Document document = (org.bson.Document) object;
+		assertThat(document.get("$lt")).isInstanceOf(ObjectId.class);
+		assertThat(document.get("$lte")).isInstanceOf(ObjectId.class);
+		assertThat(document.get("$gt")).isInstanceOf(ObjectId.class);
+		assertThat(document.get("$gte")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-278
@@ -558,7 +641,7 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document queryObject = query(
 				where("referenceList").is(new org.bson.Document("$nested", new org.bson.Document("$keys", 0L))))
-						.getQueryObject();
+				.getQueryObject();
 
 		org.bson.Document mappedObject = mapper.getMappedObject(queryObject,
 				context.getPersistentEntity(WithDBRefList.class));
@@ -830,7 +913,7 @@ public class QueryMapperUnitTests {
 	@Test // GH-3688
 	void mappingShouldAllowSettingEntireNestedNumericKeyedMapValue() {
 
-		Query query = query(where("outerMap.1.map").is(null)); //newEntityWithComplexValueTypeMap()
+		Query query = query(where("outerMap.1.map").is(null)); // newEntityWithComplexValueTypeMap()
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithIntKeyedMapOfMap.class));
@@ -1000,6 +1083,37 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(WithExplicitTargetTypes.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("scripts", new Code(script)));
+	}
+
+	@Test // GH-4649
+	void shouldRetainRegexPattern() {
+
+		Query query = new Query(where("text").regex("foo"));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithExplicitTargetTypes.class));
+
+		assertThat(document.get("text")).isInstanceOf(Pattern.class);
+
+		query = new Query(where("text").regex(new BsonRegularExpression("foo")));
+		document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithExplicitTargetTypes.class));
+		assertThat(document.get("text")).isInstanceOf(BsonRegularExpression.class);
+	}
+
+	@Test // GH-4674
+	void shouldRetainRegexPatternForIdProperty() {
+
+		org.bson.Document javaRegex = mapper.getMappedObject(query(where("id").regex("^1234$")).getQueryObject(),
+				context.getPersistentEntity(WithStringId.class));
+
+		assertThat(javaRegex.get("_id")).isInstanceOf(Pattern.class);
+
+		org.bson.Document bsonRegex = mapper.getMappedObject(
+				query(where("id").regex(new BsonRegularExpression("^1234$"))).getQueryObject(),
+				context.getPersistentEntity(WithStringId.class));
+
+		assertThat(bsonRegex.get("_id")).isInstanceOf(BsonRegularExpression.class);
 	}
 
 	@Test // DATAMONGO-2339
@@ -1305,7 +1419,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithPropertyUsingUnderscoreInName.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document("fieldname_with_underscores", new org.bson.Document("$exists", true)));
+		assertThat(document)
+				.isEqualTo(new org.bson.Document("fieldname_with_underscores", new org.bson.Document("$exists", true)));
 	}
 
 	@Test // GH-3601
@@ -1327,7 +1442,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document("simple.fieldname_with_underscores", new org.bson.Document("$exists", true)));
+		assertThat(document)
+				.isEqualTo(new org.bson.Document("simple.fieldname_with_underscores", new org.bson.Document("$exists", true)));
 	}
 
 	@Test // GH-3601
@@ -1349,7 +1465,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document("double_underscore.fieldname_with_underscores", new org.bson.Document("$exists", true)));
+		assertThat(document).isEqualTo(
+				new org.bson.Document("double_underscore.fieldname_with_underscores", new org.bson.Document("$exists", true)));
 	}
 
 	@Test // GH-3601
@@ -1360,7 +1477,8 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document("double_underscore.renamed", new org.bson.Document("$exists", true)));
+		assertThat(document)
+				.isEqualTo(new org.bson.Document("double_underscore.renamed", new org.bson.Document("$exists", true)));
 	}
 
 	@Test // GH-3633
@@ -1398,7 +1516,8 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("address.street").is("1007 Mountain Drive"));
 
-		MongoCustomConversions mongoCustomConversions = new MongoCustomConversions(Collections.singletonList(new MyAddressToDocumentConverter()));
+		MongoCustomConversions mongoCustomConversions = new MongoCustomConversions(
+				Collections.singletonList(new MyAddressToDocumentConverter()));
 
 		this.context = new MongoMappingContext();
 		this.context.setSimpleTypeHolder(mongoCustomConversions.getSimpleTypeHolder());
@@ -1410,7 +1529,8 @@ public class QueryMapperUnitTests {
 
 		this.mapper = new QueryMapper(converter);
 
-		assertThat(mapper.getMappedSort(query.getQueryObject(), context.getPersistentEntity(Customer.class))).isEqualTo(new org.bson.Document("address.street", "1007 Mountain Drive"));
+		assertThat(mapper.getMappedSort(query.getQueryObject(), context.getPersistentEntity(Customer.class)))
+				.isEqualTo(new org.bson.Document("address.street", "1007 Mountain Drive"));
 	}
 
 	@Test // GH-3790
@@ -1431,7 +1551,8 @@ public class QueryMapperUnitTests {
 	@Test // GH-3668
 	void mapStringIdFieldProjection() {
 
-		org.bson.Document mappedFields = mapper.getMappedFields(new org.bson.Document("id", 1), context.getPersistentEntity(WithStringId.class));
+		org.bson.Document mappedFields = mapper.getMappedFields(new org.bson.Document("id", 1),
+				context.getPersistentEntity(WithStringId.class));
 		assertThat(mappedFields).containsEntry("_id", 1);
 	}
 
@@ -1453,12 +1574,130 @@ public class QueryMapperUnitTests {
 		assertThat(mappedQuery.get("_id"))
 				.isEqualTo(org.bson.Document.parse("{ $in: [ {$oid: \"5b8bedceb1e0bfc07b008828\" } ]}"));
 	}
-	
+
 	@Test // GH-3596
 	void considersValueConverterWhenPresent() {
 
-		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", "value"), context.getPersistentEntity(WithPropertyValueConverter.class));
+		org.bson.Document mappedObject = mapper.getMappedObject(new org.bson.Document("text", "value"),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
 		assertThat(mappedObject).isEqualTo(new org.bson.Document("text", "eulav"));
+	}
+
+	@Test // GH-2750
+	void mapsAggregationExpression() {
+
+		Query query = query(whereExpr(ComparisonOperators.valueOf("field").greaterThan("budget")));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$foo', '$budget'] } }");
+	}
+
+	@Test // GH-2750
+	void unwrapsAggregationExpressionExprObjectWrappedInExpressionCriteria() {
+
+		Query query = query(whereExpr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$foo', '$budget'] } }");
+	}
+
+	@Test // GH-2750
+	void mapsMongoExpressionToFieldsIfItsAnAggregationExpression() {
+
+		Query query = query(expr(ComparisonOperators.valueOf("field").greaterThan("budget")));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$foo', '$budget'] } }");
+	}
+
+	@Test // GH-2750
+	void usageOfMongoExpressionOnCriteriaDoesNotUnwrapAnExprAggregationExpression() {
+
+		Query query = query(expr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $expr : { $gt : [ '$foo', '$budget'] } } }");
+	}
+
+	@Test // GH-4687
+	void usageOfUntypedAggregationShouldRenderOperationsAsIs() {
+
+		Query query = query(expr(Expr.valueOf(ComparisonOperators.valueOf("field").greaterThan("budget"))));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+			context.getPersistentEntity(Object.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $expr : { $gt : [ '$field', '$budget'] } } }");
+	}
+
+	@Test // GH-2750
+	void usesMongoExpressionDocumentAsIsIfItIsNotAnAggregationExpression() {
+
+		Query query = query(expr(() -> org.bson.Document.parse("{ $gt : [ '$field', '$budget'] }")));
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(CustomizedField.class));
+		assertThat(mappedObject).isEqualTo("{ $expr : { $gt : [ '$field', '$budget'] } }");
+	}
+
+	@Test // GH-4080
+	void convertsListOfValuesForPropertyThatHasValueConverterButIsNotCollectionLikeOneByOne() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("text").in("spring", "data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : { $in : ['gnirps', 'atad'] } }");
+	}
+
+	@Test // GH-4464
+	void usesKeyNameWithDotsIfFieldNameTypeIsKey() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(query(where("value").is("A")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyHavingDotsInFieldName.class));
+		assertThat(mappedObject).isEqualTo("{ 'field.name.with.dots' : 'A' }");
+	}
+
+	@Test // GH-4577
+	void mappingShouldRetainMapKeyOrder() {
+
+		TreeMap<String, String> sourceMap = new TreeMap<>(Map.of("test1", "123", "test2", "456"));
+
+		org.bson.Document target = mapper.getMappedObject(query(where("simpleMap").is(sourceMap)).getQueryObject(),
+				context.getPersistentEntity(WithSimpleMap.class));
+		assertThat(target.get("simpleMap", Map.class)).containsExactlyEntriesOf(sourceMap);
+	}
+
+	@Test // GH-4510
+	void convertsNestedOperatorValueForPropertyThatHasValueConverter() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(
+				query(where("text").gt("spring").lt("data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : {  $gt : 'gnirps', $lt : 'atad' } }");
+	}
+
+	@Test // GH-4510
+	void convertsNestedOperatorValueForPropertyContainingListThatHasValueConverter() {
+
+		org.bson.Document mappedObject = mapper.getMappedObject(
+				query(where("text").gt("spring").in("data")).getQueryObject(),
+				context.getPersistentEntity(WithPropertyValueConverter.class));
+
+		assertThat(mappedObject).isEqualTo("{ 'text' : {  $gt : 'gnirps', $in : [ 'atad' ] } }");
+	}
+
+	@Test // GH-4736
+	void allOperatorShouldConvertIdCollection() {
+
+		ObjectId oid = ObjectId.get();
+		Criteria criteria = new Criteria().andOperator(where("name").isNull().and("id").all(List.of(oid.toString())));
+
+		org.bson.Document mappedObject = mapper.getMappedObject(criteria.getCriteriaObject(),
+			context.getPersistentEntity(Customer.class));
+
+		assertThat(mappedObject).containsEntry("$and.[0]._id.$all", List.of(oid));
+	}
+
+	class WithSimpleMap {
+		Map<String, String> simpleMap;
 	}
 
 	class WithDeepArrayNesting {
@@ -1588,23 +1827,20 @@ public class QueryMapperUnitTests {
 
 		private String name;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
-		private Customer customer;
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") private Customer customer;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
-		private List<Customer> customers;
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") private List<Customer> customers;
 
-		@DocumentReference
-		private Sample sample;
+		@DocumentReference private Sample sample;
 
-		@DocumentReference
-		private List<Sample> samples;
+		@DocumentReference private List<Sample> samples;
 	}
 
 	class WithTextScoreProperty {
 
 		@Id String id;
-		@TextScore @Field("score") Float textScore;
+		@TextScore
+		@Field("score") Float textScore;
 	}
 
 	static class RootForClassWithExplicitlyRenamedIdField {
@@ -1641,7 +1877,7 @@ public class QueryMapperUnitTests {
 		Map<Integer, SimpleEntityWithoutId> map;
 	}
 
-	static class EntityWithIntKeyedMapOfMap{
+	static class EntityWithIntKeyedMapOfMap {
 		Map<Integer, EntityWithComplexValueTypeMap> outerMap;
 	}
 
@@ -1653,6 +1889,9 @@ public class QueryMapperUnitTests {
 
 		@Field(targetType = FieldType.SCRIPT) //
 		String script;
+
+		@Field(targetType = FieldType.STRING) //
+		String text;
 
 		@Field(targetType = FieldType.SCRIPT) //
 		List<String> scripts;
@@ -1723,15 +1962,13 @@ public class QueryMapperUnitTests {
 
 		String fieldname_with_underscores;
 
-		@Field("renamed")
-		String renamed_fieldname_with_underscores;
+		@Field("renamed") String renamed_fieldname_with_underscores;
 	}
 
 	@Document
 	static class Customer {
 
-		@Id
-		private ObjectId id;
+		@Id private ObjectId id;
 		private String name;
 		private MyAddress address;
 	}
@@ -1739,11 +1976,10 @@ public class QueryMapperUnitTests {
 	static class MyAddress {
 		private String street;
 	}
-	
+
 	static class WithPropertyValueConverter {
-		
-		@ValueConverter(ReversingValueConverter.class)
-		String text;
+
+		@ValueConverter(ReversingValueConverter.class) String text;
 	}
 
 	@WritingConverter
@@ -1755,5 +1991,11 @@ public class QueryMapperUnitTests {
 			doc.put("street", address.street);
 			return doc;
 		}
+	}
+
+	static class WithPropertyHavingDotsInFieldName {
+
+		@Field(name = "field.name.with.dots", nameType = Type.KEY) String value;
+
 	}
 }

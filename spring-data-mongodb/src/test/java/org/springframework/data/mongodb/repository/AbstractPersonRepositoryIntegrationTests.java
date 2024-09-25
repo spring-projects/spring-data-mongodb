@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,17 +38,11 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatcher;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -208,6 +202,40 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result).contains(dave, stefan);
 	}
 
+	@Test // GH-4308
+	void appliesScrollPositionCorrectly() {
+
+		Window<Person> page = repository.findTop2ByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
+				ScrollPosition.keyset());
+
+		assertThat(page.isLast()).isFalse();
+		assertThat(page.size()).isEqualTo(2);
+		assertThat(page).contains(carter);
+	}
+
+	@Test // GH-4397
+	void appliesLimitToScrollingCorrectly() {
+
+		Window<Person> page = repository.findByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
+				ScrollPosition.keyset(), Limit.of(2));
+
+		assertThat(page.isLast()).isFalse();
+		assertThat(page.size()).isEqualTo(2);
+		assertThat(page).contains(carter);
+	}
+
+	@Test // GH-4308
+	void appliesScrollPositionWithProjectionCorrectly() {
+
+		Window<PersonSummaryDto> page = repository.findCursorProjectionByLastnameLike("*a*",
+				PageRequest.of(0, 2, Sort.by(Direction.ASC, "lastname", "firstname")));
+
+		assertThat(page.isLast()).isFalse();
+		assertThat(page.size()).isEqualTo(2);
+
+		assertThat(page).element(0).isEqualTo(new PersonSummaryDto(carter.getFirstname(), carter.getLastname()));
+	}
+
 	@Test
 	void executesPagedFinderCorrectly() {
 
@@ -217,6 +245,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(page.isLast()).isFalse();
 		assertThat(page.getNumberOfElements()).isEqualTo(2);
 		assertThat(page).contains(carter, stefan);
+	}
+
+	@Test // GH-4397
+	void executesFinderCorrectlyWithSortAndLimit() {
+
+		List<Person> page = repository.findByLastnameLike("*a*", Sort.by(Direction.ASC, "lastname", "firstname"), Limit.of(2));
+
+		assertThat(page).containsExactly(carter, stefan);
 	}
 
 	@Test
@@ -936,6 +972,21 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id)))).contains(dave, carter);
 	}
 
+	@Test // DATAMONGO-969
+	void shouldScrollPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
+
+		Window<Person> scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(ScrollPosition.keyset()));
+
+		assertThat(scroll).containsExactly(boyd, carter);
+
+		ScrollPosition resumeFrom = scroll.positionAt(scroll.size() - 1);
+		scroll = repository.findBy(person.id.in(asList(dave.id, carter.id, boyd.id)), //
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(resumeFrom));
+
+		assertThat(scroll).containsOnly(dave);
+	}
+
 	@Test // DATAMONGO-1030
 	void executesSingleEntityQueryWithProjectionCorrectly() {
 
@@ -1140,6 +1191,33 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 		List<Person> result = repository.findAll(Example.of(sample));
 		assertThat(result).hasSize(2);
+	}
+
+	@Test // GH-4308
+	void scrollByExampleShouldReturnCorrectResult() {
+
+		Person sample = new Person();
+		sample.setLastname("M");
+
+		// needed to tweak stuff a bit since some field are automatically set - so we need to undo this
+		ReflectionTestUtils.setField(sample, "id", null);
+		ReflectionTestUtils.setField(sample, "createdAt", null);
+		ReflectionTestUtils.setField(sample, "email", null);
+
+		Window<Person> result = repository.findBy(
+				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(ScrollPosition.keyset()));
+
+		assertThat(result).containsOnly(dave, leroi);
+		assertThat(result.hasNext()).isTrue();
+
+		ScrollPosition position = result.positionAt(result.size() - 1);
+		result = repository.findBy(
+				Example.of(sample, ExampleMatcher.matching().withMatcher("lastname", GenericPropertyMatcher::startsWith)),
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(position));
+
+		assertThat(result).containsOnly(oliver);
+		assertThat(result.hasNext()).isFalse();
 	}
 
 	@Test // DATAMONGO-1425
@@ -1451,9 +1529,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(result.get(0).getId().equals(bart.getId()));
 	}
 
-	@Test // GH-3395
+	@Test // GH-3395, GH-4404
 	void caseInSensitiveInClause() {
+
 		assertThat(repository.findByLastnameIgnoreCaseIn("bEAuFoRd", "maTTheWs")).hasSize(3);
+
+		repository.save(new Person("the-first", "The First"));
+		repository.save(new Person("the-first-one", "The First One"));
+		repository.save(new Person("the-second", "The Second"));
+
+		assertThat(repository.findByLastnameIgnoreCaseIn("tHE fIRsT")).hasSize(1);
 	}
 
 	@Test // GH-3395

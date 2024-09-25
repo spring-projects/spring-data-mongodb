@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,12 +166,35 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		@Override
+		public TerminatingReplace withOptions(ReplaceOptions options) {
+
+			FindAndReplaceOptions target = new FindAndReplaceOptions();
+			if (options.isUpsert()) {
+				target.upsert();
+			}
+			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+					target, replacement, targetType);
+		}
+
+		@Override
 		public <R> FindAndReplaceWithOptions<R> as(Class<R> resultType) {
 
 			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
 					findAndReplaceOptions, replacement, resultType);
+		}
+
+		@Override
+		public Mono <UpdateResult> replaceFirst() {
+
+			if (replacement != null) {
+				return template.replace(query, domainType, replacement,
+						findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
+			}
+
+			return template.replace(query, domainType, update,
+					findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
 		private Mono<UpdateResult> doUpdate(boolean multi, boolean upsert) {

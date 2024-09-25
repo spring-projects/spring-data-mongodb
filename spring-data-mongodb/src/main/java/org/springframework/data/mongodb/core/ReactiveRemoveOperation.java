@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ public interface ReactiveRemoveOperation {
 
 		/**
 		 * Remove and return all matching documents. <br/>
-		 * <strong>NOTE</strong> The entire list of documents will be fetched before sending the actual delete commands.
+		 * <strong>NOTE:</strong> The entire list of documents will be fetched before sending the actual delete commands.
 		 * Also, {@link org.springframework.context.ApplicationEvent}s will be published for each and every delete
 		 * operation.
 		 *

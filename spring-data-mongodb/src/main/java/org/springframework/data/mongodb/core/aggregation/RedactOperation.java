@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the original author or authors.
+ * Copyright 2020-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -226,14 +226,14 @@ public class RedactOperation implements AggregationOperation {
 
 		private ThenBuilder when() {
 
-			if (when instanceof CriteriaDefinition) {
-				return ConditionalOperators.Cond.when((CriteriaDefinition) when);
+			if (when instanceof CriteriaDefinition criteriaDefinition) {
+				return ConditionalOperators.Cond.when(criteriaDefinition);
 			}
-			if (when instanceof AggregationExpression) {
-				return ConditionalOperators.Cond.when((AggregationExpression) when);
+			if (when instanceof AggregationExpression aggregationExpression) {
+				return ConditionalOperators.Cond.when(aggregationExpression);
 			}
-			if (when instanceof Document) {
-				return ConditionalOperators.Cond.when((Document) when);
+			if (when instanceof Document document) {
+				return ConditionalOperators.Cond.when(document);
 			}
 
 			throw new IllegalArgumentException(String.format(

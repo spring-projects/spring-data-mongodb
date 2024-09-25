@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the original author or authors.
+ * Copyright 2020-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoClient;
@@ -94,7 +95,7 @@ public class MongoTestTemplate extends MongoTemplate {
 	}
 
 	public void flushDatabase() {
-		flush(getDb().listCollectionNames());
+		flush(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(getDb()).listCollectionNames());
 	}
 
 	public void flush(Iterable<String> collections) {
@@ -145,5 +146,12 @@ public class MongoTestTemplate extends MongoTemplate {
 		for (Class<?> entity : entities) {
 			getCollection(getCollectionName(entity)).dropIndexes();
 		}
+	}
+
+	public void doInCollection(Class<?> entityClass, Consumer<MongoCollection<Document>> callback) {
+		execute(entityClass, (collection -> {
+			callback.accept(collection);
+			return null;
+		}));
 	}
 }

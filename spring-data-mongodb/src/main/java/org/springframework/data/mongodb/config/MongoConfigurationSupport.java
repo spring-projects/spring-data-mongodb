@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,7 +206,7 @@ public abstract class MongoConfigurationSupport {
 	 * {@link org.springframework.data.mongodb.core.index.IndexDefinition} from the entity or not.
 	 *
 	 * @return {@literal false} by default. <br />
-	 *         <strong>INFO</strong>: As of 3.x the default is set to {@literal false}; In 2.x it was {@literal true}.
+	 *         <strong>INFO:</strong> As of 3.x the default is set to {@literal false}; In 2.x it was {@literal true}.
 	 * @since 2.2
 	 */
 	protected boolean autoIndexCreation() {

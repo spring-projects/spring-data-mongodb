@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Value;
-import lombok.experimental.Wither;
-
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -39,6 +34,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 
 /**
  * Unit tests for {@link AuditingEntityCallback}.
@@ -48,13 +44,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 @ExtendWith(MockitoExtension.class)
 public class AuditingEntityCallbackUnitTests {
 
+	private final MongoMappingContext mappingContext = new MongoMappingContext();
+
 	private IsNewAwareAuditingHandler handler;
 	private AuditingEntityCallback callback;
 
 	@BeforeEach
 	void setUp() {
 
-		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.getPersistentEntity(Sample.class);
 
 		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
@@ -110,6 +107,21 @@ public class AuditingEntityCallbackUnitTests {
 		assertThat(result).isSameAs(newSample);
 	}
 
+	@Test // GH-4732
+	void shouldApplyAuditingToUnwrappedImmutableObject() {
+
+		WithUnwrapped sample = new WithUnwrapped();
+		sample.auditingData = new MyAuditingData(null, null);
+
+		IsNewAwareAuditingHandler handler = new IsNewAwareAuditingHandler(PersistentEntities.of(mappingContext));
+
+		AuditingEntityCallback listener = new AuditingEntityCallback(() -> handler);
+		WithUnwrapped result = (WithUnwrapped) listener.onBeforeConvert(sample, "foo");
+
+		assertThat(result.auditingData.created).isNotNull();
+		assertThat(result.auditingData.modified).isNotNull();
+	}
+
 	static class Sample {
 
 		@Id String id;
@@ -117,14 +129,79 @@ public class AuditingEntityCallbackUnitTests {
 		@LastModifiedDate Date modified;
 	}
 
-	@Value
-	@Wither
-	@AllArgsConstructor
-	@NoArgsConstructor(force = true)
-	private static class ImmutableSample {
+	static class WithUnwrapped {
 
 		@Id String id;
-		@CreatedDate Date created;
-		@LastModifiedDate Date modified;
+
+		@Unwrapped(onEmpty = Unwrapped.OnEmpty.USE_NULL) MyAuditingData auditingData;
+
+	}
+
+	record MyAuditingData(@CreatedDate Date created, @LastModifiedDate Date modified) {
+
+	}
+
+	private static final class ImmutableSample {
+
+		@Id private final String id;
+		@CreatedDate private final Date created;
+		@LastModifiedDate private final Date modified;
+
+		public ImmutableSample() {
+			this(null, null, null);
+		}
+
+		public ImmutableSample(String id, Date created, Date modified) {
+			this.id = id;
+			this.created = created;
+			this.modified = modified;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Date getCreated() {
+			return this.created;
+		}
+
+		public Date getModified() {
+			return this.modified;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ImmutableSample that = (ImmutableSample) o;
+			return Objects.equals(id, that.id) && Objects.equals(created, that.created)
+					&& Objects.equals(modified, that.modified);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, created, modified);
+		}
+
+		public String toString() {
+			return "AuditingEntityCallbackUnitTests.ImmutableSample(id=" + this.getId() + ", created=" + this.getCreated()
+					+ ", modified=" + this.getModified() + ")";
+		}
+
+		public ImmutableSample withId(String id) {
+			return this.id == id ? this : new ImmutableSample(id, this.created, this.modified);
+		}
+
+		public ImmutableSample withCreated(Date created) {
+			return this.created == created ? this : new ImmutableSample(this.id, created, this.modified);
+		}
+
+		public ImmutableSample withModified(Date modified) {
+			return this.modified == modified ? this : new ImmutableSample(this.id, this.created, modified);
+		}
 	}
 }

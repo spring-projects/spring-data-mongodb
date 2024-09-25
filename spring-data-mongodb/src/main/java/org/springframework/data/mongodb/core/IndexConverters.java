@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,11 @@ package org.springframework.data.mongodb.core;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
@@ -89,7 +91,7 @@ abstract class IndexConverters {
 				ops = ops.bits((Integer) indexOptions.get("bits"));
 			}
 			if (indexOptions.containsKey("bucketSize")) {
-				ops = ops.bucketSize(((Number) indexOptions.get("bucketSize")).doubleValue());
+				MongoCompatibilityAdapter.indexOptionsAdapter(ops).setBucketSize(((Number) indexOptions.get("bucketSize")).doubleValue());
 			}
 			if (indexOptions.containsKey("default_language")) {
 				ops = ops.defaultLanguage(indexOptions.get("default_language").toString());
@@ -117,6 +119,10 @@ abstract class IndexConverters {
 
 			if (indexOptions.containsKey("wildcardProjection")) {
 				ops.wildcardProjection(indexOptions.get("wildcardProjection", Document.class));
+			}
+
+			if (indexOptions.containsKey("hidden")) {
+				ops = ops.hidden((Boolean) indexOptions.get("hidden"));
 			}
 
 			return ops;

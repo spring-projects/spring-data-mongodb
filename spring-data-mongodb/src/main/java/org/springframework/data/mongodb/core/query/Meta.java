@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public class Meta {
 	private enum MetaKey {
 		MAX_TIME_MS("$maxTimeMS"), MAX_SCAN("$maxScan"), COMMENT("$comment"), SNAPSHOT("$snapshot");
 
-		private String key;
+		private final String key;
 
 		MetaKey(String key) {
 			this.key = key;
@@ -70,11 +70,44 @@ public class Meta {
 	}
 
 	/**
+	 * Return whether the maximum time limit for processing operations is set.
+	 *
+	 * @return {@code true} if set; {@code false} otherwise.
+	 * @since 4.0.6
+	 */
+	public boolean hasMaxTime() {
+
+		Long maxTimeMsec = getMaxTimeMsec();
+
+		return maxTimeMsec != null && maxTimeMsec > 0;
+	}
+
+	/**
 	 * @return {@literal null} if not set.
 	 */
 	@Nullable
 	public Long getMaxTimeMsec() {
 		return getValue(MetaKey.MAX_TIME_MS.key);
+	}
+
+	/**
+	 * Returns the required maximum time limit in milliseconds or throws {@link IllegalStateException} if the maximum time
+	 * limit is not set.
+	 *
+	 * @return the maximum time limit in milliseconds for processing operations.
+	 * @throws IllegalStateException if the maximum time limit is not set
+	 * @see #hasMaxTime()
+	 * @since 4.0.6
+	 */
+	public Long getRequiredMaxTimeMsec() {
+
+		Long maxTimeMsec = getMaxTimeMsec();
+
+		if (maxTimeMsec == null) {
+			throw new IllegalStateException("Maximum time limit in milliseconds not set");
+		}
+
+		return maxTimeMsec;
 	}
 
 	/**
@@ -99,12 +132,13 @@ public class Meta {
 	}
 
 	/**
-	 * Add a comment to the query that is propagated to the profile log.
+	 * Return whether the comment is set.
 	 *
-	 * @param comment
+	 * @return {@code true} if set; {@code false} otherwise.
+	 * @since 4.0.6
 	 */
-	public void setComment(String comment) {
-		setValue(MetaKey.COMMENT.key, comment);
+	public boolean hasComment() {
+		return StringUtils.hasText(getComment());
 	}
 
 	/**
@@ -113,6 +147,34 @@ public class Meta {
 	@Nullable
 	public String getComment() {
 		return getValue(MetaKey.COMMENT.key);
+	}
+
+	/**
+	 * Returns the required comment or throws {@link IllegalStateException} if the comment is not set.
+	 *
+	 * @return the comment.
+	 * @throws IllegalStateException if the comment is not set
+	 * @see #hasComment()
+	 * @since 4.0.6
+	 */
+	public String getRequiredComment() {
+
+		String comment = getComment();
+
+		if (comment == null) {
+			throw new IllegalStateException("Comment not set");
+		}
+
+		return comment;
+	}
+
+	/**
+	 * Add a comment to the query that is propagated to the profile log.
+	 *
+	 * @param comment
+	 */
+	public void setComment(String comment) {
+		setValue(MetaKey.COMMENT.key, comment);
 	}
 
 	/**
@@ -217,7 +279,7 @@ public class Meta {
 			values = new LinkedHashMap<>(2);
 		}
 
-		if (value == null || (value instanceof String && !StringUtils.hasText((String) value))) {
+		if (value == null || (value instanceof String stringValue && !StringUtils.hasText(stringValue))) {
 			this.values.remove(key);
 		}
 		this.values.put(key, value);
@@ -250,11 +312,10 @@ public class Meta {
 			return true;
 		}
 
-		if (!(obj instanceof Meta)) {
+		if (!(obj instanceof Meta other)) {
 			return false;
 		}
 
-		Meta other = (Meta) obj;
 		if (!ObjectUtils.nullSafeEquals(this.values, other.values)) {
 			return false;
 		}

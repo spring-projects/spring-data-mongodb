@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.bson.BsonReader;
 import org.bson.BsonTimestamp;
+import org.bson.BsonUndefined;
 import org.bson.BsonWriter;
 import org.bson.Document;
 import org.bson.codecs.Codec;
@@ -50,6 +51,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.util.Assert;
@@ -104,6 +106,7 @@ abstract class MongoConverters {
 		converters.add(BinaryToByteArrayConverter.INSTANCE);
 		converters.add(BsonTimestampToInstantConverter.INSTANCE);
 
+		converters.add(reading(BsonUndefined.class, Object.class, it -> null));
 		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
 
 		return converters;
@@ -298,7 +301,7 @@ abstract class MongoConverters {
 				return null;
 			}
 
-			String id = source.get("_id").toString();
+			String id = source.get(FieldName.ID.name()).toString();
 			Object rawValue = source.get("value");
 
 			return new NamedMongoScript(id, ((Code) rawValue).getCode());
@@ -318,7 +321,7 @@ abstract class MongoConverters {
 
 			Document document = new Document();
 
-			document.put("_id", source.getName());
+			document.put(FieldName.ID.name(), source.getName());
 			document.put("value", new Code(source.getCode()));
 
 			return document;
@@ -401,12 +404,12 @@ abstract class MongoConverters {
 			@Override
 			public T convert(Number source) {
 
-				if (source instanceof AtomicInteger) {
-					return NumberUtils.convertNumberToTargetClass(((AtomicInteger) source).get(), this.targetType);
+				if (source instanceof AtomicInteger atomicInteger) {
+					return NumberUtils.convertNumberToTargetClass(atomicInteger.get(), this.targetType);
 				}
 
-				if (source instanceof AtomicLong) {
-					return NumberUtils.convertNumberToTargetClass(((AtomicLong) source).get(), this.targetType);
+				if (source instanceof AtomicLong atomicLong) {
+					return NumberUtils.convertNumberToTargetClass(atomicLong.get(), this.targetType);
 				}
 
 				return NumberUtils.convertNumberToTargetClass(source, this.targetType);

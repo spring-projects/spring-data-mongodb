@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,10 +97,8 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 		super(pipeline);
 
 		for (AggregationOperation operation : pipeline) {
-			if (operation instanceof FieldsExposingAggregationOperation) {
-				((FieldsExposingAggregationOperation) operation).getFields().forEach(it -> {
-					keysTouched.add(it.getName());
-				});
+			if (operation instanceof FieldsExposingAggregationOperation exposingAggregationOperation) {
+				exposingAggregationOperation.getFields().forEach(it -> keysTouched.add(it.getName()));
 			}
 		}
 	}

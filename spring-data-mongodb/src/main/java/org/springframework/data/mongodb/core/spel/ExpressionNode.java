@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,20 +67,20 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 */
 	public static ExpressionNode from(SpelNode node, ExpressionState state) {
 
-		if (node instanceof Operator) {
-			return new OperatorNode((Operator) node, state);
+		if (node instanceof Operator operator) {
+			return new OperatorNode(operator, state);
 		}
 
-		if (node instanceof MethodReference) {
-			return new MethodReferenceNode((MethodReference) node, state);
+		if (node instanceof MethodReference methodReference) {
+			return new MethodReferenceNode(methodReference, state);
 		}
 
-		if (node instanceof Literal) {
-			return new LiteralNode((Literal) node, state);
+		if (node instanceof Literal literal) {
+			return new LiteralNode(literal, state);
 		}
 
-		if (node instanceof OperatorNot) {
-			return new NotOperatorNode((OperatorNot) node, state);
+		if (node instanceof OperatorNot operatorNot) {
+			return new NotOperatorNode(operatorNot, state);
 		}
 
 		return new ExpressionNode(node, state);
@@ -114,7 +114,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 * @return
 	 */
 	boolean isOfSameTypeAs(@Nullable ExpressionNode node) {
-		return node == null ? false : this.node.getClass().equals(node.node.getClass());
+		return node != null && this.node.getClass().equals(node.node.getClass());
 	}
 
 	/**

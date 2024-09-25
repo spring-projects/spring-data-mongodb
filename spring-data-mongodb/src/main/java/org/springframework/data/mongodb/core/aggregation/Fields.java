@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -40,7 +41,7 @@ public final class Fields implements Iterable<Field> {
 	private static final String AMBIGUOUS_EXCEPTION = "Found two fields both using '%s' as name: %s and %s; Please "
 			+ "customize your field definitions to get to unique field names";
 
-	public static final String UNDERSCORE_ID = "_id";
+	public static final String UNDERSCORE_ID = FieldName.ID.name();
 	public static final String UNDERSCORE_ID_REF = "$_id";
 
 	private final List<Field> fields;
@@ -67,7 +68,7 @@ public final class Fields implements Iterable<Field> {
 
 		Assert.notNull(names, "Field names must not be null");
 
-		List<Field> fields = new ArrayList<Field>();
+		List<Field> fields = new ArrayList<>();
 
 		for (String name : names) {
 			fields.add(field(name));
@@ -114,7 +115,7 @@ public final class Fields implements Iterable<Field> {
 
 	private static List<Field> verify(List<Field> fields) {
 
-		Map<String, Field> reference = new HashMap<String, Field>();
+		Map<String, Field> reference = new HashMap<>();
 
 		for (Field field : fields) {
 
@@ -133,7 +134,7 @@ public final class Fields implements Iterable<Field> {
 
 	private Fields(Fields existing, Field tail) {
 
-		this.fields = new ArrayList<Field>(existing.fields.size() + 1);
+		this.fields = new ArrayList<>(existing.fields.size() + 1);
 		this.fields.addAll(existing.fields);
 		this.fields.add(tail);
 	}
@@ -245,7 +246,7 @@ public final class Fields implements Iterable<Field> {
 
 		private static String cleanUp(String source) {
 
-			if (SystemVariable.isReferingToSystemVariable(source)) {
+			if (AggregationVariable.isVariable(source)) {
 				return source;
 			}
 
@@ -253,10 +254,12 @@ public final class Fields implements Iterable<Field> {
 			return dollarIndex == -1 ? source : source.substring(dollarIndex + 1);
 		}
 
+		@Override
 		public String getName() {
 			return name;
 		}
 
+		@Override
 		public String getTarget() {
 
 			if (isLocalVar() || pointsToDBRefId()) {
@@ -308,13 +311,11 @@ public final class Fields implements Iterable<Field> {
 				return true;
 			}
 
-			if (!(obj instanceof AggregationField)) {
+			if (!(obj instanceof AggregationField field)) {
 				return false;
 			}
 
-			AggregationField that = (AggregationField) obj;
-
-			return this.name.equals(that.name) && ObjectUtils.nullSafeEquals(this.target, that.target);
+			return this.name.equals(field.name) && ObjectUtils.nullSafeEquals(this.target, field.target);
 		}
 
 		@Override

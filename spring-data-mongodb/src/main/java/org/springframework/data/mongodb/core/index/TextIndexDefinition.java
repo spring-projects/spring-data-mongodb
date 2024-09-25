@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -205,11 +205,9 @@ public class TextIndexDefinition implements IndexDefinition {
 			if (obj == null) {
 				return false;
 			}
-			if (!(obj instanceof TextIndexedFieldSpec)) {
+			if (!(obj instanceof TextIndexedFieldSpec other)) {
 				return false;
 			}
-
-			TextIndexedFieldSpec other = (TextIndexedFieldSpec) obj;
 
 			return ObjectUtils.nullSafeEquals(this.fieldname, other.fieldname);
 		}
@@ -244,7 +242,7 @@ public class TextIndexDefinition implements IndexDefinition {
 
 		/**
 		 * Define the index to span all fields using wildcard. <br/>
-		 * <strong>NOTE</strong> {@link TextIndexDefinition} cannot contain any other fields when defined with wildcard.
+		 * <strong>NOTE:</strong> {@link TextIndexDefinition} cannot contain any other fields when defined with wildcard.
 		 *
 		 * @return
 		 */

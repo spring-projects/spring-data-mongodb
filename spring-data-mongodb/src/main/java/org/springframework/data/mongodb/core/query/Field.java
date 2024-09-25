@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,12 +36,13 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Owen Q
+ * @author Kirill Egorov
  */
 public class Field {
 
 	private final Map<String, Object> criteria = new HashMap<>();
 	private final Map<String, Object> slices = new HashMap<>();
-	private final Map<String, Criteria> elemMatchs = new HashMap<>();
+	private final Map<String, Criteria> elemMatches = new HashMap<>();
 	private @Nullable String positionKey;
 	private int positionValue;
 
@@ -123,20 +125,28 @@ public class Field {
 	 * @since 3.1
 	 */
 	public Field include(String... fields) {
+		return include(Arrays.asList(fields));
+	}
+
+	/**
+	 * Include one or more {@code fields} to be returned by the query operation.
+	 *
+	 * @param fields the document field names to be included.
+	 * @return {@code this} field projection instance.
+	 * @since 4.4
+	 */
+	public Field include(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
 
-		for (String key : fields) {
-			criteria.put(key, 1);
-		}
-
+		fields.forEach(this::include);
 		return this;
 	}
 
 	/**
 	 * Exclude a single {@code field} from being returned by the query operation.
 	 *
-	 * @param field the document field name to be included.
+	 * @param field the document field name to be excluded.
 	 * @return {@code this} field projection instance.
 	 */
 	public Field exclude(String field) {
@@ -151,18 +161,26 @@ public class Field {
 	/**
 	 * Exclude one or more {@code fields} from being returned by the query operation.
 	 *
-	 * @param fields the document field names to be included.
+	 * @param fields the document field names to be excluded.
 	 * @return {@code this} field projection instance.
 	 * @since 3.1
 	 */
 	public Field exclude(String... fields) {
+		return exclude(Arrays.asList(fields));
+	}
+
+	/**
+	 * Exclude one or more {@code fields} from being returned by the query operation.
+	 *
+	 * @param fields the document field names to be excluded.
+	 * @return {@code this} field projection instance.
+	 * @since 4.4
+	 */
+	public Field exclude(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
 
-		for (String key : fields) {
-			criteria.put(key, 0);
-		}
-
+		fields.forEach(this::exclude);
 		return this;
 	}
 
@@ -199,7 +217,7 @@ public class Field {
 
 	public Field elemMatch(String field, Criteria elemMatchCriteria) {
 
-		elemMatchs.put(field, elemMatchCriteria);
+		elemMatches.put(field, elemMatchCriteria);
 		return this;
 	}
 
@@ -229,7 +247,7 @@ public class Field {
 			document.put(entry.getKey(), new Document("$slice", entry.getValue()));
 		}
 
-		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
+		for (Entry<String, Criteria> entry : elemMatches.entrySet()) {
 			document.put(entry.getKey(), new Document("$elemMatch", entry.getValue().getCriteriaObject()));
 		}
 
@@ -259,7 +277,7 @@ public class Field {
 		if (!ObjectUtils.nullSafeEquals(slices, field.slices)) {
 			return false;
 		}
-		if (!ObjectUtils.nullSafeEquals(elemMatchs, field.elemMatchs)) {
+		if (!ObjectUtils.nullSafeEquals(elemMatches, field.elemMatches)) {
 			return false;
 		}
 		return ObjectUtils.nullSafeEquals(positionKey, field.positionKey);
@@ -270,7 +288,7 @@ public class Field {
 
 		int result = ObjectUtils.nullSafeHashCode(criteria);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(slices);
-		result = 31 * result + ObjectUtils.nullSafeHashCode(elemMatchs);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(elemMatches);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(positionKey);
 		result = 31 * result + positionValue;
 		return result;

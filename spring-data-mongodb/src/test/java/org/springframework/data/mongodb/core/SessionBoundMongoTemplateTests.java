@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-
-import lombok.Data;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -98,9 +96,9 @@ public class SessionBoundMongoTemplateTests {
 			@Override
 			public MongoDatabase getMongoDatabase() throws DataAccessException {
 
-				MongoDatabase spiedDatabse = Mockito.spy(super.getMongoDatabase());
-				spiedDatabases.add(spiedDatabse);
-				return spiedDatabse;
+				MongoDatabase spiedDatabase = Mockito.spy(super.getMongoDatabase());
+				spiedDatabases.add(spiedDatabase);
+				return spiedDatabase;
 			}
 		};
 
@@ -364,14 +362,32 @@ public class SessionBoundMongoTemplateTests {
 		assertThat(resultList).hasSize(nrThreads).allMatch(it -> it.equals(1L));
 	}
 
-	@Data
 	static class WithDbRef {
 
 		@Id String id;
 		@DBRef Person personRef;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public Person getPersonRef() {
+			return this.personRef;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPersonRef(Person personRef) {
+			this.personRef = personRef;
+		}
+
+		public String toString() {
+			return "SessionBoundMongoTemplateTests.WithDbRef(id=" + this.getId() + ", personRef=" + this.getPersonRef() + ")";
+		}
 	}
 
-	@Data
 	static class WithLazyDbRef {
 
 		@Id String id;
@@ -379,6 +395,23 @@ public class SessionBoundMongoTemplateTests {
 
 		public Person getPersonRef() {
 			return personRef;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setPersonRef(Person personRef) {
+			this.personRef = personRef;
+		}
+
+		public String toString() {
+			return "SessionBoundMongoTemplateTests.WithLazyDbRef(id=" + this.getId() + ", personRef=" + this.getPersonRef()
+					+ ")";
 		}
 	}
 

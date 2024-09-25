@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.Window;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveCollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -67,8 +70,8 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		private final String collection;
 		private final Query query;
 
-		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType,
-				String collection, Query query) {
+		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, String collection,
+				Query query) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -137,6 +140,11 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		}
 
 		@Override
+		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
+			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
+		}
+
+		@Override
 		public Flux<T> tail() {
 			return doFind(template.new TailingQueryFindPublisherPreparer(query, domainType));
 		}
@@ -169,8 +177,8 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			Document queryObject = query.getQueryObject();
 			Document fieldsObject = query.getFieldsObject();
 
-			return template.doFind(getCollectionName(), queryObject, fieldsObject, domainType, returnType,
-					preparer != null ? preparer : getCursorPreparer(query));
+			return template.doFind(getCollectionName(), ReactiveCollectionPreparerDelegate.of(query), queryObject,
+					fieldsObject, domainType, returnType, preparer != null ? preparer : getCursorPreparer(query));
 		}
 
 		@SuppressWarnings("unchecked")

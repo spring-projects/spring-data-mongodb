@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +24,7 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -66,6 +66,7 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jorge Rodríguez
  * @since 2.0
  */
 public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
@@ -160,6 +161,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			applyQueryMetaAttributesWhenPresent(query);
 			query = applyAnnotatedDefaultSortIfPresent(query);
 			query = applyAnnotatedCollationIfPresent(query, accessor);
+			query = applyHintIfPresent(query);
+			query = applyAnnotatedReadPreferenceIfPresent(query);
 
 			FindWithQuery<?> find = typeToRead == null //
 					? findOperationWithProjection //
@@ -203,6 +206,9 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).tail();
 		} else if (method.isCollectionQuery()) {
 			return (q, t, c) -> operation.matching(q.with(accessor.getPageable())).all();
+		} else if (method.isScrollQuery()) {
+			return (q, t, c) -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort()))
+					.scroll(accessor.getScrollPosition());
 		} else if (isCountQuery()) {
 			return (q, t, c) -> operation.matching(q).count();
 		} else if (isExistsQuery()) {
@@ -267,6 +273,39 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	}
 
 	/**
+	 * If present apply the hint from the {@link org.springframework.data.mongodb.repository.Hint} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	Query applyHintIfPresent(Query query) {
+
+		if (!method.hasAnnotatedHint()) {
+			return query;
+		}
+
+		return query.withHint(method.getAnnotatedHint());
+	}
+
+	/**
+	 * If present apply the {@link com.mongodb.ReadPreference} from the
+	 * {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	private Query applyAnnotatedReadPreferenceIfPresent(Query query) {
+
+		if (!method.hasAnnotatedReadPreference()) {
+			return query;
+		}
+
+		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
+	}
+
+	/**
 	 * Creates a {@link Query} instance using the given {@link ConvertingParameterAccessor}. Will delegate to
 	 * {@link #createQuery(ConvertingParameterAccessor)} by default but allows customization of the count query to be
 	 * triggered.
@@ -300,8 +339,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 				String updateJson = updateSource.update();
 				return getParameterBindingCodec() //
-						.flatMap(codec -> expressionEvaluator(updateJson, accessor, codec)) //
-						.map(it -> decode(it.getT1(), updateJson, accessor, it.getT2())) //
+						.flatMap(codec -> expressionEvaluator(updateJson, accessor, codec) //
+								.map(evaluator -> decode(evaluator, updateJson, accessor, codec))) //
 						.map(BasicUpdate::fromDocument);
 			}
 			if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
@@ -337,18 +376,17 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private Mono<AggregationOperation> computePipelineStage(String source, MongoParameterAccessor accessor,
 			ParameterBindingDocumentCodec codec) {
 
-		return expressionEvaluator(source, accessor, codec).map(it -> {
-			return ctx -> ctx.getMappedObject(decode(it.getT1(), source, accessor, it.getT2()),
-					getQueryMethod().getDomainClass());
-		});
+		return expressionEvaluator(source, accessor, codec).map(evaluator -> new StringAggregationOperation(source,
+				AbstractReactiveMongoQuery.this.getQueryMethod().getDomainClass(),
+				bsonString -> AbstractReactiveMongoQuery.this.decode(evaluator, bsonString, accessor, codec)));
 	}
 
-	private Mono<Tuple2<SpELExpressionEvaluator, ParameterBindingDocumentCodec>> expressionEvaluator(String source,
-			MongoParameterAccessor accessor, ParameterBindingDocumentCodec codec) {
+	private Mono<SpELExpressionEvaluator> expressionEvaluator(String source, MongoParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
 
 		ExpressionDependencies dependencies = codec.captureExpressionDependencies(source, accessor::getBindableValue,
 				expressionParser);
-		return getSpelEvaluatorFor(dependencies, accessor).zipWith(Mono.just(codec));
+		return getSpelEvaluatorFor(dependencies, accessor);
 	}
 
 	private Document decode(SpELExpressionEvaluator expressionEvaluator, String source, MongoParameterAccessor accessor,

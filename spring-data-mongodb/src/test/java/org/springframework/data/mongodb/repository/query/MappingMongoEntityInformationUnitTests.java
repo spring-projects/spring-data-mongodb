@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,10 @@ package org.springframework.data.mongodb.repository.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Value;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.Person;
@@ -67,10 +64,27 @@ public class MappingMongoEntityInformationUnitTests {
 		assertThat(information.isNew(new TypeImplementingPersistable(100L, false))).isFalse();
 	}
 
-	@Value
-	static class TypeImplementingPersistable implements Persistable<Long> {
+	static final class TypeImplementingPersistable implements Persistable<Long> {
 
-		Long id;
-		boolean isNew;
+		private final Long id;
+		private final boolean isNew;
+
+		public TypeImplementingPersistable(Long id, boolean isNew) {
+			this.id = id;
+			this.isNew = isNew;
+		}
+
+		public Long getId() {
+			return this.id;
+		}
+
+		public boolean isNew() {
+			return this.isNew;
+		}
+
+		public String toString() {
+			return "MappingMongoEntityInformationUnitTests.TypeImplementingPersistable(id=" + this.getId() + ", isNew="
+					+ this.isNew() + ")";
+		}
 	}
 }

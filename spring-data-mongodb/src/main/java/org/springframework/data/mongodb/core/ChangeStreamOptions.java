@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ public class ChangeStreamOptions {
 
 	/**
 	 * Obtain a shiny new {@link ChangeStreamOptionsBuilder} and start defining options in this fancy fluent way. Just
-	 * don't forget to call {@link ChangeStreamOptionsBuilder#build() build()} when your're done.
+	 * don't forget to call {@link ChangeStreamOptionsBuilder#build() build()} when done.
 	 *
 	 * @return new instance of {@link ChangeStreamOptionsBuilder}.
 	 */
@@ -150,12 +150,12 @@ public class ChangeStreamOptions {
 			return timestamp;
 		}
 
-		if (timestamp instanceof Instant) {
-			return new BsonTimestamp((int) ((Instant) timestamp).getEpochSecond(), 0);
+		if (timestamp instanceof Instant instant) {
+			return new BsonTimestamp((int) instant.getEpochSecond(), 0);
 		}
 
-		if (timestamp instanceof BsonTimestamp) {
-			return Instant.ofEpochSecond(((BsonTimestamp) timestamp).getTime());
+		if (timestamp instanceof BsonTimestamp bsonTimestamp) {
+			return Instant.ofEpochSecond(bsonTimestamp.getTime());
 		}
 
 		throw new IllegalArgumentException(

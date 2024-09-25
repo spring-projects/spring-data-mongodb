@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the original author or authors.
+ * Copyright 2022-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
@@ -140,8 +139,6 @@ public class ReactiveMongoTemplateViewTests {
 		assertThat(collectionInfo.getCollation().getLocale()).isEqualTo("en_US");
 	}
 
-	@Data
-	@NoArgsConstructor
 	private static class Student {
 
 		@Field("sID") Long studentID;
@@ -152,11 +149,68 @@ public class ReactiveMongoTemplateViewTests {
 
 		String name;
 
+		public Student() {}
+
 		public Student(long studentID, String name, int year, double score) {
 			this.studentID = studentID;
 			this.name = name;
 			this.year = year;
 			this.score = score;
+		}
+
+		public Long getStudentID() {
+			return this.studentID;
+		}
+
+		public int getYear() {
+			return this.year;
+		}
+
+		public double getScore() {
+			return this.score;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setStudentID(Long studentID) {
+			this.studentID = studentID;
+		}
+
+		public void setYear(int year) {
+			this.year = year;
+		}
+
+		public void setScore(double score) {
+			this.score = score;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Student student = (Student) o;
+			return year == student.year && Double.compare(student.score, score) == 0
+					&& Objects.equals(studentID, student.studentID) && Objects.equals(name, student.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(studentID, year, score, name);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateViewTests.Student(studentID=" + this.getStudentID() + ", year=" + this.getYear()
+					+ ", score=" + this.getScore() + ", name=" + this.getName() + ")";
 		}
 	}
 }

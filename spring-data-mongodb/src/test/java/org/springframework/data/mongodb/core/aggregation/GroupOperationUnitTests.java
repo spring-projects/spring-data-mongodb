@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Percentile;
 import org.springframework.data.mongodb.core.aggregation.SelectionOperators.Bottom;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -34,6 +35,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Gustavo de Geus
+ * @author Julia Lee
  */
 class GroupOperationUnitTests {
 
@@ -264,6 +266,18 @@ class GroupOperationUnitTests {
 
 		assertThat(groupClause).containsEntry("playerId",
 				Document.parse("{ $bottom : { output: [ \"$playerId\", \"$score\" ], sortBy: { \"score\": -1 }}}"));
+	}
+
+	@Test // GH-4473
+	void groupOperationAllowsAddingFieldWithPercentileAggregationExpression() {
+
+		GroupOperation groupOperation = Aggregation.group("id").and("scorePercentile",
+			Percentile.percentileOf("score").percentages(0.2));
+
+		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
+
+		assertThat(groupClause).containsEntry("scorePercentile",
+			Document.parse("{ $percentile : { input: \"$score\", method: \"approximate\", p: [0.2]}}"));
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {

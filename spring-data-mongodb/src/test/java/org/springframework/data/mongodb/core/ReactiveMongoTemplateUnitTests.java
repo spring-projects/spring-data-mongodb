@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplateUnitTests.Wrapper;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -37,7 +32,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
@@ -56,12 +53,12 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
@@ -94,13 +91,16 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -110,6 +110,7 @@ import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.TimeSeriesGranularity;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -131,7 +132,9 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
+ * @author Ben Foster
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveMongoTemplateUnitTests {
@@ -168,6 +171,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(db.runCommand(any(), any(Class.class))).thenReturn(runCommandPublisher);
 		when(db.createCollection(any(), any(CreateCollectionOptions.class))).thenReturn(runCommandPublisher);
 		when(collection.withReadPreference(any())).thenReturn(collection);
+		when(collection.withReadConcern(any())).thenReturn(collection);
 		when(collection.find(any(Class.class))).thenReturn(findPublisher);
 		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
@@ -350,7 +354,29 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
+	}
 
+	@Test // GH-3218
+	void updateUsesHintStringFromQuery() {
+
+		template.updateFirst(new Query().withHint("index-1"), new Update().set("spring", "data"), Person.class).subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-1");
+	}
+
+	@Test // GH-3218
+	void updateUsesHintDocumentFromQuery() {
+
+		template.updateFirst(new Query().withHint("{ firstname : 1 }"), new Update().set("spring", "data"), Person.class)
+				.subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(Bson.class), any(Bson.class), options.capture());
+
+		assertThat(options.getValue().getHint()).isEqualTo(new Document("firstname", 1));
 	}
 
 	@Test // DATAMONGO-1518
@@ -385,11 +411,33 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
+	@Test // GH-4277
+	void geoNearShouldHonorReadPreferenceFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadPreference(ReadPreference.secondary());
+
+		template.geoNear(query, Wrapper.class).subscribe();
+
+		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
+	}
+
+	@Test // GH-4277
+	void geoNearShouldHonorReadConcernFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		query.withReadConcern(ReadConcern.SNAPSHOT);
+
+		template.geoNear(query, Wrapper.class).subscribe();
+
+		verify(collection).withReadConcern(eq(ReadConcern.SNAPSHOT));
+	}
+
 	@Test // DATAMONGO-1719
 	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
+				PersonProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
 	}
@@ -397,8 +445,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document("bar", 1), Person.class,
+				PersonProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("bar", 1)));
 	}
@@ -406,8 +454,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
+				PersonSpELProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}
@@ -415,8 +463,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
+				Jedi.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
 	}
@@ -424,8 +472,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document("bar", 1), Person.class,
+				Jedi.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("bar", 1)));
 	}
@@ -433,8 +481,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
+				Person.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}
@@ -442,8 +490,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
-				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
+				PersonExtended.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}
@@ -630,6 +678,48 @@ public class ReactiveMongoTemplateUnitTests {
 		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class).subscribe();
 
 		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // GH-4277
+	void aggreateShouldUseReadConcern() {
+
+		AggregationOptions options = AggregationOptions.builder().readConcern(ReadConcern.SNAPSHOT).build();
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(options), AutogenerateableId.class,
+				Document.class).subscribe();
+
+		verify(collection).withReadConcern(ReadConcern.SNAPSHOT);
+	}
+
+	@Test // GH-4286
+	void aggreateShouldUseReadReadPreference() {
+
+		AggregationOptions options = AggregationOptions.builder().readPreference(ReadPreference.primaryPreferred()).build();
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(options), AutogenerateableId.class,
+				Document.class).subscribe();
+
+		verify(collection).withReadPreference(ReadPreference.primaryPreferred());
+	}
+
+	@Test // GH-4543
+	void aggregateDoesNotLimitBackpressure() {
+
+		reset(collection);
+
+		AtomicLong request = new AtomicLong();
+		Publisher<Document> realPublisher = Flux.just(new Document()).doOnRequest(request::addAndGet);
+
+		doAnswer(invocation -> {
+			Subscriber<Document> subscriber = invocation.getArgument(0);
+			realPublisher.subscribe(subscriber);
+			return null;
+		}).when(aggregatePublisher).subscribe(any());
+
+		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
+		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
+
+		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class).subscribe();
+
+		assertThat(request).hasValueGreaterThan(128);
 	}
 
 	@Test // DATAMONGO-1854
@@ -1196,6 +1286,17 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 	}
 
+	@Test // GH-4543
+	void findShouldNotLimitBackpressure() {
+
+		AtomicLong request = new AtomicLong();
+		stubFindSubscribe(new Document(), request);
+
+		template.find(new Query(), Person.class).subscribe();
+
+		assertThat(request).hasValueGreaterThan(128);
+	}
+
 	@Test // DATAMONGO-2479
 	void findByIdShouldInvokeAfterConvertCallbacks() {
 
@@ -1469,6 +1570,26 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).countDocuments(any(Document.class), any());
 	}
 
+	@Test // GH-4374
+	void countConsidersMaxTimeMs() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").maxTimeMsec(5000), Person.class).subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getMaxTime(TimeUnit.MILLISECONDS)).isEqualTo(5000);
+	}
+
+	@Test // GH-4374
+	void countPassesOnComment() {
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }").comment("rocks!"), Person.class).subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(Document.class), options.capture());
+		assertThat(options.getValue().getComment()).isEqualTo(BsonUtils.simpleToBsonValue("rocks!"));
+	}
+
 	@Test // GH-2911
 	void insertErrorsOnPublisher() {
 
@@ -1520,9 +1641,169 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(changeStreamPublisher).startAfter(eq(token));
 	}
 
-	private void stubFindSubscribe(Document document) {
+	@Test // GH-4495
+	void changeStreamOptionFullDocumentBeforeChangeShouldBeApplied() {
 
-		Publisher<Document> realPublisher = Flux.just(document);
+		when(factory.getMongoDatabase(anyString())).thenReturn(Mono.just(db));
+
+		when(collection.watch(any(Class.class))).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.batchSize(anyInt())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.startAfter(any())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.fullDocument(any())).thenReturn(changeStreamPublisher);
+		when(changeStreamPublisher.fullDocumentBeforeChange(any())).thenReturn(changeStreamPublisher);
+
+		ChangeStreamOptions options = ChangeStreamOptions.builder()
+				.fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.REQUIRED).build();
+		template.changeStream("database", "collection", options, Object.class).subscribe();
+
+		verify(changeStreamPublisher).fullDocumentBeforeChange(FullDocumentBeforeChange.REQUIRED);
+
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseCollationWhenPresent() {
+
+		template.replace(new BasicQuery("{}").collation(Collation.of("fr")), new Jedi()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
+	}
+
+	@Test // GH-4462
+	void replaceShouldNotUpsertByDefault() {
+
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isFalse();
+	}
+
+	@Test // GH-4462
+	void replaceShouldUpsert() {
+
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().isUpsert()).isTrue();
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseDefaultCollationWhenPresent() {
+
+		template.replace(new BasicQuery("{}"), new MongoTemplateUnitTests.Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
+	}
+
+	@Test // GH-4462
+	void replaceShouldUseHintIfPresent() {
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new MongoTemplateUnitTests.Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+
+		ArgumentCaptor<com.mongodb.client.model.ReplaceOptions> options = ArgumentCaptor
+				.forClass(com.mongodb.client.model.ReplaceOptions.class);
+		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("index-to-use");
+	}
+
+	@Test // GH-4462
+	void replaceShouldApplyWriteConcern() {
+
+		template.setWriteConcernResolver(new WriteConcernResolver() {
+			public WriteConcern resolve(MongoAction action) {
+
+				assertThat(action.getMongoActionOperation()).isEqualTo(MongoActionOperation.REPLACE);
+				return WriteConcern.UNACKNOWLEDGED;
+			}
+		});
+
+		template.replace(new BasicQuery("{}").withHint("index-to-use"), new Sith(),
+				org.springframework.data.mongodb.core.ReplaceOptions.replaceOptions().upsert()).subscribe();
+
+		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
+	}
+
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithExpirationFromString() {
+
+		template.createCollection(TimeSeriesTypeWithExpireAfterAsPlainString.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES))
+				.isEqualTo(10);
+	}
+
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithExpirationFromIso8601String() {
+
+		template.createCollection(TimeSeriesTypeWithExpireAfterAsIso8601Style.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getExpireAfter(TimeUnit.DAYS))
+				.isEqualTo(1);
+	}
+
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithExpirationFromExpression() {
+
+		template.createCollection(TimeSeriesTypeWithExpireAfterAsExpression.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
+				.isEqualTo(11);
+	}
+
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithExpirationFromExpressionReturningDuration() {
+
+		template.createCollection(TimeSeriesTypeWithExpireAfterAsExpressionResultingInDuration.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
+				.isEqualTo(100);
+	}
+
+	@Test // GH-4099
+	void createCollectionShouldSetUpTimeSeriesWithInvalidTimeoutExpiration() {
+
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+			template.createCollection(TimeSeriesTypeWithInvalidExpireAfter.class).subscribe()
+		);
+	}
+
+	private void stubFindSubscribe(Document document) {
+		stubFindSubscribe(document, new AtomicLong());
+	}
+
+	private void stubFindSubscribe(Document document, AtomicLong request) {
+
+		Publisher<Document> realPublisher = Flux.just(document).doOnRequest(request::addAndGet);
 
 		doAnswer(invocation -> {
 			Subscriber<Document> subscriber = invocation.getArgument(0);
@@ -1531,14 +1812,55 @@ public class ReactiveMongoTemplateUnitTests {
 		}).when(findPublisher).subscribe(any());
 	}
 
-	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Person {
 
 		@Id String id;
 		String firstname;
+
+		public Person() {}
+
+		public Person(String id, String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Person person = (Person) o;
+			return Objects.equals(id, person.id) && Objects.equals(firstname, person.firstname);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, firstname);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateUnitTests.Person(id=" + this.getId() + ", firstname=" + this.getFirstname() + ")";
+		}
 	}
 
 	class Wrapper {
@@ -1561,10 +1883,40 @@ public class ReactiveMongoTemplateUnitTests {
 		String getName();
 	}
 
-	@Data
 	static class Jedi {
 
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Jedi jedi = (Jedi) o;
+			return Objects.equals(name, jedi.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
+
+		public String toString() {
+			return "ReactiveMongoTemplateUnitTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")
@@ -1591,6 +1943,41 @@ public class ReactiveMongoTemplateUnitTests {
 
 		@Field("time_stamp") Instant timestamp;
 		Object meta;
+	}
+
+	@TimeSeries(timeField = "timestamp", expireAfter = "10m")
+	static class TimeSeriesTypeWithExpireAfterAsPlainString {
+
+		String id;
+		Instant timestamp;
+	}
+
+	@TimeSeries(timeField = "timestamp", expireAfter = "P1D")
+	static class TimeSeriesTypeWithExpireAfterAsIso8601Style {
+
+		String id;
+		Instant timestamp;
+	}
+
+	@TimeSeries(timeField = "timestamp", expireAfter = "#{10 + 1 + 's'}")
+	static class TimeSeriesTypeWithExpireAfterAsExpression {
+
+		String id;
+		Instant timestamp;
+	}
+
+	@TimeSeries(timeField = "timestamp", expireAfter = "#{T(java.time.Duration).ofSeconds(100)}")
+	static class TimeSeriesTypeWithExpireAfterAsExpressionResultingInDuration {
+
+		String id;
+		Instant timestamp;
+	}
+
+	@TimeSeries(timeField = "timestamp", expireAfter = "123ops")
+	static class TimeSeriesTypeWithInvalidExpireAfter {
+
+		String id;
+		Instant timestamp;
 	}
 
 	static class ValueCapturingEntityCallback<T> {

@@ -1,0 +1,105 @@
+include::{commons}@data-commons::page$custom-conversions.adoc[]
+
+[[mongo.custom-converters]]
+== Type based Converter
+
+The most trivial way of influencing the mapping result is by specifying the desired native MongoDB target type via the `@Field` annotation.
+This allows to work with non MongoDB types like `BigDecimal` in the domain model while persisting values in native `org.bson.types.Decimal128` format.
+
+.Explicit target type mapping
+====
+[source,java]
+----
+public class Payment {
+
+  @Id String id; <1>
+
+  @Field(targetType = FieldType.DECIMAL128) <2>
+  BigDecimal value;
+
+  Date date; <3>
+
+}
+----
+
+[source,java]
+----
+{
+  "_id"   : ObjectId("5ca4a34fa264a01503b36af8"), <1>
+  "value" : NumberDecimal(2.099), <2>
+  "date"   : ISODate("2019-04-03T12:11:01.870Z") <3>
+}
+----
+<1> String _id_ values that represent a valid `ObjectId` are converted automatically. See xref:mongodb/template-crud-operations.adoc#mongo-template.id-handling[How the `_id` Field is Handled in the Mapping Layer]
+for details.
+<2> The desired target type is explicitly defined as `Decimal128` which translates to `NumberDecimal`. Otherwise the
+`BigDecimal` value would have been truned into a `String`.
+<3> `Date` values are handled by the MongoDB driver itself an are stored as `ISODate`.
+====
+
+The snippet above is handy for providing simple type hints. To gain more fine-grained control over the mapping process,
+ you can register Spring converters with the `MongoConverter` implementations, such as the `MappingMongoConverter`.
+
+The `MappingMongoConverter` checks to see if any Spring converters can handle a specific class before attempting to map the object itself. To 'hijack' the normal mapping strategies of the `MappingMongoConverter`, perhaps for increased performance or other custom mapping needs, you first need to create an implementation of the Spring `Converter` interface and then register it with the `MappingConverter`.
+
+NOTE: For more information on the Spring type conversion service, see the reference docs link:{springDocsUrl}/core.html#validation[here].
+
+[[mongo.custom-converters.writer]]
+=== Writing Converter
+
+The following example shows an implementation of the `Converter` that converts from a `Person` object to a `org.bson.Document`:
+
+[source,java]
+----
+import org.springframework.core.convert.converter.Converter;
+
+import org.bson.Document;
+
+public class PersonWriteConverter implements Converter<Person, Document> {
+
+  public Document convert(Person source) {
+    Document document = new Document();
+    document.put("_id", source.getId());
+    document.put("name", source.getFirstName());
+    document.put("age", source.getAge());
+    return document;
+  }
+}
+----
+
+[[mongo.custom-converters.reader]]
+=== Reading Converter
+
+The following example shows an implementation of a `Converter` that converts from a `Document` to a `Person` object:
+
+[source,java]
+----
+public class PersonReadConverter implements Converter<Document, Person> {
+
+  public Person convert(Document source) {
+    Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
+    p.setAge((Integer) source.get("age"));
+    return p;
+  }
+}
+----
+
+[[mongo.custom-converters.xml]]
+=== Registering Converters
+
+[source,java]
+----
+class MyMongoConfiguration extends AbstractMongoClientConfiguration {
+
+	@Override
+	public String getDatabaseName() {
+		return "database";
+	}
+
+	@Override
+	protected void configureConverters(MongoConverterConfigurationAdapter adapter) {
+		adapter.registerConverter(new com.example.PersonReadConverter());
+		adapter.registerConverter(new com.example.PersonWriteConverter());
+	}
+}
+----

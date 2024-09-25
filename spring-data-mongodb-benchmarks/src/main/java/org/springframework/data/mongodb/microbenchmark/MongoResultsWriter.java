@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the original author or authors.
+ * Copyright 2017-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,15 +96,14 @@ class MongoResultsWriter implements ResultsWriter {
 		for (Object key : doc.keySet()) {
 
 			Object value = doc.get(key);
-			if (value instanceof Document) {
-				value = fixDocumentKeys((Document) value);
-			} else if (value instanceof BasicDBObject) {
-				value = fixDocumentKeys(new Document((BasicDBObject) value));
+			if (value instanceof Document document) {
+				value = fixDocumentKeys(document);
+			} else if (value instanceof BasicDBObject basicDBObject) {
+				value = fixDocumentKeys(new Document(basicDBObject));
 			}
 
-			if (key instanceof String) {
+			if (key instanceof String newKey) {
 
-				String newKey = (String) key;
 				if (newKey.contains(".")) {
 					newKey = newKey.replace('.', ',');
 				}

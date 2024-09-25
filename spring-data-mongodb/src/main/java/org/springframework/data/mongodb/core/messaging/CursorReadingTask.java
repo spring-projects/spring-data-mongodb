@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ package org.springframework.data.mongodb.core.messaging;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.util.Lock;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
@@ -39,7 +41,7 @@ import com.mongodb.client.MongoCursor;
  */
 abstract class CursorReadingTask<T, R> implements Task {
 
-	private final Object lifecycleMonitor = new Object();
+	private final Lock lock = Lock.of(new ReentrantLock());
 
 	private final MongoTemplate template;
 	private final SubscriptionRequest<T, R, RequestOptions> request;
@@ -86,19 +88,14 @@ abstract class CursorReadingTask<T, R> implements Task {
 					}
 				} catch (InterruptedException e) {
 
-					synchronized (lifecycleMonitor) {
-						state = State.CANCELLED;
-					}
+					lock.executeWithoutResult(() -> state = State.CANCELLED);
 					Thread.currentThread().interrupt();
 					break;
 				}
 			}
 		} catch (RuntimeException e) {
 
-			synchronized (lifecycleMonitor) {
-				state = State.CANCELLED;
-			}
-
+			lock.executeWithoutResult(() -> state = State.CANCELLED);
 			errorHandler.handleError(e);
 		}
 	}
@@ -114,30 +111,30 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 */
 	private void start() {
 
-		synchronized (lifecycleMonitor) {
+		lock.executeWithoutResult(() -> {
 			if (!State.RUNNING.equals(state)) {
 				state = State.STARTING;
 			}
-		}
+		});
 
 		do {
 
-			boolean valid = false;
+			boolean valid = lock.execute(() -> {
 
-			synchronized (lifecycleMonitor) {
-
-				if (State.STARTING.equals(state)) {
-
-					MongoCursor<T> cursor = execute(() -> initCursor(template, request.getRequestOptions(), targetType));
-					valid = isValidCursor(cursor);
-					if (valid) {
-						this.cursor = cursor;
-						state = State.RUNNING;
-					} else if (cursor != null) {
-						cursor.close();
-					}
+				if (!State.STARTING.equals(state)) {
+					return false;
 				}
-			}
+
+				MongoCursor<T> cursor = execute(() -> initCursor(template, request.getRequestOptions(), targetType));
+				boolean isValid = isValidCursor(cursor);
+				if (isValid) {
+					this.cursor = cursor;
+					state = State.RUNNING;
+				} else if (cursor != null) {
+					cursor.close();
+				}
+				return isValid;
+			});
 
 			if (!valid) {
 
@@ -145,9 +142,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 
-					synchronized (lifecycleMonitor) {
-						state = State.CANCELLED;
-					}
+					lock.executeWithoutResult(() -> state = State.CANCELLED);
 					Thread.currentThread().interrupt();
 				}
 			}
@@ -163,7 +158,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public void cancel() throws DataAccessResourceFailureException {
 
-		synchronized (lifecycleMonitor) {
+		lock.executeWithoutResult(() -> {
 
 			if (State.RUNNING.equals(state) || State.STARTING.equals(state)) {
 				this.state = State.CANCELLED;
@@ -171,7 +166,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					cursor.close();
 				}
 			}
-		}
+		});
 	}
 
 	@Override
@@ -181,10 +176,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	@Override
 	public State getState() {
-
-		synchronized (lifecycleMonitor) {
-			return state;
-		}
+		return lock.execute(() -> state);
 	}
 
 	@Override
@@ -220,13 +212,12 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Nullable
 	private T getNext() {
 
-		synchronized (lifecycleMonitor) {
+		return lock.execute(() -> {
 			if (State.RUNNING.equals(state)) {
 				return cursor.tryNext();
 			}
-		}
-
-		throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
+			throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
+		});
 	}
 
 	private static boolean isValidCursor(@Nullable MongoCursor<?> cursor) {
@@ -235,11 +226,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 			return false;
 		}
 
-		if (cursor.getServerCursor() == null || cursor.getServerCursor().getId() == 0) {
-			return false;
-		}
-
-		return true;
+		return cursor.getServerCursor() != null && cursor.getServerCursor().getId() != 0;
 	}
 
 	/**
@@ -263,4 +250,5 @@ abstract class CursorReadingTask<T, R> implements Task {
 			throw translated != null ? translated : e;
 		}
 	}
+
 }

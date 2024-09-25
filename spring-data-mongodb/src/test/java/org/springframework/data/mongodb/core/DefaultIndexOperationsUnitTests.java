@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Data;
-
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -46,6 +43,7 @@ import com.mongodb.client.model.IndexOptions;
  * Unit tests for {@link DefaultIndexOperations}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class DefaultIndexOperationsUnitTests {
@@ -124,13 +122,36 @@ public class DefaultIndexOperationsUnitTests {
 		verify(collection).createIndex(eq(new Document("firstname", "hashed")), any());
 	}
 
+	@Test // GH-4698
+	void shouldConsiderGivenCollectionName() {
+
+		DefaultIndexOperations operations = new DefaultIndexOperations(template, "foo", Jedi.class);
+
+		operations.ensureIndex(HashedIndex.hashed("name"));
+		verify(db).getCollection(eq("foo"), any(Class.class));
+	}
+
 	private DefaultIndexOperations indexOpsFor(Class<?> type) {
 		return new DefaultIndexOperations(template, template.getCollectionName(type), type);
 	}
 
-	@Data
 	static class Jedi {
+
 		@Field("firstname") String name;
+
+		public Jedi() {}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String toString() {
+			return "DefaultIndexOperationsUnitTests.Jedi(name=" + this.getName() + ")";
+		}
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")

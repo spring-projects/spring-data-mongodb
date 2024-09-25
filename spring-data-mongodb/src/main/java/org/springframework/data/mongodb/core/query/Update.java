@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,8 +95,8 @@ public class Update implements UpdateDefinition {
 
 			Object value = object.get(key);
 			update.modifierOps.put(key, value);
-			if (isKeyword(key) && value instanceof Document) {
-				update.keysToUpdate.addAll(((Document) value).keySet());
+			if (isKeyword(key) && value instanceof Document document) {
+				update.keysToUpdate.addAll(document.keySet());
 			} else {
 				update.keysToUpdate.add(key);
 			}
@@ -404,7 +404,7 @@ public class Update implements UpdateDefinition {
 
 	/**
 	 * Filter elements in an array that match the given criteria for update. {@code expression} is used directly with the
-	 * driver without further further type or field mapping.
+	 * driver without further type or field mapping.
 	 *
 	 * @param identifier the positional operator identifier filter criteria name.
 	 * @param expression the positional operator filter expression.
@@ -448,8 +448,8 @@ public class Update implements UpdateDefinition {
 			keyValueMap = new Document();
 			this.modifierOps.put(operator, keyValueMap);
 		} else {
-			if (existingValue instanceof Document) {
-				keyValueMap = (Document) existingValue;
+			if (existingValue instanceof Document document) {
+				keyValueMap = document;
 			} else {
 				throw new InvalidDataAccessApiUsageException(
 						"Modifier Operations should be a LinkedHashMap but was " + existingValue.getClass());
@@ -656,8 +656,8 @@ public class Update implements UpdateDefinition {
 				return values;
 			}
 
-			if (values.length == 1 && values[0] instanceof Collection) {
-				return ((Collection<?>) values[0]).toArray();
+			if (values.length == 1 && values[0] instanceof Collection<?> collection) {
+				return collection.toArray();
 			}
 
 			return Arrays.copyOf(values, values.length);
@@ -982,7 +982,7 @@ public class Update implements UpdateDefinition {
 			@Override
 			public String toString() {
 				return super.toString().toLowerCase();
-			};
+			}
 		}
 
 		/**

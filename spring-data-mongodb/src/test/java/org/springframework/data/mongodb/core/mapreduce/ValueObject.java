@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,61 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Objects;
 
 /**
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ValueObject {
 
 	private String id;
 
 	private float value;
 
+	public ValueObject() {}
+
+	public ValueObject(String id, float value) {
+		this.id = id;
+		this.value = value;
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public float getValue() {
+		return this.value;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public void setValue(float value) {
+		this.value = value;
+	}
+
 	@Override
 	public String toString() {
 		return "ValueObject [id=" + id + ", value=" + value + "]";
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		ValueObject that = (ValueObject) o;
+		return Float.compare(that.value, value) == 0 && Objects.equals(id, that.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, value);
+	}
 }

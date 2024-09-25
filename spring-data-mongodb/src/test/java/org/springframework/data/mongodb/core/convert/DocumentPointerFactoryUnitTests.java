@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,6 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -97,19 +93,63 @@ public class DocumentPointerFactoryUnitTests {
 				.getPointer();
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Book {
+
 		String id;
 		String title;
 		List<Author> author;
 		Metadata metadata;
 
+		public Book() {}
+
 		public Book(String id, String title, List<Author> author) {
 			this.id = id;
 			this.title = title;
 			this.author = author;
+		}
+
+		public Book(String id, String title, List<Author> author, Metadata metadata) {
+			this.id = id;
+			this.title = title;
+			this.author = author;
+			this.metadata = metadata;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getTitle() {
+			return this.title;
+		}
+
+		public List<Author> getAuthor() {
+			return this.author;
+		}
+
+		public Metadata getMetadata() {
+			return this.metadata;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
+		}
+
+		public void setAuthor(List<Author> author) {
+			this.author = author;
+		}
+
+		public void setMetadata(Metadata metadata) {
+			this.metadata = metadata;
+		}
+
+		public String toString() {
+			return "DocumentPointerFactoryUnitTests.Book(id=" + this.getId() + ", title=" + this.getTitle() + ", author="
+					+ this.getAuthor() + ", metadata=" + this.getMetadata() + ")";
 		}
 	}
 
@@ -130,10 +170,41 @@ public class DocumentPointerFactoryUnitTests {
 		}
 	}
 
-	@Data
 	static class Author {
+
 		String id;
 		String firstname;
 		String lastname;
+
+		public Author() {}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getFirstname() {
+			return this.firstname;
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setFirstname(String firstname) {
+			this.firstname = firstname;
+		}
+
+		public void setLastname(String lastname) {
+			this.lastname = lastname;
+		}
+
+		public String toString() {
+			return "DocumentPointerFactoryUnitTests.Author(id=" + this.getId() + ", firstname=" + this.getFirstname()
+					+ ", lastname=" + this.getLastname() + ")";
+		}
 	}
 }

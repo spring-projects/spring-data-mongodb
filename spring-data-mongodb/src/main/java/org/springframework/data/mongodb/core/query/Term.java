@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.springframework.util.ObjectUtils;
 public class Term {
 
 	public enum Type {
-		WORD, PHRASE;
+		WORD, PHRASE
 	}
 
 	private final Type type;
@@ -98,14 +98,12 @@ public class Term {
 			return true;
 		}
 
-		if (!(o instanceof Term)) {
+		if (!(o instanceof Term other)) {
 			return false;
 		}
 
-		Term term = (Term) o;
-
-		return ObjectUtils.nullSafeEquals(negated, term.negated) && ObjectUtils.nullSafeEquals(type, term.type)
-				&& ObjectUtils.nullSafeEquals(raw, term.raw);
+		return ObjectUtils.nullSafeEquals(negated, other.negated) && ObjectUtils.nullSafeEquals(type, other.type)
+				&& ObjectUtils.nullSafeEquals(raw, other.raw);
 	}
 
 	@Override

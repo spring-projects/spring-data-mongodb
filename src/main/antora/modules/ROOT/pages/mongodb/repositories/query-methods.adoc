@@ -1,0 +1,857 @@
+[[mongodb.repositories.queries]]
+= MongoDB-specific Query Methods
+
+Most of the data access operations you usually trigger on a repository result in a query being executed against the MongoDB databases.
+Defining such a query is a matter of declaring a method on the repository interface, as the following example shows:
+
+.PersonRepository with query methods
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
+
+    List<Person> findByLastname(String lastname);                      <1>
+
+    Page<Person> findByFirstname(String firstname, Pageable pageable); <2>
+
+    Person findByShippingAddresses(Address address);                   <3>
+
+    Person findFirstByLastname(String lastname);                       <4>
+
+    Stream<Person> findAllBy();                                        <5>
+}
+----
+<1> The `findByLastname` method shows a query for all people with the given last name.
+The query is derived by parsing the method name for constraints that can be concatenated with `And` and `Or`.
+Thus, the method name results in a query expression of `{"lastname" : lastname}`.
+<2> Applies pagination to a query.
+You can equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and Spring Data automatically pages the query accordingly.
+<3> Shows that you can query based on properties that are not primitive types.
+Throws `IncorrectResultSizeDataAccessException` if more than one match is found.
+<4> Uses the `First` keyword to restrict the query to only the first result.
+Unlike <3>, this method does not throw an exception if more than one match is found.
+<5> Uses a Java 8 `Stream` that reads and converts individual elements while iterating the stream.
+
+Reactive::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface ReactivePersonRepository extends ReactiveSortingRepository<Person, String> {
+
+    Flux<Person> findByFirstname(String firstname);                                   <1>
+
+    Flux<Person> findByFirstname(Publisher<String> firstname);                        <2>
+
+    Flux<Person> findByFirstnameOrderByLastname(String firstname, Pageable pageable); <3>
+
+    Mono<Person> findByFirstnameAndLastname(String firstname, String lastname);       <4>
+
+    Mono<Person> findFirstByLastname(String lastname);                                <5>
+}
+----
+<1> The method shows a query for all people with the given `lastname`. The query is derived by parsing the method name for constraints that can be concatenated with `And` and `Or`. Thus, the method name results in a query expression of `{"lastname" : lastname}`.
+<2> The method shows a query for all people with the given `firstname` once the `firstname` is emitted by the given `Publisher`.
+<3> Use `Pageable` to pass offset and sorting parameters to the database.
+<4> Find a single entity for the given criteria. It completes with `IncorrectResultSizeDataAccessException` on non-unique results.
+<5> Unless <4>, the first entity is always emitted even if the query yields more result documents.
+
+WARNING: The `Page` return type (as in `Mono<Page>`) is not supported by reactive repositories.
+
+It is possible to use `Pageable` in derived finder methods, to pass on `sort`, `limit` and `offset` parameters to the query to reduce load and network traffic.
+The returned `Flux` will only emit data within the declared range.
+
+[source,java]
+----
+Pageable page = PageRequest.of(1, 10, Sort.by("lastname"));
+Flux<Person> persons = repository.findByFirstnameOrderByLastname("luke", page);
+----
+====
+======
+
+NOTE: We do not support referring to parameters that are mapped as `DBRef` in the domain class.
+
+.Supported keywords for query methods
+[%collapsible]
+====
+[cols="1,2,3",options="header"]
+|===
+| Keyword
+| Sample
+| Logical result
+
+| `After`
+| `findByBirthdateAfter(Date date)`
+| `{"birthdate" : {"$gt" : date}}`
+
+| `GreaterThan`
+| `findByAgeGreaterThan(int age)`
+| `{"age" : {"$gt" : age}}`
+
+| `GreaterThanEqual`
+| `findByAgeGreaterThanEqual(int age)`
+| `{"age" : {"$gte" : age}}`
+
+| `Before`
+| `findByBirthdateBefore(Date date)`
+| `{"birthdate" : {"$lt" : date}}`
+
+| `LessThan`
+| `findByAgeLessThan(int age)`
+| `{"age" : {"$lt" : age}}`
+
+| `LessThanEqual`
+| `findByAgeLessThanEqual(int age)`
+| `{"age" : {"$lte" : age}}`
+
+| `Between`
+| `findByAgeBetween(int from, int to)` +
+`findByAgeBetween(Range<Integer> range)`
+| `{"age" : {"$gt" : from, "$lt" : to}}` +
+lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
+
+| `In`
+| `findByAgeIn(Collection ages)`
+| `{"age" : {"$in" : [ages...]}}`
+
+| `NotIn`
+| `findByAgeNotIn(Collection ages)`
+| `{"age" : {"$nin" : [ages...]}}`
+
+| `IsNotNull`, `NotNull`
+| `findByFirstnameNotNull()`
+| `{"firstname" : {"$ne" : null}}`
+
+| `IsNull`, `Null`
+| `findByFirstnameNull()`
+| `{"firstname" : null}`
+
+| `Like`, `StartingWith`, `EndingWith`
+| `findByFirstnameLike(String name)`
+| `{"firstname" : name} (name as regex)`
+
+| `NotLike`, `IsNotLike`
+| `findByFirstnameNotLike(String name)`
+| `{"firstname" : { "$not" : name }} (name as regex)`
+
+| `Containing` on String
+| `findByFirstnameContaining(String name)`
+| `{"firstname" : name} (name as regex)`
+
+| `NotContaining` on String
+| `findByFirstnameNotContaining(String name)`
+| `{"firstname" : { "$not" : name}} (name as regex)`
+
+| `Containing` on Collection
+| `findByAddressesContaining(Address address)`
+| `{"addresses" : { "$in" : address}}`
+
+| `NotContaining` on Collection
+| `findByAddressesNotContaining(Address address)`
+| `{"addresses" : { "$not" : { "$in" : address}}}`
+
+| `Regex`
+| `findByFirstnameRegex(String firstname)`
+| `{"firstname" : {"$regex" : firstname }}`
+
+| `(No keyword)`
+| `findByFirstname(String name)`
+| `{"firstname" : name}`
+
+| `Not`
+| `findByFirstnameNot(String name)`
+| `{"firstname" : {"$ne" : name}}`
+
+| `Near`
+| `findByLocationNear(Point point)`
+| `{"location" : {"$near" : [x,y]}}`
+
+| `Near`
+| `findByLocationNear(Point point, Distance max)`
+| `{"location" : {"$near" : [x,y], "$maxDistance" : max}}`
+
+| `Near`
+| `findByLocationNear(Point point, Distance min, Distance max)`
+| `{"location" : {"$near" : [x,y], "$minDistance" : min, "$maxDistance" : max}}`
+
+| `Within`
+| `findByLocationWithin(Circle circle)`
+| `{"location" : {"$geoWithin" : {"$center" : [ [x, y], distance]}}}`
+
+| `Within`
+| `findByLocationWithin(Box box)`
+| `{"location" : {"$geoWithin" : {"$box" : [ [x1, y1], x2, y2]}}}`
+
+| `IsTrue`, `True`
+| `findByActiveIsTrue()`
+| `{"active" : true}`
+
+| `IsFalse`,  `False`
+| `findByActiveIsFalse()`
+| `{"active" : false}`
+
+| `Exists`
+| `findByLocationExists(boolean exists)`
+| `{"location" : {"$exists" : exists }}`
+
+| `IgnoreCase`
+| `findByUsernameIgnoreCase(String username)`
+| `{"username" : {"$regex" : "^username$", "$options" : "i" }}`
+|===
+====
+
+NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
+
+[[mongodb.repositories.queries.geo-spatial]]
+== Geo-spatial Queries
+
+As you saw in the preceding table of keywords, a few keywords trigger geo-spatial operations within a MongoDB query.
+The `Near` keyword allows some further modification, as the next few examples show.
+
+The following example shows how to define a `near` query that finds all persons with a given distance of a given point:
+
+.Advanced `Near` queries
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+    List<Person> findByLocationNear(Point location, Distance distance);
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+    Flux<Person> findByLocationNear(Point location, Distance distance);
+}
+----
+======
+
+Adding a `Distance` parameter to the query method allows restricting results to those within the given distance.
+If the `Distance` was set up containing a `Metric`, we transparently use `$nearSphere` instead of `$code`, as the following example shows:
+
+.Using `Distance` with `Metrics`
+====
+[source,java]
+----
+Point point = new Point(43.7, 48.8);
+Distance distance = new Distance(200, Metrics.KILOMETERS);
+… = repository.findByLocationNear(point, distance);
+// {'location' : {'$nearSphere' : [43.7, 48.8], '$maxDistance' : 0.03135711885774796}}
+----
+====
+
+NOTE: Reactive Geo-spatial repository queries support the domain type and `GeoResult<T>` results within a reactive wrapper type. `GeoPage` and `GeoResults` are not supported as they contradict the deferred result approach with pre-calculating the average distance. However, you can still pass in a `Pageable` argument to page results yourself.
+
+Using a `Distance` with a `Metric` causes a `$nearSphere` (instead of a plain `$near`) clause to be added.
+Beyond that, the actual distance gets calculated according to the `Metrics` used.
+
+(Note that `Metric` does not refer to metric units of measure.
+It could be miles rather than kilometers.
+Rather, `metric` refers to the concept of a system of measurement, regardless of which system you use.)
+
+NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of the `$nearSphere` operator.
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    // {'geoNear' : 'location', 'near' : [x, y] }
+    GeoResults<Person> findByLocationNear(Point location);
+
+    // No metric: {'geoNear' : 'person', 'near' : [x, y], maxDistance : distance }
+    // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance,
+    //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
+    GeoResults<Person> findByLocationNear(Point location, Distance distance);
+
+    // Metric: {'geoNear' : 'person', 'near' : [x, y], 'minDistance' : min,
+    //          'maxDistance' : max, 'distanceMultiplier' : metric.multiplier,
+    //          'spherical' : true }
+    GeoResults<Person> findByLocationNear(Point location, Distance min, Distance max);
+
+    // {'geoNear' : 'location', 'near' : [x, y] }
+    GeoResults<Person> findByLocationNear(Point location);
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+interface PersonRepository extends ReactiveMongoRepository<Person, String>  {
+
+    // {'geoNear' : 'location', 'near' : [x, y] }
+    Flux<GeoResult<Person>> findByLocationNear(Point location);
+
+    // No metric: {'geoNear' : 'person', 'near' : [x, y], maxDistance : distance }
+    // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance,
+    //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
+    Flux<GeoResult<Person>> findByLocationNear(Point location, Distance distance);
+
+    // Metric: {'geoNear' : 'person', 'near' : [x, y], 'minDistance' : min,
+    //          'maxDistance' : max, 'distanceMultiplier' : metric.multiplier,
+    //          'spherical' : true }
+    Flux<GeoResult<Person>> findByLocationNear(Point location, Distance min, Distance max);
+
+    // {'geoNear' : 'location', 'near' : [x, y] }
+    Flux<GeoResult<Person>> findByLocationNear(Point location);
+}
+----
+======
+
+[[mongodb.repositories.queries.json-based]]
+== JSON-based Query Methods and Field Restriction
+
+By adding the `org.springframework.data.mongodb.repository.Query` annotation to your repository query methods, you can specify a MongoDB JSON query string to use instead of having the query be derived from the method name, as the following example shows:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    @Query("{ 'firstname' : ?0 }")
+    List<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    @Query("{ 'firstname' : ?0 }")
+    Flux<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+======
+
+The `?0` placeholder lets you substitute the value from the method arguments into the JSON query string.
+
+NOTE: `String` parameter values are escaped during the binding process, which means that it is not possible to add MongoDB specific operators through the argument.
+
+You can also use the filter property to restrict the set of properties that is mapped into the Java object, as the following example shows:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname' : 1, 'lastname' : 1}")
+    List<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname' : 1, 'lastname' : 1}")
+    Flux<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+======
+
+The query in the preceding example returns only the `firstname`, `lastname` and `Id` properties of the `Person` objects.
+The `age` property, a `java.lang.Integer`, is not set and its value is therefore null.
+
+[[mongodb.repositories.queries.json-spel]]
+== JSON-based Queries with SpEL Expressions
+
+Query strings and field definitions can be used together with SpEL expressions to create dynamic queries at runtime.
+SpEL expressions can provide predicate values and can be used to extend predicates with subdocuments.
+
+Expressions expose method arguments through an array that contains all the arguments.
+The following query uses `[0]`
+to declare the predicate value for `lastname` (which is equivalent to the `?0` parameter binding):
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    @Query("{'lastname': ?#{[0]} }")
+    List<Person> findByQueryWithExpression(String param0);
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    @Query("{'lastname': ?#{[0]} }")
+    Flux<Person> findByQueryWithExpression(String param0);
+}
+----
+======
+
+Expressions can be used to invoke functions, evaluate conditionals, and construct values.
+SpEL expressions used in conjunction with JSON reveal a side-effect, because Map-like declarations inside of SpEL read like JSON, as the following example shows:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
+    List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
+    Flux<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
+}
+----
+======
+
+WARNING: SpEL in query strings can be a powerful way to enhance queries.
+However, they can also accept a broad range of unwanted arguments.
+Make sure to sanitize strings before passing them to the query to avoid creation of vulnerabilities or unwanted changes to your query.
+
+Expression support is extensible through the Query SPI: `EvaluationContextExtension` & `ReactiveEvaluationContextExtension`
+The Query SPI can contribute properties and functions and can customize the root object.
+Extensions are retrieved from the application context at the time of SpEL evaluation when the query is built.
+The following example shows how to use an evaluation context extension:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public class SampleEvaluationContextExtension extends EvaluationContextExtensionSupport {
+
+    @Override
+    public String getExtensionId() {
+        return "security";
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return Collections.singletonMap("principal", SecurityContextHolder.getCurrent().getPrincipal());
+    }
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public class SampleEvaluationContextExtension implements ReactiveEvaluationContextExtension {
+
+    @Override
+    public String getExtensionId() {
+        return "security";
+    }
+
+    @Override
+    public Mono<? extends EvaluationContextExtension> getExtension() {
+        return Mono.just(new EvaluationContextExtensionSupport() { ... });
+    }
+}
+----
+======
+
+NOTE: Bootstrapping `MongoRepositoryFactory` yourself is not application context-aware and requires further configuration to pick up Query SPI extensions.
+
+NOTE: Reactive query methods can make use of `org.springframework.data.spel.spi.ReactiveEvaluationContextExtension`.
+
+[[mongodb.repositories.queries.full-text]]
+== Full-text Search Queries
+
+MongoDB's full-text search feature is store-specific and, therefore, can be found on `MongoRepository` rather than on the more general `CrudRepository`.
+We need a document with a full-text index (see "`xref:mongodb/mapping/mapping.adoc#mapping-usage-indexes.text-index[Text Indexes]`" to learn how to create a full-text index).
+
+Additional methods on `MongoRepository` take `TextCriteria` as an input parameter.
+In addition to those explicit methods, it is also possible to add a `TextCriteria`-derived repository method.
+The criteria are added as an additional `AND` criteria.
+Once the entity contains a `@TextScore`-annotated property, the document's full-text score can be retrieved.
+Furthermore, the `@TextScore` annotated also makes it possible to sort by the document's score, as the following example shows:
+
+[source,java]
+----
+@Document
+class FullTextDocument {
+
+  @Id String id;
+  @TextIndexed String title;
+  @TextIndexed String content;
+  @TextScore Float score;
+}
+
+interface FullTextRepository extends Repository<FullTextDocument, String> {
+
+  // Execute a full-text search and define sorting dynamically
+  List<FullTextDocument> findAllBy(TextCriteria criteria, Sort sort);
+
+  // Paginate over a full-text search result
+  Page<FullTextDocument> findAllBy(TextCriteria criteria, Pageable pageable);
+
+  // Combine a derived query with a full-text search
+  List<FullTextDocument> findByTitleOrderByScoreDesc(String title, TextCriteria criteria);
+}
+
+
+Sort sort = Sort.by("score");
+TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny("spring", "data");
+List<FullTextDocument> result = repository.findAllBy(criteria, sort);
+
+criteria = TextCriteria.forDefaultLanguage().matching("film");
+Page<FullTextDocument> page = repository.findAllBy(criteria, PageRequest.of(1, 1, sort));
+List<FullTextDocument> result = repository.findByTitleOrderByScoreDesc("mongodb", criteria);
+----
+
+[[mongodb.repositories.queries.aggregation]]
+== Aggregation Methods
+
+The repository layer offers means to interact with xref:mongodb/aggregation-framework.adoc[the aggregation framework] via annotated repository query methods.
+Similar to the xref:mongodb/repositories/repositories.adoc#mongodb.repositories.queries.json-based[JSON based queries], you can define a pipeline using the `org.springframework.data.mongodb.repository.Aggregation` annotation.
+The definition may contain simple placeholders like `?0` as well as link:{springDocsUrl}/core.html#expressions[SpEL expressions] `?#{ … }`.
+
+.Aggregating Repository Method
+====
+[source,java]
+----
+public interface PersonRepository extends CrudRepository<Person, String> {
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames();                            <1>
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames(Sort sort);                   <2>
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : ?0 } } }")
+  List<PersonAggregate> groupByLastnameAnd(String property);                       <3>
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : ?0 } } }")
+  Slice<PersonAggregate> groupByLastnameAnd(String property, Pageable page);       <4>
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  Stream<PersonAggregate> groupByLastnameAndFirstnamesAsStream();                  <5>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  SumValue sumAgeUsingValueWrapper();                                              <6>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  Long sumAge();                                                                   <7>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  AggregationResults<SumValue> sumAgeRaw();                                        <8>
+
+  @Aggregation("{ '$project': { '_id' : '$lastname' } }")
+  List<String> findAllLastnames();                                                 <9>
+
+  @Aggregation(pipeline = {
+		  "{ $group : { _id : '$author', books: { $push: '$title' } } }",
+		  "{ $out : 'authors' }"
+  })
+  void groupAndOutSkippingOutput();                                                <10>
+}
+----
+[source,java]
+----
+public class PersonAggregate {
+
+  private @Id String lastname;                                                     <2>
+  private List<String> names;
+
+  public PersonAggregate(String lastname, List<String> names) {
+     // ...
+  }
+
+  // Getter / Setter omitted
+}
+
+public class SumValue {
+
+  private final Long total;                                                        <6> <8>
+
+  public SumValue(Long total) {
+    // ...
+  }
+
+  // Getter omitted
+}
+----
+<1> Aggregation pipeline to group first names by `lastname` in the `Person` collection returning these as `PersonAggregate`.
+<2> If `Sort` argument is present, `$sort` is appended after the declared pipeline stages so that it only affects the order of the final results after having passed all other aggregation stages.
+Therefore, the `Sort` properties are mapped against the methods return type `PersonAggregate` which turns `Sort.by("lastname")` into `{ $sort : { '_id', 1 } }` because `PersonAggregate.lastname` is annotated with `@Id`.
+<3> Replaces `?0` with the given value for `property` for a dynamic aggregation pipeline.
+<4> `$skip`, `$limit` and `$sort` can be passed on via a `Pageable` argument. Same as in <2>, the operators are appended to the pipeline definition. Methods accepting `Pageable` can return `Slice` for easier pagination.
+<5> Aggregation methods can return `Stream` to consume results directly from an underlying cursor. Make sure to close the stream after consuming it to release the server-side cursor by either calling `close()` or through `try-with-resources`.
+<6> Map the result of an aggregation returning a single `Document` to an instance of a desired `SumValue` target type.
+<7> Aggregations resulting in single document holding just an accumulation result like e.g. `$sum` can be extracted directly from the result `Document`.
+To gain more control, you might consider `AggregationResult` as method return type as shown in <7>.
+<8> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
+<9> Like in <6>, a single value can be directly obtained from multiple result ``Document``s.
+<10> Skips the output of the `$out` stage when return type is `void`.
+====
+
+In some scenarios, aggregations might require additional options, such as a maximum run time, additional log comments, or the permission to temporarily write data to disk.
+Use the `@Meta` annotation to set those options via `maxExecutionTimeMs`, `comment` or `allowDiskUse`.
+
+[source,java]
+----
+interface PersonRepository extends CrudRepository<Person, String> {
+
+  @Meta(allowDiskUse = true)
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames();
+}
+----
+
+Or use `@Meta` to create your own annotation as shown in the sample below.
+
+[source,java]
+----
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.METHOD })
+@Meta(allowDiskUse = true)
+@interface AllowDiskUse { }
+
+interface PersonRepository extends CrudRepository<Person, String> {
+
+  @AllowDiskUse
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames();
+}
+----
+
+[NOTE]
+====
+Simple-type single-result inspects the returned `Document` and checks for the following:
+
+. Only one entry in the document, return it.
+. Two entries, one is the `_id` value. Return the other.
+. Return for the first value assignable to the return type.
+. Throw an exception if none of the above is applicable.
+====
+
+WARNING: The `Page` return type is not supported for repository methods using `@Aggregation`. However, you can use a
+`Pageable` argument to add `$skip`, `$limit` and `$sort` to the pipeline and let the method return `Slice`.
+
+[[mongodb.repositories.queries.by-example]]
+include::../../repositories/query-by-example.adoc[leveloffset=+1]
+
+[[mongodb.repositories.queries.scroll]]
+include::{commons}@data-commons::page$repositories/scrolling.adoc[leveloffset=+1]
+
+[[mongodb.repositories.queries.sort]]
+== Sorting Results
+
+MongoDB repositories allow various approaches to define sorting order.
+Let's take a look at the following example:
+
+.Sorting Query Results
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+    List<Person> findByFirstnameSortByAgeDesc(String firstname); <1>
+
+    List<Person> findByFirstname(String firstname, Sort sort);   <2>
+
+    @Query(sort = "{ age : -1 }")
+    List<Person> findByFirstname(String firstname);              <3>
+
+    @Query(sort = "{ age : -1 }")
+    List<Person> findByLastname(String lastname, Sort sort);     <4>
+}
+----
+<1> Static sorting derived from method name. `SortByAgeDesc` results in `{ age : -1 }` for the sort parameter.
+<2> Dynamic sorting using a method argument.
+`Sort.by(DESC, "age")` creates `{ age : -1 }` for the sort parameter.
+<3> Static sorting via `Query` annotation.
+Sort parameter applied as stated in the `sort` attribute.
+<4> Default sorting via `Query` annotation combined with dynamic one via a method argument. `Sort.unsorted()`
+results in `{ age : -1 }`.
+Using `Sort.by(ASC, "age")` overrides the defaults and creates `{ age : 1 }`.
+`Sort.by
+(ASC, "firstname")` alters the default and results in `{ age : -1, firstname : 1 }`.
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+
+    Flux<Person> findByFirstnameSortByAgeDesc(String firstname);
+
+    Flux<Person> findByFirstname(String firstname, Sort sort);
+
+    @Query(sort = "{ age : -1 }")
+    Flux<Person> findByFirstname(String firstname);
+
+    @Query(sort = "{ age : -1 }")
+    Flux<Person> findByLastname(String lastname, Sort sort);
+}
+----
+======
+
+[[mongodb.repositories.index-hint]]
+== Index Hints
+
+The `@Hint` annotation allows to override MongoDB's default index selection and forces the database to use the specified index instead.
+
+.Example of index hints
+====
+[source,java]
+----
+@Hint("lastname-idx")                                          <1>
+List<Person> findByLastname(String lastname);
+
+@Query(value = "{ 'firstname' : ?0 }", hint = "firstname-idx") <2>
+List<Person> findByFirstname(String firstname);
+----
+<1> Use the index with name `lastname-idx`.
+<2> The `@Query` annotation defines the `hint` alias which is equivalent to adding the `@Hint` annotation.
+====
+
+For more information about index creation please refer to the xref:mongodb/template-collection-management.adoc[Collection Management] section.
+
+[[mongo.repositories.collation]]
+== Collation Support
+
+Next to the xref:mongodb/collation.adoc[general Collation Support] repositories allow to define the collation for various operations.
+
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query(collation = "en_US")  <1>
+  List<Person> findByFirstname(String firstname);
+
+  @Query(collation = "{ 'locale' : 'en_US' }") <2>
+  List<Person> findPersonByFirstname(String firstname);
+
+  @Query(collation = "?1") <3>
+  List<Person> findByFirstname(String firstname, Object collation);
+
+  @Query(collation = "{ 'locale' : '?1' }") <4>
+  List<Person> findByFirstname(String firstname, String collation);
+
+  List<Person> findByFirstname(String firstname, Collation collation); <5>
+
+  @Query(collation = "{ 'locale' : 'en_US' }")
+  List<Person> findByFirstname(String firstname, @Nullable Collation collation); <6>
+}
+----
+<1> Static collation definition resulting in `{ 'locale' : 'en_US' }`.
+<2> Static collation definition resulting in `{ 'locale' : 'en_US' }`.
+<3> Dynamic collation depending on 2nd method argument. Allowed types include `String` (eg. 'en_US'), `Locacle` (eg. Locacle.US)
+and `Document` (eg. new Document("locale", "en_US"))
+<4> Dynamic collation depending on 2nd method argument.
+<5> Apply the `Collation` method parameter to the query.
+<6> The `Collation` method parameter overrides the default `collation` from `@Query` if not null.
+
+NOTE: In case you enabled the automatic index creation for repository finder methods a potential static collation definition,
+as shown in (1) and (2), will be included when creating the index.
+
+TIP: The most specifc `Collation` outrules potentially defined others. Which means Method argument over query method annotation over domain type annotation.
+====
+
+To streamline usage of collation attributes throughout the codebase it is also possible to use the `@Collation` annotation, which serves as a meta annotation for the ones mentioned above.
+The same rules and locations apply, plus, direct usage of `@Collation` supersedes any collation values defined on `@Query` and other annotations.
+Which means, if a collation is declared via `@Query` and additionally via `@Collation`, then the one from `@Collation` is picked.
+
+.Using `@Collation`
+====
+[source,java]
+----
+@Collation("en_US") <1>
+class Game {
+  // ...
+}
+
+interface GameRepository extends Repository<Game, String> {
+
+  @Collation("en_GB")  <2>
+  List<Game> findByTitle(String title);
+
+  @Collation("de_AT")  <3>
+  @Query(collation="en_GB")
+  List<Game> findByDescriptionContaining(String keyword);
+}
+----
+<1> Instead of `@Document(collation=...)`.
+<2> Instead of `@Query(collation=...)`.
+<3> Favors `@Collation` over meta usage.
+====
+
+== Read Preferences
+
+The `@ReadPreference` annotation allows you to configure MongoDB's ReadPreferences.
+
+.Example of read preferences
+====
+[source,java]
+----
+
+@ReadPreference("primaryPreferred") <1>
+public interface PersonRepository extends CrudRepository<Person, String> {
+
+    @ReadPreference("secondaryPreferred") <2>
+    List<Person> findWithReadPreferenceAnnotationByLastname(String lastname);
+
+    @Query(readPreference = "nearest") <3>
+    List<Person> findWithReadPreferenceAtTagByFirstname(String firstname);
+
+    List<Person> findWithReadPreferenceAtTagByFirstname(String firstname); <4>
+----
+<1> Configure read preference for all repository operations (including inherited, non custom implementation ones) that do not have a query-level definition. Therefore, in this case the read preference mode will be `primaryPreferred`
+<2> Use the read preference mode defined in annotation `ReadPreference`, in this case secondaryPreferred
+<3> The `@Query` annotation defines the `read preference mode` alias which is equivalent to adding the `@ReadPreference` annotation.
+<4> This query will use the read preference mode defined in the repository.
+====
+
+[TIP]
+====
+The `MongoOperations` and `Query` API offer more fine grained control for `ReadPreference`.
+====

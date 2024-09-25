@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 the original author or authors.
+ * Copyright 2016-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.annotation.Collation;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.query.MongoQueryMethodUnitTests.PersonRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,7 +25,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,12 +35,15 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -53,6 +54,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jorge Rodríguez
  */
 public class ReactiveMongoQueryMethodUnitTests {
 
@@ -220,10 +222,56 @@ public class ReactiveMongoQueryMethodUnitTests {
 	@Test // GH-3002
 	void annotatedCollationClashSelectsAtCollationAnnotationValue() throws Exception {
 
-		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname", String.class);
 
 		assertThat(method.hasAnnotatedCollation()).isTrue();
 		assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
+	}
+
+
+	@Test // GH-2971
+	void readsReadPreferenceAtQueryAnnotation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtReadPreferenceByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceFromAtQueryAnnotation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithReadPreferenceFromAtQueryByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void annotatedReadPreferenceClashSelectsAtReadPreferenceAnnotationValue() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
+	}
+
+	@Test // GH-2971
+	void readsReadPreferenceAtRepositoryAnnotation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("primaryPreferred");
+	}
+
+	@Test // GH-2971
+	void detectsReadPreferenceForAggregation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(MongoQueryMethodUnitTests.PersonRepository.class, "findByAggregationWithReadPreference");
+
+		assertThat(method.hasAnnotatedReadPreference()).isTrue();
+		assertThat(method.getAnnotatedReadPreference()).isEqualTo("secondaryPreferred");
 	}
 
 	private ReactiveMongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
@@ -234,6 +282,7 @@ public class ReactiveMongoQueryMethodUnitTests {
 		return new ReactiveMongoQueryMethod(method, new DefaultRepositoryMetadata(repository), factory, context);
 	}
 
+	@ReadPreference(value = "primaryPreferred")
 	interface PersonRepository extends Repository<User, Long> {
 
 		Mono<Person> findMonoByLastname(String lastname, Pageable pageRequest);
@@ -268,6 +317,9 @@ public class ReactiveMongoQueryMethodUnitTests {
 				collation = "de_AT")
 		Flux<User> findByAggregationWithCollation();
 
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }", readPreference = "secondaryPreferred")
+		Flux<User> findByAggregationWithReadPreference();
+
 		@Collation("en_US")
 		List<User> findWithCollationFromAtCollationByFirstname(String firstname);
 
@@ -277,6 +329,16 @@ public class ReactiveMongoQueryMethodUnitTests {
 		@Collation("de_AT")
 		@Query(collation = "en_US")
 		List<User> findWithMultipleCollationsFromAtQueryAndAtCollationByFirstname(String firstname);
+
+		@ReadPreference("secondaryPreferred")
+		Flux<User> findWithReadPreferenceFromAtReadPreferenceByFirstname(String firstname);
+
+		@Query(readPreference = "secondaryPreferred")
+		Flux<User> findWithReadPreferenceFromAtQueryByFirstname(String firstname);
+
+		@ReadPreference("secondaryPreferred")
+		@Query(readPreference = "primaryPreferred")
+		Flux<User> findWithMultipleReadPreferencesFromAtQueryAndAtReadPreferenceByFirstname(String firstname);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

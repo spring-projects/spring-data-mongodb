@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the original author or authors.
+ * Copyright 2019-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,11 +92,11 @@ abstract class CollationUtils {
 			if (placeholderValue instanceof String) {
 				return Collation.parse(placeholderValue.toString());
 			}
-			if (placeholderValue instanceof Locale) {
-				return Collation.of((Locale) placeholderValue);
+			if (placeholderValue instanceof Locale locale) {
+				return Collation.of(locale);
 			}
-			if (placeholderValue instanceof Document) {
-				return Collation.from((Document) placeholderValue);
+			if (placeholderValue instanceof Document document) {
+				return Collation.from(document);
 			}
 			throw new IllegalArgumentException(String.format("Collation must be a String, Locale or Document but was %s",
 					ObjectUtils.nullSafeClassName(placeholderValue)));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -96,7 +95,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * @return
 	 */
 	protected GroupOperation and(Operation operation) {
-		return new GroupOperation(this, Arrays.asList(operation));
+		return new GroupOperation(this, List.of(operation));
 	}
 
 	/**
@@ -457,12 +456,12 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		String toString();
 	}
 
-	private static enum GroupOps implements Keyword {
+	private enum GroupOps implements Keyword {
 
 		SUM("$sum"), LAST("$last"), FIRST("$first"), PUSH("$push"), AVG("$avg"), MIN("$min"), MAX("$max"), ADD_TO_SET(
 				"$addToSet"), STD_DEV_POP("$stdDevPop"), STD_DEV_SAMP("$stdDevSamp");
 
-		private String mongoOperator;
+		private final String mongoOperator;
 
 		GroupOps(String mongoOperator) {
 			this.mongoOperator = mongoOperator;
@@ -514,8 +513,8 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 			if (reference == null) {
 
-				if (value instanceof AggregationExpression) {
-					return ((AggregationExpression) value).toDocument(context);
+				if (value instanceof AggregationExpression aggregationExpression) {
+					return aggregationExpression.toDocument(context);
 				}
 
 				return value;

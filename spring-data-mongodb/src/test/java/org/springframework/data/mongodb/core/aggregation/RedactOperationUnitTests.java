@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the original author or authors.
+ * Copyright 2020-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
-
-import lombok.Data;
 
 import java.util.Arrays;
 
@@ -74,10 +72,21 @@ class RedactOperationUnitTests {
 				.otherwise(RedactOperation.DESCEND)).toDocument(contextFor(DomainType.class))).isEqualTo(expectedMapped);
 	}
 
-	@Data
 	static class DomainType {
 
 		@Field("le_v_el") String level;
+
+		public String getLevel() {
+			return this.level;
+		}
+
+		public void setLevel(String level) {
+			this.level = level;
+		}
+
+		public String toString() {
+			return "RedactOperationUnitTests.DomainType(level=" + this.getLevel() + ")";
+		}
 	}
 
 	private static AggregationOperationContext contextFor(@Nullable Class<?> type) {

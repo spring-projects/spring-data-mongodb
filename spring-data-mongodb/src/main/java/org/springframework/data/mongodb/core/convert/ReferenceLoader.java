@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Iterator;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.client.MongoCollection;
@@ -125,6 +126,31 @@ public interface ReferenceLoader {
 					return collection.find(getQuery()).sort(getSort());
 				}
 			};
+		}
+
+		/**
+		 * @return a {@link DocumentReferenceQuery} that will not match any documents.
+		 * @since 4.2.5
+		 */
+		static DocumentReferenceQuery forNoResult() {
+			return NoResultsFilter.INSTANCE;
+		}
+	}
+
+	/**
+	 * A dedicated {@link DocumentReferenceQuery} that will not match any documents.
+	 *
+	 * @since 4.2.5
+	 */
+	enum NoResultsFilter implements DocumentReferenceQuery {
+		INSTANCE;
+
+		private static final Document NO_RESULTS_PREDICATE = new Document(FieldName.ID.name(),
+				new Document("$exists", false));
+
+		@Override
+		public Bson getQuery() {
+			return NO_RESULTS_PREDICATE;
 		}
 	}
 }

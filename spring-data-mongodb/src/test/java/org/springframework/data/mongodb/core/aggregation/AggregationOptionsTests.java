@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the original author or authors.
+ * Copyright 2014-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,6 +75,39 @@ class AggregationOptionsTests {
 		assertThat(aggregationOptions.getComment()).contains("hola");
 		assertThat(aggregationOptions.getHint()).contains(dummyHint);
 		assertThat(aggregationOptions.getHintObject()).contains(dummyHint);
+	}
+
+	@Test // GH-4664
+	void omitsAllowDiskUseByDefault() {
+
+		aggregationOptions = AggregationOptions.fromDocument(new Document());
+
+		assertThat(aggregationOptions.isAllowDiskUse()).isFalse();
+		assertThat(aggregationOptions.isAllowDiskUseSet()).isFalse();
+
+		assertThat(aggregationOptions.toDocument()).doesNotContainKey("allowDiskUse");
+	}
+
+	@Test // GH-4664
+	void applyOptionsDoesNotChangeAllowDiskUseDefault() {
+
+		aggregationOptions = AggregationOptions.fromDocument(new Document());
+
+		Document empty = new Document();
+		aggregationOptions.applyAndReturnPotentiallyChangedCommand(empty);
+
+		assertThat(empty).doesNotContainKey("allowDiskUse");
+	}
+
+	@Test // GH-4664
+	void applyOptionsDoesNotChangeExistingAllowDiskUse() {
+
+		aggregationOptions = AggregationOptions.fromDocument(new Document());
+
+		Document existing = new Document("allowDiskUse", true);
+		aggregationOptions.applyAndReturnPotentiallyChangedCommand(existing);
+
+		assertThat(existing).containsEntry("allowDiskUse", true);
 	}
 
 	@Test // DATAMONGO-960, DATAMONGO-2153, DATAMONGO-1836

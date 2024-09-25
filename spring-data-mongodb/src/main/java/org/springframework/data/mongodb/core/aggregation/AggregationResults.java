@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,6 @@ public class AggregationResults<T> implements Iterable<T> {
 	private String parseServerUsed() {
 
 		Object object = rawResults.get("serverUsed");
-		return object instanceof String ? (String) object : null;
+		return object instanceof String stringValue ? stringValue : null;
 	}
 }

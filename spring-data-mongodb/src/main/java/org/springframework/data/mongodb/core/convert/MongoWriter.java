@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,11 +67,11 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 * Creates a {@link DBRef} to refer to the given object.
 	 *
 	 * @param object the object to create a {@link DBRef} to link to. The object's type has to carry an id attribute.
-	 * @param referingProperty the client-side property referring to the object which might carry additional metadata for
+	 * @param referringProperty the client-side property referring to the object which might carry additional metadata for
 	 *          the {@link DBRef} object to create. Can be {@literal null}.
 	 * @return will never be {@literal null}.
 	 */
-	DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referingProperty);
+	DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty);
 
 	/**
 	 * Creates a the {@link DocumentPointer} representing the link to another entity.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the original author or authors.
+ * Copyright 2010-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -62,6 +63,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jorge Rodríguez
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
@@ -127,6 +129,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param accessor for providing invocation arguments. Never {@literal null}.
 	 * @param typeToRead the desired component target type. Can be {@literal null}.
 	 */
+	@Nullable
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {
 
@@ -135,12 +138,30 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		applyQueryMetaAttributesWhenPresent(query);
 		query = applyAnnotatedDefaultSortIfPresent(query);
 		query = applyAnnotatedCollationIfPresent(query, accessor);
+		query = applyHintIfPresent(query);
+		query = applyAnnotatedReadPreferenceIfPresent(query);
 
 		FindWithQuery<?> find = typeToRead == null //
 				? executableFind //
 				: executableFind.as(typeToRead);
 
 		return getExecution(accessor, find).execute(query);
+	}
+
+	/**
+	 * If present apply the {@link com.mongodb.ReadPreference} from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.2
+	 */
+	private Query applyAnnotatedReadPreferenceIfPresent(Query query) {
+
+		if (!method.hasAnnotatedReadPreference()) {
+			return query;
+		}
+
+		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
 	}
 
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
@@ -167,6 +188,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {
 			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort())).all();
+		} else if (method.isScrollQuery()) {
+			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort()))
+					.scroll(accessor.getScrollPosition());
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operation, accessor.getPageable());
 		} else if (isCountQuery()) {
@@ -220,6 +244,22 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
 				accessor, getQueryMethod().getParameters(), expressionParser, evaluationContextProvider);
+	}
+
+	/**
+	 * If present apply the hint from the {@link org.springframework.data.mongodb.repository.Hint} annotation.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 4.1
+	 */
+	Query applyHintIfPresent(Query query) {
+
+		if (!method.hasAnnotatedHint()) {
+			return query;
+		}
+
+		return query.withHint(method.getAnnotatedHint());
 	}
 
 	/**
@@ -284,7 +324,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	private AggregationOperation computePipelineStage(String source, ConvertingParameterAccessor accessor) {
-		return ctx -> ctx.getMappedObject(bindParameters(source, accessor), getQueryMethod().getDomainClass());
+		return new StringAggregationOperation(source, getQueryMethod().getDomainClass(),
+				(it) -> bindParameters(it, accessor));
 	}
 
 	protected Document decode(String source, ParameterBindingContext bindingContext) {

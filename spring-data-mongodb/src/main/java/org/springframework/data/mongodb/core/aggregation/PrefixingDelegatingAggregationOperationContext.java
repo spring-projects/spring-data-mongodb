@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,8 +115,8 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		List<Object> prefixed = new ArrayList<>(sourceCollection.size());
 
 		for (Object o : sourceCollection) {
-			if (o instanceof Document) {
-				prefixed.add(doPrefix((Document) o));
+			if (o instanceof Document document) {
+				prefixed.add(doPrefix(document));
 			} else {
 				prefixed.add(o);
 			}

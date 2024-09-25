@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the original author or authors.
+ * Copyright 2015-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,10 @@ import org.springframework.data.mongodb.MongoExpression;
 /**
  * An {@link AggregationExpression} can be used with field expressions in aggregation pipeline stages like
  * {@code project} and {@code group}.
+ * <p>
+ * The {@link AggregationExpression expressions} {@link #toDocument(AggregationOperationContext)} method is called during
+ * the mapping process to obtain the mapped, ready to use representation that can be handed over to the driver as part
+ * of an {@link AggregationOperation pipleine stage}.
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
@@ -39,11 +43,11 @@ public interface AggregationExpression extends MongoExpression {
 	 */
 	static AggregationExpression from(MongoExpression expression) {
 
-		if (expression instanceof AggregationExpression) {
-			return AggregationExpression.class.cast(expression);
+		if (expression instanceof AggregationExpression aggregationExpression) {
+			return aggregationExpression;
 		}
 
-		return (context) -> context.getMappedObject(expression.toDocument());
+		return context -> context.getMappedObject(expression.toDocument());
 	}
 
 	/**

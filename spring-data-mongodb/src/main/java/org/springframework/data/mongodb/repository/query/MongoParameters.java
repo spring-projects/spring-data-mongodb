@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
@@ -49,38 +50,48 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	private final @Nullable Integer nearIndex;
 	private final @Nullable Integer collationIndex;
 	private final int updateIndex;
+	private final TypeInformation<?> domainType;
 
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
 	 *
-	 * @param method must not be {@literal null}.
+	 * @param parametersSource must not be {@literal null}.
 	 * @param isGeoNearMethod indicate if this is a geo spatial query method
 	 */
-	public MongoParameters(Method method, boolean isGeoNearMethod) {
+	public MongoParameters(ParametersSource parametersSource, boolean isGeoNearMethod) {
+		this(parametersSource, new NearIndex(parametersSource, isGeoNearMethod));
+	}
 
-		super(method);
+	/**
+	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
+	 *
+	 * @param parametersSource must not be {@literal null}.
+	 * @param nearIndex the near parameter index.
+	 */
+	private MongoParameters(ParametersSource parametersSource, NearIndex nearIndex) {
+
+		super(parametersSource, methodParameter -> new MongoParameter(methodParameter,
+				parametersSource.getDomainTypeInformation(), nearIndex.nearIndex));
+
+		Method method = parametersSource.getMethod();
 		List<Class<?>> parameterTypes = Arrays.asList(method.getParameterTypes());
 
+		this.domainType = parametersSource.getDomainTypeInformation();
 		this.fullTextIndex = parameterTypes.indexOf(TextCriteria.class);
 
-		TypeInformation<?> declaringClassInfo = TypeInformation.of(method.getDeclaringClass());
+		TypeInformation<?> declaringClassInfo = TypeInformation.of(parametersSource.getContainingClass());
 		List<TypeInformation<?>> parameterTypeInfo = declaringClassInfo.getParameterTypes(method);
 
 		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);
 		this.maxDistanceIndex = this.rangeIndex == -1 ? getTypeIndex(parameterTypeInfo, Distance.class, null) : -1;
 		this.collationIndex = getTypeIndex(parameterTypeInfo, Collation.class, null);
 		this.updateIndex = QueryUtils.indexOfAssignableParameter(UpdateDefinition.class, parameterTypes);
-
-		int index = findNearIndexInParameters(method);
-		if (index == -1 && isGeoNearMethod) {
-			index = getNearIndex(parameterTypes);
-		}
-
-		this.nearIndex = index;
+		this.nearIndex = nearIndex.nearIndex;
 	}
 
 	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, @Nullable Integer nearIndex,
-			@Nullable Integer fullTextIndex, int rangeIndex, @Nullable Integer collationIndex, int updateIndex) {
+			@Nullable Integer fullTextIndex, int rangeIndex, @Nullable Integer collationIndex, int updateIndex,
+			TypeInformation<?> domainType) {
 
 		super(parameters);
 
@@ -90,9 +101,25 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.rangeIndex = rangeIndex;
 		this.collationIndex = collationIndex;
 		this.updateIndex = updateIndex;
+		this.domainType = domainType;
 	}
 
-	private final int getNearIndex(List<Class<?>> parameterTypes) {
+	static class NearIndex {
+
+		private final @Nullable Integer nearIndex;
+
+		public NearIndex(ParametersSource parametersSource, boolean isGeoNearMethod) {
+
+			int index = findNearIndexInParameters(parametersSource.getMethod());
+			if (index == -1 && isGeoNearMethod) {
+				index = getNearIndex(Arrays.asList(parametersSource.getMethod().getParameterTypes()));
+			}
+
+			this.nearIndex = index;
+		}
+	}
+
+	private static int getNearIndex(List<Class<?>> parameterTypes) {
 
 		for (Class<?> reference : Arrays.asList(Point.class, double[].class)) {
 
@@ -112,28 +139,26 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return -1;
 	}
 
-	private int findNearIndexInParameters(Method method) {
+	static int findNearIndexInParameters(Method method) {
 
 		int index = -1;
 		for (java.lang.reflect.Parameter p : method.getParameters()) {
 
-			MongoParameter param = createParameter(MethodParameter.forParameter(p));
-			if (param.isManuallyAnnotatedNearParameter()) {
+			MethodParameter methodParameter = MethodParameter.forParameter(p);
+
+			if ((Point.class.isAssignableFrom(methodParameter.getParameterType())
+					|| methodParameter.getParameterType().equals(double[].class))
+					&& methodParameter.hasParameterAnnotation(Near.class)) {
 				if (index == -1) {
-					index = param.getIndex();
+					index = methodParameter.getParameterIndex();
 				} else {
 					throw new IllegalStateException(
-							String.format("Found multiple @Near annotations ond method %s; Only one allowed", method.toString()));
+							String.format("Found multiple @Near annotations ond method %s; Only one allowed", method));
 				}
 
 			}
 		}
 		return index;
-	}
-
-	@Override
-	protected MongoParameter createParameter(MethodParameter parameter) {
-		return new MongoParameter(parameter);
 	}
 
 	public int getDistanceRangeIndex() {
@@ -160,13 +185,13 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	/**
-	 * Returns the index of the parameter to be used as a textquery param
+	 * Returns the index of the parameter to be used as a text query param
 	 *
 	 * @return
 	 * @since 1.6
 	 */
 	public int getFullTextParameterIndex() {
-		return fullTextIndex != null ? fullTextIndex.intValue() : -1;
+		return fullTextIndex != null ? fullTextIndex : -1;
 	}
 
 	/**
@@ -174,7 +199,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 1.6
 	 */
 	public boolean hasFullTextParameter() {
-		return this.fullTextIndex != null && this.fullTextIndex.intValue() >= 0;
+		return this.fullTextIndex != null && this.fullTextIndex >= 0;
 	}
 
 	/**
@@ -192,11 +217,12 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 2.2
 	 */
 	public int getCollationParameterIndex() {
-		return collationIndex != null ? collationIndex.intValue() : -1;
+		return collationIndex != null ? collationIndex : -1;
 	}
 
 	/**
 	 * Returns the index of the {@link UpdateDefinition} parameter or -1 if not present.
+	 *
 	 * @return -1 if not present.
 	 * @since 3.4
 	 */
@@ -207,7 +233,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
 		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex,
-				this.collationIndex, this.updateIndex);
+				this.collationIndex, this.updateIndex, this.domainType);
 	}
 
 	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, @Nullable Class<?> componentType) {
@@ -234,18 +260,21 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 *
 	 * @author Oliver Gierke
 	 */
-	class MongoParameter extends Parameter {
+	static class MongoParameter extends Parameter {
 
 		private final MethodParameter parameter;
+		private final @Nullable Integer nearIndex;
 
 		/**
 		 * Creates a new {@link MongoParameter}.
 		 *
 		 * @param parameter must not be {@literal null}.
+		 * @param domainType must not be {@literal null}.
 		 */
-		MongoParameter(MethodParameter parameter) {
-			super(parameter);
+		MongoParameter(MethodParameter parameter, TypeInformation<?> domainType, @Nullable Integer nearIndex) {
+			super(parameter, domainType);
 			this.parameter = parameter;
+			this.nearIndex = nearIndex;
 
 			if (!isPoint() && hasNearAnnotation()) {
 				throw new IllegalArgumentException("Near annotation is only allowed at Point parameter");
@@ -259,7 +288,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		}
 
 		private boolean isNearParameter() {
-			Integer nearIndex = MongoParameters.this.nearIndex;
 			return nearIndex != null && nearIndex.equals(getIndex());
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,7 +128,7 @@ public class UnwindOperation
 	 * @author Mark Paluch
 	 * @since 1.10
 	 */
-	public static interface PathBuilder {
+	public interface PathBuilder {
 
 		/**
 		 * @param path the path to unwind, must not be {@literal null} or empty.
@@ -141,7 +141,7 @@ public class UnwindOperation
 	 * @author Mark Paluch
 	 * @since 1.10
 	 */
-	public static interface IndexBuilder {
+	public interface IndexBuilder {
 
 		/**
 		 * Exposes the array index as {@code field}.
@@ -159,7 +159,7 @@ public class UnwindOperation
 		EmptyArraysBuilder noArrayIndex();
 	}
 
-	public static interface EmptyArraysBuilder {
+	public interface EmptyArraysBuilder {
 
 		/**
 		 * Output documents if the array is null or empty.

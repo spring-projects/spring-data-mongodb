@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the original author or authors.
+ * Copyright 2020-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,12 +138,12 @@ public class UnionWithOperation implements AggregationOperation {
 
 	private AggregationOperationContext computeContext(AggregationOperationContext source) {
 
-		if (source instanceof TypeBasedAggregationOperationContext) {
-			return ((TypeBasedAggregationOperationContext) source).continueOnMissingFieldReference(domainType != null ? domainType : Object.class);
+		if (source instanceof TypeBasedAggregationOperationContext aggregationOperationContext) {
+			return aggregationOperationContext.continueOnMissingFieldReference(domainType != null ? domainType : Object.class);
 		}
 
-		if (source instanceof ExposedFieldsAggregationOperationContext) {
-			return computeContext(((ExposedFieldsAggregationOperationContext) source).getRootContext());
+		if (source instanceof ExposedFieldsAggregationOperationContext aggregationOperationContext) {
+			return computeContext(aggregationOperationContext.getRootContext());
 		}
 
 		return source;

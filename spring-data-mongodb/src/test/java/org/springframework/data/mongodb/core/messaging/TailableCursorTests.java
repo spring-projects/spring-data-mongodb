@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import lombok.Data;
-
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -207,11 +206,56 @@ public class TailableCursorTests {
 				huffyFluffy, sugarSplashy);
 	}
 
-	@Data
 	static class User {
 
 		@Id String id;
 		@Field("user_name") String userName;
 		int age;
+
+		public String getId() {
+			return this.id;
+		}
+
+		public String getUserName() {
+			return this.userName;
+		}
+
+		public int getAge() {
+			return this.age;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			User user = (User) o;
+			return age == user.age && Objects.equals(id, user.id) && Objects.equals(userName, user.userName);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id, userName, age);
+		}
+
+		public String toString() {
+			return "TailableCursorTests.User(id=" + this.getId() + ", userName=" + this.getUserName() + ", age="
+					+ this.getAge() + ")";
+		}
 	}
 }

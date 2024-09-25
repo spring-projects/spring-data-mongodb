@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,7 +136,9 @@ public @interface Indexed {
 	 * @return {@literal -1} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
+	 * @deprecated since 4.4 - Please use {@link #expireAfter()} instead.
 	 */
+	@Deprecated(since="4.4", forRemoval = true)
 	int expireAfterSeconds() default -1;
 
 	/**
@@ -154,13 +156,9 @@ public @interface Indexed {
 	 * Supports ISO-8601 style.
 	 *
 	 * <pre class="code">
-	 *
 	 * &#0064;Indexed(expireAfter = "10s") String expireAfterTenSeconds;
-	 *
 	 * &#0064;Indexed(expireAfter = "1d") String expireAfterOneDay;
-	 *
 	 * &#0064;Indexed(expireAfter = "P2D") String expireAfterTwoDays;
-	 *
 	 * &#0064;Indexed(expireAfter = "#{&#0064;mySpringBean.timeout}") String expireAfterTimeoutObtainedFromSpringBean;
 	 * </pre>
 	 *
