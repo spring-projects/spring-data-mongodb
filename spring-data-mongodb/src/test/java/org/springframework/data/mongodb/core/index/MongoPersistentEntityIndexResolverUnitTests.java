@@ -832,7 +832,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 	}
 
 	/**
-	 * Test resolution of {@link CompoundWildcardIndexed}.
+	 * Test resolution of {@link CompoundWildcardIndex}.
 	 *
 	 * @author Julia Lee
 	 */
@@ -939,36 +939,36 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document("CompoundWildcardIndexOnSingleField")
-		@CompoundWildcardIndexed(wildcardFieldName = "foo", fields = "{'bar': 1, 'baz': 1}")
+		@CompoundWildcardIndex(wildcardFieldName = "foo", fields = "{'bar': 1, 'baz': 1}")
 		class CompoundWildcardIndexOnFields {}
 
 		@Document
-		@CompoundWildcardIndexed(wildcardFieldName = "foo", wildcardProjection = "{}", fields = "{'bar': 1}")
+		@CompoundWildcardIndex(wildcardFieldName = "foo", wildcardProjection = "{}", fields = "{'bar': 1}")
 		class IncorrectCompoundWildcardIndexOnFieldWithProjection {}
 
 		@Document
-		@CompoundWildcardIndexed(fields = "{ 'bar': 1 }")
+		@CompoundWildcardIndex(fields = "{ 'bar': 1 }")
 		class IncorrectCompoundWildcardIndexOnEntityWithoutProjection {}
 
 		@Document
-		@CompoundWildcardIndexed(wildcardProjection = "{'foo.something' : 0}", fields = "{'bar': -1}")
+		@CompoundWildcardIndex(wildcardProjection = "{'foo.something' : 0}", fields = "{'bar': -1}")
 		class CompoundWildcardIndexOnEntity {}
 
 		@Document
-		@CompoundWildcardIndexed(fields = "{'foo': 1}", wildcardProjection = "{'bar.something': 1}", name = "my_index_name",
+		@CompoundWildcardIndex(fields = "{'foo': 1}", wildcardProjection = "{'bar.something': 1}", name = "my_index_name",
 				collation = "{'locale': 'en_US', 'strength': 2}", partialFilter = "{'value': {'$exists': true}}")
 		class CompoundWildcardIndexWithOptions {}
 
 		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
-		@CompoundWildcardIndexed(wildcardFieldName = "foo", fields = "{'bar': 1}")
+		@CompoundWildcardIndex(wildcardFieldName = "foo", fields = "{'bar': 1}")
 		class CompoundWildcardIndexWithCollationOnDocument {}
 
 		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
-		@CompoundWildcardIndexed(wildcardFieldName = "foo", fields = "{'bar': 1}", collation = "#{{'locale' : 'de' + '_' + 'AT'}}")
+		@CompoundWildcardIndex(wildcardFieldName = "foo", fields = "{'bar': 1}", collation = "#{{'locale' : 'de' + '_' + 'AT'}}")
 		class CompoundWildcardIndexWithEvaluatedCollation {}
 
 		@Document
-		@CompoundWildcardIndexed(wildcardFieldName = "foo", fields = "{'bar': 1}")
+		@CompoundWildcardIndex(wildcardFieldName = "foo", fields = "{'bar': 1}")
 		class MultipleIndexes {
 			@Indexed String one;
 		}

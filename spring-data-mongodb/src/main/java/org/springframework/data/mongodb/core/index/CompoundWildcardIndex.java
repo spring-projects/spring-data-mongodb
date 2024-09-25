@@ -57,10 +57,9 @@ import java.lang.annotation.Target;
  */
 @Target({ ElementType.TYPE })
 @Documented
-@WildcardIndexed
 @CompoundIndex
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CompoundWildcardIndexed {
+public @interface CompoundWildcardIndex {
 
 	/**
 	 * Represents wildcard for all fields starting from the root od the document.
@@ -81,7 +80,6 @@ public @interface CompoundWildcardIndexed {
 	 *
 	 * @return empty by default.
 	 */
-	@AliasFor(annotation = WildcardIndexed.class, attribute = "wildcardProjection")
 	String wildcardProjection() default "";
 
 	/**
@@ -89,12 +87,12 @@ public @interface CompoundWildcardIndexed {
 	 * define the index direction (1 for ascending, -1 for descending). <br />
 	 *
 	 * <pre class="code">
-   * &#64;Document
-   * &#64;CompoundWildcardIndexed(wildcardProjection = "{ 'address.zip' : 0 }", fields = "{'firstname': 1}")
-   * class Person {
-   * 	String firstname;
-   * 	Address address;
-   * }
+	 * &#64;Document
+	 * &#64;CompoundWildcardIndexed(wildcardProjection = "{ 'address.zip' : 0 }", fields = "{'firstname': 1}")
+	 * class Person {
+	 * 	String firstname;
+	 * 	Address address;
+	 * }
 	 * </pre>
 	 *
 	 * @return empty String by default.
@@ -108,7 +106,7 @@ public @interface CompoundWildcardIndexed {
 	 *
 	 * @return empty by default.
 	 */
-	@AliasFor(annotation = WildcardIndexed.class, attribute = "name")
+	@AliasFor(annotation = CompoundIndex.class, attribute = "name")
 	String name() default "";
 
 	/**
@@ -117,7 +115,7 @@ public @interface CompoundWildcardIndexed {
 	 *
 	 * @return {@literal false} by default
 	 */
-	@AliasFor(annotation = WildcardIndexed.class, attribute = "useGeneratedName")
+	@AliasFor(annotation = CompoundIndex.class, attribute = "useGeneratedName")
 	boolean useGeneratedName() default false;
 
 	/**
@@ -125,7 +123,7 @@ public @interface CompoundWildcardIndexed {
 	 *
 	 * @return empty by default.
 	 */
-	@AliasFor(annotation = WildcardIndexed.class, attribute = "partialFilter")
+	@AliasFor(annotation = CompoundIndex.class, attribute = "partialFilter")
 	String partialFilter() default "";
 
 	/**
@@ -133,6 +131,6 @@ public @interface CompoundWildcardIndexed {
 	 *
 	 * @return an empty {@link String} by default.
 	 */
-	@AliasFor(annotation = WildcardIndexed.class, attribute = "collation")
+	@AliasFor(annotation = CompoundIndex.class, attribute = "collation")
 	String collation() default "";
 }

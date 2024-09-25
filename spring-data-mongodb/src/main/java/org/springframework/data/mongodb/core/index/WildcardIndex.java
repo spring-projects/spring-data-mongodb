@@ -179,7 +179,7 @@ public class WildcardIndex extends Index {
 	}
 
 	private String getTargetFieldName() {
-		return (StringUtils.hasText(fieldName) && !CompoundWildcardIndexed.ALL_FIELDS.equals(fieldName)) ? (fieldName + ".$**") : "$**";
+		return (StringUtils.hasText(fieldName) && !CompoundWildcardIndex.ALL_FIELDS.equals(fieldName)) ? (fieldName + ".$**") : "$**";
 	}
 
 	@Override

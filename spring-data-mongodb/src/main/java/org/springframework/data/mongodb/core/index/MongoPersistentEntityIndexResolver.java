@@ -157,8 +157,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		});
 
-		if (entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
-			CompoundWildcardIndexed indexed = entity.getRequiredAnnotation(CompoundWildcardIndexed.class);
+		if (entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
+			CompoundWildcardIndex indexed = entity.getRequiredAnnotation(CompoundWildcardIndex.class);
 
 			if (!isWildcardFromRoot(indexed.wildcardFieldName()) && !ObjectUtils.isEmpty(indexed.wildcardProjection())) {
 
@@ -175,7 +175,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	private static boolean isWildcardFromRoot(String fieldName) {
-		return CompoundWildcardIndexed.ALL_FIELDS.equals(fieldName);
+		return CompoundWildcardIndex.ALL_FIELDS.equals(fieldName);
 	}
 
 	private void potentiallyAddIndexForProperty(MongoPersistentEntity<?> root, MongoPersistentProperty persistentProperty,
@@ -303,7 +303,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentEntity<?> entity) {
 
 		if ((!entity.isAnnotationPresent(CompoundIndexes.class) && !entity.isAnnotationPresent(CompoundIndex.class))
-				|| entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
+				|| entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
 			return Collections.emptyList();
 		}
 
@@ -314,7 +314,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentEntity<?> entity) {
 
 		if (!entity.isAnnotationPresent(WildcardIndexed.class)
-				|| entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
+				|| entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
 			return Collections.emptyList();
 		}
 
@@ -372,11 +372,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateCompoundWildcardDefinition(
 			MongoPersistentEntity<?> entity, String collection) {
 
-		if (!entity.isAnnotationPresent(CompoundWildcardIndexed.class)) {
+		if (!entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
 			return Collections.emptyList();
 		}
 
-		CompoundWildcardIndexed compoundWildcardIndex = entity.getRequiredAnnotation(CompoundWildcardIndexed.class);
+		CompoundWildcardIndex compoundWildcardIndex = entity.getRequiredAnnotation(CompoundWildcardIndex.class);
 		IndexDefinitionHolder compoundWildcardIndexDefinition = createCompoundWildcardIndexDefinition(collection,
 				compoundWildcardIndex, entity);
 		return Collections.singletonList(compoundWildcardIndexDefinition);
@@ -520,7 +520,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	protected IndexDefinitionHolder createCompoundWildcardIndexDefinition(String collection, CompoundWildcardIndexed index,
+	protected IndexDefinitionHolder createCompoundWildcardIndexDefinition(String collection, CompoundWildcardIndex index,
 			@Nullable MongoPersistentEntity<?> entity) {
 
 		String wildcardField = index.wildcardFieldName();
