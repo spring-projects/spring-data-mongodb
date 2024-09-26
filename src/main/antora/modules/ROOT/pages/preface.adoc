@@ -22,6 +22,11 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 |Driver Version
 |Database Versions
 
+|2024.1
+|4.4.x
+|5.x
+|4.4.x, 5.x, 6.x, 7.x, 8.x
+
 |2024.0
 |4.3.x
 |4.11.x & 5.x
