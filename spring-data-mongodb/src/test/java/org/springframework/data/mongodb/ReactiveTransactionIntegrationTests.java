@@ -108,7 +108,7 @@ public class ReactiveTransactionIntegrationTests {
 			Flux.merge( //
 					MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(Person.class), client),
 					MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(EventLog.class), client) //
-			).then().as(StepVerifier::create).verifyComplete();
+			).then().as(StepVerifier::create).thenAwait(Duration.ofMillis(100)).verifyComplete();
 		}
 	}
 
@@ -143,6 +143,7 @@ public class ReactiveTransactionIntegrationTests {
 
 		personService.savePerson(new Person(null, "Walter", "White")) //
 				.as(StepVerifier::create) //
+				.thenAwait(Duration.ofMillis(100))
 				.expectNextCount(1) //
 				.verifyComplete();
 
