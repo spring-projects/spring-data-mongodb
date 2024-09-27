@@ -10,7 +10,7 @@ ENV MONGO_VERSION=${MONGODB}
 RUN set -eux; \
 	sed -i -e 's/archive.ubuntu.com/mirror.one.com/g' /etc/apt/sources.list && \
 	sed -i -e 's/security.ubuntu.com/mirror.one.com/g' /etc/apt/sources.list && \
-    sed -i -e 's/ports.ubuntu.com/mirrors.ocf.berkeley.edu/g' /etc/apt/sources.list && \
+	sed -i -e 's/ports.ubuntu.com/mirrors.ocf.berkeley.edu/g' /etc/apt/sources.list && \
 	sed -i -e 's/http/https/g' /etc/apt/sources.list && \
 	apt-get update && apt-get install -y apt-transport-https apt-utils gnupg2 wget && \
 	# MongoDB 8.0 release signing key

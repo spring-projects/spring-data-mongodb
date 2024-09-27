@@ -25,37 +25,37 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 |2024.1
 |4.4.x
 |5.x
-|4.4.x, 5.x, 6.x, 7.x, 8.x
+|4.4.x to 8.x
 
 |2024.0
 |4.3.x
 |4.11.x & 5.x
-|4.4.x, 5.x, 6.x, 7.x
+|4.4.x to 7.x
 
 |2023.1
 |4.2.x
 |4.9.x
-|4.4.x, 5.x, 6.x, 7.x
+|4.4.x to 7.x
 
 |2023.0 (*)
 |4.1.x
 |4.9.x
-|4.4.x, 5.x, 6.x
+|4.4.x to 6.x
 
 |2022.0 (*)
 |4.0.x
 |4.7.x
-|4.4.x, 5.x, 6.x
+|4.4.x to 6.x
 
 |2021.2 (*)
 |3.4.x
 |4.6.x
-|4.4.x, 5.0.x
+|4.4.x to 5.0.x
 
 |2021.1 (*)
 |3.3.x
 |4.4.x
-|4.4.x, 5.0.x
+|4.4.x to 5.0.x
 
 |2021.0 (*)
 |3.2.x
@@ -83,7 +83,7 @@ See also the https://www.mongodb.com/docs/drivers/java/sync/current/compatibilit
 |4.0.x
 
 |===
-(*) End of OSS Support
+(*) https://spring.io/projects/spring-data-mongodb#support[End of OSS Support]
 ====
 
 [[compatibility.changes]]
