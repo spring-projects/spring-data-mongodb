@@ -65,6 +65,7 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.expression.EvaluationException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.MongoClientSettings;
@@ -327,6 +328,16 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'bar'}");
 
 		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
+	}
+
+	@Test // GH-3050
+	public void shouldFailWhenPropertiesWithNoDefaultValueInCustomQueries() {
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithProperty");
+
+		assertThatThrownBy(() -> mongoQuery.createQuery(accessor))
+				.isInstanceOf(EvaluationException.class)
+				.hasMessageContaining("Could not resolve placeholder 'foo' in value \"${foo}\"");
 	}
 
 	@Test // DATAMONGO-1244
