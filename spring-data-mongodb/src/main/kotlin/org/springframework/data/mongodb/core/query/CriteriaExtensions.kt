@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 package org.springframework.data.mongodb.core.query
 
 import org.springframework.data.mapping.toDotPath
+import kotlin.internal.OnlyInputTypes
 import kotlin.reflect.KProperty
 
 /**
@@ -32,7 +34,7 @@ fun Criteria.isEqualTo(o: Any?): Criteria = `is`(o)
  * @author Sebastien Deleuze
  * @since 2.0
  */
-fun <T : Any?> Criteria.inValues(c: Collection<T>): Criteria = `in`(c)
+fun <@OnlyInputTypes T : Any?> Criteria.inValues(c: Collection<T>): Criteria = `in`(c)
 
 /**
  * Extension for [Criteria.in] providing an `inValues` alias since `in` is a reserved keyword in Kotlin.
