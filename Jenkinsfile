@@ -234,7 +234,7 @@ pipeline {
 								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
 									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml -Pmongo-4.x clean dependency:list test -Dsort -U -B -Dgradle.cache.local.enabled=false -Dgradle.cache.remote.enabled=false"
+										"./mvnw -s settings.xml -Pmongo-4.x clean dependency:list test -Dsort -U -B -Ddevelocity.cache.local.enabled=false -Ddevelocity.cache.remote.enabled=false"
 								}
 							}
 						}
