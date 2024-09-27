@@ -276,7 +276,7 @@ pipeline {
 									sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 									sh 'sleep 15'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml -Pmongo-4.x clean dependency:list test -Dsort -U -B -Dgradle.cache.local.enabled=false -Dgradle.cache.remote.enabled=false"
+										"./mvnw -s settings.xml -Pmongo-4.x clean dependency:list test -Dsort -U -B -Ddevelocity.cache.local.enabled=false -Ddevelocity.cache.remote.enabled=false"
 								}
 							}
 						}
