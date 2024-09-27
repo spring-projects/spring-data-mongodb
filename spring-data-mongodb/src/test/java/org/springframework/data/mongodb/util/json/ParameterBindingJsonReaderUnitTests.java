@@ -31,6 +31,7 @@ import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.expression.ValueExpressionParser;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.EvaluationContext;
@@ -263,7 +264,7 @@ class ParameterBindingJsonReaderUnitTests {
 		};
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader("{ 'name':'?0' }",
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target).isEqualTo(new Document("name", "value"));
@@ -347,7 +348,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(
 				"{ 'isBatman' : ?#{ T(" + this.getClass().getName() + ").isBatman() ? [0] : [1] }}",
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
@@ -362,7 +363,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(
 				"{ 'isBatman' : ?#{ T(" + this.getClass().getName() + ").isBatman() ? '?0' : '?1' }}",
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
@@ -377,7 +378,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(
 				"{ 'isBatman' : \"?#{ T(" + this.getClass().getName() + ").isBatman() ? '?0' : '?1' }\" }",
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
@@ -395,7 +396,7 @@ class ParameterBindingJsonReaderUnitTests {
 				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.supervisor':  principal.id } } } }";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target)
@@ -422,7 +423,7 @@ class ParameterBindingJsonReaderUnitTests {
 				.getEvaluationContext(args);
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 		assertThat(target).isEqualTo(new Document("name", "expected"));
@@ -438,7 +439,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		assertThatExceptionOfType(ParseException.class).isThrownBy(() -> {
 			ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-					new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+					new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 
 			new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 		});
@@ -453,7 +454,7 @@ class ParameterBindingJsonReaderUnitTests {
 				.getEvaluationContext(args);
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
@@ -471,7 +472,7 @@ class ParameterBindingJsonReaderUnitTests {
 		String json = "?#{  T(" + this.getClass().getName() + ").applyFilterByUser('?0' ,principal.id) }";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target)
@@ -489,7 +490,7 @@ class ParameterBindingJsonReaderUnitTests {
 		String json = "?0";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
-				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), () -> evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
 		assertThat(target).isEqualTo(new Document("itWorks", true));
