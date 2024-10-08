@@ -61,7 +61,7 @@ public class AggregationOperationRendererUnitTests {
 		verify(stage2).toPipelineStages(eq(rootContext));
 	}
 
-	@Test
+	@Test // GH-4722
 	void contextShouldCarryOnRelaxedFieldMapping() {
 
 		MongoTestMappingContext ctx = new MongoTestMappingContext(cfg -> {
