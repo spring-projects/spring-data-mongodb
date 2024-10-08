@@ -157,20 +157,30 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		});
 
-		if (entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
-			CompoundWildcardIndex indexed = entity.getRequiredAnnotation(CompoundWildcardIndex.class);
+			if (entity.isAnnotationPresent(CompoundWildcardIndexes.class)) {
+				CompoundWildcardIndexes indexes = entity.getRequiredAnnotation(CompoundWildcardIndexes.class);
+				for (CompoundWildcardIndex compoundWildcardIndex : indexes.value()) {
+					checkSingleIndex(compoundWildcardIndex);
+				}
 
-			if (!isWildcardFromRoot(indexed.wildcardFieldName()) && !ObjectUtils.isEmpty(indexed.wildcardProjection())) {
-
-				throw new MappingException(
-						String.format("CompoundWildcardIndex.wildcardProjection is only allowed on \"$**\"; Offending property: %s",
-								indexed.wildcardFieldName()));
 			}
-
-			if (isWildcardFromRoot(indexed.wildcardFieldName()) && ObjectUtils.isEmpty(indexed.wildcardProjection())) {
-
-				throw new MappingException("CompoundWildcardIndex.wildcardProjection is required on \"$**\"");
+			if (entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
+				checkSingleIndex(entity.getRequiredAnnotation(CompoundWildcardIndex.class));
 			}
+		}
+
+	private static void checkSingleIndex(CompoundWildcardIndex indexed) {
+
+		if (!isWildcardFromRoot(indexed.wildcardFieldName()) && !ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+
+			throw new MappingException(
+					String.format("CompoundWildcardIndex.wildcardProjection is only allowed on \"$**\"; Offending property: %s",
+							indexed.wildcardFieldName()));
+		}
+
+		if (isWildcardFromRoot(indexed.wildcardFieldName()) && ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+
+			throw new MappingException("CompoundWildcardIndex.wildcardProjection is required on \"$**\"");
 		}
 	}
 
@@ -202,23 +212,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				LOGGER.info(e.getMessage());
 			}
 		}
-	}
-
-	/**
-	 * Recursively resolve and inspect properties of given {@literal type} for indexes to be created.
-	 *
-	 * @param type
-	 * @param dotPath The {@literal "dot} path.
-	 * @param path {@link PersistentProperty} path for cycle detection.
-	 * @param collection
-	 * @param guard
-	 * @return List of {@link IndexDefinitionHolder} representing indexes for given type and its referenced property
-	 *         types. Will never be {@code null}.
-	 */
-	private List<IndexDefinitionHolder> resolveIndexForClass(TypeInformation<?> type, String dotPath, Path path,
-			String collection, CycleGuard guard) {
-
-		return resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(type), dotPath, path, collection, guard);
 	}
 
 	private List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> entity, String dotPath, Path path,
@@ -303,7 +296,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentEntity<?> entity) {
 
 		if ((!entity.isAnnotationPresent(CompoundIndexes.class) && !entity.isAnnotationPresent(CompoundIndex.class))
-				|| entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
+				|| entity.isAnnotationPresent(CompoundWildcardIndex.class) || entity.isAnnotationPresent(CompoundWildcardIndexes.class)) {
 			return Collections.emptyList();
 		}
 
@@ -313,14 +306,23 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> potentiallyCreateWildcardIndexDefinitions(String dotPath, String collection,
 			MongoPersistentEntity<?> entity) {
 
-		if (!entity.isAnnotationPresent(WildcardIndexed.class)
-				|| entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
+		if ((!entity.isAnnotationPresent(WildcardIndexed.class) && !entity.isAnnotationPresent(WildcardIndexes.class))
+				|| entity.isAnnotationPresent(CompoundWildcardIndex.class) || entity.isAnnotationPresent(CompoundWildcardIndexes.class)) {
 			return Collections.emptyList();
 		}
 
-		return Collections.singletonList(new IndexDefinitionHolder(dotPath,
-				createWildcardIndexDefinition(dotPath, collection, entity.getRequiredAnnotation(WildcardIndexed.class), entity),
-				collection));
+		WildcardIndexes wildcardIndexes = entity.findAnnotation(WildcardIndexes.class);
+		if (wildcardIndexes == null) {
+			return Collections.singletonList(new IndexDefinitionHolder(dotPath,
+					createWildcardIndexDefinition(dotPath, collection, entity.getRequiredAnnotation(WildcardIndexed.class), entity),
+					collection));
+		}
+		List<IndexDefinitionHolder> holders = new ArrayList<>();
+		for (WildcardIndexed indexed : wildcardIndexes.value()) {
+			holders.add(new IndexDefinitionHolder(dotPath,
+					createWildcardIndexDefinition(dotPath, collection, indexed, entity), collection));
+		}
+		return holders;
 	}
 
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(
@@ -372,14 +374,26 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateCompoundWildcardDefinition(
 			MongoPersistentEntity<?> entity, String collection) {
 
-		if (!entity.isAnnotationPresent(CompoundWildcardIndex.class)) {
+		boolean singleIndexAnnotationPresent = entity.isAnnotationPresent(CompoundWildcardIndex.class);
+		boolean indexesAnnotationPresent = entity.isAnnotationPresent(CompoundWildcardIndexes.class);
+		if (!singleIndexAnnotationPresent && !indexesAnnotationPresent) {
 			return Collections.emptyList();
 		}
 
-		CompoundWildcardIndex compoundWildcardIndex = entity.getRequiredAnnotation(CompoundWildcardIndex.class);
-		IndexDefinitionHolder compoundWildcardIndexDefinition = createCompoundWildcardIndexDefinition(collection,
-				compoundWildcardIndex, entity);
-		return Collections.singletonList(compoundWildcardIndexDefinition);
+		List<IndexDefinitionHolder> definitions = new ArrayList<>();
+		if (indexesAnnotationPresent) {
+			CompoundWildcardIndexes annotation = entity.getRequiredAnnotation(CompoundWildcardIndexes.class);
+			for (CompoundWildcardIndex index : annotation.value()) {
+				definitions.add(createCompoundWildcardIndexDefinition(collection, index, entity));
+			}
+
+		}
+		if (singleIndexAnnotationPresent) {
+			CompoundWildcardIndex compoundWildcardIndex = entity.getRequiredAnnotation(CompoundWildcardIndex.class);
+			definitions.add(createCompoundWildcardIndexDefinition(collection,
+					compoundWildcardIndex, entity));
+		}
+		return definitions;
 	}
 
 	private void appendTextIndexInformation(DotPath dotPath, Path path, TextIndexDefinitionBuilder indexDefinitionBuilder,

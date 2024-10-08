@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -55,6 +57,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.util.StringUtils;
 
 /**
  * Tests for {@link MongoPersistentEntityIndexResolver}.
@@ -849,6 +852,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					indexDefinitions.get(0));
 		}
 
+		@ParameterizedTest // GH-4471
+		@ValueSource(classes = {RepeatableCompoundWildcardIndex.class, RepeatableCompoundWildcardIndexThroughIndexes.class})
+		public void compoundWildcardIndexOnSingleField(Class<?> clazz) {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(clazz);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertIndexPathAndCollection(new String[] { "foo1.$**", "bar1", "baz1" }, StringUtils.uncapitalize(clazz.getSimpleName()),
+					indexDefinitions.get(0));
+			assertIndexPathAndCollection(new String[] { "foo2.$**", "bar2", "baz2" }, StringUtils.uncapitalize(clazz.getSimpleName()),
+					indexDefinitions.get(1));
+		}
+
 		@Test // GH-4471
 		public void compoundWildcardIndexOnEntityWithProjection() {
 
@@ -941,6 +957,16 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document("CompoundWildcardIndexOnSingleField")
 		@CompoundWildcardIndex(wildcardFieldName = "foo", fields = "{'bar': 1, 'baz': 1}")
 		class CompoundWildcardIndexOnFields {}
+
+		@Document
+		@CompoundWildcardIndex(wildcardFieldName = "foo1", fields = "{'bar1': 1, 'baz1': 1}")
+		@CompoundWildcardIndex(wildcardFieldName = "foo2", fields = "{'bar2': 1, 'baz2': 1}")
+		class RepeatableCompoundWildcardIndex {}
+
+		@Document
+		@CompoundWildcardIndexes({@CompoundWildcardIndex(wildcardFieldName = "foo1", fields = "{'bar1': 1, 'baz1': 1}"),
+		@CompoundWildcardIndex(wildcardFieldName = "foo2", fields = "{'bar2': 1, 'baz2': 1}")})
+		class RepeatableCompoundWildcardIndexThroughIndexes {}
 
 		@Document
 		@CompoundWildcardIndex(wildcardFieldName = "foo", wildcardProjection = "{}", fields = "{'bar': 1}")
@@ -1570,6 +1596,26 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			});
 		}
 
+		@ParameterizedTest // GH-4471
+		@ValueSource(classes = { WithRepeatableWildcardIndex.class, WithWildcardIndexes.class})
+		public void resolvesRepeatableWildcards(Class<?> clazz) {
+
+			List<IndexDefinitionHolder> indices = prepareMappingContextAndResolveIndexForType(clazz);
+			assertThat(indices).hasSize(2);
+			assertThat(indices.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("$**", 1);
+				assertThat(it.getIndexOptions()).containsEntry("name", "foo")
+						.containsEntry("collation", new org.bson.Document("locale", "en_US"))
+						.containsEntry("partialFilterExpression", new org.bson.Document("$eq", 1));
+			});
+			assertThat(indices.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("$**", 1);
+				assertThat(it.getIndexOptions()).containsEntry("name", "bar")
+						.containsEntry("collation", new org.bson.Document("locale", "en_UK"))
+						.containsEntry("partialFilterExpression", new org.bson.Document("$eq", 0));
+			});
+		}
+
 		@Test // GH-3225
 		public void resolvesWildcardTypeOfNestedProperty() {
 
@@ -1921,6 +1967,28 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@WildcardIndexed(name = "idx", partialFilter = "{ '$eq' : 1 }", collation = "en_US") //
 			Map<String, String> withOptions;
+
+		}
+
+		@WildcardIndexed(name = "foo", partialFilter = "{ '$eq' : 1 }", collation = "en_US")
+		@WildcardIndexed(name = "bar", partialFilter = "{ '$eq' : 0 }", collation = "en_UK")
+		@Document
+		class WithRepeatableWildcardIndex {
+
+			Map<String, String> value;
+
+			Map<String, String> value2;
+
+		}
+
+		@WildcardIndexes({ @WildcardIndexed(name = "foo", partialFilter = "{ '$eq' : 1 }", collation = "en_US"),
+				@WildcardIndexed(name = "bar", partialFilter = "{ '$eq' : 0 }", collation = "en_UK") })
+		@Document
+		class WithWildcardIndexes {
+
+			Map<String, String> value;
+
+			Map<String, String> value2;
 
 		}
 

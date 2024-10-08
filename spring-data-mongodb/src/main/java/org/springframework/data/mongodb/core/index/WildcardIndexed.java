@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.index;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -86,6 +87,7 @@ import org.springframework.data.mongodb.core.annotation.Collation;
 @Documented
 @Target({ ElementType.TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
+@Repeatable(WildcardIndexes.class)
 public @interface WildcardIndexed {
 
 	/**

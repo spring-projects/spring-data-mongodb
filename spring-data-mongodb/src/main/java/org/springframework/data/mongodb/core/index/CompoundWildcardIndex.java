@@ -19,6 +19,7 @@ import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -53,12 +54,13 @@ import java.lang.annotation.Target;
  *
  * @author Julia Lee
  * @author Marcin Grzejszczak
- * @since 4.4.0
+ * @since 4.4
  */
 @Target({ ElementType.TYPE })
 @Documented
 @CompoundIndex
 @Retention(RetentionPolicy.RUNTIME)
+@Repeatable(CompoundWildcardIndexes.class)
 public @interface CompoundWildcardIndex {
 
 	/**
