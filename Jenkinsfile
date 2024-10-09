@@ -156,10 +156,10 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-						docker.image("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
-							sh 'ci/start-replica.sh'
+						docker.image("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
+							sh 'ci/start-replica-4.x.sh'
 							sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-								"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
+								"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B"
 						}
 					}
 				}
@@ -187,10 +187,10 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
-									sh 'ci/start-replica.sh'
+								docker.image("springci/spring-data-with-mongodb-5.0:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
+									sh 'ci/start-replica-4.x.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
+										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B"
 								}
 							}
 						}
@@ -209,10 +209,10 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-6.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+								docker.image("springci/spring-data-with-mongodb-6.0:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
 									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
+										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B"
 								}
 							}
 						}
@@ -231,10 +231,10 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
+								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
 									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml -Pmongo-4.x clean dependency:list test -Dsort -U -B -Ddevelocity.cache.local.enabled=false -Ddevelocity.cache.remote.enabled=false"
+										"./mvnw -s settings.xml -Pmongo-4.x -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B -Ddevelocity.cache.local.enabled=false -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Ddevelocity.cache.remote.enabled=false"
 								}
 							}
 						}
@@ -253,10 +253,10 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.next.tag']}").inside(p['docker.java.inside.basic']) {
+								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.next.tag']}").inside(p['docker.java.inside.docker']) {
 									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
+										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B"
 								}
 							}
 						}
@@ -275,14 +275,10 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-								docker.image("springci/spring-data-with-mongodb-8.0:${p['java.main.tag']}").inside(p['docker.java.inside.basic']) {
-									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-									sh 'sleep 10'
-									sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-									sh 'sleep 15'
+								docker.image("springci/spring-data-with-mongodb-8.0:${p['java.main.tag']}").inside(p['docker.java.inside.docker']) {
+									sh 'ci/start-replica.sh'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
-										"./mvnw -s settings.xml clean dependency:list test -Dsort -U -B"
+										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B"
 								}
 							}
 						}
@@ -310,15 +306,17 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
-						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.docker']) {
 							sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
 									"./mvnw -s settings.xml -Pci,artifactory " +
+									"-Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root " +
 									"-Dartifactory.server=${p['artifactory.url']} " +
 									"-Dartifactory.username=${ARTIFACTORY_USR} " +
 									"-Dartifactory.password=${ARTIFACTORY_PSW} " +
 									"-Dartifactory.staging-repository=${p['artifactory.repository.snapshot']} " +
 									"-Dartifactory.build-name=spring-data-mongodb " +
 									"-Dartifactory.build-number=spring-data-mongodb-${BRANCH_NAME}-build-${BUILD_NUMBER} " +
+									"-Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb " +
 									"-Dmaven.test.skip=true clean deploy -U -B"
 						}
 					}
