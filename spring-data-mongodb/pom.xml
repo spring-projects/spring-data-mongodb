@@ -115,7 +115,7 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-crypt</artifactId>
-			<version>1.8.0</version>
+			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
 
