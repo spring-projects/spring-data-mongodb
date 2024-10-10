@@ -17,8 +17,11 @@ package org.springframework.data.mongodb;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 
+import java.io.Serial;
+
 public class InvalidMongoDbApiUsageException extends InvalidDataAccessApiUsageException {
 
+	@Serial
 	private static final long serialVersionUID = 2034770973290508041L;
 
 	public InvalidMongoDbApiUsageException(String msg) {
