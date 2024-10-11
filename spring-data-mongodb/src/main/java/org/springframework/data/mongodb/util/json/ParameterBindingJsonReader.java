@@ -456,7 +456,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		if (isRegularExpression) {
 
-			bindableValue.setValue(new BsonRegularExpression(computedValue));
+			BsonRegularExpression originalExpression = token.getValue(BsonRegularExpression.class);
+
+			bindableValue.setValue(new BsonRegularExpression(computedValue, originalExpression.getOptions()));
 			bindableValue.setType(BsonType.REGULAR_EXPRESSION);
 		} else {
 
