@@ -26,12 +26,12 @@ import java.util.UUID;
 
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
+import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.expression.ValueExpressionParser;
-import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.EvaluationContext;
@@ -82,6 +82,26 @@ class ParameterBindingJsonReaderUnitTests {
 
 		Document target = parse("{ 'lastname' : '?0' }", 100);
 		assertThat(target).isEqualTo(new Document("lastname", "100"));
+	}
+
+	@Test // GH-4806
+	void regexConsidersOptions() {
+
+		Document target = parse("{ 'c': /^true$/i }");
+
+		BsonRegularExpression pattern = target.get("c", BsonRegularExpression.class);
+		assertThat(pattern.getPattern()).isEqualTo("^true$");
+		assertThat(pattern.getOptions()).isEqualTo("i");
+	}
+
+	@Test // GH-4806
+	void regexConsidersBindValueWithOptions() {
+
+		Document target = parse("{ 'c': /^?0$/i }", "foo");
+
+		BsonRegularExpression pattern = target.get("c", BsonRegularExpression.class);
+		assertThat(pattern.getPattern()).isEqualTo("^foo$");
+		assertThat(pattern.getOptions()).isEqualTo("i");
 	}
 
 	@Test
