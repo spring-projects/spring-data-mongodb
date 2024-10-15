@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import org.bson.Document;
 import org.springframework.util.Assert;
 
+import java.io.Serial;
+
 /**
  * Event to be triggered after loading {@link Document}s to be mapped onto a given type.
  *
@@ -29,6 +31,7 @@ import org.springframework.util.Assert;
  */
 public class AfterLoadEvent<T> extends MongoMappingEvent<Document> {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private final Class<T> type;
 
