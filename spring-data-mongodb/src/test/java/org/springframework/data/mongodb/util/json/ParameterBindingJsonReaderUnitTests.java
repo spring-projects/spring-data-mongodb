@@ -102,6 +102,22 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(pattern.getOptions()).isEqualTo("i");
 	}
 
+	@Test // GH-4806
+	void treatsQuotedValueThatLooksLikeRegexAsPlainString() {
+
+		Document target = parse("{ 'c': '/^?0$/i' }", "foo");
+
+		assertThat(target.get("c")).isInstanceOf(String.class);
+	}
+
+	@Test // GH-4806
+	void treatsStringParameterValueThatLooksLikeRegexAsPlainString() {
+
+		Document target = parse("{ 'c': ?0 }", "/^foo$/i");
+
+		assertThat(target.get("c")).isInstanceOf(String.class);
+	}
+
 	@Test
 	void bindValueToRegex() {
 
@@ -145,7 +161,6 @@ class ParameterBindingJsonReaderUnitTests {
 	@Test
 	void bindListValue() {
 
-		//
 		Document target = parse("{ 'lastname' : { $in : ?0 } }", Arrays.asList("Kohlin", "Davar"));
 		assertThat(target).isEqualTo(Document.parse("{ 'lastname' : { $in : ['Kohlin', 'Davar' ]} }"));
 	}
@@ -153,7 +168,6 @@ class ParameterBindingJsonReaderUnitTests {
 	@Test
 	void bindListOfBinaryValue() {
 
-		//
 		byte[] value = "Kohlin".getBytes(StandardCharsets.UTF_8);
 		List<byte[]> args = Collections.singletonList(value);
 
@@ -168,12 +182,9 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(Document.parse("{ \"id\" : { \"$exists\" : true}}"));
 	}
 
-	// {'id':?#{ [0] ? { $exists :true} : [1] }}
-
 	@Test
 	void bindDocumentValue() {
 
-		//
 		Document target = parse("{ 'lastname' : ?0 }", new Document("$eq", "Kohlin"));
 		assertThat(target).isEqualTo(Document.parse("{ 'lastname' : { '$eq' : 'Kohlin' } }"));
 	}
@@ -181,7 +192,6 @@ class ParameterBindingJsonReaderUnitTests {
 	@Test
 	void arrayWithoutBinding() {
 
-		//
 		Document target = parse("{ 'lastname' : { $in : [\"Kohlin\", \"Davar\"] } }");
 		assertThat(target).isEqualTo(Document.parse("{ 'lastname' : { $in : ['Kohlin', 'Davar' ]} }"));
 	}
@@ -189,7 +199,6 @@ class ParameterBindingJsonReaderUnitTests {
 	@Test
 	void bindSpEL() {
 
-		// "{ arg0 : ?#{[0]} }"
 		Document target = parse("{ arg0 : ?#{[0]} }", 100.01D);
 		assertThat(target).isEqualTo(new Document("arg0", 100.01D));
 	}
