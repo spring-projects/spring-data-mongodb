@@ -128,6 +128,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		implements ApplicationContextAware, EnvironmentCapable {
 
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s; Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions; Parent object was: %4$s";
+	private static final String INCOMPATIBLE_MAP = "Expected map like structure but found %s";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter";
 
 	public static final TypeInformation<Bson> BSON = TypeInformation.of(Bson.class);
@@ -2392,9 +2393,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				if (BsonUtils.supportsBson(source)) {
 					return (S) mapConverter.convert(context, BsonUtils.asBson(source), typeHint);
 				}
-
-				throw new IllegalArgumentException(
-						String.format("Expected map like structure but found %s", source.getClass()));
+				throw new MappingException(
+						String.format(INCOMPATIBLE_MAP, source));
 			}
 
 			if (source instanceof DBRef dbRef) {
