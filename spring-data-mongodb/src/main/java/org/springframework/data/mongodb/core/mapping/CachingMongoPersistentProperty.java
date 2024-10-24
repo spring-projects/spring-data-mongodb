@@ -30,6 +30,8 @@ import org.springframework.lang.Nullable;
  */
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
+	private final Lazy<Boolean> isEntity = Lazy.of(super::isEntity);
+	private final Lazy<Boolean> isUnwrapped = Lazy.of(super::isUnwrapped);
 	private final Lazy<Boolean> isIdProperty = Lazy.of(super::isIdProperty);
 	private final Lazy<Boolean> isAssociation = Lazy.of(super::isAssociation);
 	private final Lazy<DBRef> dbref = Lazy.of(super::getDBRef);
@@ -56,6 +58,16 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
 		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
+	}
+
+	@Override
+	public boolean isEntity() {
+		return isEntity.get();
+	}
+
+	@Override
+	public boolean isUnwrapped() {
+		return isUnwrapped.get();
 	}
 
 	@Override

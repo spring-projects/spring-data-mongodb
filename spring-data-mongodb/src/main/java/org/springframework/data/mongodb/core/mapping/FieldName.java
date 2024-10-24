@@ -25,7 +25,11 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @since 4.2
  */
-public record FieldName(String name, Type type) {
+public record FieldName(String name, Type type, String[] parts) {
+
+	public FieldName(String name, Type type) {
+		this(name, type, name.split("\\."));
+	}
 
 	private static final String ID_KEY = "_id";
 
@@ -65,7 +69,7 @@ public record FieldName(String name, Type type) {
 			return new String[] { name };
 		}
 
-		return name.split("\\.");
+		return parts;
 	}
 
 	/**
