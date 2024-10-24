@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.microbenchmark;
 
-import lombok.SneakyThrows;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -43,13 +43,20 @@ class HttpResultsWriter implements ResultsWriter {
 	}
 
 	@Override
-	@SneakyThrows
 	public void write(Collection<RunResult> results) {
 
 		if (CollectionUtils.isEmpty(results)) {
 			return;
 		}
 
+		try {
+			doWrite(results);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void doWrite(Collection<RunResult> results) throws IOException {
 		StandardEnvironment env = new StandardEnvironment();
 
 		String projectVersion = env.getProperty("project.version", "unknown");

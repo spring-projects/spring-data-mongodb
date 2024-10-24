@@ -19,6 +19,7 @@ import org.bson.Document;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.TearDown;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
@@ -27,8 +28,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.microbenchmark.AbstractMicrobenchmark;
 
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -56,7 +57,7 @@ public class ProjectionsBenchmark extends AbstractMicrobenchmark {
 	@Setup
 	public void setUp() {
 
-		client = new MongoClient(new ServerAddress());
+		client = MongoClients.create();
 		template = new MongoTemplate(client, DB_NAME);
 
 		source = new Person();
@@ -83,7 +84,7 @@ public class ProjectionsBenchmark extends AbstractMicrobenchmark {
 	@TearDown
 	public void tearDown() {
 
-		client.dropDatabase(DB_NAME);
+		client.getDatabase(DB_NAME).drop();
 		client.close();
 	}
 

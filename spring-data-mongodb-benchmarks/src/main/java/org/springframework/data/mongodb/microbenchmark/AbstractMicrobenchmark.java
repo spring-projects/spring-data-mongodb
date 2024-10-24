@@ -21,7 +21,6 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 
-import org.junit.Test;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Scope;
@@ -33,6 +32,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
+
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ResourceUtils;
@@ -41,15 +41,15 @@ import org.springframework.util.StringUtils;
 /**
  * @author Christoph Strobl
  */
-@Warmup(iterations = AbstractMicrobenchmark.WARMUP_ITERATIONS)
-@Measurement(iterations = AbstractMicrobenchmark.MEASUREMENT_ITERATIONS)
+@Warmup(iterations = AbstractMicrobenchmark.WARMUP_ITERATIONS, time = 2)
+@Measurement(iterations = AbstractMicrobenchmark.MEASUREMENT_ITERATIONS, time = 2)
 @Fork(AbstractMicrobenchmark.FORKS)
 @State(Scope.Thread)
 public class AbstractMicrobenchmark {
 
 	static final int WARMUP_ITERATIONS = 5;
 	static final int MEASUREMENT_ITERATIONS = 10;
-	static final int FORKS = 1;
+	static final int FORKS = 0;
 	static final String[] JVM_ARGS = { "-server", "-XX:+HeapDumpOnOutOfMemoryError", "-Xms1024m", "-Xmx1024m",
 			"-XX:MaxDirectMemorySize=1024m" };
 
@@ -62,7 +62,6 @@ public class AbstractMicrobenchmark {
 	 * @throws Exception
 	 * @see #options(String)
 	 */
-	@Test
 	public void run() throws Exception {
 
 		String includes = includes();

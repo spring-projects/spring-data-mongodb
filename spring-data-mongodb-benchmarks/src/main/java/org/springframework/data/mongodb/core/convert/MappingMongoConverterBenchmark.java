@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -29,25 +24,29 @@ import java.util.UUID;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.junit.platform.commons.annotation.Testable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.microbenchmark.AbstractMicrobenchmark;
+import org.springframework.util.ObjectUtils;
 
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 /**
  * @author Christoph Strobl
  */
 @State(Scope.Benchmark)
+@Testable
 public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 
 	private static final String DB_NAME = "mapping-mongo-converter-benchmark";
@@ -64,13 +63,13 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 	@Setup
 	public void setUp() throws Exception {
 
-		client = new MongoClient(new ServerAddress());
+		client = MongoClients.create();
 
 		this.mappingContext = new MongoMappingContext();
 		this.mappingContext.setInitialEntitySet(Collections.singleton(Customer.class));
 		this.mappingContext.afterPropertiesSet();
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(new SimpleMongoDbFactory(client, DB_NAME));
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(new SimpleMongoClientDatabaseFactory(client, DB_NAME));
 
 		this.converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		this.converter.setCustomConversions(new MongoCustomConversions(Collections.emptyList()));
@@ -116,7 +115,7 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 	@TearDown
 	public void tearDown() {
 
-		client.dropDatabase(DB_NAME);
+		client.getDatabase(DB_NAME).drop();
 		client.close();
 	}
 
@@ -151,22 +150,36 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 		return sink;
 	}
 
-	@Getter
-	@RequiredArgsConstructor
 	static class Customer {
 
 		private @Id ObjectId id;
 		private final String firstname, lastname;
 		private final Address address;
+
+		public Customer(String firstname, String lastname, Address address) {
+			this.firstname = firstname;
+			this.lastname = lastname;
+			this.address = address;
+		}
 	}
 
-	@Getter
-	@AllArgsConstructor
 	static class Address {
 		private String zipCode, city;
+
+		public Address(String zipCode, String city) {
+			this.zipCode = zipCode;
+			this.city = city;
+		}
+
+		public String getZipCode() {
+			return zipCode;
+		}
+
+		public String getCity() {
+			return city;
+		}
 	}
 
-	@Data
 	static class SlightlyMoreComplexObject {
 
 		@Id String id;
@@ -177,5 +190,59 @@ public class MappingMongoConverterBenchmark extends AbstractMicrobenchmark {
 		Customer customer;
 		List<Address> addressList;
 		Map<String, Customer> customerMap;
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (!(o instanceof SlightlyMoreComplexObject)) {
+				return false;
+			}
+			SlightlyMoreComplexObject that = (SlightlyMoreComplexObject) o;
+			if (intOne != that.intOne) {
+				return false;
+			}
+			if (intTwo != that.intTwo) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(id, that.id)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(stringOne, that.stringOne)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(stringTwo, that.stringTwo)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(renamedField, that.renamedField)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(location, that.location)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(customer, that.customer)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(addressList, that.addressList)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(customerMap, that.customerMap);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(id);
+			result = 31 * result + intOne;
+			result = 31 * result + intTwo;
+			result = 31 * result + ObjectUtils.nullSafeHashCode(stringOne);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(stringTwo);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(renamedField);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(location);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(customer);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(addressList);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(customerMap);
+			return result;
+		}
 	}
 }

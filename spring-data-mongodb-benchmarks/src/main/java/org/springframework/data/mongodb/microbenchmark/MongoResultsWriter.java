@@ -21,15 +21,16 @@ import java.util.List;
 
 import org.bson.Document;
 import org.openjdk.jmh.results.RunResult;
+
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.util.JSON;
 
 /**
  * MongoDB specific {@link ResultsWriter} implementation.
@@ -56,13 +57,14 @@ class MongoResultsWriter implements ResultsWriter {
 		String gitDirty = env.getProperty("git.dirty", "no");
 		String gitCommitId = env.getProperty("git.commit.id", "unknown");
 
-		MongoClientURI uri = new MongoClientURI(this.uri);
-		MongoClient client = new MongoClient(uri);
+		ConnectionString connectionString = new ConnectionString(this.uri);
+		MongoClient client = MongoClients.create(this.uri);
 
-		String dbName = StringUtils.hasText(uri.getDatabase()) ? uri.getDatabase() : "spring-data-mongodb-benchmarks";
+		String dbName = StringUtils.hasText(connectionString.getDatabase()) ? connectionString.getDatabase()
+				: "spring-data-mongodb-benchmarks";
 		MongoDatabase db = client.getDatabase(dbName);
 
-		for (BasicDBObject dbo : (List<BasicDBObject>) JSON.parse(ResultsWriter.jsonifyResults(results))) {
+		for (Document dbo : (List<Document>) Document.parse(ResultsWriter.jsonifyResults(results))) {
 
 			String collectionName = extractClass(dbo.get("benchmark").toString());
 
@@ -96,14 +98,15 @@ class MongoResultsWriter implements ResultsWriter {
 		for (Object key : doc.keySet()) {
 
 			Object value = doc.get(key);
-			if (value instanceof Document document) {
-				value = fixDocumentKeys(document);
-			} else if (value instanceof BasicDBObject basicDBObject) {
-				value = fixDocumentKeys(new Document(basicDBObject));
+			if (value instanceof Document) {
+				value = fixDocumentKeys((Document) value);
+			} else if (value instanceof BasicDBObject) {
+				value = fixDocumentKeys(new Document((BasicDBObject) value));
 			}
 
-			if (key instanceof String newKey) {
+			if (key instanceof String) {
 
+				String newKey = (String) key;
 				if (newKey.contains(".")) {
 					newKey = newKey.replace('.', ',');
 				}
