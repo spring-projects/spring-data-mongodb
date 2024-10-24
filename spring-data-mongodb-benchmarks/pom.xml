@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.4.0-SNAPSHOT</version>
+		<version>4.4.0-GH-4818-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -19,7 +19,15 @@
 	<properties>
 		<!-- Skip tests by default; run only if -DskipTests=false is specified or benchmarks profile is activated  -->
 		<skipTests>true</skipTests>
+		<source.level>17</source.level>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 
@@ -30,10 +38,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit}</version>
-			<scope>compile</scope>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-sync</artifactId>
+			<version>${mongo}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.mp911de.microbenchmark-runner</groupId>
+			<artifactId>microbenchmark-runner-junit5</artifactId>
+			<version>0.4.0.RELEASE</version>
 		</dependency>
 
 		<dependency>
@@ -63,6 +76,17 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessors>
+						<annotationProcessor>
+							org.openjdk.jmh.generators.BenchmarkProcessor
+						</annotationProcessor>
+					</annotationProcessors>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>
