@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -129,6 +130,23 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s; Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions; Parent object was: %4$s";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter";
+
+	private static final BiPredicate<MongoPersistentEntity<?>, MongoPersistentProperty> PROPERTY_FILTER = (e,
+			property) -> {
+
+		if (property.isIdProperty()) {
+			return false;
+		}
+
+		if (e.isCreatorArgument(property)) {
+			return false;
+		}
+
+		if (!property.isReadable()) {
+			return false;
+		}
+		return true;
+	};
 
 	public static final TypeInformation<Bson> BSON = TypeInformation.of(Bson.class);
 
@@ -368,7 +386,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 					evaluator, spELContext);
 
 			readProperties(context, entity, convertingAccessor, documentAccessor, valueProvider, evaluator,
-					Predicates.isTrue());
+					(mongoPersistentProperties, mongoPersistentProperty) -> true);
 			return (R) projectionFactory.createProjection(mappedType.getType(), accessor.getBean());
 		}
 
@@ -518,6 +536,23 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				parameterProvider);
 	}
 
+	class EvaluatingDocumentAccessor extends DocumentAccessor implements ValueExpressionEvaluator {
+
+		/**
+		 * Creates a new {@link DocumentAccessor} for the given {@link Document}.
+		 *
+		 * @param document must be a {@link Document} effectively, must not be {@literal null}.
+		 */
+		public EvaluatingDocumentAccessor(Bson document) {
+			super(document);
+		}
+
+		@Override
+		public <T> T evaluate(String expression) {
+			return expressionEvaluatorFactory.create(getDocument()).evaluate(expression);
+		}
+	}
+
 	private <S> S read(ConversionContext context, MongoPersistentEntity<S> entity, Document bson) {
 
 		S existing = context.findContextualEntity(entity, bson);
@@ -525,19 +560,18 @@ public class MappingMongoConverter extends AbstractMongoConverter
 			return existing;
 		}
 
-		ValueExpressionEvaluator evaluator = expressionEvaluatorFactory.create(bson);
-		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
-
+		EvaluatingDocumentAccessor documentAccessor = new EvaluatingDocumentAccessor(bson);
 		InstanceCreatorMetadata<MongoPersistentProperty> instanceCreatorMetadata = entity.getInstanceCreatorMetadata();
 
 		ParameterValueProvider<MongoPersistentProperty> provider = instanceCreatorMetadata != null
-				&& instanceCreatorMetadata.hasParameters() ? getParameterProvider(context, entity, documentAccessor, evaluator)
+				&& instanceCreatorMetadata.hasParameters()
+						? getParameterProvider(context, entity, documentAccessor, documentAccessor)
 						: NoOpParameterValueProvider.INSTANCE;
 
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
-		return populateProperties(context, entity, documentAccessor, evaluator, instance);
+		return populateProperties(context, entity, documentAccessor, documentAccessor, instance);
 	}
 
 	private <S> S populateProperties(ConversionContext context, MongoPersistentEntity<S> entity,
@@ -559,9 +593,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(contextToUse, documentAccessor,
 				evaluator, spELContext);
 
-		Predicate<MongoPersistentProperty> propertyFilter = isIdentifier(entity).or(isConstructorArgument(entity))
-				.or(Predicates.negate(PersistentProperty::isReadable)).negate();
-		readProperties(contextToUse, entity, accessor, documentAccessor, valueProvider, evaluator, propertyFilter);
+		readProperties(contextToUse, entity, accessor, documentAccessor, valueProvider, evaluator, PROPERTY_FILTER);
 
 		return accessor.getBean();
 	}
@@ -606,13 +638,13 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	private void readProperties(ConversionContext context, MongoPersistentEntity<?> entity,
 			PersistentPropertyAccessor<?> accessor, DocumentAccessor documentAccessor,
 			MongoDbPropertyValueProvider valueProvider, ValueExpressionEvaluator evaluator,
-			Predicate<MongoPersistentProperty> propertyFilter) {
+			BiPredicate<MongoPersistentEntity<?>, MongoPersistentProperty> propertyFilter) {
 
 		DbRefResolverCallback callback = null;
 
 		for (MongoPersistentProperty prop : entity) {
 
-			if (!propertyFilter.test(prop)) {
+			if (!propertyFilter.test(entity, prop)) {
 				continue;
 			}
 
@@ -1943,10 +1975,6 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		MongoDbPropertyValueProvider(ConversionContext context, DocumentAccessor accessor,
 				ValueExpressionEvaluator evaluator, SpELContext spELContext) {
 
-			Assert.notNull(context, "ConversionContext must no be null");
-			Assert.notNull(accessor, "DocumentAccessor must no be null");
-			Assert.notNull(evaluator, "ValueExpressionEvaluator must not be null");
-
 			this.context = context;
 			this.accessor = accessor;
 			this.evaluator = evaluator;
@@ -2358,9 +2386,6 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		@Override
 		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint,
 				ConversionContext context) {
-
-			Assert.notNull(source, "Source must not be null");
-			Assert.notNull(typeHint, "TypeInformation must not be null");
 
 			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
 				return (S) elementConverter.convert(source, typeHint);

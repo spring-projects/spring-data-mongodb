@@ -171,6 +171,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 			this.typeKey = typeKey;
 		}
 
+		@Override
 		public Alias readAliasFrom(Bson source) {
 
 			if (source instanceof List) {
