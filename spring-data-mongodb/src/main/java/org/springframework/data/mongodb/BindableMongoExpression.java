@@ -30,7 +30,7 @@ import org.springframework.util.StringUtils;
 /**
  * A {@link MongoExpression} using the {@link ParameterBindingDocumentCodec} for parsing a raw ({@literal json})
  * expression. The expression will be wrapped within <code>{ ... }</code> if necessary. The actual parsing and parameter
- * binding of placeholders like {@code ?0} is delayed upon first call on the the target {@link Document} via
+ * binding of placeholders like {@code ?0} is delayed upon first call on the target {@link Document} via
  * {@link #toDocument()}.
  * <br />
  *
