@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.test.util.Template;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Giacomo Baso
  */
 @ExtendWith(MongoTemplateExtension.class)
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.4")
@@ -83,6 +84,21 @@ class MongoTemplateFieldProjectionTests {
 
 		Person result = findLuke(fields -> {
 			fields.include("firstname").project(MongoExpression.create("'$toUpper' : '$?0'", "last_name"))
+					.as("last_name");
+		});
+
+		assertThat(result).isEqualTo(luke.upperCaseLastnameClone());
+	}
+
+	@Test // GH-4821
+	void usesMongoExpressionWithLineBreaksAsIs() {
+
+		Person result = findLuke(fields -> {
+			fields.include("firstname").project(MongoExpression.create("""
+							{
+							  '$toUpper' : '$last_name'
+							}
+							"""))
 					.as("last_name");
 		});
 
