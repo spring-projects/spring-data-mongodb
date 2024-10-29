@@ -49,7 +49,7 @@ public class AbstractMicrobenchmark {
 
 	static final int WARMUP_ITERATIONS = 5;
 	static final int MEASUREMENT_ITERATIONS = 10;
-	static final int FORKS = 0;
+	static final int FORKS = 1;
 	static final String[] JVM_ARGS = { "-server", "-XX:+HeapDumpOnOutOfMemoryError", "-Xms1024m", "-Xmx1024m",
 			"-XX:MaxDirectMemorySize=1024m" };
 
