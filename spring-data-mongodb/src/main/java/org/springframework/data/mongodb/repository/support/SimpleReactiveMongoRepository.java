@@ -114,7 +114,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		return source.stream().allMatch(entityInformation::isNew) ? //
 				mongoOperations.insert(source.stream().collect(Collectors.toList()), entityInformation.getCollectionName()) : //
-				Flux.fromIterable(entities).flatMap(this::save);
+				Flux.fromIterable(entities).flatMapSequential(this::save);
 	}
 
 	@Override
