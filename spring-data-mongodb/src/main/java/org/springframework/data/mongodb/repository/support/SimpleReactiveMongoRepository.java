@@ -113,8 +113,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Streamable<S> source = Streamable.of(entities);
 
 		return source.stream().allMatch(entityInformation::isNew) ? //
-				mongoOperations.insert(source.stream().collect(Collectors.toList()), entityInformation.getCollectionName()) : //
-				Flux.fromIterable(entities).flatMap(this::save);
+			    insert(entities) :
+				Flux.fromIterable(entities).concatMap(this::save);
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null");
 
-		return Flux.from(entityStream).flatMapSequential(entity -> entityInformation.isNew(entity) ? //
+		return Flux.from(entityStream).concatMap(entity -> entityInformation.isNew(entity) ? //
 				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
 				mongoOperations.save(entity, entityInformation.getCollectionName()));
 	}
@@ -296,7 +296,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Optional<ReadPreference> readPreference = getReadPreference();
 		return Flux.from(entityStream)//
 				.map(entityInformation::getRequiredId)//
-				.flatMap(id -> deleteById(id, readPreference))//
+				.concatMap(id -> deleteById(id, readPreference))//
 				.then();
 	}
 
@@ -337,8 +337,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
 		Collection<S> source = toCollection(entities);
-
-		return source.isEmpty() ? Flux.empty() : mongoOperations.insertAll(source);
+		return source.isEmpty() ? Flux.empty() : mongoOperations.insert(source, entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -346,8 +345,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Publisher of entities must not be null");
 
-		return Flux.from(entities)
-				.flatMapSequential(entity -> mongoOperations.insert(entity, entityInformation.getCollectionName()));
+		return Flux.from(entities).concatMap(this::insert);
 	}
 
 	// -------------------------------------------------------------------------

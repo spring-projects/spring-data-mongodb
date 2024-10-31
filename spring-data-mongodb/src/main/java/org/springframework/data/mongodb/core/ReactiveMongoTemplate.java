@@ -1413,7 +1413,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		});
 
 		return Flux.fromIterable(elementsByCollection.keySet())
-				.flatMap(collectionName -> doInsertBatch(collectionName, elementsByCollection.get(collectionName), writer));
+				.concatMap(collectionName -> doInsertBatch(collectionName, elementsByCollection.get(collectionName), writer));
 	}
 
 	protected <T> Flux<T> doInsertBatch(String collectionName, Collection<? extends T> batchToSave,
