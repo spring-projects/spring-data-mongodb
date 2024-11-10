@@ -37,6 +37,7 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  * @author Owen Q
  * @author Kirill Egorov
+ * @author GaEun Kim
  */
 public class Field {
 
@@ -286,7 +287,7 @@ public class Field {
 	@Override
 	public int hashCode() {
 
-		int result = ObjectUtils.nullSafeHashCode(criteria);
+		int result = ObjectUtils.nullSafeHashCode(criteria.toString());
 		result = 31 * result + ObjectUtils.nullSafeHashCode(slices);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(elemMatches);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(positionKey);
