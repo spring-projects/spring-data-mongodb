@@ -28,6 +28,7 @@
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>3.4.0-SNAPSHOT</springdata.commons>
 		<mongo>5.2.1</mongo>
+		<mongodb-crypt>${mongo}</mongodb-crypt>
 		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
@@ -137,6 +138,7 @@
 			<id>mongo-4.x</id>
 			<properties>
 				<mongo>4.11.1</mongo>
+				<mongodb-crypt>1.8.0</mongodb-crypt>
 			</properties>
 		</profile>
 
