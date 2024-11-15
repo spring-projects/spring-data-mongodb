@@ -108,7 +108,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-with-mongodb-8.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.8.0.version']} ci/openjdk17-mongodb-8.0/")
+							def image = docker.build("springci/spring-data-with-mongodb-8.0:${p['java.next.tag']}", "--build-arg BASE=${p['docker.java.next.image']} --build-arg MONGODB=${p['docker.mongodb.8.0.version']} ci/openjdk23-mongodb-8.0/")
 							docker.withRegistry(p['docker.registry'], p['docker.credentials']) {
 								image.push()
 							}
@@ -244,7 +244,7 @@ pipeline {
 					}
 				}
 
-				stage("test: MongoDB 8.0 (main)") {
+				stage("test: MongoDB 8.0 (next)") {
 					agent {
 						label 'data'
 					}
