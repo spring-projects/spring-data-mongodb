@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -536,7 +536,7 @@ public class GeoJsonTests {
 		private String name;
 		private @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) double[] location;
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public Venue2DSphere(String name, double[] location) {
 			this.name = name;
 			this.location = location;

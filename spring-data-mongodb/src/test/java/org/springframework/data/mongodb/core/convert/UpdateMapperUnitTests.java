@@ -544,7 +544,7 @@ class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONG0-471
-	void testUpdateShouldRetainClassTypeInformationWhenUsing$addToSetWith$eachForCustomTypes() {
+	void testUpdateShouldRetainTypeInformationWhenUsing$addToSetWith$eachForCustomTypes() {
 
 		Update update = new Update().addToSet("models").each(new ModelImpl(2014), new ModelImpl(1), new ModelImpl(28));
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),

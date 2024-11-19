@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -62,8 +63,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
@@ -80,8 +80,6 @@ import com.mongodb.ReadPreference;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class StringBasedAggregationUnitTests {
-
-	private SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	@Mock MongoOperations operations;
 	@Mock DbRefResolver dbRefResolver;
@@ -254,8 +252,7 @@ public class StringBasedAggregationUnitTests {
 				factory, converter.getMappingContext());
 
 		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class) //
-				.isThrownBy(() -> new StringBasedAggregation(queryMethod, operations, PARSER,
-						QueryMethodEvaluationContextProvider.DEFAULT)) //
+				.isThrownBy(() -> new StringBasedAggregation(queryMethod, operations, ValueExpressionDelegate.create())) //
 				.withMessageContaining("pageIsUnsupported") //
 				.withMessageContaining("Page");
 	}
@@ -311,7 +308,7 @@ public class StringBasedAggregationUnitTests {
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
 				factory, converter.getMappingContext());
-		return new StringBasedAggregation(queryMethod, operations, PARSER, QueryMethodEvaluationContextProvider.DEFAULT);
+		return new StringBasedAggregation(queryMethod, operations, ValueExpressionDelegate.create());
 	}
 
 	private List<Document> pipelineOf(AggregationInvocation invocation) {
@@ -334,19 +331,18 @@ public class StringBasedAggregationUnitTests {
 
 	@Nullable
 	private Object hintOf(AggregationInvocation invocation) {
-		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getHintObject().orElse(null)
+		return invocation.aggregation.getOptions() != null
+				? invocation.aggregation.getOptions().getHintObject().orElse(null)
 				: null;
 	}
 
 	private Boolean skipResultsOf(AggregationInvocation invocation) {
-		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults()
-				: false;
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults() : false;
 	}
 
 	@Nullable
 	private ReadPreference readPreferenceOf(AggregationInvocation invocation) {
-		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference()
-				: null;
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference() : null;
 	}
 
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {

@@ -465,7 +465,7 @@ This can be a single value (the _id_ by default), or a `Document` provided via a
 * `@Transient`: By default, all fields are mapped to the document.
 This annotation excludes the field where it is applied from being stored in the database.
 Transient properties cannot be used within a persistence constructor as the converter cannot materialize a value for the constructor argument.
-* `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database.
+* `@PersistenceCreator`: Marks a given constructor or a `static` factory method - even a package protected one - to use when instantiating the object from the database.
 Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Value`: This annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments.
 This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object.
@@ -513,7 +513,7 @@ public class Person<T extends Address> {
     this.ssn = ssn;
   }
 
-  @PersistenceConstructor
+  @PersistenceCreator
   public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
     this.ssn = ssn;
     this.firstName = firstName;
@@ -673,7 +673,7 @@ Increased levels of nesting increase the complexity of the aggregation expressio
 [[mapping-custom-object-construction]]
 === Customized Object Construction
 
-The mapping subsystem allows the customization of the object construction by annotating a constructor with the `@PersistenceConstructor` annotation.
+The mapping subsystem allows the customization of the object construction by annotating a constructor with the `@PersistenceCreator` annotation.
 The values to be used for the constructor parameters are resolved in the following way:
 
 * If a parameter is annotated with the `@Value` annotation, the given expression is evaluated and the result is used as the parameter value.
@@ -706,7 +706,7 @@ OrderItem item = converter.read(OrderItem.class, input);
 
 NOTE: The SpEL expression in the `@Value` annotation of the `quantity` parameter falls back to the value `0` if the given property path cannot be resolved.
 
-Additional examples for using the `@PersistenceConstructor` annotation can be found in the https://github.com/spring-projects/spring-data-mongodb/blob/master/spring-data-mongodb/src/test/java/org/springframework/data/mongodb/core/convert/MappingMongoConverterUnitTests.java[MappingMongoConverterUnitTests] test suite.
+Additional examples for using the `@PersistenceCreator` annotation can be found in the https://github.com/spring-projects/spring-data-mongodb/blob/master/spring-data-mongodb/src/test/java/org/springframework/data/mongodb/core/convert/MappingMongoConverterUnitTests.java[MappingMongoConverterUnitTests] test suite.
 
 [[mapping-usage-events]]
 === Mapping Framework Events

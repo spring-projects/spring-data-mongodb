@@ -22,11 +22,8 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
 /**
@@ -48,47 +45,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
 	private final boolean isDeleteQuery;
-
-	/**
-	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod}, {@link MongoOperations},
-	 * {@link SpelExpressionParser} and {@link QueryMethodEvaluationContextProvider}.
-	 *
-	 * @param method must not be {@literal null}.
-	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionParser must not be {@literal null}.
-	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.4.0, use the constructors accepting {@link ValueExpressionDelegate} instead.
-	 */
-	@Deprecated(since = "4.4.0")
-	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(method, mongoOperations, expressionParser, evaluationContextProvider);
-
-		String query = method.getAnnotatedQuery();
-		Assert.notNull(query, "Query must not be null");
-
-		this.query = query;
-		this.fieldSpec = method.getFieldSpecification();
-
-		if (method.hasAnnotatedQuery()) {
-
-			org.springframework.data.mongodb.repository.Query queryAnnotation = method.getQueryAnnotation();
-
-			this.isCountQuery = queryAnnotation.count();
-			this.isExistsQuery = queryAnnotation.exists();
-			this.isDeleteQuery = queryAnnotation.delete();
-
-			if (hasAmbiguousProjectionFlags(this.isCountQuery, this.isExistsQuery, this.isDeleteQuery)) {
-				throw new IllegalArgumentException(String.format(COUNT_EXISTS_AND_DELETE, method));
-			}
-
-		} else {
-
-			this.isCountQuery = false;
-			this.isExistsQuery = false;
-			this.isDeleteQuery = false;
-		}
-	}
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod}, {@link MongoOperations},

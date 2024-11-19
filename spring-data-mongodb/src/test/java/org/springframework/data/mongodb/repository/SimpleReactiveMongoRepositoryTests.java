@@ -44,7 +44,6 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.query.FluentQuery;
-import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -90,7 +89,6 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
 		factory.setBeanClassLoader(classLoader);
 		factory.setBeanFactory(beanFactory);
-		factory.setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 
 		repository = factory.getRepository(ReactivePersonRepository.class);
 		immutableRepository = factory.getRepository(ReactiveImmutablePersonRepository.class);
@@ -342,7 +340,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 				.consumeNextWith(actual -> {
 					assertThat(actual.id).isNotNull();
 				}) //
-			.verifyComplete();
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444

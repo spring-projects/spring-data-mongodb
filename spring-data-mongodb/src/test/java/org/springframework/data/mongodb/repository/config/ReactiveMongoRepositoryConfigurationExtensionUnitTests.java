@@ -27,7 +27,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.type.StandardAnnotationMetadata;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
@@ -43,13 +43,13 @@ import org.springframework.data.repository.reactive.RxJava3CrudRepository;
  */
 public class ReactiveMongoRepositoryConfigurationExtensionUnitTests {
 
-	StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(Config.class, true);
+	AnnotationMetadata metadata = AnnotationMetadata.introspect(Config.class);
 	ResourceLoader loader = new PathMatchingResourcePatternResolver();
 	Environment environment = new StandardEnvironment();
 	BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
 
 	RepositoryConfigurationSource configurationSource = new AnnotationRepositoryConfigurationSource(metadata,
-			EnableReactiveMongoRepositories.class, loader, environment, registry);
+			EnableReactiveMongoRepositories.class, loader, environment, registry, null);
 
 	@Test // DATAMONGO-1444
 	public void isStrictMatchIfDomainTypeIsAnnotatedWithDocument() {

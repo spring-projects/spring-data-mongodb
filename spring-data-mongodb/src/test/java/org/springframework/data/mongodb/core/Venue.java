@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("newyork")
@@ -30,7 +30,7 @@ public class Venue {
 	private double[] location;
 	private Date openingDate;
 
-	@PersistenceConstructor
+	@PersistenceCreator
 	Venue(String name, double[] location) {
 		super();
 		this.name = name;

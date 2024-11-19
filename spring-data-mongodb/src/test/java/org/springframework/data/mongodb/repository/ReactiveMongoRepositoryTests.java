@@ -72,7 +72,6 @@ import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
@@ -111,7 +110,6 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 			factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
 			factory.setBeanClassLoader(beanFactory.getClass().getClassLoader());
 			factory.setBeanFactory(beanFactory);
-			factory.setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 
 			return factory;
 		}

@@ -45,8 +45,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 /**
  * Unit tests for {@link PartTreeMongoQuery}.
@@ -206,8 +205,7 @@ class PartTreeMongoQueryUnitTests {
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(Repo.class), factory,
 					mappingContext);
 
-			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock, new SpelExpressionParser(),
-					QueryMethodEvaluationContextProvider.DEFAULT);
+			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock, ValueExpressionDelegate.create());
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
