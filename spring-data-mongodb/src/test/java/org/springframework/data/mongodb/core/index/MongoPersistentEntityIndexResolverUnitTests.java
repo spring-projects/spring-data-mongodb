@@ -53,7 +53,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Tests for {@link MongoPersistentEntityIndexResolver}.
@@ -1186,7 +1186,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void shouldCatchCyclicReferenceExceptionOnRoot() {
 
-			MongoPersistentEntity entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Object.class));
+			MongoPersistentEntity entity = new BasicMongoPersistentEntity<>(TypeInformation.of(Object.class));
 
 			MongoPersistentProperty propertyMock = mock(MongoPersistentProperty.class);
 			when(propertyMock.isEntity()).thenReturn(true);
@@ -1195,7 +1195,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					new MongoPersistentEntityIndexResolver.CyclicPropertyReferenceException("foo", Object.class, "bar"));
 
 			MongoPersistentEntity<SelfCyclingViaCollectionType> selfCyclingEntity = new BasicMongoPersistentEntity<>(
-					ClassTypeInformation.from(SelfCyclingViaCollectionType.class));
+					TypeInformation.of(SelfCyclingViaCollectionType.class));
 
 			new MongoPersistentEntityIndexResolver(prepareMappingContext(SelfCyclingViaCollectionType.class))
 					.resolveIndexForEntity(selfCyclingEntity);

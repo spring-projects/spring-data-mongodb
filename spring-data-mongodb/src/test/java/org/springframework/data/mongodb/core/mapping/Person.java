@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -44,7 +44,7 @@ public class Person<T extends Address> {
 		this.ssn = ssn;
 	}
 
-	@PersistenceConstructor
+	@PersistenceCreator
 	public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
 		this.ssn = ssn;
 		this.firstName = firstName;

@@ -34,6 +34,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -54,9 +55,8 @@ import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
@@ -70,8 +70,6 @@ import com.mongodb.ReadPreference;
  */
 @ExtendWith(MockitoExtension.class)
 public class ReactiveStringBasedAggregationUnitTests {
-
-	SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	@Mock ReactiveMongoOperations operations;
 	@Mock DbRefResolver dbRefResolver;
@@ -226,8 +224,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-		return new ReactiveStringBasedAggregation(queryMethod, operations, PARSER,
-				ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
+		return new ReactiveStringBasedAggregation(queryMethod, operations, ValueExpressionDelegate.create());
 	}
 
 	private List<Document> pipelineOf(AggregationInvocation invocation) {
@@ -250,19 +247,18 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 	@Nullable
 	private Object hintOf(AggregationInvocation invocation) {
-		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getHintObject().orElse(null)
+		return invocation.aggregation.getOptions() != null
+				? invocation.aggregation.getOptions().getHintObject().orElse(null)
 				: null;
 	}
 
 	private Boolean skipResultsOf(AggregationInvocation invocation) {
-		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults()
-				: false;
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().isSkipResults() : false;
 	}
 
 	@Nullable
 	private ReadPreference readPreferenceOf(AggregationInvocation invocation) {
-		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference()
-				: null;
+		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getReadPreference() : null;
 	}
 
 	private Class<?> targetTypeOf(AggregationInvocation invocation) {
@@ -284,7 +280,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		@Aggregation(GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER)
 		Mono<PersonAggregate> spelParameterReplacementAggregation(String arg0);
 
-		@Aggregation(pipeline = {RAW_GROUP_BY_LASTNAME_STRING, GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER})
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER })
 		Mono<PersonAggregate> multiOperationPipeline(String arg0);
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")

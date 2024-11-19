@@ -49,7 +49,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.domain.PageRequest;
@@ -4482,7 +4482,7 @@ public class MongoTemplateTests {
 
 		LocalDateTime myDate;
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		TestClass(LocalDateTime myDate) {
 			this.myDate = myDate;
 		}
@@ -4739,7 +4739,7 @@ public class MongoTemplateTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) Document refToDocUsedInCtor;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) Document refToDocNotUsedInCtor;
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public DocumentWithLazyDBrefUsedInPresistenceConstructor(Document refToDocUsedInCtor) {
 			this.refToDocUsedInCtor = refToDocUsedInCtor;
 		}

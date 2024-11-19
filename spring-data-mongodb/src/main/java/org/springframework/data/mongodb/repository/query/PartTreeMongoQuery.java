@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.repository.query;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,14 +27,11 @@ import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.util.StringUtils;
 
 /**
@@ -53,26 +48,6 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	private final boolean isGeoNearQuery;
 	private final MappingContext<?, MongoPersistentProperty> context;
 	private final ResultProcessor processor;
-
-	/**
-	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
-	 *
-	 * @param method must not be {@literal null}.
-	 * @param mongoOperations must not be {@literal null}.
-	 * @param expressionParser must not be {@literal null}.
-	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.4, use the constructors accepting {@link QueryMethodValueEvaluationContextAccessor} instead.
-	 */
-	@Deprecated(since = "4.4.0")
-	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations, ExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(method, mongoOperations, expressionParser, evaluationContextProvider);
-
-		this.processor = method.getResultProcessor();
-		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());
-		this.isGeoNearQuery = method.isGeoNearQuery();
-		this.context = mongoOperations.getConverter().getMappingContext();
-	}
 
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
