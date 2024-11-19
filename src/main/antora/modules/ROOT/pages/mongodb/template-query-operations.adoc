@@ -342,7 +342,7 @@ public class Venue {
   private String name;
   private double[] location;
 
-  @PersistenceConstructor
+  @PersistenceCreator
   Venue(String name, double[] location) {
     super();
     this.name = name;
