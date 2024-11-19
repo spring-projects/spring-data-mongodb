@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.repository.util.ClassUtils.*;
-
 import java.lang.reflect.Method;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -35,6 +33,7 @@ import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -130,7 +129,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	@Override
 	public void verify() {
 
-		if (hasParameterOfType(method, Pageable.class)) {
+		if (ReflectionUtils.hasParameterOfType(method, Pageable.class)) {
 
 			TypeInformation<?> returnType = TypeInformation.fromReturnTypeOf(method);
 
@@ -139,7 +138,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
 							|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
 
-			if (hasParameterOfType(method, Sort.class)) {
+			if (ReflectionUtils.hasParameterOfType(method, Sort.class)) {
 				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter;"
 						+ " Use sorting capabilities on Pageable instead; Offending method: %s", method));
 			}

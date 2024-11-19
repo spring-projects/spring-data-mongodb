@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 
 /**
  * @author Christoph Strobl
@@ -37,7 +37,7 @@ final class PersonAggregate {
 		this(lastname, Collections.singletonList(name));
 	}
 
-	@PersistenceConstructor
+	@PersistenceCreator
 	public PersonAggregate(String lastname, Collection<String> names) {
 
 		this.lastname = lastname;

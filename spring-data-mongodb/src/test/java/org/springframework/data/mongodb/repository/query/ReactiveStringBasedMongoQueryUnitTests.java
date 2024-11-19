@@ -56,8 +56,6 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
-import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.spel.spi.ReactiveEvaluationContextExtension;
@@ -248,8 +246,8 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
-		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
-				"{'lastname' : { '$binary' : '" + Base64.getEncoder().encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
+				+ Base64.getEncoder().encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
@@ -266,16 +264,14 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
-	private ReactiveStringBasedMongoQuery createQueryForMethod(
-			String name, Class<?>... parameters)
-			throws Exception {
+	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-		QueryMethodValueEvaluationContextAccessor accessor = new QueryMethodValueEvaluationContextAccessor(
-				environment, Collections.singletonList(ReactiveSpelExtension.INSTANCE));
+		QueryMethodValueEvaluationContextAccessor accessor = new QueryMethodValueEvaluationContextAccessor(environment,
+				Collections.singletonList(ReactiveSpelExtension.INSTANCE));
 		return new ReactiveStringBasedMongoQuery(queryMethod, operations, new ValueExpressionDelegate(accessor, PARSER));
 	}
 

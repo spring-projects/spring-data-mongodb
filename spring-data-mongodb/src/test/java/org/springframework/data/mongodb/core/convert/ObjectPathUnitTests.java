@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link ObjectPath}.
@@ -39,9 +39,9 @@ public class ObjectPathUnitTests {
 	@BeforeEach
 	public void setUp() {
 
-		one = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityOne.class));
-		two = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityTwo.class));
-		three = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityThree.class));
+		one = new BasicMongoPersistentEntity<>(TypeInformation.of(EntityOne.class));
+		two = new BasicMongoPersistentEntity<>(TypeInformation.of(EntityTwo.class));
+		three = new BasicMongoPersistentEntity<>(TypeInformation.of(EntityThree.class));
 	}
 
 	@Test // DATAMONGO-1703

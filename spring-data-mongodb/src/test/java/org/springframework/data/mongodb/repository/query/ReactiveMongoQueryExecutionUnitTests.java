@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
@@ -74,7 +74,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 				.thenReturn(Range.from(Bound.inclusive(new Distance(10))).to(Bound.inclusive(new Distance(15))));
 		when(parameterAccessor.getPageable()).thenReturn(PageRequest.of(1, 10));
 
-		new GeoNearExecution(operations, parameterAccessor, ClassTypeInformation.fromReturnTypeOf(geoNear)).execute(query,
+		new GeoNearExecution(operations, parameterAccessor, TypeInformation.fromReturnTypeOf(geoNear)).execute(query,
 				Person.class, "person");
 
 		ArgumentCaptor<NearQuery> queryArgumentCaptor = ArgumentCaptor.forClass(NearQuery.class);
@@ -96,7 +96,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		when(parameterAccessor.getGeoNearLocation()).thenReturn(new Point(1, 2));
 		when(parameterAccessor.getDistanceRange()).thenReturn(Range.unbounded());
 
-		new GeoNearExecution(operations, parameterAccessor, ClassTypeInformation.fromReturnTypeOf(geoNear)).execute(query,
+		new GeoNearExecution(operations, parameterAccessor, TypeInformation.fromReturnTypeOf(geoNear)).execute(query,
 				Person.class, "person");
 
 		ArgumentCaptor<NearQuery> queryArgumentCaptor = ArgumentCaptor.forClass(NearQuery.class);

@@ -98,13 +98,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 		return delegate.getName();
 	}
 
-	@Override
 	@Nullable
-	@Deprecated
-	public PreferredConstructor<T, MongoPersistentProperty> getPersistenceConstructor() {
-		return delegate.getPersistenceConstructor();
-	}
-
 	@Override
 	public InstanceCreatorMetadata<MongoPersistentProperty> getInstanceCreatorMetadata() {
 		return delegate.getInstanceCreatorMetadata();
