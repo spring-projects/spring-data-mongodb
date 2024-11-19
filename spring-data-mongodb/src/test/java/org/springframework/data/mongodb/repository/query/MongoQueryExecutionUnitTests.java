@@ -56,8 +56,7 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.client.result.DeleteResult;
@@ -81,15 +80,13 @@ class MongoQueryExecutionUnitTests {
 	@Mock TerminatingFindNear<Object> terminatingGeoMock;
 	@Mock DbRefResolver dbRefResolver;
 
-	private SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 	private Point POINT = new Point(10, 20);
 	private Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
 	private RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
 	private MongoMappingContext context = new MongoMappingContext();
 	private ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 	private Method method = ReflectionUtils.findMethod(PersonRepository.class, "findByLocationNear", Point.class,
-			Distance.class,
-			Pageable.class);
+			Distance.class, Pageable.class);
 	private MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 	private MappingMongoConverter converter;
 
@@ -152,8 +149,8 @@ class MongoQueryExecutionUnitTests {
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
 				new MongoParametersParameterAccessor(queryMethod, new Object[] { POINT, DISTANCE, PageRequest.of(0, 10) }));
 
-		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock, EXPRESSION_PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock,
+				ValueExpressionDelegate.create());
 
 		PagingGeoNearExecution execution = new PagingGeoNearExecution(findOperationMock, queryMethod, accessor, query);
 		execution.execute(new Query());
@@ -173,8 +170,8 @@ class MongoQueryExecutionUnitTests {
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
 				new MongoParametersParameterAccessor(queryMethod, new Object[] { POINT, DISTANCE, PageRequest.of(2, 10) }));
 
-		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock, EXPRESSION_PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+		PartTreeMongoQuery query = new PartTreeMongoQuery(queryMethod, mongoOperationsMock,
+				ValueExpressionDelegate.create());
 
 		PagingGeoNearExecution execution = new PagingGeoNearExecution(findOperationMock, queryMethod, accessor, query);
 		execution.execute(new Query());

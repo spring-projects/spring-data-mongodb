@@ -16,17 +16,13 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
-import java.util.Optional;
 
-import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -92,12 +88,6 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 		}
 
 		return factory;
-	}
-
-	@Override
-	protected Optional<QueryMethodEvaluationContextProvider> createDefaultQueryMethodEvaluationContextProvider(
-			ListableBeanFactory beanFactory) {
-		return Optional.of(new ReactiveExtensionAwareQueryMethodEvaluationContextProvider(beanFactory));
 	}
 
 	/**
