@@ -39,7 +39,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -56,7 +56,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	@BeforeEach
 	void setup() {
-		entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Person.class));
+		entity = new BasicMongoPersistentEntity<>(TypeInformation.of(Person.class));
 	}
 
 	@Test
@@ -90,7 +90,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	void usesPropertyAccessForThrowableCause() {
 
 		BasicMongoPersistentEntity<Throwable> entity = new BasicMongoPersistentEntity<>(
-				ClassTypeInformation.from(Throwable.class));
+				TypeInformation.of(Throwable.class));
 		MongoPersistentProperty property = getPropertyFor(entity, "cause");
 
 		assertThat(property.usePropertyAccess()).isTrue();
@@ -99,7 +99,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test // DATAMONGO-607
 	void usesCustomFieldNamingStrategyByDefault() throws Exception {
 
-		ClassTypeInformation<Person> type = ClassTypeInformation.from(Person.class);
+		TypeInformation<Person> type = TypeInformation.of(Person.class);
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
@@ -116,7 +116,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test // DATAMONGO-607
 	void rejectsInvalidValueReturnedByFieldNamingStrategy() {
 
-		ClassTypeInformation<Person> type = ClassTypeInformation.from(Person.class);
+		TypeInformation<Person> type = TypeInformation.of(Person.class);
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
@@ -255,7 +255,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	private static <T> MongoPersistentProperty getPropertyFor(Class<T> type, String fieldname) {
-		return getPropertyFor(new BasicMongoPersistentEntity<>(ClassTypeInformation.from(type)), fieldname);
+		return getPropertyFor(new BasicMongoPersistentEntity<>(TypeInformation.of(type)), fieldname);
 	}
 
 	private static MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> entity, String fieldname) {

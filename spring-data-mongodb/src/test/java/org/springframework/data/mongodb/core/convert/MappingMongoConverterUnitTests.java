@@ -63,7 +63,7 @@ import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.ConverterBuilder;
@@ -103,7 +103,6 @@ import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -1061,7 +1060,7 @@ class MappingMongoConverterUnitTests {
 		address.city = "London";
 		address.street = "Foo";
 
-		Object result = converter.convertToMongoType(Collections.singleton(address), ClassTypeInformation.OBJECT);
+		Object result = converter.convertToMongoType(Collections.singleton(address), TypeInformation.OBJECT);
 		assertThat(result).isInstanceOf(List.class);
 
 		Set<?> readResult = converter.read(Set.class, (org.bson.Document) result);
@@ -1393,7 +1392,7 @@ class MappingMongoConverterUnitTests {
 		address.street = "Foo";
 
 		Object result = converter.convertToMongoType(Collections.singletonList(address),
-				ClassTypeInformation.from(InterfaceType.class));
+				TypeInformation.of(InterfaceType.class));
 
 		assertThat(result).isInstanceOf(List.class);
 
@@ -1421,7 +1420,7 @@ class MappingMongoConverterUnitTests {
 		address.city = "London";
 		address.street = "Foo";
 
-		Object result = converter.convertToMongoType(new Address[] { address }, ClassTypeInformation.OBJECT);
+		Object result = converter.convertToMongoType(new Address[] { address }, TypeInformation.OBJECT);
 
 		assertThat(result).isInstanceOf(List.class);
 
@@ -1712,7 +1711,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1001, DATAMONGO-1509
-	void shouldWriteCglibProxiedClassTypeInformationCorrectly() {
+	void shouldWriteCglibProxiedTypeInformationCorrectly() {
 
 		ProxyFactory factory = new ProxyFactory();
 		factory.setTargetClass(GenericType.class);
@@ -2318,7 +2317,7 @@ class MappingMongoConverterUnitTests {
 		Mockito.doReturn(cluster).when(spyConverter).readRef(dbRef);
 
 		Map<Object, Object> result = spyConverter.readMap(spyConverter.getConversionContext(ObjectPath.ROOT), data,
-				ClassTypeInformation.MAP);
+				TypeInformation.MAP);
 
 		assertThat(((Map) result.get("cluster")).get("_id")).isEqualTo(100L);
 	}
@@ -3522,7 +3521,7 @@ class MappingMongoConverterUnitTests {
 
 		}
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public Person(Set<Address> addresses) {
 			this.addresses = addresses;
 		}
@@ -3802,7 +3801,7 @@ class MappingMongoConverterUnitTests {
 
 		@Field("property") private int m_property;
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public PrimitiveContainer(@Value("#root.property") int a_property) {
 			m_property = a_property;
 		}
@@ -3817,7 +3816,7 @@ class MappingMongoConverterUnitTests {
 
 		@Field("property") private PrimitiveContainer m_property;
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public ObjectContainer(@Value("#root.property") PrimitiveContainer a_property) {
 			m_property = a_property;
 		}

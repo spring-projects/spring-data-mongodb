@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -44,7 +43,6 @@ import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
-import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
@@ -77,7 +75,6 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 
-		setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
 	}
 
@@ -132,7 +129,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		return targetRepository;
 	}
 
-	@Override protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
+	@Override
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
 			ValueExpressionDelegate valueExpressionDelegate) {
 		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionDelegate));
 	}
@@ -159,8 +157,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @author Christoph Strobl
 	 */
 	private record MongoQueryLookupStrategy(ReactiveMongoOperations operations,
-		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-		ValueExpressionDelegate delegate) implements QueryLookupStrategy {
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			ValueExpressionDelegate delegate) implements QueryLookupStrategy {
 
 		@Override
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,

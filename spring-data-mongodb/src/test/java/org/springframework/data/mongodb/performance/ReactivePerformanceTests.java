@@ -32,7 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.Constants;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
@@ -513,7 +513,7 @@ public class ReactivePerformanceTests {
 			this(zipCode, city, new HashSet<AddressType>(pickRandomNumerOfItemsFrom(Arrays.asList(AddressType.values()))));
 		}
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public Address(String zipCode, String city, Set<AddressType> types) {
 			this.zipCode = zipCode;
 			this.city = city;
@@ -571,7 +571,7 @@ public class ReactivePerformanceTests {
 			this.status = Status.ORDERED;
 		}
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		public Order(List<LineItem> lineItems, Date createdAt, Status status) {
 			this.lineItems = lineItems;
 			this.createdAt = createdAt;

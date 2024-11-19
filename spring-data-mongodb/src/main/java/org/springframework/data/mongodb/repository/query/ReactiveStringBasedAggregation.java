@@ -29,11 +29,9 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 
 /**
@@ -48,24 +46,6 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
 	private final ReactiveMongoOperations reactiveMongoOperations;
 	private final MongoConverter mongoConverter;
-
-	/**
-	 * @param method must not be {@literal null}.
-	 * @param reactiveMongoOperations must not be {@literal null}.
-	 * @param expressionParser must not be {@literal null}.
-	 * @param evaluationContextProvider must not be {@literal null}.
-	 * @deprecated since 4.4.0, use the constructors accepting {@link ValueExpressionDelegate} instead.
-	 */
-	@Deprecated(since = "4.4.0")
-	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations reactiveMongoOperations, ExpressionParser expressionParser,
-			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
-
-		super(method, reactiveMongoOperations, expressionParser, evaluationContextProvider);
-
-		this.reactiveMongoOperations = reactiveMongoOperations;
-		this.mongoConverter = reactiveMongoOperations.getConverter();
-	}
 
 	/**
 	 * @param method must not be {@literal null}.

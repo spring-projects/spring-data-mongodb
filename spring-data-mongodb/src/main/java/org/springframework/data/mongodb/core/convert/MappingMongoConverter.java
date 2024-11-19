@@ -71,7 +71,6 @@ import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mapping.model.ValueExpressionParameterValueProvider;
 import org.springframework.data.mongodb.CodecRegistryProvider;
@@ -2059,7 +2058,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	}
 
 	/**
-	 * Extension of {@link SpELExpressionParameterValueProvider} to recursively trigger value conversion on the raw
+	 * Extension of {@link ValueExpressionParameterValueProvider} to recursively trigger value conversion on the raw
 	 * resolved SpEL value.
 	 *
 	 * @author Oliver Gierke

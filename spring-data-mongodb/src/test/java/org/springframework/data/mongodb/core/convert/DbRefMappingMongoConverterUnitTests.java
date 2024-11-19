@@ -46,7 +46,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -774,7 +774,7 @@ class DbRefMappingMongoConverterUnitTests {
 
 		public LazyDbRefTargetWithPeristenceConstructor() {}
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		LazyDbRefTargetWithPeristenceConstructor(String id, String value) {
 			super(id, value);
 			this.persistenceConstructorCalled = true;
@@ -790,7 +790,7 @@ class DbRefMappingMongoConverterUnitTests {
 
 		boolean persistenceConstructorCalled;
 
-		@PersistenceConstructor
+		@PersistenceCreator
 		LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor(String id, String value) {
 			super(id, value);
 			this.persistenceConstructorCalled = true;
