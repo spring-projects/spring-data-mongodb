@@ -386,6 +386,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-1752
 	Iterable<PersonSummary> findClosedProjectionBy();
 
+    // https://github.com/spring-projects/spring-data-mongodb/issues/4839
+	@Aggregation("{ '$project': { _id : 0, firstName : 1, lastname : 1 } }")
+    Iterable<PersonSummary> findAggregatedClosedProjectionBy();
+
 	@Query(sort = "{ age : -1 }")
 	List<Person> findByAgeGreaterThan(int age);
 
