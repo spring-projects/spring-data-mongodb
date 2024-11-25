@@ -18,6 +18,10 @@ package org.springframework.data.mongodb.repository;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
+import org.junit.jupiter.api.RepeatedTest;
+import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -331,6 +335,18 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(dave.getId()).isNotNull();
 		assertThat(oliver.getId()).isNotNull();
 		assertThat(boyd.getId()).isNotNull();
+	}
+
+	@RepeatedTest(10)
+	void transactionalSaveAllForStuffThatIsConsideredAnUpdateOfExistingData() {
+
+		ReactiveMongoTransactionManager txmgr = new ReactiveMongoTransactionManager(template.getMongoDatabaseFactory());
+		TransactionalOperator.create(txmgr, TransactionDefinition.withDefaults()).execute(callback -> {
+			return repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
+		})
+		.as(StepVerifier::create) //
+			.expectNext(oliver, dave, carter, boyd, stefan, leroi, alicia)
+			.verifyComplete();
 	}
 
 	@Test // GH-3609

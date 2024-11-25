@@ -113,8 +113,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Streamable<S> source = Streamable.of(entities);
 
 		return source.stream().allMatch(entityInformation::isNew) ? //
-			    insert(entities) :
-				Flux.fromIterable(entities).concatMap(this::save);
+				insert(entities) : doItSomewhatSequentially(source, this::save);
 	}
 
 	@Override
@@ -125,6 +124,20 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.from(entityStream).concatMap(entity -> entityInformation.isNew(entity) ? //
 				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
 				mongoOperations.save(entity, entityInformation.getCollectionName()));
+	}
+
+	static <T> Flux<T> doItSomewhatSequentially/* how should we actually call this? */(Streamable<T> ts, Function<? super T, ? extends Publisher<? extends T>> mapper) {
+
+		List<T> list = ts.toList();
+		if (list.size() == 1) {
+			return Flux.just(list.iterator().next()).flatMap(mapper);
+		} else if (list.size() == 2) {
+			return Flux.fromIterable(list).concatMap(mapper);
+		}
+
+		Flux<T> first = Flux.just(list.get(0)).flatMap(mapper);
+		Flux<T> theRest = Flux.fromIterable(list.subList(1, list.size())).flatMapSequential(mapper);
+		return first.concatWith(theRest);
 	}
 
 	@Override
