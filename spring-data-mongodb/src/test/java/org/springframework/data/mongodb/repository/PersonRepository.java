@@ -386,10 +386,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-1752
 	Iterable<PersonSummary> findClosedProjectionBy();
 
-    // https://github.com/spring-projects/spring-data-mongodb/issues/4839
-	@Aggregation("{ '$project': { _id : 0, firstName : 1, lastname : 1 } }")
-    Iterable<PersonSummary> findAggregatedClosedProjectionBy();
-
 	@Query(sort = "{ age : -1 }")
 	List<Person> findByAgeGreaterThan(int age);
 
@@ -437,6 +433,12 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 	AggregationResults<SumAge> sumAgeAndReturnAggregationResultWrapperWithConcreteType();
+
+	@Aggregation({
+		"{ '$match' :  { 'lastname' :  'Matthews'} }",
+		"{ '$project': { _id : 0, firstname : 1, lastname : 1 } }"
+	})
+	Iterable<PersonSummary> findAggregatedClosedInterfaceProjectionBy();
 
 	@Query(value = "{_id:?0}")
 	Optional<org.bson.Document> findDocumentById(String id);

@@ -106,7 +106,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	@Override
 	@Nullable
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
-			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
+			ConvertingParameterAccessor accessor, @Nullable Class<?> typeToRead) {
 
 		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
@@ -121,8 +121,8 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
 		}
 
-		boolean isSimpleReturnType = isSimpleReturnType(typeToRead);
-		boolean isRawAggregationResult = ClassUtils.isAssignable(AggregationResults.class, typeToRead);
+		boolean isSimpleReturnType = typeToRead != null && isSimpleReturnType(typeToRead);
+		boolean isRawAggregationResult = typeToRead != null && ClassUtils.isAssignable(AggregationResults.class, typeToRead);
 
 		if (isSimpleReturnType) {
 			targetType = Document.class;
@@ -130,6 +130,8 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 			// 🙈
 			targetType = method.getReturnType().getRequiredActualType().getRequiredComponentType().getType();
+		} else if (resultProcessor.getReturnedType().isProjecting()) {
+			targetType = resultProcessor.getReturnedType().getReturnedType().isInterface() ? Document.class :resultProcessor.getReturnedType().getReturnedType();
 		}
 
 		AggregationOptions options = computeOptions(method, accessor, pipeline);
@@ -147,7 +149,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		}
 
 		AggregationResults<Object> result = (AggregationResults<Object>) mongoOperations.aggregate(aggregation, targetType);
-		if (ReflectionUtils.isVoid(typeToRead)) {
+		if (typeToRead != null && ReflectionUtils.isVoid(typeToRead)) {
 			return null;
 		}
 
