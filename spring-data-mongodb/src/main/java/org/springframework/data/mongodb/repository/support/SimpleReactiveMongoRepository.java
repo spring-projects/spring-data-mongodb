@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -113,7 +114,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Streamable<S> source = Streamable.of(entities);
 
 		return source.stream().allMatch(entityInformation::isNew) ? //
-				insert(entities) : doItSomewhatSequentially(source, this::save);
+				insert(entities) : new AeonFlux<>(source).combatMap(this::save);
 	}
 
 	@Override
@@ -124,20 +125,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.from(entityStream).concatMap(entity -> entityInformation.isNew(entity) ? //
 				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
 				mongoOperations.save(entity, entityInformation.getCollectionName()));
-	}
-
-	static <T> Flux<T> doItSomewhatSequentially/* how should we actually call this? */(Streamable<T> ts, Function<? super T, ? extends Publisher<? extends T>> mapper) {
-
-		List<T> list = ts.toList();
-		if (list.size() == 1) {
-			return Flux.just(list.iterator().next()).flatMap(mapper);
-		} else if (list.size() == 2) {
-			return Flux.fromIterable(list).concatMap(mapper);
-		}
-
-		Flux<T> first = Flux.just(list.get(0)).flatMap(mapper);
-		Flux<T> theRest = Flux.fromIterable(list.subList(1, list.size())).flatMapSequential(mapper);
-		return first.concatWith(theRest);
 	}
 
 	@Override
@@ -578,5 +565,47 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 					.as(getResultType()).matching(query);
 		}
 
+	}
+
+	static class AeonFlux<T> extends Flux<T> {
+
+		private final Streamable<T> source;
+		private final Flux<T> delegate;
+
+		AeonFlux(Streamable<T> source) {
+			this(source, Flux.fromIterable(source));
+		}
+
+		private AeonFlux(Streamable<T> source, Flux<T> delegate) {
+			this.source = source;
+			this.delegate = delegate;
+		}
+
+		@Override
+		public void subscribe(CoreSubscriber<? super T> actual) {
+			delegate.subscribe(actual);
+		}
+
+		Flux<T> combatMap(Function<? super T, ? extends Publisher<? extends T>> mapper) {
+			return new AeonFlux<>(source, combatMapList(source.toList(), mapper));
+		}
+
+		private static <T> Flux<T> combatMapList(List<T> list,
+				Function<? super T, ? extends Publisher<? extends T>> mapper) {
+
+			if (list.isEmpty()) {
+				return Flux.empty();
+			}
+			if (list.size() == 1) {
+				return Flux.just(list.iterator().next()).flatMap(mapper);
+			}
+			if (list.size() == 2) {
+				return Flux.fromIterable(list).concatMap(mapper);
+			}
+
+			Flux<T> first = Flux.just(list.get(0)).flatMap(mapper);
+			Flux<T> theRest = Flux.fromIterable(list.subList(1, list.size())).flatMapSequential(mapper);
+			return first.concatWith(theRest);
+		}
 	}
 }
