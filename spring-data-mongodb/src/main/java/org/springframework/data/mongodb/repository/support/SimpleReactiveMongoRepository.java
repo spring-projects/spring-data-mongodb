@@ -116,13 +116,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	@Override
-	public <S extends T> Flux<S> saveAll(Publisher<S> entityStream) {
+	public <S extends T> Flux<S> saveAll(Publisher<S> publisher) {
 
-		Assert.notNull(entityStream, "The given Publisher of entities must not be null");
+		Assert.notNull(publisher, "The given Publisher of entities must not be null");
 
-		return Flux.from(entityStream).concatMap(entity -> entityInformation.isNew(entity) ? //
-				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
-				mongoOperations.save(entity, entityInformation.getCollectionName()));
+		return concatMapSequentially(publisher, this::save);
 	}
 
 	@Override
@@ -496,6 +494,20 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Flux<T> first = Flux.just(source.get(0)).flatMap(mapper);
 		Flux<T> theRest = Flux.fromIterable(source.subList(1, source.size())).flatMapSequential(mapper);
 		return first.concatWith(theRest);
+	}
+
+	static <T> Flux<T> concatMapSequentially(Publisher<T> publisher,
+			Function<? super T, ? extends Publisher<? extends T>> mapper) {
+
+		return Flux.from(publisher).switchOnFirst(((signal, source) -> {
+
+			if (!signal.hasValue()) {
+				return source.concatMap(mapper);
+			}
+
+			Mono<T> firstCall = Mono.from(mapper.apply(signal.get()));
+			return firstCall.concatWith(source.skip(1).flatMapSequential(mapper));
+		}));
 	}
 
 	private static <E> List<E> toList(Iterable<E> source) {

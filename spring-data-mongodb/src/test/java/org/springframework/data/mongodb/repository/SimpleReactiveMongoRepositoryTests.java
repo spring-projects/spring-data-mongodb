@@ -18,18 +18,16 @@ package org.springframework.data.mongodb.repository;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
-import org.junit.jupiter.api.RepeatedTest;
-import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.BeansException;
@@ -44,6 +42,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
@@ -52,6 +51,8 @@ import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationCo
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -337,16 +338,26 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(boyd.getId()).isNotNull();
 	}
 
-	@RepeatedTest(10)
+	@RepeatedTest(10) // GH-4838
 	void transactionalSaveAllForStuffThatIsConsideredAnUpdateOfExistingData() {
 
 		ReactiveMongoTransactionManager txmgr = new ReactiveMongoTransactionManager(template.getMongoDatabaseFactory());
 		TransactionalOperator.create(txmgr, TransactionDefinition.withDefaults()).execute(callback -> {
 			return repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
-		})
-		.as(StepVerifier::create) //
-			.expectNext(oliver, dave, carter, boyd, stefan, leroi, alicia)
-			.verifyComplete();
+		}).as(StepVerifier::create) //
+				.expectNext(oliver, dave, carter, boyd, stefan, leroi, alicia).verifyComplete();
+	}
+
+	@RepeatedTest(10) // GH-4838
+	void transactionalSaveAllWithPublisherForStuffThatIsConsideredAnUpdateOfExistingData() {
+
+		ReactiveMongoTransactionManager txmgr = new ReactiveMongoTransactionManager(template.getMongoDatabaseFactory());
+		Flux<ReactivePerson> personFlux = Flux.fromStream(Stream.of(oliver, dave, carter, boyd, stefan, leroi, alicia));
+
+		TransactionalOperator.create(txmgr, TransactionDefinition.withDefaults()).execute(callback -> {
+				return repository.saveAll(personFlux);
+			}).as(StepVerifier::create) //
+				.expectNextCount(7).verifyComplete();
 	}
 
 	@Test // GH-3609
@@ -358,7 +369,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 				.consumeNextWith(actual -> {
 					assertThat(actual.id).isNotNull();
 				}) //
-			.verifyComplete();
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
