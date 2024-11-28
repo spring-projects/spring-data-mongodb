@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
 
@@ -28,11 +29,18 @@ import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ReturnedType;
+import org.springframework.data.util.ReflectionUtils;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -116,19 +124,108 @@ abstract class AggregationUtils {
 	}
 
 	/**
-	 * If present apply the preference from the {@link org.springframework.data.mongodb.repository.ReadPreference} annotation.
+	 * If present apply the preference from the {@link org.springframework.data.mongodb.repository.ReadPreference}
+	 * annotation.
 	 *
 	 * @param builder must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 4.2
 	 */
-	static AggregationOptions.Builder applyReadPreference(AggregationOptions.Builder builder, MongoQueryMethod queryMethod) {
+	static AggregationOptions.Builder applyReadPreference(AggregationOptions.Builder builder,
+			MongoQueryMethod queryMethod) {
 
 		if (!queryMethod.hasAnnotatedReadPreference()) {
 			return builder;
 		}
 
 		return builder.readPreference(ReadPreference.valueOf(queryMethod.getAnnotatedReadPreference()));
+	}
+
+	static AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor,
+			AggregationPipeline pipeline, ValueExpressionEvaluator evaluator) {
+
+		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
+
+		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, evaluator);
+		AggregationUtils.applyMeta(builder, method);
+		AggregationUtils.applyHint(builder, method);
+		AggregationUtils.applyReadPreference(builder, method);
+
+		TypeInformation<?> returnType = method.getReturnType();
+		if (returnType.getComponentType() != null) {
+			returnType = returnType.getRequiredComponentType();
+		}
+		if (ReflectionUtils.isVoid(returnType.getType()) && pipeline.isOutOrMerge()) {
+			builder.skipOutput();
+		}
+
+		return builder.build();
+	}
+
+	/**
+	 * Prepares the AggregationPipeline including type discovery and calling {@link AggregationCallback} to run the
+	 * aggregation.
+	 */
+	@Nullable
+	static <T> T doAggregate(AggregationPipeline pipeline, MongoQueryMethod method, ResultProcessor processor,
+			ConvertingParameterAccessor accessor,
+			Function<MongoParameterAccessor, ValueExpressionEvaluator> evaluatorFunction, AggregationCallback<T> callback) {
+
+		Class<?> sourceType = method.getDomainClass();
+		ReturnedType returnedType = processor.getReturnedType();
+		// 🙈Interface Projections do not happen on the Aggregation level but through our repository infrastructure.
+		// Non-projections and raw results (AggregationResults<…>) are handled here. Interface projections read a Document
+		// and DTO projections read the returned type.
+		// We also support simple return types (String) that are read from a Document
+		TypeInformation<?> returnType = method.getReturnType();
+		Class<?> returnElementType = (returnType.getComponentType() != null ? returnType.getRequiredComponentType()
+				: returnType).getType();
+		Class<?> entityType;
+
+		boolean isRawAggregationResult = ClassUtils.isAssignable(AggregationResults.class, method.getReturnedObjectType());
+
+		if (returnElementType.equals(Document.class)) {
+			entityType = sourceType;
+		} else {
+			entityType = returnElementType;
+		}
+
+		AggregationUtils.appendSortIfPresent(pipeline, accessor, entityType);
+
+		if (method.isSliceQuery()) {
+			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor, LongUnaryOperator.identity(),
+					limit -> limit + 1);
+		} else {
+			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
+		}
+
+		AggregationOptions options = AggregationUtils.computeOptions(method, accessor, pipeline,
+				evaluatorFunction.apply(accessor));
+		TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline.getOperations(), options);
+
+		boolean isSimpleReturnType = MongoSimpleTypes.HOLDER.isSimpleType(returnElementType);
+		Class<?> typeToRead;
+
+		if (isSimpleReturnType) {
+			typeToRead = Document.class;
+		} else if (isRawAggregationResult) {
+			typeToRead = returnElementType;
+		} else {
+
+			if (returnedType.isProjecting()) {
+				typeToRead = returnedType.getReturnedType().isInterface() ? Document.class : returnedType.getReturnedType();
+			} else {
+				typeToRead = entityType;
+			}
+		}
+
+		return callback.doAggregate(aggregation, sourceType, typeToRead, returnElementType, isSimpleReturnType,
+				isRawAggregationResult);
+	}
+
+	static AggregationPipeline computePipeline(AbstractMongoQuery mongoQuery, MongoQueryMethod method,
+			ConvertingParameterAccessor accessor) {
+		return new AggregationPipeline(mongoQuery.parseAggregationPipeline(method.getAnnotatedAggregation(), accessor));
 	}
 
 	/**
@@ -139,7 +236,7 @@ abstract class AggregationUtils {
 	 * @param targetType
 	 */
 	static void appendSortIfPresent(AggregationPipeline aggregationPipeline, ConvertingParameterAccessor accessor,
-			Class<?> targetType) {
+			@Nullable Class<?> targetType) {
 
 		if (accessor.getSort().isUnsorted()) {
 			return;
@@ -253,5 +350,27 @@ abstract class AggregationUtils {
 		}
 
 		return converter.getConversionService().convert(value, targetType);
+	}
+
+	/**
+	 * Interface to invoke an aggregation along with source, intermediate, and target types.
+	 *
+	 * @param <T>
+	 */
+	interface AggregationCallback<T> {
+
+		/**
+		 * @param aggregation
+		 * @param domainType
+		 * @param typeToRead
+		 * @param elementType
+		 * @param simpleType whether the aggregation returns {@link Document} or a
+		 *          {@link org.springframework.data.mapping.model.SimpleTypeHolder simple type}.
+		 * @param rawResult whether the aggregation returns {@link AggregationResults}.
+		 * @return
+		 */
+		@Nullable
+		T doAggregate(TypedAggregation<?> aggregation, Class<?> domainType, Class<?> typeToRead, Class<?> elementType,
+				boolean simpleType, boolean rawResult);
 	}
 }

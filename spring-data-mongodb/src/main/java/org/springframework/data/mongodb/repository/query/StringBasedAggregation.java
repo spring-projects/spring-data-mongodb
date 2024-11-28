@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.LongUnaryOperator;
 import java.util.stream.Stream;
 
 import org.bson.Document;
@@ -26,11 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
@@ -41,7 +36,6 @@ import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ClassUtils;
 
 /**
  * {@link AbstractMongoQuery} implementation to run string-based aggregations using
@@ -103,87 +97,67 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		this.mongoConverter = mongoOperations.getConverter();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
-	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
-			ConvertingParameterAccessor accessor, @Nullable Class<?> typeToRead) {
+	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
+			@Nullable Class<?> ignore) {
 
-		Class<?> sourceType = method.getDomainClass();
-		Class<?> targetType = typeToRead;
+		return AggregationUtils.doAggregate(AggregationUtils.computePipeline(this, method, accessor), method, processor,
+				accessor, this::getExpressionEvaluatorFor,
+				(aggregation, sourceType, typeToRead, elementType, simpleType, rawResult) -> {
 
-		AggregationPipeline pipeline = computePipeline(method, accessor);
-		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
+					if (method.isStreamQuery()) {
 
-		if (method.isSliceQuery()) {
-			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor, LongUnaryOperator.identity(),
-					limit -> limit + 1);
-		} else {
-			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
-		}
+						Stream<?> stream = mongoOperations.aggregateStream(aggregation, typeToRead);
 
-		boolean isSimpleReturnType = typeToRead != null && isSimpleReturnType(typeToRead);
-		boolean isRawAggregationResult = typeToRead != null && ClassUtils.isAssignable(AggregationResults.class, typeToRead);
+						if (!simpleType || elementType.equals(Document.class)) {
+							return stream;
+						}
 
-		if (isSimpleReturnType) {
-			targetType = Document.class;
-		} else if (isRawAggregationResult) {
+						return stream
+								.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, elementType, mongoConverter));
+					}
 
-			// 🙈
-			targetType = method.getReturnType().getRequiredActualType().getRequiredComponentType().getType();
-		} else if (resultProcessor.getReturnedType().isProjecting()) {
-			targetType = resultProcessor.getReturnedType().getReturnedType().isInterface() ? Document.class :resultProcessor.getReturnedType().getReturnedType();
-		}
+					AggregationResults<Object> result = (AggregationResults<Object>) mongoOperations.aggregate(aggregation,
+							typeToRead);
 
-		AggregationOptions options = computeOptions(method, accessor, pipeline);
-		TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline.getOperations(), options);
+					if (ReflectionUtils.isVoid(elementType)) {
+						return null;
+					}
 
-		if (method.isStreamQuery()) {
+					if (rawResult) {
+						return result;
+					}
 
-			Stream<?> stream = mongoOperations.aggregateStream(aggregation, targetType);
+					List<?> results = result.getMappedResults();
+					if (method.isCollectionQuery()) {
+						return simpleType ? convertResults(elementType, (List<Document>) results) : results;
+					}
 
-			if (isSimpleReturnType) {
-				return stream.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));
-			}
+					if (method.isSliceQuery()) {
 
-			return stream;
-		}
+						Pageable pageable = accessor.getPageable();
+						int pageSize = pageable.getPageSize();
+						List<Object> resultsToUse = simpleType ? convertResults(elementType, (List<Document>) results)
+								: (List<Object>) results;
+						boolean hasNext = resultsToUse.size() > pageSize;
+						return new SliceImpl<>(hasNext ? resultsToUse.subList(0, pageSize) : resultsToUse, pageable, hasNext);
+					}
 
-		AggregationResults<Object> result = (AggregationResults<Object>) mongoOperations.aggregate(aggregation, targetType);
-		if (typeToRead != null && ReflectionUtils.isVoid(typeToRead)) {
-			return null;
-		}
+					Object uniqueResult = result.getUniqueMappedResult();
 
-		if (isRawAggregationResult) {
-			return result;
-		}
-
-		List<Object> results = result.getMappedResults();
-		if (method.isCollectionQuery()) {
-			return isSimpleReturnType ? convertResults(typeToRead, results) : results;
-		}
-
-		if (method.isSliceQuery()) {
-
-			Pageable pageable = accessor.getPageable();
-			int pageSize = pageable.getPageSize();
-			List<Object> resultsToUse = isSimpleReturnType ? convertResults(typeToRead, results) : results;
-			boolean hasNext = resultsToUse.size() > pageSize;
-			return new SliceImpl<>(hasNext ? resultsToUse.subList(0, pageSize) : resultsToUse, pageable, hasNext);
-		}
-
-		Object uniqueResult = result.getUniqueMappedResult();
-
-		return isSimpleReturnType
-				? AggregationUtils.extractSimpleTypeResult((Document) uniqueResult, typeToRead, mongoConverter)
-				: uniqueResult;
+					return simpleType
+							? AggregationUtils.extractSimpleTypeResult((Document) uniqueResult, elementType, mongoConverter)
+							: uniqueResult;
+				});
 	}
 
-	private List<Object> convertResults(Class<?> typeToRead, List<Object> mappedResults) {
+	private List<Object> convertResults(Class<?> targetType, List<Document> mappedResults) {
 
 		List<Object> list = new ArrayList<>(mappedResults.size());
-		for (Object it : mappedResults) {
-			Object extractSimpleTypeResult = AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead,
-					mongoConverter);
+		for (Document it : mappedResults) {
+			Object extractSimpleTypeResult = AggregationUtils.extractSimpleTypeResult(it, targetType, mongoConverter);
 			list.add(extractSimpleTypeResult);
 		}
 		return list;
@@ -191,28 +165,6 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 	private boolean isSimpleReturnType(Class<?> targetType) {
 		return MongoSimpleTypes.HOLDER.isSimpleType(targetType);
-	}
-
-	AggregationPipeline computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
-		return new AggregationPipeline(parseAggregationPipeline(method.getAnnotatedAggregation(), accessor));
-	}
-
-	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor,
-			AggregationPipeline pipeline) {
-
-		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
-
-		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor,
-				getExpressionEvaluatorFor(accessor));
-		AggregationUtils.applyMeta(builder, method);
-		AggregationUtils.applyHint(builder, method);
-		AggregationUtils.applyReadPreference(builder, method);
-
-		if (ReflectionUtils.isVoid(method.getReturnType().getType()) && pipeline.isOutOrMerge()) {
-			builder.skipOutput();
-		}
-
-		return builder.build();
 	}
 
 	@Override

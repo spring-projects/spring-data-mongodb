@@ -32,4 +32,5 @@ public interface ReactivePersonRepository extends ReactiveMongoRepository<Person
 	 * @return
 	 */
 	Flux<Person> findByLastname(String lastname);
+
 }
