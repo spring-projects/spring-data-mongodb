@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
@@ -47,7 +47,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.query.FluentQuery;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -264,8 +263,15 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(ids, "The given Iterable of Id's must not be null");
 
+		return deleteAllById(ids, getReadPreference());
+	}
+
+	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+	private Mono<Void> deleteAllById(Iterable<? extends ID> ids, Optional<ReadPreference> readPreference) {
+
 		Query query = getIdQuery(ids);
-		getReadPreference().ifPresent(query::withReadPreference);
+		readPreference.ifPresent(query::withReadPreference);
+
 		return mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
 	}
 
@@ -274,10 +280,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
-		Collection<? extends ID> ids = StreamUtils.createStreamFromIterator(entities.iterator())
-				.map(entityInformation::getId).collect(Collectors.toList());
-
-		return deleteAllById(ids);
+		Optional<ReadPreference> readPreference = getReadPreference();
+		return Flux.fromIterable(entities).map(entityInformation::getRequiredId).collectList()
+				.flatMap(ids -> deleteAllById(ids, readPreference));
 	}
 
 	@Override
@@ -464,10 +469,10 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	/**
 	 * Transform the elements emitted by this Flux into Publishers, then flatten these inner publishers into a single
-	 * Flux. The operation does not allow interleave between performing the map operation for the first and second source
-	 * element guaranteeing the mapping operation completed before subscribing to its following inners, that will then be
-	 * subscribed to eagerly emitting elements in order of their source.
-	 * 
+	 * Flux. The operation does not allow interleaving between performing the map operation for the first and second
+	 * source element guaranteeing the mapping operation completed before subscribing to its following inners, that will
+	 * then be subscribed to eagerly emitting elements in order of their source.
+	 *
 	 * <pre class="code">
 	 * Flux.just(first-element).flatMap(...)
 	 *     .concatWith(Flux.fromIterable(remaining-elements).flatMapSequential(...))
@@ -481,25 +486,23 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	static <T> Flux<T> concatMapSequentially(List<T> source,
 			Function<? super T, ? extends Publisher<? extends T>> mapper) {
 
-		if (source.isEmpty()) {
-			return Flux.empty();
-		}
-		if (source.size() == 1) {
-			return Flux.just(source.iterator().next()).flatMap(mapper);
-		}
-		if (source.size() == 2) {
-			return Flux.fromIterable(source).concatMap(mapper);
-		}
+		return switch (source.size()) {
+			case 0 -> Flux.empty();
+			case 1 -> Flux.just(source.get(0)).flatMap(mapper);
+			case 2 -> Flux.fromIterable(source).concatMap(mapper);
+			default -> {
 
-		Flux<T> first = Flux.just(source.get(0)).flatMap(mapper);
-		Flux<T> theRest = Flux.fromIterable(source.subList(1, source.size())).flatMapSequential(mapper);
-		return first.concatWith(theRest);
+				Flux<T> first = Flux.just(source.get(0)).flatMap(mapper);
+				Flux<T> theRest = Flux.fromIterable(source.subList(1, source.size())).flatMapSequential(mapper);
+				yield first.concatWith(theRest);
+			}
+		};
 	}
 
 	static <T> Flux<T> concatMapSequentially(Publisher<T> publisher,
 			Function<? super T, ? extends Publisher<? extends T>> mapper) {
 
-		return Flux.from(publisher).switchOnFirst(((signal, source) -> {
+		return Flux.from(publisher).switchOnFirst((signal, source) -> {
 
 			if (!signal.hasValue()) {
 				return source.concatMap(mapper);
@@ -507,16 +510,30 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 			Mono<T> firstCall = Mono.from(mapper.apply(signal.get()));
 			return firstCall.concatWith(source.skip(1).flatMapSequential(mapper));
-		}));
+		});
 	}
 
 	private static <E> List<E> toList(Iterable<E> source) {
-		return source instanceof List<E> list ? list : new ArrayList<>(toCollection(source));
+
+		Collection<E> collection = toCollection(source);
+
+		if (collection instanceof List<E> list) {
+			return list;
+		}
+
+		return new ArrayList<>(collection);
 	}
 
 	private static <E> Collection<E> toCollection(Iterable<E> source) {
-		return source instanceof Collection<E> collection ? collection
-				: StreamUtils.createStreamFromIterator(source.iterator()).collect(Collectors.toList());
+
+		if (source instanceof Collection<E> collection) {
+			return collection;
+		}
+
+		List<E> list = new ArrayList<>();
+		source.forEach(list::add);
+
+		return list;
 	}
 
 	/**

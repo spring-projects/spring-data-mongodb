@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
@@ -339,6 +340,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@RepeatedTest(10) // GH-4838
+	@EnableIfReplicaSetAvailable
 	void transactionalSaveAllForStuffThatIsConsideredAnUpdateOfExistingData() {
 
 		ReactiveMongoTransactionManager txmgr = new ReactiveMongoTransactionManager(template.getMongoDatabaseFactory());
@@ -349,6 +351,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@RepeatedTest(10) // GH-4838
+	@EnableIfReplicaSetAvailable
 	void transactionalSaveAllWithPublisherForStuffThatIsConsideredAnUpdateOfExistingData() {
 
 		ReactiveMongoTransactionManager txmgr = new ReactiveMongoTransactionManager(template.getMongoDatabaseFactory());
