@@ -467,7 +467,7 @@ public class ReactiveTransactionIntegrationTests {
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
 					new DefaultTransactionDefinition());
 
-			return Flux.merge(operations.save(new EventLog(new ObjectId(), "beforeConvert")), //
+			return Flux.concat(operations.save(new EventLog(new ObjectId(), "beforeConvert")), //
 					operations.save(new EventLog(new ObjectId(), "afterConvert")), //
 					operations.save(new EventLog(new ObjectId(), "beforeInsert")), //
 					operations.save(person), //
