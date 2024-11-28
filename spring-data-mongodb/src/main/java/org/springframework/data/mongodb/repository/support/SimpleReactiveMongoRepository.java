@@ -276,14 +276,10 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null");
 
-		Collection<?> idCollection = StreamUtils.createStreamFromIterator(entities.iterator()).map(entityInformation::getId)
-				.collect(Collectors.toList());
+		Collection<? extends ID> ids = StreamUtils.createStreamFromIterator(entities.iterator())
+				.map(entityInformation::getId).collect(Collectors.toList());
 
-		Criteria idsInCriteria = where(entityInformation.getIdAttribute()).in(idCollection);
-
-		Query query = new Query(idsInCriteria);
-		getReadPreference().ifPresent(query::withReadPreference);
-		return mongoOperations.remove(query, entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
+		return deleteAllById(ids);
 	}
 
 	@Override
