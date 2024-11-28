@@ -1396,6 +1396,18 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		}
 	}
 
+	@Test // DATAMONGO-4841
+	void annotatedAggregationStreamWithPlaceholderValue() {
+
+		assertThat(repository.groupStreamByLastnameAnd("firstname"))
+				.contains(new PersonAggregate("Lessard", Collections.singletonList("Stefan"))) //
+				.contains(new PersonAggregate("Keys", Collections.singletonList("Alicia"))) //
+				.contains(new PersonAggregate("Tinsley", Collections.singletonList("Boyd"))) //
+				.contains(new PersonAggregate("Beauford", Collections.singletonList("Carter"))) //
+				.contains(new PersonAggregate("Moore", Collections.singletonList("Leroi"))) //
+				.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+	}
+
 	@Test // DATAMONGO-2153
 	void annotatedAggregationWithPlaceholderValue() {
 

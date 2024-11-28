@@ -27,10 +27,10 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -412,6 +412,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Aggregation("{ '$project': { '_id' : '$lastname' } }")
 	Stream<String> findAllLastnamesAsStream();
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	Stream<PersonAggregate> groupStreamByLastnameAnd(String property);
 
 	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
 	List<PersonAggregate> groupByLastnameAnd(String property);
