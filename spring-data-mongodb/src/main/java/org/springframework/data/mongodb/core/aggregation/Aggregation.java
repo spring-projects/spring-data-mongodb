@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -785,4 +786,18 @@ public class Aggregation {
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument("__collection__", DEFAULT_CONTEXT));
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof Aggregation)) {
+			return false;
+		}
+		Aggregation that = (Aggregation) o;
+		return Objects.equals(pipeline, that.pipeline) && Objects.equals(options, that.options);
+	}
 }
+
+
