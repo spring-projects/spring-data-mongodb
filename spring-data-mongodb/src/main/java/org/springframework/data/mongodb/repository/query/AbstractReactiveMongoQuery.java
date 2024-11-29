@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +62,6 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.spel.ExpressionDependencies;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -70,7 +70,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoClientSettings;
-import reactor.util.function.Tuple2;
 
 /**
  * Base class for reactive {@link RepositoryQuery} implementations for MongoDB.
@@ -112,16 +111,20 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		this.method = method;
 		this.operations = operations;
 		this.instantiators = new EntityInstantiators();
-		this.valueExpressionDelegate = new ValueExpressionDelegate(new QueryMethodValueEvaluationContextAccessor(new StandardEnvironment(), evaluationContextProvider.getEvaluationContextProvider()), ValueExpressionParser.create(() -> expressionParser));
+		this.valueExpressionDelegate = new ValueExpressionDelegate(
+				new QueryMethodValueEvaluationContextAccessor(new StandardEnvironment(),
+						evaluationContextProvider.getEvaluationContextProvider()),
+				ValueExpressionParser.create(() -> expressionParser));
 
 		MongoEntityMetadata<?> metadata = method.getEntityInformation();
 		Class<?> type = metadata.getCollectionEntity().getType();
 
 		this.findOperationWithProjection = operations.query(type);
 		this.updateOps = operations.update(type);
-		ValueEvaluationContextProvider valueContextProvider = valueExpressionDelegate.createValueContextProvider(
-				method.getParameters());
-		Assert.isInstanceOf(ReactiveValueEvaluationContextProvider.class, valueContextProvider, "ValueEvaluationContextProvider must be reactive");
+		ValueEvaluationContextProvider valueContextProvider = valueExpressionDelegate
+				.createValueContextProvider(method.getParameters());
+		Assert.isInstanceOf(ReactiveValueEvaluationContextProvider.class, valueContextProvider,
+				"ValueEvaluationContextProvider must be reactive");
 		this.valueEvaluationContextProvider = (ReactiveValueEvaluationContextProvider) valueContextProvider;
 	}
 
@@ -151,9 +154,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		this.findOperationWithProjection = operations.query(type);
 		this.updateOps = operations.update(type);
-		ValueEvaluationContextProvider valueContextProvider = valueExpressionDelegate.createValueContextProvider(
-				method.getParameters());
-		Assert.isInstanceOf(ReactiveValueEvaluationContextProvider.class, valueContextProvider, "ValueEvaluationContextProvider must be reactive");
+		ValueEvaluationContextProvider valueContextProvider = valueExpressionDelegate
+				.createValueContextProvider(method.getParameters());
+		Assert.isInstanceOf(ReactiveValueEvaluationContextProvider.class, valueContextProvider,
+				"ValueEvaluationContextProvider must be reactive");
 		this.valueEvaluationContextProvider = (ReactiveValueEvaluationContextProvider) valueContextProvider;
 	}
 
@@ -182,13 +186,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				parameterAccessor);
 
-		TypeInformation<?> returnType = method.getReturnType();
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
-
-		if (typeToRead == null && returnType.getComponentType() != null) {
-			typeToRead = returnType.getComponentType().getType();
-		}
 
 		return doExecute(method, processor, accessor, typeToRead);
 	}
@@ -221,9 +220,13 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			String collection = method.getEntityInformation().getCollectionName();
 
 			ReactiveMongoQueryExecution execution = getExecution(accessor,
-					new ResultProcessingConverter(processor, operations, instantiators), find);
+					getResultProcessing(processor), find);
 			return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
 		});
+	}
+
+	ResultProcessingConverter getResultProcessing(ResultProcessor processor) {
+		return new ResultProcessingConverter(processor, operations, instantiators);
 	}
 
 	/**
@@ -439,8 +442,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return getValueExpressionEvaluatorLater(dependencies, accessor).zipWith(Mono.just(codec));
 	}
 
-	private Document decode(Tuple2<ValueExpressionEvaluator, ParameterBindingDocumentCodec> expressionEvaluator, String source, MongoParameterAccessor accessor,
-			ParameterBindingDocumentCodec codec) {
+	private Document decode(Tuple2<ValueExpressionEvaluator, ParameterBindingDocumentCodec> expressionEvaluator,
+			String source, MongoParameterAccessor accessor, ParameterBindingDocumentCodec codec) {
 
 		ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue,
 				expressionEvaluator.getT1());
@@ -490,8 +493,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 			@Override
 			public <T> T evaluate(String expressionString) {
 				ValueExpression expression = valueExpressionDelegate.parse(expressionString);
-				ValueEvaluationContext evaluationContext = valueEvaluationContextProvider.getEvaluationContext(accessor.getValues(),
-						expression.getExpressionDependencies());
+				ValueEvaluationContext evaluationContext = valueEvaluationContextProvider
+						.getEvaluationContext(accessor.getValues(), expression.getExpressionDependencies());
 				return (T) expression.evaluate(evaluationContext);
 			}
 		};
@@ -509,8 +512,9 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	protected Mono<ValueExpressionEvaluator> getValueExpressionEvaluatorLater(ExpressionDependencies dependencies,
 			MongoParameterAccessor accessor) {
 
-			return valueEvaluationContextProvider.getEvaluationContextLater(accessor.getValues(), dependencies)
-					.map(evaluationContext -> new ValueExpressionDelegateValueExpressionEvaluator(valueExpressionDelegate, valueExpression -> evaluationContext));
+		return valueEvaluationContextProvider.getEvaluationContextLater(accessor.getValues(), dependencies)
+				.map(evaluationContext -> new ValueExpressionDelegateValueExpressionEvaluator(valueExpressionDelegate,
+						valueExpression -> evaluationContext));
 	}
 
 	/**

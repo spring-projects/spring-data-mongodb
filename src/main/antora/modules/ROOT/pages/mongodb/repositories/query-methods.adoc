@@ -571,23 +571,29 @@ public interface PersonRepository extends CrudRepository<Person, String> {
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
   Stream<PersonAggregate> groupByLastnameAndFirstnamesAsStream();                  <5>
 
-  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
-  SumValue sumAgeUsingValueWrapper();                                              <6>
+  @Aggregation(pipeline = {
+      "{ '$match' :  { 'lastname' :  '?0'} }",
+      "{ '$project': { _id : 0, firstname : 1, lastname : 1 } }"
+  })
+  Stream<PersonAggregate> groupByLastnameAndFirstnamesAsStream();                  <6>
 
   @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
-  Long sumAge();                                                                   <7>
+  SumValue sumAgeUsingValueWrapper();                                              <7>
 
   @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
-  AggregationResults<SumValue> sumAgeRaw();                                        <8>
+  Long sumAge();                                                                   <8>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  AggregationResults<SumValue> sumAgeRaw();                                        <9>
 
   @Aggregation("{ '$project': { '_id' : '$lastname' } }")
-  List<String> findAllLastnames();                                                 <9>
+  List<String> findAllLastnames();                                                 <10>
 
   @Aggregation(pipeline = {
 		  "{ $group : { _id : '$author', books: { $push: '$title' } } }",
 		  "{ $out : 'authors' }"
   })
-  void groupAndOutSkippingOutput();                                                <10>
+  void groupAndOutSkippingOutput();                                                <11>
 }
 ----
 [source,java]
@@ -614,19 +620,25 @@ public class SumValue {
 
   // Getter omitted
 }
+
+interface PersonProjection {
+    String getFirstname();
+    String getLastname();
+}
 ----
 <1> Aggregation pipeline to group first names by `lastname` in the `Person` collection returning these as `PersonAggregate`.
 <2> If `Sort` argument is present, `$sort` is appended after the declared pipeline stages so that it only affects the order of the final results after having passed all other aggregation stages.
 Therefore, the `Sort` properties are mapped against the methods return type `PersonAggregate` which turns `Sort.by("lastname")` into `{ $sort : { '_id', 1 } }` because `PersonAggregate.lastname` is annotated with `@Id`.
 <3> Replaces `?0` with the given value for `property` for a dynamic aggregation pipeline.
 <4> `$skip`, `$limit` and `$sort` can be passed on via a `Pageable` argument. Same as in <2>, the operators are appended to the pipeline definition. Methods accepting `Pageable` can return `Slice` for easier pagination.
-<5> Aggregation methods can return `Stream` to consume results directly from an underlying cursor. Make sure to close the stream after consuming it to release the server-side cursor by either calling `close()` or through `try-with-resources`.
-<6> Map the result of an aggregation returning a single `Document` to an instance of a desired `SumValue` target type.
-<7> Aggregations resulting in single document holding just an accumulation result like e.g. `$sum` can be extracted directly from the result `Document`.
+<5> Aggregation methods can return interface based projections wrapping the resulting `org.bson.Document` behind a proxy, exposing getters delegating to fields within the document.
+<6> Aggregation methods can return `Stream` to consume results directly from an underlying cursor. Make sure to close the stream after consuming it to release the server-side cursor by either calling `close()` or through `try-with-resources`.
+<7> Map the result of an aggregation returning a single `Document` to an instance of a desired `SumValue` target type.
+<8> Aggregations resulting in single document holding just an accumulation result like e.g. `$sum` can be extracted directly from the result `Document`.
 To gain more control, you might consider `AggregationResult` as method return type as shown in <7>.
-<8> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
-<9> Like in <6>, a single value can be directly obtained from multiple result ``Document``s.
-<10> Skips the output of the `$out` stage when return type is `void`.
+<9> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
+<10> Like in <6>, a single value can be directly obtained from multiple result ``Document``s.
+<11> Skips the output of the `$out` stage when return type is `void`.
 ====
 
 In some scenarios, aggregations might require additional options, such as a maximum run time, additional log comments, or the permission to temporarily write data to disk.

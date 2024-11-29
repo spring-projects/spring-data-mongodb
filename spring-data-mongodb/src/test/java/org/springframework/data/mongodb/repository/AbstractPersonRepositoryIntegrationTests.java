@@ -1396,6 +1396,18 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		}
 	}
 
+	@Test // DATAMONGO-4841
+	void annotatedAggregationStreamWithPlaceholderValue() {
+
+		assertThat(repository.groupStreamByLastnameAnd("firstname"))
+				.contains(new PersonAggregate("Lessard", Collections.singletonList("Stefan"))) //
+				.contains(new PersonAggregate("Keys", Collections.singletonList("Alicia"))) //
+				.contains(new PersonAggregate("Tinsley", Collections.singletonList("Boyd"))) //
+				.contains(new PersonAggregate("Beauford", Collections.singletonList("Carter"))) //
+				.contains(new PersonAggregate("Moore", Collections.singletonList("Leroi"))) //
+				.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+	}
+
 	@Test // DATAMONGO-2153
 	void annotatedAggregationWithPlaceholderValue() {
 
@@ -1457,6 +1469,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(repository.sumAgeAndReturnAggregationResultWrapperWithConcreteType()) //
 				.isInstanceOf(AggregationResults.class) //
 				.containsExactly(new SumAge(245L));
+	}
+
+	@Test // GH-4839
+	void annotatedAggregationWithAggregationResultAsClosedInterfaceProjection() {
+
+		assertThat(repository.findAggregatedClosedInterfaceProjectionBy()).allSatisfy(it -> {
+			assertThat(it.getFirstname()).isIn(dave.getFirstname(), oliver.getFirstname());
+			assertThat(it.getLastname()).isEqualTo(dave.getLastname());
+		});
 	}
 
 	@Test // DATAMONGO-2374

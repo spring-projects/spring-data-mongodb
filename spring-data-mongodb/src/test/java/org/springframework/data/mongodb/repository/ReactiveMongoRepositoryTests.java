@@ -600,6 +600,17 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 				}).verifyComplete();
 	}
 
+	@Test // GH-4839
+	void annotatedAggregationWithAggregationResultAsClosedInterfaceProjection() {
+
+		repository.findAggregatedClosedInterfaceProjectionBy() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.getFirstname()).isIn(dave.getFirstname(), oliver.getFirstname());
+					assertThat(it.getLastname()).isEqualTo(dave.getLastname());
+				}).expectNextCount(1).verifyComplete();
+	}
+
 	@Test // DATAMONGO-2403
 	@DirtiesState
 	void annotatedAggregationExtractingSimpleValueIsEmptyForEmptyDocument() {
@@ -815,6 +826,10 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 
 		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 		Mono<Map> sumAgeAndReturnSumAsMap();
+
+		@Aggregation({ "{ '$match' :  { 'lastname' :  'Matthews'} }",
+				"{ '$project': { _id : 0, firstname : 1, lastname : 1 } }" })
+		Flux<PersonSummary> findAggregatedClosedInterfaceProjectionBy();
 
 		@Aggregation(
 				pipeline = { "{ '$match' : { 'firstname' : '?0' } }", "{ '$project' : { '_id' : 0, 'lastname' : 1 } }" })
