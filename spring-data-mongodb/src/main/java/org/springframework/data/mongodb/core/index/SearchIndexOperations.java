@@ -20,11 +20,11 @@ import java.util.List;
 /**
  * @author Christoph Strobl
  */
-public interface VectorIndexOperations {
+public interface SearchIndexOperations {
 
-	String ensureIndex(IndexDefinition indexDefinition);
+	String ensureIndex(SearchIndexDefinition indexDefinition);
 
-	void updateIndex(VectorIndex index);
+	void updateIndex(SearchIndex index);
 
 	boolean exists(String indexName);
 

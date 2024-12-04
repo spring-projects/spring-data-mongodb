@@ -85,10 +85,13 @@ import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.index.DefaultSearchIndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mongodb.core.index.SearchIndexOperations;
+import org.springframework.data.mongodb.core.index.SearchIndexOperationsProvider;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -183,7 +186,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Jakub Zurawa
  */
 public class MongoTemplate
-		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, ReadPreferenceAware {
+		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, SearchIndexOperationsProvider, ReadPreferenceAware {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
@@ -3008,6 +3011,21 @@ public class MongoTemplate
 			PersistenceExceptionTranslator exceptionTranslator) {
 		RuntimeException resolved = exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
+	}
+
+	@Override
+	public SearchIndexOperations searchIndexOps(String collectionName) {
+		return searchIndexOps(null, collectionName);
+	}
+
+	@Override
+	public SearchIndexOperations searchIndexOps(Class<?> type) {
+		return new DefaultSearchIndexOperations(this, type);
+	}
+
+	@Override
+	public SearchIndexOperations searchIndexOps(Class<?> type, String collectionName) {
+		return new DefaultSearchIndexOperations(this, collectionName, type);
 	}
 
 	// Callback implementations

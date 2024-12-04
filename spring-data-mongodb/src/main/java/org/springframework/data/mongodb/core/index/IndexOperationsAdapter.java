@@ -41,11 +41,6 @@ public interface IndexOperationsAdapter extends IndexOperations {
 		return new IndexOperationsAdapter() {
 
 			@Override
-			public VectorIndexOperations vectorIndex() {
-				throw new IllegalStateException("currently not supported");
-			}
-
-			@Override
 			public String ensureIndex(IndexDefinition indexDefinition) {
 				return reactiveIndexOperations.ensureIndex(indexDefinition).block();
 			}
