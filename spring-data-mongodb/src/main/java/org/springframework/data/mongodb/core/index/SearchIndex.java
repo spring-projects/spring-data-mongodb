@@ -44,57 +44,58 @@ import org.bson.Document;
  *
  * @author Christoph Strobl
  */
-public class VectorIndex implements IndexDefinition {
+public class SearchIndex implements SearchIndexDefinition {
 
     private final String name;
     private String path;
     private int dimensions;
     private String similarity;
     private List<Filter> filters;
+    private String quantization = Quantization.NONE.name();
 
     /**
-     * Create a new {@link VectorIndex} instance.
+     * Create a new {@link SearchIndex} instance.
      *
      * @param name The name of the index.
      */
-    public VectorIndex(String name) {
+    public SearchIndex(String name) {
         this.name = name;
     }
 
     /**
-     * Create a new {@link VectorIndex} instance using similarity based on the angle between vectors.
+     * Create a new {@link SearchIndex} instance using similarity based on the angle between vectors.
      *
      * @param name The name of the index.
-     * @return new instance of {@link VectorIndex}.
+     * @return new instance of {@link SearchIndex}.
      */
-    public static VectorIndex cosine(String name) {
+    public static SearchIndex cosine(String name) {
 
-        VectorIndex idx = new VectorIndex(name);
+        SearchIndex idx = new SearchIndex(name);
         return idx.similarity(SimilarityFunction.COSINE);
     }
 
     /**
-     * Create a new {@link VectorIndex} instance using similarity based the distance between vector ends.
+     * Create a new {@link SearchIndex} instance using similarity based the distance between vector ends.
      *
      * @param name The name of the index.
-     * @return new instance of {@link VectorIndex}.
+     * @return new instance of {@link SearchIndex}.
      */
-    public static VectorIndex euclidean(String name) {
+    public static SearchIndex euclidean(String name) {
 
-        VectorIndex idx = new VectorIndex(name);
+        SearchIndex idx = new SearchIndex(name);
         return idx.similarity(SimilarityFunction.EUCLIDEAN);
     }
 
     /**
-     * Create a new {@link VectorIndex} instance using similarity based on based on both angle and magnitude of the
+     * Create a new {@link SearchIndex} instance using similarity based on based on both angle and magnitude of the
      * vectors.
      *
      * @param name The name of the index.
-     * @return new instance of {@link VectorIndex}.
+     * @return new instance of {@link SearchIndex}.
      */
-    public static VectorIndex dotProduct(String name) {
+    public static SearchIndex dotProduct(String name) {
 
-        VectorIndex idx = new VectorIndex(name);
+        SearchIndex idx = new SearchIndex(name);
         return idx.similarity(SimilarityFunction.DOT_PRODUCT);
     }
 
@@ -104,7 +105,7 @@ public class VectorIndex implements IndexDefinition {
      * @param path The path using dot notation.
      * @return this.
      */
-    public VectorIndex path(String path) {
+    public SearchIndex path(String path) {
 
         this.path = path;
         return this;
@@ -116,7 +117,7 @@ public class VectorIndex implements IndexDefinition {
      * @param dimensions value between {@code 0} and {@code 4096}.
      * @return this.
      */
-    public VectorIndex dimensions(int dimensions) {
+    public SearchIndex dimensions(int dimensions) {
         this.dimensions = dimensions;
         return this;
     }
@@ -129,7 +130,7 @@ public class VectorIndex implements IndexDefinition {
      * @see SimilarityFunction
      * @see #similarity(SimilarityFunction)
      */
-    public VectorIndex similarity(String similarity) {
+    public SearchIndex similarity(String similarity) {
         this.similarity = similarity;
         return this;
     }
@@ -140,8 +141,32 @@ public class VectorIndex implements IndexDefinition {
      * @param similarity must not be {@literal null}.
      * @return this.
      */
-    public VectorIndex similarity(SimilarityFunction similarity) {
+    public SearchIndex similarity(SimilarityFunction similarity) {
         return similarity(similarity.getFunctionName());
+    }
+
+
+    /**
+     * Quantization used.
+     *
+     * @param quantization should be one of {@literal none | scalar | binary}.
+     * @return this.
+     * @see Quantization
+     * @see #quantization(Quantization)
+     */
+    public SearchIndex quantization(String quantization) {
+        this.quantization = quantization;
+        return this;
+    }
+
+    /**
+     * Quntization used.
+     *
+     * @param quantization must not be {@literal null}.
+     * @return this.
+     */
+    public SearchIndex quantization(Quantization quantization) {
+        return similarity(quantization.getQuantizationName());
     }
 
     /**
@@ -150,7 +175,7 @@ public class VectorIndex implements IndexDefinition {
      * @param filter must not be {@literal null}.
      * @return this.
      */
-    public VectorIndex filter(Filter filter) {
+    public SearchIndex filter(Filter filter) {
 
         if (this.filters == null) {
             this.filters = new ArrayList<>(3);
@@ -167,19 +192,8 @@ public class VectorIndex implements IndexDefinition {
      * @return this.
      * @see #filter(Filter)
      */
-    public VectorIndex filter(String path) {
+    public SearchIndex filter(String path) {
         return filter(new Filter(path));
-    }
-
-    @Override
-    public Document getIndexKeys() {
-
-        // List<Document> fields = new ArrayList<>(filters.size()+1);
-        // fields.
-
-        // needs to be wrapped in new Document("definition", before sending to server
-        // return new Document("fields", fields);
-        return new Document();
     }
 
     @Override
@@ -222,6 +236,20 @@ public class VectorIndex implements IndexDefinition {
 
         public String getFunctionName() {
             return functionName;
+        }
+    }
+
+    public enum Quantization {
+        NONE("none"), SCALAR("scalar"), BINARY("binary");
+
+        String quantizationName;
+
+        Quantization(String quantizationName) {
+            this.quantizationName = quantizationName;
+        }
+
+        public String getQuantizationName() {
+            return quantizationName;
         }
     }
 }
