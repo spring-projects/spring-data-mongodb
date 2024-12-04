@@ -43,10 +43,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.DefaultVectorIndexOperations;
-import org.springframework.data.mongodb.core.index.VectorIndex;
-import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
-import org.springframework.data.mongodb.core.index.VectorIndexOperations;
+import org.springframework.data.mongodb.core.index.DefaultSearchIndexOperations;
+import org.springframework.data.mongodb.core.index.SearchIndex;
+import org.springframework.data.mongodb.core.index.SearchIndex.SimilarityFunction;
+import org.springframework.data.mongodb.core.index.SearchIndexOperations;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -59,7 +59,7 @@ import com.mongodb.client.AggregateIterable;
  * @author Christoph Strobl
  */
 @EnableIfVectorSearchAvailable
-class DefaultVectorIndexOperationsTests {
+class DefaultSearchIndexOperationsTests {
 
 	MongoTestTemplate template = new MongoTestTemplate(cfg -> {
 		cfg.configureMappingContext(ctx -> {
@@ -67,7 +67,7 @@ class DefaultVectorIndexOperationsTests {
 		});
 	});
 
-	VectorIndexOperations indexOps;
+	SearchIndexOperations indexOps;
 
 	@BeforeEach
 	void init() throws InterruptedException {
@@ -276,13 +276,13 @@ class DefaultVectorIndexOperationsTests {
 
 		Thread.sleep(5000);
 
-		indexOps = new DefaultVectorIndexOperations(template, Movie.class);
+		indexOps = new DefaultSearchIndexOperations(template, Movie.class);
 	}
 
 	@AfterEach
 	void cleanup() {
 
-		template.indexOps(Movie.class).vectorIndex().dropIndex("vector_index");
+		template.searchIndexOps(Movie.class).dropIndex("vector_index");
 		template.dropCollection(Movie.class);
 	}
 
@@ -290,7 +290,7 @@ class DefaultVectorIndexOperationsTests {
 	@ValueSource(strings = { "euclidean", "cosine", "dotProduct" })
 	void createsSimpleVectorIndex(String similarityFunction) throws InterruptedException {
 
-		VectorIndex idx = new VectorIndex("vector_index").dimensions(1536).path("plotEmbedding")
+		SearchIndex idx = new SearchIndex("vector_index").dimensions(1536).path("plotEmbedding")
 				.similarity(similarityFunction);
 
 		indexOps.ensureIndex(idx);
@@ -313,7 +313,7 @@ class DefaultVectorIndexOperationsTests {
 			""")
 	void updatesVectorIndex() throws InterruptedException {
 
-		VectorIndex idx = new VectorIndex("vector_index").dimensions(1536).path("plotEmbedding").similarity("cosine");
+		SearchIndex idx = new SearchIndex("vector_index").dimensions(1536).path("plotEmbedding").similarity("cosine");
 
 		indexOps.ensureIndex(idx);
 		Thread.sleep(5000); // now that's quite some time to build the index
@@ -342,7 +342,7 @@ class DefaultVectorIndexOperationsTests {
 	@Test
 	void createsVectorIndexWithFilters() throws InterruptedException {
 
-		VectorIndex idx = VectorIndex.cosine("vector_index").dimensions(1536).path("plotEmbedding") //
+		SearchIndex idx = SearchIndex.cosine("vector_index").dimensions(1536).path("plotEmbedding") //
 				.filter("description") //
 				.filter("year");
 

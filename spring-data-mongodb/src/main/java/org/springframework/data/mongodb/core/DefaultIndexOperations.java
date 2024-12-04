@@ -24,11 +24,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.index.DefaultVectorIndexOperations;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
-import org.springframework.data.mongodb.core.index.VectorIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -208,11 +206,6 @@ public class DefaultIndexOperations implements IndexOperations {
 				return indexInfoList;
 			}
 		});
-	}
-
-	@Override
-	public VectorIndexOperations vectorIndex() {
-		return new DefaultVectorIndexOperations(mongoOperations, collectionName, type);
 	}
 
 	@Nullable

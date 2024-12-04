@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.index.VectorIndex.Filter;
+import org.springframework.data.mongodb.core.index.SearchIndex.Filter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -34,15 +34,15 @@ import org.springframework.lang.Nullable;
 /**
  * @author Christoph Strobl
  */
-public class DefaultVectorIndexOperations extends DefaultIndexOperations implements VectorIndexOperations {
+public class DefaultSearchIndexOperations extends DefaultIndexOperations implements SearchIndexOperations {
 
-	private static final Log LOGGER = LogFactory.getLog(VectorIndexOperations.class);
+	private static final Log LOGGER = LogFactory.getLog(SearchIndexOperations.class);
 
-	public DefaultVectorIndexOperations(MongoOperations mongoOperations, Class<?> type) {
+	public DefaultSearchIndexOperations(MongoOperations mongoOperations, Class<?> type) {
 		this(mongoOperations, mongoOperations.getCollectionName(type), type);
 	}
 
-	public DefaultVectorIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
+	public DefaultSearchIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
 		super(mongoOperations, collectionName, type);
 	}
 
@@ -62,7 +62,7 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@Override
-	public void updateIndex(VectorIndex index) {
+	public void updateIndex(SearchIndex index) {
 
 		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
 
@@ -106,10 +106,10 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@Override
-	public String ensureIndex(IndexDefinition indexDefinition) {
+	public String ensureIndex(SearchIndexDefinition indexDefinition) {
 
-		if (!(indexDefinition instanceof VectorIndex vsi)) {
-			return super.ensureIndex(indexDefinition);
+		if (!(indexDefinition instanceof SearchIndex vsi)) {
+			throw new IllegalStateException("Index definitions must be of type VectorIndex");
 		}
 
 		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
@@ -129,7 +129,7 @@ public class DefaultVectorIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@NonNull
-	private Document createIndexDocument(VectorIndex vsi, MongoPersistentEntity<?> entity) {
+	private Document createIndexDocument(SearchIndex vsi, MongoPersistentEntity<?> entity) {
 
 		Document index = new Document(vsi.getIndexOptions());
 		Document definition = new Document();

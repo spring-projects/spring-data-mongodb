@@ -1,11 +1,11 @@
 /*
- * Copyright 2024. the original author or authors.
+ * Copyright 2011-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,17 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.bson.Document;
+
 /**
- * @author Christoph Strobl
+ * @author Marcin Grzejszczak
  */
-public interface VectorIndexOperationsProvider {
+public interface SearchIndexDefinition {
 
-    VectorIndexOperations vectorIndex();
-
+	/**
+	 * Get the index properties such as {@literal unique},...
+	 *
+	 * @return never {@literal null}.
+	 */
+	Document getIndexOptions();
 }
