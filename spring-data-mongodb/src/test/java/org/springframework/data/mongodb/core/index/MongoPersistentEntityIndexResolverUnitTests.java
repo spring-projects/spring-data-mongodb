@@ -222,6 +222,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 600L);
 		}
 
+		@Test // GH-4844
+		public void shouldResolveZeroTimeoutFromString() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+				WithExpireAfterZeroSecondsAsPlainString.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 0L);
+		}
+
 		@Test // DATAMONGO-2112
 		public void shouldResolveTimeoutFromIso8601String() {
 
@@ -381,6 +390,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithExpireAfterAsPlainString {
 			@Indexed(expireAfter = "10m") String withTimeout;
+		}
+
+		@Document
+		class WithExpireAfterZeroSecondsAsPlainString {
+			@Indexed(expireAfter = "0s") String withTimeout;
 		}
 
 		@Document
