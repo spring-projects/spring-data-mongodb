@@ -563,7 +563,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 			Duration timeout = computeIndexTimeout(index.expireAfter(),
 					() -> getEvaluationContextForProperty(persistentProperty.getOwner()));
-			if (!timeout.isZero() && !timeout.isNegative()) {
+			if (!timeout.isNegative()) {
 				indexDefinition.expire(timeout);
 			}
 		}
