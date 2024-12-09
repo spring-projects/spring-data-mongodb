@@ -81,7 +81,7 @@ public class BindableMongoExpression implements MongoExpression {
 
 		Assert.notNull(expression, "Expression must not be null");
 
-		this.expressionString = expression.trim();
+		this.expressionString = expression;
 		this.codecRegistryProvider = codecRegistryProvider;
 		this.args = args;
 		this.target = Lazy.of(this::parse);
@@ -139,10 +139,11 @@ public class BindableMongoExpression implements MongoExpression {
 
 	private static String wrapJsonIfNecessary(String json) {
 
-		if (StringUtils.hasText(json) && (json.startsWith("{") && json.endsWith("}"))) {
+		if(!StringUtils.hasText(json)) {
 			return json;
 		}
 
-		return "{" + json + "}";
+		String raw = json.trim();
+		return (raw.startsWith("{") && raw.endsWith("}")) ? raw : "{%s}".formatted(raw);
 	}
 }
