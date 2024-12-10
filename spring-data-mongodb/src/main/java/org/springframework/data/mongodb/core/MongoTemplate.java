@@ -3261,7 +3261,7 @@ public class MongoTemplate
 	 * @author Thomas Darimont
 	 */
 
-	interface DocumentCallback<T> {
+	protected interface DocumentCallback<T> {
 
 		T doWith(Document object);
 	}
