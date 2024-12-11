@@ -1275,6 +1275,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(repository.findClosedProjectionBy()).isNotEmpty();
 	}
 
+	@Test // https://github.com/spring-projects/spring-data-mongodb/issues/4839
+    void findAggregatedClosedProjectionBy() {
+        assertThat(repository.findAggregatedClosedProjectionBy()).isNotEmpty();
+    }
+
 	@Test // DATAMONGO-1865
 	void findFirstEntityReturnsFirstResultEvenForNonUniqueMatches() {
 		assertThat(repository.findFirstBy()).isNotNull();
