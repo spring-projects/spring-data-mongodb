@@ -86,13 +86,14 @@ public class IndexOptions {
 	public static IndexOptions expireAfter(Duration duration) {
 
 		IndexOptions options = new IndexOptions();
-		options.unique = Unique.YES;
+		options.expire = duration;
 		return options;
 	}
 
 	/**
 	 * @return the expiration time. A {@link Duration#isNegative() negative value} represents no expiration, {@literal null} if not set.
 	 */
+	@Nullable
 	public Duration getExpire() {
 		return expire;
 	}
@@ -150,7 +151,6 @@ public class IndexOptions {
 		if(hidden != null) {
 			document.put("hidden", hidden);
 		}
-
 
 		if (expire != null && !expire.isNegative()) {
 			document.put("expireAfterSeconds", expire.getSeconds());
