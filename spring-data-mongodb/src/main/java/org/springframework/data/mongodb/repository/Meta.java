@@ -24,6 +24,12 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
+ * Annotation to declare meta-information (execution time, cursor size, disk usage) for query methods.
+ * <p>
+ * Annotating a repository method with this annotation forces the method to be implemented as query method (i.e. using
+ * this annotation on an overridden method from a base interface or fragment interface), similar to using
+ * {@link Query @Query}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.6
