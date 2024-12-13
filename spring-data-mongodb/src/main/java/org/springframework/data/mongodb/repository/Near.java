@@ -25,8 +25,8 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 
 /**
- * Annotation to be used for disambiguing method parameters that shall be used to trigger geo near queries. By default
- * those parameters are found without the need for additional annotation if they are the only parameters of the
+ * Annotation to be used for disambiguating method parameters that shall be used to trigger geo near queries. By
+ * default, those parameters are found without the need for additional annotation if they are the only parameters of the
  * according type (e.g. {@link Point}, {@code double[]}, {@link Distance}).
  *
  * @author Oliver Gierke
