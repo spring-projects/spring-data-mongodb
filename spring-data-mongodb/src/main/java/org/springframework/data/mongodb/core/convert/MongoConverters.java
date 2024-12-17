@@ -31,6 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.bson.BsonObjectId;
 import org.bson.BsonReader;
 import org.bson.BsonTimestamp;
 import org.bson.BsonUndefined;
@@ -122,6 +123,19 @@ abstract class MongoConverters {
 
 		public String convert(ObjectId id) {
 			return id.toString();
+		}
+	}
+
+	/**
+	 * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
+	 *
+	 * @author Oliver Gierke
+	 */
+	enum BsonObjectIdToStringConverter implements Converter<BsonObjectId, String> {
+		INSTANCE;
+
+		public String convert(BsonObjectId id) {
+			return id.getValue().toString();
 		}
 	}
 

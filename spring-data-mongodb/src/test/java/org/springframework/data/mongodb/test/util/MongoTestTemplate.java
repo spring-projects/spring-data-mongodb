@@ -15,11 +15,16 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.mongodb.client.MongoCursor;
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -154,4 +159,92 @@ public class MongoTestTemplate extends MongoTemplate {
 			return null;
 		}));
 	}
+
+	public DBVerifyer verify() {
+		return new DBVerifyer(this);
+	}
+
+	public static class DBVerifyer {
+
+		MongoTemplate template;
+
+		public DBVerifyer(MongoTemplate template) {
+			this.template = template;
+		}
+
+		public CollectionVerifyer collection(String collection) {
+			return new CollectionVerifyer(template.getCollection(collection));
+		}
+
+		public CollectionVerifyer collection(Class<?> type) {
+			return collection(template.getCollectionName(type));
+		}
+
+	}
+
+	public static class CollectionVerifyer {
+
+		MongoCollection<Document> collection;
+
+		public CollectionVerifyer(MongoCollection<Document> collection) {
+			this.collection = collection;
+		}
+
+		public CollectionVerifyer hasSize(long expectedSize) {
+
+			Assertions.assertThat(this.collection.countDocuments()).isEqualTo(expectedSize);
+			return this;
+		}
+
+		public CollectionVerifyer documentsSatisfy(Consumer<Document> sink) {
+
+            try (MongoCursor<Document> iterator = this.collection.find().iterator()) {
+                while (iterator.hasNext()) {
+                    sink.accept(iterator.next());
+                }
+            }
+            return this;
+		}
+
+		public DocumentsVerifyer documents() {
+			ArrayList<Document> documents = new ArrayList<>();
+			this.collection.find().into(documents);
+			return new DocumentsVerifyer(documents);
+		}
+	}
+
+	public static class DocumentsVerifyer {
+
+		private final ArrayList<Document> documents;
+
+		public DocumentsVerifyer(ArrayList<Document> documents) {
+			this.documents = documents;
+		}
+
+		public DocumentVerifyer atPosition(int index) {
+			return new DocumentVerifyer(this, documents.get(index));
+		}
+
+		public DocumentsVerifyer hasSize(int expectedSize) {
+
+			assertThat(documents).hasSize(expectedSize);
+			return this;
+		}
+	}
+
+	public static class DocumentVerifyer {
+		DocumentsVerifyer source;
+		Document doc;
+
+		public DocumentVerifyer(DocumentsVerifyer source, Document doc) {
+			this.source = source;
+			this.doc = doc;
+		}
+
+		public DocumentsVerifyer satisfies(Consumer<Document> sink) {
+			sink.accept(doc);
+			return source;
+		}
+	}
+
 }

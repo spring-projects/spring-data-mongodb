@@ -26,6 +26,7 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.mongodb.bulk.BulkWriteResult;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
@@ -41,6 +42,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -1458,6 +1460,180 @@ public class MongoTemplate
 		return source.isVersionedEntity() //
 				? doSaveVersioned(source, collectionName) //
 				: (T) doSave(collectionName, objectToSave, this.mongoConverter);
+	}
+
+	public <T> Collection<T> saveAll(Collection<? extends T> objectsToSave) {
+
+		List<WriteModel<Document>> saves = new ArrayList<>(objectsToSave.size());
+		int requiredUpdateCount = -1;
+		int replaceCount = 0;
+		Class<?> type = null;
+		List<T> inserts = new ArrayList<>(objectsToSave.size());
+		for(T entity : objectsToSave) {
+
+			if(type == null) {
+				type = entity.getClass();
+			}
+			AdaptibleEntity<T> source = operations.forEntity(entity, mongoConverter.getConversionService());
+
+			if(source.isVersionedEntity() && !source.isNew()) {
+
+				Query query = source.getQueryForVersion();
+
+				// Bump version number
+				T toSave = source.incrementVersion();
+				MappedDocument mapped = source.toMappedDocument(mongoConverter);
+				UpdateDefinition update = mapped.updateWithoutId();
+
+				MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entity.getClass());
+				Document queryObj = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
+				Document updateObj = updateMapper.getMappedObject(update.getUpdateObject(), persistentEntity);
+
+				saves.add(new UpdateOneModel<>(queryObj, updateObj));
+				if(requiredUpdateCount < 0) {
+					requiredUpdateCount = 1;
+				} else {
+					requiredUpdateCount++;
+				}
+			}
+			if (source.isNew()) {
+				Document target = new Document();
+				mongoConverter.write(entity, target);
+				saves.add(new InsertOneModel<>(target));
+				inserts.add(entity);
+			} else {
+				Document target = new Document();
+				mongoConverter.write(entity, target);
+				Document queryObj = queryMapper.getMappedObject(source.getByIdQuery().getQueryObject(), mappingContext.getPersistentEntity(entity.getClass()));
+				saves.add(new ReplaceOneModel<>(queryObj, target, new com.mongodb.client.model.ReplaceOptions().upsert(true)));
+				replaceCount++;
+			}
+		}
+
+		BulkWriteResult result = execute(type, collection -> {
+			return collection.bulkWrite(saves, new BulkWriteOptions().ordered(true));
+		});
+
+		if(requiredUpdateCount > 0) {
+
+
+			if(result.getMatchedCount() != (replaceCount + requiredUpdateCount)) {
+				throw new DataIntegrityViolationException("Holy Moly, Batman!");
+			}
+		}
+
+
+		if(!inserts.isEmpty()) {
+			for(int i = 0;i<inserts.size();i++) {
+
+				// TODO: this needs some love for immutatbles and ordering of original results
+				T saved = populateIdIfNecessary(inserts.get(i), result.getInserts().get(i).getId());
+				//inserts.get(i)
+			}
+		}
+
+
+		return (Collection<T>) objectsToSave;
+	}
+
+	public <T> Collection<T> saveAllBulkMongoDB8(Collection<? extends T> objectsToSave) {
+
+		List<Document> saves = new ArrayList<>(objectsToSave.size());
+		List<String> namespaces = new ArrayList<>(objectsToSave.size());
+
+
+		int requiredUpdateCount = -1;
+		int replaceCount = 0;
+		Class<?> type = null;
+		List<T> inserts = new ArrayList<>(objectsToSave.size());
+		for(T entity : objectsToSave) {
+
+			if(type == null) {
+				type = entity.getClass();
+			}
+
+			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entity.getClass());
+			if(!namespaces.contains(persistentEntity.getCollection())) {
+				namespaces.add(persistentEntity.getCollection());
+			}
+			int nsIndex = namespaces.indexOf(persistentEntity.getCollection());
+
+			AdaptibleEntity<T> source = operations.forEntity(entity, mongoConverter.getConversionService());
+
+			if(source.isVersionedEntity() && !source.isNew()) {
+
+				Query query = source.getQueryForVersion();
+
+				// Bump version number
+				T toSave = source.incrementVersion();
+				MappedDocument mapped = source.toMappedDocument(mongoConverter);
+				UpdateDefinition update = mapped.updateWithoutId();
+
+				Document queryObj = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
+				Document updateObj = updateMapper.getMappedObject(update.getUpdateObject(), persistentEntity);
+
+
+				// meh - there's no replace op
+				Document saveOp = new Document("update", nsIndex)
+					.append("filter", queryObj)
+					.append("multi", false)
+					.append("updateMods", updateObj);
+				saves.add(saveOp);
+
+				if(requiredUpdateCount < 0) {
+					requiredUpdateCount = 1;
+				} else {
+					requiredUpdateCount++;
+				}
+			}
+			if (source.isNew()) {
+				Document target = new Document();
+				mongoConverter.write(entity, target);
+
+				Document saveOp = new Document("insert", nsIndex)
+					.append("document", target);
+				saves.add(saveOp);
+				inserts.add(entity);
+			} else {
+				Document target = new Document();
+				mongoConverter.write(entity, target);
+				Document queryObj = queryMapper.getMappedObject(source.getByIdQuery().getQueryObject(), mappingContext.getPersistentEntity(entity.getClass()));
+
+
+				Document saveOp = new Document("update", nsIndex)
+					.append("filter", queryObj)
+					.append("multi", false)
+					.append("updateMods", target);
+				saves.add(saveOp);
+				replaceCount++;
+			}
+		}
+
+		BulkWriteResult result = execute(db -> {
+			db.runCommand(new Document());
+			return null;
+		});
+
+		if(requiredUpdateCount > 0) {
+
+
+			if(result.getMatchedCount() != (replaceCount + requiredUpdateCount)) {
+				throw new DataIntegrityViolationException("Holy Moly, Batman!");
+			}
+		}
+
+
+		if(!inserts.isEmpty()) {
+			for(int i = 0;i<inserts.size();i++) {
+
+				// TODO: this needs some love for immutatbles and ordering of original results
+				T saved = populateIdIfNecessary(inserts.get(i), result.getInserts().get(i).getId());
+				//inserts.get(i)
+			}
+		}
+
+
+		return (Collection<T>) objectsToSave;
 	}
 
 	@SuppressWarnings("unchecked")

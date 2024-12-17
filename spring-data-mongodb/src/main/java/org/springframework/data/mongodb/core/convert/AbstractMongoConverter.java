@@ -28,6 +28,7 @@ import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.BsonObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
@@ -86,6 +87,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	private void initializeConverters() {
 
 		conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+		conversionService.addConverter(BsonObjectIdToStringConverter.INSTANCE);
 		conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
 
 		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
