@@ -1033,34 +1033,67 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Slice the number of elements.
+		 *
+		 * @param nrElements An {@link AggregationExpression} that evaluates to a numeric value used as item count.
+		 * @return new instance of {@link Slice}.
+		 * @since 4.5
+		 */
+		public Slice itemCount(AggregationExpression nrElements) {
+			return new Slice(append(nrElements));
+		}
+
+		/**
 		 * Slice using offset and count.
 		 *
 		 * @param position the start position
 		 * @return new instance of {@link SliceElementsBuilder} to create {@link Slice}.
 		 */
-		public SliceElementsBuilder offset(final int position) {
+		public SliceElementsBuilder offset(int position) {
+			return new SliceElementsBuilder(position);
+		}
 
-			return new SliceElementsBuilder() {
-
-				@Override
-				public Slice itemCount(int nrElements) {
-					return new Slice(append(position)).itemCount(nrElements);
-				}
-			};
+		/**
+		 * Slice using offset and count.
+		 *
+		 * @param position the start position
+		 * @return new instance of {@link SliceElementsBuilder} to create {@link Slice}.
+		 */
+		public SliceElementsBuilder offset(AggregationExpression position) {
+			return new SliceElementsBuilder(position);
 		}
 
 		/**
 		 * @author Christoph Strobl
 		 */
-		public interface SliceElementsBuilder {
+		public class SliceElementsBuilder {
+
+			private final Object position;
+
+			SliceElementsBuilder(Object position) {
+				this.position = position;
+			}
 
 			/**
 			 * Set the number of elements given {@literal nrElements}.
 			 *
 			 * @param nrElements
-			 * @return
+			 * @return new instance of {@link Slice}.
 			 */
-			Slice itemCount(int nrElements);
+			public Slice itemCount(int nrElements) {
+				return new Slice(append(position)).itemCount(nrElements);
+			}
+
+			/**
+			 * Slice the number of elements.
+			 *
+			 * @param nrElements An {@link AggregationExpression} that evaluates to a numeric value used as item count.
+			 * @return new instance of {@link Slice}.
+			 * @since 4.5
+			 */
+			public Slice itemCount(AggregationExpression nrElements) {
+				return new Slice(append(position)).itemCount(nrElements);
+			}
 		}
 	}
 
