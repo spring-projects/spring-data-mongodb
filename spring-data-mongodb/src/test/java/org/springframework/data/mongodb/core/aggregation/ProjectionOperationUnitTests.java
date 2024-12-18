@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.Subtract;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.Variable;
@@ -1062,6 +1063,17 @@ public class ProjectionOperationUnitTests {
 				.as("threeFavorites").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { threeFavorites: { $slice: [ \"$favorites\", 2, 3 ] } } }"));
+	}
+
+	@Test // DATAMONGO-4857
+	void shouldRenderSliceWithExpressions() {
+
+		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice()
+				.offset(Subtract.valueOf(ArrayOperators.Size.lengthOfArray("myArray")).subtract(1))
+				.itemCount(ArithmeticOperators.rand())).as("threeFavorites").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse(
+				"{ $project: { threeFavorites: { $slice: [ \"$favorites\", { \"$subtract\":  [ {\"$size\": \"$myArray\"}, 1]}, { $rand : {} } ] } } }"));
 	}
 
 	@Test // DATAMONGO-1536
