@@ -945,8 +945,17 @@ public class Criteria implements CriteriaDefinition {
 		Document queryCriteria = new Document();
 
 		if (!NOT_SET.equals(isValue)) {
-			queryCriteria.put(this.key, this.isValue);
-			queryCriteria.putAll(document);
+			if(document.isEmpty()) {
+				queryCriteria.put(this.key, this.isValue);
+			}
+			else {
+				if(isValue instanceof Pattern || isValue instanceof BsonRegularExpression) {
+					document.put("$regex", isValue);
+				} else {
+					document.put("$eq", isValue);
+				}
+				queryCriteria.put(this.key, document);
+			}
 		} else {
 			queryCriteria.put(this.key, document);
 		}
