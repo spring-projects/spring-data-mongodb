@@ -20,7 +20,9 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
+import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.geo.Point;
@@ -48,6 +50,44 @@ public class CriteriaUnitTests {
 	public void testSimpleCriteria() {
 		Criteria c = new Criteria("name").is("Bubba");
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\"}");
+	}
+
+	@Test // GH-4850
+	public void testCombiningSimpleCriteria() {
+
+		Document expected = Document.parse("{ name : { $eq : 123, $type : ['long'] } }");
+
+		Criteria c = Criteria.where("name") //
+			.is(123) //
+			.type(Type.INT_64);
+
+		assertThat(c.getCriteriaObject()).isEqualTo(expected);
+
+		c = Criteria.where("name") //
+			.type(Type.INT_64)
+			.is(123);
+
+		assertThat(c.getCriteriaObject()).isEqualTo(expected);
+	}
+
+	@Test // GH-4850
+	public void testCombiningBsonRegexCriteria() {
+
+		Criteria c = Criteria.where("name")
+			.regex(new BsonRegularExpression("^spring$"))
+			.type(Type.INT_64);
+
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ name : { $regex : RegExp('^spring$'), $type : ['long'] } }"));
+	}
+
+	@Test // GH-4850
+	public void testCombiningRegexCriteria() {
+
+		Criteria c = Criteria.where("name")
+			.regex("^spring$")
+			.type(Type.INT_64);
+
+		assertThat(c.getCriteriaObject()).hasEntrySatisfying("name.$regex", it -> assertThat(it).isInstanceOf(Pattern.class));
 	}
 
 	@Test
