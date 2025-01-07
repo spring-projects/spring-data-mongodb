@@ -64,84 +64,84 @@ class CriteriaTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAllClearWithBitPositions() {
+	void bitsAllClearWithBitPositions() {
 
 		assertThat(ops.find(query(where("value").bits().allClear(Arrays.asList(1, 5))), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(TWENTY_INT, TWENTY_FLOAT);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAllClearWithNumericBitmask() {
+	void bitsAllClearWithNumericBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().allClear(35)), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(TWENTY_INT, TWENTY_FLOAT);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAllClearWithStringBitmask() {
+	void bitsAllClearWithStringBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().allClear("ID==")), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(TWENTY_INT, TWENTY_FLOAT);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAllSetWithBitPositions() {
+	void bitsAllSetWithBitPositions() {
 
 		assertThat(ops.find(query(where("value").bits().allSet(Arrays.asList(1, 5))), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR, ONE_HUNDRED_TWO);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAllSetWithNumericBitmask() {
+	void bitsAllSetWithNumericBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().allSet(50)), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAllSetWithStringBitmask() {
+	void bitsAllSetWithStringBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().allSet("MC==")), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAnyClearWithBitPositions() {
+	void bitsAnyClearWithBitPositions() {
 
 		assertThat(ops.find(query(where("value").bits().anyClear(Arrays.asList(1, 5))), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(TWENTY_INT, TWENTY_FLOAT);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAnyClearWithNumericBitmask() {
+	void bitsAnyClearWithNumericBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().anyClear(35)), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR, TWENTY_INT, TWENTY_FLOAT, ONE_HUNDRED_TWO);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAnyClearWithStringBitmask() {
+	void bitsAnyClearWithStringBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().anyClear("MC==")), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(TWENTY_INT, TWENTY_FLOAT, ONE_HUNDRED_TWO);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAnySetWithBitPositions() {
+	void bitsAnySetWithBitPositions() {
 
 		assertThat(ops.find(query(where("value").bits().anySet(Arrays.asList(1, 5))), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR, ONE_HUNDRED_TWO);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAnySetWithNumericBitmask() {
+	void bitsAnySetWithNumericBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().anySet(35)), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR, ONE_HUNDRED_TWO);
 	}
 
 	@Test // DATAMONGO-1808
-	public void bitsAnySetWithStringBitmask() {
+	void bitsAnySetWithStringBitmask() {
 
 		assertThat(ops.find(query(where("value").bits().anySet("MC==")), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR, TWENTY_INT, TWENTY_FLOAT, ONE_HUNDRED_TWO);
