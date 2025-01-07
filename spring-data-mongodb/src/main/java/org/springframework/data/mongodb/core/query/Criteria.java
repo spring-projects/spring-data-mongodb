@@ -196,7 +196,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria is(@Nullable Object value) {
 
-		if (!isValue.equals(NOT_SET)) {
+		if (!NOT_SET.equals(isValue)) {
 			throw new InvalidMongoDbApiUsageException(
 					"Multiple 'is' values declared; You need to use 'and' with multiple criteria");
 		}
@@ -945,11 +945,10 @@ public class Criteria implements CriteriaDefinition {
 		Document queryCriteria = new Document();
 
 		if (!NOT_SET.equals(isValue)) {
-			if(document.isEmpty()) {
+			if (document.isEmpty()) {
 				queryCriteria.put(this.key, this.isValue);
-			}
-			else {
-				if(isValue instanceof Pattern || isValue instanceof BsonRegularExpression) {
+			} else {
+				if (isValue instanceof Pattern || isValue instanceof BsonRegularExpression) {
 					document.put("$regex", isValue);
 				} else {
 					document.put("$eq", isValue);

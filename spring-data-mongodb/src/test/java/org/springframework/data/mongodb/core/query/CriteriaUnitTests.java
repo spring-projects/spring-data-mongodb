@@ -24,7 +24,8 @@ import java.util.regex.Pattern;
 
 import org.bson.BsonRegularExpression;
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
@@ -44,60 +45,57 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Mark Paluch
  * @author James McNee
  */
-public class CriteriaUnitTests {
+class CriteriaUnitTests {
 
 	@Test
-	public void testSimpleCriteria() {
+	void testSimpleCriteria() {
 		Criteria c = new Criteria("name").is("Bubba");
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\"}");
 	}
 
 	@Test // GH-4850
-	public void testCombiningSimpleCriteria() {
+	void testCombiningSimpleCriteria() {
 
 		Document expected = Document.parse("{ name : { $eq : 123, $type : ['long'] } }");
 
 		Criteria c = Criteria.where("name") //
-			.is(123) //
-			.type(Type.INT_64);
+				.is(123) //
+				.type(Type.INT_64);
 
 		assertThat(c.getCriteriaObject()).isEqualTo(expected);
 
 		c = Criteria.where("name") //
-			.type(Type.INT_64)
-			.is(123);
+				.type(Type.INT_64).is(123);
 
 		assertThat(c.getCriteriaObject()).isEqualTo(expected);
 	}
 
 	@Test // GH-4850
-	public void testCombiningBsonRegexCriteria() {
+	void testCombiningBsonRegexCriteria() {
 
-		Criteria c = Criteria.where("name")
-			.regex(new BsonRegularExpression("^spring$"))
-			.type(Type.INT_64);
+		Criteria c = Criteria.where("name").regex(new BsonRegularExpression("^spring$")).type(Type.INT_64);
 
-		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ name : { $regex : RegExp('^spring$'), $type : ['long'] } }"));
+		assertThat(c.getCriteriaObject())
+				.isEqualTo(Document.parse("{ name : { $regex : RegExp('^spring$'), $type : ['long'] } }"));
 	}
 
 	@Test // GH-4850
-	public void testCombiningRegexCriteria() {
+	void testCombiningRegexCriteria() {
 
-		Criteria c = Criteria.where("name")
-			.regex("^spring$")
-			.type(Type.INT_64);
+		Criteria c = Criteria.where("name").regex("^spring$").type(Type.INT_64);
 
-		assertThat(c.getCriteriaObject()).hasEntrySatisfying("name.$regex", it -> assertThat(it).isInstanceOf(Pattern.class));
+		assertThat(c.getCriteriaObject()).hasEntrySatisfying("name.$regex",
+				it -> assertThat(it).isInstanceOf(Pattern.class));
 	}
 
 	@Test
-	public void testNotEqualCriteria() {
+	void testNotEqualCriteria() {
 		Criteria c = new Criteria("name").ne("Bubba");
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : { \"$ne\" : \"Bubba\"}}");
 	}
 
 	@Test
-	public void buildsIsNullCriteriaCorrectly() {
+	void buildsIsNullCriteriaCorrectly() {
 
 		Document reference = new Document("name", null);
 
@@ -106,19 +104,20 @@ public class CriteriaUnitTests {
 	}
 
 	@Test
-	public void testChainedCriteria() {
+	void testChainedCriteria() {
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}");
 	}
 
-	@Test(expected = InvalidMongoDbApiUsageException.class)
-	public void testCriteriaWithMultipleConditionsForSameKey() {
+	@Test
+	void testCriteriaWithMultipleConditionsForSameKey() {
 		Criteria c = new Criteria("name").gte("M").and("name").ne("A");
-		c.getCriteriaObject();
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(c::getCriteriaObject);
 	}
 
 	@Test
-	public void equalIfCriteriaMatches() {
+	void equalIfCriteriaMatches() {
 
 		Criteria left = new Criteria("name").is("Foo").and("lastname").is("Bar");
 		Criteria right = new Criteria("name").is("Bar").and("lastname").is("Bar");
@@ -128,7 +127,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-3286
-	public void shouldBuildCorrectAndOperator() {
+	void shouldBuildCorrectAndOperator() {
 
 		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true), Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
@@ -140,7 +139,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-3286
-	public void shouldBuildCorrectOrOperator() {
+	void shouldBuildCorrectOrOperator() {
 
 		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true), Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
@@ -152,7 +151,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-3286
-	public void shouldBuildCorrectNorOperator() {
+	void shouldBuildCorrectNorOperator() {
 
 		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true), Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
@@ -164,28 +163,28 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-507
-	public void shouldThrowExceptionWhenTryingToNegateAndOperation() {
+	void shouldThrowExceptionWhenTryingToNegateAndOperation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
 				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
 	@Test // DATAMONGO-507
-	public void shouldThrowExceptionWhenTryingToNegateOrOperation() {
+	void shouldThrowExceptionWhenTryingToNegateOrOperation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
 				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
 	@Test // DATAMONGO-507
-	public void shouldThrowExceptionWhenTryingToNegateNorOperation() {
+	void shouldThrowExceptionWhenTryingToNegateNorOperation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
 				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
 	@Test // DATAMONGO-507
-	public void shouldNegateFollowingSimpleExpression() {
+	void shouldNegateFollowingSimpleExpression() {
 
 		Criteria c = Criteria.where("age").not().gt(18).and("status").is("student");
 		Document co = c.getCriteriaObject();
@@ -195,23 +194,23 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-3726
-	public void shouldBuildCorrectSampleRateOperation() {
+	void shouldBuildCorrectSampleRateOperation() {
 		Criteria c = new Criteria().sampleRate(0.4);
 		assertThat(c.getCriteriaObject()).isEqualTo("{ \"$sampleRate\" : 0.4 }");
 	}
 
 	@Test // GH-3726
-	public void shouldThrowExceptionWhenSampleRateIsNegative() {
+	void shouldThrowExceptionWhenSampleRateIsNegative() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria().sampleRate(-1));
 	}
 
 	@Test // GH-3726
-	public void shouldThrowExceptionWhenSampleRateIsGreatedThanOne() {
+	void shouldThrowExceptionWhenSampleRateIsGreatedThanOne() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria().sampleRate(1.01));
 	}
 
 	@Test // DATAMONGO-1068
-	public void getCriteriaObjectShouldReturnEmptyDocumentWhenNoCriteriaSpecified() {
+	void getCriteriaObjectShouldReturnEmptyDocumentWhenNoCriteriaSpecified() {
 
 		Document document = new Criteria().getCriteriaObject();
 
@@ -219,7 +218,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1068
-	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresent() {
+	void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresent() {
 
 		Document document = new Criteria().lt("foo").getCriteriaObject();
 
@@ -227,7 +226,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1068
-	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresentButMultipleCriteriasPresent() {
+	void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresentButMultipleCriteriasPresent() {
 
 		Document document = new Criteria().lt("foo").gt("bar").getCriteriaObject();
 
@@ -235,7 +234,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1068
-	public void getCriteriaObjectShouldRespectNotWhenNoKeyPresent() {
+	void getCriteriaObjectShouldRespectNotWhenNoKeyPresent() {
 
 		Document document = new Criteria().lt("foo").not().getCriteriaObject();
 
@@ -243,7 +242,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-4220
-	public void usesCorrectBsonType() {
+	void usesCorrectBsonType() {
 
 		Document document = new Criteria("foo").type(Type.BOOLEAN).getCriteriaObject();
 
@@ -251,7 +250,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void geoJsonTypesShouldBeWrappedInGeometry() {
+	void geoJsonTypesShouldBeWrappedInGeometry() {
 
 		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
 
@@ -259,7 +258,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void legacyCoordinateTypesShouldNotBeWrappedInGeometry() {
+	void legacyCoordinateTypesShouldNotBeWrappedInGeometry() {
 
 		Document document = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
 
@@ -267,7 +266,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void maxDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
+	void maxDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
 		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
@@ -275,7 +274,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void maxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
+	void maxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
 		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
@@ -283,7 +282,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void minDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
+	void minDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
 
 		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
@@ -291,7 +290,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void minDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
+	void minDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
 		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
@@ -299,7 +298,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void minAndMaxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
+	void minAndMaxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
 
 		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
 				.getCriteriaObject();
@@ -309,12 +308,12 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1134
-	public void intersectsShouldThrowExceptionWhenCalledWihtNullValue() {
+	void intersectsShouldThrowExceptionWhenCalledWihtNullValue() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria("foo").intersects(null));
 	}
 
 	@Test // DATAMONGO-1134
-	public void intersectsShouldWrapGeoJsonTypeInGeometryCorrectly() {
+	void intersectsShouldWrapGeoJsonTypeInGeometryCorrectly() {
 
 		GeoJsonLineString lineString = new GeoJsonLineString(new Point(0, 0), new Point(10, 10));
 		Document document = new Criteria("foo").intersects(lineString).getCriteriaObject();
@@ -323,7 +322,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void extractsJsonSchemaInChainCorrectly() {
+	void extractsJsonSchemaInChainCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
 		Criteria criteria = Criteria.where("foo").is("bar").andDocumentStructureMatches(schema);
@@ -333,7 +332,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void extractsJsonSchemaFromFactoryMethodCorrectly() {
+	void extractsJsonSchemaFromFactoryMethodCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
 		Criteria criteria = Criteria.matchingDocumentStructure(schema);
@@ -343,7 +342,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAllClearWithIntBitmaskCorrectly() {
+	void shouldAppendBitsAllClearWithIntBitmaskCorrectly() {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allClear(0b101);
 
@@ -351,7 +350,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAllClearWithPositionListCorrectly() {
+	void shouldAppendBitsAllClearWithPositionListCorrectly() {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().allClear(Arrays.asList(0, 2));
 
@@ -360,7 +359,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAllSetWithIntBitmaskCorrectly() {
+	void shouldAppendBitsAllSetWithIntBitmaskCorrectly() {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allSet(0b101);
 
@@ -368,7 +367,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAllSetWithPositionListCorrectly() {
+	void shouldAppendBitsAllSetWithPositionListCorrectly() {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().allSet(Arrays.asList(0, 2));
 
@@ -377,7 +376,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAnyClearWithIntBitmaskCorrectly() {
+	void shouldAppendBitsAnyClearWithIntBitmaskCorrectly() {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anyClear(0b101);
 
@@ -385,7 +384,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAnyClearWithPositionListCorrectly() {
+	void shouldAppendBitsAnyClearWithPositionListCorrectly() {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().anyClear(Arrays.asList(0, 2));
 
@@ -394,7 +393,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAnySetWithIntBitmaskCorrectly() {
+	void shouldAppendBitsAnySetWithIntBitmaskCorrectly() {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anySet(0b101);
 
@@ -402,7 +401,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-1808
-	public void shouldAppendBitsAnySetWithPositionListCorrectly() {
+	void shouldAppendBitsAnySetWithPositionListCorrectly() {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().anySet(Arrays.asList(0, 2));
 
@@ -411,7 +410,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-2002
-	public void shouldEqualForSamePattern() {
+	void shouldEqualForSamePattern() {
 
 		Criteria left = new Criteria("field").regex("foo");
 		Criteria right = new Criteria("field").regex("foo");
@@ -420,7 +419,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-2002
-	public void shouldEqualForDocument() {
+	void shouldEqualForDocument() {
 
 		assertThat(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)))
 				.isEqualTo(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)));
@@ -439,7 +438,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-2002
-	public void shouldEqualForCollection() {
+	void shouldEqualForCollection() {
 
 		assertThat(new Criteria("field").is(Arrays.asList("foo", "bar")))
 				.isEqualTo(new Criteria("field").is(Arrays.asList("foo", "bar")));
@@ -459,7 +458,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-3414
-	public void shouldEqualForSamePatternAndFlags() {
+	void shouldEqualForSamePatternAndFlags() {
 
 		Criteria left = new Criteria("field").regex("foo", "iu");
 		Criteria right = new Criteria("field").regex("foo");
@@ -468,7 +467,7 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // GH-3414
-	public void shouldEqualForNestedPattern() {
+	void shouldEqualForNestedPattern() {
 
 		Criteria left = new Criteria("a").orOperator(new Criteria("foo").regex("value", "i"),
 				new Criteria("bar").regex("value"));
