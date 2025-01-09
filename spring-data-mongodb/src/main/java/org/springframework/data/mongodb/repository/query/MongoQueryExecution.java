@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -32,6 +33,9 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -55,7 +59,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  */
 @FunctionalInterface
-interface MongoQueryExecution {
+public interface MongoQueryExecution {
 
 	@Nullable
 	Object execute(Query query);
@@ -67,12 +71,12 @@ interface MongoQueryExecution {
 	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
-	final class SlicedExecution implements MongoQueryExecution {
+	final class SlicedExecution<T> implements MongoQueryExecution {
 
-		private final FindWithQuery<?> find;
+		private final FindWithQuery<T> find;
 		private final Pageable pageable;
 
-		public SlicedExecution(ExecutableFindOperation.FindWithQuery<?> find, Pageable pageable) {
+		public SlicedExecution(ExecutableFindOperation.FindWithQuery<T> find, Pageable pageable) {
 
 			Assert.notNull(find, "Find must not be null");
 			Assert.notNull(pageable, "Pageable must not be null");
@@ -83,7 +87,7 @@ interface MongoQueryExecution {
 
 		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public Object execute(Query query) {
+		public Slice<T> execute(Query query) {
 
 			int pageSize = pageable.getPageSize();
 
@@ -93,7 +97,7 @@ interface MongoQueryExecution {
 
 			boolean hasNext = result.size() > pageSize;
 
-			return new SliceImpl<Object>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
+			return new SliceImpl<T>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
 		}
 	}
 
@@ -104,12 +108,12 @@ interface MongoQueryExecution {
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	final class PagedExecution implements MongoQueryExecution {
+	final class PagedExecution<T> implements MongoQueryExecution {
 
-		private final FindWithQuery<?> operation;
+		private final FindWithQuery<T> operation;
 		private final Pageable pageable;
 
-		public PagedExecution(ExecutableFindOperation.FindWithQuery<?> operation, Pageable pageable) {
+		public PagedExecution(ExecutableFindOperation.FindWithQuery<T> operation, Pageable pageable) {
 
 			Assert.notNull(operation, "Operation must not be null");
 			Assert.notNull(pageable, "Pageable must not be null");
@@ -119,11 +123,11 @@ interface MongoQueryExecution {
 		}
 
 		@Override
-		public Object execute(Query query) {
+		public Page<T> execute(Query query) {
 
 			int overallLimit = query.getLimit();
 
-			TerminatingFind<?> matching = operation.matching(query);
+			TerminatingFind<T> matching = operation.matching(query);
 
 			// Apply raw pagination
 			query.with(pageable);
@@ -244,6 +248,39 @@ interface MongoQueryExecution {
 
 			// transform to GeoPage after applying optimization
 			return new GeoPage<>(geoResults, accessor.getPageable(), page.getTotalElements());
+		}
+	}
+
+	final class DeleteExecutionX<T> implements MongoQueryExecution {
+
+		ExecutableRemoveOperation.ExecutableRemove<T> remove;
+		Type type;
+
+		public DeleteExecutionX(ExecutableRemove<T> remove, Type type) {
+			this.remove = remove;
+			this.type = type;
+		}
+
+		@Nullable
+		@Override
+		public Object execute(Query query) {
+
+			TerminatingRemove<T> doRemove = remove.matching(query);
+			if (Type.ALL.equals(type)) {
+				DeleteResult result = doRemove.all();
+				return result.wasAcknowledged() ? Long.valueOf(result.getDeletedCount()) : Long.valueOf(0);
+			} else if (Type.FIND_AND_REMOVE_ALL.equals(type)) {
+				return doRemove.findAndRemove();
+			} else if (Type.FIND_AND_REMOVE_ONE.equals(type)) {
+				Iterator<T> removed = doRemove.findAndRemove().iterator();
+				return removed.hasNext() ? removed.next() : null;
+
+			}
+			throw new RuntimeException();
+		}
+
+		public enum Type {
+			FIND_AND_REMOVE_ONE, FIND_AND_REMOVE_ALL, ALL
 		}
 	}
 

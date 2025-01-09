@@ -39,6 +39,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.ReadPreference;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link RepositoryProxyPostProcessor} that sets up interceptors to read metadata information from the invoked method.
@@ -193,7 +194,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 				org.springframework.data.mongodb.repository.ReadPreference preference = AnnotatedElementUtils
 						.findMergedAnnotation(element, org.springframework.data.mongodb.repository.ReadPreference.class);
 
-				if (preference != null) {
+				if (preference != null && StringUtils.hasText(preference.value())) {
 					return Optional.of(com.mongodb.ReadPreference.valueOf(preference.value()));
 				}
 			}

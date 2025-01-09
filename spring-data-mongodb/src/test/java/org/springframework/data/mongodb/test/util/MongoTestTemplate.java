@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.mongodb.client.MongoClients;
 import org.bson.Document;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -43,6 +44,14 @@ import com.mongodb.client.MongoCollection;
 public class MongoTestTemplate extends MongoTemplate {
 
 	private final MongoTestTemplateConfiguration cfg;
+
+	public MongoTestTemplate() {
+		this("test");
+	}
+
+	public MongoTestTemplate(String databaseName) {
+		this(MongoClients.create(), databaseName);
+	}
 
 	public MongoTestTemplate(MongoClient client, String database, Class<?>... initialEntities) {
 		this(cfg -> {
