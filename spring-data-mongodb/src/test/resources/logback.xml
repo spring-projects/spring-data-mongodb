@@ -18,6 +18,7 @@
 		<appender-ref ref="no-op" />
 	</logger>
 	<logger name="org.springframework.data.mongodb.test.util" level="info"/>
+	<logger name="org.springframework.data.repository.aot.generate.RepositoryContributor" level="trace" />
 
 	<root level="error">
 		<appender-ref ref="console" />
