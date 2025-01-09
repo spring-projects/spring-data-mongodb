@@ -29,11 +29,38 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
-import org.bson.*;
+import org.bson.AbstractBsonWriter;
+import org.bson.BSONObject;
+import org.bson.BsonArray;
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
+import org.bson.BsonBoolean;
+import org.bson.BsonContextType;
+import org.bson.BsonDateTime;
+import org.bson.BsonDbPointer;
+import org.bson.BsonDecimal128;
+import org.bson.BsonDouble;
+import org.bson.BsonInt32;
+import org.bson.BsonInt64;
+import org.bson.BsonJavaScript;
+import org.bson.BsonNull;
+import org.bson.BsonObjectId;
+import org.bson.BsonReader;
+import org.bson.BsonRegularExpression;
+import org.bson.BsonString;
+import org.bson.BsonSymbol;
+import org.bson.BsonTimestamp;
+import org.bson.BsonUndefined;
+import org.bson.BsonValue;
+import org.bson.BsonWriter;
+import org.bson.BsonWriterSettings;
+import org.bson.Document;
 import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecConfigurationException;
+import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
@@ -45,6 +72,8 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
+import org.springframework.data.mongodb.util.json.SpringJsonWriter;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -72,6 +101,9 @@ public class BsonUtils {
 	 * @since 3.2.5
 	 */
 	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
+
+	private static final CodecRegistry JSON_CODEC_REGISTRY = CodecRegistries.fromRegistries(
+			MongoClientSettings.getDefaultCodecRegistry(), CodecRegistries.fromCodecs(new PlaceholderCodec()));
 
 	@SuppressWarnings("unchecked")
 	@Contract("null, _ -> null")
@@ -751,6 +783,17 @@ public class BsonUtils {
 		return new Document(target);
 	}
 
+	public static JsonWriter writeJson(Document document) {
+		return sink -> {
+			SpringJsonWriter writer = new SpringJsonWriter(sink);
+			JSON_CODEC_REGISTRY.get(Document.class).encode(writer, document, EncoderContext.builder().build());
+		};
+	}
+
+	public interface JsonWriter {
+		void to(StringBuffer sink);
+	}
+
 	@Contract("null -> null")
 	private static @Nullable String toJson(@Nullable Object value) {
 
@@ -961,6 +1004,28 @@ public class BsonUtils {
 		@Override
 		public void flush() {
 			values.clear();
+		}
+	}
+
+	static class PlaceholderCodec implements Codec<Placeholder> {
+
+		@Override
+		public Placeholder decode(BsonReader reader, DecoderContext decoderContext) {
+			return null;
+		}
+
+		@Override
+		public void encode(BsonWriter writer, Placeholder value, EncoderContext encoderContext) {
+			if (writer instanceof SpringJsonWriter sjw) {
+				sjw.writePlaceholder(value.toString());
+			} else {
+				writer.writeString(value.toString());
+			}
+		}
+
+		@Override
+		public Class<Placeholder> getEncoderClass() {
+			return Placeholder.class;
 		}
 	}
 }

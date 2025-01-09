@@ -16,8 +16,11 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import org.springframework.aot.generate.GenerationContext;
+import org.springframework.data.aot.AotContext;
 import org.springframework.data.mongodb.aot.LazyLoadingProxyAotProcessor;
 import org.springframework.data.mongodb.aot.MongoAotPredicates;
+import org.springframework.data.mongodb.aot.generated.MongoRepositoryContributor;
+import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.config.RepositoryRegistrationAotProcessor;
 import org.springframework.data.util.TypeContributor;
@@ -31,7 +34,8 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 	private final LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
 
 	@Override
-	protected void contribute(AotRepositoryContext repositoryContext, GenerationContext generationContext) {
+	protected RepositoryContributor contribute(AotRepositoryContext repositoryContext,
+			GenerationContext generationContext) {
 		// do some custom type registration here
 		super.contribute(repositoryContext, generationContext);
 
@@ -39,6 +43,14 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 			TypeContributor.contribute(type, it -> true, generationContext);
 			lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type, generationContext);
 		});
+
+		boolean enabled = Boolean.parseBoolean(
+				repositoryContext.getEnvironment().getProperty(AotContext.GENERATED_REPOSITORIES_ENABLED, "false"));
+		if (!enabled) {
+			return null;
+		}
+
+		return new MongoRepositoryContributor(repositoryContext);
 	}
 
 	@Override

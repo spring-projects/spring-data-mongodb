@@ -65,7 +65,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Edward Prentice
  */
-class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
+public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 
