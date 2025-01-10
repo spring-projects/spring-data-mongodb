@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.aot.generated;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,11 +33,9 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
@@ -48,6 +45,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder.MethodGenerationMetadata;
@@ -88,12 +86,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 				userAnnotatedQuery(repositoryInformation, metadata, body, query);
 			} else {
 
-
 				;
 
 				MongoMappingContext mongoMappingContext = new MongoMappingContext();
-				mongoMappingContext.setSimpleTypeHolder(MongoCustomConversions.create((cfg) ->
-					cfg.useNativeDriverJavaTimeCodecs()).getSimpleTypeHolder());
+				mongoMappingContext.setSimpleTypeHolder(
+						MongoCustomConversions.create((cfg) -> cfg.useNativeDriverJavaTimeCodecs()).getSimpleTypeHolder());
 				mongoMappingContext.setAutoIndexCreation(false);
 				mongoMappingContext.afterPropertiesSet();
 
@@ -143,10 +140,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 							@Override
 							public Object[] getValues() {
 
-								if(metadata.getRepositoryMethod().getParameterCount() == 0) {
-									return new Object[]{};
+								if (metadata.getRepositoryMethod().getParameterCount() == 0) {
+									return new Object[] {};
 								}
-								return IntStream.range(0, metadata.getRepositoryMethod().getParameterCount()).mapToObj(it -> new Placeholder("?"+it)).toArray();
+								return IntStream.range(0, metadata.getRepositoryMethod().getParameterCount())
+										.mapToObj(it -> new Placeholder("?" + it)).toArray();
 							}
 
 							@Nullable
@@ -194,33 +192,36 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 							}
 						}), mongoMappingContext);
 
-				writeStringQuery(repositoryInformation, metadata, body, queryCreator.createQuery().toJson());
+				org.springframework.data.mongodb.core.query.Query partTreeQuery = queryCreator.createQuery();
+				StringBuffer buffer = new StringBuffer();
+				BsonUtils.writeJson(partTreeQuery.getQueryObject()).to(buffer);
+				writeStringQuery(repositoryInformation, metadata, body, buffer.toString());
 			}
 		});
 	}
 
 	private static void writeStringQuery(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata,
-		Builder body, String query) {
+			Builder body, String query) {
 
 		String mongoOpsRef = metadata.fieldNameOf(MongoOperations.class);
 		String arguments = StringUtils.collectionToCommaDelimitedString(Arrays
-			.stream(metadata.getRepositoryMethod().getParameters()).map(Parameter::getName).collect(Collectors.toList()));
+				.stream(metadata.getRepositoryMethod().getParameters()).map(Parameter::getName).collect(Collectors.toList()));
 
 		body.beginControlFlow("if($L.isDebugEnabled())", metadata.fieldNameOf(Log.class));
 		body.addStatement("$L.debug(\"invoking generated [$L] method\")", metadata.fieldNameOf(Log.class),
-			metadata.getRepositoryMethod().getName());
+				metadata.getRepositoryMethod().getName());
 		body.endControlFlow();
 
 		body.addStatement("$T filter = new $T($S, $L.getConverter(), new $T[]{ $L })", BindableMongoExpression.class,
-			BindableMongoExpression.class, query, mongoOpsRef, Object.class, arguments);
+				BindableMongoExpression.class, query, mongoOpsRef, Object.class, arguments);
 		body.addStatement("$T query = new $T(filter.toDocument())", org.springframework.data.mongodb.core.query.Query.class,
-			BasicQuery.class);
+				BasicQuery.class);
 
 		boolean isCollectionType = TypeInformation.fromReturnTypeOf(metadata.getRepositoryMethod()).isCollectionLike();
 		String terminatingMethod = isCollectionType ? "all()" : "oneValue()";
 
 		if (metadata.getActualReturnType() != null && ObjectUtils
-			.nullSafeEquals(TypeName.get(repositoryInformation.getDomainType()), metadata.getActualReturnType())) {
+				.nullSafeEquals(TypeName.get(repositoryInformation.getDomainType()), metadata.getActualReturnType())) {
 			body.addStatement("""
 					return $L.query($T.class)
 						.matching(query)
@@ -232,8 +233,9 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 						.as($T.class)
 						.matching(query)
 						.$L""", mongoOpsRef, repositoryInformation.getDomainType(),
-				metadata.getActualReturnType() != null ? metadata.getActualReturnType()
-					: repositoryInformation.getDomainType(), terminatingMethod);
+					metadata.getActualReturnType() != null ? metadata.getActualReturnType()
+							: repositoryInformation.getDomainType(),
+					terminatingMethod);
 		}
 	}
 
