@@ -29,9 +29,21 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.mongodb.MongoClientSettings;
+import org.bson.BsonReader;
 import org.bson.BsonRegularExpression;
 import org.bson.BsonType;
+import org.bson.BsonWriter;
 import org.bson.Document;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.DocumentCodec;
+import org.bson.codecs.DocumentCodecProvider;
+import org.bson.codecs.Encoder;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.Binary;
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
@@ -900,7 +912,8 @@ public class Criteria implements CriteriaDefinition {
 			for (Criteria c : this.criteriaChain) {
 				Document document = c.getSingleCriteriaObject();
 				for (String k : document.keySet()) {
-					setValue(criteriaObject, k, document.get(k));
+					Object o = document.get(k);
+					setValue(criteriaObject, k, o);
 				}
 			}
 			return criteriaObject;
