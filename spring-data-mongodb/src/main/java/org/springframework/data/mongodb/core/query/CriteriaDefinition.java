@@ -40,4 +40,21 @@ public interface CriteriaDefinition {
 	@Nullable
 	String getKey();
 
+	class Placeholder {
+
+		Object value;
+
+		public Placeholder(Object value) {
+			this.value = value;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
 }

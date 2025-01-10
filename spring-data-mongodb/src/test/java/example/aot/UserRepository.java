@@ -29,4 +29,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 
     @Query("{ 'username' : '?0' }")
     List<User> findAllByAnnotatedQueryWithParameter(String username);
+
+    User findByUsername(String username);
+
+    List<User> findUserByLastnameLike(String lastname);
 }
