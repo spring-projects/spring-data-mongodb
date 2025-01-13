@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
-import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.commons.logging.Log;
 import org.bson.conversions.Bson;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.domain.Pageable;
@@ -30,13 +27,11 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
 import org.springframework.data.mongodb.core.query.TextCriteria;
@@ -49,6 +44,8 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder.MethodGenerationMetadata;
+import org.springframework.data.repository.aot.generate.CodeBlocks;
+import org.springframework.data.repository.aot.generate.Contribution;
 import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -57,8 +54,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.javapoet.MethodSpec.Builder;
 import org.springframework.javapoet.TypeName;
 import org.springframework.lang.Nullable;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
 
@@ -78,15 +73,13 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	@Override
-	protected void customizeDerivedMethod(AotRepositoryMethodBuilder methodBuilder) {
+	protected Contribution customizeDerivedMethod(AotRepositoryMethodBuilder methodBuilder) {
 
 		methodBuilder.customize((repositoryInformation, metadata, body) -> {
 			Query query = AnnotatedElementUtils.findMergedAnnotation(metadata.getRepositoryMethod(), Query.class);
 			if (query != null) {
-				userAnnotatedQuery(repositoryInformation, metadata, body, query);
+				userAnnotatedQuery(repositoryInformation, metadata, methodBuilder.codeBlocks(), body, query);
 			} else {
-
-				;
 
 				MongoMappingContext mongoMappingContext = new MongoMappingContext();
 				mongoMappingContext.setSimpleTypeHolder(
@@ -195,52 +188,22 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 				org.springframework.data.mongodb.core.query.Query partTreeQuery = queryCreator.createQuery();
 				StringBuffer buffer = new StringBuffer();
 				BsonUtils.writeJson(partTreeQuery.getQueryObject()).to(buffer);
-				writeStringQuery(repositoryInformation, metadata, body, buffer.toString());
+				writeStringQuery(repositoryInformation, metadata, methodBuilder.codeBlocks(), body, buffer.toString());
 			}
 		});
+		return Contribution.CODE;
 	}
 
 	private static void writeStringQuery(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata,
-			Builder body, String query) {
+			CodeBlocks codeBlocks, Builder body, String query) {
 
-		String mongoOpsRef = metadata.fieldNameOf(MongoOperations.class);
-		String arguments = StringUtils.collectionToCommaDelimitedString(Arrays
-				.stream(metadata.getRepositoryMethod().getParameters()).map(Parameter::getName).collect(Collectors.toList()));
-
-		body.beginControlFlow("if($L.isDebugEnabled())", metadata.fieldNameOf(Log.class));
-		body.addStatement("$L.debug(\"invoking generated [$L] method\")", metadata.fieldNameOf(Log.class),
-				metadata.getRepositoryMethod().getName());
-		body.endControlFlow();
-
-		body.addStatement("$T filter = new $T($S, $L.getConverter(), new $T[]{ $L })", BindableMongoExpression.class,
-				BindableMongoExpression.class, query, mongoOpsRef, Object.class, arguments);
-		body.addStatement("$T query = new $T(filter.toDocument())", org.springframework.data.mongodb.core.query.Query.class,
-				BasicQuery.class);
-
-		boolean isCollectionType = TypeInformation.fromReturnTypeOf(metadata.getRepositoryMethod()).isCollectionLike();
-		String terminatingMethod = isCollectionType ? "all()" : "oneValue()";
-
-		if (metadata.getActualReturnType() != null && ObjectUtils
-				.nullSafeEquals(TypeName.get(repositoryInformation.getDomainType()), metadata.getActualReturnType())) {
-			body.addStatement("""
-					return $L.query($T.class)
-						.matching(query)
-						.$L""", mongoOpsRef, repositoryInformation.getDomainType(), terminatingMethod);
-		} else {
-
-			body.addStatement("""
-					return $L.query($T.class)
-						.as($T.class)
-						.matching(query)
-						.$L""", mongoOpsRef, repositoryInformation.getDomainType(),
-					metadata.getActualReturnType() != null ? metadata.getActualReturnType()
-							: repositoryInformation.getDomainType(),
-					terminatingMethod);
-		}
+		body.addCode(codeBlocks.logDebug("invoking [%s]".formatted(metadata.getRepositoryMethod().getName())));
+		body.addCode(MongoBlocks.queryBlockBuilder(repositoryInformation, metadata).filter(query).build("query"));
+		body.addCode(MongoBlocks.queryExecutionBlockBuilder(repositoryInformation, metadata).build("query"));
 	}
 
 	private static void userAnnotatedQuery(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata,
-			Builder body, Query query) {
-		writeStringQuery(repositoryInformation, metadata, body, query.value());
+			CodeBlocks codeBlocks, Builder body, Query query) {
+		writeStringQuery(repositoryInformation, metadata, codeBlocks, body, query.value());
 	}
 }

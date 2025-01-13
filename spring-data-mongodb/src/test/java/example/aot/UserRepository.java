@@ -17,7 +17,12 @@ package example.aot;
 
 import java.util.List;
 
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -30,7 +35,15 @@ public interface UserRepository extends CrudRepository<User, String> {
     @Query("{ 'username' : '?0' }")
     List<User> findAllByAnnotatedQueryWithParameter(String username);
 
+    @ReadPreference("secondary")
     User findByUsername(String username);
 
     List<User> findUserByLastnameLike(String lastname);
+
+    List<User> findUserByLastnameStartingWith(String lastname, Pageable page);
+    List<User> findUserByLastnameStartingWith(String lastname, Sort sort);
+    List<User> findUserByLastnameStartingWith(String lastname, Limit limit);
+    List<User> findUserByLastnameStartingWith(String lastname, Sort sort, Limit limit);
+
+    Page<User> findUserByFirstnameStartingWith(String lastname, Pageable page);
 }
