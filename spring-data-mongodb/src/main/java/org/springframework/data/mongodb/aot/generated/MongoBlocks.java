@@ -21,14 +21,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.mongodb.BindableMongoExpression;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder.MethodGenerationMetadata;
 import org.springframework.data.repository.core.RepositoryInformation;
-import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
@@ -71,11 +72,16 @@ public class MongoBlocks {
 			Object actualReturnType = isProjecting ? metadata.getActualReturnType() : repositoryInformation.getDomainType();
 
 			if (isProjecting) {
-				builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class).matching($L)", TerminatingFind.class,
-						actualReturnType, mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType, queryVariableName);
+				// builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class).matching($L)", TerminatingFind.class,
+				// actualReturnType, mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType, queryVariableName);
+				builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class)", FindWithQuery.class, actualReturnType,
+						mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType);
 			} else {
-				builder.addStatement("$T<$T> finder = $L.query($T.class).matching($L)", TerminatingFind.class, actualReturnType,
-						mongoOpsRef, repositoryInformation.getDomainType(), queryVariableName);
+				// builder.addStatement("$T<$T> finder = $L.query($T.class).matching($L)", TerminatingFind.class,
+				// actualReturnType,
+				// mongoOpsRef, repositoryInformation.getDomainType(), queryVariableName);
+				builder.addStatement("$T<$T> finder = $L.query($T.class)", FindWithQuery.class, actualReturnType, mongoOpsRef,
+						repositoryInformation.getDomainType());
 			}
 
 			String terminatingMethod = "all()";
@@ -87,14 +93,24 @@ public class MongoBlocks {
 				}
 			}
 
-			if (!metadata.returnsPage()) {
-				builder.addStatement("return finder.$L", terminatingMethod);
+			if (metadata.returnsPage()) {
+				// builder.addStatement("return finder.$L", terminatingMethod);
+				builder.addStatement("return new $T(finder, $L).execute($L)", PagedExecution.class,
+						metadata.getPageableParameterName(), queryVariableName);
+			} else if (metadata.returnsSlice()) {
+				builder.addStatement("return new $T(finder, $L).execute($L)", SlicedExecution.class,
+						metadata.getPageableParameterName(), queryVariableName);
 			} else {
-				builder.addStatement("return $T.getPage(finder.$L, $L, () -> finder.count())", PageableExecutionUtils.class, terminatingMethod,
-					metadata.getPageableParameterName());
+				builder.addStatement("return finder.matching($L).$L", queryVariableName, terminatingMethod);
+				// builder.addStatement("return $T.getPage(finder.$L, $L, () -> finder.count())", PageableExecutionUtils.class,
+				// terminatingMethod,
+				// metadata.getPageableParameterName());
 			}
 
+			// new MongoQueryExecution.PagedExecution(finder, page).execute(query);
+
 			return builder.build();
+
 		}
 
 	}

@@ -20,6 +20,7 @@ import java.util.List;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
@@ -45,5 +46,6 @@ public interface UserRepository extends CrudRepository<User, String> {
     List<User> findUserByLastnameStartingWith(String lastname, Limit limit);
     List<User> findUserByLastnameStartingWith(String lastname, Sort sort, Limit limit);
 
-    Page<User> findUserByFirstnameStartingWith(String lastname, Pageable page);
+    Page<User> findUserByFirstnameStartingWith(String firstname, Pageable page);
+    Slice<User> findUserByFirstnameLike(String firstname, Pageable page);
 }

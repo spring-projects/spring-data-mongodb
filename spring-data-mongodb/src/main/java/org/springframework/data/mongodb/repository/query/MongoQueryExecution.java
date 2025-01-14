@@ -54,7 +54,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  */
 @FunctionalInterface
-interface MongoQueryExecution {
+public interface MongoQueryExecution {
 
 	@Nullable
 	Object execute(Query query);
@@ -66,12 +66,12 @@ interface MongoQueryExecution {
 	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
-	final class SlicedExecution implements MongoQueryExecution {
+	final class SlicedExecution<T> implements MongoQueryExecution {
 
-		private final FindWithQuery<?> find;
+		private final FindWithQuery<T> find;
 		private final Pageable pageable;
 
-		public SlicedExecution(ExecutableFindOperation.FindWithQuery<?> find, Pageable pageable) {
+		public SlicedExecution(ExecutableFindOperation.FindWithQuery<T> find, Pageable pageable) {
 
 			Assert.notNull(find, "Find must not be null");
 			Assert.notNull(pageable, "Pageable must not be null");
@@ -82,7 +82,7 @@ interface MongoQueryExecution {
 
 		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public Object execute(Query query) {
+		public Slice<T> execute(Query query) {
 
 			int pageSize = pageable.getPageSize();
 
@@ -92,7 +92,7 @@ interface MongoQueryExecution {
 
 			boolean hasNext = result.size() > pageSize;
 
-			return new SliceImpl<Object>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
+			return new SliceImpl<T>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
 		}
 	}
 
@@ -103,12 +103,12 @@ interface MongoQueryExecution {
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	final class PagedExecution implements MongoQueryExecution {
+	final class PagedExecution<T> implements MongoQueryExecution {
 
-		private final FindWithQuery<?> operation;
+		private final FindWithQuery<T> operation;
 		private final Pageable pageable;
 
-		public PagedExecution(ExecutableFindOperation.FindWithQuery<?> operation, Pageable pageable) {
+		public PagedExecution(ExecutableFindOperation.FindWithQuery<T> operation, Pageable pageable) {
 
 			Assert.notNull(operation, "Operation must not be null");
 			Assert.notNull(pageable, "Pageable must not be null");
@@ -118,11 +118,11 @@ interface MongoQueryExecution {
 		}
 
 		@Override
-		public Object execute(Query query) {
+		public Page<T> execute(Query query) {
 
 			int overallLimit = query.getLimit();
 
-			TerminatingFind<?> matching = operation.matching(query);
+			TerminatingFind<T> matching = operation.matching(query);
 
 			// Apply raw pagination
 			query.with(pageable);
