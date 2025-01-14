@@ -43,12 +43,9 @@ import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder;
-import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder.MethodGenerationMetadata;
-import org.springframework.data.repository.aot.generate.CodeBlocks;
-import org.springframework.data.repository.aot.generate.Contribution;
+import org.springframework.data.repository.aot.generate.AotRepositoryMethodGenerationContext;
 import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
-import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.javapoet.MethodSpec.Builder;
@@ -73,12 +70,13 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	@Override
-	protected Contribution customizeDerivedMethod(AotRepositoryMethodBuilder methodBuilder) {
+	protected AotRepositoryMethodBuilder contributeRepositoryMethod(
+			AotRepositoryMethodGenerationContext generationContext) {
 
-		methodBuilder.customize((repositoryInformation, metadata, body) -> {
-			Query query = AnnotatedElementUtils.findMergedAnnotation(metadata.getRepositoryMethod(), Query.class);
+		return new AotRepositoryMethodBuilder(generationContext).customize((context, body) -> {
+			Query query = AnnotatedElementUtils.findMergedAnnotation(context.getMethod(), Query.class);
 			if (query != null) {
-				userAnnotatedQuery(repositoryInformation, metadata, methodBuilder.codeBlocks(), body, query);
+				userAnnotatedQuery(context, body, query);
 			} else {
 
 				MongoMappingContext mongoMappingContext = new MongoMappingContext();
@@ -87,8 +85,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 				mongoMappingContext.setAutoIndexCreation(false);
 				mongoMappingContext.afterPropertiesSet();
 
-				PartTree partTree = new PartTree(metadata.getRepositoryMethod().getName(),
-						repositoryInformation.getDomainType());
+				PartTree partTree = new PartTree(context.getMethod().getName(),
+						context.getRepositoryInformation().getDomainType());
 				MongoQueryCreator queryCreator = new MongoQueryCreator(partTree,
 						new ConvertingParameterAccessor(new MongoWriter<Object>() {
 							@Nullable
@@ -133,10 +131,10 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 							@Override
 							public Object[] getValues() {
 
-								if (metadata.getRepositoryMethod().getParameterCount() == 0) {
+								if (context.getMethod().getParameterCount() == 0) {
 									return new Object[] {};
 								}
-								return IntStream.range(0, metadata.getRepositoryMethod().getParameterCount())
+								return IntStream.range(0, context.getMethod().getParameterCount())
 										.mapToObj(it -> new Placeholder("?" + it)).toArray();
 							}
 
@@ -188,22 +186,19 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 				org.springframework.data.mongodb.core.query.Query partTreeQuery = queryCreator.createQuery();
 				StringBuffer buffer = new StringBuffer();
 				BsonUtils.writeJson(partTreeQuery.getQueryObject()).to(buffer);
-				writeStringQuery(repositoryInformation, metadata, methodBuilder.codeBlocks(), body, buffer.toString());
+				writeStringQuery(context, body, buffer.toString());
 			}
 		});
-		return Contribution.CODE;
 	}
 
-	private static void writeStringQuery(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata,
-			CodeBlocks codeBlocks, Builder body, String query) {
+	private static void writeStringQuery(AotRepositoryMethodGenerationContext context, Builder body, String query) {
 
-		body.addCode(codeBlocks.logDebug("invoking [%s]".formatted(metadata.getRepositoryMethod().getName())));
-		body.addCode(MongoBlocks.queryBlockBuilder(repositoryInformation, metadata).filter(query).build("query"));
-		body.addCode(MongoBlocks.queryExecutionBlockBuilder(repositoryInformation, metadata).build("query"));
+		body.addCode(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
+		body.addCode(MongoBlocks.queryBlockBuilder(context).filter(query).build("query"));
+		body.addCode(MongoBlocks.queryExecutionBlockBuilder(context).build("query"));
 	}
 
-	private static void userAnnotatedQuery(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata,
-			CodeBlocks codeBlocks, Builder body, Query query) {
-		writeStringQuery(repositoryInformation, metadata, codeBlocks, body, query.value());
+	private static void userAnnotatedQuery(AotRepositoryMethodGenerationContext context, Builder body, Query query) {
+		writeStringQuery(context, body, query.value());
 	}
 }
