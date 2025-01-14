@@ -28,8 +28,7 @@ import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
-import org.springframework.data.repository.aot.generate.AotRepositoryMethodBuilder.MethodGenerationMetadata;
-import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.aot.generate.AotRepositoryMethodGenerationContext;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
@@ -41,65 +40,63 @@ import org.springframework.util.StringUtils;
  */
 public class MongoBlocks {
 
-	public static QueryBlockBuilder queryBlockBuilder(RepositoryInformation repositoryInformation,
-			MethodGenerationMetadata metadata) {
-		return new QueryBlockBuilder(repositoryInformation, metadata);
+	public static QueryBlockBuilder queryBlockBuilder(AotRepositoryMethodGenerationContext context) {
+		return new QueryBlockBuilder(context);
 	}
 
-	public static QueryExecutionBlockBuilder queryExecutionBlockBuilder(RepositoryInformation repositoryInformation,
-			MethodGenerationMetadata metadata) {
-		return new QueryExecutionBlockBuilder(repositoryInformation, metadata);
+	public static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotRepositoryMethodGenerationContext context) {
+		return new QueryExecutionBlockBuilder(context);
 	}
 
 	static class QueryExecutionBlockBuilder {
 
-		RepositoryInformation repositoryInformation;
-		MethodGenerationMetadata metadata;
+		AotRepositoryMethodGenerationContext context;
 
-		public QueryExecutionBlockBuilder(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata) {
-			this.repositoryInformation = repositoryInformation;
-			this.metadata = metadata;
+		public QueryExecutionBlockBuilder(AotRepositoryMethodGenerationContext context) {
+			this.context = context;
 		}
 
 		CodeBlock build(String queryVariableName) {
 
-			String mongoOpsRef = metadata.fieldNameOf(MongoOperations.class);
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 
 			Builder builder = CodeBlock.builder();
 
-			boolean isProjecting = metadata.getActualReturnType() != null && !ObjectUtils
-					.nullSafeEquals(TypeName.get(repositoryInformation.getDomainType()), metadata.getActualReturnType());
-			Object actualReturnType = isProjecting ? metadata.getActualReturnType() : repositoryInformation.getDomainType();
+			boolean isProjecting = context.getActualReturnType() != null
+					&& !ObjectUtils.nullSafeEquals(TypeName.get(context.getRepositoryInformation().getDomainType()),
+							context.getActualReturnType());
+			Object actualReturnType = isProjecting ? context.getActualReturnType()
+					: context.getRepositoryInformation().getDomainType();
 
 			if (isProjecting) {
 				// builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class).matching($L)", TerminatingFind.class,
 				// actualReturnType, mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType, queryVariableName);
 				builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class)", FindWithQuery.class, actualReturnType,
-						mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType);
+						mongoOpsRef, context.getRepositoryInformation().getDomainType(), actualReturnType);
 			} else {
 				// builder.addStatement("$T<$T> finder = $L.query($T.class).matching($L)", TerminatingFind.class,
 				// actualReturnType,
 				// mongoOpsRef, repositoryInformation.getDomainType(), queryVariableName);
 				builder.addStatement("$T<$T> finder = $L.query($T.class)", FindWithQuery.class, actualReturnType, mongoOpsRef,
-						repositoryInformation.getDomainType());
+						context.getRepositoryInformation().getDomainType());
 			}
 
 			String terminatingMethod = "all()";
-			if (metadata.returnsSingleValue()) {
-				if (metadata.returnsOptionalValue()) {
+			if (context.returnsSingleValue()) {
+				if (context.returnsOptionalValue()) {
 					terminatingMethod = "one()";
 				} else {
 					terminatingMethod = "oneValue()";
 				}
 			}
 
-			if (metadata.returnsPage()) {
+			if (context.returnsPage()) {
 				// builder.addStatement("return finder.$L", terminatingMethod);
 				builder.addStatement("return new $T(finder, $L).execute($L)", PagedExecution.class,
-						metadata.getPageableParameterName(), queryVariableName);
-			} else if (metadata.returnsSlice()) {
+						context.getPageableParameterName(), queryVariableName);
+			} else if (context.returnsSlice()) {
 				builder.addStatement("return new $T(finder, $L).execute($L)", SlicedExecution.class,
-						metadata.getPageableParameterName(), queryVariableName);
+						context.getPageableParameterName(), queryVariableName);
 			} else {
 				builder.addStatement("return finder.matching($L).$L", queryVariableName, terminatingMethod);
 				// builder.addStatement("return $T.getPage(finder.$L, $L, () -> finder.count())", PageableExecutionUtils.class,
@@ -117,14 +114,14 @@ public class MongoBlocks {
 
 	static class QueryBlockBuilder {
 
-		MethodGenerationMetadata metadata;
+		AotRepositoryMethodGenerationContext context;
 		String queryString;
 		List<String> arguments;
 		// MongoParameters argumentSource;
 
-		public QueryBlockBuilder(RepositoryInformation repositoryInformation, MethodGenerationMetadata metadata) {
-			this.metadata = metadata;
-			this.arguments = Arrays.stream(metadata.getRepositoryMethod().getParameters()).map(Parameter::getName)
+		public QueryBlockBuilder(AotRepositoryMethodGenerationContext context) {
+			this.context = context;
+			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
 					.collect(Collectors.toList());
 
 			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
@@ -139,7 +136,7 @@ public class MongoBlocks {
 
 		CodeBlock build(String queryVariableName) {
 
-			String mongoOpsRef = metadata.fieldNameOf(MongoOperations.class);
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 
@@ -149,28 +146,28 @@ public class MongoBlocks {
 			builder.addStatement("$T $L = new $T(filter.toDocument())",
 					org.springframework.data.mongodb.core.query.Query.class, queryVariableName, BasicQuery.class);
 
-			String sortParameter = metadata.getSortParameterName();
+			String sortParameter = context.getSortParameterName();
 			if (StringUtils.hasText(sortParameter)) {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
 			}
 
-			String limitParameter = metadata.getLimitParameterName();
+			String limitParameter = context.getLimitParameterName();
 			if (StringUtils.hasText(limitParameter)) {
 				builder.addStatement("$L.limit($L)", queryVariableName, limitParameter);
 			}
 
-			String pageableParameter = metadata.getPageableParameterName();
+			String pageableParameter = context.getPageableParameterName();
 			if (StringUtils.hasText(pageableParameter)) {
 				builder.addStatement("$L.with($L)", queryVariableName, pageableParameter);
 			}
 
-			String hint = metadata.annotationValue(Hint.class, "value");
+			String hint = context.annotationValue(Hint.class, "value");
 
 			if (StringUtils.hasText(hint)) {
 				builder.addStatement("$L.withHint($S)", queryVariableName, hint);
 			}
 
-			String readPreference = metadata.annotationValue(ReadPreference.class, "value");
+			String readPreference = context.annotationValue(ReadPreference.class, "value");
 			if (StringUtils.hasText(readPreference)) {
 				builder.addStatement("$L.withReadPreference($T.valueOf($S))", queryVariableName,
 						com.mongodb.ReadPreference.class, readPreference);
