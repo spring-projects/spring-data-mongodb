@@ -149,7 +149,7 @@ public class SpringJsonWriter implements BsonWriter {
 
 		writeStartDocument();
 		writeName("$numberDouble");
-		buffer.append(value);
+		writeString(Double.valueOf(value).toString());
 		writeEndDocument();
 	}
 
@@ -187,7 +187,7 @@ public class SpringJsonWriter implements BsonWriter {
 
 		writeStartDocument();
 		writeName("$numberInt");
-		buffer.append(value);
+		writeString(Integer.valueOf(value).toString());
 		writeEndDocument();
 	}
 
@@ -203,7 +203,7 @@ public class SpringJsonWriter implements BsonWriter {
 
 		writeStartDocument();
 		writeName("$numberLong");
-		buffer.append(value);
+		writeString(Long.valueOf(value).toString());
 		writeEndDocument();
 	}
 
@@ -220,7 +220,7 @@ public class SpringJsonWriter implements BsonWriter {
 		// { "$numberDecimal": "<number>" }
 		writeStartDocument();
 		writeName("$numberDecimal");
-		write(value.toString());
+		writeString(value.toString());
 		writeEndDocument();
 	}
 
