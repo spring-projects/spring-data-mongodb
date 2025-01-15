@@ -65,7 +65,7 @@ public class SpringJsonWriterUnitTests {
 
 		writer.writeInt32("int32", 32);
 
-		assertThat(buffer).isEqualToIgnoringWhitespace("'int32':{'$numberInt':32}");
+		assertThat(buffer).isEqualToIgnoringWhitespace("'int32':{'$numberInt':'32'}");
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class SpringJsonWriterUnitTests {
 
 		writer.writeInt64("int64", 64);
 
-		assertThat(buffer).isEqualToIgnoringWhitespace("'int64':{'$numberLong':64}");
+		assertThat(buffer).isEqualToIgnoringWhitespace("'int64':{'$numberLong':'64'}");
 	}
 
 	@Test
@@ -81,7 +81,7 @@ public class SpringJsonWriterUnitTests {
 
 		writer.writeDouble("double", 42.24D);
 
-		assertThat(buffer).isEqualToIgnoringWhitespace("'double':{'$numberDouble':42.24}");
+		assertThat(buffer).isEqualToIgnoringWhitespace("'double':{'$numberDouble':'42.24'}");
 	}
 
 	@Test
@@ -89,7 +89,7 @@ public class SpringJsonWriterUnitTests {
 
 		writer.writeDecimal128("decimal128", new Decimal128(128L));
 
-		assertThat(buffer).isEqualToIgnoringWhitespace("'decimal128':{'$numberDecimal':128}");
+		assertThat(buffer).isEqualToIgnoringWhitespace("'decimal128':{'$numberDecimal':'128'}");
 	}
 
 	@Test
@@ -142,7 +142,7 @@ public class SpringJsonWriterUnitTests {
 		writer.writeInt32(42);
 		writer.writeEndArray();
 
-		assertThat(buffer).isEqualToIgnoringNewLines("[{'$numberInt':42}]");
+		assertThat(buffer).isEqualToIgnoringNewLines("[{'$numberInt':'42'}]");
 	}
 
 	@Test
@@ -153,7 +153,7 @@ public class SpringJsonWriterUnitTests {
 		writer.writeInt64(24);
 		writer.writeEndArray();
 
-		assertThat(buffer).isEqualToIgnoringNewLines("[{'$numberInt':42},{'$numberLong':24}]");
+		assertThat(buffer).isEqualToIgnoringNewLines("[{'$numberInt':'42'},{'$numberLong':'24'}]");
 	}
 
 }

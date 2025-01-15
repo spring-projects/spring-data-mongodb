@@ -43,6 +43,7 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 		});
 
 		if (AotContext.aotGeneratedRepositoriesEnabled()) {
+
 			new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
 		}
 	}

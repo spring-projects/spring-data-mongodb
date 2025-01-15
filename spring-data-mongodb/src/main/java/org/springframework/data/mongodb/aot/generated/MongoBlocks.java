@@ -18,8 +18,10 @@ package org.springframework.data.mongodb.aot.generated;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -32,6 +34,7 @@ import org.springframework.data.repository.aot.generate.AotRepositoryMethodGener
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -39,6 +42,8 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  */
 public class MongoBlocks {
+
+	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
 	public static QueryBlockBuilder queryBlockBuilder(AotRepositoryMethodGenerationContext context) {
 		return new QueryBlockBuilder(context);
@@ -68,6 +73,7 @@ public class MongoBlocks {
 			Object actualReturnType = isProjecting ? context.getActualReturnType()
 					: context.getRepositoryInformation().getDomainType();
 
+			builder.add("\n");
 			if (isProjecting) {
 				// builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class).matching($L)", TerminatingFind.class,
 				// actualReturnType, mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType, queryVariableName);
@@ -83,8 +89,13 @@ public class MongoBlocks {
 
 			String terminatingMethod = "all()";
 			if (context.returnsSingleValue()) {
+
 				if (context.returnsOptionalValue()) {
 					terminatingMethod = "one()";
+				} else if(context.isCountMethod()){
+					terminatingMethod = "count()";
+				} else if(context.isExistsMethod()){
+					terminatingMethod = "exists()";
 				} else {
 					terminatingMethod = "oneValue()";
 				}
@@ -115,8 +126,9 @@ public class MongoBlocks {
 	static class QueryBlockBuilder {
 
 		AotRepositoryMethodGenerationContext context;
-		String queryString;
+		StringQuery source;
 		List<String> arguments;
+
 		// MongoParameters argumentSource;
 
 		public QueryBlockBuilder(AotRepositoryMethodGenerationContext context) {
@@ -129,35 +141,47 @@ public class MongoBlocks {
 
 		}
 
-		public QueryBlockBuilder filter(String filter) {
-			this.queryString = filter;
+		public QueryBlockBuilder filter(StringQuery query) {
+			this.source = query;
 			return this;
 		}
 
 		CodeBlock build(String queryVariableName) {
 
-			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
-
 			CodeBlock.Builder builder = CodeBlock.builder();
 
-			builder.addStatement("$T filter = new $T($S, $L.getConverter(), new $T[]{ $L })", BindableMongoExpression.class,
-					BindableMongoExpression.class, queryString, mongoOpsRef, Object.class,
-					StringUtils.collectionToCommaDelimitedString(arguments));
-			builder.addStatement("$T $L = new $T(filter.toDocument())",
-					org.springframework.data.mongodb.core.query.Query.class, queryVariableName, BasicQuery.class);
+			builder.add("\n");
+			// String queryStringName = "%sString".formatted(queryVariableName);
+			// builder.addStatement("String $L = $S", queryStringName, queryString);
+			String queryDocumentVariableName = "%sDocument".formatted(queryVariableName);
+			builder.add(renderExpressionToDocument(source.getQueryString(), queryVariableName));
+			builder.addStatement("$T $L = new $T($L)", BasicQuery.class, queryVariableName, BasicQuery.class,
+					queryDocumentVariableName);
+
+			if (StringUtils.hasText(source.getFieldsString())) {
+				builder.add(renderExpressionToDocument(source.getFieldsString(), "fields"));
+				builder.addStatement("$L.setFieldsObject(fieldsDocument)", queryVariableName);
+			}
 
 			String sortParameter = context.getSortParameterName();
 			if (StringUtils.hasText(sortParameter)) {
+
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
+			} else if (StringUtils.hasText(source.getSortString())) {
+
+				builder.add(renderExpressionToDocument(source.getSortString(), "sort"));
+				builder.addStatement("$L.setSortObject(sortDocument)", queryVariableName);
 			}
 
 			String limitParameter = context.getLimitParameterName();
 			if (StringUtils.hasText(limitParameter)) {
 				builder.addStatement("$L.limit($L)", queryVariableName, limitParameter);
+			} else if (context.getPageableParameterName() == null && source.isLimited()) {
+				builder.addStatement("$L.limit($L)", queryVariableName, source.getLimit());
 			}
 
 			String pageableParameter = context.getPageableParameterName();
-			if (StringUtils.hasText(pageableParameter)) {
+			if (StringUtils.hasText(pageableParameter) && (!context.returnsPage() || !context.returnsSlice())) {
 				builder.addStatement("$L.with($L)", queryVariableName, pageableParameter);
 			}
 
@@ -176,6 +200,34 @@ public class MongoBlocks {
 			// TODO: all the meta stuff
 
 			return builder.build();
+		}
+
+		private CodeBlock renderExpressionToDocument(@Nullable String source, String variableName) {
+
+			Builder builder = CodeBlock.builder();
+			if(!StringUtils.hasText(source)) {
+				builder.addStatement("$T $L = new $T()", Document.class, "%sDocument".formatted(variableName),
+					Document.class);
+			}
+			else if (!containsPlaceholder(source)) {
+				builder.addStatement("$T $L = $T.parse($S)", Document.class, "%sDocument".formatted(variableName),
+						Document.class, source);
+			} else {
+
+				String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+				String tmpVarName = "%sString".formatted(variableName);
+
+				builder.addStatement("String $L = $S", tmpVarName, source);
+				builder.addStatement("$T $L = new $T($L, $L.getConverter(), new $T[]{ $L }).toDocument()", Document.class,
+						"%sDocument".formatted(variableName), BindableMongoExpression.class, tmpVarName, mongoOpsRef, Object.class,
+						StringUtils.collectionToDelimitedString(arguments, ", "));
+			}
+
+			return builder.build();
+		}
+
+		private boolean containsPlaceholder(String source) {
+			return PARAMETER_BINDING_PATTERN.matcher(source).find();
 		}
 
 	}
