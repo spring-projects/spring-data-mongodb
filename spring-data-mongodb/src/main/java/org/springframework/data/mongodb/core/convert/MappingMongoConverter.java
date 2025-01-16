@@ -133,7 +133,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	private static final BiPredicate<MongoPersistentEntity<?>, MongoPersistentProperty> PROPERTY_FILTER = (e,
 			property) -> {
 
-		if (property.isIdProperty()) {
+		if (e.isIdProperty(property)) {
 			return false;
 		}
 
