@@ -16,6 +16,7 @@
 package example.aot;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,9 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface UserRepository extends CrudRepository<User, String> {
 
+    User findOneByUsername(String username);
+
+    Optional<User> findOptionalOneByUsername(String username);
 
     @Query("{ 'username' : '?0' }")
     List<User> findAllByAnnotatedQueryWithParameter(String username);
@@ -42,8 +46,9 @@ public interface UserRepository extends CrudRepository<User, String> {
         }""")
     List<User> findAllByAnnotatedMultilineQueryWithParameter(String username);
 
+
     @ReadPreference("secondary")
-    User findByUsername(String username);
+    User findWithReadPreferenceByUsername(String username);
 
     Page<UserProjection> findUserProjectionBy(Pageable pageable);
 
