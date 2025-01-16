@@ -68,11 +68,11 @@ import com.querydsl.core.types.dsl.StringPath;
 public class SpringDataMongodbSerializerUnitTests {
 
 	@Mock DbRefResolver dbFactory;
-	MongoConverter converter;
-	SpringDataMongodbSerializer serializer;
+	private MongoConverter converter;
+	private SpringDataMongodbSerializer serializer;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		MongoMappingContext context = new MongoMappingContext();
 
@@ -81,21 +81,21 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test
-	public void uses_idAsKeyForIdProperty() {
+	void uses_idAsKeyForIdProperty() {
 
 		StringPath path = QPerson.person.id;
 		assertThat(serializer.getKeyForPath(path, path.getMetadata())).isEqualTo("_id");
 	}
 
 	@Test
-	public void buildsNestedKeyCorrectly() {
+	void buildsNestedKeyCorrectly() {
 
 		StringPath path = QPerson.person.address.street;
 		assertThat(serializer.getKeyForPath(path, path.getMetadata())).isEqualTo("street");
 	}
 
 	@Test
-	public void convertsComplexObjectOnSerializing() {
+	void convertsComplexObjectOnSerializing() {
 
 		Address address = new Address();
 		address.street = "Foo";
@@ -111,14 +111,14 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-376
-	public void returnsEmptyStringIfNoPathExpressionIsGiven() {
+	void returnsEmptyStringIfNoPathExpressionIsGiven() {
 
 		QAddress address = QPerson.person.shippingAddresses.any();
 		assertThat(serializer.getKeyForPath(address, address.getMetadata())).isEmpty();
 	}
 
 	@Test // DATAMONGO-467, DATAMONGO-1798
-	public void appliesImplicitIdConversion() {
+	void appliesImplicitIdConversion() {
 
 		ObjectId id = new ObjectId();
 
@@ -130,7 +130,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-761
-	public void looksUpKeyForNonPropertyPath() {
+	void looksUpKeyForNonPropertyPath() {
 
 		PathBuilder<Address> builder = new PathBuilder<Address>(Address.class, "address");
 		SimplePath<Object> firstElementPath = builder.getArray("foo", String[].class).get(0);
@@ -140,7 +140,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-1485
-	public void takesCustomConversionForEnumsIntoAccount() {
+	void takesCustomConversionForEnumsIntoAccount() {
 
 		MongoMappingContext context = new MongoMappingContext();
 
@@ -158,7 +158,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-1848, DATAMONGO-1943
-	public void shouldRemarshallListsAndDocuments() {
+	void shouldRemarshallListsAndDocuments() {
 
 		BooleanExpression criteria = QPerson.person.lastname.isNotEmpty()
 				.and(QPerson.person.firstname.containsIgnoreCase("foo")).not();
@@ -168,7 +168,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-2228
-	public void retainsOpsInAndExpression() {
+	void retainsOpsInAndExpression() {
 
 		PredicateOperation testExpression = predicate(Ops.AND,
 				predicate(Ops.OR, predicate(Ops.EQ, path(Object.class, "firstname"), constant("John")),
@@ -181,7 +181,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-2475
-	public void chainedOrsInSameDocument() {
+	void chainedOrsInSameDocument() {
 
 		Predicate predicate = QPerson.person.firstname.eq("firstname_value")
 				.or(QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.age.goe(30)).or(QPerson.person.age.loe(20))
@@ -192,7 +192,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-2475
-	public void chainedNestedOrsInSameDocument() {
+	void chainedNestedOrsInSameDocument() {
 
 		Predicate predicate = QPerson.person.firstname.eq("firstname_value")
 				.or(QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.address.street.eq("spring"));
@@ -202,7 +202,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	}
 
 	@Test // DATAMONGO-2475
-	public void chainedAndsInSameDocument() {
+	void chainedAndsInSameDocument() {
 
 		Predicate predicate = QPerson.person.firstname.eq("firstname_value")
 				.and(QPerson.person.lastname.eq("lastname_value")).and(QPerson.person.age.goe(30))

@@ -487,7 +487,8 @@ public class QueryMapper {
 	}
 
 	private boolean isIdField(Field documentField) {
-		return documentField.getProperty() != null && documentField.getProperty().isIdProperty();
+		return documentField.getProperty() != null
+				&& documentField.getProperty().getOwner().isIdProperty(documentField.getProperty());
 	}
 
 	private Class<?> getIdTypeForField(Field documentField) {
@@ -635,7 +636,8 @@ public class QueryMapper {
 
 		if (source instanceof DBRef ref) {
 
-			Object id = convertId(ref.getId(), property.isIdProperty() ? property.getFieldType() : ObjectId.class);
+			Object id = convertId(ref.getId(),
+					property.getOwner().isIdProperty(property) ? property.getFieldType() : ObjectId.class);
 
 			if (StringUtils.hasText(ref.getDatabaseName())) {
 				return new DBRef(ref.getDatabaseName(), ref.getCollectionName(), id);
@@ -1187,7 +1189,7 @@ public class QueryMapper {
 		public boolean isIdField() {
 
 			if (property != null) {
-				return property.isIdProperty();
+				return property.getOwner().isIdProperty(property);
 			}
 
 			MongoPersistentProperty idProperty = entity.getIdProperty();
@@ -1317,7 +1319,7 @@ public class QueryMapper {
 					continue;
 				}
 
-				if (associationDetected && !property.isIdProperty()) {
+				if (associationDetected && !property.getOwner().isIdProperty(property)) {
 					throw new MappingException(String.format(INVALID_ASSOCIATION_REFERENCE, pathExpression));
 				}
 			}

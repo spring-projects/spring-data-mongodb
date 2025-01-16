@@ -117,7 +117,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		Field fieldAnnotation = findAnnotation(Field.class);
 
-		if (!isIdProperty()) {
+		if (!getOwner().isIdProperty(this)) {
 
 			if (fieldAnnotation == null || fieldAnnotation.targetType() == FieldType.IMPLICIT) {
 				return getType();

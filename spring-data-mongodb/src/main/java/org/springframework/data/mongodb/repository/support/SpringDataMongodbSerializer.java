@@ -135,13 +135,14 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 		MongoPersistentProperty property = getPropertyFor(path);
 
-		return property != null && property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
+		return property != null && property.getOwner().isIdProperty(property) ? key.replaceAll("." + ID_KEY + "$", "")
+				: key;
 	}
 
 	@Override
 	protected boolean isId(Path<?> arg) {
 		MongoPersistentProperty propertyFor = getPropertyFor(arg);
-		return propertyFor == null ? super.isId(arg) : propertyFor.isIdProperty();
+		return propertyFor == null ? super.isId(arg) : propertyFor.getOwner().isIdProperty(propertyFor);
 	}
 
 	@Override
@@ -159,7 +160,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 				return super.convert(path, constant);
 			}
 
-			if (property.isIdProperty()) {
+			if (property.getOwner().isIdProperty(property)) {
 				return mapper.convertId(constant.getConstant(), property.getFieldType());
 			}
 
@@ -177,7 +178,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 				return converter.toDocumentPointer(constant.getConstant(), property).getPointer();
 			}
 
-			if (property.isIdProperty()) {
+			if (property.getOwner().isIdProperty(property)) {
 
 				MongoPersistentProperty propertyForPotentialDbRef = getPropertyForPotentialDbRef(path);
 				if (propertyForPotentialDbRef != null && propertyForPotentialDbRef.isDocumentReference()) {
@@ -221,7 +222,8 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		MongoPersistentProperty property = getPropertyFor(path);
 		PathMetadata metadata = path.getMetadata();
 
-		if (property != null && property.isIdProperty() && metadata != null && metadata.getParent() != null) {
+		if (property != null && property.getOwner().isIdProperty(property) && metadata != null
+				&& metadata.getParent() != null) {
 			return getPropertyFor(metadata.getParent());
 		}
 
