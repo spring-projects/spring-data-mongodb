@@ -40,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -71,7 +72,7 @@ import com.mongodb.client.MongoClient;
 public class MongoRepositoryContributorTests {
 
 	private static final String DB_NAME = "aot-repo-tests";
-	private static Verifyer generatedContext;
+	private static Verifyer generated;
 
 	@Client static MongoClient client;
 
@@ -89,7 +90,7 @@ public class MongoRepositoryContributorTests {
 				.genericBeanDefinition("example.aot.UserRepositoryImpl__Aot").addConstructorArgReference("mongoOperations")
 				.getBeanDefinition();
 
-		generatedContext = generateContext(generationContext) //
+		generated = generateContext(generationContext) //
 				.register("mongoOperations", mongoTemplate) //
 				.register("aotUserRepository", aotGeneratedRepository);
 	}
@@ -98,30 +99,81 @@ public class MongoRepositoryContributorTests {
 	void beforeEach() {
 
 		MongoTestUtils.flushCollection(DB_NAME, "user", client);
-
 		initUsers();
 	}
 
 	@Test
 	void testFindDerivedFinderSingleEntity() {
 
-		generatedContext.verify(methodInvoker -> {
+		generated.verify(methodInvoker -> {
 
 			User user = methodInvoker.invoke("findOneByUsername", "yoda").onBean("aotUserRepository");
 			assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
 		});
+	}
 
+	@Test
+	void testFindDerivedFinderOptionalEntity() {
+
+		generated.verify(methodInvoker -> {
+
+			Optional<User> user = methodInvoker.invoke("findOptionalOneByUsername", "yoda").onBean("aotUserRepository");
+			assertThat(user).isNotNull().containsInstanceOf(User.class)
+					.hasValueSatisfying(it -> assertThat(it).extracting(User::getUsername).isEqualTo("yoda"));
+		});
+	}
+
+	@Test
+	void testDerivedCount() {
+
+		generated.verify(methodInvoker -> {
+
+			Long value = methodInvoker.invoke("countUsersByLastname", "Skywalker").onBean("aotUserRepository");
+			assertThat(value).isEqualTo(2L);
+		});
+	}
+
+	@Test
+	void testDerivedExists() {
+
+		generated.verify(methodInvoker -> {
+
+			Boolean exists = methodInvoker.invoke("existsUserByLastname", "Skywalker").onBean("aotUserRepository");
+			assertThat(exists).isTrue();
+		});
+	}
+
+	@Test
+	void testDerivedFinderWithoutArguments() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findUserNoArgumentsBy").onBean("aotUserRepository");
+			assertThat(users).hasSize(7).hasOnlyElementsOfType(User.class);
+		});
 	}
 
 	@Test
 	void testCountWorksAsExpected() {
 
-		generatedContext.verify(methodInvoker -> {
+		generated.verify(methodInvoker -> {
 
-			Long value = methodInvoker.invoke("countUsersByLastnameLike", "Sky").onBean("aotUserRepository");
+			Long value = methodInvoker.invoke("countUsersByLastname", "Skywalker").onBean("aotUserRepository");
 			assertThat(value).isEqualTo(2L);
 		});
 	}
+
+	@Test
+	void testLimitedDerivedFinder() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findTop2ByLastnameStartingWith", "S").onBean("aotUserRepository");
+			assertThat(users).hasSize(2);
+		});
+	}
+
+	// countUsersByLastname
 
 	private static void initUsers() {
 
