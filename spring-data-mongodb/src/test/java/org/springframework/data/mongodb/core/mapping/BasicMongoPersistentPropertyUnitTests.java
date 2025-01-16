@@ -263,8 +263,12 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	private static MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> entity, Field field) {
-		return new BasicMongoPersistentProperty(Property.of(entity.getTypeInformation(), field), entity,
-				SimpleTypeHolder.DEFAULT, PropertyNameFieldNamingStrategy.INSTANCE);
+		BasicMongoPersistentProperty property = new BasicMongoPersistentProperty(
+				Property.of(entity.getTypeInformation(), field), entity, SimpleTypeHolder.DEFAULT,
+				PropertyNameFieldNamingStrategy.INSTANCE);
+
+		entity.addPersistentProperty(property);
+		return property;
 	}
 
 	class Person {
@@ -335,12 +339,14 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation {
 
-		@Id @org.springframework.data.mongodb.core.mapping.Field("id") String id;
+		@Id
+		@org.springframework.data.mongodb.core.mapping.Field("id") String id;
 	}
 
 	static class DocumentWithComposedAnnotations {
 
-		@ComposedIdAnnotation @ComposedFieldAnnotation String myId;
+		@ComposedIdAnnotation
+		@ComposedFieldAnnotation String myId;
 		@ComposedFieldAnnotation(name = "myField") String myField;
 	}
 
@@ -356,7 +362,8 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	@Id
-	static @interface ComposedIdAnnotation {}
+	static @interface ComposedIdAnnotation {
+	}
 
 	static class WithStringMongoId {
 
@@ -375,7 +382,8 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class WithComplexId {
 
-		@Id @org.springframework.data.mongodb.core.mapping.Field ComplexId id;
+		@Id
+		@org.springframework.data.mongodb.core.mapping.Field ComplexId id;
 	}
 
 	static class WithJMoleculesIdentity {
