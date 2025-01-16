@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -61,7 +60,6 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.InstanceCreatorMetadata;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.Parameter;
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -1926,14 +1924,6 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 	private static <T> T peek(Iterable<T> result) {
 		return result.iterator().next();
-	}
-
-	static Predicate<MongoPersistentProperty> isIdentifier(PersistentEntity<?, ?> entity) {
-		return entity::isIdProperty;
-	}
-
-	static Predicate<MongoPersistentProperty> isConstructorArgument(PersistentEntity<?, ?> entity) {
-		return entity::isCreatorArgument;
 	}
 
 	/**

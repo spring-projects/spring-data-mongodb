@@ -348,7 +348,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			return property.getType();
 		}
 
-		if (!mongoProperty.isIdProperty()) {
+		if (!property.getOwner().isIdProperty(property)) {
 			return mongoProperty.getFieldType();
 		}
 
