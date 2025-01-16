@@ -33,9 +33,17 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface UserRepository extends CrudRepository<User, String> {
 
+    List<User> findUserNoArgumentsBy();
+
     User findOneByUsername(String username);
 
     Optional<User> findOptionalOneByUsername(String username);
+
+    Long countUsersByLastname(String lastname);
+
+    Boolean existsUserByLastname(String lastname);
+
+    List<User> findTop2ByLastnameStartingWith(String lastname);
 
     @Query("{ 'username' : '?0' }")
     List<User> findAllByAnnotatedQueryWithParameter(String username);
@@ -55,14 +63,10 @@ public interface UserRepository extends CrudRepository<User, String> {
     @Query(sort = "{ 'last_name' : -1}")
     List<User> findByLastnameAfter(String lastname);
 
-    Long countUsersByLastnameLike(String lastname);
 
-    Boolean existsUserByLastname(String lastname);
 
     @Query(fields = "{ '_id' : -1}")
     List<User> findByLastnameBefore(String lastname);
-
-    List<User> findTop5ByUsernameLike(String username);
 
     List<User> findByLastnameOrderByFirstnameDesc(String lastname);
 
