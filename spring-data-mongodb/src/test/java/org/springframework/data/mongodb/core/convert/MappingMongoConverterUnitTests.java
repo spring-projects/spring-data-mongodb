@@ -3313,6 +3313,21 @@ class MappingMongoConverterUnitTests {
 				.extracting("id").isEqualTo(idValue);
 	}
 
+	@Test // GH-4877
+	void shouldReadNonIdFieldCalledIdFromSource() {
+
+		WithRenamedIdPropertyAndAnotherPropertyNamedId source = new WithRenamedIdPropertyAndAnotherPropertyNamedId();
+		source.abc = "actual-id-value";
+		source.id = "just-a-field";
+
+		org.bson.Document document = write(source);
+		assertThat(document).containsEntry("_id", source.abc).containsEntry("id", source.id);
+
+		WithRenamedIdPropertyAndAnotherPropertyNamedId target = converter.read(WithRenamedIdPropertyAndAnotherPropertyNamedId.class, document);
+		assertThat(target.abc).isEqualTo(source.abc);
+		assertThat(target.id).isEqualTo(source.id);
+	}
+
 	org.bson.Document write(Object source) {
 
 		org.bson.Document target = new org.bson.Document();
@@ -4529,6 +4544,12 @@ class MappingMongoConverterUnitTests {
 		public DoubleHolderDto(DoubleHolder number) {
 			this.number = number;
 		}
+	}
+
+	static class WithRenamedIdPropertyAndAnotherPropertyNamedId {
+
+		@Id String abc;
+		String id;
 	}
 
 }
