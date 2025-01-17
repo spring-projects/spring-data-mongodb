@@ -84,6 +84,12 @@ public @interface ExplicitEncrypted {
 	 */
 	String keyAltName() default "";
 
+	// TODO QE - update docs as well as algorithm.
+	long contentionFactor() default -1;
+
+	// TODO QE - update docs as well as algorithm.
+	String rangeOptions() default "";
+
 	/**
 	 * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.
 	 *
@@ -91,4 +97,5 @@ public @interface ExplicitEncrypted {
 	 */
 	@AliasFor(annotation = ValueConverter.class, value = "value")
 	Class<? extends PropertyValueConverter> value() default MongoEncryptionConverter.class;
+
 }

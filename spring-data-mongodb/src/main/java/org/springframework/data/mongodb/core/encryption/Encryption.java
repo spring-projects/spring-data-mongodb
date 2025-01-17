@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import org.bson.BsonDocument;
+
 /**
  * Component responsible for encrypting and decrypting values.
  *
@@ -39,5 +41,9 @@ public interface Encryption<S, T> {
 	 * @return the decrypted value.
 	 */
 	S decrypt(T value);
+
+	default BsonDocument encryptExpression(BsonDocument value, EncryptionOptions options) {
+		throw new UnsupportedOperationException("Unsupported encryption method");
+	}
 
 }

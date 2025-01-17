@@ -66,4 +66,10 @@ class ExplicitEncryptionContext implements EncryptionContext {
 	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
 		return conversionContext.write(value, target);
 	}
+
+	// TODO QE - add to interface
+	@Nullable
+	public String getQueryFieldPath() {
+		return conversionContext.getQueryFieldPath();
+	}
 }
