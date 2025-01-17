@@ -75,14 +75,9 @@ public class MongoBlocks {
 
 			builder.add("\n");
 			if (isProjecting) {
-				// builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class).matching($L)", TerminatingFind.class,
-				// actualReturnType, mongoOpsRef, repositoryInformation.getDomainType(), actualReturnType, queryVariableName);
 				builder.addStatement("$T<$T> finder = $L.query($T.class).as($T.class)", FindWithQuery.class, actualReturnType,
 						mongoOpsRef, context.getRepositoryInformation().getDomainType(), actualReturnType);
 			} else {
-				// builder.addStatement("$T<$T> finder = $L.query($T.class).matching($L)", TerminatingFind.class,
-				// actualReturnType,
-				// mongoOpsRef, repositoryInformation.getDomainType(), queryVariableName);
 				builder.addStatement("$T<$T> finder = $L.query($T.class)", FindWithQuery.class, actualReturnType, mongoOpsRef,
 						context.getRepositoryInformation().getDomainType());
 			}
@@ -92,9 +87,9 @@ public class MongoBlocks {
 
 				if (context.returnsOptionalValue()) {
 					terminatingMethod = "one()";
-				} else if(context.isCountMethod()){
+				} else if (context.isCountMethod()) {
 					terminatingMethod = "count()";
-				} else if(context.isExistsMethod()){
+				} else if (context.isExistsMethod()) {
 					terminatingMethod = "exists()";
 				} else {
 					terminatingMethod = "oneValue()";
@@ -110,12 +105,7 @@ public class MongoBlocks {
 						context.getPageableParameterName(), queryVariableName);
 			} else {
 				builder.addStatement("return finder.matching($L).$L", queryVariableName, terminatingMethod);
-				// builder.addStatement("return $T.getPage(finder.$L, $L, () -> finder.count())", PageableExecutionUtils.class,
-				// terminatingMethod,
-				// metadata.getPageableParameterName());
 			}
-
-			// new MongoQueryExecution.PagedExecution(finder, page).execute(query);
 
 			return builder.build();
 
@@ -128,9 +118,7 @@ public class MongoBlocks {
 		AotRepositoryMethodGenerationContext context;
 		StringQuery source;
 		List<String> arguments;
-
-		// MongoParameters argumentSource;
-
+		
 		public QueryBlockBuilder(AotRepositoryMethodGenerationContext context) {
 			this.context = context;
 			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
@@ -151,8 +139,6 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
 			builder.add("\n");
-			// String queryStringName = "%sString".formatted(queryVariableName);
-			// builder.addStatement("String $L = $S", queryStringName, queryString);
 			String queryDocumentVariableName = "%sDocument".formatted(queryVariableName);
 			builder.add(renderExpressionToDocument(source.getQueryString(), queryVariableName));
 			builder.addStatement("$T $L = new $T($L)", BasicQuery.class, queryVariableName, BasicQuery.class,
@@ -181,7 +167,7 @@ public class MongoBlocks {
 			}
 
 			String pageableParameter = context.getPageableParameterName();
-			if (StringUtils.hasText(pageableParameter) && (!context.returnsPage() || !context.returnsSlice())) {
+			if (StringUtils.hasText(pageableParameter) && !context.returnsPage() && !context.returnsSlice()) {
 				builder.addStatement("$L.with($L)", queryVariableName, pageableParameter);
 			}
 
@@ -205,11 +191,9 @@ public class MongoBlocks {
 		private CodeBlock renderExpressionToDocument(@Nullable String source, String variableName) {
 
 			Builder builder = CodeBlock.builder();
-			if(!StringUtils.hasText(source)) {
-				builder.addStatement("$T $L = new $T()", Document.class, "%sDocument".formatted(variableName),
-					Document.class);
-			}
-			else if (!containsPlaceholder(source)) {
+			if (!StringUtils.hasText(source)) {
+				builder.addStatement("$T $L = new $T()", Document.class, "%sDocument".formatted(variableName), Document.class);
+			} else if (!containsPlaceholder(source)) {
 				builder.addStatement("$T $L = $T.parse($S)", Document.class, "%sDocument".formatted(variableName),
 						Document.class, source);
 			} else {
