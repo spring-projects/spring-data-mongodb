@@ -55,6 +55,11 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.test.tools.TestCompiler;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -164,6 +169,16 @@ public class MongoRepositoryContributorTests {
 	}
 
 	@Test
+	void testDerivedFinderReturningList() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S").onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("luke", "vader", "kylo", "han");
+		});
+	}
+
+	@Test
 	void testLimitedDerivedFinder() {
 
 		generated.verify(methodInvoker -> {
@@ -172,6 +187,196 @@ public class MongoRepositoryContributorTests {
 			assertThat(users).hasSize(2);
 		});
 	}
+
+	@Test
+	void testSortedDerivedFinder() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findByLastnameStartingWithOrderByUsername", "S")
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
+		});
+	}
+
+	@Test
+	void testDerivedFinderWithLimitArgument() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S", Limit.of(2))
+					.onBean("aotUserRepository");
+			assertThat(users).hasSize(2);
+		});
+	}
+
+	@Test
+	void testDerivedFinderWithSort() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S", Sort.by("username"))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
+		});
+	}
+
+	@Test
+	void testDerivedFinderWithSortAndLimit() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S", Sort.by("username"), Limit.of(2))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testDerivedFinderReturningListWithPageable() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker
+					.invoke("findByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testDerivedFinderReturningPage() {
+
+		generated.verify(methodInvoker -> {
+
+			Page<User> page = methodInvoker
+					.invoke("findPageOfUsersByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(page.getTotalElements()).isEqualTo(4);
+			assertThat(page.getSize()).isEqualTo(2);
+			assertThat(page.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testDerivedFinderReturningSlice() {
+
+		generated.verify(methodInvoker -> {
+
+			Slice<User> slice = methodInvoker
+					.invoke("findSliceOfUserByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(slice.hasNext()).isTrue();
+			assertThat(slice.getSize()).isEqualTo(2);
+			assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderWithQuery() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S").onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
+		});
+	}
+
+	@Test
+	void testAnnotatedMultilineFinderWithQuery() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findAnnotatedMultilineQueryByLastname", "S").onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderWithQueryAndLimit() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S", Limit.of(2))
+					.onBean("aotUserRepository");
+			assertThat(users).hasSize(2);
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderWithQueryAndSort() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S", Sort.by("username"))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderWithQueryLimitAndSort() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S", Limit.of(2), Sort.by("username"))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderReturningListWithPageable() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker
+					.invoke("findAnnotatedQueryByLastname", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderReturningPage() {
+
+		generated.verify(methodInvoker -> {
+
+			Page<User> page = methodInvoker
+					.invoke("findAnnotatedQueryPageOfUsersByLastname", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(page.getTotalElements()).isEqualTo(4);
+			assertThat(page.getSize()).isEqualTo(2);
+			assertThat(page.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderReturningSlice() {
+
+		generated.verify(methodInvoker -> {
+
+			Slice<User> slice = methodInvoker
+					.invoke("findAnnotatedQuerySliceOfUsersByLastname", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(slice.hasNext()).isTrue();
+			assertThat(slice.getSize()).isEqualTo(2);
+			assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
+		});
+	}
+
+	@Test
+	void testDerivedFinderWithAnnotatedSort() {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findWithAnnotatedSortByLastnameStartingWith", "S")
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
+		});
+	}
+
+	// findAnnotatedQueryPageOfUsersByLastname
 
 	// countUsersByLastname
 

@@ -33,50 +33,79 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface UserRepository extends CrudRepository<User, String> {
 
-    List<User> findUserNoArgumentsBy();
+	List<User> findUserNoArgumentsBy();
 
-    User findOneByUsername(String username);
+	User findOneByUsername(String username);
 
-    Optional<User> findOptionalOneByUsername(String username);
+	Optional<User> findOptionalOneByUsername(String username);
 
-    Long countUsersByLastname(String lastname);
+	Long countUsersByLastname(String lastname);
 
-    Boolean existsUserByLastname(String lastname);
+	Boolean existsUserByLastname(String lastname);
 
-    List<User> findTop2ByLastnameStartingWith(String lastname);
+	List<User> findByLastnameStartingWith(String lastname);
 
-    @Query("{ 'username' : '?0' }")
-    List<User> findAllByAnnotatedQueryWithParameter(String username);
+	List<User> findTop2ByLastnameStartingWith(String lastname);
 
-    @Query("""
-        {
-            'username' : '?0'
-        }""")
-    List<User> findAllByAnnotatedMultilineQueryWithParameter(String username);
+	List<User> findByLastnameStartingWithOrderByUsername(String lastname);
 
+	List<User> findByLastnameStartingWith(String lastname, Limit limit);
 
-    @ReadPreference("secondary")
-    User findWithReadPreferenceByUsername(String username);
+	List<User> findByLastnameStartingWith(String lastname, Sort sort);
 
-    Page<UserProjection> findUserProjectionBy(Pageable pageable);
+	List<User> findByLastnameStartingWith(String lastname, Sort sort, Limit limit);
 
-    @Query(sort = "{ 'last_name' : -1}")
-    List<User> findByLastnameAfter(String lastname);
+	List<User> findByLastnameStartingWith(String lastname, Pageable page);
 
+	Page<User> findPageOfUsersByLastnameStartingWith(String lastname, Pageable page);
 
+	Slice<User> findSliceOfUserByLastnameStartingWith(String lastname, Pageable page);
 
-    @Query(fields = "{ '_id' : -1}")
-    List<User> findByLastnameBefore(String lastname);
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	List<User> findAnnotatedQueryByLastname(String lastname);
 
-    List<User> findByLastnameOrderByFirstnameDesc(String lastname);
+	@Query("""
+			{
+			    'lastname' : {
+			        '$regex' : '^?0'
+			    }
+			}""")
+	List<User> findAnnotatedMultilineQueryByLastname(String username);
 
-    List<User> findUserByLastnameLike(String lastname);
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	List<User> findAnnotatedQueryByLastname(String lastname, Limit limit);
 
-    List<User> findUserByLastnameStartingWith(String lastname, Pageable page);
-    List<User> findUserByLastnameStartingWith(String lastname, Sort sort);
-    List<User> findUserByLastnameStartingWith(String lastname, Limit limit);
-    List<User> findUserByLastnameStartingWith(String lastname, Sort sort, Limit limit);
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	List<User> findAnnotatedQueryByLastname(String lastname, Sort sort);
 
-    Page<User> findUserByFirstnameStartingWith(String firstname, Pageable page);
-    Slice<User> findUserByFirstnameLike(String firstname, Pageable page);
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	List<User> findAnnotatedQueryByLastname(String lastname, Limit limit, Sort sort);
+
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	List<User> findAnnotatedQueryByLastname(String lastname, Pageable pageable);
+
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	Page<User> findAnnotatedQueryPageOfUsersByLastname(String lastname, Pageable pageable);
+
+	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
+	Slice<User> findAnnotatedQuerySliceOfUsersByLastname(String lastname, Pageable pageable);
+
+	@Query(sort = "{ 'username' : 1 }")
+	List<User> findWithAnnotatedSortByLastnameStartingWith(String lastname);
+
+	@ReadPreference("secondary")
+	User findWithReadPreferenceByUsername(String username);
+
+	Page<UserProjection> findUserProjectionBy(Pageable pageable);
+
+	@Query(sort = "{ 'last_name' : -1}")
+	List<User> findByLastnameAfter(String lastname);
+
+	@Query(fields = "{ '_id' : -1}")
+	List<User> findByLastnameBefore(String lastname);
+
+	List<User> findByLastnameOrderByFirstnameDesc(String lastname);
+
+	List<User> findUserByLastnameLike(String lastname);
+
 }
