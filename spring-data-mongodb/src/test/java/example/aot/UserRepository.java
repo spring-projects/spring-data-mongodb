@@ -33,6 +33,8 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface UserRepository extends CrudRepository<User, String> {
 
+	/* Derived Queries */
+
 	List<User> findUserNoArgumentsBy();
 
 	User findOneByUsername(String username);
@@ -60,6 +62,18 @@ public interface UserRepository extends CrudRepository<User, String> {
 	Page<User> findPageOfUsersByLastnameStartingWith(String lastname, Pageable page);
 
 	Slice<User> findSliceOfUserByLastnameStartingWith(String lastname, Pageable page);
+
+	// TODO: Streaming
+	// TODO: Scrolling
+	// TODO: GeoQueries
+
+	/* Annotated Queries */
+
+	@Query("{ 'username' : ?0 }")
+	User findAnnotatedQueryByUsername(String username);
+
+	@Query(value = "{ 'lastname' : { '$regex' : '^?0' } }", count = true)
+	Long countAnnotatedQueryByLastname(String lastname);
 
 	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
 	List<User> findAnnotatedQueryByLastname(String lastname);
@@ -90,22 +104,27 @@ public interface UserRepository extends CrudRepository<User, String> {
 	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
 	Slice<User> findAnnotatedQuerySliceOfUsersByLastname(String lastname, Pageable pageable);
 
+	// TODO: deletes
+	// TODO: updates
+	// TODO: Aggregations
+
+	/* Derived With Annotated Options */
+
 	@Query(sort = "{ 'username' : 1 }")
 	List<User> findWithAnnotatedSortByLastnameStartingWith(String lastname);
 
-	@ReadPreference("secondary")
+	@Query(fields = "{ 'username' : 1 }")
+	List<User> findWithAnnotatedFieldsProjectionByLastnameStartingWith(String lastname);
+
+	@ReadPreference("no-such-read-preference")
 	User findWithReadPreferenceByUsername(String username);
 
-	Page<UserProjection> findUserProjectionBy(Pageable pageable);
+	// TODO: hints
 
-	@Query(sort = "{ 'last_name' : -1}")
-	List<User> findByLastnameAfter(String lastname);
+	/* Projecting Queries */
 
-	@Query(fields = "{ '_id' : -1}")
-	List<User> findByLastnameBefore(String lastname);
+	List<UserProjection> findUserProjectionByLastnameStartingWith(String lastname);
 
-	List<User> findByLastnameOrderByFirstnameDesc(String lastname);
-
-	List<User> findUserByLastnameLike(String lastname);
+	Page<UserProjection> findUserProjectionByLastnameStartingWith(String lastname, Pageable page);
 
 }

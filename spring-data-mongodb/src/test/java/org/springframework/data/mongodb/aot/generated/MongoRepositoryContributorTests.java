@@ -32,8 +32,10 @@
 package org.springframework.data.mongodb.aot.generated;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import example.aot.User;
+import example.aot.UserProjection;
 import example.aot.UserRepository;
 
 import java.util.LinkedHashMap;
@@ -66,6 +68,7 @@ import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.MongoClient;
 
@@ -273,7 +276,27 @@ public class MongoRepositoryContributorTests {
 	}
 
 	@Test
-	void testAnnotatedFinderWithQuery() {
+	void testAnnotatedFinderReturningSingleValueWithQuery() {
+
+		generated.verify(methodInvoker -> {
+
+			User user = methodInvoker.invoke("findAnnotatedQueryByUsername", "yoda").onBean("aotUserRepository");
+			assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
+		});
+	}
+
+	@Test
+	void testAnnotatedCount() {
+
+		generated.verify(methodInvoker -> {
+
+			Long value = methodInvoker.invoke("countAnnotatedQueryByLastname", "Skywalker").onBean("aotUserRepository");
+			assertThat(value).isEqualTo(2L);
+		});
+	}
+
+	@Test
+	void testAnnotatedFinderReturningListWithQuery() {
 
 		generated.verify(methodInvoker -> {
 
@@ -376,9 +399,53 @@ public class MongoRepositoryContributorTests {
 		});
 	}
 
-	// findAnnotatedQueryPageOfUsersByLastname
+	@Test
+	void testDerivedFinderWithAnnotatedFieldsProjection() {
 
-	// countUsersByLastname
+		generated.verify(methodInvoker -> {
+
+			List<User> users = methodInvoker.invoke("findWithAnnotatedFieldsProjectionByLastnameStartingWith", "S")
+					.onBean("aotUserRepository");
+			assertThat(users).allMatch(
+					user -> StringUtils.hasText(user.getUsername()) && user.getLastname() == null && user.getFirstname() == null);
+		});
+	}
+
+	@Test
+	void testReadPreferenceAppliedToQuery() {
+
+		generated.verify(methodInvoker -> {
+
+			// check if it fails when trying to parse the read preference to indicate it would get applied
+			assertThatExceptionOfType(IllegalArgumentException.class)
+					.isThrownBy(() -> methodInvoker.invoke("findWithReadPreferenceByUsername", "S").onBean("aotUserRepository"))
+					.withMessageContaining("No match for read preference");
+		});
+	}
+
+	@Test
+	void testDerivedFinderReturningListOfProjections() {
+
+		generated.verify(methodInvoker -> {
+
+			List<UserProjection> users = methodInvoker.invoke("findUserProjectionByLastnameStartingWith", "S")
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(UserProjection::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke",
+					"vader");
+		});
+	}
+
+	@Test
+	void testDerivedFinderReturningPageOfProjections() {
+
+		generated.verify(methodInvoker -> {
+
+			Page<UserProjection> users = methodInvoker
+					.invoke("findUserProjectionByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
+					.onBean("aotUserRepository");
+			assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
+		});
+	}
 
 	private static void initUsers() {
 
