@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -54,6 +53,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Tests for {@link MongoPersistentEntityIndexResolver}.
@@ -328,7 +328,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		class IndexOnLevelZeroWithExplicityNamedField {
 
-			@Indexed @Field("customFieldName") String namedProperty;
+			@Indexed
+			@Field("customFieldName") String namedProperty;
 		}
 
 		@Document
@@ -441,7 +442,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	@Document
 	class IndexOnMetaAnnotatedField {
-		@Field("_name") @IndexedFieldAnnotation String lastname;
+		@Field("_name")
+		@IndexedFieldAnnotation String lastname;
 	}
 
 	/**
@@ -839,7 +841,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		class WithCompoundCollationFromDocument {}
 
 		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
-		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}", collation = "#{{ 'locale' : 'de' + '_' + 'AT' }}")
+		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}",
+				collation = "#{{ 'locale' : 'de' + '_' + 'AT' }}")
 		class WithEvaluatedCollationFromCompoundIndex {}
 	}
 
@@ -1474,9 +1477,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					WithCollationFromIndexedAnnotation.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
-					.append("unique", true)
-					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "value").append("unique", true).append("collation",
+							new org.bson.Document().append("locale", "en_US").append("strength", 2)));
 		}
 
 		@Test // GH-3002
@@ -1486,9 +1489,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					WithCollationFromDocumentAnnotation.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
-					.append("unique", true)
-					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "value").append("unique", true).append("collation",
+							new org.bson.Document().append("locale", "en_US").append("strength", 2)));
 		}
 
 		@Test // GH-3002
@@ -1591,7 +1594,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class SimilarityHolingBean {
 
-			@Indexed @Field("norm") String normalProperty;
+			@Indexed
+			@Field("norm") String normalProperty;
 			@Field("similarityL") private List<SimilaritySibling> listOfSimilarilyNamedEntities = null;
 		}
 
@@ -1754,7 +1758,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithHashedIndexOnId {
 
-			@HashIndexed @Id String id;
+			@HashIndexed
+			@Id String id;
 		}
 
 		@Document
@@ -1847,6 +1852,55 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@AliasFor(annotation = Indexed.class, attribute = "name")
 			String name() default "";
+		}
+	}
+
+	/**
+	 * Test resolution of {@link VectorIndexed}.
+	 *
+	 * @author Mark Paluch
+	 */
+	public static class VectorIndexResolutionTests {
+
+		@Test // GH-4706
+		public void shouldResolveIndexCorrectly() {
+
+			MongoMappingContext mappingContext = new MongoMappingContext();
+			MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			TypeInformation<?> type = mappingContext.getRequiredPersistentEntity(Movie.class).getTypeInformation();
+			Iterable<? extends SearchIndexDefinition> searchIndexDefinitions = resolver.resolveSearchIndexFor(type);
+
+			assertThat(searchIndexDefinitions).hasSize(1);
+
+			org.bson.Document definition = searchIndexDefinitions.iterator().next().getIndexDocument(type, mappingContext);
+
+			assertThat(definition).containsEntry("name", "movies").containsEntry("type", "vector");
+			assertThat(definition) //
+					.containsEntry("definition.fields.[0].path", "genre")//
+					.containsEntry("definition.fields.[0].type", "filter");
+
+			assertThat(definition) //
+					.containsEntry("definition.fields.[1].path", "rating")//
+					.containsEntry("definition.fields.[1].type", "filter");
+
+			assertThat(definition).containsEntry("definition.fields.[2].path", "embedding") //
+					.containsEntry("definition.fields.[2].type", "vector") //
+					.containsEntry("definition.fields.[2].numDimensions", 1536)
+					.containsEntry("definition.fields.[2].similarity", "cosine")
+					.containsEntry("definition.fields.[2].quantization", "none");
+		}
+
+		@Document
+		@VectorIndexed("movies")
+		static class Movie {
+
+			@ABetterNameForVectorIndexed String genre;
+
+			@ABetterNameForVectorIndexed int rating;
+
+			@ABetterNameForVector(dimensions = 1536, similarity = VectorIndex.SimilarityFunction.COSINE) float[] embedding;
+
 		}
 	}
 

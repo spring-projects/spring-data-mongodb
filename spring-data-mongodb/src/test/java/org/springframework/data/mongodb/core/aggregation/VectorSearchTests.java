@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.data.mongodb.core.index.SearchIndex;
+import org.springframework.data.mongodb.core.index.VectorIndex;
 import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -58,14 +58,16 @@ public class VectorSearchTests {
 		if(hasIndex) {
 			System.out.println("found the index: vector_index");
 			System.out.println(template.searchIndexOps(COLLECTION_NAME).getIndexInfo());
-			template.searchIndexOps(COLLECTION_NAME).updateIndex(new SearchIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("euclidean"));
+			template.searchIndexOps(COLLECTION_NAME).updateIndex(new VectorIndex("vector_index").addVector("plot_embedding",
+					field -> field.dimensions(1536).similarity("euclidean")));
 //			template.indexOps(COLLECTION_NAME).vectorIndexOperations().dropIndex("vector_name");
 		}
 		else {
 
 			System.out.print("Creating index: ");
 			String s = template.searchIndexOps(COLLECTION_NAME).ensureIndex(
-					new SearchIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("cosine"));
+					new VectorIndex("vector_index").addVector("plot_embedding",
+							field -> field.dimensions(1536).similarity("cosine")));
 			System.out.println(s);
 		}
 

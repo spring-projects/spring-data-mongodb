@@ -78,4 +78,14 @@ public interface IndexResolver {
 		return resolveIndexFor(TypeInformation.of(entityType));
 	}
 
+	/**
+	 * Find and create {@link SearchIndexDefinition}s for properties of given {@link TypeInformation}.
+	 * {@link SearchIndexDefinition}s are created for properties and types with {@link VectorIndexed}.
+	 *
+	 * @param typeInformation must not be {@literal null}.
+	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
+	 * @since 3.5
+	 */
+	Iterable<? extends SearchIndexDefinition> resolveSearchIndexFor(TypeInformation<?> typeInformation);
+
 }
