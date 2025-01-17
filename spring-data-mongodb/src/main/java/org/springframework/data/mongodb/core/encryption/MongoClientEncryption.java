@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.encryption;
 import java.util.function.Supplier;
 
 import org.bson.BsonBinary;
+import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.springframework.data.mongodb.core.encryption.EncryptionKey.Type;
 import org.springframework.util.Assert;
@@ -59,7 +60,19 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 
 	@Override
 	public BsonBinary encrypt(BsonValue value, EncryptionOptions options) {
+		return getClientEncryption().encrypt(value, createEncryptOptions(options));
+	}
 
+	@Override
+	public BsonDocument encryptExpression(BsonDocument value, EncryptionOptions options) {
+		return getClientEncryption().encryptExpression(value, createEncryptOptions(options));
+	}
+
+	public ClientEncryption getClientEncryption() {
+		return source.get();
+	}
+
+	private EncryptOptions createEncryptOptions(EncryptionOptions options) {
 		EncryptOptions encryptOptions = new EncryptOptions(options.algorithm());
 
 		if (Type.ALT.equals(options.key().type())) {
@@ -68,11 +81,10 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 			encryptOptions = encryptOptions.keyId((BsonBinary) options.key().value());
 		}
 
-		return getClientEncryption().encrypt(value, encryptOptions);
-	}
-
-	public ClientEncryption getClientEncryption() {
-		return source.get();
+		options.queryableEncryptionOptions().getQueryType().map(encryptOptions::queryType);
+		options.queryableEncryptionOptions().getContentionFactor().map(encryptOptions::contentionFactor);
+		options.queryableEncryptionOptions().getRangeOptions().map(encryptOptions::rangeOptions);
+		return encryptOptions;
 	}
 
 }

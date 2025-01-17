@@ -26,4 +26,6 @@ public final class EncryptionAlgorithms {
 	public static final String AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic";
 	public static final String AEAD_AES_256_CBC_HMAC_SHA_512_Random = "AEAD_AES_256_CBC_HMAC_SHA_512-Random";
 
+	public static final String RANGE = "Range";
+
 }

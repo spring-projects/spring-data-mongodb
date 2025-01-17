@@ -59,6 +59,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.MongoField;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -356,9 +357,10 @@ public class QueryMapper {
 			return createMapEntry(key, getMappedObject(mongoExpression.toDocument(), field.getEntity()));
 		}
 
-		if (isNestedKeyword(rawValue) && !field.isIdField()) {
+		if (isNestedKeyword(rawValue)) {
 			Keyword keyword = new Keyword((Document) rawValue);
-			value = getMappedKeyword(field, keyword);
+			field = field.with(keyword.getKey());
+			value = field.isIdField() ? getMappedValue(field, rawValue) : getMappedKeyword(field, keyword);
 		} else {
 			value = getMappedValue(field, rawValue);
 		}
@@ -455,11 +457,20 @@ public class QueryMapper {
 	@Nullable
 	@SuppressWarnings("unchecked")
 	protected Object getMappedValue(Field documentField, Object sourceValue) {
-
 		Object value = applyFieldTargetTypeHintToValue(documentField, sourceValue);
 
-		if (documentField.getProperty() != null
-				&& converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
+		MongoPersistentProperty property = documentField.getProperty();
+
+		String queryPath = property != null && !property.getFieldName().equals(documentField.name)
+				? property.getFieldName() + "." + documentField.name
+				: documentField.name;
+
+		// TODO add flattened path to convert value and remove logging
+		if (LOGGER.isErrorEnabled()) {
+			LOGGER.error(" >-|-> " + queryPath);
+		}
+
+		if (property != null && converter.getCustomConversions().hasValueConverter(documentField.getProperty())) {
 
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = converter
 					.getCustomConversions().getPropertyValueConversions().getValueConverter(documentField.getProperty());
@@ -668,8 +679,18 @@ public class QueryMapper {
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter) {
 
 		MongoPersistentProperty property = documentField.getProperty();
+
+		String queryPath = property != null && !property.getFieldName().equals(documentField.name)
+				? property.getFieldName() + "." + documentField.name
+				: documentField.name;
+
+		// TODO add flattened path to convert value and remove logging
+		if (LOGGER.isErrorEnabled()) {
+			LOGGER.error(" >--> " + queryPath);
+		}
+
 		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
-				property, converter);
+				converter, property, queryPath);
 
 		/* might be an $in clause with multiple entries */
 		if (property != null && !property.isCollectionLike() && sourceValue instanceof Collection<?> collection) {

@@ -33,24 +33,37 @@ import org.springframework.lang.Nullable;
 public class MongoConversionContext implements ValueConversionContext<MongoPersistentProperty> {
 
 	private final PropertyValueProvider<MongoPersistentProperty> accessor; // TODO: generics
-	private final @Nullable MongoPersistentProperty persistentProperty;
 	private final MongoConverter mongoConverter;
 
+	@Nullable private final MongoPersistentProperty persistentProperty;
 	@Nullable private final SpELContext spELContext;
+	@Nullable private final String queryFieldPath;
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
-		this(accessor, persistentProperty, mongoConverter, null);
+		this(accessor, mongoConverter, persistentProperty, null);
 	}
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
 			@Nullable SpELContext spELContext) {
+		this(accessor, mongoConverter, persistentProperty, spELContext, null);
+	}
+
+	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor, MongoConverter mongoConverter,
+			@Nullable MongoPersistentProperty persistentProperty, @Nullable String queryFieldPath) {
+		this(accessor, mongoConverter, persistentProperty, null, queryFieldPath);
+	}
+
+	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor, MongoConverter mongoConverter,
+			@Nullable MongoPersistentProperty persistentProperty, @Nullable SpELContext spELContext,
+			@Nullable String queryFieldPath) {
 
 		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
 		this.spELContext = spELContext;
+		this.queryFieldPath = queryFieldPath;
 	}
 
 	@Override
@@ -83,5 +96,10 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	@Nullable
 	public SpELContext getSpELContext() {
 		return spELContext;
+	}
+
+	@Nullable
+	public String getQueryFieldPath() {
+		return queryFieldPath;
 	}
 }

@@ -76,6 +76,18 @@ public abstract class AbstractEncryptionTestBase {
 
 	@Autowired MongoTemplate template;
 
+	@Test
+	void canQueryDeterministicallyEncryptedWithQueryScope() {
+		Person source = new Person();
+		source.id = "id-1";
+		source.ssn = "mySecretSSN";
+
+		template.save(source);
+
+		Person loaded = template.query(Person.class).matching(where("ssn").gte(source.ssn)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
 	@Test // GH-4284
 	void encryptAndDecryptSimpleValue() {
 
