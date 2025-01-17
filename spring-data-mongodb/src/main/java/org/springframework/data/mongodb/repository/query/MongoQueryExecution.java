@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -31,6 +32,9 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -239,6 +243,39 @@ public interface MongoQueryExecution {
 
 			// transform to GeoPage after applying optimization
 			return new GeoPage<>(geoResults, accessor.getPageable(), page.getTotalElements());
+		}
+	}
+
+	final class DeleteExecutionX<T> implements MongoQueryExecution {
+
+		ExecutableRemoveOperation.ExecutableRemove<T> remove;
+		Type type;
+
+		public DeleteExecutionX(ExecutableRemove<T> remove, Type type) {
+			this.remove = remove;
+			this.type = type;
+		}
+
+		@Nullable
+		@Override
+		public Object execute(Query query) {
+
+			TerminatingRemove<T> doRemove = remove.matching(query);
+			if (Type.ALL.equals(type)) {
+				DeleteResult result = doRemove.all();
+				return result.wasAcknowledged() ? Long.valueOf(result.getDeletedCount()) : Long.valueOf(0);
+			} else if (Type.FIND_AND_REMOVE_ALL.equals(type)) {
+				return doRemove.findAndRemove();
+			} else if (Type.FIND_AND_REMOVE_ONE.equals(type)) {
+				Iterator<T> removed = doRemove.findAndRemove().iterator();
+				return removed.hasNext() ? removed.next() : null;
+
+			}
+			throw new RuntimeException();
+		}
+
+		public enum Type {
+			FIND_AND_REMOVE_ONE, FIND_AND_REMOVE_ALL, ALL
 		}
 	}
 

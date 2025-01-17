@@ -51,6 +51,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -386,6 +388,48 @@ public class MongoRepositoryContributorTests {
 			assertThat(slice.getSize()).isEqualTo(2);
 			assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
 		});
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "deleteByUsername", "deleteAnnotatedQueryByUsername" })
+	void testDeleteSingle(String methodName) {
+
+		generated.verify(methodInvoker -> {
+
+			User result = methodInvoker.invoke(methodName, "yoda").onBean("aotUserRepository");
+
+			assertThat(result).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
+		});
+
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(6L);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "deleteByLastnameStartingWith", "deleteAnnotatedQueryByLastnameStartingWith" })
+	void testDerivedDeleteMultipleReturningDeleteCount(String methodName) {
+
+		generated.verify(methodInvoker -> {
+
+			Long result = methodInvoker.invoke(methodName, "S").onBean("aotUserRepository");
+
+			assertThat(result).isEqualTo(4L);
+		});
+
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(3L);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "deleteUsersByLastnameStartingWith", "deleteUsersAnnotatedQueryByLastnameStartingWith" })
+	void testDerivedDeleteMultipleReturningDeleted(String methodName) {
+
+		generated.verify(methodInvoker -> {
+
+			List<User> result = methodInvoker.invoke(methodName, "S").onBean("aotUserRepository");
+
+			assertThat(result).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
+		});
+
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(3L);
 	}
 
 	@Test
