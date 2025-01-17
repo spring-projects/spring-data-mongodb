@@ -33,6 +33,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.assertj.core.data.Percentage;
+import org.bson.BsonDouble;
 import org.bson.BsonUndefined;
 import org.bson.types.Binary;
 import org.bson.types.Code;
@@ -70,6 +71,7 @@ import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -3328,11 +3330,34 @@ class MappingMongoConverterUnitTests {
 		assertThat(target.id).isEqualTo(source.id);
 	}
 
+	@Test // GH-4706
+	void shouldWriteVectorValues() {
+
+		WithVector source = new WithVector();
+		source.embeddings = Vector.of(1.1d, 2.2d, 3.3d);
+
+		org.bson.Document document = write(source);
+		assertThat(document.getList("embeddings", BsonDouble.class)).hasSize(3);
+	}
+
+	@Test // GH-4706
+	void shouldReadVectorValues() {
+
+		org.bson.Document document = new org.bson.Document("embeddings", List.of(1.1d, 2.2d, 3.3d));
+		WithVector withVector = converter.read(WithVector.class, document);
+		assertThat(withVector.embeddings.toDoubleArray()).contains(1.1d, 2.2d, 3.3d);
+	}
+
 	org.bson.Document write(Object source) {
 
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 		return target;
+	}
+
+	static class WithVector {
+
+		Vector embeddings;
 	}
 
 	static class GenericType<T> {

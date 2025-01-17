@@ -18,67 +18,91 @@ package org.springframework.data.mongodb.core.index;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.springframework.data.mongodb.core.DefaultIndexOperations;
+
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.index.SearchIndex.Filter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.lang.NonNull;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+
+import com.mongodb.client.model.SearchIndexModel;
+import com.mongodb.client.model.SearchIndexType;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 3.5
  */
-public class DefaultSearchIndexOperations extends DefaultIndexOperations implements SearchIndexOperations {
+public class DefaultSearchIndexOperations implements SearchIndexOperations {
 
-	private static final Log LOGGER = LogFactory.getLog(SearchIndexOperations.class);
+	private final MongoOperations mongoOperations;
+	private final String collectionName;
+	private final TypeInformation<?> entityTypeInformation;
 
 	public DefaultSearchIndexOperations(MongoOperations mongoOperations, Class<?> type) {
 		this(mongoOperations, mongoOperations.getCollectionName(type), type);
 	}
 
 	public DefaultSearchIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
-		super(mongoOperations, collectionName, type);
+		this.collectionName = collectionName;
+
+		if (type != null) {
+
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoOperations
+					.getConverter().getMappingContext();
+			entityTypeInformation = mappingContext.getRequiredPersistentEntity(type).getTypeInformation();
+		} else {
+			entityTypeInformation = null;
+		}
+
+		this.mongoOperations = mongoOperations;
 	}
 
-	private static String getMappedPath(String path, MongoPersistentEntity<?> entity, QueryMapper mapper) {
-		return mapper.getMappedFields(new Document(path, 1), entity).entrySet().iterator().next().getKey();
+	@Override
+	public String ensureIndex(SearchIndexDefinition indexDefinition) {
+
+		if (!(indexDefinition instanceof VectorIndex vsi)) {
+			throw new IllegalStateException("Index definitions must be of type VectorIndex");
+		}
+
+		Document index = indexDefinition.getIndexDocument(entityTypeInformation,
+				mongoOperations.getConverter().getMappingContext());
+
+		mongoOperations.getCollection(collectionName).createSearchIndexes(List
+				.of(new SearchIndexModel(vsi.getName(), (Document) index.get("definition"), SearchIndexType.vectorSearch())));
+
+		return vsi.getName();
+	}
+
+	@Override
+	public void updateIndex(SearchIndexDefinition index) {
+
+		if (index instanceof VectorIndex) {
+			throw new UnsupportedOperationException("Vector Index definitions cannot be updated");
+		}
+
+		Document indexDocument = index.getIndexDocument(entityTypeInformation,
+				mongoOperations.getConverter().getMappingContext());
+
+		mongoOperations.getCollection(collectionName).updateSearchIndex(index.getName(), indexDocument);
 	}
 
 	@Override
 	public boolean exists(String indexName) {
 
-		// https://www.mongodb.com/docs/manual/reference/operator/aggregation/listSearchIndexes/
-		AggregationResults<Document> aggregate = mongoOperations.aggregate(
-				Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document("name", indexName))),
-				collectionName, Document.class);
+		List<Document> indexes = mongoOperations.getCollection(collectionName).listSearchIndexes().into(new ArrayList<>());
 
-		return aggregate.iterator().hasNext();
-	}
-
-	@Override
-	public void updateIndex(SearchIndex index) {
-
-		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
-
-		Document indexDocument = createIndexDocument(index, entity);
-
-		Document cmdResult = mongoOperations.execute(db -> {
-
-			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName());
-			command.putAll(indexDocument);
-			command.remove("type");
-
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Updating VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
+		for (Document index : indexes) {
+			if (index.getString("name").equals(indexName)) {
+				return true;
 			}
-			return db.runCommand(command);
-		});
+		}
+
+		return false;
 	}
 
 	@Override
@@ -106,59 +130,13 @@ public class DefaultSearchIndexOperations extends DefaultIndexOperations impleme
 	}
 
 	@Override
-	public String ensureIndex(SearchIndexDefinition indexDefinition) {
-
-		if (!(indexDefinition instanceof SearchIndex vsi)) {
-			throw new IllegalStateException("Index definitions must be of type VectorIndex");
-		}
-
-		MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
-
-		Document index = createIndexDocument(vsi, entity);
-
-		Document cmdResult = mongoOperations.execute(db -> {
-
-			Document command = new Document().append("createSearchIndexes", collectionName).append("indexes", List.of(index));
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Creating VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
-			}
-			return db.runCommand(command);
-		});
-
-		return cmdResult.get("ok").toString().equalsIgnoreCase("1.0") ? vsi.getName() : cmdResult.toJson();
-	}
-
-	@NonNull
-	private Document createIndexDocument(SearchIndex vsi, MongoPersistentEntity<?> entity) {
-
-		Document index = new Document(vsi.getIndexOptions());
-		Document definition = new Document();
-
-		List<Document> fields = new ArrayList<>(vsi.getFilters().size() + 1);
-
-		Document vectorField = new Document("type", "vector");
-		vectorField.append("path", getMappedPath(vsi.getPath(), entity, mapper));
-		vectorField.append("numDimensions", vsi.getDimensions());
-		vectorField.append("similarity", vsi.getSimilarity());
-
-		fields.add(vectorField);
-
-		for (Filter filter : vsi.getFilters()) {
-			fields.add(new Document("type", "filter").append("path", getMappedPath(filter.path(), entity, mapper)));
-		}
-
-		definition.append("fields", fields);
-		index.append("definition", definition);
-		return index;
+	public void dropAllIndexes() {
+		getIndexInfo().forEach(indexInfo -> dropIndex(indexInfo.getName()));
 	}
 
 	@Override
 	public void dropIndex(String name) {
-
-		Document command = new Document().append("dropSearchIndex", collectionName).append("name", name);
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Dropping VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
-		}
-		mongoOperations.execute(db -> db.runCommand(command));
+		mongoOperations.getCollection(collectionName).dropSearchIndex(name);
 	}
+
 }

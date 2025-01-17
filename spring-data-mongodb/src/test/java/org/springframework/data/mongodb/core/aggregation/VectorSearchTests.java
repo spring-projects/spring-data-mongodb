@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.data.mongodb.core.index.SearchIndex;
+import org.springframework.data.mongodb.core.index.VectorIndex;
 import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.test.util.Template;
 @ExtendWith(MongoTemplateExtension.class)
 public class VectorSearchTests {
 
-	static final String COLLECTION_NAME = "embedded_movies";
+	static final String COLLECTION_NAME = "movies";
 
 	@Template(database = "mflix") //
 	static MongoTestTemplate template;
@@ -39,38 +39,37 @@ public class VectorSearchTests {
 	@Test
 	void xxx() {
 
-//		boolean hasIndex = template.indexOps(COLLECTION_NAME).getIndexInfo().stream()
-//				.anyMatch(it -> it.getName().endsWith("vector_index"));
+		// boolean hasIndex = template.indexOps(COLLECTION_NAME).getIndexInfo().stream()
+		// .anyMatch(it -> it.getName().endsWith("movie_vector_index"));
 
 		// TODO: index conversion etc. is missing - should we combine the index info listing?
-//		boolean hasIndex = template.execute(db -> {
-//
-//			Document doc = db.runCommand(new Document("listSearchIndexes", COLLECTION_NAME));
-//			Object searchIndexes = BsonUtils.resolveValue(BsonUtils.asMap(doc), "cursor.firstBatch");
-//			if(searchIndexes instanceof Collection<?> indexes) {
-//				return indexes.stream().anyMatch(it -> it instanceof Document idx && idx.get("name", String.class).equalsIgnoreCase("vector_index"));
-//			}
-//			return false;
-//		});
+		// boolean hasIndex = template.execute(db -> {
+		//
+		// Document doc = db.runCommand(new Document("listSearchIndexes", COLLECTION_NAME));
+		// Object searchIndexes = BsonUtils.resolveValue(BsonUtils.asMap(doc), "cursor.firstBatch");
+		// if(searchIndexes instanceof Collection<?> indexes) {
+		// return indexes.stream().anyMatch(it -> it instanceof Document idx && idx.get("name",
+		// String.class).equalsIgnoreCase("vector_index"));
+		// }
+		// return false;
+		// });
 
-		boolean hasIndex = template.searchIndexOps(COLLECTION_NAME).exists("vector_index");
-
-		if(hasIndex) {
-			System.out.println("found the index: vector_index");
-			System.out.println(template.searchIndexOps(COLLECTION_NAME).getIndexInfo());
-			template.searchIndexOps(COLLECTION_NAME).updateIndex(new SearchIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("euclidean"));
-//			template.indexOps(COLLECTION_NAME).vectorIndexOperations().dropIndex("vector_name");
+		if (!template.collectionExists(COLLECTION_NAME)) {
+			template.createCollection(COLLECTION_NAME);
 		}
-		else {
+
+		boolean hasIndex = template.searchIndexOps(COLLECTION_NAME).exists("movie_vector_index");
+
+		if (!hasIndex) {
 
 			System.out.print("Creating index: ");
-			String s = template.searchIndexOps(COLLECTION_NAME).ensureIndex(
-					new SearchIndex("vector_index").path("plot_embedding").dimensions(1536).similarity("cosine"));
-			System.out.println(s);
+			VectorIndex vectorIndex = new VectorIndex("movie_vector_index").addVector("plot_embedding",
+					field -> field.dimensions(1536).similarity(VectorIndex.SimilarityFunction.COSINE)).addFilter("language");
+			String s = template.searchIndexOps(COLLECTION_NAME).ensureIndex(vectorIndex);
 		}
 
-		VectorSearchOperation $vectorSearch = VectorSearchOperation.search("vector_index").path("plot_embedding")
-				.vectors(vectors).limit(10).numCandidates(150).searchScore();
+		VectorSearchOperation $vectorSearch = VectorSearchOperation.search("movie_vector_index").path("plot_embedding")
+				.vector(vectors).limit(10).numCandidates(150).withSearchScore();
 
 		Aggregation agg = Aggregation.newAggregation($vectorSearch, Aggregation.project("plot", "title"));
 
@@ -79,7 +78,7 @@ public class VectorSearchTests {
 		aggregate.forEach(System.out::println);
 	}
 
-	static Double[] vectors = { -0.0016261312, -0.028070757, -0.011342932, -0.012775794, -0.0027440966, 0.008683807,
+	static double[] vectors = { -0.0016261312, -0.028070757, -0.011342932, -0.012775794, -0.0027440966, 0.008683807,
 			-0.02575152, -0.02020668, -0.010283281, -0.0041719596, 0.021392956, 0.028657231, -0.006634482, 0.007490867,
 			0.018593878, 0.0038187427, 0.029590257, -0.01451522, 0.016061379, 0.00008528442, -0.008943722, 0.01627464,
 			0.024311995, -0.025911469, 0.00022596726, -0.008863748, 0.008823762, -0.034921836, 0.007910728, -0.01515501,

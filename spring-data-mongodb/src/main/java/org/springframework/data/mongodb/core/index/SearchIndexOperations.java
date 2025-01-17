@@ -18,17 +18,52 @@ package org.springframework.data.mongodb.core.index;
 import java.util.List;
 
 /**
+ * Search Index operations on a collection for Atlas Search.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 4.5
  */
 public interface SearchIndexOperations {
 
+	/**
+	 * Ensure that an index for the provided {@link SearchIndexDefinition} exists for the collection indicated by the
+	 * entity class. If not it will be created.
+	 *
+	 * @param indexDefinition must not be {@literal null}.
+	 * @return the index name.
+	 */
 	String ensureIndex(SearchIndexDefinition indexDefinition);
 
-	void updateIndex(SearchIndex index);
+	/**
+	 * Alters the search {@code index}.
+	 * <p>
+	 * Note that Atlas Search does not support updating Vector Search Indices resulting in
+	 * {@link UnsupportedOperationException}.
+	 *
+	 * @param index the index definition.
+	 */
+	void updateIndex(SearchIndexDefinition index);
 
-	boolean exists(String indexName);
+	/**
+	 * Check whether an index with the {@code name} exists.
+	 *
+	 * @param name name of index to check for presence.
+	 * @return {@literal true} if the index exists; {@literal false} otherwise.
+	 */
+	boolean exists(String name);
 
+	/**
+	 * Drops an index from this collection.
+	 *
+	 * @param name name of index to drop.
+	 */
 	void dropIndex(String name);
+
+	/**
+	 * Drops all search indices from this collection.
+	 */
+	void dropAllIndexes();
 
 	/**
 	 * Returns the index information on the collection.

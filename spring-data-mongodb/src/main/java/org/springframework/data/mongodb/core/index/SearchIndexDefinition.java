@@ -17,15 +17,60 @@ package org.springframework.data.mongodb.core.index;
 
 import org.bson.Document;
 
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
+
 /**
+ * Definition for an Atlas Search Index (Search Index or Vector Index).
+ *
  * @author Marcin Grzejszczak
+ * @author Mark Paluch
+ * @since 4.5
  */
 public interface SearchIndexDefinition {
 
 	/**
-	 * Get the index properties such as {@literal unique},...
-	 *
-	 * @return never {@literal null}.
+	 * @return the name of the index.
 	 */
-	Document getIndexOptions();
+	String getName();
+
+	/**
+	 * @return the type of the index. Typically, {@code search} or {@code vectorSearch}.
+	 */
+	String getType();
+
+	/**
+	 * Returns the index document for this index in the context of a potential entity to resolve field name mappings. The
+	 * resulting document contains the index name, type and {@link #getDefinition(TypeInformation, MappingContext)
+	 * definition}.
+	 *
+	 * @param entity
+	 * @param mappingContext
+	 * @return
+	 */
+	default Document getIndexDocument(@Nullable TypeInformation<?> entity,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+		Document document = new Document();
+		document.put("name", getName());
+		document.put("type", getType());
+		document.put("definition", getDefinition(entity, mappingContext));
+
+		return document;
+	}
+
+	/**
+	 * Returns the actual index definition for this index in the context of a potential entity to resolve field name
+	 * mappings.
+	 *
+	 * @param entity
+	 * @param mappingContext
+	 * @return
+	 */
+	Document getDefinition(@Nullable TypeInformation<?> entity,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext);
+
 }

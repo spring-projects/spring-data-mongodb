@@ -32,9 +32,9 @@ import org.springframework.data.mongodb.util.aggregation.TestAggregationContext;
 class VectorSearchOperationUnitTests {
 
 	static final Document $VECTOR_SEARCH = Document.parse(
-			"{'index' : 'vector_index', 'path' : 'plot_embedding', 'queryVector' : [-0.0016261312, -0.028070757, -0.011342932], 'limit' : 10}");
+			"{'index' : 'vector_index', 'limit' : 10, 'path' : 'plot_embedding', 'queryVector' : [-0.0016261312, -0.028070757, -0.011342932]}");
 	static final VectorSearchOperation SEARCH_OPERATION = VectorSearchOperation.search("vector_index")
-			.path("plot_embedding").vectors(-0.0016261312, -0.028070757, -0.011342932).limit(10);
+			.path("plot_embedding").vector(-0.0016261312, -0.028070757, -0.011342932).limit(10);
 
 	@Test // GH-4706
 	void requiredArgs() {
@@ -60,7 +60,7 @@ class VectorSearchOperationUnitTests {
 	@Test // GH-4706
 	void withScore() {
 
-		List<Document> stages = SEARCH_OPERATION.searchScore().toPipelineStages(Aggregation.DEFAULT_CONTEXT);
+		List<Document> stages = SEARCH_OPERATION.withSearchScore().toPipelineStages(Aggregation.DEFAULT_CONTEXT);
 		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
 				new Document("$addFields", new Document("score", new Document("$meta", "vectorSearchScore"))));
 	}
@@ -68,7 +68,7 @@ class VectorSearchOperationUnitTests {
 	@Test // GH-4706
 	void withScoreFilter() {
 
-		List<Document> stages = SEARCH_OPERATION.filterBySore(score -> score.gt(50))
+		List<Document> stages = SEARCH_OPERATION.withFilterBySore(score -> score.gt(50))
 				.toPipelineStages(Aggregation.DEFAULT_CONTEXT);
 		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
 				new Document("$addFields", new Document("score", new Document("$meta", "vectorSearchScore"))),
@@ -78,7 +78,7 @@ class VectorSearchOperationUnitTests {
 	@Test // GH-4706
 	void withScoreFilterOnCustomFieldName() {
 
-		List<Document> stages = SEARCH_OPERATION.filterBySore(score -> score.gt(50)).searchScore("s-c-o-r-e")
+		List<Document> stages = SEARCH_OPERATION.withFilterBySore(score -> score.gt(50)).withSearchScore("s-c-o-r-e")
 				.toPipelineStages(Aggregation.DEFAULT_CONTEXT);
 		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
 				new Document("$addFields", new Document("s-c-o-r-e", new Document("$meta", "vectorSearchScore"))),
