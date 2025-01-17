@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.index;
 import org.springframework.lang.Nullable;
 
 /**
- * Provider interface to obtain {@link IndexOperations} by MongoDB collection name.
+ * Provider interface to obtain {@link IndexOperations} by MongoDB collection name or entity type.
  *
  * @author Mark Paluch
  * @author Jens Schauder
@@ -46,4 +46,5 @@ public interface IndexOperationsProvider {
 	 * @since 3.2
 	 */
 	IndexOperations indexOps(String collectionName, @Nullable Class<?> type);
+
 }
