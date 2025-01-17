@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.aot.generated;
 import java.util.regex.Pattern;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.mongodb.aot.generated.MongoBlocks.QueryBlockBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
@@ -55,10 +56,6 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 		// TODO: do not generate stuff for spel expressions
 
-		// skip currently unsupported Stuff.
-		if (generationContext.isDeleteMethod()) {
-			return null;
-		}
 		if (AnnotatedElementUtils.hasAnnotation(generationContext.getMethod(), Aggregation.class)) {
 			return null;
 		}
@@ -100,8 +97,19 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private static void writeStringQuery(AotRepositoryMethodGenerationContext context, Builder body, StringQuery query) {
 
 		body.addCode(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-		body.addCode(MongoBlocks.queryBlockBuilder(context).filter(query).build("query"));
-		body.addCode(MongoBlocks.queryExecutionBlockBuilder(context).build("query"));
+		QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context).filter(query);
+
+		if (context.isDeleteMethod()) {
+
+			String deleteQueryVariableName = "deleteQuery";
+			body.addCode(queryBlockBuilder.usingQueryVariableName(deleteQueryVariableName).build());
+			body.addCode(MongoBlocks.deleteExecutionBlockBuilder(context).referencing(deleteQueryVariableName).build());
+		} else {
+
+			String filterQueryVariableName = "filterQuery";
+			body.addCode(queryBlockBuilder.usingQueryVariableName(filterQueryVariableName).build());
+			body.addCode(MongoBlocks.queryExecutionBlockBuilder(context).referencing(filterQueryVariableName).build());
+		}
 	}
 
 	private static void userAnnotatedQuery(AotRepositoryMethodGenerationContext context, Builder body, Query query) {

@@ -104,7 +104,23 @@ public interface UserRepository extends CrudRepository<User, String> {
 	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
 	Slice<User> findAnnotatedQuerySliceOfUsersByLastname(String lastname, Pageable pageable);
 
-	// TODO: deletes
+	/* deletes */
+
+	User deleteByUsername(String username);
+
+	@Query(value = "{ 'username' : ?0 }", delete = true)
+	User deleteAnnotatedQueryByUsername(String username);
+
+	Long deleteByLastnameStartingWith(String lastname);
+
+	@Query(value = "{ 'lastname' : { '$regex' : '^?0' } }", delete = true)
+	Long deleteAnnotatedQueryByLastnameStartingWith(String lastname);
+
+	List<User> deleteUsersByLastnameStartingWith(String lastname);
+
+	@Query(value = "{ 'lastname' : { '$regex' : '^?0' } }", delete = true)
+	List<User> deleteUsersAnnotatedQueryByLastnameStartingWith(String lastname);
+
 	// TODO: updates
 	// TODO: Aggregations
 
