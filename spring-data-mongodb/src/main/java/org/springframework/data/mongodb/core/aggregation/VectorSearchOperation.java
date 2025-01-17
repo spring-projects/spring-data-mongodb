@@ -23,18 +23,313 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.bson.BinaryVector;
 import org.bson.Document;
+
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Vector;
+import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.lang.Contract;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
+ * Performs a semantic search on data in your Atlas cluster. This stage is only available for Atlas Vector Search.
+ * Vector data must be less than or equal to 4096 dimensions in width.
+ * <p>
+ * <h3>Limitations</h3> You cannot use this stage together with:
+ * <ul>
+ * <li>{@link org.springframework.data.mongodb.core.aggregation.LookupOperation Lookup} stages</li>
+ * <li>{@link org.springframework.data.mongodb.core.aggregation.FacetOperation Facet} stage</li>
+ * </ul>
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 4.5
  */
 public class VectorSearchOperation implements AggregationOperation {
 
+	private final SearchType searchType;
+	private final @Nullable CriteriaDefinition filter;
+	private final String indexName;
+	private final Limit limit;
+	private final @Nullable Integer numCandidates;
+	private final QueryPaths path;
+	private final Vector vector;
+	private final String score;
+	private final Consumer<Criteria> scoreCriteria;
+
+	private VectorSearchOperation(SearchType searchType, @Nullable CriteriaDefinition filter, String indexName,
+			Limit limit, @Nullable Integer numCandidates, QueryPaths path, Vector vector, @Nullable String searchScore,
+			Consumer<Criteria> scoreCriteria) {
+
+		this.searchType = searchType;
+		this.filter = filter;
+		this.indexName = indexName;
+		this.limit = limit;
+		this.numCandidates = numCandidates;
+		this.path = path;
+		this.vector = vector;
+		this.score = searchScore;
+		this.scoreCriteria = scoreCriteria;
+	}
+
+	VectorSearchOperation(String indexName, QueryPaths path, Limit limit, Vector vector) {
+		this(SearchType.DEFAULT, null, indexName, limit, null, path, vector, null, null);
+	}
+
+	/**
+	 * Entrypoint to build a {@link VectorSearchOperation} starting from the {@code index} name to search. Atlas Vector
+	 * Search doesn't return results if you misspell the index name or if the specified index doesn't already exist on the
+	 * cluster.
+	 *
+	 * @param index must not be {@literal null} or empty.
+	 * @return new instance of {@link VectorSearchOperation.PathContributor}.
+	 */
+	public static PathContributor search(String index) {
+		return new VectorSearchBuilder().index(index);
+	}
+
+	/**
+	 * Configure the search type to use. {@link SearchType#ENN} leads to an exact search while {@link SearchType#ANN} uses
+	 * {@code exact=false}.
+	 *
+	 * @param searchType must not be null.
+	 * @return a new {@link VectorSearchOperation} with {@link SearchType} applied.
+	 */
+	@Contract("_ -> new")
+	public VectorSearchOperation searchType(SearchType searchType) {
+		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, score,
+				scoreCriteria);
+	}
+
+	/**
+	 * Criteria expression that compares an indexed field with a boolean, date, objectId, number (not decimals), string,
+	 * or UUID to use as a pre-filter.
+	 * <p>
+	 * Atlas Vector Search supports only the filters for the following MQL match expressions:
+	 * <ul>
+	 * <li>$gt</li>
+	 * <li>$lt</li>
+	 * <li>$gte</li>
+	 * <li>$lte</li>
+	 * <li>$eq</li>
+	 * <li>$ne</li>
+	 * <li>$in</li>
+	 * <li>$nin</li>
+	 * <li>$nor</li>
+	 * <li>$not</li>
+	 * <li>$and</li>
+	 * <li>$or</li>
+	 * </ul>
+	 *
+	 * @param filter must not be null.
+	 * @return a new {@link VectorSearchOperation} with {@link CriteriaDefinition} applied.
+	 */
+	@Contract("_ -> new")
+	public VectorSearchOperation filter(CriteriaDefinition filter) {
+		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, score,
+				scoreCriteria);
+	}
+
+	/**
+	 * Criteria expression that compares an indexed field with a boolean, date, objectId, number (not decimals), string,
+	 * or UUID to use as a pre-filter.
+	 * <p>
+	 * Atlas Vector Search supports only the filters for the following MQL match expressions:
+	 * <ul>
+	 * <li>$gt</li>
+	 * <li>$lt</li>
+	 * <li>$gte</li>
+	 * <li>$lte</li>
+	 * <li>$eq</li>
+	 * <li>$ne</li>
+	 * <li>$in</li>
+	 * <li>$nin</li>
+	 * <li>$nor</li>
+	 * <li>$not</li>
+	 * <li>$and</li>
+	 * <li>$or</li>
+	 * </ul>
+	 *
+	 * @param filter must not be null.
+	 * @return a new {@link VectorSearchOperation} with {@link CriteriaDefinition} applied.
+	 */
+	@Contract("_ -> new")
+	public VectorSearchOperation filter(Document filter) {
+
+		return filter(new CriteriaDefinition() {
+			@Override
+			public Document getCriteriaObject() {
+				return filter;
+			}
+
+			@Nullable
+			@Override
+			public String getKey() {
+				return null;
+			}
+		});
+	}
+
+	/**
+	 * Number of nearest neighbors to use during the search. Value must be less than or equal to (<=) {@code 10000}. You
+	 * can't specify a number less than the number of documents to return (limit). This field is required if
+	 * {@link #searchType(SearchType)} is {@link SearchType#ANN} or {@link SearchType#DEFAULT}.
+	 *
+	 * @param numCandidates
+	 * @return a new {@link VectorSearchOperation} with {@code numCandidates} applied.
+	 */
+	@Contract("_ -> new")
+	public VectorSearchOperation numCandidates(int numCandidates) {
+		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, score,
+				scoreCriteria);
+	}
+
+	/**
+	 * Add a {@link AddFieldsOperation} stage including the search score using {@code score} as field name.
+	 *
+	 * @return a new {@link VectorSearchOperation} with search score applied.
+	 * @see #withSearchScore(String)
+	 */
+	@Contract("-> new")
+	public VectorSearchOperation withSearchScore() {
+		return withSearchScore("score");
+	}
+
+	/**
+	 * Add a {@link AddFieldsOperation} stage including the search score using {@code scoreFieldName} as field name.
+	 *
+	 * @param scoreFieldName name of the score field.
+	 * @return a new {@link VectorSearchOperation} with {@code scoreFieldName} applied.
+	 * @see #withSearchScore()
+	 */
+	@Contract("_ -> new")
+	public VectorSearchOperation withSearchScore(String scoreFieldName) {
+		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, scoreFieldName,
+				scoreCriteria);
+	}
+
+	/**
+	 * Add a {@link MatchOperation} stage targeting the score field name. Implies that the score field is present by
+	 * either reusing a previous {@link AddFieldsOperation} from {@link #withSearchScore()} or
+	 * {@link #withSearchScore(String)} or by adding a new {@link AddFieldsOperation} stage.
+	 *
+	 * @return a new {@link VectorSearchOperation} with search score filter applied.
+	 */
+	@Contract("_ -> new")
+	public VectorSearchOperation withFilterBySore(Consumer<Criteria> score) {
+		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector,
+				StringUtils.hasText(this.score) ? this.score : "score", score);
+	}
+
+	@Override
+	public Document toDocument(AggregationOperationContext context) {
+
+		Document $vectorSearch = new Document();
+
+		if (searchType != null && !searchType.equals(SearchType.DEFAULT)) {
+			$vectorSearch.append("exact", searchType.equals(SearchType.ENN));
+		}
+
+		if (filter != null) {
+			$vectorSearch.append("filter", context.getMappedObject(filter.getCriteriaObject()));
+		}
+
+		$vectorSearch.append("index", indexName);
+		$vectorSearch.append("limit", limit.max());
+
+		if (numCandidates != null) {
+			$vectorSearch.append("numCandidates", numCandidates);
+		}
+
+		Object path = this.path.getPathObject();
+
+		if (path instanceof String pathFieldName) {
+			Document mappedObject = context.getMappedObject(new Document(pathFieldName, 1));
+			path = mappedObject.keySet().iterator().next();
+		}
+
+		Object source = vector.getSource();
+
+		if (source instanceof float[]) {
+			source = vector.toDoubleArray();
+		}
+
+		if (source instanceof double[] ds) {
+			source = Arrays.stream(ds).boxed().collect(Collectors.toList());
+		}
+
+		$vectorSearch.append("path", path);
+		$vectorSearch.append("queryVector", source);
+
+		return new Document(getOperator(), $vectorSearch);
+	}
+
+	@Override
+	public List<Document> toPipelineStages(AggregationOperationContext context) {
+
+		if (!StringUtils.hasText(score)) {
+			return List.of(toDocument(context));
+		}
+
+		AddFieldsOperation $vectorSearchScore = Aggregation.addFields().addField(score)
+				.withValueOfExpression("{\"$meta\":\"vectorSearchScore\"}").build();
+
+		if (scoreCriteria == null) {
+			return List.of(toDocument(context), $vectorSearchScore.toDocument(context));
+		}
+
+		Criteria criteria = Criteria.where(score);
+		scoreCriteria.accept(criteria);
+		MatchOperation $filterByScore = Aggregation.match(criteria);
+
+		return List.of(toDocument(context), $vectorSearchScore.toDocument(context), $filterByScore.toDocument(context));
+	}
+
+	@Override
+	public String getOperator() {
+		return "$vectorSearch";
+	}
+
+	/**
+	 * Builder helper to create a {@link VectorSearchOperation}.
+	 */
+	private static class VectorSearchBuilder implements PathContributor, VectorContributor, LimitContributor {
+
+		String index;
+		QueryPath<String> paths;
+		Vector vector;
+
+		PathContributor index(String index) {
+			this.index = index;
+			return this;
+		}
+
+		@Override
+		public VectorContributor path(String path) {
+
+			this.paths = QueryPath.path(path);
+			return this;
+		}
+
+		@Override
+		public VectorSearchOperation limit(Limit limit) {
+			return new VectorSearchOperation(index, QueryPaths.of(paths), limit, vector);
+		}
+
+		@Override
+		public LimitContributor vector(Vector vector) {
+			this.vector = vector;
+			return this;
+		}
+	}
+
+	/**
+	 * Search type, ANN as approximation or ENN for exact search.
+	 */
 	public enum SearchType {
 
 		/** MongoDB Server default (value will be omitted) */
@@ -131,190 +426,102 @@ public class VectorSearchOperation implements AggregationOperation {
 		}
 	}
 
-	private SearchType searchType;
-	private CriteriaDefinition filter;
-	private String indexName;
-	private Limit limit;
-	private Integer numCandidates;
-	private QueryPaths path;
-	private List<Double> vector;
-
-	private String score;
-	private Consumer<Criteria> scoreCriteria;
-
-	private VectorSearchOperation(SearchType searchType, CriteriaDefinition filter, String indexName, Limit limit,
-			Integer numCandidates, QueryPaths path, List<Double> vector, String searchScore,
-			Consumer<Criteria> scoreCriteria) {
-
-		this.searchType = searchType;
-		this.filter = filter;
-		this.indexName = indexName;
-		this.limit = limit;
-		this.numCandidates = numCandidates;
-		this.path = path;
-		this.vector = vector;
-		this.score = searchScore;
-		this.scoreCriteria = scoreCriteria;
-	}
-
-	public VectorSearchOperation(String indexName, QueryPaths path, Limit limit, List<Double> vector) {
-		this(SearchType.DEFAULT, null, indexName, limit, null, path, vector, null, null);
-	}
-
-	static PathContributor search(String index) {
-		return new VectorSearchBuilder().index(index);
-	}
-
-	public VectorSearchOperation(String indexName, String path, Limit limit, List<Double> vector) {
-		this(indexName, QueryPaths.of(QueryPath.path(path)), limit, vector);
-	}
-
-	public VectorSearchOperation searchType(SearchType searchType) {
-		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, score,
-				scoreCriteria);
-	}
-
-	public VectorSearchOperation filter(Document filter) {
-
-		return filter(new CriteriaDefinition() {
-			@Override
-			public Document getCriteriaObject() {
-				return filter;
-			}
-
-			@Nullable
-			@Override
-			public String getKey() {
-				return null;
-			}
-		});
-	}
-
-	public VectorSearchOperation filter(CriteriaDefinition filter) {
-		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, score,
-				scoreCriteria);
-	}
-
-	public VectorSearchOperation numCandidates(int numCandidates) {
-		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, score,
-				scoreCriteria);
-	}
-
-	public VectorSearchOperation searchScore() {
-		return searchScore("score");
-	}
-
-	public VectorSearchOperation searchScore(String scoreFieldName) {
-		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector, scoreFieldName,
-				scoreCriteria);
-	}
-
-	public VectorSearchOperation filterBySore(Consumer<Criteria> score) {
-		return new VectorSearchOperation(searchType, filter, indexName, limit, numCandidates, path, vector,
-				StringUtils.hasText(this.score) ? this.score : "score", score);
-	}
-
-	@Override
-	public Document toDocument(AggregationOperationContext context) {
-
-		Document $vectorSearch = new Document();
-
-		$vectorSearch.append("index", indexName);
-		$vectorSearch.append("path", path.getPathObject());
-		$vectorSearch.append("queryVector", vector);
-		$vectorSearch.append("limit", limit.max());
-
-		if (searchType != null && !searchType.equals(SearchType.DEFAULT)) {
-			$vectorSearch.append("exact", searchType.equals(SearchType.ENN));
-		}
-
-		if (filter != null) {
-			$vectorSearch.append("filter", context.getMappedObject(filter.getCriteriaObject()));
-		}
-
-		if (numCandidates != null) {
-			$vectorSearch.append("numCandidates", numCandidates);
-		}
-
-		return new Document(getOperator(), $vectorSearch);
-	}
-
-	@Override
-	public List<Document> toPipelineStages(AggregationOperationContext context) {
-
-		if (!StringUtils.hasText(score)) {
-			return List.of(toDocument(context));
-		}
-
-		AddFieldsOperation $vectorSearchScore = Aggregation.addFields().addField(score)
-				.withValueOfExpression("{\"$meta\":\"vectorSearchScore\"}").build();
-
-		if (scoreCriteria == null) {
-			return List.of(toDocument(context), $vectorSearchScore.toDocument(context));
-		}
-
-		Criteria criteria = Criteria.where(score);
-		scoreCriteria.accept(criteria);
-		MatchOperation $filterByScore = Aggregation.match(criteria);
-
-		return List.of(toDocument(context), $vectorSearchScore.toDocument(context), $filterByScore.toDocument(context));
-	}
-
-	@Override
-	public String getOperator() {
-		return "$vectorSearch";
-	}
-
-	public static class VectorSearchBuilder implements PathContributor, VectorContributor, LimitContributor {
-
-		String index;
-		QueryPaths paths;
-		private List<Double> vector;
-
-		PathContributor index(String index) {
-			this.index = index;
-			return this;
-		}
-
-		@Override
-		public VectorContributor path(QueryPaths paths) {
-			this.paths = paths;
-			return this;
-		}
-
-		@Override
-		public VectorSearchOperation limit(Limit limit) {
-			return new VectorSearchOperation(index, paths, limit, vector);
-		}
-
-		@Override
-		public LimitContributor vectors(List<Double> vectors) {
-			this.vector = vectors;
-			return this;
-		}
-	}
-
 	public interface PathContributor {
-		default VectorContributor path(String path) {
-			return path(QueryPaths.of(QueryPath.path(path)));
-		}
 
-		VectorContributor path(QueryPaths paths);
+		/**
+		 * Indexed vector type field to search.
+		 *
+		 * @param path name of the search path.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		VectorContributor path(String path);
 	}
 
 	public interface VectorContributor {
-		default LimitContributor vectors(Double... vectors) {
-			return vectors(Arrays.asList(vectors));
+
+		/**
+		 * Array of float numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(float... vector) {
+			return vector(Vector.of(vector));
 		}
 
-		LimitContributor vectors(List<Double> vectors);
+		/**
+		 * Array of double numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(double... vector) {
+			return vector(Vector.of(vector));
+		}
+
+		/**
+		 * Array of numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(List<? extends Number> vector) {
+			return vector(Vector.of(vector));
+		}
+
+		/**
+		 * Binary vector (BSON BinData vector subtype float32, or BSON BinData vector subtype int1 or int8 type) that
+		 * represent the query vector. The number type must match the indexed field value type. Otherwise, Atlas Vector
+		 * Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(BinaryVector vector) {
+			return vector(MongoVector.of(vector));
+		}
+
+		/**
+		 * The query vector. The number type must match the indexed field value type. Otherwise, Atlas Vector Search doesn't
+		 * return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		LimitContributor vector(Vector vector);
 	}
 
 	public interface LimitContributor {
+
+		/**
+		 * Number (of type int only) of documents to return in the results. This value can't exceed the value of
+		 * numCandidates if you specify numCandidates.
+		 *
+		 * @param limit
+		 * @return
+		 */
+		@Contract("_ -> this")
 		default VectorSearchOperation limit(int limit) {
 			return limit(Limit.of(limit));
 		}
 
+		/**
+		 * Number (of type int only) of documents to return in the results. This value can't exceed the value of
+		 * numCandidates if you specify numCandidates.
+		 *
+		 * @param limit
+		 * @return
+		 */
+		@Contract("_ -> this")
 		VectorSearchOperation limit(Limit limit);
 	}
 

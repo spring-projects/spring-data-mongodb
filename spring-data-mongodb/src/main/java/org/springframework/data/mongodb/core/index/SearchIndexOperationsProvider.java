@@ -16,13 +16,36 @@
 package org.springframework.data.mongodb.core.index;
 
 /**
+ * Provider interface to obtain {@link SearchIndexOperations} by MongoDB collection name or entity type.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
+ * @since 4.5
  */
 public interface SearchIndexOperationsProvider {
 
-    SearchIndexOperations searchIndexOps(String collectionName);
+	/**
+	 * Returns the operations that can be performed on search indexes.
+	 *
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
+	 * @return index operations on the named collection
+	 */
+	SearchIndexOperations searchIndexOps(String collectionName);
 
-    SearchIndexOperations searchIndexOps(Class<?> type);
+	/**
+	 * Returns the operations that can be performed on search indexes.
+	 *
+	 * @param type the type used for field mapping.
+	 * @return index operations on the named collection
+	 */
+	SearchIndexOperations searchIndexOps(Class<?> type);
 
-    SearchIndexOperations searchIndexOps(Class<?> type, String collectionName);
+	/**
+	 * Returns the operations that can be performed on search indexes.
+	 *
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
+	 * @param type the type used for field mapping. Can be {@literal null}.
+	 * @return index operations on the named collection
+	 */
+	SearchIndexOperations searchIndexOps(Class<?> type, String collectionName);
 }

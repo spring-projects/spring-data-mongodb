@@ -185,8 +185,8 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  */
-public class MongoTemplate
-		implements MongoOperations, ApplicationContextAware, IndexOperationsProvider, SearchIndexOperationsProvider, ReadPreferenceAware {
+public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
+		SearchIndexOperationsProvider, ReadPreferenceAware {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
@@ -772,6 +772,21 @@ public class MongoTemplate
 	}
 
 	@Override
+	public SearchIndexOperations searchIndexOps(String collectionName) {
+		return searchIndexOps(null, collectionName);
+	}
+
+	@Override
+	public SearchIndexOperations searchIndexOps(Class<?> type) {
+		return new DefaultSearchIndexOperations(this, type);
+	}
+
+	@Override
+	public SearchIndexOperations searchIndexOps(@Nullable Class<?> type, String collectionName) {
+		return new DefaultSearchIndexOperations(this, collectionName, type);
+	}
+
+	@Override
 	public BulkOperations bulkOps(BulkMode mode, String collectionName) {
 		return bulkOps(mode, null, collectionName);
 	}
@@ -1316,7 +1331,7 @@ public class MongoTemplate
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject()instanceof Number concern && concern.intValue() < 1)) {
+					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -1968,7 +1983,8 @@ public class MongoTemplate
 			}
 
 			if (mapReduceOptions.getOutputSharded().isPresent()) {
-				MongoCompatibilityAdapter.mapReduceIterableAdapter(mapReduce).sharded(mapReduceOptions.getOutputSharded().get());
+				MongoCompatibilityAdapter.mapReduceIterableAdapter(mapReduce)
+						.sharded(mapReduceOptions.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(mapReduceOptions.getOutputCollection()) && !mapReduceOptions.usesInlineOutput()) {
@@ -2067,7 +2083,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	public <T> UpdateResult replace(Query query, T replacement, ReplaceOptions options, String collectionName){
+	public <T> UpdateResult replace(Query query, T replacement, ReplaceOptions options, String collectionName) {
 
 		Assert.notNull(replacement, "Replacement must not be null");
 		return replace(query, (Class<T>) ClassUtils.getUserClass(replacement), replacement, options, collectionName);
@@ -2743,8 +2759,7 @@ public class MongoTemplate
 			LOGGER.debug(String.format(
 					"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), fields, serializeToJsonSafely(sort), entityClass,
-					serializeToJsonSafely(mappedUpdate),
-					collectionName));
+					serializeToJsonSafely(mappedUpdate), collectionName));
 		}
 
 		return executeFindOneInternal(
@@ -3011,21 +3026,6 @@ public class MongoTemplate
 			PersistenceExceptionTranslator exceptionTranslator) {
 		RuntimeException resolved = exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
-	}
-
-	@Override
-	public SearchIndexOperations searchIndexOps(String collectionName) {
-		return searchIndexOps(null, collectionName);
-	}
-
-	@Override
-	public SearchIndexOperations searchIndexOps(Class<?> type) {
-		return new DefaultSearchIndexOperations(this, type);
-	}
-
-	@Override
-	public SearchIndexOperations searchIndexOps(Class<?> type, String collectionName) {
-		return new DefaultSearchIndexOperations(this, collectionName, type);
 	}
 
 	// Callback implementations
