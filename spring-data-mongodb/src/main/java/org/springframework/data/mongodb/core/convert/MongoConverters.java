@@ -31,6 +31,9 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.bson.BinaryVector;
+import org.bson.BsonArray;
+import org.bson.BsonDouble;
 import org.bson.BsonReader;
 import org.bson.BsonTimestamp;
 import org.bson.BsonUndefined;
@@ -44,6 +47,7 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -51,7 +55,9 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.FieldName;
+import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.util.Assert;
@@ -105,6 +111,10 @@ abstract class MongoConverters {
 		converters.add(IntegerToAtomicIntegerConverter.INSTANCE);
 		converters.add(BinaryToByteArrayConverter.INSTANCE);
 		converters.add(BsonTimestampToInstantConverter.INSTANCE);
+
+		converters.add(VectorToBsonArrayConverter.INSTANCE);
+		converters.add(ListToVectorConverter.INSTANCE);
+		converters.add(BinaryVectorToMongoVectorConverter.INSTANCE);
 
 		converters.add(reading(BsonUndefined.class, Object.class, it -> null));
 		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
@@ -414,6 +424,52 @@ abstract class MongoConverters {
 
 				return NumberUtils.convertNumberToTargetClass(source, this.targetType);
 			}
+		}
+	}
+
+	@WritingConverter
+	enum VectorToBsonArrayConverter implements Converter<Vector, Object> {
+
+		INSTANCE;
+
+		@Override
+		public Object convert(Vector source) {
+
+			if (source instanceof MongoVector mv) {
+				return mv.getSource();
+			}
+
+			double[] doubleArray = source.toDoubleArray();
+
+			BsonArray array = new BsonArray(doubleArray.length);
+
+			for (double v : doubleArray) {
+				array.add(new BsonDouble(v));
+			}
+
+			return array;
+		}
+	}
+
+	@ReadingConverter
+	enum ListToVectorConverter implements Converter<List<Number>, Vector> {
+
+		INSTANCE;
+
+		@Override
+		public Vector convert(List<Number> source) {
+			return Vector.of(source);
+		}
+	}
+
+	@ReadingConverter
+	enum BinaryVectorToMongoVectorConverter implements Converter<BinaryVector, Vector> {
+
+		INSTANCE;
+
+		@Override
+		public Vector convert(BinaryVector source) {
+			return MongoVector.of(source);
 		}
 	}
 
