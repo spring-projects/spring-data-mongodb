@@ -23,9 +23,12 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.bson.BinaryVector;
 import org.bson.Document;
 
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Vector;
+import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.lang.Contract;
@@ -54,13 +57,13 @@ public class VectorSearchOperation implements AggregationOperation {
 	private final Limit limit;
 	private final @Nullable Integer numCandidates;
 	private final QueryPaths path;
-	private final List<? extends Number> vector;
+	private final Vector vector;
 	private final String score;
 	private final Consumer<Criteria> scoreCriteria;
 
 	private VectorSearchOperation(SearchType searchType, @Nullable CriteriaDefinition filter, String indexName,
-			Limit limit, @Nullable Integer numCandidates, QueryPaths path, List<? extends Number> vector,
-			@Nullable String searchScore, Consumer<Criteria> scoreCriteria) {
+			Limit limit, @Nullable Integer numCandidates, QueryPaths path, Vector vector, @Nullable String searchScore,
+			Consumer<Criteria> scoreCriteria) {
 
 		this.searchType = searchType;
 		this.filter = filter;
@@ -73,7 +76,7 @@ public class VectorSearchOperation implements AggregationOperation {
 		this.scoreCriteria = scoreCriteria;
 	}
 
-	VectorSearchOperation(String indexName, QueryPaths path, Limit limit, List<? extends Number> vector) {
+	VectorSearchOperation(String indexName, QueryPaths path, Limit limit, Vector vector) {
 		this(SearchType.DEFAULT, null, indexName, limit, null, path, vector, null, null);
 	}
 
@@ -249,8 +252,18 @@ public class VectorSearchOperation implements AggregationOperation {
 			path = mappedObject.keySet().iterator().next();
 		}
 
+		Object source = vector.getSource();
+
+		if (source instanceof float[]) {
+			source = vector.toDoubleArray();
+		}
+
+		if (source instanceof double[] ds) {
+			source = Arrays.stream(ds).boxed().collect(Collectors.toList());
+		}
+
 		$vectorSearch.append("path", path);
-		$vectorSearch.append("queryVector", vector);
+		$vectorSearch.append("queryVector", source);
 
 		return new Document(getOperator(), $vectorSearch);
 	}
@@ -288,7 +301,7 @@ public class VectorSearchOperation implements AggregationOperation {
 
 		String index;
 		QueryPath<String> paths;
-		private List<? extends Number> vector;
+		Vector vector;
 
 		PathContributor index(String index) {
 			this.index = index;
@@ -308,8 +321,8 @@ public class VectorSearchOperation implements AggregationOperation {
 		}
 
 		@Override
-		public LimitContributor vector(List<? extends Number> vectors) {
-			this.vector = vectors;
+		public LimitContributor vector(Vector vector) {
+			this.vector = vector;
 			return this;
 		}
 	}
@@ -428,28 +441,63 @@ public class VectorSearchOperation implements AggregationOperation {
 	public interface VectorContributor {
 
 		/**
-		 * Array of numbers of the BSON double, BSON BinData vector subtype float32, or BSON BinData vector subtype int1 or
-		 * int8 type that represent the query vector. The number type must match the indexed field value type. Otherwise,
-		 * Atlas Vector Search doesn't return any results or errors.
+		 * Array of float numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
 		 *
-		 * @param vectors
+		 * @param vector the query vector.
 		 * @return
 		 */
 		@Contract("_ -> this")
-		default LimitContributor vector(Double... vectors) {
-			return vector(Arrays.asList(vectors));
+		default LimitContributor vector(float... vector) {
+			return vector(Vector.of(vector));
 		}
 
 		/**
-		 * Array of numbers of the BSON double, BSON BinData vector subtype float32, or BSON BinData vector subtype int1 or
-		 * int8 type that represent the query vector. The number type must match the indexed field value type. Otherwise,
-		 * Atlas Vector Search doesn't return any results or errors.
+		 * Array of double numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
 		 *
-		 * @param vectors
+		 * @param vector the query vector.
 		 * @return
 		 */
 		@Contract("_ -> this")
-		LimitContributor vector(List<? extends Number> vectors);
+		default LimitContributor vector(double... vector) {
+			return vector(Vector.of(vector));
+		}
+
+		/**
+		 * Array of numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(List<? extends Number> vector) {
+			return vector(Vector.of(vector));
+		}
+
+		/**
+		 * Binary vector (BSON BinData vector subtype float32, or BSON BinData vector subtype int1 or int8 type) that
+		 * represent the query vector. The number type must match the indexed field value type. Otherwise, Atlas Vector
+		 * Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(BinaryVector vector) {
+			return vector(MongoVector.of(vector));
+		}
+
+		/**
+		 * The query vector. The number type must match the indexed field value type. Otherwise, Atlas Vector Search doesn't
+		 * return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		LimitContributor vector(Vector vector);
 	}
 
 	public interface LimitContributor {
