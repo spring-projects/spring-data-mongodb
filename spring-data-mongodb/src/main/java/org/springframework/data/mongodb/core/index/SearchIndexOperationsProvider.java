@@ -20,7 +20,7 @@ package org.springframework.data.mongodb.core.index;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 3.5
+ * @since 4.5
  */
 public interface SearchIndexOperationsProvider {
 

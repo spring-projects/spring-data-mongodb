@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
@@ -53,7 +54,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Tests for {@link MongoPersistentEntityIndexResolver}.
@@ -1852,55 +1852,6 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@AliasFor(annotation = Indexed.class, attribute = "name")
 			String name() default "";
-		}
-	}
-
-	/**
-	 * Test resolution of {@link VectorIndexed}.
-	 *
-	 * @author Mark Paluch
-	 */
-	public static class VectorIndexResolutionTests {
-
-		@Test // GH-4706
-		public void shouldResolveIndexCorrectly() {
-
-			MongoMappingContext mappingContext = new MongoMappingContext();
-			MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
-
-			TypeInformation<?> type = mappingContext.getRequiredPersistentEntity(Movie.class).getTypeInformation();
-			Iterable<? extends SearchIndexDefinition> searchIndexDefinitions = resolver.resolveSearchIndexFor(type);
-
-			assertThat(searchIndexDefinitions).hasSize(1);
-
-			org.bson.Document definition = searchIndexDefinitions.iterator().next().getIndexDocument(type, mappingContext);
-
-			assertThat(definition).containsEntry("name", "movies").containsEntry("type", "vector");
-			assertThat(definition) //
-					.containsEntry("definition.fields.[0].path", "genre")//
-					.containsEntry("definition.fields.[0].type", "filter");
-
-			assertThat(definition) //
-					.containsEntry("definition.fields.[1].path", "rating")//
-					.containsEntry("definition.fields.[1].type", "filter");
-
-			assertThat(definition).containsEntry("definition.fields.[2].path", "embedding") //
-					.containsEntry("definition.fields.[2].type", "vector") //
-					.containsEntry("definition.fields.[2].numDimensions", 1536)
-					.containsEntry("definition.fields.[2].similarity", "cosine")
-					.containsEntry("definition.fields.[2].quantization", "none");
-		}
-
-		@Document
-		@VectorIndexed("movies")
-		static class Movie {
-
-			@ABetterNameForVectorIndexed String genre;
-
-			@ABetterNameForVectorIndexed int rating;
-
-			@ABetterNameForVector(dimensions = 1536, similarity = VectorIndex.SimilarityFunction.COSINE) float[] embedding;
-
 		}
 	}
 

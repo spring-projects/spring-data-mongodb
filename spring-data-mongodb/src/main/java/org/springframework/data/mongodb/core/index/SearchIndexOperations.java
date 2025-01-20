@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 3.5
+ * @since 4.5
  */
 public interface SearchIndexOperations {
 
@@ -36,7 +36,10 @@ public interface SearchIndexOperations {
 	String ensureIndex(SearchIndexDefinition indexDefinition);
 
 	/**
-	 * Alters the {@code index}.
+	 * Alters the search {@code index}.
+	 * <p>
+	 * Note that Atlas Search does not support updating Vector Search Indices resulting in
+	 * {@link UnsupportedOperationException}.
 	 *
 	 * @param index the index definition.
 	 */

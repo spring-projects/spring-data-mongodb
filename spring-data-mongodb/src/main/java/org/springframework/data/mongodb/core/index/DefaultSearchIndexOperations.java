@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core.index;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 
 import org.springframework.data.mapping.context.MappingContext;
@@ -31,14 +29,15 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
+import com.mongodb.client.model.SearchIndexModel;
+import com.mongodb.client.model.SearchIndexType;
+
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 3.5
  */
 public class DefaultSearchIndexOperations implements SearchIndexOperations {
-
-	private static final Log LOGGER = LogFactory.getLog(DefaultSearchIndexOperations.class);
 
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
@@ -64,33 +63,46 @@ public class DefaultSearchIndexOperations implements SearchIndexOperations {
 	}
 
 	@Override
-	public boolean exists(String indexName) {
+	public String ensureIndex(SearchIndexDefinition indexDefinition) {
 
-		// https://www.mongodb.com/docs/manual/reference/operator/aggregation/listSearchIndexes/
-		AggregationResults<Document> aggregate = mongoOperations.aggregate(
-				Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document("name", indexName))),
-				collectionName, Document.class);
+		if (!(indexDefinition instanceof VectorIndex vsi)) {
+			throw new IllegalStateException("Index definitions must be of type VectorIndex");
+		}
 
-		return aggregate.iterator().hasNext();
+		Document index = indexDefinition.getIndexDocument(entityTypeInformation,
+				mongoOperations.getConverter().getMappingContext());
+
+		mongoOperations.getCollection(collectionName).createSearchIndexes(List
+				.of(new SearchIndexModel(vsi.getName(), (Document) index.get("definition"), SearchIndexType.vectorSearch())));
+
+		return vsi.getName();
 	}
 
 	@Override
 	public void updateIndex(SearchIndexDefinition index) {
 
+		if (index instanceof VectorIndex) {
+			throw new UnsupportedOperationException("Vector Index definitions cannot be updated");
+		}
+
 		Document indexDocument = index.getIndexDocument(entityTypeInformation,
 				mongoOperations.getConverter().getMappingContext());
 
-		Document cmdResult = mongoOperations.execute(db -> {
+		mongoOperations.getCollection(collectionName).updateSearchIndex(index.getName(), indexDocument);
+	}
 
-			Document command = new Document().append("updateSearchIndex", collectionName).append("name", index.getName());
-			command.putAll(indexDocument);
-			command.remove("type");
+	@Override
+	public boolean exists(String indexName) {
 
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Updating VectorIndex: db.runCommand(%s)".formatted(command.toJson()));
+		List<Document> indexes = mongoOperations.getCollection(collectionName).listSearchIndexes().into(new ArrayList<>());
+
+		for (Document index : indexes) {
+			if (index.getString("name").equals(indexName)) {
+				return true;
 			}
-			return db.runCommand(command);
-		});
+		}
+
+		return false;
 	}
 
 	@Override
@@ -118,42 +130,13 @@ public class DefaultSearchIndexOperations implements SearchIndexOperations {
 	}
 
 	@Override
-	public String ensureIndex(SearchIndexDefinition indexDefinition) {
-
-		if (!(indexDefinition instanceof VectorIndex vsi)) {
-			throw new IllegalStateException("Index definitions must be of type VectorIndex");
-		}
-
-		Document index = indexDefinition.getIndexDocument(entityTypeInformation,
-				mongoOperations.getConverter().getMappingContext());
-
-		Document cmdResult = mongoOperations.execute(db -> {
-
-			Document command = new Document().append("createSearchIndexes", collectionName).append("indexes", List.of(index));
-
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Creating SearchIndex: db.runCommand(%s)".formatted(command.toJson()));
-			}
-
-			return db.runCommand(command);
-		});
-
-		return cmdResult.get("ok").toString().equalsIgnoreCase("1.0") ? vsi.getName() : cmdResult.toJson();
-	}
-
-	@Override
 	public void dropAllIndexes() {
 		getIndexInfo().forEach(indexInfo -> dropIndex(indexInfo.getName()));
 	}
 
 	@Override
 	public void dropIndex(String name) {
-
-		Document command = new Document().append("dropSearchIndex", collectionName).append("name", name);
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Dropping SearchIndex: db.runCommand(%s)".formatted(command.toJson()));
-		}
-		mongoOperations.execute(db -> db.runCommand(command));
+		mongoOperations.getCollection(collectionName).dropSearchIndex(name);
 	}
 
 }

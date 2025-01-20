@@ -72,7 +72,7 @@ public class VectorSearchTests {
 		}
 
 		VectorSearchOperation $vectorSearch = VectorSearchOperation.search("vector_index").path("plot_embedding")
-				.vectors(vectors).limit(10).numCandidates(150).searchScore();
+				.vector(vectors).limit(10).numCandidates(150).withSearchScore();
 
 		Aggregation agg = Aggregation.newAggregation($vectorSearch, Aggregation.project("plot", "title"));
 

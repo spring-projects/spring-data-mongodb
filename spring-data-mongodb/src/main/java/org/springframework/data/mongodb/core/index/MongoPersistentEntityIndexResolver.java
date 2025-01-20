@@ -138,55 +138,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return indexInformation;
 	}
 
-	@Override
-	public Iterable<? extends SearchIndexDefinition> resolveSearchIndexFor(TypeInformation<?> typeInformation) {
-		return resolveSearchIndexForEntity(mappingContext.getRequiredPersistentEntity(typeInformation));
-	}
-
-	/**
-	 * Resolve the {@link SearchIndexDefinition}s for a given {@literal root} entity by traversing
-	 * {@link MongoPersistentProperty} scanning for search index annotations. The given {@literal root} has therefore to
-	 * be annotated with {@link Document}.
-	 *
-	 * @param root must not be null.
-	 * @return List of {@link IndexDefinitionHolder}. Will never be {@code null}.
-	 * @throws IllegalArgumentException in case of missing {@link Document} annotation marking root entities.
-	 */
-	private List<SearchIndexDefinition> resolveSearchIndexForEntity(MongoPersistentEntity<?> root) {
-
-		Assert.notNull(root, "MongoPersistentEntity must not be null");
-		Assert.isTrue(root.isAnnotationPresent(Document.class), () -> String
-				.format("Entity %s is not a collection root; Make sure to annotate it with @Document", root.getName()));
-
-		List<SearchIndexDefinition> indexInformation = new ArrayList<>();
-
-		VectorIndexed vectorIndexed = root.findAnnotation(VectorIndexed.class);
-		if (vectorIndexed != null) {
-
-			VectorIndex vectorIndex = new VectorIndex(vectorIndexed.name());
-
-			root.doWithAll(it -> {
-
-				if (it.isAnnotationPresent(ABetterNameForVectorIndexed.class)) {
-					vectorIndex.addFilter(it.getName());
-				} else if (it.isAnnotationPresent(ABetterNameForVector.class)) {
-
-					ABetterNameForVector vector = it.getRequiredAnnotation(ABetterNameForVector.class);
-
-					vectorIndex.addVector(it.getName(), builder -> {
-						builder.dimensions(vector.dimensions());
-						builder.similarity(vector.similarity());
-						builder.quantization(vector.quantization());
-					});
-				}
-			});
-
-			indexInformation.add(vectorIndex);
-		}
-
-		return indexInformation;
-	}
-
 	private void verifyWildcardIndexedProjection(MongoPersistentEntity<?> entity) {
 
 		entity.doWithAll(it -> {

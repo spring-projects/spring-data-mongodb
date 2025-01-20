@@ -28,7 +28,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Marcin Grzejszczak
  * @author Mark Paluch
- * @since 3.5
+ * @since 4.5
  */
 public interface SearchIndexDefinition {
 

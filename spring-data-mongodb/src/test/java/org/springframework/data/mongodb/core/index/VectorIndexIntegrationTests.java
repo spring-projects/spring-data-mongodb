@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.index;
 
 import static org.awaitility.Awaitility.*;
@@ -24,7 +23,6 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -89,7 +87,6 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
-	@Disabled("Local Atlas requires userCommand.mappings which is only valid for text search indexes and not Vector Search")
 	void updatesVectorIndex() {
 
 		String indexName = "vector_index";
@@ -110,17 +107,7 @@ class VectorIndexIntegrationTests {
 
 		VectorIndex updatedIdx = new VectorIndex(indexName).addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity(SimilarityFunction.DOT_PRODUCT));
-		indexOps.updateIndex(idx);
-
-		await().untilAsserted(() -> {
-			Document raw = readRawIndexInfo(updatedIdx.getName());
-			assertThat(raw).containsEntry("name", updatedIdx.getName()) //
-					.containsEntry("type", "vectorSearch") //
-					.containsEntry("latestDefinition.fields.[0].type", "vector") //
-					.containsEntry("latestDefinition.fields.[0].path", "plot_embedding") //
-					.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
-					.containsEntry("latestDefinition.fields.[0].similarity", "dotProduct"); //
-		});
+		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> indexOps.updateIndex(idx));
 	}
 
 	@Test // GH-4706
