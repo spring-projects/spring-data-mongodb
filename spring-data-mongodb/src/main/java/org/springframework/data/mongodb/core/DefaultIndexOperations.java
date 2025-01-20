@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.bson.Document;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -51,11 +50,11 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 
-	private final String collectionName;
-	private final QueryMapper mapper;
-	private final @Nullable Class<?> type;
+	protected final String collectionName;
+	protected final QueryMapper mapper;
+	protected final @Nullable Class<?> type;
 
-	private final MongoOperations mongoOperations;
+	protected final MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -133,7 +132,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Nullable
-	private MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
+	protected MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
 
 		if (entityType != null) {
 			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);

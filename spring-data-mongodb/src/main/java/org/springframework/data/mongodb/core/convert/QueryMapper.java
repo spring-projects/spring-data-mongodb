@@ -1130,7 +1130,7 @@ public class QueryMapper {
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	protected static class MetadataBackedField extends Field {
+	public static class MetadataBackedField extends Field {
 
 		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?");
 		private static final Pattern NUMERIC_SEGMENT = Pattern.compile("\\d+");

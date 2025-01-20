@@ -60,6 +60,11 @@ public class TestAggregationContext implements AggregationOperationContext {
 	}
 
 	@Override
+	public Document getMappedObject(Document document) {
+		return delegate.getMappedObject(document);
+	}
+
+	@Override
 	public Document getMappedObject(Document document, @Nullable Class<?> type) {
 		return delegate.getMappedObject(document, type);
 	}

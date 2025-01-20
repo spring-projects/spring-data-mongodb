@@ -381,9 +381,9 @@ public class Aggregation {
 	}
 
 	/**
-	 * Factory method to create a new {@link UnwindOperation} for the field with the given name, including the name of a new
-	 * field to hold the array index of the element as {@code arrayIndex} using {@code preserveNullAndEmptyArrays}. Note
-	 * that extended unwind is supported in MongoDB version 3.2+.
+	 * Factory method to create a new {@link UnwindOperation} for the field with the given name, including the name of a
+	 * new field to hold the array index of the element as {@code arrayIndex} using {@code preserveNullAndEmptyArrays}.
+	 * Note that extended unwind is supported in MongoDB version 3.2+.
 	 *
 	 * @param field must not be {@literal null} or empty.
 	 * @param arrayIndex must not be {@literal null} or empty.
@@ -426,6 +426,20 @@ public class Aggregation {
 	 */
 	public static StartWithBuilder graphLookup(String fromCollection) {
 		return GraphLookupOperation.builder().from(fromCollection);
+	}
+
+	/**
+	 * Creates a new {@link VectorSearchOperation} by starting from the {@code indexName} to use.
+	 *
+	 * @param indexName must not be {@literal null} or empty.
+	 * @return new instance of {@link VectorSearchOperation.PathContributor}.
+	 * @since 4.5
+	 */
+	public static VectorSearchOperation.PathContributor vectorSearch(String indexName) {
+
+		Assert.hasText(indexName, "Index name must not be null or empty");
+
+		return VectorSearchOperation.search(indexName);
 	}
 
 	/**
@@ -669,14 +683,14 @@ public class Aggregation {
 
 	/**
 	 * Entrypoint for creating {@link LookupOperation $lookup} using a fluent builder API.
+	 *
 	 * <pre class="code">
-	 * Aggregation.lookup().from("restaurants")
-	 * 	.localField("restaurant_name")
-	 * 	.foreignField("name")
-	 * 	.let(newVariable("orders_drink").forField("drink"))
-	 * 	.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
-	 * 	.as("matches")
+	 * Aggregation.lookup().from("restaurants").localField("restaurant_name").foreignField("name")
+	 * 		.let(newVariable("orders_drink").forField("drink"))
+	 * 		.pipeline(match(ctx -> new Document("$expr", new Document("$in", List.of("$$orders_drink", "$beverages")))))
+	 * 		.as("matches")
 	 * </pre>
+	 *
 	 * @return new instance of {@link LookupOperationBuilder}.
 	 * @since 4.1
 	 */

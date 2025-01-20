@@ -23,17 +23,22 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.bson.BinaryVector;
 import org.bson.types.Binary;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Integration tests for {@link MongoConverters}.
@@ -101,11 +106,110 @@ public class MongoConvertersIntegrationTests {
 		assertThat(template.findOne(query(where("id").is(wbd.id)), WithBinaryDataType.class)).isEqualTo(wbd);
 	}
 
+	@Test // GH-4706
+	public void shouldReadAndWriteVectors() {
+
+		WithVectors source = new WithVectors();
+		source.vector = Vector.of(1.1, 2.2, 3.3);
+
+		template.save(source);
+
+		WithVectors loaded = template.findOne(query(where("id").is(source.id)), WithVectors.class);
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4706
+	public void shouldReadAndWriteFloatVectors() {
+
+		WithVectors source = new WithVectors();
+		source.vector = Vector.of(1.1f, 2.2f, 3.3f);
+
+		template.save(source);
+
+		WithVectors loaded = template.findOne(query(where("id").is(source.id)), WithVectors.class);
+
+		// top-level arrays are converted into doubles by MongoDB with all their conversion imprecisions
+		assertThat(loaded.vector.getClass().getName()).contains("DoubleVector");
+		assertThat(loaded.vector).isNotEqualTo(source.vector);
+	}
+
+	@Test // GH-4706
+	public void shouldReadAndWriteBinFloat32Vectors() {
+
+		WithVectors source = new WithVectors();
+		source.binVector = BinaryVector.floatVector(new float[] { 1.1f, 2.2f, 3.3f });
+		source.vector = MongoVector.of(source.binVector);
+
+		template.save(source);
+
+		WithVectors loaded = template.findOne(query(where("id").is(source.id)), WithVectors.class);
+
+		assertThat(loaded.vector).isEqualTo(source.vector);
+		assertThat(loaded.binVector).isEqualTo(source.binVector);
+	}
+
+	@Test // GH-4706
+	public void shouldReadAndWriteBinInt8Vectors() {
+
+		WithVectors source = new WithVectors();
+		source.binVector = BinaryVector.int8Vector(new byte[] { 1, 2, 3 });
+		source.vector = MongoVector.of(source.binVector);
+
+		template.save(source);
+
+		WithVectors loaded = template.findOne(query(where("id").is(source.id)), WithVectors.class);
+
+		assertThat(loaded.vector).isEqualTo(source.vector);
+		assertThat(loaded.binVector).isEqualTo(source.binVector);
+	}
+
+	@Test // GH-4706
+	public void shouldReadAndWriteBinPackedVectors() {
+
+		WithVectors source = new WithVectors();
+		source.binVector = BinaryVector.packedBitVector(new byte[] { 1, 2, 3 }, (byte) 1);
+		source.vector = MongoVector.of(source.binVector);
+
+		template.save(source);
+
+		WithVectors loaded = template.findOne(query(where("id").is(source.id)), WithVectors.class);
+
+		assertThat(loaded.vector).isEqualTo(source.vector);
+		assertThat(loaded.binVector).isEqualTo(source.binVector);
+	}
+
 	@Document(COLLECTION)
 	static class Wrapper {
 
 		String id;
 		UUID uuid;
+	}
+
+	@Document(COLLECTION)
+	static class WithVectors {
+
+		ObjectId id;
+		Vector vector;
+		BinaryVector binVector;
+
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof WithVectors that)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(id, that.id)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(vector, that.vector)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(binVector, that.binVector);
+		}
+
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHash(id, vector, binVector);
+		}
 	}
 
 	@Document(COLLECTION)

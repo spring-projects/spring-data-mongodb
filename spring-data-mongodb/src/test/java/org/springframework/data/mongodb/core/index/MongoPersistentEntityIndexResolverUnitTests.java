@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
@@ -328,7 +328,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		class IndexOnLevelZeroWithExplicityNamedField {
 
-			@Indexed @Field("customFieldName") String namedProperty;
+			@Indexed
+			@Field("customFieldName") String namedProperty;
 		}
 
 		@Document
@@ -441,7 +442,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	@Document
 	class IndexOnMetaAnnotatedField {
-		@Field("_name") @IndexedFieldAnnotation String lastname;
+		@Field("_name")
+		@IndexedFieldAnnotation String lastname;
 	}
 
 	/**
@@ -839,7 +841,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		class WithCompoundCollationFromDocument {}
 
 		@Document(collation = "{'locale': 'en_US', 'strength': 2}")
-		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}", collation = "#{{ 'locale' : 'de' + '_' + 'AT' }}")
+		@CompoundIndex(name = "compound_index_with_collation", def = "{'foo': 1}",
+				collation = "#{{ 'locale' : 'de' + '_' + 'AT' }}")
 		class WithEvaluatedCollationFromCompoundIndex {}
 	}
 
@@ -1474,9 +1477,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					WithCollationFromIndexedAnnotation.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
-					.append("unique", true)
-					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "value").append("unique", true).append("collation",
+							new org.bson.Document().append("locale", "en_US").append("strength", 2)));
 		}
 
 		@Test // GH-3002
@@ -1486,9 +1489,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					WithCollationFromDocumentAnnotation.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "value")
-					.append("unique", true)
-					.append("collation", new org.bson.Document().append("locale", "en_US").append("strength", 2)));
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("name", "value").append("unique", true).append("collation",
+							new org.bson.Document().append("locale", "en_US").append("strength", 2)));
 		}
 
 		@Test // GH-3002
@@ -1591,7 +1594,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class SimilarityHolingBean {
 
-			@Indexed @Field("norm") String normalProperty;
+			@Indexed
+			@Field("norm") String normalProperty;
 			@Field("similarityL") private List<SimilaritySibling> listOfSimilarilyNamedEntities = null;
 		}
 
@@ -1754,7 +1758,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithHashedIndexOnId {
 
-			@HashIndexed @Id String id;
+			@HashIndexed
+			@Id String id;
 		}
 
 		@Document
