@@ -15,8 +15,14 @@
  */
 package org.springframework.data.mongodb.core.convert.encryption;
 
+import static java.util.Arrays.*;
+import static java.util.Collections.*;
+import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
+import static org.springframework.data.mongodb.core.encryption.EncryptionOptions.*;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -31,9 +37,11 @@ import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.encryption.Encryption;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
+import org.springframework.data.mongodb.core.encryption.EncryptionKey;
 import org.springframework.data.mongodb.core.encryption.EncryptionKeyResolver;
 import org.springframework.data.mongodb.core.encryption.EncryptionOptions;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
+import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
@@ -44,11 +52,14 @@ import org.springframework.util.ObjectUtils;
  * {@link Encrypted @Encrypted} to provide key and algorithm metadata.
  *
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 4.1
  */
 public class MongoEncryptionConverter implements EncryptingConverter<Object, Object> {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoEncryptionConverter.class);
+	private static final String EQUALITY_OPERATOR = "$eq";
+	private static final List<String> RANGE_OPERATORS = asList("$gt", "$gte", "$lt", "$lte");
 
 	private final Encryption<BsonValue, BsonBinary> encryption;
 	private final EncryptionKeyResolver keyResolver;
@@ -161,8 +172,42 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 					getProperty(context).getOwner().getName(), getProperty(context).getName()));
 		}
 
-		EncryptionOptions encryptionOptions = new EncryptionOptions(annotation.algorithm(), keyResolver.getKey(context));
+		boolean encryptExpression = false;
+		String algorithm = annotation.algorithm();
+		EncryptionKey key = keyResolver.getKey(context);
+		EncryptionOptions encryptionOptions = new EncryptionOptions(algorithm, key);
+		String fieldNameAndQueryOperator = context.getFieldNameAndQueryOperator();
 
+		ExplicitEncrypted explicitEncryptedAnnotation = persistentProperty.findAnnotation(ExplicitEncrypted.class);
+		if (explicitEncryptedAnnotation != null) {
+			QueryableEncryptionOptions queryableEncryptionOptions = QueryableEncryptionOptions.none();
+			String rangeOptions = explicitEncryptedAnnotation.rangeOptions();
+			if (!rangeOptions.isEmpty()) {
+				queryableEncryptionOptions = queryableEncryptionOptions.rangeOptions(Document.parse(rangeOptions));
+			}
+
+			if (explicitEncryptedAnnotation.contentionFactor() >= 0) {
+				queryableEncryptionOptions = queryableEncryptionOptions
+						.contentionFactor(explicitEncryptedAnnotation.contentionFactor());
+			}
+
+			boolean isPartOfARangeQuery = algorithm.equalsIgnoreCase(RANGE) && fieldNameAndQueryOperator != null;
+			if (isPartOfARangeQuery) {
+				encryptExpression = true;
+				queryableEncryptionOptions = queryableEncryptionOptions.queryType("range");
+			}
+			encryptionOptions = new EncryptionOptions(algorithm, key, queryableEncryptionOptions);
+		}
+
+		if (encryptExpression) {
+			return encryptExpression(fieldNameAndQueryOperator, value, encryptionOptions);
+		} else {
+			return encryptValue(value, context, persistentProperty, encryptionOptions);
+		}
+	}
+
+	private BsonBinary encryptValue(Object value, EncryptionContext context, MongoPersistentProperty persistentProperty,
+			EncryptionOptions encryptionOptions) {
 		if (!persistentProperty.isEntity()) {
 
 			if (persistentProperty.isCollectionLike()) {
@@ -185,6 +230,42 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			return encryption.encrypt(doc.toBsonDocument(), encryptionOptions);
 		}
 		return encryption.encrypt(BsonUtils.simpleToBsonValue(write), encryptionOptions);
+	}
+
+	/**
+	 * Encrypts a range query expression.
+	 *
+	 * <p>The mongodb-crypt {@code encryptExpression} has strict formatting requirements so this method
+	 * ensures these requirements are met and then picks out and returns just the value for use with a range query.
+	 *
+	 * @param fieldNameAndQueryOperator field name and query operator
+	 * @param value the value of the expression to be encrypted
+	 * @param encryptionOptions the options
+	 * @return the encrypted range value for use in a range query
+	 */
+	private BsonValue encryptExpression(String fieldNameAndQueryOperator, Object value,
+			EncryptionOptions encryptionOptions) {
+		BsonValue doc = BsonUtils.simpleToBsonValue(value);
+
+		String fieldName = fieldNameAndQueryOperator;
+		String queryOperator = EQUALITY_OPERATOR;
+
+		int pos = fieldNameAndQueryOperator.lastIndexOf(".$");
+		if (pos > -1) {
+			fieldName = fieldNameAndQueryOperator.substring(0, pos);
+			queryOperator = fieldNameAndQueryOperator.substring(pos + 1);
+		}
+
+		if (!RANGE_OPERATORS.contains(queryOperator)) {
+			throw new AssertionError(String.format("Not a valid range query. Querying a range encrypted field but the "
+					+ "query operator '%s' for field path '%s' is not a range query.", queryOperator, fieldName));
+		}
+
+		BsonDocument encryptExpression = new BsonDocument("$and",
+				new BsonArray(singletonList(new BsonDocument(fieldName, new BsonDocument(queryOperator, doc)))));
+
+		BsonDocument result = encryption.encryptExpression(encryptExpression, encryptionOptions);
+		return result.getArray("$and").get(0).asDocument().getDocument(fieldName).getBinary(queryOperator);
 	}
 
 	private BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property,

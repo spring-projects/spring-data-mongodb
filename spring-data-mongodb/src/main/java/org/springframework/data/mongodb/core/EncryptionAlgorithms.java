@@ -19,11 +19,13 @@ package org.springframework.data.mongodb.core;
  * Encryption algorithms supported by MongoDB Client Side Field Level Encryption.
  *
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 3.3
  */
 public final class EncryptionAlgorithms {
 
 	public static final String AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic";
 	public static final String AEAD_AES_256_CBC_HMAC_SHA_512_Random = "AEAD_AES_256_CBC_HMAC_SHA_512-Random";
+	public static final String RANGE = "Range";
 
 }

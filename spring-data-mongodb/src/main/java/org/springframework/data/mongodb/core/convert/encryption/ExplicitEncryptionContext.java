@@ -26,6 +26,7 @@ import org.springframework.lang.Nullable;
  * Default {@link EncryptionContext} implementation.
  * 
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 4.1
  */
 class ExplicitEncryptionContext implements EncryptionContext {
@@ -65,5 +66,11 @@ class ExplicitEncryptionContext implements EncryptionContext {
 	@Override
 	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
 		return conversionContext.write(value, target);
+	}
+
+	@Override
+	@Nullable
+	public String getFieldNameAndQueryOperator() {
+		return conversionContext.getFieldNameAndQueryOperator();
 	}
 }
