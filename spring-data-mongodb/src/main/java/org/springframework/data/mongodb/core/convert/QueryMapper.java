@@ -88,6 +88,7 @@ import com.mongodb.DBRef;
  * @author David Julia
  * @author Divya Srivastava
  * @author Gyungrai Wang
+ * @author Ross Lawley
  */
 public class QueryMapper {
 
@@ -670,9 +671,23 @@ public class QueryMapper {
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter) {
 
 		MongoPersistentProperty property = documentField.getProperty();
-		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
-				property, converter);
 
+		String fieldNameAndQueryOperator = property != null && !property.getFieldName().equals(documentField.name)
+				? property.getFieldName() + "." + documentField.name
+				: documentField.name;
+
+		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
+				property, converter, fieldNameAndQueryOperator);
+
+		return convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, conversionContext);
+	}
+
+	@Nullable
+	private Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
+			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
+			MongoConversionContext conversionContext) {
+
+		MongoPersistentProperty property = documentField.getProperty();
 		/* might be an $in clause with multiple entries */
 		if (property != null && !property.isCollectionLike() && sourceValue instanceof Collection<?> collection) {
 
@@ -692,7 +707,10 @@ public class QueryMapper {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
-					return getMappedValue(documentField, val);
+					MongoConversionContext fieldConversionContext = new MongoConversionContext(
+							NoPropertyPropertyValueProvider.INSTANCE, property, converter,
+							conversionContext.getFieldNameAndQueryOperator() + "." + key);
+					return convertValueWithConversionContext(documentField, val, val, valueConverter, fieldConversionContext);
 				}
 				return val;
 			});

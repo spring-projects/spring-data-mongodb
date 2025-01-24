@@ -28,29 +28,44 @@ import org.springframework.lang.Nullable;
  * {@link ValueConversionContext} that allows to delegate read/write to an underlying {@link MongoConverter}.
  *
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 3.4
  */
 public class MongoConversionContext implements ValueConversionContext<MongoPersistentProperty> {
 
 	private final PropertyValueProvider<MongoPersistentProperty> accessor; // TODO: generics
-	private final @Nullable MongoPersistentProperty persistentProperty;
 	private final MongoConverter mongoConverter;
 
+	@Nullable private final MongoPersistentProperty persistentProperty;
 	@Nullable private final SpELContext spELContext;
+	@Nullable private final String fieldNameAndQueryOperator;
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
-		this(accessor, persistentProperty, mongoConverter, null);
+		this(accessor, persistentProperty, mongoConverter, null, null);
 	}
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
 			@Nullable SpELContext spELContext) {
+		this(accessor, persistentProperty, mongoConverter, spELContext, null);
+	}
+
+	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
+			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
+			@Nullable String fieldNameAndQueryOperator) {
+		this(accessor, persistentProperty, mongoConverter, null, fieldNameAndQueryOperator);
+	}
+
+	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
+			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
+			@Nullable SpELContext spELContext, @Nullable String fieldNameAndQueryOperator) {
 
 		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
 		this.spELContext = spELContext;
+		this.fieldNameAndQueryOperator = fieldNameAndQueryOperator;
 	}
 
 	@Override
@@ -83,5 +98,10 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	@Nullable
 	public SpELContext getSpELContext() {
 		return spELContext;
+	}
+
+	@Nullable
+	public String getFieldNameAndQueryOperator() {
+		return fieldNameAndQueryOperator;
 	}
 }
