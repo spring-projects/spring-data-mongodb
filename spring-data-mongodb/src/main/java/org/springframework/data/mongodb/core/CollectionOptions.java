@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -41,6 +42,7 @@ import com.mongodb.client.model.ValidationLevel;
  * @author Mark Paluch
  * @author Andreas Zink
  * @author Ben Foster
+ * @author Ross Lawley
  */
 public class CollectionOptions {
 
@@ -51,10 +53,11 @@ public class CollectionOptions {
 	private ValidationOptions validationOptions;
 	private @Nullable TimeSeriesOptions timeSeriesOptions;
 	private @Nullable CollectionChangeStreamOptions changeStreamOptions;
+	private @Nullable Bson encryptedFields;
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
 			@Nullable Collation collation, ValidationOptions validationOptions, @Nullable TimeSeriesOptions timeSeriesOptions,
-			@Nullable CollectionChangeStreamOptions changeStreamOptions) {
+			@Nullable CollectionChangeStreamOptions changeStreamOptions,  @Nullable  Bson encryptedFields) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -63,6 +66,7 @@ public class CollectionOptions {
 		this.validationOptions = validationOptions;
 		this.timeSeriesOptions = timeSeriesOptions;
 		this.changeStreamOptions = changeStreamOptions;
+		this.encryptedFields = encryptedFields;
 	}
 
 	/**
@@ -76,7 +80,7 @@ public class CollectionOptions {
 
 		Assert.notNull(collation, "Collation must not be null");
 
-		return new CollectionOptions(null, null, null, collation, ValidationOptions.none(), null, null);
+		return new CollectionOptions(null, null, null, collation, ValidationOptions.none(), null, null, null);
 	}
 
 	/**
@@ -86,7 +90,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public static CollectionOptions empty() {
-		return new CollectionOptions(null, null, null, null, ValidationOptions.none(), null, null);
+		return new CollectionOptions(null, null, null, null, ValidationOptions.none(), null, null, null);
 	}
 
 	/**
@@ -136,7 +140,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions capped() {
 		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -148,7 +152,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions maxDocuments(long maxDocuments) {
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -160,7 +164,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions size(long size) {
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -172,7 +176,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions collation(@Nullable Collation collation) {
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -293,7 +297,7 @@ public class CollectionOptions {
 
 		Assert.notNull(validationOptions, "ValidationOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -307,7 +311,7 @@ public class CollectionOptions {
 
 		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -321,7 +325,19 @@ public class CollectionOptions {
 
 		Assert.notNull(changeStreamOptions, "ChangeStreamOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions);
+				changeStreamOptions, encryptedFields);
+	}
+
+	/**
+	 * Create new {@link CollectionOptions} with the given {@code encryptedFields}.
+	 *
+	 * @param encryptedFields can be null
+	 * @return new instance of {@link CollectionOptions}.
+	 * @since 4.5.0
+	 */
+	public CollectionOptions encryptedFields(@Nullable Bson encryptedFields) {
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions, encryptedFields);
 	}
 
 	/**
@@ -392,12 +408,22 @@ public class CollectionOptions {
 		return Optional.ofNullable(changeStreamOptions);
 	}
 
+	/**
+	 * Get the {@code encryptedFields} if available.
+	 *
+	 * @return {@link Optional#empty()} if not specified.
+	 * @since 4.5.0
+	 */
+	public Optional<Bson> getEncryptedFields() {
+		return Optional.ofNullable(encryptedFields);
+	}
+
 	@Override
 	public String toString() {
 		return "CollectionOptions{" + "maxDocuments=" + maxDocuments + ", size=" + size + ", capped=" + capped
 				+ ", collation=" + collation + ", validationOptions=" + validationOptions + ", timeSeriesOptions="
-				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", disableValidation="
-				+ disableValidation() + ", strictValidation=" + strictValidation() + ", moderateValidation="
+				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", encryptedFields=" + encryptedFields
+				+ ", disableValidation=" + disableValidation() + ", strictValidation=" + strictValidation() + ", moderateValidation="
 				+ moderateValidation() + ", warnOnValidationError=" + warnOnValidationError() + ", failOnValidationError="
 				+ failOnValidationError() + '}';
 	}
@@ -431,7 +457,10 @@ public class CollectionOptions {
 		if (!ObjectUtils.nullSafeEquals(timeSeriesOptions, that.timeSeriesOptions)) {
 			return false;
 		}
-		return ObjectUtils.nullSafeEquals(changeStreamOptions, that.changeStreamOptions);
+		if (!ObjectUtils.nullSafeEquals(changeStreamOptions, that.changeStreamOptions)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(encryptedFields, that.encryptedFields);
 	}
 
 	@Override
@@ -443,6 +472,7 @@ public class CollectionOptions {
 		result = 31 * result + ObjectUtils.nullSafeHashCode(validationOptions);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(timeSeriesOptions);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(changeStreamOptions);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(encryptedFields);
 		return result;
 	}
 
