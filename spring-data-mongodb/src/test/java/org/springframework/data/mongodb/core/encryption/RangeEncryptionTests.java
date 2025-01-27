@@ -44,7 +44,6 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
-import org.assertj.core.api.Assumptions;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
@@ -55,7 +54,6 @@ import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.DisposableBean;
@@ -71,7 +69,6 @@ import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -86,11 +83,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 class RangeEncryptionTests {
 
 	@Autowired MongoTemplate template;
-
-	@BeforeEach
-	void setUp() {
-		Assumptions.assumeThat(MongoClientVersion.isVersion5orNewer()).isTrue();
-	}
 
 	@AfterEach
 	void tearDown() {
