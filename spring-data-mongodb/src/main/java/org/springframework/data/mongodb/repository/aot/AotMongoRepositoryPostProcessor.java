@@ -20,6 +20,7 @@ import org.springframework.data.aot.AotContext;
 import org.springframework.data.mongodb.aot.LazyLoadingProxyAotProcessor;
 import org.springframework.data.mongodb.aot.MongoAotPredicates;
 import org.springframework.data.mongodb.aot.generated.MongoRepositoryContributor;
+import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.config.RepositoryRegistrationAotProcessor;
 import org.springframework.data.util.TypeContributor;
@@ -33,7 +34,7 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 	private final LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
 
 	@Override
-	protected void contribute(AotRepositoryContext repositoryContext, GenerationContext generationContext) {
+	protected RepositoryContributor contribute(AotRepositoryContext repositoryContext, GenerationContext generationContext) {
 		// do some custom type registration here
 		super.contribute(repositoryContext, generationContext);
 
@@ -43,9 +44,10 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 		});
 
 		if (AotContext.aotGeneratedRepositoriesEnabled()) {
-
-			new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
+			return new MongoRepositoryContributor(repositoryContext);
 		}
+
+		return null;
 	}
 
 	@Override
