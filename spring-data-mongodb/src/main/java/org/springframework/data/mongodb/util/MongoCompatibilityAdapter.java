@@ -129,23 +129,6 @@ public class MongoCompatibilityAdapter {
 	}
 
 	/**
-	 * Return a compatibility adapter for {@link RangeOptions}.
-	 *
-	 * @param options
-	 * @return
-	 */
-	public static RangeOptionsAdapter rangeOptionsAdapter(RangeOptions options) {
-		return trimFactor -> {
-
-			if (!MongoClientVersion.isVersion5orNewer() || setTrimFactor == null) {
-				throw new UnsupportedOperationException(NOT_SUPPORTED_ON_4.formatted("RangeOptions.trimFactor"));
-			}
-
-			ReflectionUtils.invokeMethod(setTrimFactor, options, trimFactor);
-		};
-	}
-
-	/**
 	 * Return a compatibility adapter for {@code MapReducePublisher}.
 	 *
 	 * @param publisher

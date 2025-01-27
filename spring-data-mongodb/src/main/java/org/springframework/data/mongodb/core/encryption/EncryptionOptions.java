@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.springframework.data.mongodb.util.MongoCompatibilityAdapter.*;
-
 import java.util.Objects;
 import java.util.Optional;
 
@@ -203,7 +201,7 @@ public class EncryptionOptions {
 				Assert.isInstanceOf(Integer.class, trimFactor, () -> String
 						.format("Expected to find a %s but it turned out to be %s.", Integer.class, trimFactor.getClass()));
 
-				rangeOptionsAdapter(encryptionRangeOptions).trimFactor((Integer) trimFactor);
+				encryptionRangeOptions.trimFactor((Integer) trimFactor);
 			}
 
 			if (rangeOptions.containsKey("sparsity")) {
