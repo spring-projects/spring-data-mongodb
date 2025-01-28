@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import com.mongodb.client.model.vault.RangeOptions;
 import org.bson.Document;
+import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -125,7 +126,7 @@ public class EncryptionOptions {
 		/**
 		 * Create an empty {@link QueryableEncryptionOptions}.
 		 *
-		 * @return none {@literal null}.
+		 * @return unmodifiable {@link QueryableEncryptionOptions} instance.
 		 */
 		public static QueryableEncryptionOptions none() {
 			return NONE;
