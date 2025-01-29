@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -26,6 +29,7 @@ import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoClient;
@@ -153,5 +157,26 @@ public class MongoTestTemplate extends MongoTemplate {
 			callback.accept(collection);
 			return null;
 		}));
+	}
+
+	public void awaitIndexCreation(Class<?> type, String indexName) {
+		awaitIndexCreation(getCollectionName(type), indexName, Duration.ofSeconds(10));
+	}
+
+	public void awaitIndexCreation(String collectionName, String indexName, Duration timeout) {
+
+		Awaitility.await().atMost(timeout).pollInterval(Duration.ofMillis(200)).until(() -> {
+
+			ArrayList<Document> execute = this.execute(collectionName,
+					coll -> coll
+							.aggregate(List.of(Document.parse("{'$listSearchIndexes': { 'name' : '%s'}}".formatted(indexName))))
+							.into(new ArrayList<>()));
+			for (Document doc : execute) {
+				if (doc.getString("name").equals(indexName)) {
+					return doc.getString("status").equals("READY");
+				}
+			}
+			return false;
+		});
 	}
 }

@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.awaitility.Awaitility.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatRuntimeException;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
 
@@ -26,14 +27,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
+import org.springframework.data.mongodb.test.util.AtlasContainer;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.lang.Nullable;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.client.AggregateIterable;
 
 /**
@@ -42,10 +46,15 @@ import com.mongodb.client.AggregateIterable;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@EnableIfVectorSearchAvailable
+@Testcontainers(disabledWithoutDocker = true)
 class VectorIndexIntegrationTests {
 
+	private static @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
+
 	MongoTestTemplate template = new MongoTestTemplate(cfg -> {
+		cfg.configureDatabaseFactory(ctx -> {
+			ctx.client(MongoTestUtils.client(new ConnectionString(atlasLocal.getConnectionString())));
+		});
 		cfg.configureMappingContext(ctx -> {
 			ctx.initialEntitySet(Movie.class);
 		});
@@ -68,7 +77,7 @@ class VectorIndexIntegrationTests {
 
 	@ParameterizedTest // GH-4706
 	@ValueSource(strings = { "euclidean", "cosine", "dotProduct" })
-	void createsSimpleVectorIndex(String similarityFunction) throws InterruptedException {
+	void createsSimpleVectorIndex(String similarityFunction) {
 
 		VectorIndex idx = new VectorIndex("vector_index").addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity(similarityFunction));
@@ -84,6 +93,50 @@ class VectorIndexIntegrationTests {
 					.containsEntry("latestDefinition.fields.[0].numDimensions", 1536) //
 					.containsEntry("latestDefinition.fields.[0].similarity", similarityFunction); //
 		});
+	}
+
+	@Test // GH-4706
+	void dropIndex() {
+
+		VectorIndex idx = new VectorIndex("vector_index").addVector("plotEmbedding",
+				builder -> builder.dimensions(1536).similarity("cosine"));
+
+		indexOps.ensureIndex(idx);
+
+		template.awaitIndexCreation(Movie.class, idx.getName());
+
+		indexOps.dropIndex(idx.getName());
+
+		assertThat(readRawIndexInfo(idx.getName())).isNull();
+	}
+
+	@Test // GH-4706
+	void statusChanges() {
+
+		String indexName = "vector_index";
+		assertThat(indexOps.status(indexName)).isEqualTo(SearchIndexStatus.DOES_NOT_EXIST);
+
+		VectorIndex idx = new VectorIndex(indexName).addVector("plotEmbedding",
+				builder -> builder.dimensions(1536).similarity("cosine"));
+
+		indexOps.ensureIndex(idx);
+
+		assertThat(indexOps.status(indexName)).isIn(SearchIndexStatus.PENDING, SearchIndexStatus.BUILDING,
+				SearchIndexStatus.READY);
+	}
+
+	@Test // GH-4706
+	void exists() {
+
+		String indexName = "vector_index";
+		assertThat(indexOps.exists(indexName)).isFalse();
+
+		VectorIndex idx = new VectorIndex(indexName).addVector("plotEmbedding",
+				builder -> builder.dimensions(1536).similarity("cosine"));
+
+		indexOps.ensureIndex(idx);
+
+		assertThat(indexOps.exists(indexName)).isTrue();
 	}
 
 	@Test // GH-4706
@@ -107,7 +160,9 @@ class VectorIndexIntegrationTests {
 
 		VectorIndex updatedIdx = new VectorIndex(indexName).addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity(SimilarityFunction.DOT_PRODUCT));
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> indexOps.updateIndex(idx));
+
+		// updating vector index does currently not work, one needs to delete and recreat
+		assertThatRuntimeException().isThrownBy(() -> indexOps.updateIndex(updatedIdx));
 	}
 
 	@Test // GH-4706
@@ -151,5 +206,4 @@ class VectorIndexIntegrationTests {
 
 		@Field("plot_embedding") Double[] plotEmbedding;
 	}
-
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2024. the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import java.util.List;
+import org.springframework.dao.DataAccessException;
 
 /**
  * Search Index operations on a collection for Atlas Search.
@@ -23,52 +23,65 @@ import java.util.List;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 4.5
+ * @see VectorIndex
  */
 public interface SearchIndexOperations {
 
 	/**
-	 * Ensure that an index for the provided {@link SearchIndexDefinition} exists for the collection indicated by the
-	 * entity class. If not it will be created.
+	 * Create the index for the given {@link SearchIndexDefinition} in the collection indicated by the entity class.
 	 *
 	 * @param indexDefinition must not be {@literal null}.
 	 * @return the index name.
 	 */
-	String ensureIndex(SearchIndexDefinition indexDefinition);
+	// TODO: keep or just go with createIndex?
+	default String ensureIndex(SearchIndexDefinition indexDefinition) {
+		return createIndex(indexDefinition);
+	}
 
 	/**
-	 * Alters the search {@code index}.
-	 * <p>
-	 * Note that Atlas Search does not support updating Vector Search Indices resulting in
-	 * {@link UnsupportedOperationException}.
+	 * Create the index for the given {@link SearchIndexDefinition} in the collection indicated by the entity class.
 	 *
-	 * @param index the index definition.
+	 * @param indexDefinition must not be {@literal null}.
+	 * @return the index name.
 	 */
-	void updateIndex(SearchIndexDefinition index);
+	String createIndex(SearchIndexDefinition indexDefinition);
 
 	/**
-	 * Check whether an index with the {@code name} exists.
+	 * Alters the search index matching the index {@link SearchIndexDefinition#getName() name}.
+	 * <p>
+	 * Atlas Search might not support updating indices which raises a {@link DataAccessException}.
 	 *
-	 * @param name name of index to check for presence.
+	 * @param indexDefinition the index definition.
+	 */
+	// TODO: keep or remove since it does not work reliably?
+	void updateIndex(SearchIndexDefinition indexDefinition);
+
+	/**
+	 * Check whether an index with the given {@code indexName} exists for the collection indicated by the entity class. To
+	 * ensure an existing index is queryable it is recommended to check its {@link #status(String) status}.
+	 *
+	 * @param indexName name of index to check for presence.
 	 * @return {@literal true} if the index exists; {@literal false} otherwise.
 	 */
-	boolean exists(String name);
+	boolean exists(String indexName);
 
 	/**
-	 * Drops an index from this collection.
+	 * Check the actual {@link SearchIndexStatus status} of an index.
 	 *
-	 * @param name name of index to drop.
+	 * @param indexName name of index to get the status for.
+	 * @return the current status of the index or {@link SearchIndexStatus#DOES_NOT_EXIST} if the index cannot be found.
 	 */
-	void dropIndex(String name);
+	SearchIndexStatus status(String indexName);
 
 	/**
-	 * Drops all search indices from this collection.
+	 * Drops an index from the collection indicated by the entity class.
+	 *
+	 * @param indexName name of index to drop.
+	 */
+	void dropIndex(String indexName);
+
+	/**
+	 * Drops all search indices from the collection indicated by the entity class.
 	 */
 	void dropAllIndexes();
-
-	/**
-	 * Returns the index information on the collection.
-	 *
-	 * @return index information on the collection
-	 */
-	List<IndexInfo> getIndexInfo();
 }

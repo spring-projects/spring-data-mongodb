@@ -64,8 +64,10 @@ public class MongoTestUtils {
 	}
 
 	public static MongoClient client(String host, int port) {
+		return client(new ConnectionString(String.format(CONNECTION_STRING_PATTERN, host, port)));
+	}
 
-		ConnectionString connectionString = new ConnectionString(String.format(CONNECTION_STRING_PATTERN, host, port));
+	public static MongoClient client(ConnectionString connectionString) {
 		return com.mongodb.client.MongoClients.create(connectionString, SpringDataMongoDB.driverInformation());
 	}
 

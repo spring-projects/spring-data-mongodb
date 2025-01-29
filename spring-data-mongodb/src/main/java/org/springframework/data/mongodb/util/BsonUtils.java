@@ -301,11 +301,19 @@ public class BsonUtils {
 			case BOOLEAN -> value.asBoolean().getValue();
 			case OBJECT_ID -> value.asObjectId().getValue();
 			case DB_POINTER -> new DBRef(value.asDBPointer().getNamespace(), value.asDBPointer().getId());
-			case BINARY -> value.asBinary().getData();
+			case BINARY -> {
+
+				BsonBinary binary = value.asBinary();
+				if(binary.getType() != BsonBinarySubType.VECTOR.getValue()) {
+					yield binary.getData();
+				}
+				yield value.asBinary().asVector();
+			}
 			case DATE_TIME -> new Date(value.asDateTime().getValue());
 			case SYMBOL -> value.asSymbol().getSymbol();
 			case ARRAY -> value.asArray().toArray();
 			case DOCUMENT -> Document.parse(value.asDocument().toJson());
+
 			default -> value;
 		};
 	}

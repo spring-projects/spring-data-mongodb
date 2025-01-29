@@ -185,6 +185,10 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		Class<?> rawTargetType = computeTargetType(property); // target type before conversion
 		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
+		if((rawTargetType.isPrimitive() || ClassUtils.isPrimitiveArray(rawTargetType)) && targetType == Object.class) {
+			targetType = rawTargetType;
+		}
+
 		if (!isCollection(property) && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
 			if (property.isEntity() || mergeProperties.containsKey(stringPath)) {
 				List<JsonSchemaProperty> targetProperties = new ArrayList<>();

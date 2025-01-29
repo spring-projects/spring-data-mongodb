@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.data.convert.ConverterBuilder.*;
+import static org.springframework.data.convert.ConverterBuilder.reading;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -47,7 +47,6 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -118,6 +117,8 @@ abstract class MongoConverters {
 
 		converters.add(reading(BsonUndefined.class, Object.class, it -> null));
 		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
+
+		converters.add(ByteArrayConverterFactory.INSTANCE);
 
 		return converters;
 	}
@@ -470,6 +471,48 @@ abstract class MongoConverters {
 		@Override
 		public Vector convert(BinaryVector source) {
 			return MongoVector.of(source);
+		}
+	}
+
+	@WritingConverter
+	enum ByteArrayConverterFactory implements ConverterFactory<byte[], Object>, ConditionalConverter {
+
+		INSTANCE;
+
+		@Override
+		public <T> Converter<byte[], T> getConverter(Class<T> targetType) {
+			return new ByteArrayConverter<>(targetType);
+		}
+
+		@Override
+		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
+			return targetType.getType() != Object.class && !sourceType.equals(targetType);
+		}
+
+		private final static class ByteArrayConverter<T> implements Converter<byte[], T> {
+
+			private final Class<T> targetType;
+
+			/**
+			 * Creates a new {@link ByteArrayConverter} for the given target type.
+			 *
+			 * @param targetType must not be {@literal null}.
+			 */
+			public ByteArrayConverter(Class<T> targetType) {
+
+				Assert.notNull(targetType, "Target type must not be null");
+
+				this.targetType = targetType;
+			}
+
+			@Override
+			public T convert(byte[] source) {
+
+				if (this.targetType == BinaryVector.class) {
+					return (T) BinaryVector.int8Vector(source);
+				}
+				return (T) source;
+			}
 		}
 	}
 
