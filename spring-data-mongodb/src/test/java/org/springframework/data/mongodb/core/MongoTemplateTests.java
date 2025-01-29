@@ -126,6 +126,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Laszlo Csontos
  * @author duozhilin
  * @author Jakub Zurawa
+ * @author Florian Lüdiger
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
@@ -4063,6 +4064,64 @@ public class MongoTemplateTests {
 				.firstValue();
 
 		assertThat(loaded.mapValue).isEqualTo(sourceMap);
+	}
+
+	@Test // GH-4797
+	public void updateFirstWithSortingAscendingShouldUpdateCorrectEntities() {
+
+		PersonWithIdPropertyOfTypeObjectId youngPerson = new PersonWithIdPropertyOfTypeObjectId();
+		youngPerson.setId(new ObjectId());
+		youngPerson.setAge(27);
+		youngPerson.setFirstName("Dave");
+		template.save(youngPerson);
+
+		PersonWithIdPropertyOfTypeObjectId oldPerson = new PersonWithIdPropertyOfTypeObjectId();
+		oldPerson.setId(new ObjectId());
+		oldPerson.setAge(34);
+		oldPerson.setFirstName("Dave");
+		template.save(oldPerson);
+
+		template.updateFirst(query(where("firstName").is("Dave")).with(Sort.by(Direction.ASC, "age")),
+				update("firstName", "Mike"), PersonWithIdPropertyOfTypeObjectId.class);
+
+		PersonWithIdPropertyOfTypeObjectId oldPersonResult = template.findById(oldPerson.getId(),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(oldPersonResult).isNotNull();
+		assertThat(oldPersonResult.getFirstName()).isEqualTo("Dave");
+
+		PersonWithIdPropertyOfTypeObjectId youngPersonResult = template.findById(youngPerson.getId(),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(youngPersonResult).isNotNull();
+		assertThat(youngPersonResult.getFirstName()).isEqualTo("Mike");
+	}
+
+	@Test // GH-4797
+	public void updateFirstWithSortingDescendingShouldUpdateCorrectEntities() {
+
+		PersonWithIdPropertyOfTypeObjectId youngPerson = new PersonWithIdPropertyOfTypeObjectId();
+		youngPerson.setId(new ObjectId());
+		youngPerson.setAge(27);
+		youngPerson.setFirstName("Dave");
+		template.save(youngPerson);
+
+		PersonWithIdPropertyOfTypeObjectId oldPerson = new PersonWithIdPropertyOfTypeObjectId();
+		oldPerson.setId(new ObjectId());
+		oldPerson.setAge(34);
+		oldPerson.setFirstName("Dave");
+		template.save(oldPerson);
+
+		template.updateFirst(query(where("firstName").is("Dave")).with(Sort.by(Direction.DESC, "age")),
+				update("firstName", "Mike"), PersonWithIdPropertyOfTypeObjectId.class);
+
+		PersonWithIdPropertyOfTypeObjectId oldPersonResult = template.findById(oldPerson.getId(),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(oldPersonResult).isNotNull();
+		assertThat(oldPersonResult.getFirstName()).isEqualTo("Mike");
+
+		PersonWithIdPropertyOfTypeObjectId youngPersonResult = template.findById(youngPerson.getId(),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(youngPersonResult).isNotNull();
+		assertThat(youngPersonResult.getFirstName()).isEqualTo("Dave");
 	}
 
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {

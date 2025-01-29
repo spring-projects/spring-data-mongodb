@@ -183,6 +183,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
+ * @author Florian Lüdiger
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -1730,12 +1731,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected Mono<UpdateResult> doUpdate(String collectionName, Query query, @Nullable UpdateDefinition update,
 			@Nullable Class<?> entityClass, boolean upsert, boolean multi) {
 
-		if (query.isSorted() && LOGGER.isWarnEnabled()) {
-
-			LOGGER.warn(String.format("%s does not support sort ('%s'); Please use findAndModify() instead",
-					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject())));
-		}
-
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
 		UpdateContext updateContext = multi ? queryOperations.updateContext(update, query, upsert)
@@ -1743,7 +1738,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		updateContext.increaseVersionForUpdateIfNecessary(entity);
 
 		Document queryObj = updateContext.getMappedQuery(entity);
-		UpdateOptions updateOptions = updateContext.getUpdateOptions(entityClass);
+		UpdateOptions updateOptions = updateContext.getUpdateOptions(entityClass, query);
 
 		Flux<UpdateResult> result;
 
