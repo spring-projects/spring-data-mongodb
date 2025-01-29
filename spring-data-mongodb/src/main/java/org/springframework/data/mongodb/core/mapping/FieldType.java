@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+import org.bson.BinaryVector;
+import org.bson.BsonBinary;
 import org.bson.types.BSONTimestamp;
 import org.bson.types.Binary;
 import org.bson.types.Code;
@@ -55,7 +57,8 @@ public enum FieldType {
 	INT32(15, Integer.class), //
 	TIMESTAMP(16, BSONTimestamp.class), //
 	INT64(17, Long.class), //
-	DECIMAL128(18, Decimal128.class);
+	DECIMAL128(18, Decimal128.class),
+	VECTOR(5, BinaryVector.class);
 
 	private final int bsonType;
 	private final Class<?> javaClass;

@@ -50,11 +50,11 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	private static final String PARTIAL_FILTER_EXPRESSION_KEY = "partialFilterExpression";
 
-	protected final String collectionName;
-	protected final QueryMapper mapper;
-	protected final @Nullable Class<?> type;
+	private final String collectionName;
+	private final QueryMapper mapper;
+	private final @Nullable Class<?> type;
 
-	protected final MongoOperations mongoOperations;
+	private final MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link DefaultIndexOperations}.
@@ -132,7 +132,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Nullable
-	protected MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
+	private MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
 
 		if (entityType != null) {
 			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);

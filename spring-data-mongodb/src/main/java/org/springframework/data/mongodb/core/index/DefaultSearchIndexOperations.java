@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,15 @@ package org.springframework.data.mongodb.core.index;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.BsonString;
 import org.bson.Document;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.SearchIndexModel;
 import com.mongodb.client.model.SearchIndexType;
@@ -35,7 +34,7 @@ import com.mongodb.client.model.SearchIndexType;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 3.5
+ * @since 4.5
  */
 public class DefaultSearchIndexOperations implements SearchIndexOperations {
 
@@ -48,6 +47,7 @@ public class DefaultSearchIndexOperations implements SearchIndexOperations {
 	}
 
 	public DefaultSearchIndexOperations(MongoOperations mongoOperations, String collectionName, @Nullable Class<?> type) {
+
 		this.collectionName = collectionName;
 
 		if (type != null) {
@@ -63,80 +63,63 @@ public class DefaultSearchIndexOperations implements SearchIndexOperations {
 	}
 
 	@Override
-	public String ensureIndex(SearchIndexDefinition indexDefinition) {
-
-		if (!(indexDefinition instanceof VectorIndex vsi)) {
-			throw new IllegalStateException("Index definitions must be of type VectorIndex");
-		}
+	public String createIndex(SearchIndexDefinition indexDefinition) {
 
 		Document index = indexDefinition.getIndexDocument(entityTypeInformation,
 				mongoOperations.getConverter().getMappingContext());
 
-		mongoOperations.getCollection(collectionName).createSearchIndexes(List
-				.of(new SearchIndexModel(vsi.getName(), (Document) index.get("definition"), SearchIndexType.vectorSearch())));
+		mongoOperations.getCollection(collectionName)
+				.createSearchIndexes(List.of(new SearchIndexModel(indexDefinition.getName(),
+						index.get("definition", Document.class), SearchIndexType.of(new BsonString(indexDefinition.getType())))));
 
-		return vsi.getName();
+		return indexDefinition.getName();
 	}
 
 	@Override
-	public void updateIndex(SearchIndexDefinition index) {
+	public void updateIndex(SearchIndexDefinition indexDefinition) {
 
-		if (index instanceof VectorIndex) {
-			throw new UnsupportedOperationException("Vector Index definitions cannot be updated");
-		}
-
-		Document indexDocument = index.getIndexDocument(entityTypeInformation,
+		Document indexDocument = indexDefinition.getIndexDocument(entityTypeInformation,
 				mongoOperations.getConverter().getMappingContext());
 
-		mongoOperations.getCollection(collectionName).updateSearchIndex(index.getName(), indexDocument);
+		mongoOperations.getCollection(collectionName).updateSearchIndex(indexDefinition.getName(), indexDocument);
 	}
 
 	@Override
 	public boolean exists(String indexName) {
-
-		List<Document> indexes = mongoOperations.getCollection(collectionName).listSearchIndexes().into(new ArrayList<>());
-
-		for (Document index : indexes) {
-			if (index.getString("name").equals(indexName)) {
-				return true;
-			}
-		}
-
-		return false;
+		return getSearchIndex(indexName) != null;
 	}
 
 	@Override
-	public List<IndexInfo> getIndexInfo() {
+	public SearchIndexStatus status(String indexName) {
 
-		AggregationResults<Document> aggregate = mongoOperations.aggregate(
-				Aggregation.newAggregation(context -> new Document("$listSearchIndexes", new Document())), collectionName,
-				Document.class);
-
-		ArrayList<IndexInfo> result = new ArrayList<>();
-		for (Document doc : aggregate) {
-
-			List<IndexField> indexFields = new ArrayList<>();
-			String name = doc.getString("name");
-			for (Object field : doc.get("latestDefinition", Document.class).get("fields", List.class)) {
-
-				if (field instanceof Document fieldInfo) {
-					indexFields.add(IndexField.vector(fieldInfo.getString("path")));
-				}
-			}
-
-			result.add(new IndexInfo(indexFields, name, false, false, null, false));
-		}
-		return result;
+		Document searchIndex = getSearchIndex(indexName);
+		return searchIndex != null ? SearchIndexStatus.valueOf(searchIndex.getString("status"))
+				: SearchIndexStatus.DOES_NOT_EXIST;
 	}
 
 	@Override
 	public void dropAllIndexes() {
-		getIndexInfo().forEach(indexInfo -> dropIndex(indexInfo.getName()));
+		getSearchIndexes(null).forEach(indexInfo -> dropIndex(indexInfo.getString("name")));
 	}
 
 	@Override
-	public void dropIndex(String name) {
-		mongoOperations.getCollection(collectionName).dropSearchIndex(name);
+	public void dropIndex(String indexName) {
+		mongoOperations.getCollection(collectionName).dropSearchIndex(indexName);
+	}
+
+	@Nullable
+	private Document getSearchIndex(String indexName) {
+
+		List<Document> indexes = getSearchIndexes(indexName);
+		return indexes.isEmpty() ? null : indexes.iterator().next();
+	}
+
+	private List<Document> getSearchIndexes(@Nullable String indexName) {
+
+		Document filter = StringUtils.hasText(indexName) ? new Document("name", indexName) : new Document();
+
+		return mongoOperations.getCollection(collectionName).aggregate(List.of(new Document("$listSearchIndexes", filter)))
+				.into(new ArrayList<>());
 	}
 
 }

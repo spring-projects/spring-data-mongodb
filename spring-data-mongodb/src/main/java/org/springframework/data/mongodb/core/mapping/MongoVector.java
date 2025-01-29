@@ -24,7 +24,7 @@ import org.springframework.data.domain.Vector;
 import org.springframework.util.ObjectUtils;
 
 /**
- * MongoDB-specific extension to {@link Vector} based on Mongo's {@link Binary}. Note that only float32 and int8
+ * MongoDB-specific extension to {@link Vector} based on Mongo's {@link BinaryVector}. Note that only float32 and int8
  * variants can be represented as floating-point numbers. int1 returns an all-zero array for {@link #toFloatArray()} and
  * {@link #toDoubleArray()}.
  *

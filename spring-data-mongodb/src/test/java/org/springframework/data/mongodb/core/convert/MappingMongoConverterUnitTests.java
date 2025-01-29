@@ -15,10 +15,23 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static java.time.ZoneId.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
+import static java.time.ZoneId.systemDefault;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.assertTypeHint;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -27,12 +40,30 @@ import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.assertj.core.data.Percentage;
+import org.bson.BinaryVector;
 import org.bson.BsonDouble;
 import org.bson.BsonUndefined;
 import org.bson.types.Binary;
@@ -3325,7 +3356,8 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document document = write(source);
 		assertThat(document).containsEntry("_id", source.abc).containsEntry("id", source.id);
 
-		WithRenamedIdPropertyAndAnotherPropertyNamedId target = converter.read(WithRenamedIdPropertyAndAnotherPropertyNamedId.class, document);
+		WithRenamedIdPropertyAndAnotherPropertyNamedId target = converter
+				.read(WithRenamedIdPropertyAndAnotherPropertyNamedId.class, document);
 		assertThat(target.abc).isEqualTo(source.abc);
 		assertThat(target.id).isEqualTo(source.id);
 	}
@@ -3346,6 +3378,31 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("embeddings", List.of(1.1d, 2.2d, 3.3d));
 		WithVector withVector = converter.read(WithVector.class, document);
 		assertThat(withVector.embeddings.toDoubleArray()).contains(1.1d, 2.2d, 3.3d);
+	}
+
+	@Test // GH-4706
+	void mapsByteArrayAsVectorWhenAnnotatedWithFieldTargetType() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.asVector = new byte[] { 0, 1, 2 };
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThatNoException().isThrownBy(() -> target.get("asVector", BinaryVector.class));
+	}
+
+	@Test // GH-4706
+	void writesByteArrayAsIsIfNoFieldInstructionsGiven() {
+
+		WithArrays source = new WithArrays();
+		source.arrayOfPrimitiveBytes = new byte[] { 0, 1, 2 };
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("arrayOfPrimitiveBytes", byte[].class)).isSameAs(source.arrayOfPrimitiveBytes);
+
 	}
 
 	org.bson.Document write(Object source) {
@@ -3891,6 +3948,7 @@ class MappingMongoConverterUnitTests {
 
 	static class WithArrays {
 		String[] arrayOfStrings;
+		byte[] arrayOfPrimitiveBytes;
 	}
 
 	// DATAMONGO-1898
@@ -4012,6 +4070,9 @@ class MappingMongoConverterUnitTests {
 
 		@Field(targetType = FieldType.OBJECT_ID) //
 		Date dateAsObjectId;
+
+		@Field(targetType = FieldType.VECTOR) //
+		byte[] asVector;
 	}
 
 	static class WrapperAroundWithUnwrapped {

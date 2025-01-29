@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.bson.Document;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -43,16 +42,27 @@ public interface SearchIndexDefinition {
 	String getType();
 
 	/**
+	 * Returns the index document for this index without any potential entity context resolving field name mappings. The
+	 * resulting document contains the index name, type and {@link #getDefinition(TypeInformation, MappingContext)
+	 * definition}.
+	 * 
+	 * @return never {@literal null}.
+	 */
+	default Document getRawIndexDocument() {
+		return getIndexDocument(null, null);
+	}
+
+	/**
 	 * Returns the index document for this index in the context of a potential entity to resolve field name mappings. The
 	 * resulting document contains the index name, type and {@link #getDefinition(TypeInformation, MappingContext)
 	 * definition}.
 	 *
-	 * @param entity
+	 * @param entity can be {@literal null}.
 	 * @param mappingContext
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	default Document getIndexDocument(@Nullable TypeInformation<?> entity,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+			@Nullable MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		Document document = new Document();
 		document.put("name", getName());
@@ -66,11 +76,10 @@ public interface SearchIndexDefinition {
 	 * Returns the actual index definition for this index in the context of a potential entity to resolve field name
 	 * mappings.
 	 *
-	 * @param entity
+	 * @param entity can be {@literal null}.
 	 * @param mappingContext
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	Document getDefinition(@Nullable TypeInformation<?> entity,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext);
-
+			@Nullable MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext);
 }

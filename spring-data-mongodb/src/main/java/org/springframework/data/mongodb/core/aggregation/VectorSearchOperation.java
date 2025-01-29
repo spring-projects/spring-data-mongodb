@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import org.bson.BinaryVector;
 import org.bson.Document;
-
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.MongoVector;
@@ -38,7 +37,6 @@ import org.springframework.util.StringUtils;
 /**
  * Performs a semantic search on data in your Atlas cluster. This stage is only available for Atlas Vector Search.
  * Vector data must be less than or equal to 4096 dimensions in width.
- * <p>
  * <h3>Limitations</h3> You cannot use this stage together with:
  * <ul>
  * <li>{@link org.springframework.data.mongodb.core.aggregation.LookupOperation Lookup} stages</li>
@@ -450,6 +448,18 @@ public class VectorSearchOperation implements AggregationOperation {
 		@Contract("_ -> this")
 		default LimitContributor vector(float... vector) {
 			return vector(Vector.of(vector));
+		}
+
+		/**
+		 * Array of byte numbers that represent the query vector. The number type must match the indexed field value type.
+		 * Otherwise, Atlas Vector Search doesn't return any results or errors.
+		 *
+		 * @param vector the query vector.
+		 * @return
+		 */
+		@Contract("_ -> this")
+		default LimitContributor vector(byte... vector) {
+			return vector(BinaryVector.int8Vector(vector));
 		}
 
 		/**

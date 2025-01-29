@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.bson.Document;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -45,9 +44,10 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Contract;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
- * {@link IndexDefinition} for creating MongoDB
+ * {@link SearchIndexDefinition} for creating MongoDB
  * <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/">Vector Index</a> required to
  * run {@code $vectorSearch} queries.
  *
@@ -58,7 +58,7 @@ import org.springframework.util.Assert;
 public class VectorIndex implements SearchIndexDefinition {
 
 	private final String name;
-	private final List<Object> fields = new ArrayList<>();
+	private final List<SearchField> fields = new ArrayList<>();
 
 	/**
 	 * Create a new {@link VectorIndex} instance.
@@ -80,8 +80,7 @@ public class VectorIndex implements SearchIndexDefinition {
 
 		Assert.hasText(path, "Path must not be null or empty");
 
-		fields.add(new VectorFilterField(path, "filter"));
-		return this;
+		return addField(new VectorFilterField(path, "filter"));
 	}
 
 	/**
@@ -98,11 +97,7 @@ public class VectorIndex implements SearchIndexDefinition {
 
 		VectorFieldBuilder builder = new VectorFieldBuilder(path, "vector");
 		customizer.accept(builder);
-
-		fields.add(
-				new VectorIndexField(builder.path, builder.type, builder.dimensions, builder.similarity, builder.quantization));
-
-		return this;
+		return addField(builder.build());
 	}
 
 	@Override
@@ -117,46 +112,71 @@ public class VectorIndex implements SearchIndexDefinition {
 
 	@Override
 	public Document getDefinition(@Nullable TypeInformation<?> entity,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+			@Nullable MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-		if (fields.isEmpty()) {
-			throw new IllegalStateException("At least one vector or filter field must be added to the index");
-		}
-
-		MongoPersistentEntity<?> persistentEntity = entity != null ? mappingContext.getPersistentEntity(entity) : null;
+		MongoPersistentEntity<?> persistentEntity = entity != null
+				? (mappingContext != null ? mappingContext.getPersistentEntity(entity) : null)
+				: null;
 
 		Document definition = new Document();
 		List<Document> fields = new ArrayList<>();
 		definition.put("fields", fields);
 
-		for (Object field : this.fields) {
+		for (SearchField field : this.fields) {
 
-			if (field instanceof VectorFilterField vff) {
-
-				Document filter = new Document("type", "filter");
-				filter.put("path", resolvePath(vff.path(), persistentEntity, mappingContext));
-				fields.add(filter);
-			}
+			Document filter = new Document("type", field.type());
+			filter.put("path", resolvePath(field.path(), persistentEntity, mappingContext));
 
 			if (field instanceof VectorIndexField vif) {
 
-				Document filter = new Document("type", "vector");
-				filter.put("path", resolvePath(vif.path(), persistentEntity, mappingContext));
 				filter.put("numDimensions", vif.dimensions());
 				filter.put("similarity", vif.similarity());
-				filter.put("quantization", vif.quantization());
-				fields.add(filter);
+				if (StringUtils.hasText(vif.quantization)) {
+					filter.put("quantization", vif.quantization());
+				}
 			}
-
+			fields.add(filter);
 		}
 
 		return definition;
 	}
 
-	private String resolvePath(String path, @Nullable MongoPersistentEntity<?> persistentEntity,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+	@Contract("_ -> this")
+	private VectorIndex addField(SearchField filterField) {
 
-		if (persistentEntity == null) {
+		fields.add(filterField);
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		return "VectorIndex{" + "name='" + name + '\'' + ", fields=" + fields + ", type='" + getType() + '\'' + '}';
+	}
+
+	// /** instead of index info */
+	static VectorIndex of(Document document) {
+
+		VectorIndex index = new VectorIndex(document.getString("name"));
+		String definitionKey = document.containsKey("latestDefinition") ? "latestDefinition" : "definition";
+		Document definition = document.get(definitionKey, Document.class);
+		for (Object entry : definition.get("fields", List.class)) {
+			if (entry instanceof Document field) {
+				if (field.get("type").equals("vector")) {
+					index.addField(new VectorIndexField(field.getString("path"), "vector", field.getInteger("numDimensions"),
+							field.getString("similarity"), field.getString("quantization")));
+				} else {
+					index.addField(new VectorFilterField(field.getString("path"), "filter"));
+				}
+			}
+		}
+
+		return index;
+	}
+
+	private String resolvePath(String path, @Nullable MongoPersistentEntity<?> persistentEntity,
+			@Nullable MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+		if (persistentEntity == null || mappingContext == null) {
 			return path;
 		}
 
@@ -165,12 +185,23 @@ public class VectorIndex implements SearchIndexDefinition {
 		return mbf.getMappedKey();
 	}
 
-	record VectorIndexField(String path, String type, int dimensions, String similarity, String quantization) {
+	interface SearchField {
+
+		String path();
+
+		String type();
 	}
 
-	record VectorFilterField(String path, String type) {
+	record VectorFilterField(String path, String type) implements SearchField {
 	}
 
+	record VectorIndexField(String path, String type, int dimensions, String similarity,
+			@Nullable String quantization) implements SearchField {
+	}
+
+	/**
+	 * Builder to create a vector field
+	 */
 	public static class VectorFieldBuilder {
 
 		private final String path;
@@ -178,9 +209,10 @@ public class VectorIndex implements SearchIndexDefinition {
 
 		private int dimensions;
 		private @Nullable String similarity;
-		private String quantization = "none";
+		private @Nullable String quantization;
 
 		VectorFieldBuilder(String path, String type) {
+
 			this.path = path;
 			this.type = type;
 		}
@@ -204,7 +236,6 @@ public class VectorIndex implements SearchIndexDefinition {
 		 */
 		@Contract(" -> this")
 		public VectorFieldBuilder cosine() {
-
 			return similarity(SimilarityFunction.COSINE);
 		}
 
@@ -219,7 +250,6 @@ public class VectorIndex implements SearchIndexDefinition {
 		/**
 		 * Use similarity based on both angle and magnitude of the vectors.
 		 *
-		 * @param name The name of the index.
 		 * @return new instance of {@link VectorIndex}.
 		 */
 		@Contract(" -> this")
@@ -237,6 +267,7 @@ public class VectorIndex implements SearchIndexDefinition {
 		 */
 		@Contract("_ -> this")
 		public VectorFieldBuilder similarity(String similarity) {
+
 			this.similarity = similarity;
 			return this;
 		}
@@ -249,6 +280,7 @@ public class VectorIndex implements SearchIndexDefinition {
 		 */
 		@Contract("_ -> this")
 		public VectorFieldBuilder similarity(SimilarityFunction similarity) {
+
 			return similarity(similarity.getFunctionName());
 		}
 
@@ -261,12 +293,13 @@ public class VectorIndex implements SearchIndexDefinition {
 		 * @see #quantization(Quantization)
 		 */
 		public VectorFieldBuilder quantization(String quantization) {
+
 			this.quantization = quantization;
 			return this;
 		}
 
 		/**
-		 * Quntization used.
+		 * Quantization used.
 		 *
 		 * @param quantization must not be {@literal null}.
 		 * @return this.
@@ -274,9 +307,14 @@ public class VectorIndex implements SearchIndexDefinition {
 		public VectorFieldBuilder quantization(Quantization quantization) {
 			return quantization(quantization.getQuantizationName());
 		}
+
+		VectorIndexField build() {
+			return new VectorIndexField(this.path, this.type, this.dimensions, this.similarity, this.quantization);
+		}
 	}
 
 	public enum SimilarityFunction {
+
 		DOT_PRODUCT("dotProduct"), COSINE("cosine"), EUCLIDEAN("euclidean");
 
 		final String functionName;
@@ -290,7 +328,9 @@ public class VectorIndex implements SearchIndexDefinition {
 		}
 	}
 
+	/** make it nullable */
 	public enum Quantization {
+
 		NONE("none"), SCALAR("scalar"), BINARY("binary");
 
 		final String quantizationName;

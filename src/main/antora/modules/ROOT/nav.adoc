@@ -33,6 +33,7 @@
 ** xref:mongodb/change-streams.adoc[]
 ** xref:mongodb/tailable-cursors.adoc[]
 ** xref:mongodb/sharding.adoc[]
+** xref:mongodb/mongo-search-indexes.adoc[]
 ** xref:mongodb/mongo-encryption.adoc[]
 
 // Repository
