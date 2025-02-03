@@ -2596,7 +2596,7 @@ public class MongoTemplate
 
 		if (LOGGER.isDebugEnabled()) {
 
-			Document mappedSort = getMappedSortObject(query, entityClass);
+			Document mappedSort = preparer instanceof SortingQueryCursorPreparer sqcp ?  getMappedSortObject(sqcp.getSortObject(), entity) : null;
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), entityClass,
 					collectionName));
@@ -2621,9 +2621,10 @@ public class MongoTemplate
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
-		Document mappedSort = getMappedSortObject(query, sourceClass);
 
 		if (LOGGER.isDebugEnabled()) {
+
+			Document mappedSort = preparer instanceof SortingQueryCursorPreparer sqcp ?  getMappedSortObject(sqcp.getSortObject(), sourceClass) : null;
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), sourceClass,
 					collectionName));
@@ -2988,12 +2989,17 @@ public class MongoTemplate
 
 	@Nullable
 	private Document getMappedSortObject(Document sortObject, Class<?> type) {
+		return getMappedSortObject(sortObject, mappingContext.getPersistentEntity(type));
+	}
+
+	@Nullable
+	private Document getMappedSortObject(Document sortObject, MongoPersistentEntity<?> entity) {
 
 		if (ObjectUtils.isEmpty(sortObject)) {
 			return null;
 		}
 
-		return queryMapper.getMappedSort(sortObject, mappingContext.getPersistentEntity(type));
+		return queryMapper.getMappedSort(sortObject, entity);
 	}
 
 	/**
@@ -3346,7 +3352,7 @@ public class MongoTemplate
 		}
 	}
 
-	class QueryCursorPreparer implements CursorPreparer {
+	class QueryCursorPreparer implements SortingQueryCursorPreparer {
 
 		private final Query query;
 
@@ -3444,6 +3450,11 @@ public class MongoTemplate
 			return cursorToUse;
 		}
 
+		@Nullable
+		@Override
+		public Document getSortObject() {
+			return sortObject;
+		}
 	}
 
 	/**
