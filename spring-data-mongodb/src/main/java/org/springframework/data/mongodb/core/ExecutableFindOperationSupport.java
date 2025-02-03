@@ -205,7 +205,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class DelegatingQueryCursorPreparer implements CursorPreparer {
+	static class DelegatingQueryCursorPreparer implements SortingQueryCursorPreparer {
 
 		private final @Nullable CursorPreparer delegate;
 		private Optional<Integer> limit = Optional.empty();
@@ -230,6 +230,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		@Override
 		public ReadPreference getReadPreference() {
 			return delegate.getReadPreference();
+		}
+
+		@Override
+		public Document getSortObject() {
+			return delegate instanceof SortingQueryCursorPreparer sqcp ? sqcp.getSortObject() : null;
 		}
 	}
 
