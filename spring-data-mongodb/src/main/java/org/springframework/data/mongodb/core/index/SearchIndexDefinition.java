@@ -45,7 +45,7 @@ public interface SearchIndexDefinition {
 	 * Returns the index document for this index without any potential entity context resolving field name mappings. The
 	 * resulting document contains the index name, type and {@link #getDefinition(TypeInformation, MappingContext)
 	 * definition}.
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 */
 	default Document getRawIndexDocument() {
@@ -74,12 +74,14 @@ public interface SearchIndexDefinition {
 
 	/**
 	 * Returns the actual index definition for this index in the context of a potential entity to resolve field name
-	 * mappings.
+	 * mappings. Entity and context can be {@literal null} to create a generic index definition without applying field
+	 * name mapping.
 	 *
 	 * @param entity can be {@literal null}.
-	 * @param mappingContext
+	 * @param mappingContext can be {@literal null}.
 	 * @return never {@literal null}.
 	 */
 	Document getDefinition(@Nullable TypeInformation<?> entity,
 			@Nullable MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext);
+
 }

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.data.convert.ConverterBuilder.reading;
+import static org.springframework.data.convert.ConverterBuilder.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -47,6 +47,7 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -117,8 +118,6 @@ abstract class MongoConverters {
 
 		converters.add(reading(BsonUndefined.class, Object.class, it -> null));
 		converters.add(reading(String.class, URI.class, URI::create).andWriting(URI::toString));
-
-		converters.add(ByteArrayConverterFactory.INSTANCE);
 
 		return converters;
 	}

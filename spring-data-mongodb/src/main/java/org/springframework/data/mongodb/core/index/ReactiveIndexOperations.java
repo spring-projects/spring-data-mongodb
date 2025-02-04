@@ -33,8 +33,22 @@ public interface ReactiveIndexOperations {
 	 *
 	 * @param indexDefinition must not be {@literal null}.
 	 * @return a {@link Mono} emitting the name of the index on completion.
+	 * @deprecated since 4.5, in favor of {@link #createIndex(IndexDefinition)}.
 	 */
+	@Deprecated(since = "4.5", forRemoval = true)
 	Mono<String> ensureIndex(IndexDefinition indexDefinition);
+
+	/**
+	 * Create the index for the provided {@link IndexDefinition} exists for the collection indicated by the entity class.
+	 * If not it will be created.
+	 *
+	 * @param indexDefinition must not be {@literal null}.
+	 * @return the index name.
+	 * @since 4.5
+	 */
+	default Mono<String> createIndex(IndexDefinition indexDefinition) {
+		return ensureIndex(indexDefinition);
+	}
 
 	/**
 	 * Alters the index with given {@literal name}.

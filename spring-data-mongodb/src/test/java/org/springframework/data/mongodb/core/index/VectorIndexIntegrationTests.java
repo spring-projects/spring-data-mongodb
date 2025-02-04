@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.assertj.core.api.Assertions.assertThatRuntimeException;
-import static org.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -34,6 +35,7 @@ import org.springframework.data.mongodb.test.util.AtlasContainer;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.lang.Nullable;
+
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -49,7 +51,7 @@ import com.mongodb.client.AggregateIterable;
 @Testcontainers(disabledWithoutDocker = true)
 class VectorIndexIntegrationTests {
 
-	private static @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
+	private static final @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
 
 	MongoTestTemplate template = new MongoTestTemplate(cfg -> {
 		cfg.configureDatabaseFactory(ctx -> {
@@ -82,7 +84,7 @@ class VectorIndexIntegrationTests {
 		VectorIndex idx = new VectorIndex("vector_index").addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity(similarityFunction));
 
-		indexOps.ensureIndex(idx);
+		indexOps.createIndex(idx);
 
 		await().untilAsserted(() -> {
 			Document raw = readRawIndexInfo(idx.getName());
@@ -101,7 +103,7 @@ class VectorIndexIntegrationTests {
 		VectorIndex idx = new VectorIndex("vector_index").addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity("cosine"));
 
-		indexOps.ensureIndex(idx);
+		indexOps.createIndex(idx);
 
 		template.awaitIndexCreation(Movie.class, idx.getName());
 
@@ -111,7 +113,7 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
-	void statusChanges() {
+	void statusChanges() throws InterruptedException {
 
 		String indexName = "vector_index";
 		assertThat(indexOps.status(indexName)).isEqualTo(SearchIndexStatus.DOES_NOT_EXIST);
@@ -119,14 +121,17 @@ class VectorIndexIntegrationTests {
 		VectorIndex idx = new VectorIndex(indexName).addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity("cosine"));
 
-		indexOps.ensureIndex(idx);
+		indexOps.createIndex(idx);
+
+		// without synchronization, the container might crash.
+		Thread.sleep(500);
 
 		assertThat(indexOps.status(indexName)).isIn(SearchIndexStatus.PENDING, SearchIndexStatus.BUILDING,
 				SearchIndexStatus.READY);
 	}
 
 	@Test // GH-4706
-	void exists() {
+	void exists() throws InterruptedException {
 
 		String indexName = "vector_index";
 		assertThat(indexOps.exists(indexName)).isFalse();
@@ -134,19 +139,25 @@ class VectorIndexIntegrationTests {
 		VectorIndex idx = new VectorIndex(indexName).addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity("cosine"));
 
-		indexOps.ensureIndex(idx);
+		indexOps.createIndex(idx);
+
+		// without synchronization, the container might crash.
+		Thread.sleep(500);
 
 		assertThat(indexOps.exists(indexName)).isTrue();
 	}
 
 	@Test // GH-4706
-	void updatesVectorIndex() {
+	void updatesVectorIndex() throws InterruptedException {
 
 		String indexName = "vector_index";
 		VectorIndex idx = new VectorIndex(indexName).addVector("plotEmbedding",
 				builder -> builder.dimensions(1536).similarity("cosine"));
 
-		indexOps.ensureIndex(idx);
+		indexOps.createIndex(idx);
+
+		// without synchronization, the container might crash.
+		Thread.sleep(500);
 
 		await().untilAsserted(() -> {
 			Document raw = readRawIndexInfo(idx.getName());
@@ -166,13 +177,16 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
-	void createsVectorIndexWithFilters() {
+	void createsVectorIndexWithFilters() throws InterruptedException {
 
 		VectorIndex idx = new VectorIndex("vector_index")
 				.addVector("plotEmbedding", builder -> builder.dimensions(1536).cosine()).addFilter("description")
 				.addFilter("year");
 
-		indexOps.ensureIndex(idx);
+		indexOps.createIndex(idx);
+
+		// without synchronization, the container might crash.
+		Thread.sleep(500);
 
 		await().untilAsserted(() -> {
 			Document raw = readRawIndexInfo(idx.getName());

@@ -33,17 +33,6 @@ public interface SearchIndexOperations {
 	 * @param indexDefinition must not be {@literal null}.
 	 * @return the index name.
 	 */
-	// TODO: keep or just go with createIndex?
-	default String ensureIndex(SearchIndexDefinition indexDefinition) {
-		return createIndex(indexDefinition);
-	}
-
-	/**
-	 * Create the index for the given {@link SearchIndexDefinition} in the collection indicated by the entity class.
-	 *
-	 * @param indexDefinition must not be {@literal null}.
-	 * @return the index name.
-	 */
 	String createIndex(SearchIndexDefinition indexDefinition);
 
 	/**
@@ -53,7 +42,6 @@ public interface SearchIndexOperations {
 	 *
 	 * @param indexDefinition the index definition.
 	 */
-	// TODO: keep or remove since it does not work reliably?
 	void updateIndex(SearchIndexDefinition indexDefinition);
 
 	/**

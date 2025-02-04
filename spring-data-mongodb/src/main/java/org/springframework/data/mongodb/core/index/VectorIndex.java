@@ -1,27 +1,11 @@
 /*
- * Copyright 2024. the original author or authors.
+ * Copyright 2024-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
- * Copyright 2024 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -153,12 +137,16 @@ public class VectorIndex implements SearchIndexDefinition {
 		return "VectorIndex{" + "name='" + name + '\'' + ", fields=" + fields + ", type='" + getType() + '\'' + '}';
 	}
 
-	// /** instead of index info */
+	/**
+	 * Parse the {@link Document} into a {@link VectorIndex}.
+	 */
 	static VectorIndex of(Document document) {
 
 		VectorIndex index = new VectorIndex(document.getString("name"));
+
 		String definitionKey = document.containsKey("latestDefinition") ? "latestDefinition" : "definition";
 		Document definition = document.get(definitionKey, Document.class);
+
 		for (Object entry : definition.get("fields", List.class)) {
 			if (entry instanceof Document field) {
 				if (field.get("type").equals("vector")) {
@@ -195,7 +183,7 @@ public class VectorIndex implements SearchIndexDefinition {
 	record VectorFilterField(String path, String type) implements SearchField {
 	}
 
-	record VectorIndexField(String path, String type, int dimensions, String similarity,
+	record VectorIndexField(String path, String type, int dimensions, @Nullable String similarity,
 			@Nullable String quantization) implements SearchField {
 	}
 
@@ -313,6 +301,9 @@ public class VectorIndex implements SearchIndexDefinition {
 		}
 	}
 
+	/**
+	 * Similarity function used to calculate vector distance.
+	 */
 	public enum SimilarityFunction {
 
 		DOT_PRODUCT("dotProduct"), COSINE("cosine"), EUCLIDEAN("euclidean");
@@ -328,10 +319,22 @@ public class VectorIndex implements SearchIndexDefinition {
 		}
 	}
 
-	/** make it nullable */
+	/**
+	 * Vector quantization. Quantization reduce vector sizes while preserving performance.
+	 */
 	public enum Quantization {
 
-		NONE("none"), SCALAR("scalar"), BINARY("binary");
+		NONE("none"),
+
+		/**
+		 * Converting a float point into an integer.
+		 */
+		SCALAR("scalar"),
+
+		/**
+		 * Converting a float point into a single bit.
+		 */
+		BINARY("binary");
 
 		final String quantizationName;
 
