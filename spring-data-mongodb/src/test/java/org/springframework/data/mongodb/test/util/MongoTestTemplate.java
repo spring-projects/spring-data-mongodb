@@ -63,14 +63,11 @@ public class MongoTestTemplate extends MongoTemplate {
 
 	public MongoTestTemplate(Consumer<MongoTestTemplateConfiguration> cfg) {
 
-		this(new Supplier<MongoTestTemplateConfiguration>() {
-			@Override
-			public MongoTestTemplateConfiguration get() {
+		this(() -> {
 
-				MongoTestTemplateConfiguration config = new MongoTestTemplateConfiguration();
-				cfg.accept(config);
-				return config;
-			}
+			MongoTestTemplateConfiguration config = new MongoTestTemplateConfiguration();
+			cfg.accept(config);
+			return config;
 		});
 	}
 
@@ -115,7 +112,7 @@ public class MongoTestTemplate extends MongoTemplate {
 	}
 
 	public void flush(Class<?>... entities) {
-		flush(Arrays.asList(entities).stream().map(this::getCollectionName).collect(Collectors.toList()));
+		flush(Arrays.stream(entities).map(this::getCollectionName).collect(Collectors.toList()));
 	}
 
 	public void flush(String... collections) {
@@ -124,7 +121,7 @@ public class MongoTestTemplate extends MongoTemplate {
 
 	public void flush(Object... objects) {
 
-		flush(Arrays.asList(objects).stream().map(it -> {
+		flush(Arrays.stream(objects).map(it -> {
 
 			if (it instanceof String) {
 				return (String) it;
@@ -167,7 +164,7 @@ public class MongoTestTemplate extends MongoTemplate {
 
 		Awaitility.await().atMost(timeout).pollInterval(Duration.ofMillis(200)).until(() -> {
 
-			ArrayList<Document> execute = this.execute(collectionName,
+			List<Document> execute = this.execute(collectionName,
 					coll -> coll
 							.aggregate(List.of(Document.parse("{'$listSearchIndexes': { 'name' : '%s'}}".formatted(indexName))))
 							.into(new ArrayList<>()));

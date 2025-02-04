@@ -27,8 +27,9 @@ import org.springframework.lang.Nullable;
 
 /**
  * Index information for a MongoDB Search Index.
- * 
+ *
  * @author Christoph Strobl
+ * @since 4.5
  */
 public class SearchIndexInfo {
 
@@ -42,14 +43,27 @@ public class SearchIndexInfo {
 		this.indexDefinition = Lazy.of(indexDefinition);
 	}
 
+	/**
+	 * Parse a BSON document describing an index into a {@link SearchIndexInfo}.
+	 *
+	 * @param source BSON document describing the index.
+	 * @return a new {@link SearchIndexInfo} instance.
+	 */
 	public static SearchIndexInfo parse(String source) {
 		return of(Document.parse(source));
 	}
 
+	/**
+	 * Create an index from its BSON {@link Document} representation into a {@link SearchIndexInfo}.
+	 *
+	 * @param indexDocument BSON document describing the index.
+	 * @return a new {@link SearchIndexInfo} instance.
+	 */
 	public static SearchIndexInfo of(Document indexDocument) {
 
 		Object id = indexDocument.get("id");
-		SearchIndexStatus status = SearchIndexStatus.valueOf(indexDocument.get("status", "DOES_NOT_EXIST"));
+		SearchIndexStatus status = SearchIndexStatus
+				.valueOf(indexDocument.get("status", SearchIndexStatus.DOES_NOT_EXIST.name()));
 
 		return new SearchIndexInfo(id, status, () -> readIndexDefinition(indexDocument));
 	}

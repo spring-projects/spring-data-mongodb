@@ -15,11 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -27,6 +29,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.util.aggregation.TestAggregationContext;
 
 /**
+ * Unit tests for {@link VectorSearchOperation}.
+ *
  * @author Christoph Strobl
  */
 class VectorSearchOperationUnitTests {
@@ -40,7 +44,7 @@ class VectorSearchOperationUnitTests {
 	void requiredArgs() {
 
 		List<Document> stages = SEARCH_OPERATION.toPipelineStages(Aggregation.DEFAULT_CONTEXT);
-		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH));
+		assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH));
 	}
 
 	@Test // GH-4706
@@ -53,7 +57,7 @@ class VectorSearchOperationUnitTests {
 
 		Document filter = new Document("$and",
 				List.of(new Document("year", new Document("$gt", 1955)), new Document("year", new Document("$lt", 1975))));
-		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch",
+		assertThat(stages).containsExactly(new Document("$vectorSearch",
 				new Document($VECTOR_SEARCH).append("exact", true).append("filter", filter).append("numCandidates", 150)));
 	}
 
@@ -61,7 +65,7 @@ class VectorSearchOperationUnitTests {
 	void withScore() {
 
 		List<Document> stages = SEARCH_OPERATION.withSearchScore().toPipelineStages(Aggregation.DEFAULT_CONTEXT);
-		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
+		assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
 				new Document("$addFields", new Document("score", new Document("$meta", "vectorSearchScore"))));
 	}
 
@@ -70,7 +74,7 @@ class VectorSearchOperationUnitTests {
 
 		List<Document> stages = SEARCH_OPERATION.withFilterBySore(score -> score.gt(50))
 				.toPipelineStages(Aggregation.DEFAULT_CONTEXT);
-		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
+		assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
 				new Document("$addFields", new Document("score", new Document("$meta", "vectorSearchScore"))),
 				new Document("$match", new Document("score", new Document("$gt", 50))));
 	}
@@ -80,7 +84,7 @@ class VectorSearchOperationUnitTests {
 
 		List<Document> stages = SEARCH_OPERATION.withFilterBySore(score -> score.gt(50)).withSearchScore("s-c-o-r-e")
 				.toPipelineStages(Aggregation.DEFAULT_CONTEXT);
-		Assertions.assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
+		assertThat(stages).containsExactly(new Document("$vectorSearch", $VECTOR_SEARCH),
 				new Document("$addFields", new Document("s-c-o-r-e", new Document("$meta", "vectorSearchScore"))),
 				new Document("$match", new Document("s-c-o-r-e", new Document("$gt", 50))));
 	}
@@ -95,7 +99,7 @@ class VectorSearchOperationUnitTests {
 
 		Document filter = new Document("$and",
 				List.of(new Document("year", new Document("$gt", 1955)), new Document("year", new Document("$lt", 1975))));
-		Assertions.assertThat(stages)
+		assertThat(stages)
 				.containsExactly(new Document("$vectorSearch", new Document($VECTOR_SEARCH).append("filter", filter)));
 	}
 

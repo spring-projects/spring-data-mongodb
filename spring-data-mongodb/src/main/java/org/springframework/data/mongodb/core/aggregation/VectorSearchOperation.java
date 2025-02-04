@@ -16,15 +16,14 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.bson.BinaryVector;
 import org.bson.Document;
+
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.MongoVector;
@@ -177,7 +176,7 @@ public class VectorSearchOperation implements AggregationOperation {
 	 * can't specify a number less than the number of documents to return (limit). This field is required if
 	 * {@link #searchType(SearchType)} is {@link SearchType#ANN} or {@link SearchType#DEFAULT}.
 	 *
-	 * @param numCandidates
+	 * @param numCandidates number of nearest neighbors to use during the search
 	 * @return a new {@link VectorSearchOperation} with {@code numCandidates} applied.
 	 */
 	@Contract("_ -> new")
@@ -338,20 +337,25 @@ public class VectorSearchOperation implements AggregationOperation {
 		ENN
 	}
 
-	// A query path cannot only contain the name of the filed but may also hold additional information about the
-	// analyzer to use;
-	// "path": [ "names", "notes", { "value": "comments", "multi": "mySecondaryAnalyzer" } ]
-	// see: https://www.mongodb.com/docs/atlas/atlas-search/path-construction/#std-label-ref-path
+	/**
+	 * Value object capturing query paths.
+	 */
 	public static class QueryPaths {
 
-		Set<QueryPath<?>> paths;
+		private final Set<QueryPath<?>> paths;
 
+		private QueryPaths(Set<QueryPath<?>> paths) {
+			this.paths = paths;
+		}
+
+		/**
+		 * Factory method to create {@link QueryPaths} from a single {@link QueryPath}.
+		 *
+		 * @param path
+		 * @return a new {@link QueryPaths} instance.
+		 */
 		public static QueryPaths of(QueryPath<String> path) {
-
-			QueryPaths queryPaths = new QueryPaths();
-			queryPaths.paths = new LinkedHashSet<>(2);
-			queryPaths.paths.add(path);
-			return queryPaths;
+			return new QueryPaths(Set.of(path));
 		}
 
 		Object getPathObject() {
@@ -363,20 +367,18 @@ public class VectorSearchOperation implements AggregationOperation {
 		}
 	}
 
+	/**
+	 * Interface describing a query path contract. Query paths might be simple field names, wildcard paths, or
+	 * multi-paths. paths.
+	 *
+	 * @param <T>
+	 */
 	public interface QueryPath<T> {
 
 		T value();
 
 		static QueryPath<String> path(String field) {
 			return new SimplePath(field);
-		}
-
-		static QueryPath<Map<String, Object>> wildcard(String field) {
-			return new WildcardPath(field);
-		}
-
-		static QueryPath<Map<String, Object>> multi(String field, String analyzer) {
-			return new MultiPath(field, analyzer);
 		}
 	}
 
@@ -394,36 +396,9 @@ public class VectorSearchOperation implements AggregationOperation {
 		}
 	}
 
-	public static class WildcardPath implements QueryPath<Map<String, Object>> {
-
-		String name;
-
-		public WildcardPath(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public Map<String, Object> value() {
-			return Map.of("wildcard", name);
-		}
-	}
-
-	public static class MultiPath implements QueryPath<Map<String, Object>> {
-
-		String field;
-		String analyzer;
-
-		public MultiPath(String field, String analyzer) {
-			this.field = field;
-			this.analyzer = analyzer;
-		}
-
-		@Override
-		public Map<String, Object> value() {
-			return Map.of("value", field, "multi", analyzer);
-		}
-	}
-
+	/**
+	 * Fluent API to configure a path on the VectorSearchOperation builder.
+	 */
 	public interface PathContributor {
 
 		/**
@@ -436,6 +411,9 @@ public class VectorSearchOperation implements AggregationOperation {
 		VectorContributor path(String path);
 	}
 
+	/**
+	 * Fluent API to configure a vector on the VectorSearchOperation builder.
+	 */
 	public interface VectorContributor {
 
 		/**
@@ -458,7 +436,7 @@ public class VectorSearchOperation implements AggregationOperation {
 		 * @return
 		 */
 		@Contract("_ -> this")
-		default LimitContributor vector(byte... vector) {
+		default LimitContributor vector(byte[] vector) {
 			return vector(BinaryVector.int8Vector(vector));
 		}
 
@@ -510,6 +488,9 @@ public class VectorSearchOperation implements AggregationOperation {
 		LimitContributor vector(Vector vector);
 	}
 
+	/**
+	 * Fluent API to configure a limit on the VectorSearchOperation builder.
+	 */
 	public interface LimitContributor {
 
 		/**

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,15 +28,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType;
 import org.springframework.data.mongodb.core.index.VectorIndex;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.test.util.AtlasContainer;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -44,16 +44,20 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 
 /**
+ * Integration tests using Vector Search and Vector Indexes through local MongoDB Atlas.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @Testcontainers(disabledWithoutDocker = true)
 public class VectorSearchTests {
 
-	public static final String SCORE_FIELD = "vector-search-tests";
-	static final String COLLECTION_NAME = "collection-1";
+	private static final String SCORE_FIELD = "vector-search-tests";
+	private static final @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
+	private static final String COLLECTION_NAME = "collection-1";
+
 	static MongoClient client;
 	static MongoTestTemplate template;
-	private static @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
 
 	@BeforeAll
 	static void beforeAll() throws InterruptedException {
@@ -126,12 +130,12 @@ public class VectorSearchTests {
 
 		return Stream.of(//
 				Arguments.arguments(VectorSearchOperation.search("raw-index").path("rawFloat32vector") //
-						.vector(new float[] { 0.0001f, 1.12345f, 2.23456f, 3.34567f, 4.45678f }) //
+						.vector(0.0001f, 1.12345f, 2.23456f, 3.34567f, 4.45678f) //
 						.limit(10)//
 						.numCandidates(20) //
 						.searchType(SearchType.ANN)),
 				Arguments.arguments(VectorSearchOperation.search("raw-index").path("rawFloat64vector") //
-						.vector(new double[] { 1.0001d, 2.12345d, 3.23456d, 4.34567d, 5.45678d }) //
+						.vector(1.0001d, 2.12345d, 3.23456d, 4.34567d, 5.45678d) //
 						.limit(10)//
 						.numCandidates(20) //
 						.searchType(SearchType.ANN)),
@@ -160,8 +164,8 @@ public class VectorSearchTests {
 				.addVector("float64vector", it -> it.similarity(SimilarityFunction.COSINE).dimensions(5))
 				.addFilter("justSomeArgument");
 
-		template.searchIndexOps(WithVectorFields.class).ensureIndex(rawIndex);
-		template.searchIndexOps(WithVectorFields.class).ensureIndex(wrapperIndex);
+		template.searchIndexOps(WithVectorFields.class).createIndex(rawIndex);
+		template.searchIndexOps(WithVectorFields.class).createIndex(wrapperIndex);
 
 		template.awaitIndexCreation(WithVectorFields.class, rawIndex.getName());
 		template.awaitIndexCreation(WithVectorFields.class, wrapperIndex.getName());
@@ -188,8 +192,7 @@ public class VectorSearchTests {
 		Vector float32vector;
 		Vector float64vector;
 
-		@Field(targetType = FieldType.VECTOR) //
-		byte[] rawInt8vector;
+		BinaryVector rawInt8vector;
 		float[] rawFloat32vector;
 		double[] rawFloat64vector;
 
@@ -199,15 +202,16 @@ public class VectorSearchTests {
 
 			WithVectorFields instance = new WithVectorFields();
 			instance.id = "id-%s".formatted(offset);
-			instance.rawInt8vector = new byte[5];
 			instance.rawFloat32vector = new float[5];
 			instance.rawFloat64vector = new double[5];
 
+			byte[] int8 = new byte[5];
 			for (int i = 0; i < 5; i++) {
 
 				int v = i + offset;
-				instance.rawInt8vector[i] = (byte) v;
+				int8[i] = (byte) v;
 			}
+			instance.rawInt8vector = BinaryVector.int8Vector(int8);
 
 			if (offset == 0) {
 				instance.rawFloat32vector[0] = 0.0001f;
@@ -227,7 +231,7 @@ public class VectorSearchTests {
 
 			instance.justSomeArgument = offset;
 
-			instance.int8vector = MongoVector.of(BinaryVector.int8Vector(instance.rawInt8vector));
+			instance.int8vector = MongoVector.of(instance.rawInt8vector);
 			instance.float32vector = MongoVector.of(BinaryVector.floatVector(instance.rawFloat32vector));
 			instance.float64vector = Vector.of(instance.rawFloat64vector);
 
