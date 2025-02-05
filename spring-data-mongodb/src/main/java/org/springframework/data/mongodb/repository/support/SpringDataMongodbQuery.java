@@ -22,10 +22,12 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -180,6 +182,19 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		} catch (RuntimeException e) {
 			return handleException(e, new PageImpl<>(Collections.emptyList(), pageable, 0));
 		}
+	}
+
+	/**
+	 * Fetch a {@link Slice}.
+	 *
+	 * @param pageable
+	 * @return
+	 */
+	public Slice<T> fetchSlice(Pageable pageable) {
+
+		List<T> content = find.matching(SliceUtils.getQuery(createQuery(), pageable)).all();
+
+		return SliceUtils.getSlice(content, pageable);
 	}
 
 	@Override

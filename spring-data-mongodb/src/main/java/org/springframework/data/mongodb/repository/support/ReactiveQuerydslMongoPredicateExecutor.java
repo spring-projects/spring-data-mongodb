@@ -24,11 +24,13 @@ import java.util.function.Function;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -237,6 +239,14 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 			Assert.notNull(pageable, "Pageable must not be null");
 
 			return createQuery().fetchPage(pageable);
+		}
+
+		@Override
+		public Mono<Slice<T>> slice(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null");
+
+			return createQuery().fetchSlice(pageable);
 		}
 
 		@Override

@@ -38,6 +38,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoTransactionManager;
@@ -576,6 +577,24 @@ class SimpleMongoRepositoryTests implements StateFunctions {
 				it -> it.page(PageRequest.of(1, 1, Sort.by("firstname"))));
 
 		assertThat(next.getTotalElements()).isEqualTo(2);
+		assertThat(next.getContent()).contains(oliver);
+	}
+
+	@Test // GH-4889
+	void findByShouldApplySlice() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		Slice<Person> first = repository.findBy(Example.of(probe, getMatcher()),
+				it -> it.slice(PageRequest.of(0, 1, Sort.by("firstname"))));
+		assertThat(first.hasNext()).isTrue();
+		assertThat(first.getContent()).contains(dave);
+
+		Slice<Person> next = repository.findBy(Example.of(probe, getMatcher()),
+				it -> it.slice(PageRequest.of(1, 1, Sort.by("firstname"))));
+
+		assertThat(next.hasNext()).isFalse();
 		assertThat(next.getContent()).contains(oliver);
 	}
 
