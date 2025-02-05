@@ -37,6 +37,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -590,6 +591,13 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 			Mono<List<T>> items = createQuery(q -> q.with(pageable)).all().collectList();
 
 			return items.flatMap(content -> ReactivePageableExecutionUtils.getPage(content, pageable, this.count()));
+		}
+
+		@Override
+		public Mono<Slice<T>> slice(Pageable pageable) {
+
+			return createQuery(q -> SliceUtils.getQuery(q, pageable)).all().collectList()
+					.map(it -> SliceUtils.getSlice(it, pageable));
 		}
 
 		@Override

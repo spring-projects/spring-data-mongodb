@@ -27,6 +27,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -269,6 +270,14 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			Assert.notNull(pageable, "Pageable must not be null");
 
 			return createQuery().fetchPage(pageable);
+		}
+
+		@Override
+		public Slice<T> slice(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null");
+
+			return createQuery().fetchSlice(pageable);
 		}
 
 		@Override

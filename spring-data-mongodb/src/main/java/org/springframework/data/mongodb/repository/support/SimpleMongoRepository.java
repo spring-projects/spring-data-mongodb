@@ -33,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
@@ -136,8 +137,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Query query = getIdQuery(id);
 		getReadPreference().ifPresent(query::withReadPreference);
 
-		return mongoOperations.exists(query, entityInformation.getJavaType(),
-				entityInformation.getCollectionName());
+		return mongoOperations.exists(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	@Override
@@ -453,6 +453,16 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			List<T> list = createQuery(q -> q.with(pageable)).all();
 
 			return PageableExecutionUtils.getPage(list, pageable, this::count);
+		}
+
+		@Override
+		public Slice<T> slice(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null");
+
+			List<T> resultList = createQuery(q -> SliceUtils.getQuery(q, pageable)).all();
+
+			return SliceUtils.getSlice(resultList, pageable);
 		}
 
 		@Override

@@ -27,6 +27,7 @@ import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation;
@@ -107,6 +108,19 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 				.collectList();
 
 		return content.flatMap(it -> ReactivePageableExecutionUtils.getPage(it, pageable, fetchCount()));
+	}
+
+	/**
+	 * Fetch all matching query results as Slice.
+	 *
+	 * @return {@link Mono} emitting the requested Slice.
+	 */
+	Mono<Slice<K>> fetchSlice(Pageable pageable) {
+
+		Mono<List<K>> content = createQuery().map(it -> SliceUtils.getQuery(it, pageable))
+				.flatMapMany(it -> find.matching(it).all()).collectList();
+
+		return content.map(it -> SliceUtils.getSlice(it, pageable));
 	}
 
 	/**

@@ -607,6 +607,33 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 				}).verifyComplete();
 	}
 
+	@Test // GH-4889
+	void findByShouldApplySlice() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository
+				.findBy(Example.of(probe, matching().withIgnorePaths("age")),
+						it -> it.slice(PageRequest.of(0, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.hasNext()).isTrue();
+					assertThat(it.getContent()).contains(dave);
+				}).verifyComplete();
+
+		repository
+				.findBy(Example.of(probe, matching().withIgnorePaths("age")),
+						it -> it.slice(PageRequest.of(1, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.hasNext()).isFalse();
+					assertThat(it.getContent()).contains(oliver);
+				}).verifyComplete();
+	}
+
 	@Test // GH-3757
 	void findByShouldCount() {
 

@@ -31,6 +31,7 @@ import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -314,6 +315,7 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 
 		Page<Person> first = repository.findBy(person.lastname.eq(oliver.getLastname()),
 				it -> it.page(PageRequest.of(0, 1, Sort.by("firstname"))));
+
 		assertThat(first.getTotalElements()).isEqualTo(2);
 		assertThat(first.getContent()).contains(dave);
 
@@ -321,6 +323,22 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 				it -> it.page(PageRequest.of(1, 1, Sort.by("firstname"))));
 
 		assertThat(next.getTotalElements()).isEqualTo(2);
+		assertThat(next.getContent()).contains(oliver);
+	}
+
+	@Test // GH-4889
+	public void findByShouldApplySlice() {
+
+		Slice<Person> first = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.slice(PageRequest.of(0, 1, Sort.by("firstname"))));
+
+		assertThat(first.hasNext()).isTrue();
+		assertThat(first.getContent()).contains(dave);
+
+		Slice<Person> next = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.slice(PageRequest.of(1, 1, Sort.by("firstname"))));
+
+		assertThat(next.hasNext()).isFalse();
 		assertThat(next.getContent()).contains(oliver);
 	}
 

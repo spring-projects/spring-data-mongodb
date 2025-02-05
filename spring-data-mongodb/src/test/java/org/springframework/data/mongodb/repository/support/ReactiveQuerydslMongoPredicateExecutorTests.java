@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -50,8 +51,8 @@ import org.springframework.data.mongodb.repository.QUser;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -410,6 +411,28 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.assertNext(it -> {
 
 					assertThat(it.getTotalElements()).isEqualTo(2);
+					assertThat(it.getContent()).containsOnly(oliver);
+				}).verifyComplete();
+	}
+
+	@Test // GH-4889
+	public void findByShouldApplySlice() {
+
+		repository
+				.findBy(person.lastname.eq(oliver.getLastname()), it -> it.slice(PageRequest.of(0, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.hasNext()).isTrue();
+					assertThat(it.getContent()).containsOnly(dave);
+				}).verifyComplete();
+
+		repository
+				.findBy(person.lastname.eq(oliver.getLastname()), it -> it.slice(PageRequest.of(1, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.hasNext()).isFalse();
 					assertThat(it.getContent()).containsOnly(oliver);
 				}).verifyComplete();
 	}
