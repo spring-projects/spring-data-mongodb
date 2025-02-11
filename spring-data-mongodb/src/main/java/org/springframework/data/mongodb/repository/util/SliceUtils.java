@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository.support;
+package org.springframework.data.mongodb.repository.util;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * @author Mark Paluch
  * @since 4.5
  */
-class SliceUtils {
+public class SliceUtils {
 
 	/**
 	 * Creates a {@link Slice} given {@link Pageable} and {@link List} of results.
@@ -38,7 +38,7 @@ class SliceUtils {
 	 * @param pageable
 	 * @return
 	 */
-	public static <T> Slice<T> getSlice(List<T> resultList, Pageable pageable) {
+	public static <T> Slice<T> sliceResult(List<T> resultList, Pageable pageable) {
 
 		boolean hasNext = resultList.size() > pageable.getPageSize();
 
@@ -52,14 +52,21 @@ class SliceUtils {
 	/**
 	 * Customize query for slice retrieval.
 	 *
-	 * @param query
-	 * @param pageable
-	 * @return
+	 * @param query the source query
+	 * @param pageable paging to apply.
+	 * @return new instance of {@link Query} if either {@link Pageable#isPaged() paged} or {@link Pageable#getSort()
+	 *         sorted}, the source query otherwise.
 	 */
-	public static Query getQuery(Query query, Pageable pageable) {
+	public static Query limitResult(Query query, Pageable pageable) {
 
-		query.with(pageable);
+		if (pageable.isUnpaged()) {
+			return query;
+		}
 
-		return pageable.isPaged() ? query.limit(pageable.getPageSize() + 1) : query;
+		Query target = Query.of(query);
+		target.skip(pageable.getOffset());
+		target.limit(pageable.getPageSize() + 1);
+
+		return target;
 	}
 }

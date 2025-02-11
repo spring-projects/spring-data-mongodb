@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import org.springframework.data.mongodb.repository.util.SliceUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -596,8 +597,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		@Override
 		public Mono<Slice<T>> slice(Pageable pageable) {
 
-			return createQuery(q -> SliceUtils.getQuery(q, pageable)).all().collectList()
-					.map(it -> SliceUtils.getSlice(it, pageable));
+			return createQuery(q -> SliceUtils.limitResult(q, pageable).with(pageable.getSort())).all().collectList()
+					.map(it -> SliceUtils.sliceResult(it, pageable));
 		}
 
 		@Override
