@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -87,7 +88,7 @@ interface MongoQueryExecution {
 			int pageSize = pageable.getPageSize();
 
 			// Apply Pageable but tweak limit to peek into next page
-			Query modifiedQuery = query.with(pageable).limit(pageSize + 1);
+			Query modifiedQuery = SliceUtils.limitResult(query, pageable).with(pageable.getSort());
 			List result = find.matching(modifiedQuery).all();
 
 			boolean hasNext = result.size() > pageSize;

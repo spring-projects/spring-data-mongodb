@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository.support;
+package org.springframework.data.mongodb.repository.util;
 
 import java.util.List;
 
@@ -26,19 +26,21 @@ import org.springframework.data.mongodb.core.query.Query;
  * Utility methods for {@link Slice} handling.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 4.5
  */
-class SliceUtils {
+public class SliceUtils {
 
 	/**
 	 * Creates a {@link Slice} given {@link Pageable} and {@link List} of results.
 	 *
-	 * @param <T>
-	 * @param resultList
-	 * @param pageable
-	 * @return
+	 * @param <T> the element type.
+	 * @param resultList the source list holding the result of the request. If the result list contains more elements
+	 *          (indicating a next slice is available) it is trimmed to the {@link Pageable#getPageSize() page size}.
+	 * @param pageable the source pageable.
+	 * @return new instance of {@link Slice}.
 	 */
-	public static <T> Slice<T> getSlice(List<T> resultList, Pageable pageable) {
+	public static <T> Slice<T> sliceResult(List<T> resultList, Pageable pageable) {
 
 		boolean hasNext = resultList.size() > pageable.getPageSize();
 
@@ -50,16 +52,23 @@ class SliceUtils {
 	}
 
 	/**
-	 * Customize query for slice retrieval.
+	 * Customize query for {@link #sliceResult sliced result} retrieval. If {@link Pageable#isPaged() paged} the
+	 * {@link Query#limit(int) limit} is set to {@code pagesize + 1} in order to determine if more data is available.
 	 *
-	 * @param query
-	 * @param pageable
-	 * @return
+	 * @param query the source query
+	 * @param pageable paging to apply.
+	 * @return new instance of {@link Query} if either {@link Pageable#isPaged() paged}, the source query otherwise.
 	 */
-	public static Query getQuery(Query query, Pageable pageable) {
+	public static Query limitResult(Query query, Pageable pageable) {
 
-		query.with(pageable);
+		if (pageable.isUnpaged()) {
+			return query;
+		}
 
-		return pageable.isPaged() ? query.limit(pageable.getPageSize() + 1) : query;
+		Query target = Query.of(query);
+		target.skip(pageable.getOffset());
+		target.limit(pageable.getPageSize() + 1);
+
+		return target;
 	}
 }

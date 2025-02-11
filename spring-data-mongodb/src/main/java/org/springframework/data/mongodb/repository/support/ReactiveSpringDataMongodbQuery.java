@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import org.springframework.data.mongodb.repository.util.SliceUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -113,14 +114,16 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	/**
 	 * Fetch all matching query results as Slice.
 	 *
+	 * @param pageable defines range and sort of requested slice
 	 * @return {@link Mono} emitting the requested Slice.
+	 * @since 4.5
 	 */
 	Mono<Slice<K>> fetchSlice(Pageable pageable) {
 
-		Mono<List<K>> content = createQuery().map(it -> SliceUtils.getQuery(it, pageable))
+		Mono<List<K>> content = createQuery().map(it -> SliceUtils.limitResult(it, pageable).with(pageable.getSort()))
 				.flatMapMany(it -> find.matching(it).all()).collectList();
 
-		return content.map(it -> SliceUtils.getSlice(it, pageable));
+		return content.map(it -> SliceUtils.sliceResult(it, pageable));
 	}
 
 	/**

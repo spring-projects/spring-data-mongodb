@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.lang.Nullable;
 
@@ -187,14 +188,15 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	/**
 	 * Fetch a {@link Slice}.
 	 *
-	 * @param pageable
-	 * @return
+	 * @param pageable defines range and sort of requested slice
+	 * @return new instance of {@link Slice} containing matching results within range.
+	 * @since 4.5
 	 */
 	public Slice<T> fetchSlice(Pageable pageable) {
 
-		List<T> content = find.matching(SliceUtils.getQuery(createQuery(), pageable)).all();
+		List<T> content = find.matching(SliceUtils.limitResult(createQuery(), pageable).with(pageable.getSort())).all();
 
-		return SliceUtils.getSlice(content, pageable);
+		return SliceUtils.sliceResult(content, pageable);
 	}
 
 	@Override

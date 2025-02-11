@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
@@ -460,9 +461,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 			Assert.notNull(pageable, "Pageable must not be null");
 
-			List<T> resultList = createQuery(q -> SliceUtils.getQuery(q, pageable)).all();
+			List<T> resultList = createQuery(q -> SliceUtils.limitResult(q, pageable).with(pageable.getSort())).all();
 
-			return SliceUtils.getSlice(resultList, pageable);
+			return SliceUtils.sliceResult(resultList, pageable);
 		}
 
 		@Override
