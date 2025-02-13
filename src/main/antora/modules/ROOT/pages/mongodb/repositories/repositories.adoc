@@ -370,6 +370,7 @@ Maven::
         <groupId>com.querydsl</groupId>
         <artifactId>querydsl-mongodb</artifactId>
         <version>${querydslVersion}</version>
+        <classifier>jakarta</classifier>
 
         <!-- Recommended: Exclude the mongo-java-driver to avoid version conflicts -->
         <exclusions>
@@ -384,6 +385,7 @@ Maven::
         <groupId>com.querydsl</groupId>
         <artifactId>querydsl-apt</artifactId>
         <version>${querydslVersion}</version>
+        <classifier>jakarta</classifier>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -415,9 +417,9 @@ Gradle::
 [source,groovy,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 dependencies {
-    implementation 'com.querydsl:querydsl-mongodb:${querydslVersion}'
+    implementation 'com.querydsl:querydsl-mongodb:${querydslVersion}:jakarta'
 
-    annotationProcessor 'com.querydsl:querydsl-apt:${querydslVersion}'
+    annotationProcessor 'com.querydsl:querydsl-apt:${querydslVersion}:jakarta'
     annotationProcessor 'org.springframework.data:spring-data-mongodb'
 
     testAnnotationProcessor 'com.querydsl:querydsl-apt:${querydslVersion}'
