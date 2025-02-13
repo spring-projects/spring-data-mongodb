@@ -19,10 +19,14 @@ import org.bson.Document;
 import org.springframework.lang.Nullable;
 
 /**
+ * {@link CursorPreparer} that exposes its {@link Document sort document}.
+ *
  * @author Christoph Strobl
+ * @since 4.4.3
  */
 interface SortingQueryCursorPreparer extends CursorPreparer {
 
-    @Nullable
-    Document getSortObject();
+	@Nullable
+	Document getSortObject();
+
 }

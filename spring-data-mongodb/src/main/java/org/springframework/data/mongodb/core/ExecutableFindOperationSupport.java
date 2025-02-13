@@ -20,9 +20,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -228,11 +229,13 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Nullable
 		public ReadPreference getReadPreference() {
 			return delegate.getReadPreference();
 		}
 
 		@Override
+		@Nullable
 		public Document getSortObject() {
 			return delegate instanceof SortingQueryCursorPreparer sqcp ? sqcp.getSortObject() : null;
 		}
