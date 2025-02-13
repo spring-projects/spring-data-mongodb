@@ -296,7 +296,11 @@ pipeline {
 						script {
 							docker.withRegistry(p['docker.proxy.registry'], p['docker.proxy.credentials']) {
 								docker.image("springci/spring-data-with-mongodb-7.0:${p['java.next.tag']}").inside(p['docker.java.inside.docker']) {
-									sh 'ci/start-replica.sh'
+									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+									sh 'sleep 10'
+									sh 'mongosh --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+									sh 'sleep 15'
 									sh 'MAVEN_OPTS="-Duser.name=' + "${p['jenkins.user.name']}" + ' -Duser.home=/tmp/jenkins-home" ' +
 										"./mvnw -s settings.xml -Ddevelocity.storage.directory=/tmp/jenkins-home/.develocity-root -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-mongodb clean dependency:list test -Dsort -U -B"
 								}
