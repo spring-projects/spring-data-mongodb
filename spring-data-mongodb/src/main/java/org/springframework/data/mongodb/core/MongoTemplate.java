@@ -2643,7 +2643,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (LOGGER.isDebugEnabled()) {
 
-			Document mappedSort = preparer instanceof SortingQueryCursorPreparer sqcp ?  getMappedSortObject(sqcp.getSortObject(), sourceClass) : null;
+			Document mappedSort = preparer instanceof SortingQueryCursorPreparer sqcp
+					? getMappedSortObject(sqcp.getSortObject(), entity)
+					: null;
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), sourceClass,
 					collectionName));
@@ -3011,7 +3013,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Nullable
-	private Document getMappedSortObject(Document sortObject, MongoPersistentEntity<?> entity) {
+	private Document getMappedSortObject(Document sortObject, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (ObjectUtils.isEmpty(sortObject)) {
 			return null;
@@ -3373,11 +3375,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	class QueryCursorPreparer implements SortingQueryCursorPreparer {
 
 		private final Query query;
-
 		private final Document sortObject;
-
 		private final int limit;
-
 		private final long skip;
 		private final @Nullable Class<?> type;
 
