@@ -15,10 +15,13 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import org.bson.BsonDocument;
+
 /**
  * Component responsible for encrypting and decrypting values.
  *
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 4.1
  */
 public interface Encryption<S, T> {
@@ -39,5 +42,17 @@ public interface Encryption<S, T> {
 	 * @return the decrypted value.
 	 */
 	S decrypt(T value);
+
+	/**
+	 * Encrypt the given expression.
+	 *
+	 * @param value must not be {@literal null}.
+	 * @param options must not be {@literal null}.
+	 * @return the encrypted expression.
+	 * @since 4.5.0
+	 */
+	default BsonDocument encryptExpression(BsonDocument value, EncryptionOptions options) {
+		throw new UnsupportedOperationException("Unsupported encryption method");
+	}
 
 }
