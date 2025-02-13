@@ -41,6 +41,7 @@
 ** xref:repositories/core-concepts.adoc[]
 ** xref:repositories/definition.adoc[]
 ** xref:mongodb/repositories/repositories.adoc[]
+** xref:repositories/core-extensions.adoc[]
 ** xref:repositories/create-instances.adoc[]
 ** xref:repositories/query-methods-details.adoc[]
 ** xref:mongodb/repositories/query-methods.adoc[]
