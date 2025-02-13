@@ -184,6 +184,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Bartłomiej Mazur
  * @author Michael Krog
  * @author Jakub Zurawa
+ * @author Florian Lüdiger
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -1700,12 +1701,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(update, "Update must not be null");
 
-		if (query.isSorted() && LOGGER.isWarnEnabled()) {
-
-			LOGGER.warn(String.format("%s does not support sort ('%s'); Please use findAndModify() instead",
-					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject())));
-		}
-
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
 		UpdateContext updateContext = multi ? queryOperations.updateContext(update, query, upsert)
@@ -1713,7 +1708,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		updateContext.increaseVersionForUpdateIfNecessary(entity);
 
 		Document queryObj = updateContext.getMappedQuery(entity);
-		UpdateOptions opts = updateContext.getUpdateOptions(entityClass);
+		UpdateOptions opts = updateContext.getUpdateOptions(entityClass, query);
 
 		if (updateContext.isAggregationUpdate()) {
 

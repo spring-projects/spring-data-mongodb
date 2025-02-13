@@ -1846,6 +1846,42 @@ public class ReactiveMongoTemplateTests {
 				.verify();
 	}
 
+	@Test // GH-4797
+	public void updateFirstWithSortingAscendingShouldUpdateCorrectEntities() {
+
+		Person youngPerson = new Person("Dave", 27);
+		Person oldPerson = new Person("Dave", 34);
+
+		template.insertAll(List.of(youngPerson, oldPerson))
+				.then(template.updateFirst(new Query(where("firstName").is("Dave")).with(Sort.by(Direction.ASC, "age")),
+						new Update().set("firstName", "Carter"), Person.class))
+				.flatMapMany(p -> template.find(new Query().with(Sort.by(Direction.ASC, "age")), Person.class))
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getFirstName()).isEqualTo("Carter");
+				}).consumeNextWith(actual -> {
+					assertThat(actual.getFirstName()).isEqualTo("Dave");
+				}).verifyComplete();
+	}
+
+	@Test // GH-4797
+	public void updateFirstWithSortingDescendingShouldUpdateCorrectEntities() {
+
+		Person youngPerson = new Person("Dave", 27);
+		Person oldPerson = new Person("Dave", 34);
+
+		template.insertAll(List.of(youngPerson, oldPerson))
+				.then(template.updateFirst(new Query(where("firstName").is("Dave")).with(Sort.by(Direction.DESC, "age")),
+						new Update().set("firstName", "Carter"), Person.class))
+				.flatMapMany(p -> template.find(new Query().with(Sort.by(Direction.ASC, "age")), Person.class))
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getFirstName()).isEqualTo("Dave");
+				}).consumeNextWith(actual -> {
+					assertThat(actual.getFirstName()).isEqualTo("Carter");
+				}).verifyComplete();
+	}
+
 	private PersonWithAList createPersonWithAList(String firstname, int age) {
 
 		PersonWithAList p = new PersonWithAList();

@@ -77,6 +77,7 @@ import com.mongodb.client.model.UpdateOptions;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Florian Lüdiger
  * @since 3.0
  */
 class QueryOperations {
@@ -740,7 +741,7 @@ class QueryOperations {
 		/**
 		 * Get the {@link UpdateOptions} applicable for the {@link Query}.
 		 *
-		 * @param domainType must not be {@literal null}.
+		 * @param domainType can be {@literal null}.
 		 * @return never {@literal null}.
 		 */
 		UpdateOptions getUpdateOptions(@Nullable Class<?> domainType) {
@@ -751,11 +752,10 @@ class QueryOperations {
 		 * Get the {@link UpdateOptions} applicable for the {@link Query}.
 		 *
 		 * @param domainType can be {@literal null}.
-		 * @param callback a callback to modify the generated options. Can be {@literal null}.
-		 * @return
+		 * @param query can be {@literal null}
+		 * @return never {@literal null}.
 		 */
-		UpdateOptions getUpdateOptions(@Nullable Class<?> domainType, @Nullable Consumer<UpdateOptions> callback) {
-
+		UpdateOptions getUpdateOptions(@Nullable Class<?> domainType, @Nullable Query query) {
 			UpdateOptions options = new UpdateOptions();
 			options.upsert(upsert);
 
@@ -764,12 +764,12 @@ class QueryOperations {
 						.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
 			}
 
+			if (query != null && query.isSorted()) {
+				options.sort(query.getSortObject());
+			}
+
 			HintFunction.from(getQuery().getHint()).ifPresent(codecRegistryProvider, options::hintString, options::hint);
 			applyCollation(domainType, options::collation);
-
-			if (callback != null) {
-				callback.accept(options);
-			}
 
 			return options;
 		}
