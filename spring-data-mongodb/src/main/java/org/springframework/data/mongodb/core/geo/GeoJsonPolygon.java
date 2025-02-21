@@ -130,7 +130,13 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 
 	private static List<Point> asList(Point first, Point second, Point third, Point fourth, Point... others) {
 
-		ArrayList<Point> result = new ArrayList<Point>(3 + others.length);
+		Assert.notNull(first, "First point must not be null");
+		Assert.notNull(second, "Second point must not be null");
+		Assert.notNull(third, "Third point must not be null");
+		Assert.notNull(fourth, "Fourth point must not be null");
+		Assert.notNull(others, "Additional points must not be null");
+
+		ArrayList<Point> result = new ArrayList<Point>(4 + others.length);
 
 		result.add(first);
 		result.add(second);

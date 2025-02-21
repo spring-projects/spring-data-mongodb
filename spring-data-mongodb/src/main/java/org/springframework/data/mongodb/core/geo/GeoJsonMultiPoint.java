@@ -79,7 +79,7 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 		Assert.notNull(second, "Second point must not be null");
 		Assert.notNull(others, "Additional points must not be null");
 
-		this.points = new ArrayList<>();
+		this.points = new ArrayList<>(2 + others.length);
 		this.points.add(first);
 		this.points.add(second);
 		this.points.addAll(Arrays.asList(others));
