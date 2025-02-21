@@ -126,7 +126,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 
 	private static List<Point> asList(Point first, Point second, Point third, Point fourth, Point... others) {
 
-		ArrayList<Point> result = new ArrayList<Point>(3 + others.length);
+		ArrayList<Point> result = new ArrayList<Point>(4 + others.length);
 
 		result.add(first);
 		result.add(second);
