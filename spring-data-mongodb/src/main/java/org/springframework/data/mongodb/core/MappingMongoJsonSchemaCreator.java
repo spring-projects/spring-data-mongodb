@@ -31,14 +31,19 @@ import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.Queryable;
+import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristic;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -291,7 +296,35 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		if (!ObjectUtils.isEmpty(encrypted.keyId())) {
 			enc = enc.keys(property.getEncryptionKeyIds());
 		}
-		return enc;
+
+		Queryable queryable = property.findAnnotation(Queryable.class);
+		if (queryable == null || !StringUtils.hasText(queryable.queryType())) {
+			return enc;
+		}
+
+		QueryCharacteristic characteristic = new QueryCharacteristic() {
+
+			@Override
+			public String queryType() {
+				return queryable.queryType();
+			}
+
+			@Override
+			public Document toDocument() {
+
+				Document options = QueryCharacteristic.super.toDocument();
+
+				if (queryable.contentionFactor() >= 0) {
+					options.put("contention", queryable.contentionFactor());
+				}
+				if (!queryable.queryAttributes().isEmpty()) {
+					options.putAll(Document.parse(queryable.queryAttributes()));
+				}
+
+				return options;
+			}
+		};
+		return new QueryableJsonSchemaProperty(enc, QueryCharacteristics.of(List.of(characteristic)));
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,

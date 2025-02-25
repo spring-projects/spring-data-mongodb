@@ -24,10 +24,13 @@ import java.util.Map.Entry;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.WriteOperatorContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -158,6 +161,13 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		return super.getMappedObjectForField(field, rawValue);
+	}
+
+	protected Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
+		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
+		MongoConversionContext conversionContext) {
+
+		return super.convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, conversionContext.forOperator(new WriteOperatorContext(documentField.name)));
 	}
 
 	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {

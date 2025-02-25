@@ -16,10 +16,22 @@
 package org.springframework.data.mongodb.core.schema;
 
 import java.util.Collection;
+import java.util.List;
 
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.BooleanJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.DateJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NullJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.RequiredJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.StringJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.TimestampJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.*;
 import org.springframework.lang.Nullable;
 
 /**
@@ -67,6 +79,18 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 */
 	static EncryptedJsonSchemaProperty encrypted(JsonSchemaProperty property) {
 		return EncryptedJsonSchemaProperty.encrypted(property);
+	}
+
+	/**
+	 * Turns the given target property into a {@link QueryableJsonSchemaProperty queryable} one, eg. for {@literal range}
+	 * encrypted properties.
+	 * 
+	 * @param property the queryable property. Must not be {@literal null}.
+	 * @param queries predefined query characteristics.
+	 * @since 4.5
+	 */
+	static QueryableJsonSchemaProperty queryable(JsonSchemaProperty property, List<QueryCharacteristic> queries) {
+		return new QueryableJsonSchemaProperty(property, new QueryCharacteristics(queries));
 	}
 
 	/**

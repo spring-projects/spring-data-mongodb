@@ -23,8 +23,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Range;
+import org.springframework.data.mongodb.core.EncryptionAlgorithms;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.DateJsonSchemaObject;
@@ -1036,7 +1036,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		private final JsonSchemaProperty targetProperty;
 		private final @Nullable String algorithm;
-		private final @Nullable String keyId;
+		private final @Nullable Object keyId;
 		private final @Nullable List<?> keyIds;
 
 		/**
@@ -1048,7 +1048,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			this(target, null, null, null);
 		}
 
-		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId,
+		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable Object keyId,
 				@Nullable List<?> keyIds) {
 
 			Assert.notNull(target, "Target must not be null");
@@ -1069,12 +1069,24 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		}
 
 		/**
+		 * Create new instance of {@link EncryptedJsonSchemaProperty} with {@literal Range} encryption, wrapping the given
+		 * {@link JsonSchemaProperty target}.
+		 *
+		 * @param target must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 * @since 4.5
+		 */
+		public static EncryptedJsonSchemaProperty rangeEncrypted(JsonSchemaProperty target) {
+			return new EncryptedJsonSchemaProperty(target).algorithm(EncryptionAlgorithms.RANGE);
+		}
+
+		/**
 		 * Use {@literal AEAD_AES_256_CBC_HMAC_SHA_512-Random} algorithm.
 		 *
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_random() {
-			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Random");
+			return algorithm(EncryptionAlgorithms.AEAD_AES_256_CBC_HMAC_SHA_512_Random);
 		}
 
 		/**
@@ -1083,7 +1095,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_deterministic() {
-			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic");
+			return algorithm(EncryptionAlgorithms.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic);
 		}
 
 		/**
@@ -1100,6 +1112,15 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty keyId(String keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
+		}
+
+		/**
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 * @since 4.5
+		 */
+		public EncryptedJsonSchemaProperty keyId(Object keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
 
@@ -1170,6 +1191,72 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			}
 
 			return null;
+		}
+
+		public Object getKeyId() {
+			if (keyId != null) {
+				return keyId;
+			}
+			if (keyIds != null && keyIds.size() == 1) {
+				return keyIds.iterator().next();
+			}
+			return null;
+		}
+	}
+
+	/**
+	 * {@link JsonSchemaProperty} implementation typically wrapping {@link EncryptedJsonSchemaProperty encrypted
+	 * properties} to mark them as queryable.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.5
+	 */
+	public static class QueryableJsonSchemaProperty implements JsonSchemaProperty {
+
+		private final JsonSchemaProperty targetProperty;
+		private final QueryCharacteristics characteristics;
+
+		public QueryableJsonSchemaProperty(JsonSchemaProperty target, QueryCharacteristics characteristics) {
+			this.targetProperty = target;
+			this.characteristics = characteristics;
+		}
+
+		@Override
+		public Document toDocument() {
+
+			Document doc = targetProperty.toDocument();
+			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
+
+			if (propertySpecification.containsKey("encrypt")) {
+				Document encrypt = propertySpecification.get("encrypt", Document.class);
+				List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument)
+						.toList();
+				encrypt.append("queries", queries);
+			}
+
+			return doc;
+		}
+
+		@Override
+		public String getIdentifier() {
+			return targetProperty.getIdentifier();
+		}
+
+		@Override
+		public Set<Type> getTypes() {
+			return targetProperty.getTypes();
+		}
+
+		boolean isEncrypted() {
+			return targetProperty instanceof EncryptedJsonSchemaProperty;
+		}
+
+		public JsonSchemaProperty getTargetProperty() {
+			return targetProperty;
+		}
+
+		public QueryCharacteristics getCharacteristics() {
+			return characteristics;
 		}
 	}
 }
