@@ -15,17 +15,58 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static java.util.Arrays.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+
+import org.assertj.core.api.Assumptions;
+import org.bson.BsonBinary;
+import org.bson.BsonDocument;
+import org.bson.BsonInt32;
+import org.bson.BsonString;
+import org.bson.Document;
+import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.convert.PropertyValueConverterFactory;
+import org.springframework.data.convert.ValueConverter;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.CollectionOptions;
+import org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
+import org.springframework.data.mongodb.core.MongoJsonSchemaCreator;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
+import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Queryable;
+import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.util.Lazy;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
@@ -41,40 +82,15 @@ import com.mongodb.client.model.CreateEncryptedCollectionParams;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.vault.EncryptOptions;
+import com.mongodb.client.model.vault.RangeOptions;
+import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
-import org.bson.BsonArray;
-import org.bson.BsonBinary;
-import org.bson.BsonDocument;
-import org.bson.BsonInt32;
-import org.bson.BsonInt64;
-import org.bson.BsonNull;
-import org.bson.BsonString;
-import org.bson.BsonValue;
-import org.bson.Document;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.convert.PropertyValueConverterFactory;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
-import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
-import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.util.Lazy;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
 /**
  * @author Ross Lawley
+ * @author Christoph Strobl
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
@@ -83,23 +99,63 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 class RangeEncryptionTests {
 
 	@Autowired MongoTemplate template;
+	@Autowired MongoClientEncryption clientEncryption;
+	@Autowired EncryptionKeyHolder keyHolder;
+
+	@BeforeEach
+	void clientVersionCheck() {
+		Assumptions.assumeThat(MongoClientVersion.isVersion5orNewer()).isTrue();
+	}
 
 	@AfterEach
 	void tearDown() {
 		template.getDb().getCollection("test").deleteMany(new BsonDocument());
 	}
 
-	@Test
-	void canGreaterThanEqualMatchRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
+	@Test // GH-4185
+	void manuallyEncryptedValuesCanBeSavedAndRetrievedCorrectly() {
 
-		Person loaded = template.query(Person.class).matching(where("encryptedInt").gte(source.encryptedInt)).firstValue();
-		assertThat(loaded).isEqualTo(source);
+		EncryptOptions encryptOptions = new EncryptOptions("Range").contentionFactor(1L)
+				.keyId(keyHolder.getEncryptionKey("encryptedInt"))
+				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)).sparsity(1L));
+
+		EncryptOptions encryptExpressionOptions = new EncryptOptions("Range").contentionFactor(1L)
+				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)))
+				.keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
+
+		EncryptOptions equalityEncOptions = new EncryptOptions("Indexed").contentionFactor(0L)
+				.keyId(keyHolder.getEncryptionKey("age"));
+		;
+
+		EncryptOptions equalityEncOptionsString = new EncryptOptions("Indexed").contentionFactor(0L)
+				.keyId(keyHolder.getEncryptionKey("name"));
+		;
+
+		Document source = new Document("_id", "id-1");
+
+		source.put("name",
+				clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), equalityEncOptionsString));
+		source.put("age", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), equalityEncOptions));
+		source.put("encryptedInt", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), encryptOptions));
+		source.put("_class", Person.class.getName());
+
+		template.execute(Person.class, col -> col.insertOne(source));
+
+		Document result = template.execute(Person.class, col -> {
+
+			BsonDocument filterSource = new BsonDocument("encryptedInt", new BsonDocument("$gte", new BsonInt32(100)));
+			BsonDocument filter = clientEncryption.getClientEncryption()
+					.encryptExpression(new Document("$and", List.of(filterSource)), encryptExpressionOptions);
+
+			return col.find(filter).first();
+		});
+
+		assertThat(result).containsEntry("encryptedInt", 101);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canLesserThanEqualMatchRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -107,17 +163,64 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
-	void canRangeMatchRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
+	@Test // GH-4185
+	void canQueryMixOfEqualityEncryptedAndUnencrypted() {
 
-		Person loaded = template.query(Person.class).matching(where("encryptedLong").lte(1001L).gte(1001L)).firstValue();
+		Person source = template.insert(createPerson());
+
+		Person loaded = template.query(Person.class)
+				.matching(where("name").is(source.name).and("unencryptedValue").is(source.unencryptedValue)).firstValue();
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
-	void canUpdateRangeEncryptedField() {
+	@Test // GH-4185
+	void canQueryMixOfRangeEncryptedAndUnencrypted() {
+
+		Person source = template.insert(createPerson());
+
+		Person loaded = template.query(Person.class)
+				.matching(where("encryptedInt").lte(source.encryptedInt).and("unencryptedValue").is(source.unencryptedValue))
+				.firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4185
+	void canQueryEqualityEncryptedField() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		Person loaded = template.query(Person.class).matching(where("age").is(source.age)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4185
+	void canExcludeSafeContentFromResult() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
+		q.fields().exclude("__safeContent__");
+
+		Person loaded = template.query(Person.class).matching(q).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4185
+	void canRangeMatchRangeEncryptedField() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
+		Person loaded = template.query(Person.class).matching(q).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test // GH-4185
+	void canReplaceEntityWithRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -129,8 +232,23 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
+	void canUpdateRangeEncryptedField() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		UpdateResult updateResult = template.update(Person.class).matching(where("id").is(source.id))
+				.apply(Update.update("encryptedLong", 5000L)).first();
+		assertThat(updateResult.getModifiedCount()).isOne();
+
+		Person loaded = template.query(Person.class).matching(where("id").is(source.id)).firstValue();
+		assertThat(loaded.encryptedLong).isEqualTo(5000L);
+	}
+
+	@Test // GH-4185
 	void errorsWhenUsingNonRangeOperatorEqOnRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -139,11 +257,11 @@ class RangeEncryptionTests {
 				.isInstanceOf(AssertionError.class)
 				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
 						+ "the query operator '$eq' for field path 'encryptedInt' is not a range query.");
-
 	}
 
-	@Test
+	@Test // GH-4185
 	void errorsWhenUsingNonRangeOperatorInOnRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -152,14 +270,19 @@ class RangeEncryptionTests {
 				.isInstanceOf(AssertionError.class)
 				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
 						+ "the query operator '$in' for field path 'encryptedLong' is not a range query.");
-
 	}
 
 	private Person createPerson() {
+
 		Person source = new Person();
 		source.id = "id-1";
+		source.unencryptedValue = "y2k";
+		source.name = "it's a me mario!";
+		source.age = 42;
 		source.encryptedInt = 101;
 		source.encryptedLong = 1001L;
+		source.nested = new NestedWithQEFields();
+		source.nested.value = "Luigi time!";
 		return source;
 	}
 
@@ -193,37 +316,63 @@ class RangeEncryptionTests {
 		}
 
 		@Bean
-		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
+		EncryptionKeyHolder keyHolder(MongoClientEncryption mongoClientEncryption) {
+
 			Lazy<Map<String, BsonBinary>> lazyDataKeyMap = Lazy.of(() -> {
 				try (MongoClient client = mongoClient()) {
+
 					MongoDatabase database = client.getDatabase(getDatabaseName());
 					database.getCollection("test").drop();
 
 					ClientEncryption clientEncryption = mongoClientEncryption.getClientEncryption();
-					BsonDocument encryptedFields = new BsonDocument().append("fields",
-							new BsonArray(asList(
-									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
-											.append("bsonType", new BsonString("int"))
-											.append("queries",
-													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-															.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
-											.append("bsonType", new BsonString("long")).append("queries",
-													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-															.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
 
-					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test",
-							new CreateCollectionOptions().encryptedFields(encryptedFields),
+					MongoJsonSchema personSchema = MongoJsonSchemaCreator.create(new MongoMappingContext()) // init schema creator
+							.filter(MongoJsonSchemaCreator.encryptedOnly()) //
+							.createSchemaFor(Person.class); //
+
+					Document encryptedFields = CollectionOptions.encryptedCollection(personSchema) //
+							.getEncryptedFieldsOptions() //
+							.map(EncryptedFieldsOptions::toDocument) //
+							.orElseThrow();
+
+					CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions()
+							.encryptedFields(encryptedFields);
+
+					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test", createCollectionOptions,
 							new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
 
-					return local.getArray("fields").stream().map(BsonValue::asDocument).collect(
-							Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
+					Map<String, BsonBinary> keyMap = new LinkedHashMap<>();
+					for (Object o : local.getArray("fields")) {
+						if (o instanceof BsonDocument db) {
+							String path = db.getString("path").getValue();
+							BsonBinary binary = db.getBinary("keyId");
+							for (String part : path.split("\\.")) {
+								keyMap.put(part, binary);
+							}
+						}
+					}
+					return keyMap;
 				}
 			});
-			return new MongoEncryptionConverter(mongoClientEncryption, EncryptionKeyResolver
-					.annotated((ctx) -> EncryptionKey.keyId(lazyDataKeyMap.get().get(ctx.getProperty().getFieldName()))));
+
+			return new EncryptionKeyHolder(lazyDataKeyMap);
+		}
+
+		@Bean
+		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption,
+				EncryptionKeyHolder keyHolder) {
+			return new MongoEncryptionConverter(mongoClientEncryption, EncryptionKeyResolver.annotated((ctx) -> {
+
+				String path = ctx.getProperty().getFieldName();
+
+				if (ctx.getProperty().getMongoField().getName().isPath()) {
+					path = StringUtils.arrayToDelimitedString(ctx.getProperty().getMongoField().getName().parts(), ".");
+				}
+				if (ctx.getOperatorContext() != null) {
+					path = ctx.getOperatorContext().getPath();
+				}
+				return EncryptionKey.keyId(keyHolder.getEncryptionKey(path));
+			}));
 		}
 
 		@Bean
@@ -291,16 +440,47 @@ class RangeEncryptionTests {
 		}
 	}
 
+	static class EncryptionKeyHolder {
+
+		Supplier<Map<String, BsonBinary>> lazyDataKeyMap;
+
+		public EncryptionKeyHolder(Supplier<Map<String, BsonBinary>> lazyDataKeyMap) {
+			this.lazyDataKeyMap = Lazy.of(lazyDataKeyMap);
+		}
+
+		BsonBinary getEncryptionKey(String path) {
+			return lazyDataKeyMap.get().get(path);
+		}
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document("test")
 	static class Person {
 
 		String id;
+
+		String unencryptedValue;
+
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Indexed") //
+		@Queryable(queryType = "equality", contentionFactor = 0) //
 		String name;
 
-		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
-				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}") Integer encryptedInt;
-		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
-				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") Long encryptedLong;
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Indexed") //
+		@Queryable(queryType = "equality", contentionFactor = 0) //
+		Integer age;
+
+		@ValueConverter(MongoEncryptionConverter.class)
+		@RangeEncrypted(contentionFactor = 0L,
+				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}") //
+		Integer encryptedInt;
+
+		@ValueConverter(MongoEncryptionConverter.class)
+		@RangeEncrypted(contentionFactor = 0L,
+				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") //
+		Long encryptedLong;
+
+		NestedWithQEFields nested;
 
 		public String getId() {
 			return this.id;
@@ -336,29 +516,57 @@ class RangeEncryptionTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (o == this) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
-
+			}
 			Person person = (Person) o;
-			return Objects.equals(id, person.id) && Objects.equals(name, person.name)
+			return Objects.equals(id, person.id) && Objects.equals(unencryptedValue, person.unencryptedValue)
+					&& Objects.equals(name, person.name) && Objects.equals(age, person.age)
 					&& Objects.equals(encryptedInt, person.encryptedInt) && Objects.equals(encryptedLong, person.encryptedLong);
 		}
 
 		@Override
 		public int hashCode() {
-			int result = Objects.hashCode(id);
-			result = 31 * result + Objects.hashCode(name);
-			result = 31 * result + Objects.hashCode(encryptedInt);
-			result = 31 * result + Objects.hashCode(encryptedLong);
-			return result;
+			return Objects.hash(id, unencryptedValue, name, age, encryptedInt, encryptedLong);
 		}
 
 		@Override
 		public String toString() {
-			return "Person{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", encryptedInt=" + encryptedInt
-					+ ", encryptedLong=" + encryptedLong + '}';
+			return "Person{" + "id='" + id + '\'' + ", unencryptedValue='" + unencryptedValue + '\'' + ", name='" + name
+					+ '\'' + ", age=" + age + ", encryptedInt=" + encryptedInt + ", encryptedLong=" + encryptedLong + '}';
+		}
+	}
+
+	static class NestedWithQEFields {
+
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Indexed") //
+		@Queryable(queryType = "equality", contentionFactor = 0) //
+		String value;
+
+		@Override
+		public String toString() {
+			return "NestedWithQEFields{" + "value='" + value + '\'' + '}';
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			NestedWithQEFields that = (NestedWithQEFields) o;
+			return Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(value);
 		}
 	}
 

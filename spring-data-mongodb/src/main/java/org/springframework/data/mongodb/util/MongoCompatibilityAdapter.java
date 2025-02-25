@@ -57,8 +57,18 @@ public class MongoCompatibilityAdapter {
 	private static final @Nullable Method setBucketSize = ReflectionUtils.findMethod(IndexOptions.class, "bucketSize",
 			Double.class);
 
-	private static final @Nullable Method setTrimFactor = ReflectionUtils.findMethod(RangeOptions.class, "setTrimFactor",
-			Integer.class);
+	private static final @Nullable Method setTrimFactor;
+
+	static {
+
+		// method name changed in between 
+		Method trimFactor = ReflectionUtils.findMethod(RangeOptions.class, "setTrimFactor", Integer.class);
+		if (trimFactor != null) {
+			setTrimFactor = trimFactor;
+		} else {
+			setTrimFactor = ReflectionUtils.findMethod(RangeOptions.class, "trimFactor", Integer.class);
+		}
+	}
 
 	/**
 	 * Return a compatibility adapter for {@link MongoClientSettings.Builder}.
@@ -125,6 +135,23 @@ public class MongoCompatibilityAdapter {
 			// com.mongodb.client.internal.MapReduceIterableImpl
 			Method shardedMethod = ReflectionUtils.findMethod(MapReduceIterable.class, "sharded", boolean.class);
 			ReflectionUtils.invokeMethod(shardedMethod, iterable, sharded);
+		};
+	}
+
+	/**
+	 * Return a compatibility adapter for {@link RangeOptions}.
+	 *
+	 * @param options
+	 * @return
+	 */
+	public static RangeOptionsAdapter rangeOptionsAdapter(RangeOptions options) {
+		return trimFactor -> {
+
+			if (!MongoClientVersion.isVersion5orNewer() || setTrimFactor == null) {
+				throw new UnsupportedOperationException(NOT_SUPPORTED_ON_4.formatted("RangeOptions.trimFactor"));
+			}
+
+			ReflectionUtils.invokeMethod(setTrimFactor, options, trimFactor);
 		};
 	}
 
