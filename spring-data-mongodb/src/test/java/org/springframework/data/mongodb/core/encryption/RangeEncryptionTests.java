@@ -20,7 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -41,6 +43,7 @@ import com.mongodb.client.model.CreateEncryptedCollectionParams;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
@@ -200,19 +203,38 @@ class RangeEncryptionTests {
 					database.getCollection("test").drop();
 
 					ClientEncryption clientEncryption = mongoClientEncryption.getClientEncryption();
+//					BsonDocument encryptedFields = new BsonDocument().append("fields",
+//							new BsonArray(asList(
+//									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
+//											.append("bsonType", new BsonString("int"))
+//											.append("queries",
+//													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
+//															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
+//															.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
+//									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
+//											.append("bsonType", new BsonString("long")).append("queries",
+//													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
+//															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
+//															.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
+
+					BsonBinary dataKey1 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-1")));
+					BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-2")));
+
 					BsonDocument encryptedFields = new BsonDocument().append("fields",
-							new BsonArray(asList(
-									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
-											.append("bsonType", new BsonString("int"))
-											.append("queries",
-													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-															.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
-											.append("bsonType", new BsonString("long")).append("queries",
-													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-															.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
+						new BsonArray(asList(
+							new BsonDocument("keyId", dataKey1).append("path", new BsonString("encryptedInt"))
+								.append("bsonType", new BsonString("int"))
+								.append("queries",
+									new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
+										.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
+										.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
+							new BsonDocument("keyId", dataKey2).append("path", new BsonString("encryptedLong"))
+								.append("bsonType", new BsonString("long")).append("queries",
+									new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
+										.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
+										.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
+
+
 
 					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test",
 							new CreateCollectionOptions().encryptedFields(encryptedFields),
@@ -239,6 +261,7 @@ class RangeEncryptionTests {
 				builder.autoEncryptionSettings(AutoEncryptionSettings.builder() //
 						.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
 						.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
+						.bypassAutoEncryption(true)
 						.bypassQueryAnalysis(true).build());
 			}
 		}
@@ -298,9 +321,9 @@ class RangeEncryptionTests {
 		String name;
 
 		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
-				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}") Integer encryptedInt;
+				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}", keyAltName = "dek-1") Integer encryptedInt;
 		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
-				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") Long encryptedLong;
+				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}", keyAltName = "dek-2") Long encryptedLong;
 
 		public String getId() {
 			return this.id;

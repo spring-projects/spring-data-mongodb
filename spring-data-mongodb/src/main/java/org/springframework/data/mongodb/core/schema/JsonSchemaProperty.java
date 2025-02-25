@@ -69,6 +69,10 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 		return EncryptedJsonSchemaProperty.encrypted(property);
 	}
 
+	static QueryableJsonSchemaProperty queryable(JsonSchemaProperty property, QueryCharacteristics queries) {
+		return new QueryableJsonSchemaProperty(property, queries);
+	}
+
 	/**
 	 * Creates a new {@link StringJsonSchemaProperty} with given {@literal identifier} of {@code type : 'string'}.
 	 *

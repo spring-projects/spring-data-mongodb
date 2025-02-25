@@ -16,13 +16,18 @@
 package org.springframework.data.mongodb.core;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
@@ -57,7 +62,7 @@ public class CollectionOptions {
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
 			@Nullable Collation collation, ValidationOptions validationOptions, @Nullable TimeSeriesOptions timeSeriesOptions,
-			@Nullable CollectionChangeStreamOptions changeStreamOptions,  @Nullable  Bson encryptedFields) {
+			@Nullable CollectionChangeStreamOptions changeStreamOptions, @Nullable Bson encryptedFields) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -423,9 +428,9 @@ public class CollectionOptions {
 		return "CollectionOptions{" + "maxDocuments=" + maxDocuments + ", size=" + size + ", capped=" + capped
 				+ ", collation=" + collation + ", validationOptions=" + validationOptions + ", timeSeriesOptions="
 				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", encryptedFields=" + encryptedFields
-				+ ", disableValidation=" + disableValidation() + ", strictValidation=" + strictValidation() + ", moderateValidation="
-				+ moderateValidation() + ", warnOnValidationError=" + warnOnValidationError() + ", failOnValidationError="
-				+ failOnValidationError() + '}';
+				+ ", disableValidation=" + disableValidation() + ", strictValidation=" + strictValidation()
+				+ ", moderateValidation=" + moderateValidation() + ", warnOnValidationError=" + warnOnValidationError()
+				+ ", failOnValidationError=" + failOnValidationError() + '}';
 	}
 
 	@Override
@@ -603,6 +608,18 @@ public class CollectionOptions {
 			result = 31 * result + ObjectUtils.nullSafeHashCode(validationLevel);
 			result = 31 * result + ObjectUtils.nullSafeHashCode(validationAction);
 			return result;
+		}
+	}
+
+	public static class EncryptedCollectionOptions {
+
+		private List<QueryableJsonSchemaProperty> queryableProperties = new ArrayList<>();
+
+		public EncryptedCollectionOptions queryable(JsonSchemaProperty schemaObject, QueryCharacteristics characteristics) {
+
+			queryableProperties.add(JsonSchemaProperty.queryable(schemaObject, characteristics));
+			return this;
+
 		}
 	}
 

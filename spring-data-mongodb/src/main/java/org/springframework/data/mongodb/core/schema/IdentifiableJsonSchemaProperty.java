@@ -21,10 +21,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Range;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.DateJsonSchemaObject;
@@ -78,6 +79,40 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	@Override
 	public Set<Type> getTypes() {
 		return jsonSchemaObjectDelegate.getTypes();
+	}
+
+	public static class QueryableJsonSchemaProperty implements JsonSchemaProperty {
+
+		private final JsonSchemaProperty targetProperty;
+		private final QueryCharacteristics characteristics;
+
+		public QueryableJsonSchemaProperty(JsonSchemaProperty target, QueryCharacteristics characteristics) {
+			this.targetProperty = target;
+			this.characteristics = characteristics;
+		}
+
+
+		@Override
+		public Document toDocument() {
+
+			Document doc = targetProperty.toDocument();
+			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
+
+			List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument).toList();
+			propertySpecification.append("queries", queries);
+
+			return propertySpecification;
+		}
+
+		@Override
+		public String getIdentifier() {
+			return targetProperty.getIdentifier();
+		}
+
+		@Override
+		public Set<Type> getTypes() {
+			return targetProperty.getTypes();
+		}
 	}
 
 	/**

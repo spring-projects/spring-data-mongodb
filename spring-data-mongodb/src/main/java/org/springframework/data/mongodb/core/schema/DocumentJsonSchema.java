@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.bson.Document;
 import org.springframework.util.Assert;
 
