@@ -16,12 +16,12 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
-
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.CheckReturnValue;
 import org.springframework.lang.Nullable;
 
 /**
@@ -38,7 +38,7 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	@Nullable private final MongoPersistentProperty persistentProperty;
 	@Nullable private final SpELContext spELContext;
-	@Nullable private final String fieldNameAndQueryOperator;
+	@Nullable private final OperatorContext operatorContext;
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
@@ -53,19 +53,19 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
-			@Nullable String fieldNameAndQueryOperator) {
-		this(accessor, persistentProperty, mongoConverter, null, fieldNameAndQueryOperator);
+			@Nullable OperatorContext operatorContext) {
+		this(accessor, persistentProperty, mongoConverter, null, operatorContext);
 	}
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
-			@Nullable SpELContext spELContext, @Nullable String fieldNameAndQueryOperator) {
+			@Nullable SpELContext spELContext, @Nullable OperatorContext operatorContext) {
 
 		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
 		this.spELContext = spELContext;
-		this.fieldNameAndQueryOperator = fieldNameAndQueryOperator;
+		this.operatorContext = operatorContext;
 	}
 
 	@Override
@@ -76,6 +76,17 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		}
 
 		return persistentProperty;
+	}
+
+	/**
+	 *
+	 * @param operatorContext
+	 * @return new instance of {@link MongoConversionContext}.
+	 * @since 4.5
+	 */
+	@CheckReturnValue
+	public MongoConversionContext forOperator(@Nullable OperatorContext operatorContext) {
+		return new MongoConversionContext(accessor, persistentProperty, mongoConverter, spELContext, operatorContext);
 	}
 
 	@Nullable
@@ -101,7 +112,78 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	}
 
 	@Nullable
-	public String getFieldNameAndQueryOperator() {
-		return fieldNameAndQueryOperator;
+	public OperatorContext getOperatorContext() {
+		return operatorContext;
+	}
+
+	/**
+	 * The {@link OperatorContext} provides access to the actual conversion intent like a write operation or a query
+	 * operator such as {@literal $gte}.
+	 * 
+	 * @since 4.5
+	 */
+	public interface OperatorContext {
+
+		/**
+		 * The operator the conversion is used in.
+		 * @return {@literal write} for simple write operations during save, or a query operator.
+		 */
+		String getOperator();
+
+		/**
+		 * The context path the operator is used in.
+		 * @return never {@literal null}.
+		 */
+		String getPath();
+
+		boolean isWriteOperation();
+	}
+
+	public static class WriteOperatorContext implements OperatorContext {
+
+		private final String path;
+
+		public WriteOperatorContext(String path) {
+			this.path = path;
+		}
+
+		@Override
+		public String getOperator() {
+			return "write";
+		}
+
+		@Override
+		public String getPath() {
+			return path;
+		}
+
+		@Override
+		public boolean isWriteOperation() {
+			return true;
+		}
+	}
+
+	public static class QueryOperatorContext implements OperatorContext {
+
+		private final String operator;
+		private final String path;
+
+		public QueryOperatorContext(@Nullable String operator, String path) {
+			this.operator = operator != null ? operator : "$eq";
+			this.path = path;
+		}
+
+		public String getOperator() {
+			return operator;
+		}
+
+		public String getPath() {
+			return path;
+		}
+
+		@Override
+		public boolean isWriteOperation() {
+			return false;
+		}
 	}
 }

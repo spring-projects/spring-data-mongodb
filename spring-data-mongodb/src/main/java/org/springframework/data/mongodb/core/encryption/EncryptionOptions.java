@@ -15,21 +15,17 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
-import com.mongodb.client.model.vault.RangeOptions;
-import org.bson.Document;
-import org.springframework.data.mongodb.core.FindAndReplaceOptions;
-import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
- * Options, like the {@link #algorithm()}, to apply when encrypting values.
- *
+ * Options used to provide additional information when {@link Encryption encrypting} values. like the
+ * {@link #algorithm()} to be used.
+ * 
  * @author Christoph Strobl
  * @author Ross Lawley
  * @since 4.1
@@ -38,13 +34,15 @@ public class EncryptionOptions {
 
 	private final String algorithm;
 	private final EncryptionKey key;
-	private final QueryableEncryptionOptions queryableEncryptionOptions;
+	private final @Nullable QueryableEncryptionOptions queryableEncryptionOptions;
 
 	public EncryptionOptions(String algorithm, EncryptionKey key) {
-		this(algorithm, key, QueryableEncryptionOptions.NONE);
+		this(algorithm, key, null);
 	}
 
-	public EncryptionOptions(String algorithm, EncryptionKey key, QueryableEncryptionOptions queryableEncryptionOptions) {
+	public EncryptionOptions(String algorithm, EncryptionKey key,
+			@Nullable QueryableEncryptionOptions queryableEncryptionOptions) {
+
 		Assert.hasText(algorithm, "Algorithm must not be empty");
 		Assert.notNull(key, "EncryptionKey must not be empty");
 		Assert.notNull(key, "QueryableEncryptionOptions must not be empty");
@@ -62,7 +60,11 @@ public class EncryptionOptions {
 		return algorithm;
 	}
 
-	public QueryableEncryptionOptions queryableEncryptionOptions() {
+	/**
+	 * @return {@literal null} if not set.
+	 * @since 4.5
+	 */
+	public @Nullable QueryableEncryptionOptions queryableEncryptionOptions() {
 		return queryableEncryptionOptions;
 	}
 
@@ -107,20 +109,23 @@ public class EncryptionOptions {
 	 * Options, like the {@link #getQueryType()}, to apply when encrypting queryable values.
 	 *
 	 * @author Ross Lawley
+	 * @author Christoph Strobl
+	 * @since 4.5
 	 */
 	public static class QueryableEncryptionOptions {
 
-		private static final QueryableEncryptionOptions NONE = new QueryableEncryptionOptions(null, null, null);
+		private static final QueryableEncryptionOptions NONE = new QueryableEncryptionOptions(null, null, Map.of());
 
 		private final @Nullable String queryType;
 		private final @Nullable Long contentionFactor;
-		private final @Nullable Document rangeOptions;
+		private final Map<String, Object> attributes;
 
 		private QueryableEncryptionOptions(@Nullable String queryType, @Nullable Long contentionFactor,
-				@Nullable Document rangeOptions) {
+				Map<String, Object> attributes) {
+
 			this.queryType = queryType;
 			this.contentionFactor = contentionFactor;
-			this.rangeOptions = rangeOptions;
+			this.attributes = attributes;
 		}
 
 		/**
@@ -139,7 +144,7 @@ public class EncryptionOptions {
 		 * @return new instance of {@link QueryableEncryptionOptions}.
 		 */
 		public QueryableEncryptionOptions queryType(@Nullable String queryType) {
-			return new QueryableEncryptionOptions(queryType, contentionFactor, rangeOptions);
+			return new QueryableEncryptionOptions(queryType, contentionFactor, attributes);
 		}
 
 		/**
@@ -149,89 +154,57 @@ public class EncryptionOptions {
 		 * @return new instance of {@link QueryableEncryptionOptions}.
 		 */
 		public QueryableEncryptionOptions contentionFactor(@Nullable Long contentionFactor) {
-			return new QueryableEncryptionOptions(queryType, contentionFactor, rangeOptions);
+			return new QueryableEncryptionOptions(queryType, contentionFactor, attributes);
 		}
 
 		/**
 		 * Define the {@code rangeOptions} to be used for queryable document encryption.
 		 *
-		 * @param rangeOptions can be {@literal null}.
+		 * @param attributes can be {@literal null}.
 		 * @return new instance of {@link QueryableEncryptionOptions}.
 		 */
-		public QueryableEncryptionOptions rangeOptions(@Nullable Document rangeOptions) {
-			return new QueryableEncryptionOptions(queryType, contentionFactor, rangeOptions);
+		public QueryableEncryptionOptions attributes(Map<String, Object> attributes) {
+			return new QueryableEncryptionOptions(queryType, contentionFactor, attributes);
 		}
 
 		/**
 		 * Get the {@code queryType} to apply.
 		 *
-		 * @return {@link Optional#empty()} if not set.
+		 * @return {@literal null} if not set.
 		 */
-		public Optional<String> getQueryType() {
-			return Optional.ofNullable(queryType);
+		public @Nullable String getQueryType() {
+			return queryType;
 		}
 
 		/**
 		 * Get the {@code contentionFactor} to apply.
 		 *
-		 * @return {@link Optional#empty()} if not set.
+		 * @return {@literal null} if not set.
 		 */
-		public Optional<Long> getContentionFactor() {
-			return Optional.ofNullable(contentionFactor);
+		public @Nullable Long getContentionFactor() {
+			return contentionFactor;
 		}
 
 		/**
 		 * Get the {@code rangeOptions} to apply.
 		 *
-		 * @return {@link Optional#empty()} if not set.
+		 * @return never {@literal null}.
 		 */
-		public Optional<RangeOptions> getRangeOptions() {
-			if (rangeOptions == null) {
-				return Optional.empty();
-			}
-			RangeOptions encryptionRangeOptions = new RangeOptions();
-
-			if (rangeOptions.containsKey("min")) {
-				encryptionRangeOptions.min(BsonUtils.simpleToBsonValue(rangeOptions.get("min")));
-			}
-			if (rangeOptions.containsKey("max")) {
-				encryptionRangeOptions.max(BsonUtils.simpleToBsonValue(rangeOptions.get("max")));
-			}
-			if (rangeOptions.containsKey("trimFactor")) {
-				Object trimFactor = rangeOptions.get("trimFactor");
-				Assert.isInstanceOf(Integer.class, trimFactor, () -> String
-						.format("Expected to find a %s but it turned out to be %s.", Integer.class, trimFactor.getClass()));
-
-				encryptionRangeOptions.trimFactor((Integer) trimFactor);
-			}
-
-			if (rangeOptions.containsKey("sparsity")) {
-				Object sparsity = rangeOptions.get("sparsity");
-				Assert.isInstanceOf(Number.class, sparsity,
-						() -> String.format("Expected to find a %s but it turned out to be %s.", Long.class, sparsity.getClass()));
-				encryptionRangeOptions.sparsity(((Number) sparsity).longValue());
-			}
-
-			if (rangeOptions.containsKey("precision")) {
-				Object precision = rangeOptions.get("precision");
-				Assert.isInstanceOf(Number.class, precision, () -> String
-						.format("Expected to find a %s but it turned out to be %s.", Integer.class, precision.getClass()));
-				encryptionRangeOptions.precision(((Number) precision).intValue());
-			}
-			return Optional.of(encryptionRangeOptions);
+		public Map<String, Object> getAttributes() {
+			return Map.copyOf(attributes);
 		}
 
 		/**
 		 * @return {@literal true} if no arguments set.
 		 */
 		boolean isEmpty() {
-			return !Optionals.isAnyPresent(getQueryType(), getContentionFactor(), getRangeOptions());
+			return getQueryType() == null && getContentionFactor() == null && getAttributes().isEmpty();
 		}
 
 		@Override
 		public String toString() {
 			return "QueryableEncryptionOptions{" + "queryType='" + queryType + '\'' + ", contentionFactor=" + contentionFactor
-					+ ", rangeOptions=" + rangeOptions + '}';
+					+ ", attributes=" + attributes + '}';
 		}
 
 		@Override
@@ -251,12 +224,12 @@ public class EncryptionOptions {
 			if (!ObjectUtils.nullSafeEquals(contentionFactor, that.contentionFactor)) {
 				return false;
 			}
-			return ObjectUtils.nullSafeEquals(rangeOptions, that.rangeOptions);
+			return ObjectUtils.nullSafeEquals(attributes, that.attributes);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(queryType, contentionFactor, rangeOptions);
+			return Objects.hash(queryType, contentionFactor, attributes);
 		}
 	}
 }

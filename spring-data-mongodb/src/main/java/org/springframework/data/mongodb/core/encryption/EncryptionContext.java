@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
@@ -135,7 +136,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	default String getFieldNameAndQueryOperator() {
+	default OperatorContext getOperatorContext() {
 		return null;
 	}
 }

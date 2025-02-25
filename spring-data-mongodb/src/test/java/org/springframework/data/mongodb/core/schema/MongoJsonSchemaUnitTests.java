@@ -15,11 +15,17 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty.rangeEncrypted;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.encrypted;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.number;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.queryable;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.string;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.bson.Document;
@@ -103,6 +109,23 @@ class MongoJsonSchemaUnitTests {
 				new Document("type", "object").append("properties",
 						new Document("ssn", new Document("encrypt", new Document("keyId", Collections.singletonList(uuid))
 								.append("algorithm", "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic").append("bsonType", "string"))))));
+	}
+
+	@Test // GH-4185
+	void rendersQueryablePropertyCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
+				queryable(rangeEncrypted(number("ssn")),
+						List.of(QueryCharacteristics.range().contention(0).trimFactor(1).sparsity(1).min(0).max(200))))
+				.build();
+
+		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("properties",
+						new Document("ssn",
+								new Document("encrypt",
+										new Document("bsonType", "long").append("algorithm", "Range").append("queries",
+												List.of(new Document("contention", 0L).append("trimFactor", 1).append("sparsity", 1L)
+														.append("queryType", "range").append("min", 0).append("max", 200))))))));
 	}
 
 	@Test // DATAMONGO-1835

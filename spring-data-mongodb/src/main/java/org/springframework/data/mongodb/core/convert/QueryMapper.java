@@ -37,7 +37,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -58,6 +57,8 @@ import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.QueryOperatorContext;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -672,18 +673,21 @@ public class QueryMapper {
 
 		MongoPersistentProperty property = documentField.getProperty();
 
-		String fieldNameAndQueryOperator = property != null && !property.getFieldName().equals(documentField.name)
-				? property.getFieldName() + "." + documentField.name
-				: documentField.name;
-
-		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
-				property, converter, fieldNameAndQueryOperator);
+		OperatorContext criteriaContext = new QueryOperatorContext(
+				isKeyword(documentField.name) ? documentField.name : "$eq", property.getFieldName());
+		MongoConversionContext conversionContext;
+		if (valueConverter instanceof MongoConversionContext mcc) {
+			conversionContext = mcc.forOperator(criteriaContext);
+		} else {
+			conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE, property, converter,
+					criteriaContext);
+		}
 
 		return convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, conversionContext);
 	}
 
 	@Nullable
-	private Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
+	protected Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
 			MongoConversionContext conversionContext) {
 
@@ -707,10 +711,7 @@ public class QueryMapper {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
-					MongoConversionContext fieldConversionContext = new MongoConversionContext(
-							NoPropertyPropertyValueProvider.INSTANCE, property, converter,
-							conversionContext.getFieldNameAndQueryOperator() + "." + key);
-					return convertValueWithConversionContext(documentField, val, val, valueConverter, fieldConversionContext);
+					return convertValueWithConversionContext(documentField, val, val, valueConverter, conversionContext.forOperator(new QueryOperatorContext(key, conversionContext.getOperatorContext().getPath())));
 				}
 				return val;
 			});
@@ -1624,7 +1625,7 @@ public class QueryMapper {
 		return converter;
 	}
 
-	private enum NoPropertyPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
+	enum NoPropertyPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
 		INSTANCE;
 
