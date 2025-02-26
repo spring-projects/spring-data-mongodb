@@ -69,7 +69,7 @@ public class QueryCharacteristics {
 		this.characteristics.add(characteristic);
 	}
 
-	List<QueryCharacteristic> getCharacteristics() {
+	public List<QueryCharacteristic> getCharacteristics() {
 		return characteristics;
 	}
 

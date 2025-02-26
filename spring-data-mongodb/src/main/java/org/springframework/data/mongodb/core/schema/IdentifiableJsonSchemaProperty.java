@@ -113,6 +113,18 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		public Set<Type> getTypes() {
 			return targetProperty.getTypes();
 		}
+
+		boolean isEncrypted() {
+			return targetProperty instanceof EncryptedJsonSchemaProperty;
+		}
+
+		public JsonSchemaProperty getTargetProperty() {
+			return targetProperty;
+		}
+
+		public QueryCharacteristics getCharacteristics() {
+			return characteristics;
+		}
 	}
 
 	/**
@@ -1205,6 +1217,10 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			}
 
 			return null;
+		}
+
+		public String getKeyId() {
+			return keyId;
 		}
 	}
 }

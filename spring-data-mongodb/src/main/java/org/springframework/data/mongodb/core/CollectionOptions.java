@@ -15,19 +15,26 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.bson.conversions.Bson;
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
@@ -38,6 +45,7 @@ import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
+import org.springframework.util.StringUtils;
 
 /**
  * Provides a simple wrapper to encapsulate the variety of settings you can use when creating a collection.
@@ -58,11 +66,12 @@ public class CollectionOptions {
 	private ValidationOptions validationOptions;
 	private @Nullable TimeSeriesOptions timeSeriesOptions;
 	private @Nullable CollectionChangeStreamOptions changeStreamOptions;
-	private @Nullable Bson encryptedFields;
+//	private @Nullable Bson encryptedFields;
+	private @Nullable EncryptedCollectionOptions encryptedCollectionOptions;
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
 			@Nullable Collation collation, ValidationOptions validationOptions, @Nullable TimeSeriesOptions timeSeriesOptions,
-			@Nullable CollectionChangeStreamOptions changeStreamOptions, @Nullable Bson encryptedFields) {
+			@Nullable CollectionChangeStreamOptions changeStreamOptions, @Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -71,7 +80,7 @@ public class CollectionOptions {
 		this.validationOptions = validationOptions;
 		this.timeSeriesOptions = timeSeriesOptions;
 		this.changeStreamOptions = changeStreamOptions;
-		this.encryptedFields = encryptedFields;
+		this.encryptedCollectionOptions = encryptedCollectionOptions;
 	}
 
 	/**
@@ -145,7 +154,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions capped() {
 		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
@@ -157,7 +166,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions maxDocuments(long maxDocuments) {
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
@@ -169,7 +178,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions size(long size) {
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
@@ -181,7 +190,7 @@ public class CollectionOptions {
 	 */
 	public CollectionOptions collation(@Nullable Collation collation) {
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
@@ -302,7 +311,7 @@ public class CollectionOptions {
 
 		Assert.notNull(validationOptions, "ValidationOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
@@ -316,7 +325,7 @@ public class CollectionOptions {
 
 		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
@@ -330,19 +339,25 @@ public class CollectionOptions {
 
 		Assert.notNull(changeStreamOptions, "ChangeStreamOptions must not be null");
 		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+				changeStreamOptions, encryptedCollectionOptions);
 	}
 
 	/**
 	 * Create new {@link CollectionOptions} with the given {@code encryptedFields}.
 	 *
-	 * @param encryptedFields can be null
+	 * @param encryptedCollectionOptions can be null
 	 * @return new instance of {@link CollectionOptions}.
 	 * @since 4.5.0
 	 */
-	public CollectionOptions encryptedFields(@Nullable Bson encryptedFields) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
-				changeStreamOptions, encryptedFields);
+	public static CollectionOptions encrypted(@Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
+		return new CollectionOptions(null, null, null, null, null, null,
+			null, encryptedCollectionOptions);
+	}
+
+	public static CollectionOptions encrypted(Consumer<EncryptedCollectionOptions> options) {
+		EncryptedCollectionOptions theOptions = new EncryptedCollectionOptions();
+		options.accept(theOptions);
+		return encrypted(theOptions);
 	}
 
 	/**
@@ -419,15 +434,15 @@ public class CollectionOptions {
 	 * @return {@link Optional#empty()} if not specified.
 	 * @since 4.5.0
 	 */
-	public Optional<Bson> getEncryptedFields() {
-		return Optional.ofNullable(encryptedFields);
+	public Optional<EncryptedCollectionOptions> getEncryptedFields() {
+		return Optional.ofNullable(encryptedCollectionOptions);
 	}
 
 	@Override
 	public String toString() {
 		return "CollectionOptions{" + "maxDocuments=" + maxDocuments + ", size=" + size + ", capped=" + capped
 				+ ", collation=" + collation + ", validationOptions=" + validationOptions + ", timeSeriesOptions="
-				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", encryptedFields=" + encryptedFields
+				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", encryptedCollectionOptions=" + encryptedCollectionOptions
 				+ ", disableValidation=" + disableValidation() + ", strictValidation=" + strictValidation()
 				+ ", moderateValidation=" + moderateValidation() + ", warnOnValidationError=" + warnOnValidationError()
 				+ ", failOnValidationError=" + failOnValidationError() + '}';
@@ -465,7 +480,7 @@ public class CollectionOptions {
 		if (!ObjectUtils.nullSafeEquals(changeStreamOptions, that.changeStreamOptions)) {
 			return false;
 		}
-		return ObjectUtils.nullSafeEquals(encryptedFields, that.encryptedFields);
+		return ObjectUtils.nullSafeEquals(encryptedCollectionOptions, that.encryptedCollectionOptions);
 	}
 
 	@Override
@@ -477,7 +492,7 @@ public class CollectionOptions {
 		result = 31 * result + ObjectUtils.nullSafeHashCode(validationOptions);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(timeSeriesOptions);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(changeStreamOptions);
-		result = 31 * result + ObjectUtils.nullSafeHashCode(encryptedFields);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(encryptedCollectionOptions);
 		return result;
 	}
 
@@ -615,11 +630,32 @@ public class CollectionOptions {
 
 		private List<QueryableJsonSchemaProperty> queryableProperties = new ArrayList<>();
 
-		public EncryptedCollectionOptions queryable(JsonSchemaProperty schemaObject, QueryCharacteristics characteristics) {
+		public EncryptedCollectionOptions queryable(JsonSchemaProperty schemaObject, QueryCharacteristic... characteristics) {
 
-			queryableProperties.add(JsonSchemaProperty.queryable(schemaObject, characteristics));
+			QueryCharacteristics characteristics1 = new QueryCharacteristics(List.of(characteristics));
+			queryableProperties.add(JsonSchemaProperty.queryable(schemaObject, characteristics1));
 			return this;
 
+		}
+
+		public Document toDocument() {
+
+
+			List<Document> fields = new ArrayList<>(queryableProperties.size());
+			for(QueryableJsonSchemaProperty property : queryableProperties) {
+				Document field = new Document("path", property.getIdentifier());
+				if(!property.getTypes().isEmpty()) {
+					field.append("bsonType", property.getTypes().iterator().next().toBsonType().value());
+				}
+				if(property.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
+					if(StringUtils.hasText(encrypted.getKeyId())) {
+						new BsonBinary(BsonBinarySubType.UUID_STANDARD, encrypted.getKeyId().getBytes(StandardCharsets.UTF_8));
+					}
+				}
+				field.append("queries", property.getCharacteristics().getCharacteristics().stream().map(QueryCharacteristic::toDocument).collect(Collectors.toList()));
+			}
+
+			return new Document("fields", fields);
 		}
 	}
 
