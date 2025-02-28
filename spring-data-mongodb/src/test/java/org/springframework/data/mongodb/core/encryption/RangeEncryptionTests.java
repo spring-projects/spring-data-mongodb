@@ -25,6 +25,8 @@ import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.in
 import static org.springframework.data.mongodb.core.schema.QueryCharacteristics.range;
 
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -45,6 +47,7 @@ import com.mongodb.client.model.CreateEncryptedCollectionParams;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
@@ -68,10 +71,12 @@ import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.CollectionOptions.EncryptedCollectionOptions;
+import org.springframework.data.mongodb.core.EncryptionAlgorithms;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
@@ -120,7 +125,9 @@ class RangeEncryptionTests {
 		Person source = createPerson();
 		template.insert(source);
 
-		Person loaded = template.query(Person.class).matching(where("encryptedLong").lte(1001L).gte(1001L)).firstValue();
+		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
+		q.fields().exclude("__safeContent__");
+		Person loaded = template.query(Person.class).matching(q).firstValue();
 		assertThat(loaded).isEqualTo(source);
 	}
 
@@ -166,6 +173,7 @@ class RangeEncryptionTests {
 	private Person createPerson() {
 		Person source = new Person();
 		source.id = "id-1";
+		source.name = "it'se me mario!";
 		source.encryptedInt = 101;
 		source.encryptedLong = 1001L;
 		return source;
@@ -207,22 +215,29 @@ class RangeEncryptionTests {
 					MongoDatabase database = client.getDatabase(getDatabaseName());
 					database.getCollection("test").drop();
 
+
 					ClientEncryption clientEncryption = mongoClientEncryption.getClientEncryption();
+					BsonBinary dataKey1 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-1")));
+//					BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-2")));
+
 					BsonDocument encryptedFields = new BsonDocument().append("fields",
 							new BsonArray(asList(
+//									new BsonDocument("keyId", dataKey1).append("path", new BsonString("name"))
+//											.append("bsonType", new BsonString("string")),
+
 									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
 											.append("bsonType", new BsonString("int"))
 											.append("queries",
 													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
 															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
 															.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
+										new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
 											.append("bsonType", new BsonString("long")).append("queries",
 													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
 															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
 															.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
 
-//					BsonBinary dataKey1 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-1")));
+
 //					BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-2")));
 //
 //					BsonDocument encryptedFields = new BsonDocument().append("fields",
@@ -256,8 +271,12 @@ class RangeEncryptionTests {
 							new CreateCollectionOptions().encryptedFields(encryptedFields),
 							new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
 
-					return local.getArray("fields").stream().map(BsonValue::asDocument).collect(
-							Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
+					Map<String, BsonBinary> x = local.getArray("fields").stream().map(BsonValue::asDocument).collect(
+						Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
+
+					HashMap<String, BsonBinary> stringBsonBinaryHashMap = new HashMap<>(x);
+					stringBsonBinaryHashMap.put("name", dataKey1);
+					return stringBsonBinaryHashMap;
 				}
 			});
 			return new MongoEncryptionConverter(mongoClientEncryption, EncryptionKeyResolver
@@ -277,7 +296,7 @@ class RangeEncryptionTests {
 				builder.autoEncryptionSettings(AutoEncryptionSettings.builder() //
 						.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
 						.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
-						.bypassAutoEncryption(true)
+//						.bypassAutoEncryption(true)
 						.bypassQueryAnalysis(true).build());
 			}
 		}
@@ -334,6 +353,7 @@ class RangeEncryptionTests {
 	static class Person {
 
 		String id;
+//		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic)
 		String name;
 
 		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
