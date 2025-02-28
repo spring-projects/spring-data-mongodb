@@ -118,20 +118,26 @@ public class Person {
 
 [TIP]
 ====
-`@CompoundIndex` is repeatable using `@CompoundIndexes` as its container.
+`@CompoundIndex` is repeatable using `@CompoundIndexes` as its container, or can simply be declared several times on the same Element, implicitly generating this container annotation.
 
+[source,java]
+----
+@Document
+@CompoundIndexes({
+	@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
+	@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+})
+public class Person {
+  // ...
+}
+----
 [source,java]
 ----
 @Document
 @CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
 @CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+
 public class Person {
-
-  String firstname;
-  String lastname;
-
-  Address address;
-
   // ...
 }
 ----
