@@ -15,51 +15,52 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import java.util.Set;
-
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
-
+import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.bson.Document;
+import org.springframework.core.Ordered;
 import org.springframework.util.Assert;
 
 /**
- * javax.validation dependant entities validator. When it is registered as Spring component its automatically invoked
- * before entities are saved in database.
+ * javax.validation dependant entities validator.
+ * <p>
+ * When it is registered as Spring component its automatically invoked
+ * after any {@link AbstractMongoEventListener} and before entities are saved in database.
  *
- * @author Maciej Walkowiak
- * @author Oliver Gierke
- * @author Christoph Strobl
+ * @author original authors of {@link ValidatingMongoEventListener}
+ * @author Rene Felgenträger
  *
- * @see {@link ValidatingEntityCallback}
+ * @see {@link ValidatingMongoEventListener}
  */
-public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
+public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ordered {
 
-	private static final Log LOG = LogFactory.getLog(ValidatingMongoEventListener.class);
+	private static final Log LOG = LogFactory.getLog(ValidatingEntityCallback.class);
 
+	// TODO: discuss with spring team, if a handler encapsulating validation logic makes more sense (similar to "AuditingHandler")
 	private final Validator validator;
 
 	/**
-	 * Creates a new {@link ValidatingMongoEventListener} using the given {@link Validator}.
+	 * Creates a new {@link ValidatingEntityCallback} using the given {@link Validator}.
 	 *
 	 * @param validator must not be {@literal null}.
 	 */
-	public ValidatingMongoEventListener(Validator validator) {
+	public ValidatingEntityCallback(Validator validator) {
 
 		Assert.notNull(validator, "Validator must not be null");
 		this.validator = validator;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	// TODO: alternatively implement the "BeforeConvertCallback" interface and set the order to highest value ?
 	@Override
-	public void onBeforeSave(BeforeSaveEvent<Object> event) {
+	public Object onBeforeSave(Object entity, Document document, String collection) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Validating object: %s", event.getSource()));
+			LOG.debug(String.format("Validating object: %s", entity));
 		}
-		Set violations = validator.validate(event.getSource());
+		Set violations = validator.validate(entity);
 
 		if (!violations.isEmpty()) {
 
@@ -68,5 +69,11 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 			}
 			throw new ConstraintViolationException(violations);
 		}
+		return entity;
+	}
+
+	@Override
+	public int getOrder() {
+		return 100;
 	}
 }
