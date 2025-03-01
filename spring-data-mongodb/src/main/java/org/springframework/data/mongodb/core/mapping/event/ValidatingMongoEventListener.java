@@ -32,6 +32,8 @@ import org.springframework.util.Assert;
  * @author Maciej Walkowiak
  * @author Oliver Gierke
  * @author Christoph Strobl
+ *
+ * @see {@link ValidatingEntityCallback}
  */
 public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
 
