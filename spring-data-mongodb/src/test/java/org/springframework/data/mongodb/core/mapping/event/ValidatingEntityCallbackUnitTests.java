@@ -43,7 +43,7 @@ class ValidatingEntityCallbackUnitTests {
     }
   }
 
-  @Test
+  @Test // GH-4910
   void invalidModel_throwsException() {
     Coordinates coordinates = new Coordinates(-1, -1);
 
@@ -52,7 +52,7 @@ class ValidatingEntityCallbackUnitTests {
         .satisfies(e -> assertThat(e.getConstraintViolations()).hasSize(2));
   }
 
-  @Test
+  @Test // GH-4910
   void validModel_noExceptionThrown() {
     Coordinates coordinates = new Coordinates(0, 0);
     Object entity = callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates");
