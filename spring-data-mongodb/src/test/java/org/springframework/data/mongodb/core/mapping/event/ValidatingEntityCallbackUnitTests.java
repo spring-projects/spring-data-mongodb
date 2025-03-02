@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Rene Felgenträger
  */
-class ValidatingEntityCallbackTests {
+class ValidatingEntityCallbackUnitTests {
 
   private ValidatingEntityCallback callback;
 
