@@ -53,7 +53,7 @@ class ValidatingEntityCallbackUnitTests {
   }
 
   @Test
-  void validModel_noException() {
+  void validModel_noExceptionThrown() {
     Coordinates coordinates = new Coordinates(0, 0);
     Object entity = callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates");
     assertThat(entity).isEqualTo(coordinates);
