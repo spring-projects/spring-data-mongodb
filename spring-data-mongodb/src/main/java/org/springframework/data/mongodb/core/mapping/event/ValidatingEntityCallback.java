@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import java.util.Set;
@@ -25,7 +26,7 @@ import org.springframework.core.Ordered;
 import org.springframework.util.Assert;
 
 /**
- * javax.validation dependant entities validator.
+ * JSR-303 dependant entities validator.
  * <p>
  * When it is registered as Spring component its automatically invoked
  * after any {@link AbstractMongoEventListener} and before entities are saved in database.
@@ -39,7 +40,7 @@ public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ord
 
 	private static final Log LOG = LogFactory.getLog(ValidatingEntityCallback.class);
 
-	// TODO: discuss with spring team, if a handler encapsulating validation logic makes more sense (similar to "AuditingHandler")
+	// TODO: create a validation handler (similar to "AuditingHandler") an reference it from "ValidatingMongoEventListener" and "ValidatingMongoEventListener"
 	private final Validator validator;
 
 	/**
@@ -48,7 +49,6 @@ public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ord
 	 * @param validator must not be {@literal null}.
 	 */
 	public ValidatingEntityCallback(Validator validator) {
-
 		Assert.notNull(validator, "Validator must not be null");
 		this.validator = validator;
 	}
@@ -60,12 +60,11 @@ public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ord
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("Validating object: %s", entity));
 		}
-		Set violations = validator.validate(entity);
+		Set<ConstraintViolation<Object>> violations = validator.validate(entity);
 
 		if (!violations.isEmpty()) {
-
 			if (LOG.isDebugEnabled()) {
-				LOG.info(String.format("During object: %s validation violations found: %s", event.getSource(), violations));
+				LOG.info(String.format("During object: %s validation violations found: %s", entity, violations));
 			}
 			throw new ConstraintViolationException(violations);
 		}
