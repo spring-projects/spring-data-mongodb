@@ -28,12 +28,11 @@ import org.springframework.util.Assert;
 /**
  * JSR-303 dependant entities validator.
  * <p>
- * When it is registered as Spring component its automatically invoked
- * after any {@link AbstractMongoEventListener} and before entities are saved in database.
+ * When it is registered as Spring component its automatically invoked after any {@link AbstractMongoEventListener} and
+ * before entities are saved in database.
  *
  * @author original authors of {@link ValidatingMongoEventListener}
  * @author Rene Felgenträger
- *
  * @see {@link ValidatingMongoEventListener}
  */
 public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ordered {

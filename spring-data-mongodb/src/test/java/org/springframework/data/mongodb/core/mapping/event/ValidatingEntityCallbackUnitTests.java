@@ -34,40 +34,42 @@ import org.junit.jupiter.api.Test;
  */
 class ValidatingEntityCallbackUnitTests {
 
-  private ValidatingEntityCallback callback;
+	private ValidatingEntityCallback callback;
 
-  @BeforeEach
-  public void setUp() {
-    try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-      callback = new ValidatingEntityCallback(factory.getValidator());
-    }
-  }
+	@BeforeEach
+	public void setUp() {
+		try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+			callback = new ValidatingEntityCallback(factory.getValidator());
+		}
+	}
 
-  @Test // GH-4910
-  void invalidModel_throwsException() {
-    Coordinates coordinates = new Coordinates(-1, -1);
+	@Test
+		// GH-4910
+	void invalidModel_throwsException() {
+		Coordinates coordinates = new Coordinates(-1, -1);
 
-    assertThatExceptionOfType(ConstraintViolationException.class)
-        .isThrownBy(() -> callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates"))
-        .satisfies(e -> assertThat(e.getConstraintViolations()).hasSize(2));
-  }
+		assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(
+						() -> callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates"))
+				.satisfies(e -> assertThat(e.getConstraintViolations()).hasSize(2));
+	}
 
-  @Test // GH-4910
-  void validModel_noExceptionThrown() {
-    Coordinates coordinates = new Coordinates(0, 0);
-    Object entity = callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates");
-    assertThat(entity).isEqualTo(coordinates);
-  }
+	@Test
+		// GH-4910
+	void validModel_noExceptionThrown() {
+		Coordinates coordinates = new Coordinates(0, 0);
+		Object entity = callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates");
+		assertThat(entity).isEqualTo(coordinates);
+	}
 
-  record Coordinates(@NotNull @Min(0) Integer x, @NotNull @Min(0) Integer y) {
+	record Coordinates(@NotNull @Min(0) Integer x, @NotNull @Min(0) Integer y) {
 
-    Document toDocument() {
-      return Document.parse("""
-          {
-            "x": %d,
-            "y": %d
-          }
-          """.formatted(x, y));
-    }
-  }
+		Document toDocument() {
+			return Document.parse("""
+					{
+					  "x": %d,
+					  "y": %d
+					}
+					""".formatted(x, y));
+		}
+	}
 }
