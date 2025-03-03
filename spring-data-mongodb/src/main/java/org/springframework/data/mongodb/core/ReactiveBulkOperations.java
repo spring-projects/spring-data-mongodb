@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
@@ -67,7 +68,8 @@ public interface ReactiveBulkOperations {
 	/**
 	 * Add a single update to the bulk operation. For the update request, only the first matching document is updated.
 	 *
-	 * @param query update criteria, must not be {@literal null}.
+	 * @param query update criteria, must not be {@literal null}. The {@link Query} may define a {@link Query#with(Sort)
+	 *          sort order} to influence which document to update when potentially matching multiple candidates.
 	 * @param update {@link UpdateDefinition} operation to perform, must not be {@literal null}.
 	 * @return the current {@link ReactiveBulkOperations} instance with the update added, will never be {@literal null}.
 	 */
@@ -111,8 +113,11 @@ public interface ReactiveBulkOperations {
 	/**
 	 * Add a single replace operation to the bulk operation.
 	 *
-	 * @param query Update criteria.
-	 * @param replacement the replacement document. Must not be {@literal null}.
+	 * @param query Replace criteria. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence
+	 *          which document to replace when potentially matching multiple candidates.
+	 * @param replacement the replacement document. Must not be {@literal null}. The {@link Query} may define a
+	 *          {@link Query#with(Sort) sort order} to influence which document to replace when potentially matching
+	 *          multiple candidates.
 	 * @return the current {@link ReactiveBulkOperations} instance with the replace added, will never be {@literal null}.
 	 */
 	default ReactiveBulkOperations replaceOne(Query query, Object replacement) {
@@ -122,7 +127,8 @@ public interface ReactiveBulkOperations {
 	/**
 	 * Add a single replace operation to the bulk operation.
 	 *
-	 * @param query Update criteria.
+	 * @param query Replace criteria. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence
+	 *          which document to replace when potentially matching multiple candidates.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @return the current {@link ReactiveBulkOperations} instance with the replace added, will never be {@literal null}.

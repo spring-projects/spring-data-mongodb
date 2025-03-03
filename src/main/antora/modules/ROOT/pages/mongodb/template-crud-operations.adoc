@@ -356,7 +356,7 @@ Read more in the see xref:mongodb/template-crud-operations.adoc#mongo-template.o
 * *updateFirst*: Updates the first document that matches the query document criteria with the updated document.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
 
-WARNING: `updateFirst` does not support ordering. Please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
+WARNING: `updateFirst` does not support ordering for MongoDB Versions below 8.0. Running one of the older versions, please use xref:mongodb/template-crud-operations.adoc#mongo-template.find-and-upsert[findAndModify] to apply `Sort`.
 
 NOTE: Index hints for the update operation can be provided via `Query.withHint(...)`.
 

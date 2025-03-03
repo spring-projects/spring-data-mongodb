@@ -106,6 +106,11 @@ abstract class BulkOperationsSupport {
 
 		if (writeModel instanceof UpdateOneModel<Document> model) {
 
+			Bson sort = model.getOptions().getSort();
+			if (sort instanceof Document sortDocument) {
+				model.getOptions().sort(updateMapper().getMappedSort(sortDocument, entity().orElse(null)));
+			}
+
 			if (source instanceof AggregationUpdate aggregationUpdate) {
 
 				List<Document> pipeline = mapUpdatePipeline(aggregationUpdate);
@@ -134,6 +139,17 @@ abstract class BulkOperationsSupport {
 
 		if (writeModel instanceof DeleteManyModel<Document> model) {
 			return new DeleteManyModel<>(getMappedQuery(model.getFilter()), model.getOptions());
+		}
+
+		if (writeModel instanceof ReplaceOneModel<Document> model) {
+
+			Bson sort = model.getReplaceOptions().getSort();
+
+			if (sort instanceof Document sortDocument) {
+				model.getReplaceOptions().sort(updateMapper().getMappedSort(sortDocument, entity().orElse(null)));
+			}
+			return new ReplaceOneModel<>(getMappedQuery(model.getFilter()), model.getReplacement(),
+					model.getReplaceOptions());
 		}
 
 		return writeModel;
@@ -192,9 +208,11 @@ abstract class BulkOperationsSupport {
 	 * @param filterQuery The {@link Query} to read a potential {@link Collation} from. Must not be {@literal null}.
 	 * @param update The {@link Update} to apply
 	 * @param upsert flag to indicate if document should be upserted.
+	 * @param multi flag to indicate if update might affect multiple documents.
 	 * @return new instance of {@link UpdateOptions}.
 	 */
-	protected static UpdateOptions computeUpdateOptions(Query filterQuery, UpdateDefinition update, boolean upsert) {
+	protected UpdateOptions computeUpdateOptions(Query filterQuery, UpdateDefinition update, boolean upsert,
+			boolean multi) {
 
 		UpdateOptions options = new UpdateOptions();
 		options.upsert(upsert);
@@ -205,6 +223,10 @@ abstract class BulkOperationsSupport {
 				list.add(arrayFilter.asDocument());
 			}
 			options.arrayFilters(list);
+		}
+
+		if (!multi && filterQuery.isSorted()) {
+			options.sort(filterQuery.getSortObject());
 		}
 
 		filterQuery.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);

@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,17 +31,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -323,6 +327,39 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(doc).isInstanceOf(SpecialDoc.class);
 	}
 
+	@Test // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	public void updateShouldConsiderSorting() {
+
+		insertSomeDocuments();
+
+		BulkWriteResult result = createBulkOps(BulkMode.ORDERED, BaseDocWithRenamedField.class)
+			.updateOne(new Query().with(Sort.by(DESC, "renamedField")), new Update().set("bsky", "altnps")).execute();
+
+		assertThat(result.getModifiedCount()).isOne();
+
+		Document raw = operations.execute(COLLECTION_NAME, col -> col.find(new Document("_id", "4")).first());
+		assertThat(raw).containsEntry("bsky", "altnps");
+	}
+
+	@Test // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	public void replaceShouldConsiderSorting() {
+
+		insertSomeDocuments();
+
+		BaseDocWithRenamedField target = new BaseDocWithRenamedField();
+		target.value = "replacement";
+
+		BulkWriteResult result = createBulkOps(BulkMode.ORDERED, BaseDocWithRenamedField.class)
+			.replaceOne(new Query().with(Sort.by(DESC, "renamedField")), target).execute();
+
+		assertThat(result.getModifiedCount()).isOne();
+
+		Document raw = operations.execute(COLLECTION_NAME, col -> col.find(new Document("_id", "4")).first());
+		assertThat(raw).containsEntry("value", target.value);
+	}
+
 	private void testUpdate(BulkMode mode, boolean multi, int expectedUpdates) {
 
 		BulkOperations bulkOps = createBulkOps(mode);
@@ -384,10 +421,10 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		final MongoCollection<Document> coll = operations.getCollection(COLLECTION_NAME);
 
-		coll.insertOne(rawDoc("1", "value1"));
-		coll.insertOne(rawDoc("2", "value1"));
-		coll.insertOne(rawDoc("3", "value2"));
-		coll.insertOne(rawDoc("4", "value2"));
+		coll.insertOne(rawDoc("1", "value1").append("rn_f", "001"));
+		coll.insertOne(rawDoc("2", "value1").append("rn_f", "002"));
+		coll.insertOne(rawDoc("3", "value2").append("rn_f", "003"));
+		coll.insertOne(rawDoc("4", "value2").append("rn_f", "004"));
 	}
 
 	private static Stream<Arguments> upsertArguments() {
@@ -420,5 +457,11 @@ public class DefaultBulkOperationsIntegrationTests {
 
 	private static Document rawDoc(String id, String value) {
 		return new Document("_id", id).append("value", value);
+	}
+
+	static class BaseDocWithRenamedField extends BaseDoc {
+
+		@Field("rn_f")
+		String renamedField;
 	}
 }

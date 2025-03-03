@@ -15,19 +15,26 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import com.mongodb.client.result.UpdateResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.ReplaceWithOperation;
@@ -37,6 +44,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -123,13 +131,13 @@ class MongoTemplateUpdateTests {
 		Versioned source = template.insert(Versioned.class).one(new Versioned("id-1", "value-0"));
 
 		AggregationUpdate update = AggregationUpdate.update()
-				.set(SetOperation.builder().set("value").toValue("changed").and().set("version").toValue(10L));
+			.set(SetOperation.builder().set("value").toValue("changed").and().set("version").toValue(10L));
 		template.update(Versioned.class).matching(Query.query(Criteria.where("id").is(source.id))).apply(update).first();
 
 		assertThat(
-				collection(Versioned.class).find(new org.bson.Document("_id", source.id)).limit(1).into(new ArrayList<>()))
-						.containsExactly(new org.bson.Document("_id", source.id).append("version", 10L).append("value", "changed")
-								.append("_class", "org.springframework.data.mongodb.core.MongoTemplateUpdateTests$Versioned"));
+			collection(Versioned.class).find(new org.bson.Document("_id", source.id)).limit(1).into(new ArrayList<>()))
+			.containsExactly(new org.bson.Document("_id", source.id).append("version", 10L).append("value", "changed")
+				.append("_class", "org.springframework.data.mongodb.core.MongoTemplateUpdateTests$Versioned"));
 	}
 
 	@Test // DATAMONGO-2331
@@ -289,12 +297,56 @@ class MongoTemplateUpdateTests {
 				null);
 	}
 
+	@ParameterizedTest // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	@MethodSource("sortedUpdateBookArgs")
+	void updateFirstWithSort(Class<?> domainType, Sort sort, UpdateDefinition update) {
+
+		Book one = new Book();
+		one.id = 1;
+		one.isbn = "001 001 300";
+		one.title = "News isn't fake";
+		one.author = new Author("John", "Backus");
+
+		Book two = new Book();
+		two.id = 2;
+		two.title = "love is love";
+		two.isbn = "001 001 100";
+		two.author = new Author("Grace", "Hopper");
+
+		template.insertAll(Arrays.asList(one, two));
+
+		UpdateResult result = template.update(domainType) //
+			.inCollection(template.getCollectionName(Book.class))//
+			.matching(new Query().with(sort)).apply(update) //
+			.first();
+
+		assertThat(result.getModifiedCount()).isOne();
+		assertThat(collection(Book.class).find(new org.bson.Document("_id", two.id)).first()).containsEntry("title",
+			"Science is real!");
+	}
+
 	private List<org.bson.Document> all(Class<?> type) {
 		return collection(type).find(new org.bson.Document()).into(new ArrayList<>());
 	}
 
 	private MongoCollection<org.bson.Document> collection(Class<?> type) {
 		return template.getCollection(template.getCollectionName(type));
+	}
+
+	private static Stream<Arguments> sortedUpdateBookArgs() {
+
+		Update update = new Update().set("title", "Science is real!");
+		AggregationUpdate aggUpdate = AggregationUpdate.update().set("title").toValue("Science is real!");
+
+		return Stream.of( //
+				Arguments.of(Book.class, Sort.by(Direction.ASC, "isbn"), update), // typed, no field mapping
+				Arguments.of(Book.class, Sort.by(Direction.DESC, "author.lastname"), update), // typed, map `lastname`
+				Arguments.of(Book.class, Sort.by(Direction.DESC, "author.last"), update), // typed, raw field name
+				Arguments.of(Object.class, Sort.by(Direction.ASC, "isbn"), update), // untyped, requires raw field name
+				Arguments.of(Book.class, Sort.by(Direction.ASC, "isbn"), aggUpdate), // aggregation, no field mapping
+				Arguments.of(Book.class, Sort.by(Direction.DESC, "author.last"), aggUpdate) // aggregation, map `lastname`
+		);
 	}
 
 	@Document("scores")

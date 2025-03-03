@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
@@ -25,12 +26,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.ReplaceWithOperation;
@@ -39,6 +46,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
@@ -269,12 +278,60 @@ public class ReactiveMongoTemplateUpdateTests {
 
 	}
 
+	@ParameterizedTest // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	@MethodSource("sortedUpdateBookArgs")
+	void updateFirstWithSort(Class<?> domainType, Sort sort, UpdateDefinition update) {
+
+		Book one = new Book();
+		one.id = 1;
+		one.isbn = "001 001 300";
+		one.title = "News isn't fake";
+		one.author = new Author("John", "Backus");
+
+		Book two = new Book();
+		two.id = 2;
+		two.title = "love is love";
+		two.isbn = "001 001 100";
+		two.author = new Author("Grace", "Hopper");
+
+		template.insertAll(Arrays.asList(one, two)).then().as(StepVerifier::create).verifyComplete();
+
+		template.update(domainType) //
+				.inCollection(template.getCollectionName(Book.class))//
+				.matching(new Query().with(sort)).apply(update) //
+				.first().as(StepVerifier::create) //
+				.assertNext(result -> assertThat(result.getModifiedCount()).isOne()) //
+				.verifyComplete();
+
+		Mono.from(collection(Book.class).find(new org.bson.Document("_id", two.id)).first()) //
+				.as(StepVerifier::create) //
+				.assertNext(document -> assertThat(document).containsEntry("title", "Science is real!")) //
+				.verifyComplete();
+	}
+
+
 	private Flux<org.bson.Document> all(Class<?> type) {
 		return Flux.from(collection(type).find(new org.bson.Document()));
 	}
 
 	private MongoCollection<org.bson.Document> collection(Class<?> type) {
 		return client.getDatabase(DB_NAME).getCollection(template.getCollectionName(type));
+	}
+
+	private static Stream<Arguments> sortedUpdateBookArgs() {
+
+		Update update = new Update().set("title", "Science is real!");
+		AggregationUpdate aggUpdate = AggregationUpdate.update().set("title").toValue("Science is real!");
+
+		return Stream.of( //
+			Arguments.of(Book.class, Sort.by(Direction.ASC, "isbn"), update), // typed, no field mapping
+			Arguments.of(Book.class, Sort.by(Direction.DESC, "author.lastname"), update), // typed, map `lastname`
+			Arguments.of(Book.class, Sort.by(Direction.DESC, "author.last"), update), // typed, raw field name
+			Arguments.of(Object.class, Sort.by(Direction.ASC, "isbn"), update), // untyped, requires raw field name
+			Arguments.of(Book.class, Sort.by(Direction.ASC, "isbn"), aggUpdate), // aggregation, no field mapping
+			Arguments.of(Book.class, Sort.by(Direction.DESC, "author.last"), aggUpdate) // aggregation, map `lastname`
+		);
 	}
 
 	@Document("scores")

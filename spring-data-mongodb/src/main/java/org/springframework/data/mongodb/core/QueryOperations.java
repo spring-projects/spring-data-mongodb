@@ -765,7 +765,7 @@ class QueryOperations {
 			}
 
 			if (query != null && query.isSorted()) {
-				options.sort(query.getSortObject());
+				options.sort(getMappedSort(domainType != null ? mappingContext.getPersistentEntity(domainType) : null));
 			}
 
 			HintFunction.from(getQuery().getHint()).ifPresent(codecRegistryProvider, options::hintString, options::hint);
@@ -799,6 +799,9 @@ class QueryOperations {
 			options.collation(updateOptions.getCollation());
 			options.upsert(updateOptions.isUpsert());
 			applyHint(options::hintString, options::hint);
+			if (!isMulti() && getQuery().isSorted()) {
+				options.sort(getMappedSort(domainType != null ? mappingContext.getPersistentEntity(domainType) : null));
+			}
 
 			if (callback != null) {
 				callback.accept(options);

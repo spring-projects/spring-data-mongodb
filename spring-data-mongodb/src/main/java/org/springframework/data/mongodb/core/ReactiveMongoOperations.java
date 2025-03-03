@@ -26,6 +26,7 @@ import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -1502,12 +1503,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * the provided update document.
 	 * <p>
 	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
-	 * auto-incremented if not explicitly specified in the update. <strong>NOTE:</strong> {@link Query#getSortObject()
-	 * sorting} is not supported by {@code db.collection.updateOne}. Use
-	 * {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
+	 * auto-incremented if not explicitly specified in the update.
 	 *
-	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
-	 *          {@literal null}.
+	 * @param query the query document that specifies the criteria used to select a document to be updated. The
+	 *          {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to update when
+	 *          potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
@@ -1525,12 +1525,11 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * the provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
 	 * domain type information. Use {@link #updateFirst(Query, UpdateDefinition, Class, String)} to get full type specific
-	 * support. <br />
-	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
-	 * Use {@link #findAndModify(Query, UpdateDefinition, Class, String)} instead.
+	 * support.
 	 *
-	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
-	 *          {@literal null}.
+	 * @param query the query document that specifies the criteria used to select a document to be updated. The
+	 *          {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to update when
+	 *          potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
 	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
@@ -1548,8 +1547,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * A potential {@link org.springframework.data.annotation.Version} property of the {@literal entityClass} will be
 	 * auto-incremented if not explicitly specified in the update.
 	 *
-	 * @param query the query document that specifies the criteria used to select a document to be updated. Must not be
-	 *          {@literal null}.
+	 * @param query the query document that specifies the criteria used to select a document to be updated. The
+	 *          {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to update when
+	 *          potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
@@ -1745,7 +1745,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document. The query may
 	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
-	 *          to use. Must not be {@literal null}.
+	 *          to use. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to
+	 *          replace when potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
 	 * @throws org.springframework.data.mapping.MappingException if the collection name cannot be
@@ -1762,7 +1763,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document. The query may
 	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
-	 *          to use. Must not be {@literal null}.
+	 *          to use. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to
+	 *          replace when potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
@@ -1778,7 +1780,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document.The query may
 	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
-	 *          to use. Must not be {@literal null}.
+	 *          to use. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to
+	 *          replace when potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.
@@ -1796,7 +1799,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a document. The query may *
 	 *          contain an index {@link Query#withHint(String) hint} or the {@link Query#collation(Collation) collation}
-	 *          to use. Must not be {@literal null}.
+	 *          to use. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence which document to
+	 *          replace when potentially matching multiple candidates. Must not be {@literal null}.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link ReplaceOptions} holding additional information. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous replacement.

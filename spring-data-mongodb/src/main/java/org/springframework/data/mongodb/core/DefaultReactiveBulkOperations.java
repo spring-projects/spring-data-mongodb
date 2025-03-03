@@ -189,13 +189,16 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 
 		ReplaceOptions replaceOptions = new ReplaceOptions();
 		replaceOptions.upsert(options.isUpsert());
+		if (query.isSorted()) {
+			replaceOptions.sort(query.getSortObject());
+		}
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
 
 		this.models.add(Mono.just(replacement).flatMap(it -> {
 			maybeEmitEvent(new BeforeConvertEvent<>(it, collectionName));
 			return maybeInvokeBeforeConvertCallback(it);
 		}).map(it -> new SourceAwareWriteModelHolder(it,
-				new ReplaceOneModel<>(getMappedQuery(query.getQueryObject()), getMappedObject(it), replaceOptions))));
+				new ReplaceOneModel<>(query.getQueryObject(), getMappedObject(it), replaceOptions))));
 
 		return this;
 	}
@@ -218,13 +221,13 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 
 		Flux<SourceAwareWriteModelHolder> concat = Flux.concat(models).flatMapSequential(it -> {
 
-			if (it.model()instanceof InsertOneModel<Document> iom) {
+			if (it.model() instanceof InsertOneModel<Document> iom) {
 
 				Document target = iom.getDocument();
 				maybeEmitBeforeSaveEvent(it);
 				return maybeInvokeBeforeSaveCallback(it.source(), target)
 						.map(afterCallback -> new SourceAwareWriteModelHolder(afterCallback, mapWriteModel(afterCallback, iom)));
-			} else if (it.model()instanceof ReplaceOneModel<Document> rom) {
+			} else if (it.model() instanceof ReplaceOneModel<Document> rom) {
 
 				Document target = rom.getReplacement();
 				maybeEmitBeforeSaveEvent(it);
@@ -265,7 +268,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(update, "Update must not be null");
 
-		UpdateOptions options = computeUpdateOptions(query, update, upsert);
+		UpdateOptions options = computeUpdateOptions(query, update, upsert, multi);
 
 		this.models.add(Mono.just(update).map(it -> {
 			if (multi) {

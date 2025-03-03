@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -81,7 +82,8 @@ public interface BulkOperations {
 	/**
 	 * Add a single update to the bulk operation. For the update request, only the first matching document is updated.
 	 *
-	 * @param query update criteria, must not be {@literal null}.
+	 * @param query update criteria, must not be {@literal null}. The {@link Query} may define a {@link Query#with(Sort)
+	 *          sort order} to influence which document to update when potentially matching multiple candidates.
 	 * @param update {@link Update} operation to perform, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
@@ -92,7 +94,8 @@ public interface BulkOperations {
 	/**
 	 * Add a single update to the bulk operation. For the update request, only the first matching document is updated.
 	 *
-	 * @param query update criteria, must not be {@literal null}.
+	 * @param query update criteria, must not be {@literal null}. The {@link Query} may define a {@link Query#with(Sort)
+	 *          sort order} to influence which document to update when potentially matching multiple candidates.
 	 * @param update {@link Update} operation to perform, must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 * @since 4.1
@@ -187,7 +190,8 @@ public interface BulkOperations {
 	/**
 	 * Add a single replace operation to the bulk operation.
 	 *
-	 * @param query Update criteria.
+	 * @param query Replace criteria. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence
+	 *          which document to replace when potentially matching multiple candidates.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.
 	 * @since 2.2
@@ -199,7 +203,8 @@ public interface BulkOperations {
 	/**
 	 * Add a single replace operation to the bulk operation.
 	 *
-	 * @param query Update criteria.
+	 * @param query Replace criteria. The {@link Query} may define a {@link Query#with(Sort) sort order} to influence
+	 *          which document to replace when potentially matching multiple candidates.
 	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the replacement added, will never be {@literal null}.

@@ -34,9 +34,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
@@ -169,6 +173,17 @@ public class MongoTemplateReplaceTests {
 
 		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 4)).first());
 		assertThat(document).containsEntry("r-name", "Pizza Rat's Pizzaria");
+	}
+
+	@Test // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	void replaceConsidersSort() {
+
+		UpdateResult result = template.replace(new Query().with(Sort.by(Direction.DESC, "name")), new Restaurant("resist", "Manhattan"));
+
+		assertThat(result.getModifiedCount()).isOne();
+		Document document = retrieve(collection -> collection.find(Filters.eq("_id", 2)).first());
+		assertThat(document).containsEntry("r-name", "resist");
 	}
 
 	void initTestData() {

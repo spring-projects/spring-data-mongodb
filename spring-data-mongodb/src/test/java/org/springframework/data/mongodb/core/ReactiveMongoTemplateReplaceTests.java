@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.ReplaceOptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -37,7 +38,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
@@ -198,7 +202,23 @@ public class ReactiveMongoTemplateReplaceTests {
 		retrieve(collection -> collection.find(Filters.eq("_id", 4)).first()).as(StepVerifier::create)
 				.consumeNextWith(document -> {
 					assertThat(document).containsEntry("r-name", "Pizza Rat's Pizzaria");
-				});
+				})
+			.verifyComplete();
+	}
+
+	@Test // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	void replaceConsidersSort() {
+
+		template.replace(new Query().with(Sort.by(Direction.DESC, "name")), new Restaurant("resist", "Manhattan")) //
+				.as(StepVerifier::create) //
+			.consumeNextWith(result -> assertThat(result.getModifiedCount()).isOne()) //
+			.verifyComplete();
+
+		retrieve(collection -> collection.find(Filters.eq("_id", 2)).first()).as(StepVerifier::create)
+			.consumeNextWith(document -> {
+				assertThat(document).containsEntry("r-name", "resist");
+			}).verifyComplete();
 	}
 
 	void initTestData() {

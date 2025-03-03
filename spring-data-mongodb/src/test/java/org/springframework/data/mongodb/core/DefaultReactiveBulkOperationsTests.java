@@ -16,7 +16,11 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -289,11 +293,48 @@ class DefaultReactiveBulkOperationsTests {
 				}).verifyComplete();
 	}
 
+	@Test // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	public void updateShouldConsiderSorting() {
+
+		insertSomeDocuments();
+
+		createBulkOps(BulkMode.ORDERED, BaseDocWithRenamedField.class) //
+			.updateOne(new Query().with(Sort.by(DESC, "renamedField")), new Update().set("bsky", "altnps")).execute() //
+			.as(StepVerifier::create) //
+			.consumeNextWith(result -> assertThat(result.getModifiedCount()).isOne()) //
+			.verifyComplete();
+
+		template.execute(COLLECTION_NAME, col -> col.find(new Document("_id", "4")).first()).as(StepVerifier::create) //
+			.consumeNextWith(raw -> assertThat(raw).containsEntry("bsky", "altnps")) //
+			.verifyComplete();
+	}
+
+	@Test // GH-4797
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+	public void replaceShouldConsiderSorting() {
+
+		insertSomeDocuments();
+
+		BaseDocWithRenamedField target = new BaseDocWithRenamedField();
+		target.value = "replacement";
+
+		createBulkOps(BulkMode.ORDERED, BaseDocWithRenamedField.class) //
+			.replaceOne(new Query().with(Sort.by(DESC, "renamedField")), target).execute() //
+			.as(StepVerifier::create) //
+			.consumeNextWith(result -> assertThat(result.getModifiedCount()).isOne()) //
+			.verifyComplete();
+
+		template.execute(COLLECTION_NAME, col -> col.find(new Document("_id", "4")).first()).as(StepVerifier::create) //
+			.consumeNextWith(raw -> assertThat(raw).containsEntry("value", target.value)) //
+			.verifyComplete();
+	}
+
 	private void insertSomeDocuments() {
 
 		template.execute(COLLECTION_NAME, collection -> {
 			return Flux.from(collection.insertMany(
-					List.of(rawDoc("1", "value1"), rawDoc("2", "value1"), rawDoc("3", "value2"), rawDoc("4", "value2"))));
+					List.of(rawDoc("1", "value1").append("rn_f", "001"), rawDoc("2", "value1").append("rn_f", "002"), rawDoc("3", "value2").append("rn_f", "003"), rawDoc("4", "value2").append("rn_f", "004"))));
 		}).then().as(StepVerifier::create).verifyComplete();
 
 	}
@@ -344,5 +385,11 @@ class DefaultReactiveBulkOperationsTests {
 
 	private static Document rawDoc(String id, String value) {
 		return new Document("_id", id).append("value", value);
+	}
+
+	static class BaseDocWithRenamedField extends BaseDoc {
+
+		@Field("rn_f")
+		String renamedField;
 	}
 }

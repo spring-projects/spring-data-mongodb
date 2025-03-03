@@ -229,12 +229,14 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 
 		ReplaceOptions replaceOptions = new ReplaceOptions();
 		replaceOptions.upsert(options.isUpsert());
+		if (query.isSorted()) {
+			replaceOptions.sort(query.getSortObject());
+		}
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
 
 		maybeEmitEvent(new BeforeConvertEvent<>(replacement, collectionName));
 		Object source = maybeInvokeBeforeConvertCallback(replacement);
-		addModel(source,
-				new ReplaceOneModel<>(getMappedQuery(query.getQueryObject()), getMappedObject(source), replaceOptions));
+		addModel(source, new ReplaceOneModel<>(query.getQueryObject(), getMappedObject(source), replaceOptions));
 
 		return this;
 	}
@@ -315,7 +317,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(update, "Update must not be null");
 
-		UpdateOptions options = computeUpdateOptions(query, update, upsert);
+		UpdateOptions options = computeUpdateOptions(query, update, upsert, multi);
 
 		if (multi) {
 			addModel(update, new UpdateManyModel<>(query.getQueryObject(), update.getUpdateObject(), options));
