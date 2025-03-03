@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 package org.springframework.data.mongodb.core.query
 
 import org.bson.BsonRegularExpression
@@ -31,7 +32,7 @@ import kotlin.reflect.KProperty
  * @since 2.2
  * @see Criteria.isEqualTo
  */
-infix fun <T> KProperty<T>.isEqualTo(value: T) =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.isEqualTo(value: T) =
 		Criteria(this.toDotPath()).isEqualTo(value)
 
 /**
@@ -42,7 +43,7 @@ infix fun <T> KProperty<T>.isEqualTo(value: T) =
  * @since 2.2
  * @see Criteria.ne
  */
-infix fun <T> KProperty<T>.ne(value: T): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.ne(value: T): Criteria =
 		Criteria(this.toDotPath()).ne(value)
 
 /**
@@ -53,7 +54,7 @@ infix fun <T> KProperty<T>.ne(value: T): Criteria =
  * @since 2.2
  * @see Criteria.lt
  */
-infix fun <T> KProperty<T>.lt(value: Any): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.lt(value: Any): Criteria =
 	Criteria(this.toDotPath()).lt(value)
 
 /**
@@ -64,7 +65,7 @@ infix fun <T> KProperty<T>.lt(value: Any): Criteria =
  * @since 2.2
  * @see Criteria.lte
  */
-infix fun <T> KProperty<T>.lte(value: Any): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.lte(value: Any): Criteria =
 	Criteria(this.toDotPath()).lte(value)
 
 /**
@@ -75,7 +76,7 @@ infix fun <T> KProperty<T>.lte(value: Any): Criteria =
  * @since 2.2
  * @see Criteria.gt
  */
-infix fun <T> KProperty<T>.gt(value: Any): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.gt(value: Any): Criteria =
 	Criteria(this.toDotPath()).gt(value)
 
 /**
@@ -86,7 +87,7 @@ infix fun <T> KProperty<T>.gt(value: Any): Criteria =
  * @since 2.2
  * @see Criteria.gte
  */
-infix fun <T> KProperty<T>.gte(value: Any): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.gte(value: Any): Criteria =
 	Criteria(this.toDotPath()).gte(value)
 
 /**
@@ -97,7 +98,7 @@ infix fun <T> KProperty<T>.gte(value: Any): Criteria =
  * @since 2.2
  * @see Criteria.inValues
  */
-fun <T> KProperty<T>.inValues(vararg o: Any): Criteria =
+fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.inValues(vararg o: Any): Criteria =
 		Criteria(this.toDotPath()).`in`(*o)
 
 /**
@@ -108,7 +109,7 @@ fun <T> KProperty<T>.inValues(vararg o: Any): Criteria =
  * @since 2.2
  * @see Criteria.inValues
  */
-infix fun <T> KProperty<T>.inValues(value: Collection<T>): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.inValues(value: Collection<T>): Criteria =
 		Criteria(this.toDotPath()).`in`(value)
 
 /**
@@ -119,7 +120,7 @@ infix fun <T> KProperty<T>.inValues(value: Collection<T>): Criteria =
  * @since 2.2
  * @see Criteria.nin
  */
-fun <T> KProperty<T>.nin(vararg o: Any): Criteria =
+fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.nin(vararg o: Any): Criteria =
 		Criteria(this.toDotPath()).nin(*o)
 
 /**
@@ -130,7 +131,7 @@ fun <T> KProperty<T>.nin(vararg o: Any): Criteria =
  * @since 2.2
  * @see Criteria.nin
  */
-infix fun <T> KProperty<T>.nin(value: Collection<T>): Criteria =
+infix fun <@kotlin.internal.OnlyInputTypes T> KProperty<T>.nin(value: Collection<T>): Criteria =
 		Criteria(this.toDotPath()).nin(value)
 
 /**
