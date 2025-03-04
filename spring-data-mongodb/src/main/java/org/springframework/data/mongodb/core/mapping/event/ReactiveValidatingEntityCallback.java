@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,45 +18,52 @@ package org.springframework.data.mongodb.core.mapping.event;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
+import reactor.core.publisher.Mono;
 
 import java.util.Set;
 
 import org.bson.Document;
 
+import org.springframework.core.Ordered;
+
 /**
- * JSR-303 dependant entities validator.
+ * Reactive variant of JSR-303 dependant entities validator.
  * <p>
  * When it is registered as Spring component its automatically invoked after object to {@link Document} conversion and
  * before entities are saved to the database.
  *
- * @author Maciej Walkowiak
- * @author Oliver Gierke
- * @author Christoph Strobl
- * @deprecated since 4.5, use {@link ValidatingEntityCallback} respectively {@link ReactiveValidatingEntityCallback}
- *             instead to ensure ordering and interruption of saving when encountering validation constraint violations.
+ * @author Mark Paluch
+ * @author Rene Felgenträger
+ * @since 4.5
  */
-@Deprecated(since = "4.5")
-public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
+public class ReactiveValidatingEntityCallback implements ReactiveBeforeSaveCallback<Object>, Ordered {
 
 	private final BeanValidationDelegate delegate;
 
 	/**
-	 * Creates a new {@link ValidatingMongoEventListener} using the given {@link Validator}.
+	 * Creates a new {@link ReactiveValidatingEntityCallback} using the given {@link Validator}.
 	 *
 	 * @param validator must not be {@literal null}.
 	 */
-	public ValidatingMongoEventListener(Validator validator) {
+	public ReactiveValidatingEntityCallback(Validator validator) {
 		this.delegate = new BeanValidationDelegate(validator);
 	}
 
 	@Override
-	public void onBeforeSave(BeforeSaveEvent<Object> event) {
+	public Mono<Object> onBeforeSave(Object entity, Document document, String collection) {
 
-		Set<ConstraintViolation<Object>> violations = delegate.validate(event.getSource());
+		Set<ConstraintViolation<Object>> violations = delegate.validate(entity);
 
 		if (!violations.isEmpty()) {
-			throw new ConstraintViolationException(violations);
+			return Mono.error(new ConstraintViolationException(violations));
 		}
+
+		return Mono.just(entity);
+	}
+
+	@Override
+	public int getOrder() {
+		return 100;
 	}
 
 }

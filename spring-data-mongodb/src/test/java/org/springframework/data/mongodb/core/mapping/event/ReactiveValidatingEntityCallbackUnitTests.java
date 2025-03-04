@@ -15,32 +15,31 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.assertj.core.api.Assertions.*;
-
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import reactor.test.StepVerifier;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link ValidatingEntityCallback}.
+ * Unit tests for {@link ReactiveValidatingEntityCallback}.
  *
- * @author Rene Felgenträger
  * @author Mark Paluch
+ * @author Rene Felgenträger
  */
-class ValidatingEntityCallbackUnitTests {
+class ReactiveValidatingEntityCallbackUnitTests {
 
-	private ValidatingEntityCallback callback;
+	private ReactiveValidatingEntityCallback callback;
 
 	@BeforeEach
 	void setUp() {
 		try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-			callback = new ValidatingEntityCallback(factory.getValidator());
+			callback = new ReactiveValidatingEntityCallback(factory.getValidator());
 		}
 	}
 
@@ -49,18 +48,20 @@ class ValidatingEntityCallbackUnitTests {
 
 		Coordinates coordinates = new Coordinates(-1, -1);
 
-		assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(
-						() -> callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates"))
-				.satisfies(e -> assertThat(e.getConstraintViolations()).hasSize(2));
+		callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates") //
+				.as(StepVerifier::create) //
+				.verifyError(ConstraintViolationException.class);
 	}
 
 	@Test // GH-4910
 	void validateSuccessful() {
 
 		Coordinates coordinates = new Coordinates(0, 0);
-		Object entity = callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates");
 
-		assertThat(entity).isEqualTo(coordinates);
+		callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates") //
+				.as(StepVerifier::create) //
+				.expectNext(coordinates) //
+				.verifyComplete();
 	}
 
 	record Coordinates(@NotNull @Min(0) Integer x, @NotNull @Min(0) Integer y) {

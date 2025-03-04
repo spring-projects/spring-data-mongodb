@@ -104,3 +104,44 @@ Can modify the domain object, to be returned after save, `Document` containing a
 
 |===
 
+=== Bean Validation
+
+Spring Data MongoDB supports Bean Validation for MongoDB entities annotated with https://beanvalidation.org/[https://xxx][Jakarta Validation annotations].
+
+You can enable Bean Validation by registering `ValidatingEntityCallback` respectively `ReactiveValidatingEntityCallback` for reactive driver usage in your Spring `ApplicationContext` as shown in the following example:
+
+[tabs]
+======
+Imperative::
++
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+@Configuration
+class Config {
+
+  @Bean
+  public ValidatingEntityCallback validatingEntityCallback(Validator validator) {
+    return new ValidatingEntityCallback(validator);
+  }
+}
+----
+
+Reactive::
++
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+@Configuration
+class Config {
+
+  @Bean
+  public ReactiveValidatingEntityCallback validatingEntityCallback(Validator validator) {
+    return new ReactiveValidatingEntityCallback(validator);
+  }
+}
+----
+======
+
+If you're using both, imperative and reactive, then you can enable also both callbacks.
+
+NOTE: When using XML-based configuration, historically, `ValidatingMongoEventListener` is registered through our namespace handlers when configuring `<mongo:mapping-converter>`.
+If you want to use the newer Entity Callback variant, make sure to not use `<mongo:mapping-converter>`, otherwise you'll end up with both, the `ValidatingMongoEventListener` and the `ValidatingEntityCallback` being registered.
