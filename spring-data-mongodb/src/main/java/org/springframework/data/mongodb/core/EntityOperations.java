@@ -83,6 +83,7 @@ import com.mongodb.client.model.ValidationOptions;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Ben Foster
+ * @author Ross Lawley
  * @since 2.1
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
@@ -378,6 +379,7 @@ class EntityOperations {
 		collectionOptions.getChangeStreamOptions().ifPresent(it -> result
 				.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(it.getPreAndPostImages())));
 
+		collectionOptions.getEncryptedFields().ifPresent(result::encryptedFields);
 		return result;
 	}
 
