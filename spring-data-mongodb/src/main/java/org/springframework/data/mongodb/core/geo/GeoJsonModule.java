@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.geo;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +47,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  */
 public class GeoJsonModule extends SimpleModule {
 
+	@Serial
 	private static final long serialVersionUID = -8723016728655643720L;
 
 	public GeoJsonModule() {
