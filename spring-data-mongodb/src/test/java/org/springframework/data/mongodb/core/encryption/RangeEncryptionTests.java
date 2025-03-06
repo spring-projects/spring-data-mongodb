@@ -76,6 +76,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
+import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
@@ -353,12 +354,11 @@ class RangeEncryptionTests {
 	static class Person {
 
 		String id;
-//		@ExplicitEncrypted(algorithm = AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic)
 		String name;
 
-		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
+		@RangeEncrypted(contentionFactor = 0L,
 				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}") Integer encryptedInt;
-		@ExplicitEncrypted(algorithm = RANGE, contentionFactor = 0L,
+		@RangeEncrypted(contentionFactor = 0L,
 				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") Long encryptedLong;
 
 		public String getId() {
