@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.data.convert.ConverterBuilder.*;
+import static org.springframework.data.convert.ConverterBuilder.reading;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -47,7 +47,6 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -91,12 +90,9 @@ abstract class MongoConverters {
 
 		List<Object> converters = new ArrayList<>();
 
-		converters.add(BigDecimalToStringConverter.INSTANCE);
 		converters.add(BigDecimalToDecimal128Converter.INSTANCE);
-		converters.add(StringToBigDecimalConverter.INSTANCE);
 		converters.add(Decimal128ToBigDecimalConverter.INSTANCE);
-		converters.add(BigIntegerToStringConverter.INSTANCE);
-		converters.add(StringToBigIntegerConverter.INSTANCE);
+
 		converters.add(URLToStringConverter.INSTANCE);
 		converters.add(StringToURLConverter.INSTANCE);
 		converters.add(DocumentToStringConverter.INSTANCE);
@@ -111,6 +107,7 @@ abstract class MongoConverters {
 		converters.add(IntegerToAtomicIntegerConverter.INSTANCE);
 		converters.add(BinaryToByteArrayConverter.INSTANCE);
 		converters.add(BsonTimestampToInstantConverter.INSTANCE);
+		converters.add(NumberToNumberConverterFactory.INSTANCE);
 
 		converters.add(VectorToBsonArrayConverter.INSTANCE);
 		converters.add(ListToVectorConverter.INSTANCE);
@@ -212,6 +209,7 @@ abstract class MongoConverters {
 		}
 	}
 
+	@WritingConverter
 	enum BigIntegerToStringConverter implements Converter<BigInteger, String> {
 		INSTANCE;
 
@@ -220,6 +218,7 @@ abstract class MongoConverters {
 		}
 	}
 
+	@ReadingConverter
 	enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
 		INSTANCE;
 
@@ -413,6 +412,17 @@ abstract class MongoConverters {
 
 			@Override
 			public T convert(Number source) {
+
+				if (targetType == Decimal128.class) {
+
+					if (source instanceof BigDecimal bigDecimal) {
+						return targetType.cast(BigDecimalToDecimal128Converter.INSTANCE.convert(bigDecimal));
+					}
+
+					if (source instanceof BigInteger bigInteger) {
+						return targetType.cast(new Decimal128(bigInteger.longValueExact()));
+					}
+				}
 
 				if (source instanceof AtomicInteger atomicInteger) {
 					return NumberUtils.convertNumberToTargetClass(atomicInteger.get(), this.targetType);
