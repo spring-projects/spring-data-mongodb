@@ -103,3 +103,11 @@ class MyMongoConfiguration extends AbstractMongoClientConfiguration {
 	}
 }
 ----
+
+[[mongo.numeric-conversion]]
+== Big Number Format
+
+MongoDB in its early days did not have support for large numeric values such as `BigDecimal`.
+In order to persist values those types got converted into their `String` representation.
+Nowadays `org.bson.types.Decimal128` offers a native solution to storing big numbers.
+Next to influencing the to be stored numeric representation via the `@Field` annotation you can configure `MongoCustomConversions` to use `Decimal128` instead of `String` via the `MongoConverterConfigurationAdapter#numericFormat(...)` or set the `mongo.numeric.format=decimal128` property.

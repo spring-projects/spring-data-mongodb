@@ -47,6 +47,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -3360,7 +3361,47 @@ class MappingMongoConverterUnitTests {
 		converter.write(source, target);
 
 		assertThat(target.get("arrayOfPrimitiveBytes", byte[].class)).isSameAs(source.arrayOfPrimitiveBytes);
+	}
 
+	@Test // GH-3444
+	void convertsBigIntegerToDecimal128IfFieldTypeIndicatesConversion() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.bigInteger = BigInteger.valueOf(101);
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("bigInteger")).isEqualTo(new Decimal128(source.bigInteger.longValueExact()));
+	}
+
+	@Test // GH-3444
+	@SetSystemProperty(key = "mongo.numeric.format", value = "decimal128")
+	void usesConfiguredNumericFormat() {
+
+		MongoCustomConversions conversions = new MongoCustomConversions(
+			Arrays.asList(new ByteBufferToDoubleHolderConverter()));
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setApplicationContext(context);
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		mappingContext.afterPropertiesSet();
+
+		mappingContext.getPersistentEntity(Address.class);
+
+		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		BigDecimalContainer container = new BigDecimalContainer();
+		container.value = BigDecimal.valueOf(2.5d);
+		container.map = Collections.singletonMap("foo", container.value);
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(container, document);
+
+		assertThat(document.get("value")).isInstanceOf(Decimal128.class);
+		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(Decimal128.class);
 	}
 
 	org.bson.Document write(Object source) {
@@ -4016,6 +4057,9 @@ class MappingMongoConverterUnitTests {
 
 		@Field(targetType = FieldType.DECIMAL128) //
 		BigDecimal bigDecimal;
+
+		@Field(targetType = FieldType.DECIMAL128)
+		BigInteger bigInteger;
 
 		@Field(targetType = FieldType.INT64) //
 		Date dateAsLong;
