@@ -36,8 +36,6 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.PropertyValueConversions;
 import org.springframework.data.convert.PropertyValueConverter;
@@ -51,7 +49,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalT
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.lang.Nullable;
@@ -161,17 +158,11 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Set.of(LocalDate.class, LocalTime.class, LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private String numericFormat;
+		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.STRING;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
 		private PropertyValueConversions propertyValueConversions = internalValueConversion;
-
-		{
-			Environment env = new StandardEnvironment();
-			boolean flagPresent = env.containsProperty("mongo.numeric.format");
-			numericFormat = flagPresent ? env.getProperty("mongo.numeric.format", String.class, "string") : "string";
-		}
 
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
@@ -312,9 +303,18 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return useNativeDriverJavaTimeCodecs(false);
 		}
 
-		// TODO: might just be a flag like the time codec?
-		public MongoConverterConfigurationAdapter numericFormat(String format) {
-			this.numericFormat = format;
+		/**
+		 * Configures the representation to for {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in
+		 * MongoDB. Defaults to {@link BigDecimalRepresentation#STRING}.
+		 *
+		 * @param representation the representation to use.
+		 * @return this.
+		 * @since 4.5
+		 */
+		public MongoConverterConfigurationAdapter bigDecimal(BigDecimalRepresentation representation) {
+
+			Assert.notNull(representation, "BigDecimalDataType must not be null");
+			this.bigDecimals = representation;
 			return this;
 		}
 		/**
@@ -367,7 +367,9 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			}
 
 			List<Object> converters = new ArrayList<>(STORE_CONVERTERS.size() + 7);
-			if(numericFormat.equals("string")) {
+
+			if (bigDecimals == BigDecimalRepresentation.STRING) {
+
 				converters.add(BigDecimalToStringConverter.INSTANCE);
 				converters.add(StringToBigDecimalConverter.INSTANCE);
 				converters.add(BigIntegerToStringConverter.INSTANCE);
@@ -403,6 +405,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		@ReadingConverter
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {
+
 			INSTANCE;
 
 			@Override
@@ -434,5 +437,25 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private boolean hasDefaultPropertyValueConversions() {
 			return propertyValueConversions == internalValueConversion;
 		}
+
+	}
+
+	/**
+	 * Strategy to represent {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in MongoDB.
+	 *
+	 * @since 4.5
+	 */
+	public enum BigDecimalRepresentation {
+
+		/**
+		 * Store values as {@link Number#toString() String}. Using strings retains precision but does not support range
+		 * queries.
+		 */
+		STRING,
+
+		/**
+		 * Store numbers using {@link org.bson.types.Decimal128}. Requires MongoDB Server 3.4 or later.
+		 */
+		DECIMAL128
 	}
 }

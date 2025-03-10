@@ -165,13 +165,13 @@ calling `get()` before the actual conversion
 
 | `BigInteger`
 | converter +
-`String`
-| `{"value" : "741" }`
+`NumberDecimal`, `String`
+| `{"value" : NumberDecimal(741) }`, `{"value" : "741" }`
 
 | `BigDecimal`
 | converter +
-`String`
-| `{"value" : "741.99" }`
+`NumberDecimal`, `String`
+| `{"value" : NumberDecimal(741.99) }`, `{"value" : "741.99" }`
 
 | `URL`
 | converter

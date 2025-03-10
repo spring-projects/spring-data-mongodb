@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.data.convert.ConverterBuilder.reading;
+import static org.springframework.data.convert.ConverterBuilder.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -47,6 +47,7 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -92,6 +93,7 @@ abstract class MongoConverters {
 
 		converters.add(BigDecimalToDecimal128Converter.INSTANCE);
 		converters.add(Decimal128ToBigDecimalConverter.INSTANCE);
+		converters.add(BigIntegerToDecimal128Converter.INSTANCE);
 
 		converters.add(URLToStringConverter.INSTANCE);
 		converters.add(StringToURLConverter.INSTANCE);
@@ -187,6 +189,17 @@ abstract class MongoConverters {
 
 		public Decimal128 convert(BigDecimal source) {
 			return new Decimal128(source);
+		}
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	enum BigIntegerToDecimal128Converter implements Converter<BigInteger, Decimal128> {
+		INSTANCE;
+
+		public Decimal128 convert(BigInteger source) {
+			return new Decimal128(new BigDecimal(source));
 		}
 	}
 
@@ -412,17 +425,6 @@ abstract class MongoConverters {
 
 			@Override
 			public T convert(Number source) {
-
-				if (targetType == Decimal128.class) {
-
-					if (source instanceof BigDecimal bigDecimal) {
-						return targetType.cast(BigDecimalToDecimal128Converter.INSTANCE.convert(bigDecimal));
-					}
-
-					if (source instanceof BigInteger bigInteger) {
-						return targetType.cast(new Decimal128(bigInteger.longValueExact()));
-					}
-				}
 
 				if (source instanceof AtomicInteger atomicInteger) {
 					return NumberUtils.convertNumberToTargetClass(atomicInteger.get(), this.targetType);
