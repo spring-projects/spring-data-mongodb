@@ -16,9 +16,9 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static java.time.ZoneId.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.assertj.core.api.Assertions;
 import org.assertj.core.data.Percentage;
 import org.bson.BsonDouble;
 import org.bson.BsonUndefined;
@@ -47,7 +48,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junitpioneer.jupiter.SetSystemProperty;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -2552,8 +2552,11 @@ class MappingMongoConverterUnitTests {
 		assertThat(target) //
 				.containsEntry("address", new org.bson.Document("s", "1007 Mountain Drive").append("city", "Gotham")) //
 				.doesNotContainKey("street") //
+				.doesNotContainKey("city"); //
+
+		// use exact key matching, do not dive into nested documents
+		Assertions.assertThat(target) //
 				.doesNotContainKey("address.s") //
-				.doesNotContainKey("city") //
 				.doesNotContainKey("address.city");
 	}
 
@@ -3376,11 +3379,42 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // GH-3444
-	@SetSystemProperty(key = "mongo.numeric.format", value = "decimal128")
-	void usesConfiguredNumericFormat() {
+	void usesDecimal128NumericFormat() {
 
-		MongoCustomConversions conversions = new MongoCustomConversions(
-			Arrays.asList(new ByteBufferToDoubleHolderConverter()));
+		MappingMongoConverter converter = createConverter(MongoCustomConversions.BigDecimalRepresentation.DECIMAL128);
+
+		BigDecimalContainer container = new BigDecimalContainer();
+		container.value = BigDecimal.valueOf(2.5d);
+		container.map = Collections.singletonMap("foo", container.value);
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(container, document);
+
+		assertThat(document.get("value")).isInstanceOf(Decimal128.class);
+		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(Decimal128.class);
+	}
+
+	@Test // GH-3444
+	void usesStringNumericFormat() {
+
+		MappingMongoConverter converter = createConverter(MongoCustomConversions.BigDecimalRepresentation.STRING);
+
+		BigDecimalContainer container = new BigDecimalContainer();
+		container.value = BigDecimal.valueOf(2.5d);
+		container.map = Collections.singletonMap("foo", container.value);
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(container, document);
+
+		assertThat(document).containsEntry("value", "2.5");
+		assertThat(document).containsEntry("map.foo", "2.5");
+	}
+
+	private MappingMongoConverter createConverter(
+			MongoCustomConversions.BigDecimalRepresentation bigDecimalRepresentation) {
+
+		MongoCustomConversions conversions = MongoCustomConversions.create(
+				it -> it.registerConverter(new ByteBufferToDoubleHolderConverter()).bigDecimal(bigDecimalRepresentation));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
@@ -3393,15 +3427,7 @@ class MappingMongoConverterUnitTests {
 		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 
-		BigDecimalContainer container = new BigDecimalContainer();
-		container.value = BigDecimal.valueOf(2.5d);
-		container.map = Collections.singletonMap("foo", container.value);
-
-		org.bson.Document document = new org.bson.Document();
-		converter.write(container, document);
-
-		assertThat(document.get("value")).isInstanceOf(Decimal128.class);
-		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(Decimal128.class);
+		return converter;
 	}
 
 	org.bson.Document write(Object source) {

@@ -26,15 +26,16 @@ public class Payment {
 ----
 {
   "_id"   : ObjectId("5ca4a34fa264a01503b36af8"), <1>
-  "value" : NumberDecimal(2.099), <2>
-  "date"   : ISODate("2019-04-03T12:11:01.870Z") <3>
+  "value" : NumberDecimal(2.099),                 <2>
+  "date"  : ISODate("2019-04-03T12:11:01.870Z")   <3>
 }
 ----
 <1> String _id_ values that represent a valid `ObjectId` are converted automatically. See xref:mongodb/template-crud-operations.adoc#mongo-template.id-handling[How the `_id` Field is Handled in the Mapping Layer]
 for details.
-<2> The desired target type is explicitly defined as `Decimal128` which translates to `NumberDecimal`. Otherwise the
+<2> The desired target type is explicitly defined as `Decimal128` which translates to `NumberDecimal`.
+Otherwise, the
 `BigDecimal` value would have been truned into a `String`.
-<3> `Date` values are handled by the MongoDB driver itself an are stored as `ISODate`.
+<3> `Date` values are handled by the MongoDB driver itself are stored as `ISODate`.
 ====
 
 The snippet above is handy for providing simple type hints. To gain more fine-grained control over the mapping process,
@@ -108,6 +109,6 @@ class MyMongoConfiguration extends AbstractMongoClientConfiguration {
 == Big Number Format
 
 MongoDB in its early days did not have support for large numeric values such as `BigDecimal`.
-In order to persist values those types got converted into their `String` representation.
-Nowadays `org.bson.types.Decimal128` offers a native solution to storing big numbers.
-Next to influencing the to be stored numeric representation via the `@Field` annotation you can configure `MongoCustomConversions` to use `Decimal128` instead of `String` via the `MongoConverterConfigurationAdapter#numericFormat(...)` or set the `mongo.numeric.format=decimal128` property.
+To persist `BigDecimal` and `BigInteger` values, Spring Data MongoDB converted values their `String` representation.
+With MongoDB Server 3.4, `org.bson.types.Decimal128` offers a native representation for `BigDecimal` and `BigInteger`.
+You can use the to the native representation by either annotating your properties with `@Field(targetType=DECIMAL128)` or by configuring the big decimal representation in `MongoCustomConversions` through `MongoCustomConversions.create(config -> config.bigDecimal(…))`.
