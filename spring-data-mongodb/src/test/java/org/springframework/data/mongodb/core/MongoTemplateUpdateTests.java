@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.aggregation.ReplaceWithOperation;
 import org.springframework.data.mongodb.core.aggregation.SetOperation;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -324,6 +325,20 @@ class MongoTemplateUpdateTests {
 		assertThat(result.getModifiedCount()).isOne();
 		assertThat(collection(Book.class).find(new org.bson.Document("_id", two.id)).first()).containsEntry("title",
 			"Science is real!");
+	}
+
+	@Test // GH-4918
+	void updateShouldHonorVersionProvided() {
+
+		Versioned source = template.insert(Versioned.class).one(new Versioned("id-1", "value-0"));
+
+		Update update = new BasicUpdate("{ '$set' : { 'value' : 'changed' }, '$inc' : { 'version' : 10 } }");
+		template.update(Versioned.class).matching(Query.query(Criteria.where("id").is(source.id))).apply(update).first();
+
+		assertThat(
+			collection(Versioned.class).find(new org.bson.Document("_id", source.id)).limit(1).into(new ArrayList<>()))
+			.containsExactly(new org.bson.Document("_id", source.id).append("version", 10L).append("value", "changed")
+				.append("_class", "org.springframework.data.mongodb.core.MongoTemplateUpdateTests$Versioned"));
 	}
 
 	private List<org.bson.Document> all(Class<?> type) {

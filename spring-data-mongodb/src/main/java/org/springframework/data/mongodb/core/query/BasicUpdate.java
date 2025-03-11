@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.lang.Nullable;
@@ -44,7 +46,7 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update set(String key, @Nullable Object value) {
-		updateObject.put("$set", Collections.singletonMap(key, value));
+		setOperationValue("$set", key, value);
 		return this;
 	}
 
@@ -56,31 +58,44 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update inc(String key, Number inc) {
-		updateObject.put("$inc", Collections.singletonMap(key, inc));
+		setOperationValue("$inc", key, inc);
 		return this;
+	}
+
+	void setOperationValue(String operator, String key, Object value) {
+		if (!updateObject.containsKey(operator)) {
+			updateObject.put(operator, Collections.singletonMap(key, value));
+		} else {
+			Object o = updateObject.get(operator);
+			if (o instanceof Map<?, ?> existing) {
+				Map<Object, Object> target = new LinkedHashMap<>(existing);
+				target.put(key, value);
+				updateObject.put(operator, target);
+			}
+		}
 	}
 
 	@Override
 	public Update push(String key, @Nullable Object value) {
-		updateObject.put("$push", Collections.singletonMap(key, value));
+		setOperationValue("$push", key, value);
 		return this;
 	}
 
 	@Override
 	public Update addToSet(String key, @Nullable Object value) {
-		updateObject.put("$addToSet", Collections.singletonMap(key, value));
+		setOperationValue("$addToSet", key, value);
 		return this;
 	}
 
 	@Override
 	public Update pop(String key, Position pos) {
-		updateObject.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
+		setOperationValue("$pop", key, (pos == Position.FIRST ? -1 : 1));
 		return this;
 	}
 
 	@Override
 	public Update pull(String key, @Nullable Object value) {
-		updateObject.put("$pull", Collections.singletonMap(key, value));
+		setOperationValue("$pull", key, value);
 		return this;
 	}
 
@@ -94,8 +109,13 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update rename(String oldName, String newName) {
-		updateObject.put("$rename", Collections.singletonMap(oldName, newName));
+		setOperationValue("$rename", oldName, newName);
 		return this;
+	}
+
+	@Override
+	public boolean modifies(String key) {
+		return super.modifies(key) || Update.fromDocument(getUpdateObject()).modifies(key);
 	}
 
 	@Override
