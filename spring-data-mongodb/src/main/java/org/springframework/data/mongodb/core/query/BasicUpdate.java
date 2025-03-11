@@ -15,11 +15,14 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Thomas Risberg
@@ -44,63 +47,85 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update set(String key, @Nullable Object value) {
-		updateObject.put("$set", Collections.singletonMap(key, value));
+		setOperationValue("$set", key, value);
 		return this;
 	}
 
 	@Override
 	public Update unset(String key) {
-		updateObject.put("$unset", Collections.singletonMap(key, 1));
+		setOperationValue("$unset", key, 1);
 		return this;
 	}
 
 	@Override
 	public Update inc(String key, Number inc) {
-		updateObject.put("$inc", Collections.singletonMap(key, inc));
+		setOperationValue("$inc", key, inc);
 		return this;
 	}
 
 	@Override
 	public Update push(String key, @Nullable Object value) {
-		updateObject.put("$push", Collections.singletonMap(key, value));
+		setOperationValue("$push", key, value);
 		return this;
 	}
 
 	@Override
 	public Update addToSet(String key, @Nullable Object value) {
-		updateObject.put("$addToSet", Collections.singletonMap(key, value));
+		setOperationValue("$addToSet", key, value);
 		return this;
 	}
 
 	@Override
 	public Update pop(String key, Position pos) {
-		updateObject.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
+		setOperationValue("$pop", key, (pos == Position.FIRST ? -1 : 1));
 		return this;
 	}
 
 	@Override
 	public Update pull(String key, @Nullable Object value) {
-		updateObject.put("$pull", Collections.singletonMap(key, value));
+		setOperationValue("$pull", key, value);
 		return this;
 	}
 
 	@Override
 	public Update pullAll(String key, Object[] values) {
-		Document keyValue = new Document();
-		keyValue.put(key, Arrays.copyOf(values, values.length));
-		updateObject.put("$pullAll", keyValue);
+		setOperationValue("$pullAll", key, List.of(values));
 		return this;
 	}
 
 	@Override
 	public Update rename(String oldName, String newName) {
-		updateObject.put("$rename", Collections.singletonMap(oldName, newName));
+		setOperationValue("$rename", oldName, newName);
 		return this;
+	}
+
+	@Override
+	public boolean modifies(String key) {
+		return super.modifies(key) || Update.fromDocument(getUpdateObject()).modifies(key);
 	}
 
 	@Override
 	public Document getUpdateObject() {
 		return updateObject;
+	}
+
+	void setOperationValue(String operator, String key, Object value) {
+
+		if (!updateObject.containsKey(operator)) {
+			updateObject.put(operator, Collections.singletonMap(key, value));
+		} else {
+			Object existingValue = updateObject.get(operator);
+			if (existingValue instanceof Map<?, ?> existing) {
+				Map<Object, Object> target = new LinkedHashMap<>(existing);
+				target.put(key, value);
+				updateObject.put(operator, target);
+			} else {
+				throw new IllegalStateException(
+						"Cannot add ['%s' : { '%s' : ... }]. Operator already exists with value of type [%s] which is not suitable for appending"
+								.formatted(operator, key,
+										existingValue != null ? ClassUtils.getShortName(existingValue.getClass()) : "null"));
+			}
+		}
 	}
 
 }
