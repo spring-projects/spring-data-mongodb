@@ -1,6 +1,6 @@
 image:https://spring.io/badges/spring-data-mongodb/ga.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start] image:https://spring.io/badges/spring-data-mongodb/snapshot.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start]
 
-= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]] image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Develocity", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data MongoDB"]
+= Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Develocity", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data MongoDB"]
 
 The primary goal of the https://spring.io/projects/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
@@ -110,7 +110,6 @@ https://docs.spring.io/spring-data/mongodb/reference/[reference documentation], 
 If you are just starting out with Spring, try one of the https://spring.io/guides[guides].
 * If you are upgrading, check out the https://docs.spring.io/spring-data/mongodb/docs/current/changelog.txt[changelog] for "`new and noteworthy`" features.
 * Ask a question - we monitor https://stackoverflow.com[stackoverflow.com] for questions tagged with https://stackoverflow.com/tags/spring-data[`spring-data-mongodb`].
-You can also chat with the community on https://gitter.im/spring-projects/spring-data[Gitter].
 * Report bugs with Spring Data MongoDB at https://github.com/spring-projects/spring-data-mongodb/issues[github.com/spring-projects/spring-data-mongodb/issues].
 
 [[reporting-issues]]
