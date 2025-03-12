@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -27,12 +30,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.data.mongodb.core.query.Update.Position;
 
 /**
+ * Unit tests for {@link BasicUpdate}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class BasicUpdateUnitTests {
+class BasicUpdateUnitTests {
 
 	@Test // GH-4918
 	void setOperationValueShouldAppendsOpsCorrectly() {
@@ -80,8 +87,18 @@ public class BasicUpdateUnitTests {
 				.containsKey("%s.key-2".formatted(operator));
 	}
 
-	static Stream<Arguments> updateOpArgs() {
+	@Test // GH-4918
+	void shouldNotOverridePullAll() {
 
+		Document source = Document.parse("{ '$pullAll' : { 'key-1' : ['value-1'] } }");
+		Update update = new BasicUpdate(source).pullAll("key-1", new String[] { "value-2" }).pullAll("key-2",
+				new String[] { "value-3" });
+
+		assertThat(update.getUpdateObject()).containsEntry("$pullAll.key-1", Arrays.asList("value-1", "value-2"))
+				.containsEntry("$pullAll.key-2", List.of("value-3"));
+	}
+
+	static Stream<Arguments> updateOpArgs() {
 		return Stream.of( //
 				Arguments.of("$set", (Function<BasicUpdate, Update>) update -> update.set("key-2", "value-2")),
 				Arguments.of("$unset", (Function<BasicUpdate, Update>) update -> update.unset("key-2")),
