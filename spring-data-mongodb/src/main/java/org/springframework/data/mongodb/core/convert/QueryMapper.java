@@ -66,6 +66,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -274,6 +275,7 @@ public class QueryMapper {
 		return mapMetaAttributes(source, entity, MetaMapping.FORCE);
 	}
 
+	@SuppressWarnings("NullAway")
 	private Document mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity,
 			MetaMapping metaMapping) {
 
@@ -346,7 +348,7 @@ public class QueryMapper {
 	 * @param rawValue
 	 * @return
 	 */
-	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
+	protected Entry<String, @Nullable Object> getMappedObjectForField(Field field, @Nullable Object rawValue) {
 
 		String key = field.getMappedKey();
 		Object value;
@@ -410,7 +412,9 @@ public class QueryMapper {
 		}
 
 		if (keyword.isSample()) {
-			return exampleMapper.getMappedExample(keyword.getValue(), entity);
+
+			Example<?> example = keyword.getValue();
+			return exampleMapper.getMappedExample(example, entity != null ? entity : mappingContext.getRequiredPersistentEntity(example.getProbeType()));
 		}
 
 		if (keyword.isJsonSchema()) {
@@ -451,8 +455,8 @@ public class QueryMapper {
 	 * @param sourceValue the source object to be mapped
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	protected @Nullable Object getMappedValue(Field documentField, Object sourceValue) {
+	@SuppressWarnings("NullAway")
+	protected @Nullable Object getMappedValue(Field documentField, @Nullable Object sourceValue) {
 
 		Object value = applyFieldTargetTypeHintToValue(documentField, sourceValue);
 
@@ -489,6 +493,7 @@ public class QueryMapper {
 				&& documentField.getProperty().getOwner().isIdProperty(documentField.getProperty());
 	}
 
+	@SuppressWarnings("NullAway")
 	private Class<?> getIdTypeForField(Field documentField) {
 		return isIdField(documentField) ? documentField.getProperty().getFieldType() : ObjectId.class;
 	}
@@ -527,7 +532,7 @@ public class QueryMapper {
 		}
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
-		return entity.hasIdProperty()
+		return entity != null && entity.hasIdProperty()
 				&& (type.equals(DBRef.class) || entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
 	}
 
@@ -660,7 +665,7 @@ public class QueryMapper {
 		return createReferenceFor(source, property);
 	}
 
-	private @Nullable Object convertValue(Field documentField, Object sourceValue, Object value,
+	private @Nullable Object convertValue(Field documentField, @Nullable Object sourceValue, @Nullable Object value,
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter) {
 
 		MongoPersistentProperty property = documentField.getProperty();
@@ -828,6 +833,7 @@ public class QueryMapper {
 	 * @param candidate
 	 * @return
 	 */
+	@Contract("null -> false")
 	protected boolean isNestedKeyword(@Nullable Object candidate) {
 
 		if (!(candidate instanceof Document)) {

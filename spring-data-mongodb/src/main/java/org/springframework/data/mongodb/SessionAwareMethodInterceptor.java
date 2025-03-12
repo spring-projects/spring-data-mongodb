@@ -101,6 +101,7 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		if (requiresDecoration(methodInvocation.getMethod())) {
 
 			Object target = methodInvocation.proceed();
+			Assert.notNull(target, "invocation target was null");
 			if (target instanceof Proxy) {
 				return target;
 			}
