@@ -17,8 +17,8 @@ package org.springframework.data.mongodb;
 
 import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionSystemException;
@@ -318,8 +318,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public ReactiveMongoDatabaseFactory getDatabaseFactory() {
+	public @Nullable ReactiveMongoDatabaseFactory getDatabaseFactory() {
 		return databaseFactory;
 	}
 
@@ -470,8 +469,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 			}
 		}
 
-		@Nullable
-		public ClientSession getSession() {
+		public @Nullable ClientSession getSession() {
 			return resourceHolder != null ? resourceHolder.getSession() : null;
 		}
 

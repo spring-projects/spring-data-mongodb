@@ -20,9 +20,9 @@ import java.util.Arrays;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -55,7 +55,7 @@ public class BindableMongoExpression implements MongoExpression {
 
 	private final @Nullable CodecRegistryProvider codecRegistryProvider;
 
-	private final @Nullable Object[] args;
+	private final Object @Nullable[] args;
 
 	private final Lazy<Document> target;
 
@@ -65,7 +65,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @param expression must not be {@literal null}.
 	 * @param args can be {@literal null}.
 	 */
-	public BindableMongoExpression(String expression, @Nullable Object[] args) {
+	public BindableMongoExpression(String expression, Object @Nullable[] args) {
 		this(expression, null, args);
 	}
 
@@ -77,7 +77,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @param args can be {@literal null}.
 	 */
 	public BindableMongoExpression(String expression, @Nullable CodecRegistryProvider codecRegistryProvider,
-			@Nullable Object[] args) {
+			Object @Nullable[] args) {
 
 		Assert.notNull(expression, "Expression must not be null");
 

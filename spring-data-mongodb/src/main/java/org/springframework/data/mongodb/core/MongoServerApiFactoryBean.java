@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ServerApi;
@@ -59,9 +59,8 @@ public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 		this.strict = strict;
 	}
 
-	@Nullable
 	@Override
-	public ServerApi getObject() throws Exception {
+	public @Nullable ServerApi getObject() throws Exception {
 
 		Builder builder = ServerApi.builder().version(version());
 

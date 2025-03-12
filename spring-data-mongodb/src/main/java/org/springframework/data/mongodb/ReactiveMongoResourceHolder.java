@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.ResourceHolderSupport;
 
 import com.mongodb.reactivestreams.client.ClientSession;
@@ -103,8 +103,7 @@ class ReactiveMongoResourceHolder extends ResourceHolderSupport {
 	 * @param session
 	 * @return
 	 */
-	@Nullable
-	public ClientSession setSessionIfAbsent(@Nullable ClientSession session) {
+	public @Nullable ClientSession setSessionIfAbsent(@Nullable ClientSession session) {
 
 		if (!hasSession()) {
 			setSession(session);

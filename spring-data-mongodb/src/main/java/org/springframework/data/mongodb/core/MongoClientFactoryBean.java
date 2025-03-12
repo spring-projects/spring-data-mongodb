@@ -24,11 +24,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.bson.UuidRepresentation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.SpringDataMongoDB;
-import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -78,7 +78,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	 *
 	 * @param credential can be {@literal null}.
 	 */
-	public void setCredential(@Nullable MongoCredential[] credential) {
+	public void setCredential(MongoCredential @Nullable[] credential) {
 		this.credential = Arrays.asList(credential);
 	}
 
@@ -119,8 +119,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	}
 
 	@Override
-	@Nullable
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+	public @Nullable DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 

@@ -33,6 +33,7 @@ import org.bson.BsonRegularExpression;
 import org.bson.BsonType;
 import org.bson.Document;
 import org.bson.types.Binary;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -45,7 +46,6 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.util.RegexFlags;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -884,8 +884,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getKey()
 	 */
 	@Override
-	@Nullable
-	public String getKey() {
+	public @Nullable String getKey() {
 		return this.key;
 	}
 

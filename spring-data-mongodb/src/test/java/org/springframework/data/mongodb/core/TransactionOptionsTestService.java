@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -48,45 +48,38 @@ public class TransactionOptionsTestService<T> {
 		return saveFunction.apply(entity);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=available" })
-	public T availableReadConcernFind(Object id) {
+	public @Nullable T availableReadConcernFind(Object id) {
 		return findByIdFunction.apply(id);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=invalid" })
-	public T invalidReadConcernFind(Object id) {
+	public @Nullable T invalidReadConcernFind(Object id) {
 		return findByIdFunction.apply(id);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=${tx.read.concern}" })
-	public T environmentReadConcernFind(Object id) {
+	public @Nullable T environmentReadConcernFind(Object id) {
 		return findByIdFunction.apply(id);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readConcern=majority" })
-	public T majorityReadConcernFind(Object id) {
+	public @Nullable T majorityReadConcernFind(Object id) {
 		return findByIdFunction.apply(id);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readPreference=primaryPreferred" })
-	public T findFromPrimaryPreferredReplica(Object id) {
+	public @Nullable T findFromPrimaryPreferredReplica(Object id) {
 		return findByIdFunction.apply(id);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readPreference=invalid" })
-	public T findFromInvalidReplica(Object id) {
+	public @Nullable T findFromInvalidReplica(Object id) {
 		return findByIdFunction.apply(id);
 	}
 
-	@Nullable
 	@Transactional(transactionManager = "txManager", label = { "mongo:readPreference=primary" })
-	public T findFromPrimaryReplica(Object id) {
+	public @Nullable T findFromPrimaryReplica(Object id) {
 		return findByIdFunction.apply(id);
 	}
 

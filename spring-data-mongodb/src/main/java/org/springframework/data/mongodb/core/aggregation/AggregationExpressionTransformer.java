@@ -16,12 +16,12 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpressionTransformer.AggregationExpressionTransformationContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.spel.ExpressionNode;
 import org.springframework.data.mongodb.core.spel.ExpressionTransformationContextSupport;
 import org.springframework.data.mongodb.core.spel.ExpressionTransformer;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

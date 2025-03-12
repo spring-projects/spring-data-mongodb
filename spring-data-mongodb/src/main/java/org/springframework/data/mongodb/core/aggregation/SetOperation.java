@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.SetOperation.FieldAppender.ValueAppender;
-import org.springframework.lang.Nullable;
 
 /**
  * Adds new fields to documents. {@code $set} outputs documents that contain all existing fields from the input

@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Oliver Gierke

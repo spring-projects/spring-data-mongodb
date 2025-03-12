@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Thomas Risberg

@@ -18,12 +18,12 @@ package org.springframework.data.mongodb.util.json;
 import java.util.Collections;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -40,9 +40,8 @@ class EvaluationContextExpressionEvaluator implements ValueExpressionEvaluator {
 		this.expressionParser = expressionParser;
 	}
 
-	@Nullable
 	@Override
-	public <T> T evaluate(String expression) {
+	public <T> @Nullable T evaluate(String expression) {
 		return evaluateExpression(expression, Collections.emptyMap());
 	}
 

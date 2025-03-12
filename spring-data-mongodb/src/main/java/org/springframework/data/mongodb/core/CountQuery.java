@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.MetricConversion;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**

@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.util;
 
 import java.util.HashMap;
 
-import org.springframework.lang.Nullable;
-
 import com.mongodb.MongoException;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.yml}.
@@ -140,8 +140,7 @@ public final class MongoDbErrorCodes {
 		errorCodes.putAll(clientSessionCodes);
 	}
 
-	@Nullable
-	public static String getErrorDescription(@Nullable Integer errorCode) {
+	public static @Nullable String getErrorDescription(@Nullable Integer errorCode) {
 		return errorCode == null ? null : errorCodes.get(errorCode);
 	}
 

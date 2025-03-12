@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.mongodb.core.spel.ExpressionNode;
 import org.springframework.data.mongodb.core.spel.ExpressionTransformationContextSupport;
@@ -42,7 +43,6 @@ import org.springframework.expression.spel.ast.PropertyOrFieldReference;
 import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -322,9 +322,8 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		@Nullable
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
 			ExpressionNode currentNode = context.getCurrentNode();
 

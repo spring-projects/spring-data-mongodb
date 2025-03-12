@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.NonTransientDataAccessException;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link NonTransientDataAccessException} specific to MongoDB {@link com.mongodb.session.ClientSession} related data

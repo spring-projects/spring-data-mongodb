@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

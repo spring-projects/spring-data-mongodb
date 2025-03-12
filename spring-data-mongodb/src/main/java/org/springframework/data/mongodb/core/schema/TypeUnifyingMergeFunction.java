@@ -22,10 +22,10 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Path;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Resolution;
-import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -119,8 +119,7 @@ class TypeUnifyingMergeFunction implements BiFunction<Map<String, Object>, Map<S
 		return key;
 	}
 
-	@Nullable
-	private static Object getUnifiedExistingType(String key, Document source) {
+	private static @Nullable Object getUnifiedExistingType(String key, Document source) {
 		return source.get(getTypeKeyToUse(key, source));
 	}
 

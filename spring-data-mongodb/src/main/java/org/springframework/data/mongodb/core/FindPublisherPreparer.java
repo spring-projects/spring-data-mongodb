@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.function.Function;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ReadPreference;
@@ -76,8 +76,7 @@ public interface FindPublisherPreparer extends ReadPreferenceAware {
 	 * @since 2.2
 	 */
 	@Override
-	@Nullable
-	default ReadPreference getReadPreference() {
+	default @Nullable ReadPreference getReadPreference() {
 		return null;
 	}
 }

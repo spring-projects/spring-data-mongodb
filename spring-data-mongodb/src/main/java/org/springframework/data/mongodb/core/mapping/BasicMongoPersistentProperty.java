@@ -23,7 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.mapping.Association;
@@ -39,7 +39,6 @@ import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -153,8 +152,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return StringUtils.hasText(getAnnotatedFieldName());
 	}
 
-	@Nullable
-	private String getAnnotatedFieldName() {
+	private @Nullable String getAnnotatedFieldName() {
 
 		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
 				org.springframework.data.mongodb.core.mapping.Field.class);
@@ -197,9 +195,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return findAnnotation(DBRef.class);
 	}
 
-	@Nullable
 	@Override
-	public DocumentReference getDocumentReference() {
+	public @Nullable DocumentReference getDocumentReference() {
 		return findAnnotation(DocumentReference.class);
 	}
 

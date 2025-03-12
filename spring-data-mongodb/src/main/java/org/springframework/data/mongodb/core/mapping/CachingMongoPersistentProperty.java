@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link MongoPersistentProperty} caching access to {@link #isIdProperty()} and {@link #getFieldName()}.

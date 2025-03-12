@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -249,8 +249,7 @@ public class SetWindowFieldsOperation
 			return windowOperator;
 		}
 
-		@Nullable
-		public Window getWindow() {
+		public @Nullable Window getWindow() {
 			return window;
 		}
 	}

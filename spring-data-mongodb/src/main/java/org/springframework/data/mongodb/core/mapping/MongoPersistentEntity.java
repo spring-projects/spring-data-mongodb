@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.util.Collection;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.MutablePersistentEntity;
-import org.springframework.lang.Nullable;
 
 /**
  * MongoDB specific {@link PersistentEntity} abstraction.
@@ -68,8 +68,7 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 	 * @return {@literal null} if not set.
 	 * @since 2.2
 	 */
-	@Nullable
-	org.springframework.data.mongodb.core.query.Collation getCollation();
+	org.springframework.data.mongodb.core.query.@Nullable Collation getCollation();
 
 	/**
 	 * @return {@literal true} if the entity is annotated with

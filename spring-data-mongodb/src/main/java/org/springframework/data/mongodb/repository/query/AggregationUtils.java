@@ -22,7 +22,7 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
@@ -41,7 +41,6 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -166,8 +165,7 @@ abstract class AggregationUtils {
 	 * Prepares the AggregationPipeline including type discovery and calling {@link AggregationCallback} to run the
 	 * aggregation.
 	 */
-	@Nullable
-	static <T> T doAggregate(AggregationPipeline pipeline, MongoQueryMethod method, ResultProcessor processor,
+	static <T> @Nullable T doAggregate(AggregationPipeline pipeline, MongoQueryMethod method, ResultProcessor processor,
 			ConvertingParameterAccessor accessor,
 			Function<MongoParameterAccessor, ValueExpressionEvaluator> evaluatorFunction, AggregationCallback<T> callback) {
 
@@ -308,8 +306,7 @@ abstract class AggregationUtils {
 	 * @return can be {@literal null} if source {@link Document#isEmpty() is empty}.
 	 * @throws IllegalArgumentException when none of the above rules is met.
 	 */
-	@Nullable
-	static <T> T extractSimpleTypeResult(@Nullable Document source, Class<T> targetType, MongoConverter converter) {
+	static <T> @Nullable T extractSimpleTypeResult(@Nullable Document source, Class<T> targetType, MongoConverter converter) {
 
 		if (ObjectUtils.isEmpty(source)) {
 			return null;
@@ -336,9 +333,8 @@ abstract class AggregationUtils {
 				String.format("o_O no entry of type %s found in %s.", targetType.getSimpleName(), source.toJson()));
 	}
 
-	@Nullable
 	@SuppressWarnings("unchecked")
-	private static <T> T getPotentiallyConvertedSimpleTypeValue(MongoConverter converter, @Nullable Object value,
+	private static <T> @Nullable T getPotentiallyConvertedSimpleTypeValue(MongoConverter converter, @Nullable Object value,
 			Class<T> targetType) {
 
 		if (value == null) {

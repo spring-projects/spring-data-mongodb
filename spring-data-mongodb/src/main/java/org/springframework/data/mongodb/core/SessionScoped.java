@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import java.util.function.Consumer;
 
-import org.springframework.lang.Nullable;
-
 import com.mongodb.client.ClientSession;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a {@link SessionCallback}.
@@ -42,8 +42,7 @@ public interface SessionScoped {
 	 * @param <T> return type.
 	 * @return a result object returned by the action. Can be {@literal null}.
 	 */
-	@Nullable
-	default <T> T execute(SessionCallback<T> action) {
+	default <T> @Nullable T execute(SessionCallback<T> action) {
 		return execute(action, session -> {});
 	}
 
@@ -60,6 +59,5 @@ public interface SessionScoped {
 	 * @param <T> return type.
 	 * @return a result object returned by the action. Can be {@literal null}.
 	 */
-	@Nullable
-	<T> T execute(SessionCallback<T> action, Consumer<ClientSession> doFinally);
+	<T> @Nullable T execute(SessionCallback<T> action, Consumer<ClientSession> doFinally);
 }

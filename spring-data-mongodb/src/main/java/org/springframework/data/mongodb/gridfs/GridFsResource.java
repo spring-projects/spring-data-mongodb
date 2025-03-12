@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.MongoGridFSException;
@@ -157,8 +157,7 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
 	 * @since 2.2
 	 */
-	@Nullable
-	public GridFSFile getGridFSFile() {
+	public @Nullable GridFSFile getGridFSFile() {
 		return this.file;
 	}
 

@@ -17,11 +17,11 @@ package org.springframework.data.mongodb.aot;
 
 import java.util.function.Predicate;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReactiveWrappers.ReactiveLibrary;
 import org.springframework.data.util.TypeUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**

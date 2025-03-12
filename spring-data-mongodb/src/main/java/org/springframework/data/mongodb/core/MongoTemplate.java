@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -108,7 +108,6 @@ import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -800,15 +799,13 @@ public class MongoTemplate
 
 	// Find methods that take a Query to express the query and that return a single object.
 
-	@Nullable
 	@Override
-	public <T> T findOne(Query query, Class<T> entityClass) {
+	public <T> @Nullable T findOne(Query query, Class<T> entityClass) {
 		return findOne(query, entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
+	public <T> @Nullable T findOne(Query query, Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
@@ -912,15 +909,13 @@ public class MongoTemplate
 		return ScrollUtils.createWindow(result, query.getLimit(), OffsetScrollPosition.positionFunction(query.getSkip()));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findById(Object id, Class<T> entityClass) {
+	public <T> @Nullable T findById(Object id, Class<T> entityClass) {
 		return findById(id, entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findById(Object id, Class<T> entityClass, String collectionName) {
+	public <T> @Nullable T findById(Object id, Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(id, "Id must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
@@ -1048,27 +1043,23 @@ public class MongoTemplate
 		return new GeoResults<>(result, avgDistance);
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName) {
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, collectionName);
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass) {
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass) {
 		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -1135,15 +1126,13 @@ public class MongoTemplate
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
 	// collection in the database.
 
-	@Nullable
 	@Override
-	public <T> T findAndRemove(Query query, Class<T> entityClass) {
+	public <T> @Nullable T findAndRemove(Query query, Class<T> entityClass) {
 		return findAndRemove(query, entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
+	public <T> @Nullable T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
@@ -1301,15 +1290,13 @@ public class MongoTemplate
 	 * @param mongoAction any MongoAction already configured or null
 	 * @return The prepared WriteConcern or null
 	 */
-	@Nullable
-	protected WriteConcern prepareWriteConcern(MongoAction mongoAction) {
+	protected @Nullable WriteConcern prepareWriteConcern(MongoAction mongoAction) {
 
 		WriteConcern wc = writeConcernResolver.resolve(mongoAction);
 		return potentiallyForceAcknowledgedWrite(wc);
 	}
 
-	@Nullable
-	private WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
+	private @Nullable WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
@@ -2508,8 +2495,7 @@ public class MongoTemplate
 	 * @param entityClass the parameterized type of the returned list.
 	 * @return the converted object or {@literal null} if none exists.
 	 */
-	@Nullable
-	protected <T> T doFindOne(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+	protected <T> @Nullable T doFindOne(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			Document query, Document fields, Class<T> entityClass) {
 		return doFindOne(collectionName, collectionPreparer, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
 	}
@@ -2527,9 +2513,8 @@ public class MongoTemplate
 	 * @return the converted object or {@literal null} if none exists.
 	 * @since 2.2
 	 */
-	@Nullable
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindOne(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+	protected <T> @Nullable T doFindOne(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			Document query, Document fields, CursorPreparer preparer, Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
@@ -2765,9 +2750,8 @@ public class MongoTemplate
 	 * @return {@literal null} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 */
-	@Nullable
-	protected <T> T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
-			Document mappedFields, Document mappedSort, @Nullable com.mongodb.client.model.Collation collation,
+	protected <T> @Nullable T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
+			Document mappedFields, Document mappedSort, com.mongodb.client.model.@Nullable Collation collation,
 			Class<?> entityType, Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
@@ -2807,9 +2791,8 @@ public class MongoTemplate
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 * @since 3.4
 	 */
-	@Nullable
-	private <T> T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
-			Document mappedFields, Document mappedSort, @Nullable com.mongodb.client.model.Collation collation,
+	private <T> @Nullable T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName, Document mappedQuery,
+			Document mappedFields, Document mappedSort, com.mongodb.client.model.@Nullable Collation collation,
 			Class<?> entityType, Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2880,8 +2863,7 @@ public class MongoTemplate
 	 * @param collectionName the collection to be queried
 	 * @return
 	 */
-	@Nullable
-	private <T> T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
+	private <T> @Nullable T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
 			DocumentCallback<T> documentCallback, String collectionName) {
 
 		try {
@@ -2976,8 +2958,7 @@ public class MongoTemplate
 		return converter;
 	}
 
-	@Nullable
-	private Document getMappedSortObject(@Nullable Query query, Class<?> type) {
+	private @Nullable Document getMappedSortObject(@Nullable Query query, Class<?> type) {
 
 		if (query == null) {
 			return null;
@@ -2986,8 +2967,7 @@ public class MongoTemplate
 		return getMappedSortObject(query.getSortObject(), type);
 	}
 
-	@Nullable
-	private Document getMappedSortObject(Document sortObject, Class<?> type) {
+	private @Nullable Document getMappedSortObject(Document sortObject, Class<?> type) {
 
 		if (ObjectUtils.isEmpty(sortObject)) {
 			return null;
@@ -3063,10 +3043,10 @@ public class MongoTemplate
 		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
 		private final Document fields;
-		private final @Nullable com.mongodb.client.model.Collation collation;
+		private final com.mongodb.client.model.@Nullable Collation collation;
 
 		public FindCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, @Nullable com.mongodb.client.model.Collation collation) {
+				Document fields, com.mongodb.client.model.@Nullable Collation collation) {
 
 			Assert.notNull(query, "Query must not be null");
 			Assert.notNull(fields, "Fields must not be null");
@@ -3219,11 +3199,11 @@ public class MongoTemplate
 		private final Document fields;
 		private final Document sort;
 		private final Document update;
-		private final @Nullable com.mongodb.client.model.Collation collation;
+		private final com.mongodb.client.model.@Nullable Collation collation;
 		private final FindAndReplaceOptions options;
 
 		FindAndReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort, Document update, @Nullable com.mongodb.client.model.Collation collation,
+				Document fields, Document sort, Document update, com.mongodb.client.model.@Nullable Collation collation,
 				FindAndReplaceOptions options) {
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
@@ -3545,9 +3525,8 @@ public class MongoTemplate
 			}
 		}
 
-		@Nullable
 		@Override
-		public T next() {
+		public @Nullable T next() {
 
 			if (cursor == null) {
 				return null;

@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.gridfs;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -58,8 +58,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
 	 */
 	@Override
-	@Nullable
-	public ID getFileId() {
+	public @Nullable ID getFileId() {
 		return id;
 	}
 

@@ -20,9 +20,8 @@ import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -61,8 +60,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
 	 */
 	@Override
-	@Nullable
-	public ID getFileId() {
+	public @Nullable ID getFileId() {
 		return id;
 	}
 

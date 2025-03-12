@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.BeanNames.*;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -29,7 +30,6 @@ import org.springframework.data.auditing.config.IsNewAwareAuditingHandlerBeanDef
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 

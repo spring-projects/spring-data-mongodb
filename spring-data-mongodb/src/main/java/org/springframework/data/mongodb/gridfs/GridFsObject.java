@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.gridfs;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 

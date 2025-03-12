@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -26,7 +27,6 @@ import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -715,8 +715,7 @@ public class CollectionOptions {
 		 * @return can be {@literal null}. Might be an {@literal empty} {@link String} as well, so maybe check via
 		 *         {@link org.springframework.util.StringUtils#hasText(String)}.
 		 */
-		@Nullable
-		public String getMetaField() {
+		public @Nullable String getMetaField() {
 			return metaField;
 		}
 

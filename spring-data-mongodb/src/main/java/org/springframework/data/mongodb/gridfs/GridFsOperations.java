@@ -19,11 +19,11 @@ import java.io.InputStream;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsUpload.GridFsUploadBuilder;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -181,8 +181,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param query must not be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	com.mongodb.client.gridfs.model.GridFSFile findOne(Query query);
+	com.mongodb.client.gridfs.model.@Nullable GridFSFile findOne(Query query);
 
 	/**
 	 * Deletes all files matching the given {@link Query}.

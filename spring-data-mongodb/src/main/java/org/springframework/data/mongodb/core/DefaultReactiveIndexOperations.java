@@ -22,13 +22,13 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 
@@ -124,8 +124,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		}).then();
 	}
 
-	@Nullable
-	private MongoPersistentEntity<?> lookupPersistentEntity(String collection) {
+	private @Nullable MongoPersistentEntity<?> lookupPersistentEntity(String collection) {
 
 		Collection<? extends MongoPersistentEntity<?>> entities = queryMapper.getMappingContext().getPersistentEntities();
 

@@ -39,7 +39,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -94,7 +94,6 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.Predicates;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -599,8 +598,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	 * Reads the identifier from either the bean backing the {@link PersistentPropertyAccessor} or the source document in
 	 * case the identifier has not be populated yet. In this case the identifier is set on the bean for further reference.
 	 */
-	@Nullable
-	private Object readAndPopulateIdentifier(ConversionContext context, PersistentPropertyAccessor<?> accessor,
+	private @Nullable Object readAndPopulateIdentifier(ConversionContext context, PersistentPropertyAccessor<?> accessor,
 			DocumentAccessor document, MongoPersistentEntity<?> entity, ValueExpressionEvaluator evaluator) {
 
 		Object rawId = document.getRawId(entity);
@@ -684,8 +682,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				(prop, bson, e, path) -> MappingMongoConverter.this.getValueInternal(context, prop, bson, e));
 	}
 
-	@Nullable
-	private Object readAssociation(Association<MongoPersistentProperty> association, DocumentAccessor documentAccessor,
+	private @Nullable Object readAssociation(Association<MongoPersistentProperty> association, DocumentAccessor documentAccessor,
 			DbRefProxyHandler handler, DbRefResolverCallback callback, ConversionContext context) {
 
 		MongoPersistentProperty property = association.getInverse();
@@ -1332,15 +1329,13 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				property.hasExplicitWriteTarget() ? property.getFieldType() : Object.class));
 	}
 
-	@Nullable
 	@SuppressWarnings("unchecked")
-	private Object applyPropertyConversion(@Nullable Object value, MongoPersistentProperty property,
+	private @Nullable Object applyPropertyConversion(@Nullable Object value, MongoPersistentProperty property,
 			PersistentPropertyAccessor<?> persistentPropertyAccessor) {
 		MongoConversionContext context = new MongoConversionContext(new PropertyValueProvider<>() {
 
-			@Nullable
 			@Override
-			public <T> T getPropertyValue(MongoPersistentProperty property) {
+			public <T> @Nullable T getPropertyValue(MongoPersistentProperty property) {
 				return (T) persistentPropertyAccessor.getProperty(property);
 			}
 		}, property, this, spELContext);
@@ -1455,8 +1450,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		throw new MappingException("No id property found on class " + entity.getType());
 	}
 
-	@Nullable
-	private Object getValueInternal(ConversionContext context, MongoPersistentProperty prop, Bson bson,
+	private @Nullable Object getValueInternal(ConversionContext context, MongoPersistentProperty prop, Bson bson,
 			ValueExpressionEvaluator evaluator) {
 		return new MongoDbPropertyValueProvider(context, bson, evaluator).getPropertyValue(prop);
 	}
@@ -1714,9 +1708,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		return document;
 	}
 
-	@Nullable
 	@SuppressWarnings("unchecked")
-	<T> T readValue(ConversionContext context, @Nullable Object value, TypeInformation<?> type) {
+	<T> @Nullable T readValue(ConversionContext context, @Nullable Object value, TypeInformation<?> type) {
 
 		if (value == null) {
 			return null;
@@ -1735,8 +1728,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		return (T) context.convert(value, type);
 	}
 
-	@Nullable
-	private Object readDBRef(ConversionContext context, @Nullable DBRef dbref, TypeInformation<?> type) {
+	private @Nullable Object readDBRef(ConversionContext context, @Nullable DBRef dbref, TypeInformation<?> type) {
 
 		if (type.getType().equals(DBRef.class)) {
 			return dbref;
@@ -1971,9 +1963,8 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		@Nullable
 		@SuppressWarnings("unchecked")
-		public <T> T getPropertyValue(MongoPersistentProperty property) {
+		public <T> @Nullable T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
 			Object value = expression != null ? evaluator.evaluate(expression) : accessor.get(property);
@@ -2279,8 +2270,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		 * @return
 		 * @param <S>
 		 */
-		@Nullable
-		default <S> S findContextualEntity(MongoPersistentEntity<S> entity, Document document) {
+		default <S> @Nullable S findContextualEntity(MongoPersistentEntity<S> entity, Document document) {
 			return null;
 		}
 

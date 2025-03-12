@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
@@ -48,7 +48,6 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -126,8 +125,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param accessor for providing invocation arguments. Never {@literal null}.
 	 * @param typeToRead the desired component target type. Can be {@literal null}.
 	 */
-	@Nullable
-	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
+	protected @Nullable Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {
 
 		Query query = createQuery(accessor);

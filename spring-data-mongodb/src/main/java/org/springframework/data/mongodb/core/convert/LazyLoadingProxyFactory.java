@@ -30,6 +30,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.core.SpringNamingPolicy;
 import org.springframework.cglib.proxy.Callback;
@@ -43,7 +44,6 @@ import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.Lock;
 import org.springframework.data.util.Lock.AcquiredLock;
-import org.springframework.lang.Nullable;
 import org.springframework.objenesis.SpringObjenesis;
 import org.springframework.util.ReflectionUtils;
 
@@ -194,15 +194,13 @@ public final class LazyLoadingProxyFactory {
 		public static LazyLoadingInterceptor none() {
 
 			return new LazyLoadingInterceptor(null, null, null, null) {
-				@Nullable
 				@Override
-				public Object invoke(MethodInvocation invocation) throws Throwable {
+				public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
 					return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 				}
 
-				@Nullable
 				@Override
-				public Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+				public @Nullable Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 
 					ReflectionUtils.makeAccessible(method);
 					return method.invoke(o, args);
@@ -219,15 +217,13 @@ public final class LazyLoadingProxyFactory {
 			this.exceptionTranslator = exceptionTranslator;
 		}
 
-		@Nullable
 		@Override
-		public Object invoke(MethodInvocation invocation) throws Throwable {
+		public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
-		@Nullable
 		@Override
-		public Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+		public @Nullable Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 
 			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();
@@ -347,8 +343,7 @@ public final class LazyLoadingProxyFactory {
 			}
 		}
 
-		@Nullable
-		private Object resolve() {
+		private @Nullable Object resolve() {
 
 			try (AcquiredLock l = readLock.lock()) {
 				if (resolved) {

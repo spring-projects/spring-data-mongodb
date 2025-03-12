@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
@@ -61,7 +62,6 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -520,8 +520,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
-	@Nullable
-	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
+	protected @Nullable IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
 		Indexed index = persistentProperty.findAnnotation(Indexed.class);
@@ -692,8 +691,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
-	@Nullable
-	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
+	protected @Nullable IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
 		GeoSpatialIndexed index = persistentProperty.findAnnotation(GeoSpatialIndexed.class);
@@ -812,8 +810,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @return the collation present on either the annotation or the entity as a fallback. Might be {@literal null}.
 	 * @since 4.0
 	 */
-	@Nullable
-	private Collation resolveCollation(Annotation annotation, @Nullable PersistentEntity<?, ?> entity) {
+	private @Nullable Collation resolveCollation(Annotation annotation, @Nullable PersistentEntity<?, ?> entity) {
 		return MergedAnnotation.from(annotation).getValue("collation", String.class).filter(StringUtils::hasText)
 				.map(it -> evaluateCollation(it, entity)).orElseGet(() -> {
 
@@ -1138,8 +1135,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return strategy;
 		}
 
-		@Nullable
-		public TextIndexedFieldSpec getParentFieldSpec() {
+		public @Nullable TextIndexedFieldSpec getParentFieldSpec() {
 			return parentFieldSpec;
 		}
 

@@ -27,9 +27,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -210,8 +210,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	protected String generateDescription() {
+	protected @Nullable String generateDescription() {
 		return null;
 	}
 

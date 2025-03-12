@@ -19,9 +19,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
-import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.Version;
@@ -139,9 +138,8 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static abstract class GeoJsonDeserializer<T extends GeoJson<?>> extends JsonDeserializer<T> {
 
-		@Nullable
 		@Override
-		public T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt) throws IOException {
+		public @Nullable T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt) throws IOException {
 
 			JsonNode node = jp.readValueAsTree();
 			JsonNode coordinates = node.get("coordinates");
@@ -158,8 +156,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * @param coordinates
 		 * @return
 		 */
-		@Nullable
-		protected abstract T doDeserialize(ArrayNode coordinates);
+		protected abstract @Nullable T doDeserialize(ArrayNode coordinates);
 
 		/**
 		 * Get the {@link GeoJsonPoint} representation of given {@link ArrayNode} assuming {@code node.[0]} represents
@@ -168,8 +165,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * @param node can be {@literal null}.
 		 * @return {@literal null} when given a {@code null} value.
 		 */
-		@Nullable
-		protected GeoJsonPoint toGeoJsonPoint(@Nullable ArrayNode node) {
+		protected @Nullable GeoJsonPoint toGeoJsonPoint(@Nullable ArrayNode node) {
 
 			if (node == null) {
 				return null;
@@ -185,8 +181,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * @param node can be {@literal null}.
 		 * @return {@literal null} when given a {@code null} value.
 		 */
-		@Nullable
-		protected Point toPoint(@Nullable ArrayNode node) {
+		protected @Nullable Point toPoint(@Nullable ArrayNode node) {
 
 			if (node == null) {
 				return null;
@@ -236,9 +231,8 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonPointDeserializer extends GeoJsonDeserializer<GeoJsonPoint> {
 
-		@Nullable
 		@Override
-		protected GeoJsonPoint doDeserialize(ArrayNode coordinates) {
+		protected @Nullable GeoJsonPoint doDeserialize(ArrayNode coordinates) {
 			return toGeoJsonPoint(coordinates);
 		}
 	}

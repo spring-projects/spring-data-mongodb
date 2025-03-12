@@ -19,10 +19,10 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.WriteConcernAware;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -43,27 +43,23 @@ public interface MongoTransactionOptions
 	 */
 	MongoTransactionOptions NONE = new MongoTransactionOptions() {
 
-		@Nullable
 		@Override
-		public Duration getMaxCommitTime() {
+		public @Nullable Duration getMaxCommitTime() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public ReadConcern getReadConcern() {
+		public @Nullable ReadConcern getReadConcern() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public ReadPreference getReadPreference() {
+		public @Nullable ReadPreference getReadPreference() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public WriteConcern getWriteConcern() {
+		public @Nullable WriteConcern getWriteConcern() {
 			return null;
 		}
 	};
@@ -84,16 +80,14 @@ public interface MongoTransactionOptions
 
 		return new MongoTransactionOptions() {
 
-			@Nullable
 			@Override
-			public Duration getMaxCommitTime() {
+			public @Nullable Duration getMaxCommitTime() {
 				return MongoTransactionOptions.this.hasMaxCommitTime() ? MongoTransactionOptions.this.getMaxCommitTime()
 						: fallbackOptions.getMaxCommitTime();
 			}
 
-			@Nullable
 			@Override
-			public ReadConcern getReadConcern() {
+			public @Nullable ReadConcern getReadConcern() {
 				return MongoTransactionOptions.this.hasReadConcern() ? MongoTransactionOptions.this.getReadConcern()
 						: fallbackOptions.getReadConcern();
 			}
@@ -105,9 +99,8 @@ public interface MongoTransactionOptions
 						: fallbackOptions.getReadPreference();
 			}
 
-			@Nullable
 			@Override
-			public WriteConcern getWriteConcern() {
+			public @Nullable WriteConcern getWriteConcern() {
 				return MongoTransactionOptions.this.hasWriteConcern() ? MongoTransactionOptions.this.getWriteConcern()
 						: fallbackOptions.getWriteConcern();
 			}
@@ -168,35 +161,30 @@ public interface MongoTransactionOptions
 
 		return new MongoTransactionOptions() {
 
-			@Nullable
 			@Override
-			public Duration getMaxCommitTime() {
+			public @Nullable Duration getMaxCommitTime() {
 
 				Long millis = options.getMaxCommitTime(TimeUnit.MILLISECONDS);
 				return millis != null ? Duration.ofMillis(millis) : null;
 			}
 
-			@Nullable
 			@Override
-			public ReadConcern getReadConcern() {
+			public @Nullable ReadConcern getReadConcern() {
 				return options.getReadConcern();
 			}
 
-			@Nullable
 			@Override
-			public ReadPreference getReadPreference() {
+			public @Nullable ReadPreference getReadPreference() {
 				return options.getReadPreference();
 			}
 
-			@Nullable
 			@Override
-			public WriteConcern getWriteConcern() {
+			public @Nullable WriteConcern getWriteConcern() {
 				return options.getWriteConcern();
 			}
 
-			@Nullable
 			@Override
-			public TransactionOptions toDriverOptions() {
+			public @Nullable TransactionOptions toDriverOptions() {
 				return options;
 			}
 		};

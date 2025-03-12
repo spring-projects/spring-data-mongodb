@@ -20,10 +20,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
