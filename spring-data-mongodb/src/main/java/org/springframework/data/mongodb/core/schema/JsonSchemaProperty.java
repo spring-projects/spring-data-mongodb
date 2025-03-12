@@ -17,10 +17,10 @@ package org.springframework.data.mongodb.core.schema;
 
 import java.util.Collection;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.*;
-import org.springframework.lang.Nullable;
 
 /**
  * A {@literal property} or {@literal patternProperty} within a {@link JsonSchemaObject} of {@code type : 'object'}.

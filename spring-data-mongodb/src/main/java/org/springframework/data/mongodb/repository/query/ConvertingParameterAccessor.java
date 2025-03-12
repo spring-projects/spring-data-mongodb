@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -35,7 +36,6 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -130,8 +130,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @param typeInformation can be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	private Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
+	private @Nullable Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
 		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
 	}
 

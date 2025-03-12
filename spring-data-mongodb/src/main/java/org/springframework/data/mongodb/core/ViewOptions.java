@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.lang.Nullable;
 
 /**
  * Immutable object holding additional options to be applied when creating a MongoDB

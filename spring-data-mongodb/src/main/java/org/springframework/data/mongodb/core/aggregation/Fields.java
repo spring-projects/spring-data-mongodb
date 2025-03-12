@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -172,8 +172,7 @@ public final class Fields implements Iterable<Field> {
 		return fields.size();
 	}
 
-	@Nullable
-	public Field getField(String name) {
+	public @Nullable Field getField(String name) {
 
 		for (Field field : fields) {
 			if (field.getName().equals(name)) {

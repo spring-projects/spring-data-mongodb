@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -49,7 +50,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.Lock;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -1047,8 +1047,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
-	@Nullable
-	default <T> T findAndReplace(Query query, T replacement) {
+	default <T> @Nullable T findAndReplace(Query query, T replacement) {
 		return findAndReplace(query, replacement, FindAndReplaceOptions.empty());
 	}
 
@@ -1067,8 +1066,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found.
 	 * @since 2.1
 	 */
-	@Nullable
-	default <T> T findAndReplace(Query query, T replacement, String collectionName) {
+	default <T> @Nullable T findAndReplace(Query query, T replacement, String collectionName) {
 		return findAndReplace(query, replacement, FindAndReplaceOptions.empty(), collectionName);
 	}
 
@@ -1090,8 +1088,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
-	@Nullable
-	default <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
+	default <T> @Nullable T findAndReplace(Query query, T replacement, FindAndReplaceOptions options) {
 		return findAndReplace(query, replacement, options, getCollectionName(ClassUtils.getUserClass(replacement)));
 	}
 
@@ -1111,8 +1108,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	@Nullable
-	default <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
+	default <T> @Nullable T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
 
 		Assert.notNull(replacement, "Replacement must not be null");
 		return findAndReplace(query, replacement, options, (Class<T>) ClassUtils.getUserClass(replacement), collectionName);
@@ -1136,8 +1132,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	@Nullable
-	default <T> T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityType,
+	default <T> @Nullable T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, Class<T> entityType,
 			String collectionName) {
 
 		return findAndReplace(query, replacement, options, entityType, collectionName, entityType);
@@ -1165,8 +1160,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
-	@Nullable
-	default <S, T> T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+	default <S, T> @Nullable T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
 			Class<T> resultType) {
 
 		return findAndReplace(query, replacement, options, entityType,

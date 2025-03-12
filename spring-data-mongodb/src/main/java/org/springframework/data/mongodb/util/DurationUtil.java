@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.util;
 import java.time.Duration;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.env.Environment;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.expression.ValueExpression;
@@ -25,7 +26,6 @@ import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.format.datetime.standard.DurationFormatterUtils;
-import org.springframework.lang.Nullable;
 
 /**
  * Helper to evaluate Duration from expressions.
@@ -70,15 +70,13 @@ public class DurationUtil {
 	public static Duration evaluate(String value, Supplier<EvaluationContext> evaluationContext) {
 
 		return evaluate(value, new ValueEvaluationContext() {
-			@Nullable
 			@Override
-			public Environment getEnvironment() {
+			public @Nullable Environment getEnvironment() {
 				return null;
 			}
 
-			@Nullable
 			@Override
-			public EvaluationContext getEvaluationContext() {
+			public @Nullable EvaluationContext getEvaluationContext() {
 				return evaluationContext.get();
 			}
 		});

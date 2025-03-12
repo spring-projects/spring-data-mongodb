@@ -16,9 +16,10 @@
 package org.springframework.data.mongodb;
 
 import reactor.core.publisher.Mono;
+
+import org.jspecify.annotations.Nullable;
 import reactor.util.context.Context;
 
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.reactive.ReactiveResourceSynchronization;
 import org.springframework.transaction.reactive.TransactionSynchronization;

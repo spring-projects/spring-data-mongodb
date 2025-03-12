@@ -18,10 +18,10 @@ package org.springframework.data.mongodb.core.messaging;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions.TailableCursorRequestOptionsBuilder;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The source object to resolve document references upon. Encapsulates the actual source and the reference specific
@@ -56,8 +56,7 @@ public class DocumentReferenceSource {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Object getTargetSource() {
+	public @Nullable Object getTargetSource() {
 		return targetSource;
 	}
 
@@ -67,8 +66,7 @@ public class DocumentReferenceSource {
 	 * @param source
 	 * @return
 	 */
-	@Nullable
-	static Object getTargetSource(Object source) {
+	static @Nullable Object getTargetSource(Object source) {
 		return source instanceof DocumentReferenceSource referenceSource ? referenceSource.getTargetSource() : source;
 	}
 

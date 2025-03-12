@@ -25,8 +25,7 @@ import java.util.Set;
 
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
-
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
@@ -92,8 +91,7 @@ public class MongoHandlerContext extends SenderContext<Object> {
 		return commandStartedEvent.getCommandName();
 	}
 
-	@Nullable
-	public ConnectionString getConnectionString() {
+	public @Nullable ConnectionString getConnectionString() {
 		return connectionString;
 	}
 
@@ -135,8 +133,7 @@ public class MongoHandlerContext extends SenderContext<Object> {
 	 *
 	 * @return trimmed string from {@code bsonValue} or null if the trimmed string was empty or the value wasn't a string
 	 */
-	@Nullable
-	private static String getNonEmptyBsonString(@Nullable BsonValue bsonValue) {
+	private static @Nullable String getNonEmptyBsonString(@Nullable BsonValue bsonValue) {
 
 		if (bsonValue == null || !bsonValue.isString()) {
 			return null;

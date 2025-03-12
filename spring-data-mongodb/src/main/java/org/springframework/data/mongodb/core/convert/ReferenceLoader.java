@@ -20,9 +20,9 @@ import java.util.Iterator;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
 import org.springframework.data.mongodb.core.mapping.FieldName;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.client.MongoCollection;
 
@@ -42,8 +42,7 @@ public interface ReferenceLoader {
 	 * @param context must not be {@literal null}.
 	 * @return the matching {@link Document} or {@literal null} if none found.
 	 */
-	@Nullable
-	default Document fetchOne(DocumentReferenceQuery referenceQuery, ReferenceCollection context) {
+	default @Nullable Document fetchOne(DocumentReferenceQuery referenceQuery, ReferenceCollection context) {
 
 		Iterator<Document> it = fetchMany(referenceQuery, context).iterator();
 		return it.hasNext() ? it.next() : null;

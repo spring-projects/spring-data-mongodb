@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.bson.BsonDocument;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.MongoClientSettings;

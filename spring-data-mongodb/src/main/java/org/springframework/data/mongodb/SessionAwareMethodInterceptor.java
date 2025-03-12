@@ -22,8 +22,8 @@ import java.util.function.BiFunction;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodClassKey;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -95,9 +95,8 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		this.sessionType = sessionType;
 	}
 
-	@Nullable
 	@Override
-	public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+	public @Nullable Object invoke(MethodInvocation methodInvocation) throws Throwable {
 
 		if (requiresDecoration(methodInvocation.getMethod())) {
 

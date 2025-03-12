@@ -22,12 +22,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

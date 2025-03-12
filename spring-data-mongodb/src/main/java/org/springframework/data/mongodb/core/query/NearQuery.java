@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Arrays;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.CustomMetric;
 import org.springframework.data.geo.Distance;
@@ -27,7 +28,6 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -428,8 +428,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 *
 	 * @return
 	 */
-	@Nullable
-	public Distance getMaxDistance() {
+	public @Nullable Distance getMaxDistance() {
 		return this.maxDistance;
 	}
 
@@ -439,8 +438,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return
 	 * @since 1.7
 	 */
-	@Nullable
-	public Distance getMinDistance() {
+	public @Nullable Distance getMinDistance() {
 		return this.minDistance;
 	}
 
@@ -546,8 +544,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	/**
 	 * @return the number of elements to skip.
 	 */
-	@Nullable
-	public Long getSkip() {
+	public @Nullable Long getSkip() {
 		return skip;
 	}
 
@@ -557,8 +554,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return the {@link Collation} if set. {@literal null} otherwise.
 	 * @since 2.2
 	 */
-	@Nullable
-	public Collation getCollation() {
+	public @Nullable Collation getCollation() {
 		return query != null ? query.getCollation().orElse(null) : null;
 	}
 
@@ -620,9 +616,8 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @since 4.1
 	 * @see ReadPreferenceAware
 	 */
-	@Nullable
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 
 		if (query != null && query.hasReadPreference()) {
 			return query.getReadPreference();

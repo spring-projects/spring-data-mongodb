@@ -44,6 +44,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
@@ -121,7 +122,6 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -2659,8 +2659,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see #setWriteConcern(WriteConcern)
 	 * @see #setWriteConcernResolver(WriteConcernResolver)
 	 */
-	@Nullable
-	protected WriteConcern prepareWriteConcern(MongoAction mongoAction) {
+	protected @Nullable WriteConcern prepareWriteConcern(MongoAction mongoAction) {
 
 		WriteConcern wc = writeConcernResolver.resolve(mongoAction);
 		return potentiallyForceAcknowledgedWrite(wc);
@@ -2764,8 +2763,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return resolved == null ? ex : resolved;
 	}
 
-	@Nullable
-	private MongoPersistentEntity<?> getPersistentEntity(@Nullable Class<?> type) {
+	private @Nullable MongoPersistentEntity<?> getPersistentEntity(@Nullable Class<?> type) {
 		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
@@ -2785,8 +2783,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return converter;
 	}
 
-	@Nullable
-	private Document getMappedSortObject(Query query, Class<?> type) {
+	private @Nullable Document getMappedSortObject(Query query, Class<?> type) {
 
 		if (query == null) {
 			return null;
@@ -2795,8 +2792,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return getMappedSortObject(query.getSortObject(), type);
 	}
 
-	@Nullable
-	private Document getMappedSortObject(Document sortObject, Class<?> type) {
+	private @Nullable Document getMappedSortObject(Document sortObject, Class<?> type) {
 
 		if (ObjectUtils.isEmpty(sortObject)) {
 			return null;
@@ -3009,7 +3005,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Document fields;
 		private final Document sort;
 		private final Document update;
-		private final @Nullable com.mongodb.client.model.Collation collation;
+		private final com.mongodb.client.model.@Nullable Collation collation;
 		private final FindAndReplaceOptions options;
 
 		FindAndReplaceCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,

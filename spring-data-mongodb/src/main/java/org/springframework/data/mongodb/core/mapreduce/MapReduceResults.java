@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -71,13 +71,11 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return mapReduceCounts;
 	}
 
-	@Nullable
-	public String getOutputCollection() {
+	public @Nullable String getOutputCollection() {
 		return outputCollection;
 	}
 
-	@Nullable
-	public Document getRawResults() {
+	public @Nullable Document getRawResults() {
 		return rawResults;
 	}
 

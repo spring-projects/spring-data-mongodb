@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**

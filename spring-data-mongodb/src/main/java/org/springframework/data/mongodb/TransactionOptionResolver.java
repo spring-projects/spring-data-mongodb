@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.TransactionDefinition;
 
 /**

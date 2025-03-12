@@ -20,8 +20,8 @@ import java.net.InetSocketAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -174,8 +174,7 @@ public class MongoCompatibilityAdapter {
 	}
 
 	public interface ClientSettingsAdapter {
-		@Nullable
-		<T> T getStreamFactoryFactory();
+		<T> @Nullable T getStreamFactoryFactory();
 	}
 
 	public interface ClientSettingsBuilderAdapter {
@@ -202,11 +201,9 @@ public class MongoCompatibilityAdapter {
 	@SuppressWarnings({ "unchecked", "DataFlowIssue" })
 	public static class MongoDatabaseAdapter {
 
-		@Nullable //
-		private static final Method LIST_COLLECTION_NAMES_METHOD;
+		private static final @Nullable Method LIST_COLLECTION_NAMES_METHOD;
 
-		@Nullable //
-		private static final Method LIST_COLLECTION_NAMES_METHOD_SESSION;
+		private static final @Nullable Method LIST_COLLECTION_NAMES_METHOD_SESSION;
 
 		private static final Class<?> collectionNamesReturnType;
 
@@ -271,11 +268,9 @@ public class MongoCompatibilityAdapter {
 	@SuppressWarnings({ "unchecked", "DataFlowIssue" })
 	public static class ReactiveMongoDatabaseAdapter {
 
-		@Nullable //
-		private static final Method LIST_COLLECTION_NAMES_METHOD;
+		private static final @Nullable Method LIST_COLLECTION_NAMES_METHOD;
 
-		@Nullable //
-		private static final Method LIST_COLLECTION_NAMES_METHOD_SESSION;
+		private static final @Nullable Method LIST_COLLECTION_NAMES_METHOD_SESSION;
 
 		private static final Class<?> collectionNamesReturnType;
 

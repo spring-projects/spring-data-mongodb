@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.spel;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -67,8 +67,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 *
 	 * @return
 	 */
-	@Nullable
-	public ExpressionNode getParentNode() {
+	public @Nullable ExpressionNode getParentNode() {
 		return parentNode;
 	}
 
@@ -81,8 +80,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @see #addToPreviousOrReturn(Object)
 	 * @return
 	 */
-	@Nullable
-	public Document getPreviousOperationObject() {
+	public @Nullable Document getPreviousOperationObject() {
 		return previousOperationObject;
 	}
 

@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.OffsetScrollPosition;
@@ -42,7 +43,6 @@ import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ReadConcern;
@@ -349,8 +349,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 		return keysetScrollPosition != null;
 	}
 
-	@Nullable
-	public KeysetScrollPosition getKeyset() {
+	public @Nullable KeysetScrollPosition getKeyset() {
 		return keysetScrollPosition;
 	}
 

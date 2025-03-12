@@ -20,12 +20,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
-import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -55,8 +54,7 @@ abstract class CollationUtils {
 	 * @return can be {@literal null} if neither {@link ConvertingParameterAccessor#getCollation()} nor
 	 *         {@literal collationExpression} are present.
 	 */
-	@Nullable
-	static Collation computeCollation(@Nullable String collationExpression, ConvertingParameterAccessor accessor,
+	static @Nullable Collation computeCollation(@Nullable String collationExpression, ConvertingParameterAccessor accessor,
 			ValueExpressionEvaluator expressionEvaluator) {
 
 		if (accessor.getCollation() != null) {

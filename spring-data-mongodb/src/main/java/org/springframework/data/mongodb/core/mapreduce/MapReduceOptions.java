@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.client.model.MapReduceAction;
 
@@ -231,13 +231,11 @@ public class MapReduceOptions {
 		return this.finalizeFunction;
 	}
 
-	@Nullable
-	public Boolean getJavaScriptMode() {
+	public @Nullable Boolean getJavaScriptMode() {
 		return this.jsMode;
 	}
 
-	@Nullable
-	public String getOutputCollection() {
+	public @Nullable String getOutputCollection() {
 		return this.outputCollection;
 	}
 
@@ -279,8 +277,7 @@ public class MapReduceOptions {
 	 * @return the mapped action or {@literal null} if the action maps to inline output.
 	 * @since 2.0.10
 	 */
-	@Nullable
-	public MapReduceAction getMapReduceAction() {
+	public @Nullable MapReduceAction getMapReduceAction() {
 		return mapReduceAction;
 	}
 

@@ -39,10 +39,10 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -533,13 +533,11 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return BsonType.UNDEFINED;
 	}
 
-	@Nullable
-	private Object evaluateExpression(String expressionString) {
+	private @Nullable Object evaluateExpression(String expressionString) {
 		return bindingContext.evaluateExpression(expressionString, Collections.emptyMap());
 	}
 
-	@Nullable
-	private Object evaluateExpression(String expressionString, Map<String,Object> variables) {
+	private @Nullable Object evaluateExpression(String expressionString, Map<String,Object> variables) {
 		return bindingContext.evaluateExpression(expressionString, variables);
 	}
 

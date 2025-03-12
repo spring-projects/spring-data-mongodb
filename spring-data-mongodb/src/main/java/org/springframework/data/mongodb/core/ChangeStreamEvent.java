@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.Message;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -78,8 +78,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public ChangeStreamDocument<Document> getRaw() {
+	public @Nullable ChangeStreamDocument<Document> getRaw() {
 		return raw;
 	}
 
@@ -88,8 +87,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Instant getTimestamp() {
+	public @Nullable Instant getTimestamp() {
 
 		return getBsonTimestamp() != null ? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
 				: null;
@@ -111,8 +109,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public BsonValue getResumeToken() {
+	public @Nullable BsonValue getResumeToken() {
 		return raw != null ? raw.getResumeToken() : null;
 	}
 
@@ -121,8 +118,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public OperationType getOperationType() {
+	public @Nullable OperationType getOperationType() {
 		return raw != null ? raw.getOperationType() : null;
 	}
 
@@ -131,8 +127,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public String getDatabaseName() {
+	public @Nullable String getDatabaseName() {
 		return raw != null ? raw.getNamespace().getDatabaseName() : null;
 	}
 
@@ -152,8 +147,7 @@ public class ChangeStreamEvent<T> {
 	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocument()} is
 	 *         {@literal null}.
 	 */
-	@Nullable
-	public T getBody() {
+	public @Nullable T getBody() {
 
 		if (raw == null || raw.getFullDocument() == null) {
 			return null;

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionSystemException;
@@ -302,8 +302,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public MongoDatabaseFactory getDatabaseFactory() {
+	public @Nullable MongoDatabaseFactory getDatabaseFactory() {
 		return databaseFactory;
 	}
 
@@ -461,8 +460,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 			}
 		}
 
-		@Nullable
-		public ClientSession getSession() {
+		public @Nullable ClientSession getSession() {
 			return resourceHolder != null ? resourceHolder.getSession() : null;
 		}
 

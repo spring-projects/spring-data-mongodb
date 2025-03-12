@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

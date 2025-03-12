@@ -19,8 +19,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

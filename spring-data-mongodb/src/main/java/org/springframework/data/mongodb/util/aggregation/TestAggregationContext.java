@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.util.aggregation;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -27,7 +28,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl

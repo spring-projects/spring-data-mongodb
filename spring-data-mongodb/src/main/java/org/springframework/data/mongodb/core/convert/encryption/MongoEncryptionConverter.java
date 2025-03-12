@@ -27,6 +27,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.Binary;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.encryption.Encryption;
@@ -36,7 +37,6 @@ import org.springframework.data.mongodb.core.encryption.EncryptionOptions;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -59,9 +59,8 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		this.keyResolver = keyResolver;
 	}
 
-	@Nullable
 	@Override
-	public Object read(Object value, MongoConversionContext context) {
+	public @Nullable Object read(Object value, MongoConversionContext context) {
 
 		Object decrypted = EncryptingConverter.super.read(value, context);
 		return decrypted instanceof BsonValue bsonValue ? BsonUtils.toJavaType(bsonValue) : decrypted;

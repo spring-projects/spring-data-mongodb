@@ -16,13 +16,12 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link ValueConversionContext} that allows to delegate read/write to an underlying {@link MongoConverter}.
@@ -63,8 +62,7 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		return persistentProperty;
 	}
 
-	@Nullable
-	public Object getValue(String propertyPath) {
+	public @Nullable Object getValue(String propertyPath) {
 		return accessor.getPropertyValue(getProperty().getOwner().getRequiredPersistentProperty(propertyPath));
 	}
 
@@ -80,8 +78,7 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 				: ValueConversionContext.super.read(value, target);
 	}
 
-	@Nullable
-	public SpELContext getSpELContext() {
+	public @Nullable SpELContext getSpELContext() {
 		return spELContext;
 	}
 }

@@ -25,11 +25,10 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

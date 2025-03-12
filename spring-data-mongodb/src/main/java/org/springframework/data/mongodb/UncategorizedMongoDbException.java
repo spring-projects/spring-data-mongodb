@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.UncategorizedDataAccessException;
-import org.springframework.lang.Nullable;
 
 public class UncategorizedMongoDbException extends UncategorizedDataAccessException {
 

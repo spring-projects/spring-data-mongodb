@@ -23,10 +23,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.IndexOptions.Unique;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

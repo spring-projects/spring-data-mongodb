@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.ast.MethodReference;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -272,8 +272,7 @@ public class MethodReferenceNode extends ExpressionNode {
 	 * @return can be {@literal null}.
 	 * @since 1.10
 	 */
-	@Nullable
-	public AggregationMethodReference getMethodReference() {
+	public @Nullable AggregationMethodReference getMethodReference() {
 
 		String name = getName();
 		String methodName = name.substring(0, name.indexOf('('));
@@ -288,7 +287,7 @@ public class MethodReferenceNode extends ExpressionNode {
 
 		private final @Nullable String mongoOperator;
 		private final @Nullable ArgumentType argumentType;
-		private final @Nullable String[] argumentMap;
+		private final String @Nullable[] argumentMap;
 
 		/**
 		 * Creates new {@link AggregationMethodReference}.
@@ -298,7 +297,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 * @param argumentMap can be {@literal null}.
 		 */
 		private AggregationMethodReference(@Nullable String mongoOperator, @Nullable ArgumentType argumentType,
-				@Nullable String[] argumentMap) {
+				String @Nullable[] argumentMap) {
 
 			this.mongoOperator = mongoOperator;
 			this.argumentType = argumentType;
@@ -310,8 +309,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return can be {@literal null}.
 		 */
-		@Nullable
-		public String getMongoOperator() {
+		public @Nullable String getMongoOperator() {
 			return this.mongoOperator;
 		}
 
@@ -320,8 +318,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 *
 		 * @return never {@literal null}.
 		 */
-		@Nullable
-		public ArgumentType getArgumentType() {
+		public @Nullable ArgumentType getArgumentType() {
 			return this.argumentType;
 		}
 

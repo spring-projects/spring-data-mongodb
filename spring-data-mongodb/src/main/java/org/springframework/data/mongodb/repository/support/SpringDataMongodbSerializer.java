@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -27,7 +28,6 @@ import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -146,8 +146,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 	}
 
 	@Override
-	@Nullable
-	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
+	protected @Nullable Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
 
 		if (constant == null) {
 			return null;
@@ -191,8 +190,7 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return asReference(constant.getConstant(), path);
 	}
 
-	@Nullable
-	private MongoPersistentProperty getPropertyFor(Path<?> path) {
+	private @Nullable MongoPersistentProperty getPropertyFor(Path<?> path) {
 
 		Path<?> parent = path.getMetadata().getParent();
 

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
@@ -24,7 +25,6 @@ import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -95,9 +95,8 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		return (Point) value;
 	}
 
-	@Nullable
 	@Override
-	public TextCriteria getFullText() {
+	public @Nullable TextCriteria getFullText() {
 		int index = method.getParameters().getFullTextParameterIndex();
 		return index >= 0 ? potentiallyConvertFullText(getValue(index)) : null;
 	}

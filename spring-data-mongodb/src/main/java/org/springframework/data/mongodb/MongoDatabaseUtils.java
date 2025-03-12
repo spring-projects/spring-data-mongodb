@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.support.ResourceHolderSynchronization;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -139,8 +139,7 @@ public class MongoDatabaseUtils {
 		return resourceHolder != null && resourceHolder.hasActiveTransaction();
 	}
 
-	@Nullable
-	private static ClientSession doGetSession(MongoDatabaseFactory dbFactory,
+	private static @Nullable ClientSession doGetSession(MongoDatabaseFactory dbFactory,
 			SessionSynchronization sessionSynchronization) {
 
 		MongoResourceHolder resourceHolder = (MongoResourceHolder) TransactionSynchronizationManager.getResource(dbFactory);

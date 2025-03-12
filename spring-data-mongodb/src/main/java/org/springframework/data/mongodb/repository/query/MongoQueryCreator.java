@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -52,7 +53,6 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -348,8 +348,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @return the regex options or {@literal null}.
 	 */
-	@Nullable
-	private String toRegexOptions(Part part) {
+	private @Nullable String toRegexOptions(Part part) {
 
 		String regexOptions = null;
 		switch (part.shouldIgnoreCase()) {

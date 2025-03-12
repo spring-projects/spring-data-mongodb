@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.lang.Nullable;
 
 /**
  * Callback interface for executing operations within a {@link com.mongodb.session.ClientSession}.

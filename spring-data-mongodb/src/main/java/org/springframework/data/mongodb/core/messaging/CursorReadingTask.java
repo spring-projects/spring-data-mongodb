@@ -21,12 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.util.Lock;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 
@@ -209,8 +209,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 		}
 	}
 
-	@Nullable
-	private T getNext() {
+	private @Nullable T getNext() {
 
 		return lock.execute(() -> {
 			if (State.RUNNING.equals(state)) {
@@ -239,8 +238,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * @return can be {@literal null}.
 	 * @throws RuntimeException The potentially translated exception.
 	 */
-	@Nullable
-	private <V> V execute(Supplier<V> callback) {
+	private <V> @Nullable V execute(Supplier<V> callback) {
 
 		try {
 			return callback.get();

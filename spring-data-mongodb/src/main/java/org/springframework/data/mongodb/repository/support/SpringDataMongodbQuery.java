@@ -22,21 +22,18 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.lang.Nullable;
 
 import com.mysema.commons.lang.CloseableIterator;
 import com.mysema.commons.lang.EmptyCloseableIterator;
@@ -183,20 +180,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		} catch (RuntimeException e) {
 			return handleException(e, new PageImpl<>(Collections.emptyList(), pageable, 0));
 		}
-	}
-
-	/**
-	 * Fetch a {@link Slice}.
-	 *
-	 * @param pageable defines range and sort of requested slice
-	 * @return new instance of {@link Slice} containing matching results within range.
-	 * @since 4.5
-	 */
-	public Slice<T> fetchSlice(Pageable pageable) {
-
-		List<T> content = find.matching(SliceUtils.limitResult(createQuery(), pageable).with(pageable.getSort())).all();
-
-		return SliceUtils.sliceResult(content, pageable);
 	}
 
 	@Override

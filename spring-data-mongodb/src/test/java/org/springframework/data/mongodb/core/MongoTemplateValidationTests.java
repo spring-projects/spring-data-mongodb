@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +40,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
@@ -242,13 +242,11 @@ public class MongoTemplateValidationTests {
 			this.customFieldName = customFieldName;
 		}
 
-		@Nullable
-		public String getNonNullString() {
+		public @Nullable String getNonNullString() {
 			return this.nonNullString;
 		}
 
-		@Nullable
-		public Integer getRangedInteger() {
+		public @Nullable Integer getRangedInteger() {
 			return this.rangedInteger;
 		}
 

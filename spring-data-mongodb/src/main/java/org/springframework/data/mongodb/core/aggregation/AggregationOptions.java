@@ -19,11 +19,11 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ReadConcern;

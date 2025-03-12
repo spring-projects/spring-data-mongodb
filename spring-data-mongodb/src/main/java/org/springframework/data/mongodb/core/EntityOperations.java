@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonNull;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.EnvironmentCapable;
@@ -63,7 +64,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.TargetAware;
 import org.springframework.data.util.Optionals;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -578,9 +578,8 @@ class EntityOperations {
 			return Query.query(Criteria.where(ID_FIELD).is(map.get(ID_FIELD)));
 		}
 
-		@Nullable
 		@Override
-		public T populateIdIfNecessary(@Nullable Object id) {
+		public @Nullable T populateIdIfNecessary(@Nullable Object id) {
 
 			map.put(ID_FIELD, id);
 
@@ -605,8 +604,7 @@ class EntityOperations {
 		}
 
 		@Override
-		@Nullable
-		public Number getVersion() {
+		public @Nullable Number getVersion() {
 			return null;
 		}
 
@@ -790,8 +788,7 @@ class EntityOperations {
 		}
 
 		@Override
-		@Nullable
-		public Object getVersion() {
+		public @Nullable Object getVersion() {
 			return propertyAccessor.getProperty(entity.getRequiredVersionProperty());
 		}
 
@@ -888,9 +885,8 @@ class EntityOperations {
 					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), entityOperations);
 		}
 
-		@Nullable
 		@Override
-		public T populateIdIfNecessary(@Nullable Object id) {
+		public @Nullable T populateIdIfNecessary(@Nullable Object id) {
 
 			if (id == null) {
 				return propertyAccessor.getBean();
@@ -910,8 +906,7 @@ class EntityOperations {
 		}
 
 		@Override
-		@Nullable
-		public Number getVersion() {
+		public @Nullable Number getVersion() {
 
 			MongoPersistentProperty versionProperty = entity.getRequiredVersionProperty();
 

@@ -40,11 +40,11 @@ import org.bson.json.JsonParseException;
 import org.bson.types.Binary;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -73,8 +73,7 @@ public class BsonUtils {
 	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	public static <T> T get(Bson bson, String key) {
+	public static <T> @Nullable T get(Bson bson, String key) {
 		return (T) asMap(bson).get(key);
 	}
 
@@ -450,8 +449,7 @@ public class BsonUtils {
 	 * @return
 	 * @since 2.2.1
 	 */
-	@Nullable
-	public static String toJson(@Nullable Document source) {
+	public static @Nullable String toJson(@Nullable Document source) {
 
 		if (source == null) {
 			return null;
@@ -525,8 +523,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 3.0.8
 	 */
-	@Nullable
-	public static Object resolveValue(Bson bson, String key) {
+	public static @Nullable Object resolveValue(Bson bson, String key) {
 		return resolveValue(asMap(bson), key);
 	}
 
@@ -590,8 +587,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 4.1
 	 */
-	@Nullable
-	public static Object resolveValue(Map<String, Object> source, String key) {
+	public static @Nullable Object resolveValue(Map<String, Object> source, String key) {
 
 		if (source.containsKey(key)) {
 			return source.get(key);
@@ -745,8 +741,7 @@ public class BsonUtils {
 		return new Document(target);
 	}
 
-	@Nullable
-	private static String toJson(@Nullable Object value) {
+	private static @Nullable String toJson(@Nullable Object value) {
 
 		if (value == null) {
 			return null;

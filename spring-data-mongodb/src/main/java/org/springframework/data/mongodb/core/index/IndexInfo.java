@@ -27,8 +27,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -161,8 +161,7 @@ public class IndexInfo {
 	 * @return the {@link String} representation of the partial filter {@link Document}.
 	 * @since 2.1.11
 	 */
-	@Nullable
-	private static String extractPartialFilterString(Document sourceDocument) {
+	private static @Nullable String extractPartialFilterString(Document sourceDocument) {
 
 		if (!sourceDocument.containsKey("partialFilterExpression")) {
 			return null;

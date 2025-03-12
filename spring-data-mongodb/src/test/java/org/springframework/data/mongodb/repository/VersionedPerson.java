@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.repository;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -48,8 +48,7 @@ public class VersionedPerson extends Contact {
 		return this.firstname;
 	}
 
-	@Nullable
-	public String getLastname() {
+	public @Nullable String getLastname() {
 		return this.lastname;
 	}
 

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.expression.ValueExpression;
@@ -42,7 +43,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -139,9 +139,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return this.language;
 	}
 
-	@Nullable
 	@Override
-	public MongoPersistentProperty getTextScoreProperty() {
+	public @Nullable MongoPersistentProperty getTextScoreProperty() {
 		return getPersistentProperty(TextScore.class);
 	}
 
@@ -308,8 +307,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * @param potentialExpression can be {@literal null}
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	private static ValueExpression detectExpression(@Nullable String potentialExpression) {
+	private static @Nullable ValueExpression detectExpression(@Nullable String potentialExpression) {
 
 		if (!StringUtils.hasText(potentialExpression)) {
 			return null;

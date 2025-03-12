@@ -27,6 +27,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -47,7 +48,6 @@ import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ReadPreference;

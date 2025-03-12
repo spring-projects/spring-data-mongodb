@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
@@ -47,7 +48,6 @@ import org.springframework.data.mongodb.util.json.ValueProvider;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -98,8 +98,7 @@ public final class ReferenceLookupDelegate {
 	 *          {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
+	public @Nullable Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
 
 		Object value = source instanceof DocumentReferenceSource documentReferenceSource

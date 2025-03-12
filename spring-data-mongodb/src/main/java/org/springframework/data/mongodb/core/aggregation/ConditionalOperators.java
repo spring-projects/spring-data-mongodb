@@ -22,12 +22,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 

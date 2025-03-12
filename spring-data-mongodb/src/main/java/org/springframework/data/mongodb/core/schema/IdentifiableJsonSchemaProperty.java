@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Numeri
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -1159,8 +1158,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return targetProperty.getTypes();
 		}
 
-		@Nullable
-		private Type extractPropertyType(Document source) {
+		private @Nullable Type extractPropertyType(Document source) {
 
 			if (source.containsKey("type")) {
 				return Type.of(source.get("type", String.class));

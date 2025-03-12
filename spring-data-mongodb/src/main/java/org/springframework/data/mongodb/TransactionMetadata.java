@@ -17,7 +17,7 @@ package org.springframework.data.mongodb;
 
 import java.time.Duration;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * MongoDB-specific transaction metadata.

@@ -15,12 +15,9 @@
  */
 package org.springframework.data.mongodb.util;
 
-import java.lang.reflect.Field;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Version;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.internal.build.MongoDriverVersion;
 
@@ -94,14 +91,12 @@ public class MongoClientVersion {
 		return version == null ? guessDriverVersionFromClassPath(classLoader) : version;
 	}
 
-	@Nullable
-	private static Version getVersionFromPackage(ClassLoader classLoader) {
+	private static @Nullable Version getVersionFromPackage(ClassLoader classLoader) {
 
 		if (ClassUtils.isPresent("com.mongodb.internal.build.MongoDriverVersion", classLoader)) {
 			try {
-				Field field = ReflectionUtils.findField(MongoDriverVersion.class, "VERSION");
-				return field != null ? Version.parse("" + field.get(null)) : null;
-			} catch (ReflectiveOperationException | IllegalArgumentException exception) {
+				return Version.parse(MongoDriverVersion.VERSION);
+			} catch (IllegalArgumentException exception) {
 				// well not much we can do, right?
 			}
 		}

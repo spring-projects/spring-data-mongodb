@@ -25,10 +25,9 @@ import javax.net.ssl.SSLContext;
 
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
-import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 

@@ -19,8 +19,8 @@ import java.util.Locale;
 import java.util.Map.Entry;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link Query} implementation to be used to for performing full text searches.

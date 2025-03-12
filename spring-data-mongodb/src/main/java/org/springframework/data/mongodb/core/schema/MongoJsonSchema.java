@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -311,8 +311,7 @@ public interface MongoJsonSchema {
 
 		private ObjectJsonSchemaObject root;
 
-		@Nullable //
-		private Document encryptionMetadata;
+		private @Nullable Document encryptionMetadata;
 
 		MongoJsonSchemaBuilder() {
 			root = new ObjectJsonSchemaObject();
