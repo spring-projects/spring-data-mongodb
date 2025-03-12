@@ -3309,9 +3309,9 @@ public class MongoTemplate
 		@SuppressWarnings("unchecked")
 		public T doWith(Document document) {
 
-			if (document == null) {
-				return null;
-			}
+//			if (document == null) {
+//				return null;
+//			}
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, projection.getMappedType().getType(), collectionName));
 
@@ -3554,8 +3554,6 @@ public class MongoTemplate
 				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			} finally {
 				cursor = null;
-				exceptionTranslator = null;
-				objectReadCallback = null;
 			}
 		}
 	}

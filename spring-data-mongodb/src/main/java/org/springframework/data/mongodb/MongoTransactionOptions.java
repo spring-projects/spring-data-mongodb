@@ -92,9 +92,8 @@ public interface MongoTransactionOptions
 						: fallbackOptions.getReadConcern();
 			}
 
-			@Nullable
 			@Override
-			public ReadPreference getReadPreference() {
+			public @Nullable ReadPreference getReadPreference() {
 				return MongoTransactionOptions.this.hasReadPreference() ? MongoTransactionOptions.this.getReadPreference()
 						: fallbackOptions.getReadPreference();
 			}
@@ -121,8 +120,8 @@ public interface MongoTransactionOptions
 	 * @return MongoDB driver native {@link TransactionOptions}.
 	 * @see MongoTransactionOptions#map(Function)
 	 */
-	@Nullable
-	default TransactionOptions toDriverOptions() {
+	@SuppressWarnings("NullAway")
+	default @Nullable TransactionOptions toDriverOptions() {
 
 		return map(it -> {
 

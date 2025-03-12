@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -139,7 +140,7 @@ public class MongoField {
 	 */
 	public static class MongoFieldBuilder {
 
-		private String name;
+		private @Nullable String name;
 		private Type nameType = Type.PATH;
 		private FieldType type = FieldType.IMPLICIT;
 		private int order = Integer.MAX_VALUE;
@@ -205,6 +206,8 @@ public class MongoField {
 		 * @return a new {@link MongoField}.
 		 */
 		public MongoField build() {
+
+			Assert.notNull(name, "Name of Field must not be null");
 			return new MongoField(new FieldName(name, nameType), type, order);
 		}
 	}

@@ -45,6 +45,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -73,7 +74,8 @@ public class BsonUtils {
 	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
 
 	@SuppressWarnings("unchecked")
-	public static <T> @Nullable T get(Bson bson, String key) {
+	@Contract("null, _ -> null")
+	public static <T> @Nullable T get(@Nullable Bson bson, String key) {
 		return (T) asMap(bson).get(key);
 	}
 
@@ -84,7 +86,7 @@ public class BsonUtils {
 	 * @param bson
 	 * @return
 	 */
-	public static Map<String, Object> asMap(Bson bson) {
+	public static Map<String, Object> asMap(@Nullable Bson bson) {
 		return asMap(bson, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
@@ -469,6 +471,7 @@ public class BsonUtils {
 	 * @return {@literal true} if the given value looks like a json document.
 	 * @since 3.0
 	 */
+	@Contract("null -> false")
 	public static boolean isJsonDocument(@Nullable String value) {
 
 		if (!StringUtils.hasText(value)) {
@@ -486,6 +489,7 @@ public class BsonUtils {
 	 * @return {@literal true} if the given value looks like a json array.
 	 * @since 3.0
 	 */
+	@Contract("null -> false")
 	public static boolean isJsonArray(@Nullable String value) {
 		return StringUtils.hasText(value) && (value.startsWith("[") && value.endsWith("]"));
 	}
@@ -741,6 +745,7 @@ public class BsonUtils {
 		return new Document(target);
 	}
 
+	@Contract("null -> null")
 	private static @Nullable String toJson(@Nullable Object value) {
 
 		if (value == null) {

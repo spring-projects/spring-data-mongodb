@@ -137,7 +137,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return new HashSet<>(Arrays.asList(localeToString, booleanToString));
 		}
 
-		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+		public @Nullable Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return source != null ? source.toString() : null;
 		}
 	}

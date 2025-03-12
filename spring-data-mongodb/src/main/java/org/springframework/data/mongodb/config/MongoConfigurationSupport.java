@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -172,8 +173,11 @@ public abstract class MongoConfigurationSupport {
 
 			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 
+				String beanClassName = candidate.getBeanClassName();
+				Assert.notNull(beanClassName, "BeanClassName cannot be null");
+
 				initialEntitySet
-						.add(ClassUtils.forName(candidate.getBeanClassName(), MongoConfigurationSupport.class.getClassLoader()));
+						.add(ClassUtils.forName(beanClassName, MongoConfigurationSupport.class.getClassLoader()));
 			}
 		}
 

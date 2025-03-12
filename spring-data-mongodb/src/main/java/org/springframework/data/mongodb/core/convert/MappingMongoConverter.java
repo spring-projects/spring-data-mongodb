@@ -53,6 +53,7 @@ import org.springframework.core.env.EnvironmentCapable;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.PropertyValueConversions;
 import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.convert.ValueConversionContext;
@@ -156,7 +157,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 	protected @Nullable ApplicationContext applicationContext;
 	protected @Nullable Environment environment;
-	protected MongoTypeMapper typeMapper;
+	protected @Nullable MongoTypeMapper typeMapper;
 	protected @Nullable String mapKeyDotReplacement = null;
 	protected @Nullable CodecRegistryProvider codecRegistryProvider;
 
@@ -306,7 +307,9 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		this.environment = applicationContext.getEnvironment();
 		this.spELContext = new SpELContext(this.spELContext, applicationContext);
 		this.projectionFactory.setBeanFactory(applicationContext);
-		this.projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
+		if(applicationContext.getClassLoader() != null) {
+			this.projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
+		}
 
 		if (entityCallbacks == null) {
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
@@ -432,12 +435,12 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		Map<String, Object> map = new LinkedHashMap<>();
 
 		@Override
-		public void setProperty(PersistentProperty<?> persistentProperty, Object o) {
+		public void setProperty(PersistentProperty<?> persistentProperty, @Nullable Object o) {
 			map.put(persistentProperty.getName(), o);
 		}
 
 		@Override
-		public Object getProperty(PersistentProperty<?> persistentProperty) {
+		public @Nullable Object getProperty(PersistentProperty<?> persistentProperty) {
 			return map.get(persistentProperty.getName());
 		}
 
@@ -544,7 +547,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 
 		@Override
-		public <T> T evaluate(String expression) {
+		public <T> @Nullable T evaluate(String expression) {
 			return expressionEvaluatorFactory.create(getDocument()).evaluate(expression);
 		}
 	}
@@ -742,8 +745,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 	}
 
-	@Nullable
-	private Object readUnwrapped(ConversionContext context, DocumentAccessor documentAccessor,
+	private @Nullable Object readUnwrapped(ConversionContext context, DocumentAccessor documentAccessor,
 			MongoPersistentProperty prop, MongoPersistentEntity<?> unwrappedEntity) {
 
 		if (prop.findAnnotation(Unwrapped.class).onEmpty().equals(OnEmpty.USE_EMPTY)) {
@@ -765,7 +767,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		if (referringProperty != null) {
 			annotation = referringProperty.getDBRef();
-			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef");
+			Assert.notNull(annotation, "The referenced property has to be mapped with @DBRef");
 		}
 
 		// DATAMONGO-913
@@ -1339,8 +1341,13 @@ public class MappingMongoConverter extends AbstractMongoConverter
 				return (T) persistentPropertyAccessor.getProperty(property);
 			}
 		}, property, this, spELContext);
-		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = conversions
-				.getPropertyValueConversions().getValueConverter(property);
+
+		PropertyValueConversions propertyValueConversions = conversions.getPropertyValueConversions();
+		if(propertyValueConversions == null) {
+			return value;
+		}
+
+		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter = propertyValueConversions.getValueConverter(property);
 		return value != null ? valueConverter.write(value, context) : valueConverter.writeNull(context);
 	}
 
@@ -2341,15 +2348,15 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		final ObjectPath path;
 		final ContainerValueConverter<Bson> documentConverter;
 		final ContainerValueConverter<Collection<?>> collectionConverter;
-		final ContainerValueConverter<Bson> mapConverter;
-		final ContainerValueConverter<DBRef> dbRefConverter;
-		final ValueConverter<Object> elementConverter;
+		final ContainerValueConverter<@Nullable Bson> mapConverter;
+		final ContainerValueConverter<@Nullable DBRef> dbRefConverter;
+		final ValueConverter<@Nullable Object> elementConverter;
 
 		DefaultConversionContext(MongoConverter sourceConverter,
 				org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
-				ContainerValueConverter<Bson> documentConverter, ContainerValueConverter<Collection<?>> collectionConverter,
-				ContainerValueConverter<Bson> mapConverter, ContainerValueConverter<DBRef> dbRefConverter,
-				ValueConverter<Object> elementConverter) {
+				ContainerValueConverter<@Nullable Bson> documentConverter, ContainerValueConverter<Collection<?>> collectionConverter,
+				ContainerValueConverter<@Nullable Bson> mapConverter, ContainerValueConverter<@Nullable DBRef> dbRefConverter,
+				ValueConverter<@Nullable Object> elementConverter) {
 
 			this.sourceConverter = sourceConverter;
 			this.conversions = customConversions;
@@ -2453,9 +2460,9 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		 *
 		 * @param <T>
 		 */
-		interface ContainerValueConverter<T> {
+		interface ContainerValueConverter<@Nullable T> {
 
-			Object convert(ConversionContext context, T source, TypeInformation<?> typeHint);
+			@Nullable Object convert(ConversionContext context, @Nullable T source, TypeInformation<?> typeHint);
 
 		}
 
@@ -2470,7 +2477,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 
 		ProjectingConversionContext(MongoConverter sourceConverter, CustomConversions customConversions, ObjectPath path,
 				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
-				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
+				ContainerValueConverter<@Nullable DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
 				EntityProjection<?, ?> projection) {
 			super(sourceConverter, customConversions, path,
 					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, projection),

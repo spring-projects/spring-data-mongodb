@@ -191,6 +191,7 @@ public final class LazyLoadingProxyFactory {
 		 * @return a {@link LazyLoadingInterceptor} that just continues with the invocation.
 		 * @since 4.0
 		 */
+		@SuppressWarnings("NullAway")
 		public static LazyLoadingInterceptor none() {
 
 			return new LazyLoadingInterceptor(null, null, null, null) {
@@ -223,7 +224,7 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		@Override
-		public @Nullable Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+		public @Nullable Object intercept(Object o, Method method, Object @Nullable[] args, @Nullable MethodProxy proxy) throws Throwable {
 
 			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();

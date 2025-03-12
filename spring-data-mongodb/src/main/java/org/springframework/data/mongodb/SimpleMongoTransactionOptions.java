@@ -41,10 +41,10 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 	static final Set<String> KNOWN_KEYS = Arrays.stream(OptionKey.values()).map(OptionKey::getKey)
 			.collect(Collectors.toSet());
 
-	private final Duration maxCommitTime;
-	private final ReadConcern readConcern;
-	private final ReadPreference readPreference;
-	private final WriteConcern writeConcern;
+	private final @Nullable Duration maxCommitTime;
+	private final @Nullable ReadConcern readConcern;
+	private final @Nullable ReadPreference readPreference;
+	private final @Nullable WriteConcern writeConcern;
 
 	static SimpleMongoTransactionOptions of(Map<String, String> options) {
 		return new SimpleMongoTransactionOptions(options);

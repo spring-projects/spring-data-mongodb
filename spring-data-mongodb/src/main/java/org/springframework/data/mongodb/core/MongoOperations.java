@@ -195,7 +195,8 @@ public interface MongoOperations extends FluentMongoOperations {
 			private @Nullable ClientSession session;
 
 			@Override
-			public <T> T execute(SessionCallback<T> action, Consumer<ClientSession> onComplete) {
+			@SuppressWarnings("NullAway")
+			public <T> @Nullable T execute(SessionCallback<T> action, Consumer<ClientSession> onComplete) {
 
 				lock.executeWithoutResult(() -> {
 
