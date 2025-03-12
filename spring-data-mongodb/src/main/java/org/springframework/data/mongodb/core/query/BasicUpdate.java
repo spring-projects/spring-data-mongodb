@@ -15,16 +15,21 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import org.bson.Document;
+
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * {@link Document}-based {@link Update} variant.
+ *
  * @author Thomas Risberg
  * @author John Brisbin
  * @author Oliver Gierke
@@ -36,12 +41,10 @@ public class BasicUpdate extends Update {
 	private final Document updateObject;
 
 	public BasicUpdate(String updateString) {
-		super();
-		this.updateObject = Document.parse(updateString);
+		this(Document.parse(updateString));
 	}
 
 	public BasicUpdate(Document updateObject) {
-		super();
 		this.updateObject = updateObject;
 	}
 
@@ -89,7 +92,17 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update pullAll(String key, Object[] values) {
-		setOperationValue("$pullAll", key, List.of(values));
+		setOperationValue("$pullAll", key, List.of(values), (o, o2) -> {
+
+			if (o instanceof List<?> prev && o2 instanceof List<?> currentValue) {
+				List<Object> merged = new ArrayList<>(prev.size() + currentValue.size());
+				merged.addAll(prev);
+				merged.addAll(currentValue);
+				return merged;
+			}
+
+			return o2;
+		});
 		return this;
 	}
 
@@ -109,21 +122,31 @@ public class BasicUpdate extends Update {
 		return updateObject;
 	}
 
-	void setOperationValue(String operator, String key, Object value) {
+	void setOperationValue(String operator, String key, @Nullable Object value) {
+		setOperationValue(operator, key, value, (o, o2) -> o2);
+	}
+
+	void setOperationValue(String operator, String key, @Nullable Object value,
+			BiFunction<Object, Object, Object> mergeFunction) {
 
 		if (!updateObject.containsKey(operator)) {
 			updateObject.put(operator, Collections.singletonMap(key, value));
 		} else {
-			Object existingValue = updateObject.get(operator);
-			if (existingValue instanceof Map<?, ?> existing) {
+			Object o = updateObject.get(operator);
+			if (o instanceof Map<?, ?> existing) {
 				Map<Object, Object> target = new LinkedHashMap<>(existing);
-				target.put(key, value);
+
+				if (target.containsKey(key)) {
+					target.put(key, mergeFunction.apply(target.get(key), value));
+				} else {
+					target.put(key, value);
+				}
 				updateObject.put(operator, target);
 			} else {
 				throw new IllegalStateException(
 						"Cannot add ['%s' : { '%s' : ... }]. Operator already exists with value of type [%s] which is not suitable for appending"
 								.formatted(operator, key,
-										existingValue != null ? ClassUtils.getShortName(existingValue.getClass()) : "null"));
+										o != null ? ClassUtils.getShortName(o.getClass()) : "null"));
 			}
 		}
 	}

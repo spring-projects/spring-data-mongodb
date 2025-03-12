@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
@@ -40,12 +41,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.mongodb.client.MongoClient;
 
 /**
+ * Integration tests for Repositories using optimistic locking.
+ *
  * @author Christoph Strobl
- * @since 2025/03
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
-public class VersionedPersonRepositoryIntegrationTests {
+class VersionedPersonRepositoryIntegrationTests {
 
 	static @Client MongoClient mongoClient;
 
@@ -70,14 +72,15 @@ public class VersionedPersonRepositoryIntegrationTests {
 
 	@BeforeEach
 	void beforeEach() {
-		MongoTestUtils.flushCollection("versioned-person-tests", template.getCollectionName(VersionedPersonWithCounter.class),
-				mongoClient);
+		MongoTestUtils.flushCollection("versioned-person-tests",
+				template.getCollectionName(VersionedPersonWithCounter.class), mongoClient);
 	}
 
 	@Test // GH-4918
 	void updatesVersionedTypeCorrectly() {
 
-		VersionedPerson person = template.insert(VersionedPersonWithCounter.class).one(new VersionedPersonWithCounter("Donald", "Duckling"));
+		VersionedPerson person = template.insert(VersionedPersonWithCounter.class)
+				.one(new VersionedPersonWithCounter("Donald", "Duckling"));
 
 		int updateCount = versionedPersonRepository.findAndSetFirstnameToLastnameByLastname(person.getLastname());
 
@@ -93,7 +96,8 @@ public class VersionedPersonRepositoryIntegrationTests {
 	@Test // GH-4918
 	void updatesVersionedTypeCorrectlyWhenUpdateIsUsingInc() {
 
-		VersionedPerson person = template.insert(VersionedPersonWithCounter.class).one(new VersionedPersonWithCounter("Donald", "Duckling"));
+		VersionedPerson person = template.insert(VersionedPersonWithCounter.class)
+				.one(new VersionedPersonWithCounter("Donald", "Duckling"));
 
 		int updateCount = versionedPersonRepository.findAndIncCounterByLastname(person.getLastname());
 
@@ -103,13 +107,15 @@ public class VersionedPersonRepositoryIntegrationTests {
 			return collection.find(new Document("_id", new ObjectId(person.getId()))).first();
 		});
 
-		assertThat(document).containsEntry("lastname", "Duckling").containsEntry("version", 1L).containsEntry("counter", 42);
+		assertThat(document).containsEntry("lastname", "Duckling").containsEntry("version", 1L).containsEntry("counter",
+				42);
 	}
 
 	@Test // GH-4918
 	void updatesVersionedTypeCorrectlyWhenUpdateCoversVersionBump() {
 
-		VersionedPerson person = template.insert(VersionedPersonWithCounter.class).one(new VersionedPersonWithCounter("Donald", "Duckling"));
+		VersionedPerson person = template.insert(VersionedPersonWithCounter.class)
+				.one(new VersionedPersonWithCounter("Donald", "Duckling"));
 
 		int updateCount = versionedPersonRepository.findAndSetFirstnameToLastnameIncVersionByLastname(person.getLastname(),
 				10);
@@ -123,7 +129,7 @@ public class VersionedPersonRepositoryIntegrationTests {
 		assertThat(document).containsEntry("firstname", "Duckling").containsEntry("version", 10L);
 	}
 
-	public interface VersionedPersonRepository extends CrudRepository<VersionedPersonWithCounter, String> {
+	interface VersionedPersonRepository extends CrudRepository<VersionedPersonWithCounter, String> {
 
 		@Update("{ '$set': { 'firstname' : ?0 } }")
 		int findAndSetFirstnameToLastnameByLastname(String lastname);
@@ -156,5 +162,7 @@ public class VersionedPersonRepositoryIntegrationTests {
 		public void setCounter(int counter) {
 			this.counter = counter;
 		}
+
 	}
+
 }
