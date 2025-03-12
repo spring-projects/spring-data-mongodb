@@ -22,10 +22,10 @@ import java.util.function.Supplier;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.types.Binary;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -48,8 +48,7 @@ public final class EncryptionUtils {
 	 * @return can be {@literal null}.
 	 * @throws IllegalArgumentException if one of the required arguments is {@literal null}.
 	 */
-	@Nullable
-	public static Object resolveKeyId(String value, Supplier<EvaluationContext> evaluationContext) {
+	public static @Nullable Object resolveKeyId(String value, Supplier<EvaluationContext> evaluationContext) {
 
 		Assert.notNull(value, "Value must not be null");
 

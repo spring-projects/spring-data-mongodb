@@ -17,9 +17,11 @@ package org.springframework.data.mongodb.observability;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
 import com.mongodb.RequestContext;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A {@link Map}-based {@link RequestContext}.
@@ -42,7 +44,13 @@ class MapRequestContext implements RequestContext {
 
 	@Override
 	public <T> T get(Object key) {
-		return (T) map.get(key);
+
+
+		T value = (T) map.get(key);
+		if(value != null) {
+			return value;
+		}
+		throw new NoSuchElementException("%s is missing".formatted(key));
 	}
 
 	@Override

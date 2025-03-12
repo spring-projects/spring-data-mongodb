@@ -16,10 +16,10 @@
 
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.MongoClientSettings;
@@ -89,7 +89,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	}
 
 	@Override
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+	public @Nullable DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 
@@ -124,7 +124,9 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 
 	@Override
 	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
-		instance.close();
+		if (instance != null) {
+			instance.close();
+		}
 	}
 
 }

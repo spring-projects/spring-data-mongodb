@@ -16,12 +16,12 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
@@ -43,8 +43,7 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 * @param obj can be {@literal null}.
 	 * @return
 	 */
-	@Nullable
-	default Object convertToMongoType(@Nullable Object obj) {
+	default @Nullable Object convertToMongoType(@Nullable Object obj) {
 		return convertToMongoType(obj, (TypeInformation<?>) null);
 	}
 
@@ -59,7 +58,7 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	@Nullable
 	Object convertToMongoType(@Nullable Object obj, @Nullable TypeInformation<?> typeInformation);
 
-	default Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity<?> entity) {
+	default @Nullable Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity<?> entity) {
 		return convertToMongoType(obj, entity.getTypeInformation());
 	}
 

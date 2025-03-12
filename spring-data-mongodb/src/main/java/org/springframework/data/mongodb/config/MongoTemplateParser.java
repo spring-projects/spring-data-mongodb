@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.MongoParsingUtils.*;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
@@ -37,6 +38,7 @@ import org.w3c.dom.Element;
  * @author Martin Baumgartner
  * @author Oliver Gierke
  */
+@NullUnmarked
 class MongoTemplateParser extends AbstractBeanDefinitionParser {
 
 	@Override

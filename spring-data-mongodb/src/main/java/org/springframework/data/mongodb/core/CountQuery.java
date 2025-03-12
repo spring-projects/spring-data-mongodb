@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.MetricConversion;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -154,7 +154,7 @@ class CountQuery {
 	 * @param $and potentially existing {@code $and} condition.
 	 * @return the rewritten query {@link Document}.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	private static Document createGeoWithin(String key, Document source, @Nullable Object $and) {
 
 		boolean spheric = source.containsKey("$nearSphere");
@@ -233,6 +233,7 @@ class CountQuery {
 		return source.containsKey("$minDistance");
 	}
 
+	@SuppressWarnings("NullAway")
 	private static Object toCenterCoordinates(Object value) {
 
 		if (ObjectUtils.isArray(value)) {

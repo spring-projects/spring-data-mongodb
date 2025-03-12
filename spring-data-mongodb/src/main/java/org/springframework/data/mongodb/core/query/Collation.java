@@ -19,8 +19,9 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -180,6 +181,7 @@ public class Collation {
 	 * @param strength comparison level.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation strength(int strength) {
 
 		ComparisonLevel current = this.strength.orElseGet(() -> new ICUComparisonLevel(strength));
@@ -192,6 +194,7 @@ public class Collation {
 	 * @param comparisonLevel must not be {@literal null}.
 	 * @return new {@link Collation}
 	 */
+	@Contract("_ -> new")
 	public Collation strength(ComparisonLevel comparisonLevel) {
 
 		Collation newInstance = copy();
@@ -205,6 +208,7 @@ public class Collation {
 	 * @param caseLevel use {@literal true} to enable {@code caseLevel} comparison.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation caseLevel(boolean caseLevel) {
 
 		ComparisonLevel strengthValue = strength.orElseGet(ComparisonLevel::primary);
@@ -218,6 +222,7 @@ public class Collation {
 	 * @param caseFirst must not be {@literal null}.
 	 * @return new instance of {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation caseFirst(String caseFirst) {
 		return caseFirst(new CaseFirst(caseFirst));
 	}
@@ -228,6 +233,7 @@ public class Collation {
 	 * @param sort must not be {@literal null}.
 	 * @return new instance of {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation caseFirst(CaseFirst sort) {
 
 		ComparisonLevel strengthValue = strength.orElseGet(ComparisonLevel::tertiary);
@@ -239,6 +245,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("-> new")
 	public Collation numericOrderingEnabled() {
 		return numericOrdering(true);
 	}
@@ -248,6 +255,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("-> new")
 	public Collation numericOrderingDisabled() {
 		return numericOrdering(false);
 	}
@@ -257,6 +265,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation numericOrdering(boolean flag) {
 
 		Collation newInstance = copy();
@@ -271,6 +280,7 @@ public class Collation {
 	 * @param alternate must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation alternate(String alternate) {
 
 		Alternate instance = this.alternate.orElseGet(() -> new Alternate(alternate, Optional.empty()));
@@ -284,6 +294,7 @@ public class Collation {
 	 * @param alternate must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation alternate(Alternate alternate) {
 
 		Collation newInstance = copy();
@@ -296,6 +307,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation backwardDiacriticSort() {
 		return backwards(true);
 	}
@@ -305,6 +317,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("-> new")
 	public Collation forwardDiacriticSort() {
 		return backwards(false);
 	}
@@ -315,6 +328,7 @@ public class Collation {
 	 * @param backwards must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation backwards(boolean backwards) {
 
 		Collation newInstance = copy();
@@ -327,6 +341,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("-> new")
 	public Collation normalizationEnabled() {
 		return normalization(true);
 	}
@@ -336,6 +351,7 @@ public class Collation {
 	 *
 	 * @return new {@link Collation}.
 	 */
+	@Contract("-> new")
 	public Collation normalizationDisabled() {
 		return normalization(false);
 	}
@@ -346,6 +362,7 @@ public class Collation {
 	 * @param normalization must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation normalization(boolean normalization) {
 
 		Collation newInstance = copy();
@@ -359,6 +376,7 @@ public class Collation {
 	 * @param maxVariable must not be {@literal null}.
 	 * @return new {@link Collation}.
 	 */
+	@Contract("_ -> new")
 	public Collation maxVariable(String maxVariable) {
 
 		Alternate alternateValue = alternate.orElseGet(Alternate::shifted);
@@ -370,6 +388,7 @@ public class Collation {
 	 *
 	 * @return the native MongoDB {@link Document} representation of the {@link Collation}.
 	 */
+	@SuppressWarnings("NullAway")
 	public Document toDocument() {
 		return map(toMongoDocumentConverter());
 	}
@@ -379,7 +398,7 @@ public class Collation {
 	 *
 	 * @return he native MongoDB representation of the {@link Collation}.
 	 */
-	public com.mongodb.client.model.Collation toMongoCollation() {
+	public com.mongodb.client.model.@Nullable Collation toMongoCollation() {
 		return map(toMongoCollationConverter());
 	}
 
@@ -390,7 +409,7 @@ public class Collation {
 	 * @param <R>
 	 * @return the converted result.
 	 */
-	public <R> R map(Converter<? super Collation, ? extends R> mapper) {
+	public <R> @Nullable R map(Converter<? super Collation, ? extends R> mapper) {
 		return mapper.convert(this);
 	}
 

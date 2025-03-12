@@ -17,8 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -42,6 +43,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -60,7 +62,8 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		private final Query query;
 		@Nullable private final String collection;
 
-		public ExecutableRemoveSupport(MongoTemplate template, Class<T> domainType, Query query, String collection) {
+		public ExecutableRemoveSupport(MongoTemplate template, Class<T> domainType, Query query,
+				@Nullable String collection) {
 			this.template = template;
 			this.domainType = domainType;
 			this.query = query;
@@ -68,6 +71,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public RemoveWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
@@ -76,6 +80,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingRemove<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");

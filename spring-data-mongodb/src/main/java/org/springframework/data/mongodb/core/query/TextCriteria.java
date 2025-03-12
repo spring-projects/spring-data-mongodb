@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -71,7 +72,8 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param language
 	 * @return
 	 */
-	public static TextCriteria forLanguage(String language) {
+	@Contract("null -> fail")
+	public static TextCriteria forLanguage(@Nullable String language) {
 
 		Assert.hasText(language, "Language must not be null or empty");
 		return new TextCriteria(language);
@@ -83,6 +85,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param words the words to match.
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public TextCriteria matchingAny(String... words) {
 
 		for (String word : words) {
@@ -97,6 +100,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 *
 	 * @param term must not be {@literal null}.
 	 */
+	@Contract("_ -> this")
 	public TextCriteria matching(Term term) {
 
 		Assert.notNull(term, "Term to add must not be null");
@@ -109,6 +113,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param term
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public TextCriteria matching(String term) {
 
 		if (StringUtils.hasText(term)) {
@@ -121,6 +126,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param term
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public TextCriteria notMatching(String term) {
 
 		if (StringUtils.hasText(term)) {
@@ -133,6 +139,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param words
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public TextCriteria notMatchingAny(String... words) {
 
 		for (String word : words) {
@@ -147,6 +154,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param phrase
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public TextCriteria notMatchingPhrase(String phrase) {
 
 		if (StringUtils.hasText(phrase)) {
@@ -161,6 +169,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param phrase
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public TextCriteria matchingPhrase(String phrase) {
 
 		if (StringUtils.hasText(phrase)) {
@@ -176,6 +185,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @return never {@literal null}.
 	 * @since 1.10
 	 */
+	@Contract("_ -> this")
 	public TextCriteria caseSensitive(boolean caseSensitive) {
 
 		this.caseSensitive = caseSensitive;
@@ -189,6 +199,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @return never {@literal null}.
 	 * @since 1.10
 	 */
+	@Contract("_ -> this")
 	public TextCriteria diacriticSensitive(boolean diacriticSensitive) {
 
 		this.diacriticSensitive = diacriticSensitive;

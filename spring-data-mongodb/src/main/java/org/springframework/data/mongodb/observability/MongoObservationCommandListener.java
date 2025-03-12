@@ -23,7 +23,7 @@ import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ConnectionString;
@@ -197,8 +197,7 @@ public class MongoObservationCommandListener implements CommandListener {
 	 * @param context
 	 * @return
 	 */
-	@Nullable
-	private static Observation observationFromContext(RequestContext context) {
+	private static @Nullable Observation observationFromContext(RequestContext context) {
 
 		Observation observation = context.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
 

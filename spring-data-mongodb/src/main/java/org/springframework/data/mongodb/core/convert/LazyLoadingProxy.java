@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.DBRef;
 
@@ -53,8 +53,7 @@ public interface LazyLoadingProxy {
 	 * @return can be {@literal null}.
 	 * @since 3.3
 	 */
-	@Nullable
-	default Object getSource() {
+	default @Nullable Object getSource() {
 		return toDBRef();
 	}
 }

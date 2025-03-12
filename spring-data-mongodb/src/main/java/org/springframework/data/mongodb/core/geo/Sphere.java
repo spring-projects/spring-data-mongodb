@@ -18,12 +18,12 @@ package org.springframework.data.mongodb.core.geo;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
@@ -26,7 +27,6 @@ import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveC
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -67,10 +67,10 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		private final ReactiveMongoTemplate template;
 		private final Class<?> domainType;
 		private final Class<T> returnType;
-		private final String collection;
+		private final @Nullable String collection;
 		private final Query query;
 
-		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, String collection,
+		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, @Nullable String collection,
 				Query query) {
 
 			this.template = template;

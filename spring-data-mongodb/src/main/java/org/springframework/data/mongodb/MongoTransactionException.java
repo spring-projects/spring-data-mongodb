@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A specific {@link ClientSessionException} related to issues with a transaction such as aborted or non existing

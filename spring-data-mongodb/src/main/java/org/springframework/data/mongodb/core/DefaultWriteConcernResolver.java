@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
+
 import com.mongodb.WriteConcern;
 
 /**
@@ -26,7 +28,7 @@ enum DefaultWriteConcernResolver implements WriteConcernResolver {
 
 	INSTANCE;
 
-	public WriteConcern resolve(MongoAction action) {
+	public @Nullable WriteConcern resolve(MongoAction action) {
 		return action.getDefaultWriteConcern();
 	}
 }

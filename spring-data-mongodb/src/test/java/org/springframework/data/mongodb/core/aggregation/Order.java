@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.lang.Contract;
+
 /**
  * @author Thomas Darimont
  */

@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
-import org.springframework.lang.Nullable;
 
 
 /**

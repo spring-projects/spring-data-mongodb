@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.core.messaging;
 
 import java.time.Duration;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -61,8 +61,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 * @return the name of the database to subscribe to. Can be {@literal null} in which case the default
 		 *         {@link MongoDatabaseFactory#getMongoDatabase() database} is used.
 		 */
-		@Nullable
-		default String getDatabaseName() {
+		default @Nullable String getDatabaseName() {
 			return null;
 		}
 
@@ -106,7 +105,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 			return new RequestOptions() {
 
 				@Override
-				public String getCollectionName() {
+				public @Nullable String getCollectionName() {
 					return null;
 				}
 

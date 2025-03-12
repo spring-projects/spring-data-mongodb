@@ -23,6 +23,8 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+import org.jspecify.annotations.NullUnmarked;
+
 /**
  * DateTimeFormatter implementation borrowed from <a href=
  * "https://github.com/mongodb/mongo-java-driver/blob/master/bson/src/main/org/bson/json/DateTimeFormatter.java">MongoDB
@@ -33,6 +35,7 @@ import java.time.ZonedDateTime;
  * @author Ross Lawley
  * @since 2.2
  */
+@NullUnmarked
 class DateTimeFormatter {
 
 	private static final int DATE_STRING_LENGTH = "1970-01-01".length();

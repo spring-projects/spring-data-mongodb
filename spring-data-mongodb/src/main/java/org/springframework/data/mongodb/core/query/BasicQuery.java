@@ -18,7 +18,8 @@ package org.springframework.data.mongodb.core.query;
 import static org.springframework.util.ObjectUtils.*;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -91,6 +92,7 @@ public class BasicQuery extends Query {
 	 * @param query the query to copy.
 	 * @since 4.4
 	 */
+	@SuppressWarnings("NullAway")
 	public BasicQuery(Query query) {
 
 		super(query);
@@ -101,6 +103,7 @@ public class BasicQuery extends Query {
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public Query addCriteria(CriteriaDefinition criteria) {
 
 		this.queryObject.putAll(criteria.getCriteriaObject());

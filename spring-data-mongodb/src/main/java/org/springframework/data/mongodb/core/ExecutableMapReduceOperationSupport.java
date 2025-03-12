@@ -17,9 +17,10 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -46,6 +47,7 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 	 * @see in org.springframework.data.mongodb.core.ExecutableMapReduceOperation#mapReduce(java.lang.Class)
 	 */
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableMapReduceSupport<T> mapReduce(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -89,6 +91,7 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 		 * @see in org.springframework.data.mongodb.core.ExecutableMapReduceOperation.TerminatingMapReduce#all()
 		 */
 		@Override
+		@SuppressWarnings("NullAway")
 		public List<T> all() {
 			return template.mapReduce(query, domainType, getCollectionName(), mapFunction, reduceFunction, options,
 					returnType);

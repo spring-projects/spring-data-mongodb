@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.core.convert.encryption;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Default {@link EncryptionContext} implementation.
@@ -43,29 +43,33 @@ class ExplicitEncryptionContext implements EncryptionContext {
 		return conversionContext.getProperty();
 	}
 
-	@Nullable
 	@Override
-	public Object lookupValue(String path) {
+	public @Nullable Object lookupValue(String path) {
 		return conversionContext.getValue(path);
 	}
 
 	@Override
-	public Object convertToMongoType(Object value) {
+	public @Nullable Object convertToMongoType(Object value) {
 		return conversionContext.write(value);
 	}
 
 	@Override
-	public EvaluationContext getEvaluationContext(Object source) {
-		return conversionContext.getSpELContext().getEvaluationContext(source);
+	public EvaluationContext getEvaluationContext(@Nullable Object source) {
+
+		if(conversionContext.getSpELContext() != null) {
+			return conversionContext.getSpELContext().getEvaluationContext(source);
+		}
+
+		throw new IllegalStateException("SpEL context not present");
 	}
 
 	@Override
-	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
+	public <T> @Nullable T read(@Nullable Object value, TypeInformation<T> target) {
 		return conversionContext.read(value, target);
 	}
 
 	@Override
-	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
+	public <T> @Nullable T write(@Nullable Object value, TypeInformation<T> target) {
 		return conversionContext.write(value, target);
 	}
 

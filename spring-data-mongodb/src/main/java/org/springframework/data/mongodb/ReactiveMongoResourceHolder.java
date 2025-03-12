@@ -15,16 +15,15 @@
  */
 package org.springframework.data.mongodb;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.ResourceHolderSupport;
 
 import com.mongodb.reactivestreams.client.ClientSession;
 
 /**
  * MongoDB specific resource holder, wrapping a {@link ClientSession}. {@link ReactiveMongoTransactionManager} binds
- * instances of this class to the subscriber context.
- * <br />
+ * instances of this class to the subscriber context. <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Mark Paluch
@@ -103,8 +102,7 @@ class ReactiveMongoResourceHolder extends ResourceHolderSupport {
 	 * @param session
 	 * @return
 	 */
-	@Nullable
-	public ClientSession setSessionIfAbsent(@Nullable ClientSession session) {
+	public @Nullable ClientSession setSessionIfAbsent(@Nullable ClientSession session) {
 
 		if (!hasSession()) {
 			setSession(session);

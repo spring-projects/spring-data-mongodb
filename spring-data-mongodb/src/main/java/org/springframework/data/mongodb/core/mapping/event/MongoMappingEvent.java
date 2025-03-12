@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import java.util.function.Function;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.lang.Nullable;
 
 /**
  * Base {@link ApplicationEvent} triggered by Spring Data MongoDB.

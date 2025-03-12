@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CompositeIterator;
 import org.springframework.util.ObjectUtils;
@@ -154,8 +154,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * @param name must not be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public ExposedField getField(String name) {
+	public @Nullable ExposedField getField(String name) {
 
 		for (ExposedField field : this) {
 			if (field.canBeReferredToBy(name)) {

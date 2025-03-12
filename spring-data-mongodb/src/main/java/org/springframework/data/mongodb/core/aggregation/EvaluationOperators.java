@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
@@ -50,8 +51,8 @@ public class EvaluationOperators {
 
 	public static class EvaluationOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link EvaluationOperatorFactory} for given {@literal fieldReference}.
@@ -82,6 +83,7 @@ public class EvaluationOperators {
 		 *
 		 * @return new instance of {@link Expr}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Expr expr() {
 			return usesFieldRef() ? Expr.valueOf(fieldReference) : Expr.valueOf(expression);
 		}
@@ -91,6 +93,7 @@ public class EvaluationOperators {
 		 *
 		 * @return new instance of {@link Expr}.
 		 */
+		@SuppressWarnings("NullAway")
 		public LastObservationCarriedForward locf() {
 			return usesFieldRef() ? LastObservationCarriedForward.locfValueOf(fieldReference)
 					: LastObservationCarriedForward.locfValueOf(expression);

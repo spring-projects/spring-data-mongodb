@@ -20,6 +20,7 @@ import java.util.Date;
 
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -31,7 +32,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerT
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

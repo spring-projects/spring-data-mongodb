@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
@@ -47,7 +48,6 @@ import org.springframework.data.mongodb.util.json.ValueProvider;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -98,8 +98,7 @@ public final class ReferenceLookupDelegate {
 	 *          {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
+	public @Nullable Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
 
 		Object value = source instanceof DocumentReferenceSource documentReferenceSource
@@ -126,7 +125,7 @@ public final class ReferenceLookupDelegate {
 
 	@Nullable
 	private Iterable<Document> retrieveRawDocuments(MongoPersistentProperty property, Object source,
-			LookupFunction lookupFunction, Object value) {
+			LookupFunction lookupFunction, @Nullable Object value) {
 
 		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
 		if (filter instanceof NoResultsFilter) {
@@ -137,7 +136,8 @@ public final class ReferenceLookupDelegate {
 		return lookupFunction.apply(filter, referenceCollection);
 	}
 
-	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,
+	@SuppressWarnings("NullAway")
+	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, @Nullable Object value,
 			SpELContext spELContext) {
 
 		// Use the first value as a reference for others in case of collection like
@@ -195,7 +195,7 @@ public final class ReferenceLookupDelegate {
 	 * @return can be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<T> defaultValue) {
+	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<@Nullable T> defaultValue) {
 
 		if (!StringUtils.hasText(value)) {
 			return defaultValue.get();
@@ -220,7 +220,7 @@ public final class ReferenceLookupDelegate {
 		return evaluated != null ? evaluated : defaultValue.get();
 	}
 
-	ParameterBindingContext bindingContext(MongoPersistentProperty property, Object source, SpELContext spELContext) {
+	ParameterBindingContext bindingContext(MongoPersistentProperty property, @Nullable Object source, SpELContext spELContext) {
 
 		ValueProvider valueProvider = valueProviderFor(DocumentReferenceSource.getTargetSource(source));
 
@@ -228,7 +228,7 @@ public final class ReferenceLookupDelegate {
 				() -> evaluationContextFor(property, source, spELContext));
 	}
 
-	ValueProvider valueProviderFor(Object source) {
+	ValueProvider valueProviderFor(@Nullable Object source) {
 
 		return index -> {
 			if (source instanceof Document document) {
@@ -238,7 +238,7 @@ public final class ReferenceLookupDelegate {
 		};
 	}
 
-	EvaluationContext evaluationContextFor(MongoPersistentProperty property, Object source, SpELContext spELContext) {
+	EvaluationContext evaluationContextFor(MongoPersistentProperty property, @Nullable Object source, SpELContext spELContext) {
 
 		Object target = source instanceof DocumentReferenceSource documentReferenceSource
 				? documentReferenceSource.getTargetSource()
@@ -264,7 +264,7 @@ public final class ReferenceLookupDelegate {
 	 * @param spELContext must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked","NullAway"})
 	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
 		DocumentReference documentReference = property.isDocumentReference() ? property.getDocumentReference()

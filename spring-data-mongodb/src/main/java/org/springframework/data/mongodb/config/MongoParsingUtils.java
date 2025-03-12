@@ -19,6 +19,7 @@ import static org.springframework.data.config.ParsingUtils.*;
 
 import java.util.Map;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -40,6 +41,7 @@ import org.w3c.dom.Element;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@NullUnmarked
 abstract class MongoParsingUtils {
 
 	private MongoParsingUtils() {}

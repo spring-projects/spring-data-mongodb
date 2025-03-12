@@ -19,8 +19,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder.ValueAppender;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 
 /**
  * Adds new fields to documents. {@code $addFields} outputs documents that contain all existing fields from the input
@@ -83,6 +84,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 	 * @param value the value to assign.
 	 * @return new instance of {@link AddFieldsOperation}.
 	 */
+	@Contract("_ -> new")
 	public AddFieldsOperation addField(Object field, Object value) {
 
 		LinkedHashMap<Object, Object> target = new LinkedHashMap<>(getValueMap());
@@ -96,6 +98,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 	 *
 	 * @return new instance of {@link AddFieldsOperationBuilder}.
 	 */
+	@Contract("-> new")
 	public AddFieldsOperationBuilder and() {
 		return new AddFieldsOperationBuilder(getValueMap());
 	}
@@ -140,7 +143,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 			return new ValueAppender() {
 
 				@Override
-				public AddFieldsOperationBuilder withValue(Object value) {
+				public AddFieldsOperationBuilder withValue(@Nullable Object value) {
 
 					valueMap.put(field, value);
 					return AddFieldsOperationBuilder.this;

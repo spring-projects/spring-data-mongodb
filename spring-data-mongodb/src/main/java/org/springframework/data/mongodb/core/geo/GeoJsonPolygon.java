@@ -21,9 +21,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -78,6 +79,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 * @return new {@link GeoJsonPolygon}.
 	 * @since 1.10
 	 */
+	@Contract("_, _, _, _, _ -> new")
 	public GeoJsonPolygon withInnerRing(Point first, Point second, Point third, Point fourth, Point... others) {
 		return withInnerRing(asList(first, second, third, fourth, others));
 	}
@@ -88,6 +90,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 * @param points must not be {@literal null}.
 	 * @return new {@link GeoJsonPolygon}.
 	 */
+	@Contract("_ -> new")
 	public GeoJsonPolygon withInnerRing(List<Point> points) {
 		return withInnerRing(new GeoJsonLineString(points));
 	}
@@ -99,6 +102,7 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	 * @return new {@link GeoJsonPolygon}.
 	 * @since 1.10
 	 */
+	@Contract("_ -> new")
 	public GeoJsonPolygon withInnerRing(GeoJsonLineString lineString) {
 
 		Assert.notNull(lineString, "LineString must not be null");

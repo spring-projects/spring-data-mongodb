@@ -21,6 +21,7 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
@@ -33,7 +34,6 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -101,9 +101,8 @@ public interface MongoConverter
 	 * @throws IllegalArgumentException if {@literal targetType} is {@literal null}.
 	 * @since 2.1
 	 */
-	@SuppressWarnings("unchecked")
-	@Nullable
-	default <S, T> T mapValueToTargetType(S source, Class<T> targetType, DbRefResolver dbRefResolver) {
+	@SuppressWarnings({"unchecked","NullAway"})
+	default <S, T> @Nullable T mapValueToTargetType(S source, Class<T> targetType, DbRefResolver dbRefResolver) {
 
 		Assert.notNull(targetType, "TargetType must not be null");
 		Assert.notNull(dbRefResolver, "DbRefResolver must not be null");

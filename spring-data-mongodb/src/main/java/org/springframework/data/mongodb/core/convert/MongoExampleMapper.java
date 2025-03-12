@@ -28,6 +28,7 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer;
@@ -98,12 +99,16 @@ public class MongoExampleMapper {
 	 * @param entity must not be {@literal null}.
 	 * @return
 	 */
-	public Document getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
+	@SuppressWarnings("NullAway")
+	public Document getMappedExample(Example<?> example, @Nullable MongoPersistentEntity<?> entity) {
 
 		Assert.notNull(example, "Example must not be null");
-		Assert.notNull(entity, "MongoPersistentEntity must not be null");
 
 		Document reference = (Document) converter.convertToMongoType(example.getProbe());
+
+		if(entity != null) {
+			entity = mappingContext.getRequiredPersistentEntity(example.getProbeType());
+		}
 
 		if (entity.getIdProperty() != null && ClassUtils.isAssignable(entity.getType(), example.getProbeType())) {
 

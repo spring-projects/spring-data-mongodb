@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.aot.MongoAotPredicates.*;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -28,7 +29,6 @@ import org.springframework.data.mongodb.repository.support.CrudMethodMetadata;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 import org.springframework.data.mongodb.repository.support.ReactiveQuerydslMongoPredicateExecutor;
 import org.springframework.data.querydsl.QuerydslUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**

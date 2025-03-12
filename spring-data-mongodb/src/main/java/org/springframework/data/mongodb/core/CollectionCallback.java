@@ -16,8 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;

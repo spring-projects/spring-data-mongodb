@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.spel;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -67,8 +67,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 *
 	 * @return
 	 */
-	@Nullable
-	public ExpressionNode getParentNode() {
+	public @Nullable ExpressionNode getParentNode() {
 		return parentNode;
 	}
 
@@ -81,8 +80,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @see #addToPreviousOrReturn(Object)
 	 * @return
 	 */
-	@Nullable
-	public Document getPreviousOperationObject() {
+	public @Nullable Document getPreviousOperationObject() {
 		return previousOperationObject;
 	}
 
@@ -110,7 +108,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @param value
 	 * @return
 	 */
-	public Document addToPreviousOperation(Object value) {
+	public Document addToPreviousOperation(@Nullable Object value) {
 
 		Assert.state(previousOperationObject != null, "No previous operation available");
 
@@ -124,11 +122,14 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @param value
 	 * @return
 	 */
-	public Object addToPreviousOrReturn(Object value) {
+	public @Nullable Object addToPreviousOrReturn(@Nullable Object value) {
 		return hasPreviousOperation() ? addToPreviousOperation(value) : value;
 	}
 
+	@SuppressWarnings("unchecked")
 	private List<Object> extractArgumentListFrom(Document context) {
-		return (List<Object>) context.get(context.keySet().iterator().next());
+
+		Object o = context.get(context.keySet().iterator().next());
+		return o instanceof List<?> l ? (List<Object>) l : List.of();
 	}
 }

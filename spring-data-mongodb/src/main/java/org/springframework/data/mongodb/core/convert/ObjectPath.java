@@ -18,9 +18,9 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -99,8 +99,7 @@ public class ObjectPath {
 	 * @return {@literal null} when no match found.
 	 * @since 2.0
 	 */
-	@Nullable
-	<T> T getPathItem(Object id, String collection, Class<T> type) {
+	<T> @Nullable T getPathItem(Object id, String collection, Class<T> type) {
 
 		Assert.notNull(id, "Id must not be null");
 		Assert.hasText(collection, "Collection name must not be null");
@@ -133,13 +132,11 @@ public class ObjectPath {
 		return getObject();
 	}
 
-	@Nullable
-	private Object getObject() {
+	private @Nullable Object getObject() {
 		return object;
 	}
 
-	@Nullable
-	private Object getIdValue() {
+	private @Nullable Object getIdValue() {
 		return idValue;
 	}
 

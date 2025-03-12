@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.util.Assert;
@@ -105,7 +106,11 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 		return new Document(field, value);
 	}
 
-	private static Object computeValue(Object value, AggregationOperationContext context) {
+	private static @Nullable Object computeValue(@Nullable Object value, AggregationOperationContext context) {
+
+		if(value == null) {
+			return value;
+		}
 
 		if (value instanceof Field field) {
 			return context.getReference(field).toString();
@@ -154,7 +159,7 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 			this.params = parameters.clone();
 		}
 
-		Object toExpression(AggregationOperationContext context) {
+		@Nullable Object toExpression(AggregationOperationContext context) {
 			return TRANSFORMER.transform(expression, context, params);
 		}
 	}

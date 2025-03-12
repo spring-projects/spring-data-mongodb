@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +58,6 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.ReadPreference;
@@ -239,14 +239,12 @@ public class ReactiveStringBasedAggregationUnitTests {
 		return invocation.aggregation.getInputType();
 	}
 
-	@Nullable
-	private Collation collationOf(AggregationInvocation invocation) {
+	private @Nullable Collation collationOf(AggregationInvocation invocation) {
 		return invocation.aggregation.getOptions() != null ? invocation.aggregation.getOptions().getCollation().orElse(null)
 				: null;
 	}
 
-	@Nullable
-	private Object hintOf(AggregationInvocation invocation) {
+	private @Nullable Object hintOf(AggregationInvocation invocation) {
 		return invocation.aggregation.getOptions() != null
 				? invocation.aggregation.getOptions().getHintObject().orElse(null)
 				: null;

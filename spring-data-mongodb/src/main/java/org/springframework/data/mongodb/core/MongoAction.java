@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.WriteConcern;
@@ -72,28 +72,23 @@ public class MongoAction {
 		return collectionName;
 	}
 
-	@Nullable
-	public WriteConcern getDefaultWriteConcern() {
+	public @Nullable WriteConcern getDefaultWriteConcern() {
 		return defaultWriteConcern;
 	}
 
-	@Nullable
-	public Class<?> getEntityType() {
+	public @Nullable Class<?> getEntityType() {
 		return entityType;
 	}
 
-	@Nullable
-	public MongoActionOperation getMongoActionOperation() {
+	public @Nullable MongoActionOperation getMongoActionOperation() {
 		return mongoActionOperation;
 	}
 
-	@Nullable
-	public Document getQuery() {
+	public @Nullable Document getQuery() {
 		return query;
 	}
 
-	@Nullable
-	public Document getDocument() {
+	public @Nullable Document getDocument() {
 		return document;
 	}
 

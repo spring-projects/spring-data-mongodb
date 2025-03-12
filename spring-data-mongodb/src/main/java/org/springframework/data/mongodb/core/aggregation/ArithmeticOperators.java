@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Avg;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovariancePop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovarianceSamp;
@@ -32,7 +33,7 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.St
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnit;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnits;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -84,8 +85,8 @@ public class ArithmeticOperators {
 	 */
 	public static class ArithmeticOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link ArithmeticOperatorFactory} for given {@literal fieldReference}.
@@ -116,6 +117,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Abs}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Abs abs() {
 			return usesFieldRef() ? Abs.absoluteValueOf(fieldReference) : Abs.absoluteValueOf(expression);
 		}
@@ -158,6 +160,7 @@ public class ArithmeticOperators {
 			return createAdd().add(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Add createAdd() {
 			return usesFieldRef() ? Add.valueOf(fieldReference) : Add.valueOf(expression);
 		}
@@ -168,6 +171,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Ceil}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Ceil ceil() {
 			return usesFieldRef() ? Ceil.ceilValueOf(fieldReference) : Ceil.ceilValueOf(expression);
 		}
@@ -205,6 +209,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Derivative}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Derivative derivative(@Nullable String unit) {
 
 			Derivative derivative = usesFieldRef() ? Derivative.derivativeOf(fieldReference)
@@ -250,6 +255,7 @@ public class ArithmeticOperators {
 			return createDivide().divideBy(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Divide createDivide() {
 			return usesFieldRef() ? Divide.valueOf(fieldReference) : Divide.valueOf(expression);
 		}
@@ -259,6 +265,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Exp}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Exp exp() {
 			return usesFieldRef() ? Exp.expValueOf(fieldReference) : Exp.expValueOf(expression);
 		}
@@ -269,6 +276,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Floor}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Floor floor() {
 			return usesFieldRef() ? Floor.floorValueOf(fieldReference) : Floor.floorValueOf(expression);
 		}
@@ -279,6 +287,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Integral}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Integral integral() {
 			return usesFieldRef() ? Integral.integralOf(fieldReference) : Integral.integralOf(expression);
 		}
@@ -318,6 +327,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Ln}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Ln ln() {
 			return usesFieldRef() ? Ln.lnValueOf(fieldReference) : Ln.lnValueOf(expression);
 		}
@@ -345,7 +355,7 @@ public class ArithmeticOperators {
 		public Log log(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
-			return createLog().log(fieldReference);
+			return createLog().log(expression);
 		}
 
 		/**
@@ -361,6 +371,7 @@ public class ArithmeticOperators {
 			return createLog().log(base);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Log createLog() {
 			return usesFieldRef() ? Log.valueOf(fieldReference) : Log.valueOf(expression);
 		}
@@ -370,6 +381,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Log10}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Log10 log10() {
 			return usesFieldRef() ? Log10.log10ValueOf(fieldReference) : Log10.log10ValueOf(expression);
 		}
@@ -413,6 +425,7 @@ public class ArithmeticOperators {
 			return createMod().mod(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Mod createMod() {
 			return usesFieldRef() ? Mod.valueOf(fieldReference) : Mod.valueOf(expression);
 		}
@@ -453,6 +466,7 @@ public class ArithmeticOperators {
 			return createMultiply().multiplyBy(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Multiply createMultiply() {
 			return usesFieldRef() ? Multiply.valueOf(fieldReference) : Multiply.valueOf(expression);
 		}
@@ -493,6 +507,7 @@ public class ArithmeticOperators {
 			return createPow().pow(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Pow createPow() {
 			return usesFieldRef() ? Pow.valueOf(fieldReference) : Pow.valueOf(expression);
 		}
@@ -502,6 +517,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Sqrt}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Sqrt sqrt() {
 			return usesFieldRef() ? Sqrt.sqrtOf(fieldReference) : Sqrt.sqrtOf(expression);
 		}
@@ -542,6 +558,7 @@ public class ArithmeticOperators {
 			return createSubtract().subtract(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Subtract createSubtract() {
 			return usesFieldRef() ? Subtract.valueOf(fieldReference) : Subtract.valueOf(expression);
 		}
@@ -551,6 +568,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Trunc}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Trunc trunc() {
 			return usesFieldRef() ? Trunc.truncValueOf(fieldReference) : Trunc.truncValueOf(expression);
 		}
@@ -560,6 +578,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Sum}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Sum sum() {
 			return usesFieldRef() ? AccumulatorOperators.Sum.sumOf(fieldReference)
 					: AccumulatorOperators.Sum.sumOf(expression);
@@ -570,6 +589,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Avg}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Avg avg() {
 			return usesFieldRef() ? AccumulatorOperators.Avg.avgOf(fieldReference)
 					: AccumulatorOperators.Avg.avgOf(expression);
@@ -580,6 +600,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Max}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Max max() {
 			return usesFieldRef() ? AccumulatorOperators.Max.maxOf(fieldReference)
 					: AccumulatorOperators.Max.maxOf(expression);
@@ -590,6 +611,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link Min}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Min min() {
 			return usesFieldRef() ? AccumulatorOperators.Min.minOf(fieldReference)
 					: AccumulatorOperators.Min.minOf(expression);
@@ -600,6 +622,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link StdDevPop}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StdDevPop stdDevPop() {
 			return usesFieldRef() ? AccumulatorOperators.StdDevPop.stdDevPopOf(fieldReference)
 					: AccumulatorOperators.StdDevPop.stdDevPopOf(expression);
@@ -610,6 +633,7 @@ public class ArithmeticOperators {
 		 *
 		 * @return new instance of {@link StdDevSamp}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StdDevSamp stdDevSamp() {
 			return usesFieldRef() ? AccumulatorOperators.StdDevSamp.stdDevSampOf(fieldReference)
 					: AccumulatorOperators.StdDevSamp.stdDevSampOf(expression);
@@ -639,6 +663,7 @@ public class ArithmeticOperators {
 			return covariancePop().and(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private CovariancePop covariancePop() {
 			return usesFieldRef() ? CovariancePop.covariancePopOf(fieldReference) : CovariancePop.covariancePopOf(expression);
 		}
@@ -667,6 +692,7 @@ public class ArithmeticOperators {
 			return covarianceSamp().and(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private CovarianceSamp covarianceSamp() {
 			return usesFieldRef() ? CovarianceSamp.covarianceSampOf(fieldReference)
 					: CovarianceSamp.covarianceSampOf(expression);
@@ -679,6 +705,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Round}.
 		 * @since 3.0
 		 */
+		@SuppressWarnings("NullAway")
 		public Round round() {
 			return usesFieldRef() ? Round.roundValueOf(fieldReference) : Round.roundValueOf(expression);
 		}
@@ -712,6 +739,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Sin sin(AngularUnit unit) {
 			return usesFieldRef() ? Sin.sinOf(fieldReference, unit) : Sin.sinOf(expression, unit);
 		}
@@ -734,6 +762,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Sinh}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Sinh sinh(AngularUnit unit) {
 			return usesFieldRef() ? Sinh.sinhOf(fieldReference, unit) : Sinh.sinhOf(expression, unit);
 		}
@@ -744,6 +773,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ASin}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ASin asin() {
 			return usesFieldRef() ? ASin.asinOf(fieldReference) : ASin.asinOf(expression);
 		}
@@ -754,6 +784,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ASinh}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ASinh asinh() {
 			return usesFieldRef() ? ASinh.asinhOf(fieldReference) : ASinh.asinhOf(expression);
 		}
@@ -777,6 +808,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Cos}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Cos cos(AngularUnit unit) {
 			return usesFieldRef() ? Cos.cosOf(fieldReference, unit) : Cos.cosOf(expression, unit);
 		}
@@ -799,6 +831,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Cosh}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Cosh cosh(AngularUnit unit) {
 			return usesFieldRef() ? Cosh.coshOf(fieldReference, unit) : Cosh.coshOf(expression, unit);
 		}
@@ -809,6 +842,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ACos}.
 		 * @since 3.4
 		 */
+		@SuppressWarnings("NullAway")
 		public ACos acos() {
 			return usesFieldRef() ? ACos.acosOf(fieldReference) : ACos.acosOf(expression);
 		}
@@ -819,6 +853,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ACosh}.
 		 * @since 3.4
 		 */
+		@SuppressWarnings("NullAway")
 		public ACosh acosh() {
 			return usesFieldRef() ? ACosh.acoshOf(fieldReference) : ACosh.acoshOf(expression);
 		}
@@ -840,6 +875,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ATan}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ATan atan() {
 			return usesFieldRef() ? ATan.atanOf(fieldReference) : ATan.atanOf(expression);
 		}
@@ -852,6 +888,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ATan2}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ATan2 atan2(Number value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -886,8 +923,8 @@ public class ArithmeticOperators {
 			return createATan2().atan2of(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ATan2 createATan2() {
-
 			return usesFieldRef() ? ATan2.valueOf(fieldReference) : ATan2.valueOf(expression);
 		}
 
@@ -897,6 +934,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ATanh}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ATanh atanh() {
 			return usesFieldRef() ? ATanh.atanhOf(fieldReference) : ATanh.atanhOf(expression);
 		}
@@ -909,6 +947,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Tan}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Tan tan(AngularUnit unit) {
 			return usesFieldRef() ? Tan.tanOf(fieldReference, unit) : Tan.tanOf(expression, unit);
 		}
@@ -931,18 +970,19 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Tanh}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public Tanh tanh(AngularUnit unit) {
 			return usesFieldRef() ? Tanh.tanhOf(fieldReference, unit) : Tanh.tanhOf(expression, unit);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
-		 * numeric value.
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the numeric value.
 		 *
 		 * @return new instance of {@link Percentile}.
 		 * @param percentages must not be {@literal null}.
 		 * @since 4.2
 		 */
+		@SuppressWarnings("NullAway")
 		public Percentile percentile(Double... percentages) {
 			Percentile percentile = usesFieldRef() ? AccumulatorOperators.Percentile.percentileOf(fieldReference)
 					: AccumulatorOperators.Percentile.percentileOf(expression);
@@ -950,12 +990,12 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
-		 * numeric value.
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the numeric value.
 		 *
 		 * @return new instance of {@link Median}.
 		 * @since 4.2
 		 */
+		@SuppressWarnings("NullAway")
 		public Median median() {
 			return usesFieldRef() ? AccumulatorOperators.Median.medianOf(fieldReference)
 					: AccumulatorOperators.Median.medianOf(expression);
@@ -1077,6 +1117,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
+		@Contract("_ -> new")
 		public Add add(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1089,6 +1130,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
+		@Contract("_ -> new")
 		public Add add(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1101,6 +1143,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
+		@Contract("_ -> new")
 		public Add add(Number value) {
 			return new Add(append(value));
 		}
@@ -1217,6 +1260,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
+		@Contract("_ -> new")
 		public Divide divideBy(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1229,6 +1273,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
+		@Contract("_ -> new")
 		public Divide divideBy(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1241,6 +1286,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
+		@Contract("_ -> new")
 		public Divide divideBy(Number value) {
 			return new Divide(append(value));
 		}
@@ -1463,6 +1509,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
+		@Contract("_ -> new")
 		public Log log(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1475,6 +1522,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
+		@Contract("_ -> new")
 		public Log log(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1487,6 +1535,7 @@ public class ArithmeticOperators {
 		 * @param base must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
+		@Contract("_ -> new")
 		public Log log(Number base) {
 			return new Log(append(base));
 		}
@@ -1603,6 +1652,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
+		@Contract("_ -> new")
 		public Mod mod(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1615,6 +1665,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
+		@Contract("_ -> new")
 		public Mod mod(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1627,6 +1678,7 @@ public class ArithmeticOperators {
 		 * @param base must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
+		@Contract("_ -> new")
 		public Mod mod(Number base) {
 			return new Mod(append(base));
 		}
@@ -1690,6 +1742,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
+		@Contract("_ -> new")
 		public Multiply multiplyBy(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1702,6 +1755,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
+		@Contract("_ -> new")
 		public Multiply multiplyBy(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1714,6 +1768,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
+		@Contract("_ -> new")
 		public Multiply multiplyBy(Number value) {
 			return new Multiply(append(value));
 		}
@@ -1777,6 +1832,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Pow pow(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1789,6 +1845,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Pow pow(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1801,6 +1858,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Pow pow(Number value) {
 			return new Pow(append(value));
 		}
@@ -1917,6 +1975,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Subtract subtract(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1929,6 +1988,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Subtract subtract(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1941,6 +2001,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Subtract subtract(Number value) {
 			return new Subtract(append(value));
 		}
@@ -2060,6 +2121,7 @@ public class ArithmeticOperators {
 		 * @param place value between -20 and 100, exclusive.
 		 * @return new instance of {@link Round}.
 		 */
+		@Contract("_ -> new")
 		public Round place(int place) {
 			return new Round(append(place));
 		}
@@ -2070,6 +2132,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Round}.
 		 */
+		@Contract("_ -> new")
 		public Round placeOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2083,6 +2146,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Round}.
 		 */
+		@Contract("_ -> new")
 		public Round placeOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -2133,6 +2197,7 @@ public class ArithmeticOperators {
 			return new Derivative(Collections.singletonMap("input", value));
 		}
 
+		@Contract("_ -> new")
 		public Derivative unit(String unit) {
 			return new Derivative(append("unit", unit));
 		}
@@ -2183,6 +2248,7 @@ public class ArithmeticOperators {
 		 * @param unit the unit of measure.
 		 * @return new instance of {@link Integral}.
 		 */
+		@Contract("_ -> new")
 		public Integral unit(String unit) {
 			return new Integral(append("unit", unit));
 		}
@@ -2217,8 +2283,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
-		 * {@link AngularUnit#RADIANS radians}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS radians}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2330,8 +2395,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * the given {@link AngularUnit unit}.
-		 * <br />
+		 * the given {@link AngularUnit unit}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2350,8 +2414,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * {@link AngularUnit#RADIANS}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -2434,8 +2497,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASin}.
@@ -2484,8 +2546,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASinh}.
@@ -2525,8 +2586,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
-		 * {@link AngularUnit#RADIANS radians}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS radians}. <br />
 		 * Use {@code cosOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2636,8 +2696,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * the given {@link AngularUnit unit}.
-		 * <br />
+		 * the given {@link AngularUnit unit}. <br />
 		 * Use {@code coshOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2654,8 +2713,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * {@link AngularUnit#RADIANS}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -2738,8 +2796,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ACos}.
@@ -2788,8 +2845,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ACosh}.
@@ -2829,8 +2885,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
-		 * {@link AngularUnit#RADIANS radians}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS radians}. <br />
 		 * Use {@code tanOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -3008,8 +3063,8 @@ public class ArithmeticOperators {
 		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
 		 * the first and second values passed to the expression respectively.
 		 *
-		 * @param fieldReference anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
-		 *          numeric value.
+		 * @param fieldReference anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves
+		 *          to a numeric value.
 		 * @return new instance of {@link ATan2}.
 		 */
 		public ATan2 atan2of(String fieldReference) {
@@ -3022,8 +3077,8 @@ public class ArithmeticOperators {
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
 		 * {@link AngularUnit#RADIANS}.
 		 *
-		 * @param expression anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
-		 *          numeric value.
+		 * @param expression anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to
+		 *          a numeric value.
 		 * @return new instance of {@link ATan2}.
 		 */
 		public ATan2 atan2of(AggregationExpression expression) {
@@ -3075,8 +3130,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * the given {@link AngularUnit unit}.
-		 * <br />
+		 * the given {@link AngularUnit unit}. <br />
 		 * Use {@code tanhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -3093,8 +3147,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * {@link AngularUnit#RADIANS}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -3165,11 +3218,9 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse
-		 * hyperbolic tangent of a value.
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
 		 *
-		 * @param fieldReference the name of the {@link Field field} that resolves to a
-		 *                       numeric value.
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link ATanh}.
 		 */
 		public static ATanh atanhOf(String fieldReference) {
@@ -3177,8 +3228,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ATanh}.
@@ -3188,11 +3238,10 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse
-		 * hyperbolic tangent of a value.
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
 		 *
-		 * @param value anything ({@link Field field}, {@link AggregationExpression
-		 *              expression}, ...) that resolves to a numeric value.
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
 		 * @return new instance of {@link ATanh}.
 		 */
 		public static ATanh atanhOf(Object value) {

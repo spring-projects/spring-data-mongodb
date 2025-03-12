@@ -18,7 +18,7 @@ package org.springframework.data.mongodb;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Default implementation of {@link MongoTransactionOptions} using {@literal mongo:} as {@link #getLabelPrefix() label
@@ -42,9 +42,8 @@ enum DefaultMongoTransactionOptionsResolver implements MongoTransactionOptionsRe
 		return SimpleMongoTransactionOptions.of(options);
 	}
 
-	@Nullable
 	@Override
-	public String getLabelPrefix() {
+	public @Nullable String getLabelPrefix() {
 		return PREFIX;
 	}
 

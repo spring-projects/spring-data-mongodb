@@ -21,8 +21,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -76,6 +77,7 @@ public class WildcardIndex extends Index {
 	 *
 	 * @return this.
 	 */
+	@Contract("-> this")
 	public WildcardIndex includeId() {
 
 		wildcardProjection.put(FieldName.ID.name(), 1);
@@ -89,6 +91,7 @@ public class WildcardIndex extends Index {
 	 * @return this.
 	 */
 	@Override
+	@Contract("_ -> this")
 	public WildcardIndex named(String name) {
 
 		super.named(name);
@@ -101,6 +104,7 @@ public class WildcardIndex extends Index {
 	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
+	@Contract("-> fail")
 	public Index unique() {
 		throw new UnsupportedOperationException("Wildcard Index does not support 'unique'");
 	}
@@ -111,6 +115,7 @@ public class WildcardIndex extends Index {
 	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
+	@Contract("-> fail")
 	public Index expire(long seconds) {
 		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}
@@ -121,6 +126,7 @@ public class WildcardIndex extends Index {
 	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
+	@Contract("_, _ -> fail")
 	public Index expire(long value, TimeUnit timeUnit) {
 		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}
@@ -131,6 +137,7 @@ public class WildcardIndex extends Index {
 	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
+	@Contract("_ -> fail")
 	public Index expire(Duration duration) {
 		throw new UnsupportedOperationException("Wildcard Index does not support 'ttl'");
 	}
@@ -142,6 +149,7 @@ public class WildcardIndex extends Index {
 	 * @param paths must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public WildcardIndex wildcardProjectionInclude(String... paths) {
 
 		for (String path : paths) {
@@ -157,6 +165,7 @@ public class WildcardIndex extends Index {
 	 * @param paths must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public WildcardIndex wildcardProjectionExclude(String... paths) {
 
 		for (String path : paths) {
@@ -172,6 +181,7 @@ public class WildcardIndex extends Index {
 	 * @param includeExclude must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public WildcardIndex wildcardProjection(Map<String, Object> includeExclude) {
 
 		wildcardProjection.putAll(includeExclude);

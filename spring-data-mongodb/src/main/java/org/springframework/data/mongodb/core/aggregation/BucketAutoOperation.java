@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.BucketAutoOperationOutputBuilder;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.util.Assert;
@@ -38,7 +39,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		implements FieldsExposingAggregationOperation {
 
 	private final int buckets;
-	private final String granularity;
+	private final @Nullable String granularity;
 
 	/**
 	 * Creates a new {@link BucketAutoOperation} given a {@link Field group-by field}.
@@ -80,7 +81,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		this.granularity = bucketOperation.granularity;
 	}
 
-	private BucketAutoOperation(BucketAutoOperation bucketOperation, int buckets, String granularity) {
+	private BucketAutoOperation(BucketAutoOperation bucketOperation, int buckets, @Nullable String granularity) {
 
 		super(bucketOperation);
 

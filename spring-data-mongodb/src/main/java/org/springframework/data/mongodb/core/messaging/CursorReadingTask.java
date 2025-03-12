@@ -21,12 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.util.Lock;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 
@@ -51,7 +51,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	private State state = State.CREATED;
 
-	private MongoCursor<T> cursor;
+	private @Nullable MongoCursor<T> cursor;
 
 	/**
 	 * @param template must not be {@literal null}.
@@ -109,6 +109,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * is immediately {@link MongoCursor#close() closed} and a new {@link MongoCursor} is requested until a valid one is
 	 * retrieved or the {@link #state} changes.
 	 */
+	@SuppressWarnings("NullAway")
 	private void start() {
 
 		lock.executeWithoutResult(() -> {
@@ -188,6 +189,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 		return awaitStart.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
 	}
 
+	@SuppressWarnings("NullAway")
 	protected Message<T, R> createMessage(T source, Class<R> targetType, RequestOptions options) {
 
 		SimpleMessage<T, T> message = new SimpleMessage<>(source, source, MessageProperties.builder()
@@ -209,11 +211,10 @@ abstract class CursorReadingTask<T, R> implements Task {
 		}
 	}
 
-	@Nullable
-	private T getNext() {
+	private @Nullable T getNext() {
 
 		return lock.execute(() -> {
-			if (State.RUNNING.equals(state)) {
+			if (cursor != null && State.RUNNING.equals(state)) {
 				return cursor.tryNext();
 			}
 			throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));
@@ -239,8 +240,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * @return can be {@literal null}.
 	 * @throws RuntimeException The potentially translated exception.
 	 */
-	@Nullable
-	private <V> V execute(Supplier<V> callback) {
+	private <V> @Nullable V execute(Supplier<V> callback) {
 
 		try {
 			return callback.get();

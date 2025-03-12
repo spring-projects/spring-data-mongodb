@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Describes the system variables available in MongoDB aggregation framework pipeline expressions.
@@ -116,8 +116,7 @@ public enum SystemVariable implements AggregationVariable {
 		return toString();
 	}
 
-	@Nullable
-	static String variableNameFrom(@Nullable String fieldRef) {
+	static @Nullable String variableNameFrom(@Nullable String fieldRef) {
 
 		if (fieldRef == null || !fieldRef.startsWith(PREFIX) || fieldRef.length() <= 2) {
 			return null;

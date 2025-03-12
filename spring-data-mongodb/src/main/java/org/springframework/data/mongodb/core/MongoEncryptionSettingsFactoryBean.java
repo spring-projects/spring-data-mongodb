@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.bson.BsonDocument;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.MongoClientSettings;
@@ -34,11 +34,11 @@ import com.mongodb.MongoClientSettings;
 public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncryptionSettings> {
 
 	private boolean bypassAutoEncryption;
-	private String keyVaultNamespace;
-	private Map<String, Object> extraOptions;
-	private MongoClientSettings keyVaultClientSettings;
-	private Map<String, Map<String, Object>> kmsProviders;
-	private Map<String, BsonDocument> schemaMap;
+	private @Nullable String keyVaultNamespace;
+	private @Nullable Map<String, Object> extraOptions;
+	private @Nullable MongoClientSettings keyVaultClientSettings;
+	private @Nullable Map<String, Map<String, Object>> kmsProviders;
+	private @Nullable Map<String, BsonDocument> schemaMap;
 
 	/**
 	 * @param bypassAutoEncryption

@@ -17,11 +17,10 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -119,8 +118,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 * @param name must not be {@literal null}.
 	 * @return the resolved reference or {@literal null}.
 	 */
-	@Nullable
-	protected FieldReference resolveExposedField(@Nullable Field field, String name) {
+	protected @Nullable FieldReference resolveExposedField(@Nullable Field field, String name) {
 
 		ExposedField exposedField = exposedFields.getField(name);
 

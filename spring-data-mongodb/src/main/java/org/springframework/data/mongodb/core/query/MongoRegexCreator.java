@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import java.util.regex.Pattern;
 
 import org.bson.BsonRegularExpression;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -80,8 +80,7 @@ public enum MongoRegexCreator {
 	 * @param matcherType the type of matching to perform
 	 * @return {@literal source} when {@literal source} or {@literal matcherType} is {@literal null}.
 	 */
-	@Nullable
-	public String toRegularExpression(@Nullable String source, @Nullable MatchMode matcherType) {
+	public @Nullable String toRegularExpression(@Nullable String source, @Nullable MatchMode matcherType) {
 
 		if (matcherType == null || source == null) {
 			return source;

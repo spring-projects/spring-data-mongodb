@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Date;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.aggregation.DensifyOperation.DensifyUnits;
 import org.springframework.data.mongodb.core.aggregation.DensifyOperation.Range;
@@ -27,7 +28,6 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link DensifyOperation}.
