@@ -18,8 +18,9 @@ package org.springframework.data.mongodb.core;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -41,6 +42,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -56,10 +58,11 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 
 		private final MongoTemplate template;
 		private final Class<T> domainType;
-		@Nullable private final String collection;
-		@Nullable private final BulkMode bulkMode;
+		private final @Nullable String collection;
+		private final @Nullable BulkMode bulkMode;
 
-		ExecutableInsertSupport(MongoTemplate template, Class<T> domainType, String collection, BulkMode bulkMode) {
+		ExecutableInsertSupport(MongoTemplate template, Class<T> domainType, @Nullable String collection,
+				@Nullable BulkMode bulkMode) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -93,6 +96,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public InsertWithBulkMode<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
@@ -101,6 +105,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode) {
 
 			Assert.notNull(bulkMode, "BulkMode must not be null");

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
@@ -59,7 +60,6 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -163,7 +163,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 
 			if (persistentProperty.isEntity()) {
-				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+				indexes.addAll(resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(persistentProperty),
 						persistentProperty.isUnwrapped() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
 						root.getCollection(), guard));
 			}
@@ -230,7 +230,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (persistentProperty.isEntity()) {
 			try {
-				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+				indexes.addAll(resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(persistentProperty),
 						propertyDotPath.toString(), propertyPath, collection, guard));
 			} catch (CyclicPropertyReferenceException e) {
 				LOGGER.info(e.getMessage());
@@ -383,7 +383,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 						try {
 							appendTextIndexInformation(propertyDotPath, propertyPath, indexDefinitionBuilder,
-									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
+									mappingContext.getRequiredPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage());
 						} catch (InvalidDataAccessApiUsageException e) {
@@ -518,8 +518,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
-	@Nullable
-	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
+	protected @Nullable IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
 		Indexed index = persistentProperty.findAnnotation(Indexed.class);
@@ -575,7 +574,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?, ?> entity) {
+	private PartialIndexFilter evaluatePartialFilter(String filterExpression, @Nullable PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(filterExpression, () -> getEvaluationContextForProperty(entity));
 
@@ -586,7 +585,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
 	}
 
-	private org.bson.Document evaluateWildcardProjection(String projectionExpression, PersistentEntity<?, ?> entity) {
+	private org.bson.Document evaluateWildcardProjection(String projectionExpression, @Nullable PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getEvaluationContextForProperty(entity));
 
@@ -597,7 +596,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return BsonUtils.parse(projectionExpression, null);
 	}
 
-	private Collation evaluateCollation(String collationExpression, PersistentEntity<?, ?> entity) {
+	private Collation evaluateCollation(String collationExpression, @Nullable PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(collationExpression, () -> getEvaluationContextForProperty(entity));
 		if (result instanceof org.bson.Document document) {
@@ -690,8 +689,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
-	@Nullable
-	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
+	protected @Nullable IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
 		GeoSpatialIndexed index = persistentProperty.findAnnotation(GeoSpatialIndexed.class);
@@ -793,8 +791,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @return the collation present on either the annotation or the entity as a fallback. Might be {@literal null}.
 	 * @since 4.0
 	 */
-	@Nullable
-	private Collation resolveCollation(Annotation annotation, @Nullable PersistentEntity<?, ?> entity) {
+	private @Nullable Collation resolveCollation(Annotation annotation, @Nullable PersistentEntity<?, ?> entity) {
 		return MergedAnnotation.from(annotation).getValue("collation", String.class).filter(StringUtils::hasText)
 				.map(it -> evaluateCollation(it, entity)).orElseGet(() -> {
 
@@ -1119,8 +1116,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return strategy;
 		}
 
-		@Nullable
-		public TextIndexedFieldSpec getParentFieldSpec() {
+		public @Nullable TextIndexedFieldSpec getParentFieldSpec() {
 			return parentFieldSpec;
 		}
 

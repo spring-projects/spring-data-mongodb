@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.MongoGridFSException;
@@ -105,6 +105,7 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public long contentLength() throws IOException {
 
 		verifyExists();
@@ -122,6 +123,7 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public long lastModified() throws IOException {
 
 		verifyExists();
@@ -139,6 +141,7 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	 * @return never {@literal null}.
 	 * @throws IllegalStateException if the file does not {@link #exists()}.
 	 */
+	@SuppressWarnings("NullAway")
 	public Object getId() {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
@@ -147,7 +150,8 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	}
 
 	@Override
-	public Object getFileId() {
+	@SuppressWarnings("NullAway")
+	public @Nullable Object getFileId() {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 		return BsonUtils.toJavaType(getGridFSFile().getId());
@@ -157,8 +161,7 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
 	 * @since 2.2
 	 */
-	@Nullable
-	public GridFSFile getGridFSFile() {
+	public @Nullable GridFSFile getGridFSFile() {
 		return this.file;
 	}
 
@@ -170,6 +173,7 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 	 *           provided via {@link GridFSFile}.
 	 * @throws IllegalStateException if the file does not {@link #exists()}.
 	 */
+	@SuppressWarnings("NullAway")
 	public String getContentType() {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));

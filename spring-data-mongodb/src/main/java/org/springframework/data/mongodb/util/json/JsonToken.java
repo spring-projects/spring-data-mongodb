@@ -20,6 +20,7 @@ import static java.lang.String.*;
 import org.bson.BsonDouble;
 import org.bson.json.JsonParseException;
 import org.bson.types.Decimal128;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * JsonToken implementation borrowed from <a href=
@@ -30,6 +31,7 @@ import org.bson.types.Decimal128;
  * @author Ross Lawley
  * @since 2.2
  */
+@NullUnmarked
 class JsonToken {
 
 	private final Object value;

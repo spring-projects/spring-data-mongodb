@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +36,6 @@ import org.springframework.data.mongodb.core.query.TextQueryTests.FullTextDoc.Fu
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl

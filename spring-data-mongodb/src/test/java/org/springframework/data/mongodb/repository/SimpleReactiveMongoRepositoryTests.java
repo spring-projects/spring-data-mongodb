@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,6 @@ import org.springframework.data.mongodb.repository.support.ReactiveMongoReposito
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.repository.query.FluentQuery;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.TransactionDefinition;

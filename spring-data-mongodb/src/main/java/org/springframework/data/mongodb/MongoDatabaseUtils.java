@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.support.ResourceHolderSynchronization;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -29,8 +29,7 @@ import com.mongodb.client.MongoDatabase;
 /**
  * Helper class for managing a {@link MongoDatabase} instances via {@link MongoDatabaseFactory}. Used for obtaining
  * {@link ClientSession session bound} resources, such as {@link MongoDatabase} and
- * {@link com.mongodb.client.MongoCollection} suitable for transactional usage.
- * <br />
+ * {@link com.mongodb.client.MongoCollection} suitable for transactional usage. <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Christoph Strobl
@@ -42,8 +41,7 @@ public class MongoDatabaseUtils {
 
 	/**
 	 * Obtain the default {@link MongoDatabase database} form the given {@link MongoDatabaseFactory factory} using
-	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <br />
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}. <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -55,8 +53,7 @@ public class MongoDatabaseUtils {
 	}
 
 	/**
-	 * Obtain the default {@link MongoDatabase database} form the given {@link MongoDatabaseFactory factory}.
-	 * <br />
+	 * Obtain the default {@link MongoDatabase database} form the given {@link MongoDatabaseFactory factory}. <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -70,8 +67,7 @@ public class MongoDatabaseUtils {
 
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link MongoDatabaseFactory factory} using
-	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <br />
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}. <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -139,8 +135,7 @@ public class MongoDatabaseUtils {
 		return resourceHolder != null && resourceHolder.hasActiveTransaction();
 	}
 
-	@Nullable
-	private static ClientSession doGetSession(MongoDatabaseFactory dbFactory,
+	private static @Nullable ClientSession doGetSession(MongoDatabaseFactory dbFactory,
 			SessionSynchronization sessionSynchronization) {
 
 		MongoResourceHolder resourceHolder = (MongoResourceHolder) TransactionSynchronizationManager.getResource(dbFactory);

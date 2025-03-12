@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.util.AbstractMap;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -28,7 +29,6 @@ import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.NullableWrapperConverters;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * Default implementation of a {@link MappingContext} for MongoDB using {@link BasicMongoPersistentEntity} and
@@ -46,8 +46,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private boolean autoIndexCreation = false;
 
-	@Nullable
-	private ApplicationContext applicationContext;
+	private @Nullable ApplicationContext applicationContext;
 
 	/**
 	 * Creates a new {@link MongoMappingContext}.
@@ -125,9 +124,8 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 		this.autoIndexCreation = autoCreateIndexes;
 	}
 
-	@Nullable
 	@Override
-	public MongoPersistentEntity<?> getPersistentEntity(MongoPersistentProperty persistentProperty) {
+	public @Nullable MongoPersistentEntity<?> getPersistentEntity(MongoPersistentProperty persistentProperty) {
 
 		MongoPersistentEntity<?> entity = super.getPersistentEntity(persistentProperty);
 

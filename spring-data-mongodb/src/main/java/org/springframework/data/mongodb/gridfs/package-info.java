@@ -1,6 +1,6 @@
 /**
  * Support for MongoDB GridFS feature.
  */
-@org.springframework.lang.NonNullApi
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.mongodb.gridfs;
 

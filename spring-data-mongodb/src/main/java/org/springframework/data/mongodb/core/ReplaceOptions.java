@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Contract;
 
 /**
  * Options for {@link org.springframework.data.mongodb.core.MongoOperations#replace(Query, Object) replace operations}. Defaults to
@@ -69,6 +70,7 @@ public class ReplaceOptions {
 	 *
 	 * @return this.
 	 */
+	@Contract("-> this")
 	public ReplaceOptions upsert() {
 
 		this.upsert = true;

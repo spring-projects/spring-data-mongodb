@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -139,7 +141,7 @@ public class MongoField {
 	 */
 	public static class MongoFieldBuilder {
 
-		private String name;
+		private @Nullable String name;
 		private Type nameType = Type.PATH;
 		private FieldType type = FieldType.IMPLICIT;
 		private int order = Integer.MAX_VALUE;
@@ -150,6 +152,7 @@ public class MongoField {
 		 * @param fieldType
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public MongoFieldBuilder fieldType(FieldType fieldType) {
 
 			this.type = fieldType;
@@ -163,6 +166,7 @@ public class MongoField {
 		 * @param fieldName
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public MongoFieldBuilder name(String fieldName) {
 
 			Assert.hasText(fieldName, "Field name must not be empty");
@@ -178,6 +182,7 @@ public class MongoField {
 		 * @param path
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public MongoFieldBuilder path(String path) {
 
 			Assert.hasText(path, "Field path (name) must not be empty");
@@ -193,6 +198,7 @@ public class MongoField {
 		 * @param order
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public MongoFieldBuilder order(int order) {
 
 			this.order = order;
@@ -204,7 +210,10 @@ public class MongoField {
 		 *
 		 * @return a new {@link MongoField}.
 		 */
+		@Contract("-> new")
 		public MongoField build() {
+
+			Assert.notNull(name, "Name of Field must not be null");
 			return new MongoField(new FieldName(name, nameType), type, order);
 		}
 	}

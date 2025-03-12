@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import java.io.Serializable;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 

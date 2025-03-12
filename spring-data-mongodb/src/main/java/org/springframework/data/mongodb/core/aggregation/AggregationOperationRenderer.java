@@ -19,12 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
-import org.springframework.lang.Nullable;
 
 /**
  * Rendering support for {@link AggregationOperation} into a {@link List} of {@link org.bson.Document}.

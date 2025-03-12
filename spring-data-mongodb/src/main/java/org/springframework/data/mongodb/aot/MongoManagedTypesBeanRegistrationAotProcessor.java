@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.aot;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.aot.ManagedTypesBeanRegistrationAotProcessor;
 import org.springframework.data.mongodb.MongoManagedTypes;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**

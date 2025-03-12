@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.Message;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -78,8 +78,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public ChangeStreamDocument<Document> getRaw() {
+	public @Nullable ChangeStreamDocument<Document> getRaw() {
 		return raw;
 	}
 
@@ -88,10 +87,10 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Instant getTimestamp() {
+	public @Nullable Instant getTimestamp() {
 
-		return getBsonTimestamp() != null ? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
+		return getBsonTimestamp() != null && raw != null
+				? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
 				: null;
 	}
 
@@ -111,8 +110,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public BsonValue getResumeToken() {
+	public @Nullable BsonValue getResumeToken() {
 		return raw != null ? raw.getResumeToken() : null;
 	}
 
@@ -121,8 +119,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public OperationType getOperationType() {
+	public @Nullable OperationType getOperationType() {
 		return raw != null ? raw.getOperationType() : null;
 	}
 
@@ -131,8 +128,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public String getDatabaseName() {
+	public @Nullable String getDatabaseName() {
 		return raw != null ? raw.getNamespace().getDatabaseName() : null;
 	}
 
@@ -141,8 +137,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public String getCollectionName() {
+	public @Nullable String getCollectionName() {
 		return raw != null ? raw.getNamespace().getCollectionName() : null;
 	}
 
@@ -152,8 +147,7 @@ public class ChangeStreamEvent<T> {
 	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocument()} is
 	 *         {@literal null}.
 	 */
-	@Nullable
-	public T getBody() {
+	public @Nullable T getBody() {
 
 		if (raw == null || raw.getFullDocument() == null) {
 			return null;
@@ -163,14 +157,14 @@ public class ChangeStreamEvent<T> {
 	}
 
 	/**
-	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocumentBeforeChange() document} before being changed.
+	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocumentBeforeChange() document} before being
+	 * changed.
 	 *
 	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocumentBeforeChange()} is
 	 *         {@literal null}.
 	 * @since 4.0
 	 */
-	@Nullable
-	public T getBodyBeforeChange() {
+	public @Nullable T getBodyBeforeChange() {
 
 		if (raw == null || raw.getFullDocumentBeforeChange() == null) {
 			return null;
@@ -189,6 +183,7 @@ public class ChangeStreamEvent<T> {
 		return (T) doGetConverted(fullDocument, CONVERTED_FULL_DOCUMENT_UPDATER);
 	}
 
+	@SuppressWarnings("NullAway")
 	private Object doGetConverted(Document fullDocument, AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> updater) {
 
 		Object result = updater.get(this);

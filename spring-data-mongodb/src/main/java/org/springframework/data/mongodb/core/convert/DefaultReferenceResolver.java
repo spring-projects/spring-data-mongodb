@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.convert.ReferenceLookupDeleg
 import java.util.Collections;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -63,7 +64,8 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 	}
 
 	@Override
-	public Object resolveReference(MongoPersistentProperty property, Object source,
+	@SuppressWarnings("NullAway")
+	public @Nullable Object resolveReference(MongoPersistentProperty property, Object source,
 			ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
 
 		LookupFunction lookupFunction = (property.isCollectionLike() || property.isMap()) ? collectionLookupFunction
@@ -84,6 +86,7 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 	 * @see DBRef#lazy()
 	 * @see DocumentReference#lazy()
 	 */
+	@SuppressWarnings("NullAway")
 	protected boolean isLazyReference(MongoPersistentProperty property) {
 
 		if (property.isDocumentReference()) {
@@ -106,6 +109,7 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 		return proxyFactory;
 	}
 
+	@SuppressWarnings("NullAway")
 	private Object createLazyLoadingProxy(MongoPersistentProperty property, Object source,
 			ReferenceLookupDelegate referenceLookupDelegate, LookupFunction lookupFunction, MongoEntityReader entityReader) {
 		return proxyFactory.createLazyLoadingProxy(property,

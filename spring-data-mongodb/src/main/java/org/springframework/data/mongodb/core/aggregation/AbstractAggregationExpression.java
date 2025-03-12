@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.bson.Document;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
@@ -282,7 +283,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	 * @since 2.1
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T> T get(Object key) {
+	protected <T> @Nullable T get(Object key) {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map");
 

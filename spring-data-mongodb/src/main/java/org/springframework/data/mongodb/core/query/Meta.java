@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -50,8 +50,8 @@ public class Meta {
 
 	private Map<String, Object> values = Collections.emptyMap();
 	private Set<CursorOption> flags = Collections.emptySet();
-	private Integer cursorBatchSize;
-	private Boolean allowDiskUse;
+	private @Nullable Integer cursorBatchSize;
+	private @Nullable Boolean allowDiskUse;
 
 	public Meta() {}
 
@@ -85,8 +85,7 @@ public class Meta {
 	/**
 	 * @return {@literal null} if not set.
 	 */
-	@Nullable
-	public Long getMaxTimeMsec() {
+	public @Nullable Long getMaxTimeMsec() {
 		return getValue(MetaKey.MAX_TIME_MS.key);
 	}
 
@@ -181,8 +180,7 @@ public class Meta {
 	 * @return {@literal null} if not set.
 	 * @since 2.1
 	 */
-	@Nullable
-	public Integer getCursorBatchSize() {
+	public @Nullable Integer getCursorBatchSize() {
 		return cursorBatchSize;
 	}
 
@@ -285,9 +283,8 @@ public class Meta {
 		this.values.put(key, value);
 	}
 
-	@Nullable
 	@SuppressWarnings("unchecked")
-	private <T> T getValue(String key) {
+	private <T> @Nullable T getValue(String key) {
 		return (T) this.values.get(key);
 	}
 

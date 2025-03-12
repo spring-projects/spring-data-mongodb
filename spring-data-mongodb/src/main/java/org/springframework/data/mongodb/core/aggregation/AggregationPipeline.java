@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.bson.Document;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -63,6 +64,7 @@ public class AggregationPipeline {
 	 * @param aggregationOperation must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public AggregationPipeline add(AggregationOperation aggregationOperation) {
 
 		Assert.notNull(aggregationOperation, "AggregationOperation must not be null");

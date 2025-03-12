@@ -3,6 +3,6 @@
  * 
  * @since 1.3
  */
-@org.springframework.lang.NonNullApi
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.mongodb.core.aggregation;
 

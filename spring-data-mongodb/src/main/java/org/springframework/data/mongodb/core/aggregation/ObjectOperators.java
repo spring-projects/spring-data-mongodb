@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.bson.Document;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -277,7 +278,7 @@ public class ObjectOperators {
 			return super.toDocument(potentiallyExtractSingleValue(value), context);
 		}
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("NullAway")
 		private Object potentiallyExtractSingleValue(Object value) {
 
 			if (value instanceof Collection<?> collection && collection.size() == 1) {
@@ -385,6 +386,7 @@ public class ObjectOperators {
 		 * @param fieldRef must not be {@literal null}.
 		 * @return new instance of {@link GetField}.
 		 */
+		@Contract("_ -> new")
 		public GetField of(String fieldRef) {
 			return of(Fields.field(fieldRef));
 		}
@@ -396,6 +398,7 @@ public class ObjectOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link GetField}.
 		 */
+		@Contract("_ -> new")
 		public GetField of(AggregationExpression expression) {
 			return of((Object) expression);
 		}
@@ -459,6 +462,7 @@ public class ObjectOperators {
 		 * @param fieldRef must not be {@literal null}.
 		 * @return new instance of {@link GetField}.
 		 */
+		@Contract("_ -> new")
 		public SetField input(String fieldRef) {
 			return input(Fields.field(fieldRef));
 		}
@@ -470,6 +474,7 @@ public class ObjectOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link SetField}.
 		 */
+		@Contract("_ -> new")
 		public SetField input(AggregationExpression expression) {
 			return input((Object) expression);
 		}
@@ -481,6 +486,7 @@ public class ObjectOperators {
 		 * @param fieldRef must not be {@literal null}.
 		 * @return new instance of {@link SetField}.
 		 */
+		@Contract("_ -> new")
 		private SetField input(Object fieldRef) {
 			return new SetField(append("input", fieldRef));
 		}
@@ -491,6 +497,7 @@ public class ObjectOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link SetField}.
 		 */
+		@Contract("_ -> new")
 		public SetField toValueOf(String fieldReference) {
 			return toValue(Fields.field(fieldReference));
 		}
@@ -502,6 +509,7 @@ public class ObjectOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link SetField}.
 		 */
+		@Contract("_ -> new")
 		public SetField toValueOf(AggregationExpression expression) {
 			return toValue(expression);
 		}
@@ -512,6 +520,7 @@ public class ObjectOperators {
 		 * @param value
 		 * @return new instance of {@link SetField}.
 		 */
+		@Contract("_ -> new")
 		public SetField toValue(Object value) {
 			return new SetField(append("value", value));
 		}

@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -41,6 +42,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableUpdate<T> update(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -52,6 +54,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
+	@SuppressWarnings("rawtypes")
 	static class ExecutableUpdateSupport<T>
 			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
 			FindAndReplaceWithOptions<T>, TerminatingFindAndReplace<T>, FindAndReplaceWithProjection<T> {
@@ -66,9 +69,9 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		@Nullable private final Object replacement;
 		private final Class<T> targetType;
 
-		ExecutableUpdateSupport(MongoTemplate template, Class domainType, Query query, UpdateDefinition update,
-				String collection, FindAndModifyOptions findAndModifyOptions, FindAndReplaceOptions findAndReplaceOptions,
-				Object replacement, Class<T> targetType) {
+		ExecutableUpdateSupport(MongoTemplate template, Class domainType, Query query, @Nullable UpdateDefinition update,
+				@Nullable String collection, @Nullable FindAndModifyOptions findAndModifyOptions,
+				@Nullable FindAndReplaceOptions findAndReplaceOptions, @Nullable Object replacement, Class<T> targetType) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -82,6 +85,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingUpdate<T> apply(UpdateDefinition update) {
 
 			Assert.notNull(update, "Update must not be null");
@@ -91,6 +95,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public UpdateWithQuery<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
@@ -100,6 +105,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
 			Assert.notNull(options, "Options must not be null");
@@ -109,6 +115,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public FindAndReplaceWithProjection<T> replaceWith(T replacement) {
 
 			Assert.notNull(replacement, "Replacement must not be null");
@@ -118,6 +125,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public FindAndReplaceWithProjection<T> withOptions(FindAndReplaceOptions options) {
 
 			Assert.notNull(options, "Options must not be null");
@@ -127,6 +135,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingReplace withOptions(ReplaceOptions options) {
 
 			FindAndReplaceOptions target = new FindAndReplaceOptions();
@@ -138,6 +147,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public UpdateWithUpdate<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");
@@ -147,6 +157,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public <R> FindAndReplaceWithOptions<R> as(Class<R> resultType) {
 
 			Assert.notNull(resultType, "ResultType must not be null");
@@ -171,6 +182,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public @Nullable T findAndModifyValue() {
 
 			return template.findAndModify(query, update,
@@ -179,6 +191,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings({ "unchecked", "NullAway" })
 		public @Nullable T findAndReplaceValue() {
 
 			return (T) template.findAndReplace(query, replacement,
@@ -187,6 +200,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings({ "unchecked", "NullAway" })
 		public UpdateResult replaceFirst() {
 
 			if (replacement != null) {
@@ -198,6 +212,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
+		@SuppressWarnings("NullAway")
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {
 			return template.doUpdate(getCollectionName(), query, update, domainType, upsert, multi);
 		}

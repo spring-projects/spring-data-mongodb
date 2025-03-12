@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 
-import org.springframework.lang.Nullable;
-
 import com.mongodb.ReadPreference;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Parse a {@link String} to a {@link ReadPreference}.

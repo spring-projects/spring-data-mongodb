@@ -31,6 +31,7 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.DateJsonSchemaObject;
@@ -39,7 +40,6 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Numeri
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 

@@ -19,7 +19,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -55,8 +57,8 @@ public class SetOperators {
 	 */
 	public static class SetOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link SetOperatorFactory} for given {@literal fieldReference}.
@@ -104,6 +106,7 @@ public class SetOperators {
 			return createSetEquals().isEqualTo(expressions);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetEquals createSetEquals() {
 			return usesFieldRef() ? SetEquals.arrayAsSet(fieldReference) : SetEquals.arrayAsSet(expression);
 		}
@@ -130,6 +133,7 @@ public class SetOperators {
 			return createSetIntersection().intersects(expressions);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetIntersection createSetIntersection() {
 			return usesFieldRef() ? SetIntersection.arrayAsSet(fieldReference) : SetIntersection.arrayAsSet(expression);
 		}
@@ -156,6 +160,7 @@ public class SetOperators {
 			return createSetUnion().union(expressions);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetUnion createSetUnion() {
 			return usesFieldRef() ? SetUnion.arrayAsSet(fieldReference) : SetUnion.arrayAsSet(expression);
 		}
@@ -182,6 +187,7 @@ public class SetOperators {
 			return createSetDifference().differenceTo(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetDifference createSetDifference() {
 			return usesFieldRef() ? SetDifference.arrayAsSet(fieldReference) : SetDifference.arrayAsSet(expression);
 		}
@@ -208,6 +214,7 @@ public class SetOperators {
 			return createSetIsSubset().isSubsetOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetIsSubset createSetIsSubset() {
 			return usesFieldRef() ? SetIsSubset.arrayAsSet(fieldReference) : SetIsSubset.arrayAsSet(expression);
 		}
@@ -218,6 +225,7 @@ public class SetOperators {
 		 *
 		 * @return new instance of {@link AnyElementTrue}.
 		 */
+		@SuppressWarnings("NullAway")
 		public AnyElementTrue anyElementTrue() {
 			return usesFieldRef() ? AnyElementTrue.arrayAsSet(fieldReference) : AnyElementTrue.arrayAsSet(expression);
 		}
@@ -228,6 +236,7 @@ public class SetOperators {
 		 *
 		 * @return new instance of {@link AllElementsTrue}.
 		 */
+		@SuppressWarnings("NullAway")
 		public AllElementsTrue allElementsTrue() {
 			return usesFieldRef() ? AllElementsTrue.arrayAsSet(fieldReference) : AllElementsTrue.arrayAsSet(expression);
 		}
@@ -283,6 +292,7 @@ public class SetOperators {
 		 * @param arrayReferences must not be {@literal null}.
 		 * @return new instance of {@link SetEquals}.
 		 */
+		@Contract("_ -> new")
 		public SetEquals isEqualTo(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
@@ -295,6 +305,7 @@ public class SetOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link SetEquals}.
 		 */
+		@Contract("_ -> new")
 		public SetEquals isEqualTo(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -307,6 +318,7 @@ public class SetOperators {
 		 * @param array must not be {@literal null}.
 		 * @return new instance of {@link SetEquals}.
 		 */
+		@Contract("_ -> new")
 		public SetEquals isEqualTo(Object[] array) {
 
 			Assert.notNull(array, "Array must not be null");
@@ -360,6 +372,7 @@ public class SetOperators {
 		 * @param arrayReferences must not be {@literal null}.
 		 * @return new instance of {@link SetIntersection}.
 		 */
+		@Contract("_ -> new")
 		public SetIntersection intersects(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
@@ -372,6 +385,7 @@ public class SetOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link SetIntersection}.
 		 */
+		@Contract("_ -> new")
 		public SetIntersection intersects(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -425,6 +439,7 @@ public class SetOperators {
 		 * @param arrayReferences must not be {@literal null}.
 		 * @return new instance of {@link SetUnion}.
 		 */
+		@Contract("_ -> new")
 		public SetUnion union(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
@@ -437,6 +452,7 @@ public class SetOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link SetUnion}.
 		 */
+		@Contract("_ -> new")
 		public SetUnion union(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -490,6 +506,7 @@ public class SetOperators {
 		 * @param arrayReference must not be {@literal null}.
 		 * @return new instance of {@link SetDifference}.
 		 */
+		@Contract("_ -> new")
 		public SetDifference differenceTo(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null");
@@ -502,6 +519,7 @@ public class SetOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link SetDifference}.
 		 */
+		@Contract("_ -> new")
 		public SetDifference differenceTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -555,6 +573,7 @@ public class SetOperators {
 		 * @param arrayReference must not be {@literal null}.
 		 * @return new instance of {@link SetIsSubset}.
 		 */
+		@Contract("_ -> new")
 		public SetIsSubset isSubsetOf(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null");
@@ -567,6 +586,7 @@ public class SetOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link SetIsSubset}.
 		 */
+		@Contract("_ -> new")
 		public SetIsSubset isSubsetOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -614,6 +634,7 @@ public class SetOperators {
 			return new AnyElementTrue(Collections.singletonList(expression));
 		}
 
+		@Contract("-> this")
 		public AnyElementTrue anyElementTrue() {
 			return this;
 		}
@@ -659,6 +680,7 @@ public class SetOperators {
 			return new AllElementsTrue(Collections.singletonList(expression));
 		}
 
+		@Contract("-> this")
 		public AllElementsTrue allElementsTrue() {
 			return this;
 		}

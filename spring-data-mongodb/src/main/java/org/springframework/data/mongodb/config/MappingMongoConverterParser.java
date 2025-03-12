@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -56,7 +58,6 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -76,6 +77,7 @@ import org.w3c.dom.Element;
  * @author Zied Yaich
  * @author Tomasz Forys
  */
+@NullUnmarked
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	private static final String BASE_PACKAGE = "base-package";
@@ -157,8 +159,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return null;
 	}
 
-	@Nullable
-	private BeanDefinition potentiallyCreateValidatingMongoEventListener(Element element, ParserContext parserContext) {
+	private @Nullable BeanDefinition potentiallyCreateValidatingMongoEventListener(Element element, ParserContext parserContext) {
 
 		String disableValidation = element.getAttribute("disable-validation");
 		boolean validationDisabled = StringUtils.hasText(disableValidation) && Boolean.parseBoolean(disableValidation);
@@ -291,8 +292,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		}
 	}
 
-	@Nullable
-	private BeanDefinition getCustomConversions(Element element, ParserContext parserContext) {
+	private @Nullable BeanDefinition getCustomConversions(Element element, ParserContext parserContext) {
 
 		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
 
@@ -354,8 +354,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return classes;
 	}
 
-	@Nullable
-	public BeanMetadataElement parseConverter(Element element, ParserContext parserContext) {
+	public @Nullable BeanMetadataElement parseConverter(Element element, ParserContext parserContext) {
 
 		String converterRef = element.getAttribute("ref");
 		if (StringUtils.hasText(converterRef)) {

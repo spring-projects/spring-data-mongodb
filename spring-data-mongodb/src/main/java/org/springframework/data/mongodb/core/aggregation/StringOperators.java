@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.util.RegexFlags;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -60,8 +62,8 @@ public class StringOperators {
 	 */
 	public static class StringOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link StringOperatorFactory} for given {@literal fieldReference}.
@@ -126,6 +128,7 @@ public class StringOperators {
 			return createConcat().concat(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Concat createConcat() {
 			return usesFieldRef() ? Concat.valueOf(fieldReference) : Concat.valueOf(expression);
 		}
@@ -153,6 +156,7 @@ public class StringOperators {
 			return createSubstr().substring(start, nrOfChars);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Substr createSubstr() {
 			return usesFieldRef() ? Substr.valueOf(fieldReference) : Substr.valueOf(expression);
 		}
@@ -162,6 +166,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link ToLower}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ToLower toLower() {
 			return usesFieldRef() ? ToLower.lowerValueOf(fieldReference) : ToLower.lowerValueOf(expression);
 		}
@@ -171,6 +176,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link ToUpper}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ToUpper toUpper() {
 			return usesFieldRef() ? ToUpper.upperValueOf(fieldReference) : ToUpper.upperValueOf(expression);
 		}
@@ -214,6 +220,7 @@ public class StringOperators {
 			return createStrCaseCmp().strcasecmpValueOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private StrCaseCmp createStrCaseCmp() {
 			return usesFieldRef() ? StrCaseCmp.valueOf(fieldReference) : StrCaseCmp.valueOf(expression);
 		}
@@ -260,6 +267,7 @@ public class StringOperators {
 			return createIndexOfBytesSubstringBuilder().indexOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private IndexOfBytes.SubstringBuilder createIndexOfBytesSubstringBuilder() {
 			return usesFieldRef() ? IndexOfBytes.valueOf(fieldReference) : IndexOfBytes.valueOf(expression);
 		}
@@ -306,6 +314,7 @@ public class StringOperators {
 			return createIndexOfCPSubstringBuilder().indexOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private IndexOfCP.SubstringBuilder createIndexOfCPSubstringBuilder() {
 			return usesFieldRef() ? IndexOfCP.valueOf(fieldReference) : IndexOfCP.valueOf(expression);
 		}
@@ -343,6 +352,7 @@ public class StringOperators {
 			return createSplit().split(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Split createSplit() {
 			return usesFieldRef() ? Split.valueOf(fieldReference) : Split.valueOf(expression);
 		}
@@ -353,6 +363,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link StrLenBytes}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StrLenBytes length() {
 			return usesFieldRef() ? StrLenBytes.stringLengthOf(fieldReference) : StrLenBytes.stringLengthOf(expression);
 		}
@@ -363,6 +374,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link StrLenCP}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StrLenCP lengthCP() {
 			return usesFieldRef() ? StrLenCP.stringLengthOfCP(fieldReference) : StrLenCP.stringLengthOfCP(expression);
 		}
@@ -390,6 +402,7 @@ public class StringOperators {
 			return createSubstrCP().substringCP(codePointStart, nrOfCodePoints);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SubstrCP createSubstrCP() {
 			return usesFieldRef() ? SubstrCP.valueOf(fieldReference) : SubstrCP.valueOf(expression);
 		}
@@ -432,6 +445,7 @@ public class StringOperators {
 			return trim().charsOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Trim createTrim() {
 			return usesFieldRef() ? Trim.valueOf(fieldReference) : Trim.valueOf(expression);
 		}
@@ -474,6 +488,7 @@ public class StringOperators {
 			return ltrim().charsOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private LTrim createLTrim() {
 			return usesFieldRef() ? LTrim.valueOf(fieldReference) : LTrim.valueOf(expression);
 		}
@@ -516,6 +531,7 @@ public class StringOperators {
 			return rtrim().charsOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RTrim createRTrim() {
 			return usesFieldRef() ? RTrim.valueOf(fieldReference) : RTrim.valueOf(expression);
 		}
@@ -572,6 +588,7 @@ public class StringOperators {
 			return createRegexFind().regex(regex).options(options);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RegexFind createRegexFind() {
 			return usesFieldRef() ? RegexFind.valueOf(fieldReference) : RegexFind.valueOf(expression);
 		}
@@ -628,6 +645,7 @@ public class StringOperators {
 			return createRegexFindAll().regex(regex).options(options);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RegexFindAll createRegexFindAll() {
 			return usesFieldRef() ? RegexFindAll.valueOf(fieldReference) : RegexFindAll.valueOf(expression);
 		}
@@ -683,6 +701,7 @@ public class StringOperators {
 			return createRegexMatch().regex(regex).options(options);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RegexMatch createRegexMatch() {
 			return usesFieldRef() ? RegexMatch.valueOf(fieldReference) : RegexMatch.valueOf(expression);
 		}
@@ -713,6 +732,7 @@ public class StringOperators {
 			return createReplaceOne().findValueOf(search).replacement(replacement);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ReplaceOne createReplaceOne() {
 			return usesFieldRef() ? ReplaceOne.valueOf(fieldReference) : ReplaceOne.valueOf(expression);
 		}
@@ -743,6 +763,7 @@ public class StringOperators {
 			return createReplaceAll().findValueOf(search).replacement(replacement);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ReplaceAll createReplaceAll() {
 			return usesFieldRef() ? ReplaceAll.valueOf(fieldReference) : ReplaceAll.valueOf(expression);
 		}
@@ -810,6 +831,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Concat}.
 		 */
+		@Contract("_ -> new")
 		public Concat concatValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -822,6 +844,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Concat}.
 		 */
+		@Contract("_ -> new")
 		public Concat concatValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -834,6 +857,7 @@ public class StringOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Concat}.
 		 */
+		@Contract("_ -> new")
 		public Concat concat(String value) {
 			return new Concat(append(value));
 		}
@@ -883,6 +907,7 @@ public class StringOperators {
 		 * @param start start index (including)
 		 * @return new instance of {@link Substr}.
 		 */
+		@Contract("_ -> new")
 		public Substr substring(int start) {
 			return substring(start, -1);
 		}
@@ -892,6 +917,7 @@ public class StringOperators {
 		 * @param nrOfChars
 		 * @return new instance of {@link Substr}.
 		 */
+		@Contract("_, _ -> new")
 		public Substr substring(int start, int nrOfChars) {
 			return new Substr(append(Arrays.asList(start, nrOfChars)));
 		}
@@ -1055,16 +1081,19 @@ public class StringOperators {
 			return new StrCaseCmp(Collections.singletonList(value));
 		}
 
+		@Contract("_ -> new")
 		public StrCaseCmp strcasecmp(String value) {
 			return new StrCaseCmp(append(value));
 		}
 
+		@Contract("_ -> new")
 		public StrCaseCmp strcasecmpValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
 			return new StrCaseCmp(append(Fields.field(fieldReference)));
 		}
 
+		@Contract("_ -> new")
 		public StrCaseCmp strcasecmpValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1118,6 +1147,7 @@ public class StringOperators {
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link IndexOfBytes}.
 		 */
+		@Contract("_ -> new")
 		public IndexOfBytes within(Range<Long> range) {
 			return new IndexOfBytes(append(AggregationUtils.toRangeValues(range)));
 		}
@@ -1208,6 +1238,7 @@ public class StringOperators {
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link IndexOfCP}.
 		 */
+		@Contract("_ -> new")
 		public IndexOfCP within(Range<Long> range) {
 			return new IndexOfCP(append(AggregationUtils.toRangeValues(range)));
 		}
@@ -1298,6 +1329,7 @@ public class StringOperators {
 		 * @param delimiter must not be {@literal null}.
 		 * @return new instance of {@link Split}.
 		 */
+		@Contract("_ -> new")
 		public Split split(String delimiter) {
 
 			Assert.notNull(delimiter, "Delimiter must not be null");
@@ -1310,6 +1342,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Split}.
 		 */
+		@Contract("_ -> new")
 		public Split split(Field fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1322,6 +1355,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Split}.
 		 */
+		@Contract("_ -> new")
 		public Split split(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1447,10 +1481,12 @@ public class StringOperators {
 			return new SubstrCP(Collections.singletonList(expression));
 		}
 
+		@Contract("_ -> new")
 		public SubstrCP substringCP(int start) {
 			return substringCP(start, -1);
 		}
 
+		@Contract("_, _ -> new")
 		public SubstrCP substringCP(int start, int nrOfChars) {
 			return new SubstrCP(append(Arrays.asList(start, nrOfChars)));
 		}
@@ -1501,6 +1537,7 @@ public class StringOperators {
 		 * @param chars must not be {@literal null}.
 		 * @return new instance of {@link Trim}.
 		 */
+		@Contract("_ -> new")
 		public Trim chars(String chars) {
 
 			Assert.notNull(chars, "Chars must not be null");
@@ -1514,6 +1551,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Trim}.
 		 */
+		@Contract("_ -> new")
 		public Trim charsOf(String fieldReference) {
 			return new Trim(append("chars", Fields.field(fieldReference)));
 		}
@@ -1525,6 +1563,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Trim}.
 		 */
+		@Contract("_ -> new")
 		public Trim charsOf(AggregationExpression expression) {
 			return new Trim(append("chars", expression));
 		}
@@ -1598,6 +1637,7 @@ public class StringOperators {
 		 * @param chars must not be {@literal null}.
 		 * @return new instance of {@link LTrim}.
 		 */
+		@Contract("_ -> new")
 		public LTrim chars(String chars) {
 
 			Assert.notNull(chars, "Chars must not be null");
@@ -1611,6 +1651,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link LTrim}.
 		 */
+		@Contract("_ -> new")
 		public LTrim charsOf(String fieldReference) {
 			return new LTrim(append("chars", Fields.field(fieldReference)));
 		}
@@ -1622,6 +1663,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link LTrim}.
 		 */
+		@Contract("_ -> new")
 		public LTrim charsOf(AggregationExpression expression) {
 			return new LTrim(append("chars", expression));
 		}
@@ -1677,6 +1719,7 @@ public class StringOperators {
 		 * @param chars must not be {@literal null}.
 		 * @return new instance of {@link RTrim}.
 		 */
+		@Contract("_ -> new")
 		public RTrim chars(String chars) {
 
 			Assert.notNull(chars, "Chars must not be null");
@@ -1689,6 +1732,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RTrim}.
 		 */
+		@Contract("_ -> new")
 		public RTrim charsOf(String fieldReference) {
 			return new RTrim(append("chars", Fields.field(fieldReference)));
 		}
@@ -1699,6 +1743,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RTrim}.
 		 */
+		@Contract("_ -> new")
 		public RTrim charsOf(AggregationExpression expression) {
 			return new RTrim(append("chars", expression));
 		}
@@ -1757,6 +1802,7 @@ public class StringOperators {
 		 * @param options must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind options(String options) {
 
 			Assert.notNull(options, "Options must not be null");
@@ -1771,6 +1817,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind optionsOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1785,6 +1832,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind optionsOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1798,6 +1846,7 @@ public class StringOperators {
 		 * @param regex must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind regex(String regex) {
 
 			Assert.notNull(regex, "Regex must not be null");
@@ -1811,6 +1860,7 @@ public class StringOperators {
 		 * @param pattern must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind pattern(Pattern pattern) {
 
 			Assert.notNull(pattern, "Pattern must not be null");
@@ -1827,6 +1877,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind regexOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -1840,6 +1891,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RegexFind}.
 		 */
+		@Contract("_ -> new")
 		public RegexFind regexOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1899,6 +1951,7 @@ public class StringOperators {
 		 * @param options must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll options(String options) {
 
 			Assert.notNull(options, "Options must not be null");
@@ -1913,6 +1966,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll optionsOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -1927,6 +1981,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll optionsOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1940,6 +1995,7 @@ public class StringOperators {
 		 * @param pattern must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll pattern(Pattern pattern) {
 
 			Assert.notNull(pattern, "Pattern must not be null");
@@ -1956,6 +2012,7 @@ public class StringOperators {
 		 * @param regex must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll regex(String regex) {
 
 			Assert.notNull(regex, "Regex must not be null");
@@ -1969,6 +2026,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll regexOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -1982,6 +2040,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RegexFindAll}.
 		 */
+		@Contract("_ -> new")
 		public RegexFindAll regexOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2043,6 +2102,7 @@ public class StringOperators {
 		 * @param options must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch options(String options) {
 
 			Assert.notNull(options, "Options must not be null");
@@ -2057,6 +2117,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch optionsOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -2071,6 +2132,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch optionsOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2084,6 +2146,7 @@ public class StringOperators {
 		 * @param pattern must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch pattern(Pattern pattern) {
 
 			Assert.notNull(pattern, "Pattern must not be null");
@@ -2100,6 +2163,7 @@ public class StringOperators {
 		 * @param regex must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch regex(String regex) {
 
 			Assert.notNull(regex, "Regex must not be null");
@@ -2113,6 +2177,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch regexOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -2126,6 +2191,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link RegexMatch}.
 		 */
+		@Contract("_ -> new")
 		public RegexMatch regexOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2201,6 +2267,7 @@ public class StringOperators {
 		 * @param replacement must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceOne replacement(String replacement) {
 
 			Assert.notNull(replacement, "Replacement must not be null");
@@ -2215,6 +2282,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceOne replacementOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -2229,6 +2297,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceOne replacementOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2242,6 +2311,7 @@ public class StringOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceOne find(String value) {
 
 			Assert.notNull(value, "Search string must not be null");
@@ -2255,6 +2325,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceOne findValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -2269,6 +2340,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceOne findValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2344,6 +2416,7 @@ public class StringOperators {
 		 * @param replacement must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceAll replacement(String replacement) {
 
 			Assert.notNull(replacement, "Replacement must not be null");
@@ -2358,6 +2431,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceAll replacementValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -2372,6 +2446,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceAll replacementValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2385,6 +2460,7 @@ public class StringOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceAll find(String value) {
 
 			Assert.notNull(value, "Search string must not be null");
@@ -2398,6 +2474,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceAll findValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -2411,6 +2488,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
+		@Contract("_ -> new")
 		public ReplaceAll findValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -35,7 +36,6 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -74,7 +74,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public ScrollPosition getScrollPosition() {
+	public @Nullable ScrollPosition getScrollPosition() {
 		return delegate.getScrollPosition();
 	}
 
@@ -87,34 +87,34 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public Class<?> findDynamicProjection() {
+	public @Nullable Class<?> findDynamicProjection() {
 		return delegate.findDynamicProjection();
 	}
 
-	public Object getBindableValue(int index) {
+	public @Nullable Object getBindableValue(int index) {
 		return getConvertedValue(delegate.getBindableValue(index), null);
 	}
 
 	@Override
-	public Range<Distance> getDistanceRange() {
+	public @Nullable Range<Distance> getDistanceRange() {
 		return delegate.getDistanceRange();
 	}
 
-	public Point getGeoNearLocation() {
+	public @Nullable Point getGeoNearLocation() {
 		return delegate.getGeoNearLocation();
 	}
 
-	public TextCriteria getFullText() {
+	public @Nullable TextCriteria getFullText() {
 		return delegate.getFullText();
 	}
 
 	@Override
-	public Collation getCollation() {
+	public @Nullable Collation getCollation() {
 		return delegate.getCollation();
 	}
 
 	@Override
-	public UpdateDefinition getUpdate() {
+	public @Nullable UpdateDefinition getUpdate() {
 		return delegate.getUpdate();
 	}
 
@@ -130,8 +130,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @param typeInformation can be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	private Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
+	private @Nullable Object getConvertedValue(@Nullable Object value, @Nullable TypeInformation<?> typeInformation) {
 		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
 	}
 
@@ -161,11 +160,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 			return delegate.hasNext();
 		}
 
-		public Object next() {
+		public @Nullable Object next() {
 			return delegate.next();
 		}
 
-		public Object nextConverted(MongoPersistentProperty property) {
+		public @Nullable Object nextConverted(MongoPersistentProperty property) {
 
 			Object next = next();
 
@@ -228,7 +227,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public Object[] getValues() {
+	public Object @Nullable[] getValues() {
 		return delegate.getValues();
 	}
 
@@ -244,6 +243,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		 *
 		 * @return
 		 */
-		Object nextConverted(MongoPersistentProperty property);
+		@Nullable Object nextConverted(MongoPersistentProperty property);
 	}
 }

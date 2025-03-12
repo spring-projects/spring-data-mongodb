@@ -23,13 +23,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -149,6 +150,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_ -> new")
 	public ProjectionOperation andExclude(String... fieldNames) {
 
 		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fieldNames), false);
@@ -161,6 +163,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_ -> new")
 	public ProjectionOperation andInclude(String... fieldNames) {
 
 		List<FieldProjection> projections = FieldProjection.from(Fields.fields(fieldNames), true);
@@ -173,6 +176,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_ -> new")
 	public ProjectionOperation andInclude(Fields fields) {
 		return new ProjectionOperation(this.projections, FieldProjection.from(fields, true));
 	}
@@ -185,6 +189,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * @return new instance of {@link ProjectionOperation}.
 	 * @since 2.2
 	 */
+	@Contract("_ -> new")
 	public ProjectionOperation asArray(String name) {
 
 		return new ProjectionOperation(Collections.emptyList(),
@@ -402,7 +407,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				return new Document(getExposedField().getName(), toMongoExpression(context, expression, params));
 			}
 
-			protected static Object toMongoExpression(AggregationOperationContext context, String expression,
+			protected static @Nullable Object toMongoExpression(AggregationOperationContext context, String expression,
 					Object[] params) {
 				return TRANSFORMER.transform(expression, context, params);
 			}
@@ -1780,6 +1785,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param expression
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public ArrayProjectionOperationBuilder and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "AggregationExpression must not be null");
@@ -1794,6 +1800,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param field
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public ArrayProjectionOperationBuilder and(Field field) {
 
 			Assert.notNull(field, "Field must not be null");
@@ -1808,6 +1815,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param value
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public ArrayProjectionOperationBuilder and(Object value) {
 
 			this.projections.add(value);
@@ -1820,6 +1828,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param name The target property name. Must not be {@literal null}.
 		 * @return new instance of {@link ArrayProjectionOperationBuilder}.
 		 */
+		@Contract("_ -> new")
 		public ProjectionOperation as(String name) {
 
 			return new ProjectionOperation(target.projections,

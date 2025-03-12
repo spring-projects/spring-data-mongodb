@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.DtoInstantiatingConverter;
@@ -37,7 +38,6 @@ import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -86,6 +86,8 @@ interface ReactiveMongoQueryExecution {
 		private Flux<GeoResult<Object>> doExecuteQuery(@Nullable Query query, Class<?> type, String collection) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
+			Assert.notNull(nearLocation, "[query.location] ist not present");
+
 			NearQuery nearQuery = NearQuery.near(nearLocation);
 
 			if (query != null) {
@@ -93,6 +95,8 @@ interface ReactiveMongoQueryExecution {
 			}
 
 			Range<Distance> distances = accessor.getDistanceRange();
+
+			Assert.notNull(distances, "[query.range] ist not present");
 			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));
 			distances.getLowerBound().getValue().ifPresent(it -> nearQuery.minDistance(it).in(it.getMetric()));
 
@@ -195,6 +199,7 @@ interface ReactiveMongoQueryExecution {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 			return (Publisher) converter.convert(delegate.execute(query, type, collection));
 		}

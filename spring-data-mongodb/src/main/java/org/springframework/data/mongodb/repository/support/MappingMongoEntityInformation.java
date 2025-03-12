@@ -16,12 +16,12 @@
 package org.springframework.data.mongodb.repository.support;
 
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link MongoEntityInformation} implementation using a {@link MongoPersistentEntity} instance to lookup the necessary
@@ -113,7 +113,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	}
 
 	@Override
-	public Object getVersion(T entity) {
+	public @Nullable Object getVersion(T entity) {
 
 		if (!isVersioned()) {
 			return null;
@@ -124,8 +124,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		return accessor.getProperty(this.entityMetadata.getRequiredVersionProperty());
 	}
 
-	@Nullable
-	public Collation getCollation() {
+	public @Nullable Collation getCollation() {
 		return this.entityMetadata.getCollation();
 	}
 

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -59,11 +60,11 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 
 		private final ReactiveMongoTemplate template;
 		private final Class<T> domainType;
-		private final Aggregation aggregation;
-		private final String collection;
+		private final @Nullable Aggregation aggregation;
+		private final @Nullable String collection;
 
-		ReactiveAggregationSupport(ReactiveMongoTemplate template, Class<T> domainType, Aggregation aggregation,
-				String collection) {
+		ReactiveAggregationSupport(ReactiveMongoTemplate template, Class<T> domainType, @Nullable Aggregation aggregation,
+				@Nullable String collection) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -89,6 +90,9 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 
 		@Override
 		public Flux<T> all() {
+
+			Assert.notNull(aggregation, "Aggregation must be set first");
+
 			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);
 		}
 

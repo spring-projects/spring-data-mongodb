@@ -23,13 +23,11 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.bson.Document;
-
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.ClassUtils;
 
 /**
- * {@link Document}-based {@link Update} variant.
- *
  * @author Thomas Risberg
  * @author John Brisbin
  * @author Oliver Gierke
@@ -49,48 +47,56 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update set(String key, @Nullable Object value) {
 		setOperationValue("$set", key, value);
 		return this;
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public Update unset(String key) {
 		setOperationValue("$unset", key, 1);
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update inc(String key, Number inc) {
 		setOperationValue("$inc", key, inc);
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update push(String key, @Nullable Object value) {
 		setOperationValue("$push", key, value);
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update addToSet(String key, @Nullable Object value) {
 		setOperationValue("$addToSet", key, value);
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update pop(String key, Position pos) {
 		setOperationValue("$pop", key, (pos == Position.FIRST ? -1 : 1));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update pull(String key, @Nullable Object value) {
 		setOperationValue("$pull", key, value);
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update pullAll(String key, Object[] values) {
 		setOperationValue("$pullAll", key, List.of(values), (o, o2) -> {
 
@@ -107,6 +113,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update rename(String oldName, String newName) {
 		setOperationValue("$rename", oldName, newName);
 		return this;

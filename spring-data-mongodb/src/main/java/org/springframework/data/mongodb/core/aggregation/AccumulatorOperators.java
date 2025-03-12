@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -60,8 +62,8 @@ public class AccumulatorOperators {
 	 */
 	public static class AccumulatorOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link AccumulatorOperatorFactory} for given {@literal fieldReference}.
@@ -93,6 +95,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Sum}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Sum sum() {
 			return usesFieldRef() ? Sum.sumOf(fieldReference) : Sum.sumOf(expression);
 		}
@@ -103,6 +106,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Avg}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Avg avg() {
 			return usesFieldRef() ? Avg.avgOf(fieldReference) : Avg.avgOf(expression);
 		}
@@ -113,6 +117,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Max}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Max max() {
 			return usesFieldRef() ? Max.maxOf(fieldReference) : Max.maxOf(expression);
 		}
@@ -134,6 +139,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Min}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Min min() {
 			return usesFieldRef() ? Min.minOf(fieldReference) : Min.minOf(expression);
 		}
@@ -155,6 +161,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link StdDevPop}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StdDevPop stdDevPop() {
 			return usesFieldRef() ? StdDevPop.stdDevPopOf(fieldReference) : StdDevPop.stdDevPopOf(expression);
 		}
@@ -165,6 +172,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link StdDevSamp}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StdDevSamp stdDevSamp() {
 			return usesFieldRef() ? StdDevSamp.stdDevSampOf(fieldReference) : StdDevSamp.stdDevSampOf(expression);
 		}
@@ -193,6 +201,7 @@ public class AccumulatorOperators {
 			return covariancePop().and(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private CovariancePop covariancePop() {
 			return usesFieldRef() ? CovariancePop.covariancePopOf(fieldReference) : CovariancePop.covariancePopOf(expression);
 		}
@@ -221,6 +230,7 @@ public class AccumulatorOperators {
 			return covarianceSamp().and(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private CovarianceSamp covarianceSamp() {
 			return usesFieldRef() ? CovarianceSamp.covarianceSampOf(fieldReference)
 					: CovarianceSamp.covarianceSampOf(expression);
@@ -233,6 +243,7 @@ public class AccumulatorOperators {
 		 * @return new instance of {@link ExpMovingAvg}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ExpMovingAvgBuilder expMovingAvg() {
 
 			ExpMovingAvg expMovingAvg = usesFieldRef() ? ExpMovingAvg.expMovingAvgOf(fieldReference)
@@ -252,13 +263,14 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
-		 * associated numeric value expression.
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the associated numeric
+		 * value expression.
 		 *
 		 * @return new instance of {@link Percentile}.
 		 * @param percentages must not be {@literal null}.
 		 * @since 4.2
 		 */
+		@SuppressWarnings("NullAway")
 		public Percentile percentile(Double... percentages) {
 			Percentile percentile = usesFieldRef() ? Percentile.percentileOf(fieldReference)
 					: Percentile.percentileOf(expression);
@@ -271,6 +283,7 @@ public class AccumulatorOperators {
 		 * @return new instance of {@link Median}.
 		 * @since 4.2
 		 */
+		@SuppressWarnings("NullAway")
 		public Median median() {
 			return usesFieldRef() ? Median.medianOf(fieldReference) : Median.medianOf(expression);
 		}
@@ -339,6 +352,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Sum}.
 		 */
+		@Contract("_ -> new")
 		public static Sum sumOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -352,6 +366,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Sum}.
 		 */
+		@Contract("_ -> new")
 		public Sum and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -365,6 +380,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Sum}.
 		 */
+		@Contract("_ -> new")
 		public Sum and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -379,6 +395,7 @@ public class AccumulatorOperators {
 		 * @return new instance of {@link Sum}.
 		 * @since 2.2
 		 */
+		@Contract("_ -> new")
 		public Sum and(Number value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -386,7 +403,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -444,6 +460,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Avg}.
 		 */
+		@Contract("_ -> new")
 		public Avg and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -457,6 +474,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Avg}.
 		 */
+		@Contract("_ -> new")
 		public Avg and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -464,7 +482,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -522,6 +539,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Max}.
 		 */
+		@Contract("_ -> new")
 		public Max and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -535,6 +553,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Max}.
 		 */
+		@Contract("_ -> new")
 		public Max and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -548,11 +567,13 @@ public class AccumulatorOperators {
 		 * @param numberOfResults
 		 * @return new instance of {@link Max}.
 		 */
+		@Contract("_ -> new")
 		public Max limit(int numberOfResults) {
 			return new Max(append("n", numberOfResults));
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Document toDocument(AggregationOperationContext context) {
 			if (get("n") == null) {
 				return toDocument(get("input"), context);
@@ -619,6 +640,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Min}.
 		 */
+		@Contract("_ -> new")
 		public Min and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -632,6 +654,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Min}.
 		 */
+		@Contract("_ -> new")
 		public Min and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -645,11 +668,13 @@ public class AccumulatorOperators {
 		 * @param numberOfResults
 		 * @return new instance of {@link Min}.
 		 */
+		@Contract("_ -> new")
 		public Min limit(int numberOfResults) {
 			return new Min(append("n", numberOfResults));
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Document toDocument(AggregationOperationContext context) {
 
 			if (get("n") == null) {
@@ -659,7 +684,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -717,6 +741,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link StdDevPop}.
 		 */
+		@Contract("_ -> new")
 		public StdDevPop and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -730,6 +755,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link StdDevPop}.
 		 */
+		@Contract("_ -> new")
 		public StdDevPop and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -737,7 +763,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -795,6 +820,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link StdDevSamp}.
 		 */
+		@Contract("_ -> new")
 		public StdDevSamp and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -808,6 +834,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link StdDevSamp}.
 		 */
+		@Contract("_ -> new")
 		public StdDevSamp and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -815,7 +842,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -866,6 +892,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link CovariancePop}.
 		 */
+		@Contract("_ -> new")
 		public CovariancePop and(String fieldReference) {
 			return new CovariancePop(append(asFields(fieldReference)));
 		}
@@ -876,6 +903,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link CovariancePop}.
 		 */
+		@Contract("_ -> new")
 		public CovariancePop and(AggregationExpression expression) {
 			return new CovariancePop(append(expression));
 		}
@@ -926,6 +954,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link CovarianceSamp}.
 		 */
+		@Contract("_ -> new")
 		public CovarianceSamp and(String fieldReference) {
 			return new CovarianceSamp(append(asFields(fieldReference)));
 		}
@@ -936,6 +965,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link CovarianceSamp}.
 		 */
+		@Contract("_ -> new")
 		public CovarianceSamp and(AggregationExpression expression) {
 			return new CovarianceSamp(append(expression));
 		}
@@ -986,6 +1016,7 @@ public class AccumulatorOperators {
 		 * @param numberOfHistoricalDocuments
 		 * @return new instance of {@link ExpMovingAvg}.
 		 */
+		@Contract("_ -> new")
 		public ExpMovingAvg n/*umber of historical documents*/(int numberOfHistoricalDocuments) {
 			return new ExpMovingAvg(append("N", numberOfHistoricalDocuments));
 		}
@@ -997,6 +1028,7 @@ public class AccumulatorOperators {
 		 * @param exponentialDecayValue
 		 * @return new instance of {@link ExpMovingAvg}.
 		 */
+		@Contract("_ -> new")
 		public ExpMovingAvg alpha(double exponentialDecayValue) {
 			return new ExpMovingAvg(append("alpha", exponentialDecayValue));
 		}
@@ -1055,6 +1087,7 @@ public class AccumulatorOperators {
 		 * @param percentages must not be {@literal null}.
 		 * @return new instance of {@link Percentile}.
 		 */
+		@Contract("_ -> new")
 		public Percentile percentages(Double... percentages) {
 
 			Assert.notEmpty(percentages, "Percentages must not be null or empty");
@@ -1068,6 +1101,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Percentile}.
 		 */
+		@Contract("_ -> new")
 		public Percentile and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1081,6 +1115,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Percentile}.
 		 */
+		@Contract("_ -> new")
 		public Percentile and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1142,6 +1177,7 @@ public class AccumulatorOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Median}.
 		 */
+		@Contract("_ -> new")
 		public Median and(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1155,6 +1191,7 @@ public class AccumulatorOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Median}.
 		 */
+		@Contract("_ -> new")
 		public Median and(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");

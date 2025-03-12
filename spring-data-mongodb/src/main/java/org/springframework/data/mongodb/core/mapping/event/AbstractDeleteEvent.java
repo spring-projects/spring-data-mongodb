@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.mapping.event;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Base class for delete events.
@@ -49,8 +49,7 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document>
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Class<T> getType() {
+	public @Nullable Class<T> getType() {
 		return type;
 	}
 }

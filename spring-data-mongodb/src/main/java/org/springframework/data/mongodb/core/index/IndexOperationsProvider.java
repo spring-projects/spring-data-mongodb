@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Provider interface to obtain {@link IndexOperations} by MongoDB collection name or entity type.

@@ -40,11 +40,12 @@ import org.bson.json.JsonParseException;
 import org.bson.types.Binary;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -73,8 +74,8 @@ public class BsonUtils {
 	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	public static <T> T get(Bson bson, String key) {
+	@Contract("null, _ -> null")
+	public static <T> @Nullable T get(@Nullable Bson bson, String key) {
 		return (T) asMap(bson).get(key);
 	}
 
@@ -85,7 +86,7 @@ public class BsonUtils {
 	 * @param bson
 	 * @return
 	 */
-	public static Map<String, Object> asMap(Bson bson) {
+	public static Map<String, Object> asMap(@Nullable Bson bson) {
 		return asMap(bson, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
@@ -126,7 +127,7 @@ public class BsonUtils {
 	 * @return
 	 * @since 3.2.5
 	 */
-	public static Document asDocument(Bson bson) {
+	public static Document asDocument(@Nullable Bson bson) {
 		return asDocument(bson, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
@@ -140,7 +141,7 @@ public class BsonUtils {
 	 * @return never {@literal null}.
 	 * @since 4.0
 	 */
-	public static Document asDocument(Bson bson, CodecRegistry codecRegistry) {
+	public static Document asDocument(@Nullable Bson bson, CodecRegistry codecRegistry) {
 
 		Map<String, Object> map = asMap(bson, codecRegistry);
 
@@ -326,14 +327,14 @@ public class BsonUtils {
 	 * @throws IllegalArgumentException if {@literal source} does not correspond to a {@link BsonValue} type.
 	 * @since 3.0
 	 */
-	public static BsonValue simpleToBsonValue(Object source) {
+	public static BsonValue simpleToBsonValue(@Nullable Object source) {
 		return simpleToBsonValue(source, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	/**
 	 * Convert a given simple value (eg. {@link String}, {@link Long}) to its corresponding {@link BsonValue}.
 	 *
-	 * @param source must not be {@literal null}.
+	 * @param source can be {@literal null}.
 	 * @param codecRegistry The {@link CodecRegistry} used as a fallback to convert types using native {@link Codec}. Must
 	 *          not be {@literal null}.
 	 * @return the corresponding {@link BsonValue} representation.
@@ -341,7 +342,12 @@ public class BsonUtils {
 	 * @since 4.2
 	 */
 	@SuppressWarnings("unchecked")
-	public static BsonValue simpleToBsonValue(Object source, CodecRegistry codecRegistry) {
+	@Contract("null, _ -> !null")
+	public static BsonValue simpleToBsonValue(@Nullable Object source, CodecRegistry codecRegistry) {
+
+		if(source == null) {
+			return BsonNull.VALUE;
+		}
 
 		if (source instanceof BsonValue bsonValue) {
 			return bsonValue;
@@ -398,7 +404,9 @@ public class BsonUtils {
 			BsonCapturingWriter writer = new BsonCapturingWriter(value.getClass());
 			codec.encode(writer, value,
 					ObjectUtils.isArray(value) || value instanceof Collection<?> ? EncoderContext.builder().build() : null);
-			return writer.getCapturedValue();
+			Object captured = writer.getCapturedValue();
+			return captured instanceof BsonValue bv ? bv : BsonNull.VALUE;
+
 		} catch (CodecConfigurationException e) {
 			throw new IllegalArgumentException(
 					String.format("Unable to convert %s to BsonValue.", source != null ? source.getClass().getName() : "null"));
@@ -450,8 +458,7 @@ public class BsonUtils {
 	 * @return
 	 * @since 2.2.1
 	 */
-	@Nullable
-	public static String toJson(@Nullable Document source) {
+	public static @Nullable String toJson(@Nullable Document source) {
 
 		if (source == null) {
 			return null;
@@ -471,6 +478,7 @@ public class BsonUtils {
 	 * @return {@literal true} if the given value looks like a json document.
 	 * @since 3.0
 	 */
+	@Contract("null -> false")
 	public static boolean isJsonDocument(@Nullable String value) {
 
 		if (!StringUtils.hasText(value)) {
@@ -488,6 +496,7 @@ public class BsonUtils {
 	 * @return {@literal true} if the given value looks like a json array.
 	 * @since 3.0
 	 */
+	@Contract("null -> false")
 	public static boolean isJsonArray(@Nullable String value) {
 		return StringUtils.hasText(value) && (value.startsWith("[") && value.endsWith("]"));
 	}
@@ -525,8 +534,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 3.0.8
 	 */
-	@Nullable
-	public static Object resolveValue(Bson bson, String key) {
+	public static @Nullable Object resolveValue(Bson bson, String key) {
 		return resolveValue(asMap(bson), key);
 	}
 
@@ -541,7 +549,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 4.2
 	 */
-	public static Object resolveValue(Bson bson, FieldName fieldName) {
+	public static @Nullable Object resolveValue(Bson bson, FieldName fieldName) {
 		return resolveValue(asMap(bson), fieldName);
 	}
 
@@ -556,8 +564,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 4.2
 	 */
-	@Nullable
-	public static Object resolveValue(Map<String, Object> source, FieldName fieldName) {
+	public static @Nullable Object resolveValue(Map<String, Object> source, FieldName fieldName) {
 
 		if (fieldName.isKey()) {
 			return source.get(fieldName.name());
@@ -590,8 +597,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 4.1
 	 */
-	@Nullable
-	public static Object resolveValue(Map<String, Object> source, String key) {
+	public static @Nullable Object resolveValue(Map<String, Object> source, String key) {
 
 		if (source.containsKey(key)) {
 			return source.get(key);
@@ -643,9 +649,9 @@ public class BsonUtils {
 	 * @param source can be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
 	@SuppressWarnings("unchecked")
-	private static Map<String, Object> getAsMap(Object source) {
+	@Contract("null -> null")
+	private static @Nullable Map<String, Object> getAsMap(@Nullable Object source) {
 
 		if (source instanceof Document document) {
 			return document;
@@ -745,8 +751,8 @@ public class BsonUtils {
 		return new Document(target);
 	}
 
-	@Nullable
-	private static String toJson(@Nullable Object value) {
+	@Contract("null -> null")
+	private static @Nullable String toJson(@Nullable Object value) {
 
 		if (value == null) {
 			return null;

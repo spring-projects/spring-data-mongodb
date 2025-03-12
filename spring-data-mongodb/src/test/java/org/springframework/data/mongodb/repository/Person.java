@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
@@ -30,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
-import org.springframework.lang.Nullable;
 
 /**
  * Sample domain class.

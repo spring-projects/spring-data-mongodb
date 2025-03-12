@@ -17,12 +17,12 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.springframework.util.ObjectUtils.*;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.geo.Sphere;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

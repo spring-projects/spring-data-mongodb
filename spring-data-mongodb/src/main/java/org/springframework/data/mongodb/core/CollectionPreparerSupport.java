@@ -21,6 +21,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -84,7 +85,7 @@ class CollectionPreparerSupport implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	@Override
-	public ReadConcern getReadConcern() {
+	public @Nullable ReadConcern getReadConcern() {
 
 		for (Object aware : sources) {
 			if (aware instanceof ReadConcernAware rca && rca.hasReadConcern()) {
@@ -108,7 +109,7 @@ class CollectionPreparerSupport implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 
 		for (Object aware : sources) {
 			if (aware instanceof ReadPreferenceAware rpa && rpa.hasReadPreference()) {

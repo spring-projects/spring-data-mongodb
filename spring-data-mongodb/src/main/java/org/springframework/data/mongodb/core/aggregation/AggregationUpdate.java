@@ -25,11 +25,11 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -129,6 +129,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/set/">$set Aggregation Reference</a>
 	 */
+	@Contract("_ -> this")
 	public AggregationUpdate set(SetOperation setOperation) {
 
 		Assert.notNull(setOperation, "SetOperation must not be null");
@@ -148,6 +149,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/unset/">$unset Aggregation
 	 *      Reference</a>
 	 */
+	@Contract("_ -> this")
 	public AggregationUpdate unset(UnsetOperation unsetOperation) {
 
 		Assert.notNull(unsetOperation, "UnsetOperation must not be null");
@@ -166,6 +168,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceWith/">$replaceWith Aggregation
 	 *      Reference</a>
 	 */
+	@Contract("_ -> this")
 	public AggregationUpdate replaceWith(ReplaceWithOperation replaceWithOperation) {
 
 		Assert.notNull(replaceWithOperation, "ReplaceWithOperation must not be null");
@@ -179,6 +182,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * @param value must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public AggregationUpdate replaceWith(Object value) {
 
 		Assert.notNull(value, "Value must not be null");
@@ -193,6 +197,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * @return new instance of {@link SetValueAppender}.
 	 * @see #set(SetOperation)
 	 */
+	@Contract("_ -> new")
 	public SetValueAppender set(String key) {
 
 		Assert.notNull(key, "Key must not be null");
@@ -219,6 +224,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * @param keys the fields to remove.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public AggregationUpdate unset(String... keys) {
 
 		Assert.notNull(keys, "Keys must not be null");
@@ -234,6 +240,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 *
 	 * @return never {@literal null}.
 	 */
+	@Contract("-> this")
 	public AggregationUpdate isolated() {
 
 		isolated = true;

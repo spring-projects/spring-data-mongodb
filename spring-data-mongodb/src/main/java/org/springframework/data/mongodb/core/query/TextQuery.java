@@ -19,8 +19,9 @@ import java.util.Locale;
 import java.util.Map.Entry;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 
 /**
  * {@link Query} implementation to be used to for performing full text searches.
@@ -100,6 +101,7 @@ public class TextQuery extends Query {
 	 * @see TextQuery#includeScore()
 	 * @return this.
 	 */
+	@Contract("-> this")
 	public TextQuery sortByScore() {
 
 		this.sortByScoreIndex = getSortObject().size();
@@ -113,6 +115,7 @@ public class TextQuery extends Query {
 	 *
 	 * @return this.
 	 */
+	@Contract("-> this")
 	public TextQuery includeScore() {
 
 		this.includeScore = true;
@@ -125,6 +128,7 @@ public class TextQuery extends Query {
 	 * @param fieldname must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public TextQuery includeScore(String fieldname) {
 
 		setScoreFieldName(fieldname);
@@ -170,9 +174,8 @@ public class TextQuery extends Query {
 
 			int sortByScoreIndex = this.sortByScoreIndex;
 
-			return sortByScoreIndex != 0
-				? sortByScoreAtPosition(super.getSortObject(), sortByScoreIndex)
-				: sortByScoreAtPositionZero();
+			return sortByScoreIndex != 0 ? sortByScoreAtPosition(super.getSortObject(), sortByScoreIndex)
+					: sortByScoreAtPositionZero();
 		}
 
 		return super.getSortObject();

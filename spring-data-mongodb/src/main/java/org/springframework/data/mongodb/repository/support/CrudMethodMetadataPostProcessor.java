@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
@@ -32,7 +33,6 @@ import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -54,7 +54,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 	private @Nullable ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
 
 	@Override
-	public void setBeanClassLoader(ClassLoader classLoader) {
+	public void setBeanClassLoader(@Nullable ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
@@ -121,7 +121,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		}
 
 		@Override
-		public Object invoke(MethodInvocation invocation) throws Throwable {
+		public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
 
 			Method method = invocation.getMethod();
 
@@ -220,7 +220,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		}
 
 		@Override
-		public Object getTarget() {
+		public @Nullable Object getTarget() {
 
 			MethodInvocation invocation = CrudMethodMetadataPopulatingMethodInterceptor.currentInvocation();
 			return TransactionSynchronizationManager.getResource(invocation.getMethod());

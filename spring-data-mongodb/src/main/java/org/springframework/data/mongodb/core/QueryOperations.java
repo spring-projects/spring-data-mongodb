@@ -31,6 +31,7 @@ import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
@@ -62,7 +63,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.model.CountOptions;
@@ -283,6 +284,7 @@ class QueryOperations {
 		 * @param <T>
 		 * @return the {@link MappedDocument} containing the changes.
 		 */
+		@SuppressWarnings("NullAway")
 		<T> MappedDocument prepareId(@Nullable MongoPersistentEntity<T> entity) {
 
 			if (entity == null || source.hasId()) {
@@ -361,6 +363,7 @@ class QueryOperations {
 			return queryMapper.getMappedObject(getQueryObject(), entity);
 		}
 
+		@SuppressWarnings("NullAway")
 		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, EntityProjection<?, ?> projection) {
 
 			Document fields = evaluateFields(entity);
@@ -888,6 +891,8 @@ class QueryOperations {
 		 */
 		List<Document> getUpdatePipeline(@Nullable Class<?> domainType) {
 
+			Assert.isInstanceOf(AggregationUpdate.class, update);
+
 			Class<?> type = domainType != null ? domainType : Object.class;
 
 			AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type, mappingContext,
@@ -901,6 +906,7 @@ class QueryOperations {
 		 * @param entity
 		 * @return
 		 */
+		@SuppressWarnings("NullAway")
 		Document getMappedUpdate(@Nullable MongoPersistentEntity<?> entity) {
 
 			if (update != null) {

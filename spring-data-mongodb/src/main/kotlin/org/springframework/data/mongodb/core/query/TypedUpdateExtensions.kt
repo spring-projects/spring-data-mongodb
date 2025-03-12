@@ -142,7 +142,7 @@ fun <T> Update.pull(key: KProperty<T>, value: Any) =
  * @since 4.4
  * @see Update.pullAll
  */
-fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
+fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<Any>) =
     pullAll(key.toDotPath(), values)
 
 /**

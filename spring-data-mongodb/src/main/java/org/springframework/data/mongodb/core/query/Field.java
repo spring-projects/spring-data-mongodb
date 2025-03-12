@@ -22,8 +22,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.MongoExpression;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -52,6 +53,7 @@ public class Field {
 	 * @param field the document field name to be included.
 	 * @return {@code this} field projection instance.
 	 */
+	@Contract("_ -> this")
 	public Field include(String field) {
 
 		Assert.notNull(field, "Key must not be null");
@@ -111,6 +113,7 @@ public class Field {
 	 * @return new instance of {@link FieldProjectionExpression}.
 	 * @since 3.2
 	 */
+	@Contract("_, _ -> this")
 	public Field projectAs(MongoExpression expression, String field) {
 
 		criteria.put(field, expression);
@@ -124,6 +127,7 @@ public class Field {
 	 * @return {@code this} field projection instance.
 	 * @since 3.1
 	 */
+	@Contract("_ -> this")
 	public Field include(String... fields) {
 		return include(Arrays.asList(fields));
 	}
@@ -135,6 +139,7 @@ public class Field {
 	 * @return {@code this} field projection instance.
 	 * @since 4.4
 	 */
+	@Contract("_ -> this")
 	public Field include(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
@@ -149,6 +154,7 @@ public class Field {
 	 * @param field the document field name to be excluded.
 	 * @return {@code this} field projection instance.
 	 */
+	@Contract("_ -> this")
 	public Field exclude(String field) {
 
 		Assert.notNull(field, "Key must not be null");
@@ -165,6 +171,7 @@ public class Field {
 	 * @return {@code this} field projection instance.
 	 * @since 3.1
 	 */
+	@Contract("_ -> this")
 	public Field exclude(String... fields) {
 		return exclude(Arrays.asList(fields));
 	}
@@ -176,6 +183,7 @@ public class Field {
 	 * @return {@code this} field projection instance.
 	 * @since 4.4
 	 */
+	@Contract("_ -> this")
 	public Field exclude(Collection<String> fields) {
 
 		Assert.notNull(fields, "Keys must not be null");
@@ -191,6 +199,7 @@ public class Field {
 	 * @param size the number of elements to include.
 	 * @return {@code this} field projection instance.
 	 */
+	@Contract("_, _ -> this")
 	public Field slice(String field, int size) {
 
 		Assert.notNull(field, "Key must not be null");
@@ -209,12 +218,14 @@ public class Field {
 	 * @param size the number of elements to include.
 	 * @return {@code this} field projection instance.
 	 */
+	@Contract("_, _, _ -> this")
 	public Field slice(String field, int offset, int size) {
 
 		slices.put(field, Arrays.asList(offset, size));
 		return this;
 	}
 
+	@Contract("_, _ -> this")
 	public Field elemMatch(String field, Criteria elemMatchCriteria) {
 
 		elemMatches.put(field, elemMatchCriteria);
@@ -229,6 +240,7 @@ public class Field {
 	 * @param value
 	 * @return {@code this} field projection instance.
 	 */
+	@Contract("_, _ -> this")
 	public Field position(String field, int value) {
 
 		Assert.hasText(field, "DocumentField must not be null or empty");

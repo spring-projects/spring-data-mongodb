@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
@@ -31,5 +32,5 @@ public interface DbRefResolverCallback {
 	 * @param property will never be {@literal null}.
 	 * @return
 	 */
-	Object resolve(MongoPersistentProperty property);
+	@Nullable Object resolve(MongoPersistentProperty property);
 }

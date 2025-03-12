@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.util.function.Predicate;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Predicates;
-import org.springframework.lang.Nullable;
 
 /**
  * Utility to translate a {@link MongoPersistentProperty} into a corresponding property from a different

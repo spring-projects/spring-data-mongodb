@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Contract;
 
 /**
  * Gateway to {@literal selection operators} such as {@literal $bottom}.
@@ -69,6 +70,7 @@ public class SelectionOperators {
 		 * @param numberOfResults
 		 * @return new instance of {@link Bottom}.
 		 */
+		@Contract("_ -> new")
 		public Bottom limit(int numberOfResults) {
 			return limit((Object) numberOfResults);
 		}
@@ -80,10 +82,12 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Bottom}.
 		 */
+		@Contract("_ -> new")
 		public Bottom limit(AggregationExpression expression) {
 			return limit((Object) expression);
 		}
 
+		@Contract("_ -> new")
 		private Bottom limit(Object value) {
 			return new Bottom(append("n", value));
 		}
@@ -94,6 +98,7 @@ public class SelectionOperators {
 		 * @param sort must not be {@literal null}.
 		 * @return new instance of {@link Bottom}.
 		 */
+		@Contract("_ -> new")
 		public Bottom sortBy(Sort sort) {
 			return new Bottom(append("sortBy", sort));
 		}
@@ -104,6 +109,7 @@ public class SelectionOperators {
 		 * @param out must not be {@literal null}.
 		 * @return new instance of {@link Bottom}.
 		 */
+		@Contract("_ -> new")
 		public Bottom output(Fields out) {
 			return new Bottom(append("output", out));
 		}
@@ -115,6 +121,7 @@ public class SelectionOperators {
 		 * @return new instance of {@link Bottom}.
 		 * @see #output(Fields)
 		 */
+		@Contract("_ -> new")
 		public Bottom output(String... fieldNames) {
 			return output(Fields.fields(fieldNames));
 		}
@@ -126,6 +133,7 @@ public class SelectionOperators {
 		 * @return new instance of {@link Bottom}.
 		 * @see #output(Fields)
 		 */
+		@Contract("_ -> new")
 		public Bottom output(AggregationExpression... out) {
 			return new Bottom(append("output", Arrays.asList(out)));
 		}
@@ -172,6 +180,7 @@ public class SelectionOperators {
 		 * @param numberOfResults
 		 * @return new instance of {@link Top}.
 		 */
+		@Contract("_ -> new")
 		public Top limit(int numberOfResults) {
 			return limit((Object) numberOfResults);
 		}
@@ -183,6 +192,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Top}.
 		 */
+		@Contract("_ -> new")
 		public Top limit(AggregationExpression expression) {
 			return limit((Object) expression);
 		}
@@ -197,6 +207,7 @@ public class SelectionOperators {
 		 * @param sort must not be {@literal null}.
 		 * @return new instance of {@link Top}.
 		 */
+		@Contract("_ -> new")
 		public Top sortBy(Sort sort) {
 			return new Top(append("sortBy", sort));
 		}
@@ -207,6 +218,7 @@ public class SelectionOperators {
 		 * @param out must not be {@literal null}.
 		 * @return new instance of {@link Top}.
 		 */
+		@Contract("_ -> new")
 		public Top output(Fields out) {
 			return new Top(append("output", out));
 		}
@@ -218,6 +230,7 @@ public class SelectionOperators {
 		 * @return new instance of {@link Top}.
 		 * @see #output(Fields)
 		 */
+		@Contract("_ -> new")
 		public Top output(String... fieldNames) {
 			return output(Fields.fields(fieldNames));
 		}
@@ -229,6 +242,7 @@ public class SelectionOperators {
 		 * @return new instance of {@link Top}.
 		 * @see #output(Fields)
 		 */
+		@Contract("_ -> new")
 		public Top output(AggregationExpression... out) {
 			return new Top(append("output", Arrays.asList(out)));
 		}
@@ -263,6 +277,7 @@ public class SelectionOperators {
 		 * @param numberOfResults
 		 * @return new instance of {@link First}.
 		 */
+		@Contract("_ -> new")
 		public First limit(int numberOfResults) {
 			return limit((Object) numberOfResults);
 		}
@@ -274,6 +289,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link First}.
 		 */
+		@Contract("_ -> new")
 		public First limit(AggregationExpression expression) {
 			return limit((Object) expression);
 		}
@@ -288,6 +304,7 @@ public class SelectionOperators {
 		 * @param fieldName must not be {@literal null}.
 		 * @return new instance of {@link First}.
 		 */
+		@Contract("_ -> new")
 		public First of(String fieldName) {
 			return input(fieldName);
 		}
@@ -298,6 +315,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link First}.
 		 */
+		@Contract("_ -> new")
 		public First of(AggregationExpression expression) {
 			return input(expression);
 		}
@@ -308,6 +326,7 @@ public class SelectionOperators {
 		 * @param fieldName must not be {@literal null}.
 		 * @return new instance of {@link First}.
 		 */
+		@Contract("_ -> new")
 		public First input(String fieldName) {
 			return new First(append("input", Fields.field(fieldName)));
 		}
@@ -318,6 +337,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link First}.
 		 */
+		@Contract("_ -> new")
 		public First input(AggregationExpression expression) {
 			return new First(append("input", expression));
 		}
@@ -357,6 +377,7 @@ public class SelectionOperators {
 		 * @param numberOfResults
 		 * @return new instance of {@link Last}.
 		 */
+		@Contract("_ -> new")
 		public Last limit(int numberOfResults) {
 			return limit((Object) numberOfResults);
 		}
@@ -368,6 +389,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Last}.
 		 */
+		@Contract("_ -> new")
 		public Last limit(AggregationExpression expression) {
 			return limit((Object) expression);
 		}
@@ -382,6 +404,7 @@ public class SelectionOperators {
 		 * @param fieldName must not be {@literal null}.
 		 * @return new instance of {@link Last}.
 		 */
+		@Contract("_ -> new")
 		public Last of(String fieldName) {
 			return input(fieldName);
 		}
@@ -392,6 +415,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Last}.
 		 */
+		@Contract("_ -> new")
 		public Last of(AggregationExpression expression) {
 			return input(expression);
 		}
@@ -402,6 +426,7 @@ public class SelectionOperators {
 		 * @param fieldName must not be {@literal null}.
 		 * @return new instance of {@link Last}.
 		 */
+		@Contract("_ -> new")
 		public Last input(String fieldName) {
 			return new Last(append("input", Fields.field(fieldName)));
 		}
@@ -412,6 +437,7 @@ public class SelectionOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Last}.
 		 */
+		@Contract("_ -> new")
 		public Last input(AggregationExpression expression) {
 			return new Last(append("input", expression));
 		}

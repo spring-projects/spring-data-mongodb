@@ -20,12 +20,12 @@ import java.util.List;
 
 import org.bson.BsonString;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.SearchIndexModel;
@@ -40,7 +40,7 @@ public class DefaultSearchIndexOperations implements SearchIndexOperations {
 
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
-	private final TypeInformation<?> entityTypeInformation;
+	private final @Nullable TypeInformation<?> entityTypeInformation;
 
 	public DefaultSearchIndexOperations(MongoOperations mongoOperations, Class<?> type) {
 		this(mongoOperations, mongoOperations.getCollectionName(type), type);

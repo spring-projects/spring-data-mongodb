@@ -25,7 +25,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -59,6 +60,9 @@ public class DensifyOperation implements AggregationOperation {
 
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
+
+		Assert.notNull(field, "Field must be set first");
+		Assert.notNull(range, "Range must be set first");
 
 		Document densify = new Document();
 		densify.put("field", context.getReference(field).getRaw());
@@ -149,9 +153,9 @@ public class DensifyOperation implements AggregationOperation {
 	public static abstract class DensifyRange implements Range {
 
 		private @Nullable DensifyUnit unit;
-		private Number step;
+		private @Nullable Number step;
 
-		public DensifyRange(DensifyUnit unit) {
+		public DensifyRange(@Nullable DensifyUnit unit) {
 			this.unit = unit;
 		}
 
@@ -172,6 +176,7 @@ public class DensifyOperation implements AggregationOperation {
 		 * @param step must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public DensifyRange incrementBy(Number step) {
 			this.step = step;
 			return this;
@@ -183,6 +188,7 @@ public class DensifyOperation implements AggregationOperation {
 		 * @param step must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_, _ -> this")
 		public DensifyRange incrementBy(Number step, DensifyUnit unit) {
 			this.step = step;
 			return unit(unit);
@@ -194,6 +200,7 @@ public class DensifyOperation implements AggregationOperation {
 		 * @param unit
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public DensifyRange unit(DensifyUnit unit) {
 
 			this.unit = unit;

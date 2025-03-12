@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.index;
 import java.time.Duration;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Changeable properties of an index. Can be used for index creation and modification.
@@ -28,14 +28,11 @@ import org.springframework.lang.Nullable;
  */
 public class IndexOptions {
 
-	@Nullable
-	private Duration expire;
+	private @Nullable Duration expire;
 
-	@Nullable
-	private Boolean hidden;
+	private @Nullable Boolean hidden;
 
-	@Nullable
-	private Unique unique;
+	private @Nullable Unique unique;
 
 	public enum Unique {
 
@@ -108,8 +105,7 @@ public class IndexOptions {
 	/**
 	 * @return {@literal true} if hidden, {@literal null} if not set.
 	 */
-	@Nullable
-	public Boolean isHidden() {
+	public @Nullable Boolean isHidden() {
 		return hidden;
 	}
 
@@ -123,8 +119,7 @@ public class IndexOptions {
 	/**
 	 * @return the unique property value, {@literal null} if not set.
 	 */
-	@Nullable
-	public Unique getUnique() {
+	public @Nullable Unique getUnique() {
 		return unique;
 	}
 

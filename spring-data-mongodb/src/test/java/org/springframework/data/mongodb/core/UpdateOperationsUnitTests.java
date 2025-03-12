@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -29,8 +31,6 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoClientSettings;
 

@@ -21,12 +21,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

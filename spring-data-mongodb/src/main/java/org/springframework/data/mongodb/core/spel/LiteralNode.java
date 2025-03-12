@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.spel;
 
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.ast.BooleanLiteral;
 import org.springframework.expression.spel.ast.FloatLiteral;
@@ -26,7 +27,6 @@ import org.springframework.expression.spel.ast.LongLiteral;
 import org.springframework.expression.spel.ast.NullLiteral;
 import org.springframework.expression.spel.ast.RealLiteral;
 import org.springframework.expression.spel.ast.StringLiteral;
-import org.springframework.lang.Nullable;
 
 /**
  * A node representing a literal in an expression.

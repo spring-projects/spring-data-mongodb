@@ -20,9 +20,10 @@ import java.util.Arrays;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -31,8 +32,7 @@ import org.springframework.util.StringUtils;
  * A {@link MongoExpression} using the {@link ParameterBindingDocumentCodec} for parsing a raw ({@literal json})
  * expression. The expression will be wrapped within <code>{ ... }</code> if necessary. The actual parsing and parameter
  * binding of placeholders like {@code ?0} is delayed upon first call on the target {@link Document} via
- * {@link #toDocument()}.
- * <br />
+ * {@link #toDocument()}. <br />
  *
  * <pre class="code">
  * $toUpper : $name                -> { '$toUpper' : '$name' }
@@ -55,7 +55,7 @@ public class BindableMongoExpression implements MongoExpression {
 
 	private final @Nullable CodecRegistryProvider codecRegistryProvider;
 
-	private final @Nullable Object[] args;
+	private final Object @Nullable [] args;
 
 	private final Lazy<Document> target;
 
@@ -63,9 +63,9 @@ public class BindableMongoExpression implements MongoExpression {
 	 * Create a new instance of {@link BindableMongoExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @param args can be {@literal null}.
+	 * @param args must not be {@literal null} but may contain {@literal null} elements.
 	 */
-	public BindableMongoExpression(String expression, @Nullable Object[] args) {
+	public BindableMongoExpression(String expression, Object @Nullable [] args) {
 		this(expression, null, args);
 	}
 
@@ -74,10 +74,10 @@ public class BindableMongoExpression implements MongoExpression {
 	 *
 	 * @param expression must not be {@literal null}.
 	 * @param codecRegistryProvider can be {@literal null}.
-	 * @param args can be {@literal null}.
+	 * @param args must not be {@literal null} but may contain {@literal null} elements.
 	 */
 	public BindableMongoExpression(String expression, @Nullable CodecRegistryProvider codecRegistryProvider,
-			@Nullable Object[] args) {
+			Object @Nullable [] args) {
 
 		Assert.notNull(expression, "Expression must not be null");
 
@@ -93,6 +93,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @param codecRegistry must not be {@literal null}.
 	 * @return new instance of {@link BindableMongoExpression}.
 	 */
+	@Contract("_ -> new")
 	public BindableMongoExpression withCodecRegistry(CodecRegistry codecRegistry) {
 		return new BindableMongoExpression(expressionString, () -> codecRegistry, args);
 	}
@@ -103,6 +104,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @param args must not be {@literal null}.
 	 * @return new instance of {@link BindableMongoExpression}.
 	 */
+	@Contract("_ -> new")
 	public BindableMongoExpression bind(Object... args) {
 		return new BindableMongoExpression(expressionString, codecRegistryProvider, args);
 	}
@@ -139,7 +141,7 @@ public class BindableMongoExpression implements MongoExpression {
 
 	private static String wrapJsonIfNecessary(String json) {
 
-		if(!StringUtils.hasText(json)) {
+		if (!StringUtils.hasText(json)) {
 			return json;
 		}
 

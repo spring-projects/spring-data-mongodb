@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import org.bson.BsonDocument;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,7 +32,6 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoCursorNotFoundException;
 import com.mongodb.MongoException;

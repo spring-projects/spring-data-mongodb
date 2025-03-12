@@ -27,9 +27,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -100,6 +101,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("_ -> new")
 	public TypedJsonSchemaObject description(String description) {
 		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions);
 	}
@@ -110,6 +112,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("-> new")
 	public TypedJsonSchemaObject generatedDescription() {
 		return new TypedJsonSchemaObject(types, description, true, restrictions);
 	}
@@ -121,6 +124,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("_ -> new")
 	public TypedJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 		return new TypedJsonSchemaObject(types, description, generateDescription,
 				restrictions.possibleValues(possibleValues));
@@ -133,6 +137,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("_ -> new")
 	public TypedJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.allOf(allOf));
 	}
@@ -144,6 +149,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("_ -> new")
 	public TypedJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.anyOf(anyOf));
 	}
@@ -155,6 +161,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("_ -> new")
 	public TypedJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.oneOf(oneOf));
 	}
@@ -166,6 +173,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
+	@Contract("_ -> new")
 	public TypedJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 		return new TypedJsonSchemaObject(types, description, generateDescription, restrictions.notMatch(notMatch));
 	}
@@ -210,8 +218,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	protected String generateDescription() {
+	protected @Nullable String generateDescription() {
 		return null;
 	}
 
@@ -264,6 +271,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param count the allowed minimal number of properties.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject minProperties(int count) {
 
 			Bound<Integer> upper = this.propertiesCount != null ? this.propertiesCount.getUpperBound() : Bound.unbounded();
@@ -276,6 +284,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param count the allowed maximum number of properties.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject maxProperties(int count) {
 
 			Bound<Integer> lower = this.propertiesCount != null ? this.propertiesCount.getLowerBound() : Bound.unbounded();
@@ -288,6 +297,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param properties the names of required properties.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject required(String... properties) {
 
 			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -305,6 +315,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param additionalPropertiesAllowed
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject additionalProperties(boolean additionalPropertiesAllowed) {
 
 			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -319,6 +330,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param schema must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject additionalProperties(ObjectJsonSchemaObject schema) {
 
 			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -332,6 +344,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param properties must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject properties(JsonSchemaProperty... properties) {
 
 			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -349,6 +362,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param regularExpressions must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject patternProperties(JsonSchemaProperty... regularExpressions) {
 
 			ObjectJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -365,41 +379,49 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param property must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject property(JsonSchemaProperty property) {
 			return properties(property);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ObjectJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -545,6 +567,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param value must not be {@literal null}.
 		 * @return must not be {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject multipleOf(Number value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -561,6 +584,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link NumericJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject within(Range<? extends Number> range) {
 
 			Assert.notNull(range, "Range must not be null");
@@ -578,6 +602,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @return new instance of {@link NumericJsonSchemaObject}.
 		 */
 		@SuppressWarnings("unchecked")
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject gt(Number min) {
 
 			Assert.notNull(min, "Min must not be null");
@@ -593,6 +618,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @return new instance of {@link NumericJsonSchemaObject}.
 		 */
 		@SuppressWarnings("unchecked")
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject gte(Number min) {
 
 			Assert.notNull(min, "Min must not be null");
@@ -608,6 +634,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @return new instance of {@link NumericJsonSchemaObject}.
 		 */
 		@SuppressWarnings("unchecked")
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject lt(Number max) {
 
 			Assert.notNull(max, "Max must not be null");
@@ -623,6 +650,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @return new instance of {@link NumericJsonSchemaObject}.
 		 */
 		@SuppressWarnings("unchecked")
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject lte(Number max) {
 
 			Assert.notNull(max, "Max must not be null");
@@ -632,36 +660,43 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NumericJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -785,6 +820,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link StringJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaObject length(Range<Integer> range) {
 
 			Assert.notNull(range, "Range must not be null");
@@ -801,6 +837,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param length
 		 * @return new instance of {@link StringJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaObject minLength(int length) {
 
 			Bound<Integer> upper = this.length != null ? this.length.getUpperBound() : Bound.unbounded();
@@ -813,6 +850,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param length
 		 * @return new instance of {@link StringJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaObject maxLength(int length) {
 
 			Bound<Integer> lower = this.length != null ? this.length.getLowerBound() : Bound.unbounded();
@@ -825,6 +863,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param pattern must not be {@literal null}.
 		 * @return new instance of {@link StringJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaObject matching(String pattern) {
 
 			Assert.notNull(pattern, "Pattern must not be null");
@@ -836,36 +875,43 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public StringJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public StringJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public StringJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public StringJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public StringJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public StringJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("-> new")
 		public StringJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -946,6 +992,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param uniqueItems
 		 * @return new instance of {@link ArrayJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject uniqueItems(boolean uniqueItems) {
 
 			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -961,6 +1008,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param range must not be {@literal null}. Consider {@link Range#unbounded()} instead.
 		 * @return new instance of {@link ArrayJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject range(Range<Integer> range) {
 
 			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -975,6 +1023,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param count the allowed minimal number of array items.
 		 * @return new instance of {@link ArrayJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject minItems(int count) {
 
 			Bound<Integer> upper = this.range != null ? this.range.getUpperBound() : Bound.unbounded();
@@ -987,6 +1036,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param count the allowed maximal number of array items.
 		 * @return new instance of {@link ArrayJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject maxItems(int count) {
 
 			Bound<Integer> lower = this.range != null ? this.range.getLowerBound() : Bound.unbounded();
@@ -999,6 +1049,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param items the allowed items in the array.
 		 * @return new instance of {@link ArrayJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject items(Collection<JsonSchemaObject> items) {
 
 			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -1013,6 +1064,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		 * @param additionalItemsAllowed {@literal true} to allow additional items in the array, {@literal false} otherwise.
 		 * @return new instance of {@link ArrayJsonSchemaObject}.
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject additionalItems(boolean additionalItemsAllowed) {
 
 			ArrayJsonSchemaObject newInstance = newInstance(description, generateDescription, restrictions);
@@ -1022,36 +1074,43 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public ArrayJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
@@ -1147,41 +1206,49 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject description(String description) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public BooleanJsonSchemaObject generatedDescription() {
 			return new BooleanJsonSchemaObject(description, true, restrictions);
 		}
 
 		@Override
+		@Contract("-> new")
 		protected String generateDescription() {
 			return "Must be a boolean";
 		}
@@ -1208,36 +1275,43 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NullJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NullJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NullJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NullJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NullJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public NullJsonSchemaObject description(String description) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("-> new")
 		public NullJsonSchemaObject generatedDescription() {
 			return new NullJsonSchemaObject(description, true, restrictions);
 		}
@@ -1268,36 +1342,43 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateJsonSchemaObject description(String description) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("-> new")
 		public DateJsonSchemaObject generatedDescription() {
 			return new DateJsonSchemaObject(description, true, restrictions);
 		}
@@ -1328,37 +1409,44 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TimestampJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new TimestampJsonSchemaObject(description, generateDescription,
 					restrictions.possibleValues(possibleValues));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TimestampJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TimestampJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TimestampJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TimestampJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TimestampJsonSchemaObject description(String description) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
 		@Override
+		@Contract("-> new")
 		public TimestampJsonSchemaObject generatedDescription() {
 			return new TimestampJsonSchemaObject(description, true, restrictions);
 		}

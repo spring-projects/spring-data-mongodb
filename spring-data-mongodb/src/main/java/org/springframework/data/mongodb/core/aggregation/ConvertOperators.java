@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.Collections;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -242,10 +242,12 @@ public class ConvertOperators {
 			return DegreesToRadians.degreesToRadians(valueObject());
 		}
 
+		@SuppressWarnings("NullAway")
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object valueObject() {
 			return usesFieldRef() ? Fields.field(fieldReference) : expression;
 		}

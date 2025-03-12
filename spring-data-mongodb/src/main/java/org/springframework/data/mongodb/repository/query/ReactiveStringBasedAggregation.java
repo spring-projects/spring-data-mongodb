@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -32,7 +33,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.lang.Nullable;
 
 /**
  * A reactive {@link org.springframework.data.repository.query.RepositoryQuery} to use a plain JSON String to create an

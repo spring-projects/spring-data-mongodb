@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -183,8 +182,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		return this.mappingContext.equals(context);
 	}
 
-	@Nullable
-	private IndexInfo fetchIndexInformation(@Nullable IndexDefinitionHolder indexDefinition) {
+	private @Nullable IndexInfo fetchIndexInformation(@Nullable IndexDefinitionHolder indexDefinition) {
 
 		if (indexDefinition == null) {
 			return null;

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.lang.Nullable;
 
 /**
  * Delegate class to encapsulate lifecycle event configuration and publishing.
@@ -47,6 +47,7 @@ class EntityLifecycleEventDelegate {
 	 *
 	 * @param event the application event.
 	 */
+	@SuppressWarnings("NullAway")
 	public void publishEvent(Object event) {
 
 		if (canPublishEvent()) {

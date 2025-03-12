@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -55,11 +56,11 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 		private final MongoTemplate template;
 		private final Class<T> domainType;
-		private final Aggregation aggregation;
-		private final String collection;
+		private final @Nullable Aggregation aggregation;
+		private final @Nullable String collection;
 
-		public ExecutableAggregationSupport(MongoTemplate template, Class<T> domainType, Aggregation aggregation,
-				String collection) {
+		public ExecutableAggregationSupport(MongoTemplate template, Class<T> domainType, @Nullable Aggregation aggregation,
+				@Nullable String collection) {
 			this.template = template;
 			this.domainType = domainType;
 			this.aggregation = aggregation;
@@ -84,21 +85,25 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 		@Override
 		public AggregationResults<T> all() {
+
+			Assert.notNull(aggregation, "Aggregation must be set first");
 			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);
 		}
 
 		@Override
 		public Stream<T> stream() {
+
+			Assert.notNull(aggregation, "Aggregation must be set first");
 			return template.aggregateStream(aggregation, getCollectionName(aggregation), domainType);
 		}
 
-		private String getCollectionName(Aggregation aggregation) {
+		private String getCollectionName(@Nullable Aggregation aggregation) {
 
 			if (StringUtils.hasText(collection)) {
 				return collection;
 			}
 
-			if (aggregation instanceof TypedAggregation typedAggregation) {
+			if (aggregation instanceof TypedAggregation<?> typedAggregation) {
 
 				if (typedAggregation.getInputType() != null) {
 					return template.getCollectionName(typedAggregation.getInputType());
