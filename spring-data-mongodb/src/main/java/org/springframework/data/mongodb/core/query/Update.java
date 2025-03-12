@@ -447,13 +447,11 @@ public class Update implements UpdateDefinition {
 		if (existingValue == null) {
 			keyValueMap = new Document();
 			this.modifierOps.put(operator, keyValueMap);
+		} else if (existingValue instanceof Document document) {
+			keyValueMap = document;
 		} else {
-			if (existingValue instanceof Document document) {
-				keyValueMap = document;
-			} else {
-				throw new InvalidDataAccessApiUsageException(
-						"Modifier Operations should be a LinkedHashMap but was " + existingValue.getClass());
-			}
+			throw new InvalidDataAccessApiUsageException(
+					"Modifier Operations should be a LinkedHashMap but was " + existingValue.getClass());
 		}
 
 		keyValueMap.put(key, value);
