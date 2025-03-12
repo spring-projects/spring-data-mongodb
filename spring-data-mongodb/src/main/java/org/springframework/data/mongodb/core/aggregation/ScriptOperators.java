@@ -22,15 +22,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator.AccumulatorBuilder;
 import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator.AccumulatorInitBuilder;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 /**
- * Gateway to {@literal $function} and {@literal $accumulator} aggregation operations.
- * <br />
+ * Gateway to {@literal $function} and {@literal $accumulator} aggregation operations. <br />
  * Using {@link ScriptOperators} as part of the {@link Aggregation} requires MongoDB server to have
  * <a href="https://docs.mongodb.com/master/core/server-side-javascript/">server-side JavaScript</a> execution
  * <a href="https://docs.mongodb.com/master/reference/configuration-options/#security.javascriptEnabled">enabled</a>.
@@ -53,8 +53,8 @@ public class ScriptOperators {
 	}
 
 	/**
-	 * Create a custom <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator operator</a>
-	 * in Javascript.
+	 * Create a custom <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator
+	 * operator</a> in Javascript.
 	 *
 	 * @return new instance of {@link AccumulatorInitBuilder}.
 	 */
@@ -74,8 +74,7 @@ public class ScriptOperators {
 	 *     lang: "js"
 	 *   }
 	 * }
-	 * </code>
-	 * <br />
+	 * </code> <br />
 	 * {@link Function} cannot be used as part of {@link org.springframework.data.mongodb.core.schema.MongoJsonSchema
 	 * schema} validation query expression. <br />
 	 * <b>NOTE:</b> <a href="https://docs.mongodb.com/master/core/server-side-javascript/">Server-Side JavaScript</a>
@@ -150,10 +149,12 @@ public class ScriptOperators {
 			return get(Fields.ARGS.toString());
 		}
 
+		@Nullable
 		String getBody() {
 			return get(Fields.BODY.toString());
 		}
 
+		@Nullable
 		String getLang() {
 			return get(Fields.LANG.toString());
 		}
@@ -178,8 +179,7 @@ public class ScriptOperators {
 	 * {@link Accumulator} defines a custom aggregation
 	 * <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator operator</a>,
 	 * one that maintains its state (e.g. totals, maximums, minimums, and related data) as documents progress through the
-	 * pipeline, in JavaScript.
-	 * <br />
+	 * pipeline, in JavaScript. <br />
 	 * <code class="java">
 	 * {
 	 *   $accumulator: {
@@ -192,8 +192,7 @@ public class ScriptOperators {
 	 *     lang: "js"
 	 *   }
 	 * }
-	 * </code>
-	 * <br />
+	 * </code> <br />
 	 * {@link Accumulator} can be used as part of {@link GroupOperation $group}, {@link BucketOperation $bucket} and
 	 * {@link BucketAutoOperation $bucketAuto} pipeline stages. <br />
 	 * <b>NOTE:</b> <a href="https://docs.mongodb.com/master/core/server-side-javascript/">Server-Side JavaScript</a>
@@ -240,8 +239,7 @@ public class ScriptOperators {
 
 			/**
 			 * Define the {@code init} {@link Function} for the {@link Accumulator accumulators} initial state. The function
-			 * receives its arguments from the {@link Function#args(Object...) initArgs} array expression.
-			 * <br />
+			 * receives its arguments from the {@link Function#args(Object...) initArgs} array expression. <br />
 			 * <code class="java">
 			 * function(initArg1, initArg2, ...) {
 			 *   ...
@@ -253,13 +251,16 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			default AccumulatorAccumulateBuilder init(Function function) {
-				return init(function.getBody()).initArgs(function.getArgs());
+
+				Assert.notNull(function.getBody(), "Function body must not be null");
+
+				List<Object> args = function.getArgs();
+				return init(function.getBody()).initArgs(args != null ? args : List.of());
 			}
 
 			/**
 			 * Define the {@code init} function for the {@link Accumulator accumulators} initial state. The function receives
-			 * its arguments from the {@link AccumulatorInitArgsBuilder#initArgs(Object...)} array expression.
-			 * <br />
+			 * its arguments from the {@link AccumulatorInitArgsBuilder#initArgs(Object...)} array expression. <br />
 			 * <code class="java">
 			 * function(initArg1, initArg2, ...) {
 			 *   ...
@@ -307,8 +308,7 @@ public class ScriptOperators {
 			/**
 			 * Set the {@code accumulate} {@link Function} that updates the state for each document. The functions first
 			 * argument is the current {@code state}, additional arguments can be defined via {@link Function#args(Object...)
-			 * accumulateArgs}.
-			 * <br />
+			 * accumulateArgs}. <br />
 			 * <code class="java">
 			 * function(state, accumArg1, accumArg2, ...) {
 			 *   ...
@@ -320,14 +320,17 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			default AccumulatorMergeBuilder accumulate(Function function) {
-				return accumulate(function.getBody()).accumulateArgs(function.getArgs());
+
+				Assert.notNull(function.getBody(), "Function body must not be null");
+
+				List<Object> args = function.getArgs();
+				return accumulate(function.getBody()).accumulateArgs(args != null ? args : List.of());
 			}
 
 			/**
 			 * Set the {@code accumulate} function that updates the state for each document. The functions first argument is
 			 * the current {@code state}, additional arguments can be defined via
-			 * {@link AccumulatorAccumulateArgsBuilder#accumulateArgs(Object...)}.
-			 * <br />
+			 * {@link AccumulatorAccumulateArgsBuilder#accumulateArgs(Object...)}. <br />
 			 * <code class="java">
 			 * function(state, accumArg1, accumArg2, ...) {
 			 *   ...
@@ -369,8 +372,7 @@ public class ScriptOperators {
 			/**
 			 * Set the {@code merge} function used to merge two internal states. <br />
 			 * This might be required because the operation is run on a sharded cluster or when the operator exceeds its
-			 * memory limit.
-			 * <br />
+			 * memory limit. <br />
 			 * <code class="java">
 			 * function(state1, state2) {
 			 *   ...
@@ -388,8 +390,7 @@ public class ScriptOperators {
 
 			/**
 			 * Set the {@code finalize} function used to update the result of the accumulation when all documents have been
-			 * processed.
-			 * <br />
+			 * processed. <br />
 			 * <code class="java">
 			 * function(state) {
 			 *   ...
@@ -414,18 +415,17 @@ public class ScriptOperators {
 				implements AccumulatorInitBuilder, AccumulatorInitArgsBuilder, AccumulatorAccumulateBuilder,
 				AccumulatorAccumulateArgsBuilder, AccumulatorMergeBuilder, AccumulatorFinalizeBuilder {
 
-			private List<Object> initArgs;
-			private String initFunction;
-			private List<Object> accumulateArgs;
-			private String accumulateFunction;
-			private String mergeFunction;
-			private String finalizeFunction;
+			private @Nullable List<Object> initArgs;
+			private @Nullable String initFunction;
+			private @Nullable List<Object> accumulateArgs;
+			private @Nullable String accumulateFunction;
+			private @Nullable String mergeFunction;
+			private @Nullable String finalizeFunction;
 			private String lang = "js";
 
 			/**
 			 * Define the {@code init} function for the {@link Accumulator accumulators} initial state. The function receives
-			 * its arguments from the {@link #initArgs(Object...)} array expression.
-			 * <br />
+			 * its arguments from the {@link #initArgs(Object...)} array expression. <br />
 			 * <code class="java">
 			 * function(initArg1, initArg2, ...) {
 			 *   ...
@@ -437,6 +437,7 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			@Override
+			@Contract("_ -> this")
 			public AccumulatorBuilder init(String function) {
 
 				this.initFunction = function;
@@ -450,6 +451,7 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			@Override
+			@Contract("_ -> this")
 			public AccumulatorBuilder initArgs(List<Object> args) {
 
 				Assert.notNull(args, "Args must not be null");
@@ -460,8 +462,7 @@ public class ScriptOperators {
 
 			/**
 			 * Set the {@code accumulate} function that updates the state for each document. The functions first argument is
-			 * the current {@code state}, additional arguments can be defined via {@link #accumulateArgs(Object...)}.
-			 * <br />
+			 * the current {@code state}, additional arguments can be defined via {@link #accumulateArgs(Object...)}. <br />
 			 * <code class="java">
 			 * function(state, accumArg1, accumArg2, ...) {
 			 *   ...
@@ -473,6 +474,7 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			@Override
+			@Contract("_ -> this")
 			public AccumulatorBuilder accumulate(String function) {
 
 				Assert.notNull(function, "Accumulate function must not be null");
@@ -488,6 +490,7 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			@Override
+			@Contract("_ -> this")
 			public AccumulatorBuilder accumulateArgs(List<Object> args) {
 
 				Assert.notNull(args, "Args must not be null");
@@ -499,8 +502,7 @@ public class ScriptOperators {
 			/**
 			 * Set the {@code merge} function used to merge two internal states. <br />
 			 * This might be required because the operation is run on a sharded cluster or when the operator exceeds its
-			 * memory limit.
-			 * <br />
+			 * memory limit. <br />
 			 * <code class="java">
 			 * function(state1, state2) {
 			 *   ...
@@ -512,6 +514,7 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			@Override
+			@Contract("_ -> this")
 			public AccumulatorBuilder merge(String function) {
 
 				Assert.notNull(function, "Merge function must not be null");
@@ -526,6 +529,7 @@ public class ScriptOperators {
 			 * @param lang must not be {@literal null}. Default is {@literal js}.
 			 * @return this.
 			 */
+			@Contract("_ -> this")
 			public AccumulatorBuilder lang(String lang) {
 
 				Assert.hasText(lang, "Lang must not be null nor empty; The default would be 'js'");
@@ -536,8 +540,7 @@ public class ScriptOperators {
 
 			/**
 			 * Set the {@code finalize} function used to update the result of the accumulation when all documents have been
-			 * processed.
-			 * <br />
+			 * processed. <br />
 			 * <code class="java">
 			 * function(state) {
 			 *   ...
@@ -549,6 +552,7 @@ public class ScriptOperators {
 			 * @return new instance of {@link Accumulator}.
 			 */
 			@Override
+			@Contract("_ -> new")
 			public Accumulator finalize(String function) {
 
 				Assert.notNull(function, "Finalize function must not be null");
@@ -562,6 +566,7 @@ public class ScriptOperators {
 			}
 
 			@Override
+			@Contract("-> new")
 			public Accumulator build() {
 				return new Accumulator(createArgumentMap());
 			}

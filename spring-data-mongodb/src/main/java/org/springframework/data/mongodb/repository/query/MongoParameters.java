@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
@@ -36,7 +37,6 @@ import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * Custom extension of {@link Parameters} discovering additional
@@ -53,9 +53,9 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	private final int rangeIndex;
 	private final int maxDistanceIndex;
-	private final @Nullable Integer fullTextIndex;
-	private final @Nullable Integer nearIndex;
-	private final @Nullable Integer collationIndex;
+	private final int fullTextIndex;
+	private final int nearIndex;
+	private final int collationIndex;
 	private final int updateIndex;
 	private final TypeInformation<?> domainType;
 
@@ -106,9 +106,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.nearIndex = nearIndex.nearIndex;
 	}
 
-	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, @Nullable Integer nearIndex,
-			@Nullable Integer fullTextIndex, int rangeIndex, @Nullable Integer collationIndex, int updateIndex,
-			TypeInformation<?> domainType) {
+	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, int nearIndex, int fullTextIndex,
+			int rangeIndex, int collationIndex, int updateIndex, TypeInformation<?> domainType) {
 
 		super(parameters);
 
@@ -141,7 +140,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 	static class NearIndex {
 
-		private final @Nullable Integer nearIndex;
+		private final int nearIndex;
 
 		public NearIndex(ParametersSource parametersSource, boolean isGeoNearMethod) {
 
@@ -226,7 +225,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 1.6
 	 */
 	public int getFullTextParameterIndex() {
-		return fullTextIndex != null ? fullTextIndex : -1;
+		return fullTextIndex;
 	}
 
 	/**
@@ -234,7 +233,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 1.6
 	 */
 	public boolean hasFullTextParameter() {
-		return this.fullTextIndex != null && this.fullTextIndex >= 0;
+		return this.fullTextIndex >= 0;
 	}
 
 	/**
@@ -252,7 +251,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @since 2.2
 	 */
 	public int getCollationParameterIndex() {
-		return collationIndex != null ? collationIndex : -1;
+		return collationIndex;
 	}
 
 	/**

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.lang.Nullable;
 
 /**
  * GridFs-specific helper class to define {@link Criteria}s.

@@ -20,11 +20,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -47,6 +47,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public String getFieldName() {
 
 		if (!context.getProperty().isUnwrapped()) {
@@ -57,6 +58,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public boolean hasExplicitFieldName() {
 		return delegate.hasExplicitFieldName()
 				|| !ObjectUtils.isEmpty(context.getProperty().findAnnotation(Unwrapped.class).prefix());
@@ -108,14 +110,12 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public DBRef getDBRef() {
+	public @Nullable DBRef getDBRef() {
 		return delegate.getDBRef();
 	}
 
 	@Override
-	@Nullable
-	public DocumentReference getDocumentReference() {
+	public @Nullable DocumentReference getDocumentReference() {
 		return delegate.getDocumentReference();
 	}
 
@@ -145,6 +145,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public MongoField getMongoField() {
 
 		if (!context.getProperty().isUnwrapped()) {
@@ -165,8 +166,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Method getGetter() {
+	public @Nullable Method getGetter() {
 		return delegate.getGetter();
 	}
 
@@ -176,8 +176,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Method getSetter() {
+	public @Nullable Method getSetter() {
 		return delegate.getSetter();
 	}
 
@@ -187,8 +186,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Method getWither() {
+	public @Nullable Method getWither() {
 		return delegate.getWither();
 	}
 
@@ -198,8 +196,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Field getField() {
+	public @Nullable Field getField() {
 		return delegate.getField();
 	}
 
@@ -209,14 +206,12 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public String getSpelExpression() {
+	public @Nullable String getSpelExpression() {
 		return delegate.getSpelExpression();
 	}
 
 	@Override
-	@Nullable
-	public Association<MongoPersistentProperty> getAssociation() {
+	public @Nullable Association<MongoPersistentProperty> getAssociation() {
 		return delegate.getAssociation();
 	}
 
@@ -291,8 +286,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Class<?> getComponentType() {
+	public @Nullable Class<?> getComponentType() {
 		return delegate.getComponentType();
 	}
 
@@ -302,8 +296,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Class<?> getMapValueType() {
+	public @Nullable Class<?> getMapValueType() {
 		return delegate.getMapValueType();
 	}
 
@@ -313,8 +306,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public <A extends Annotation> A findAnnotation(Class<A> annotationType) {
+	public <A extends Annotation> @Nullable A findAnnotation(Class<A> annotationType) {
 		return delegate.findAnnotation(annotationType);
 	}
 
@@ -324,8 +316,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public <A extends Annotation> A findPropertyOrOwnerAnnotation(Class<A> annotationType) {
+	public <A extends Annotation> @Nullable A findPropertyOrOwnerAnnotation(Class<A> annotationType) {
 		return delegate.findPropertyOrOwnerAnnotation(annotationType);
 	}
 
@@ -340,13 +331,12 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	@Nullable
-	public Class<?> getAssociationTargetType() {
+	public @Nullable Class<?> getAssociationTargetType() {
 		return delegate.getAssociationTargetType();
 	}
 
 	@Override
-	public TypeInformation<?> getAssociationTargetTypeInformation() {
+	public @Nullable TypeInformation<?> getAssociationTargetTypeInformation() {
 		return delegate.getAssociationTargetTypeInformation();
 	}
 

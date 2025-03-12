@@ -29,6 +29,7 @@ import java.util.Objects;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.Filters;
@@ -1936,9 +1936,8 @@ public class MongoTemplateDocumentReferenceTests {
 
 	static class ReferencableConverter implements Converter<ReferenceAble, DocumentPointer<Object>> {
 
-		@Nullable
 		@Override
-		public DocumentPointer<Object> convert(ReferenceAble source) {
+		public @Nullable DocumentPointer<Object> convert(ReferenceAble source) {
 			return source::toReference;
 		}
 	}
@@ -1947,9 +1946,8 @@ public class MongoTemplateDocumentReferenceTests {
 	static class DocumentToSimpleObjectRefWithReadingConverter
 			implements Converter<DocumentPointer<Document>, SimpleObjectRefWithReadingConverter> {
 
-		@Nullable
 		@Override
-		public SimpleObjectRefWithReadingConverter convert(DocumentPointer<Document> source) {
+		public @Nullable SimpleObjectRefWithReadingConverter convert(DocumentPointer<Document> source) {
 
 			Document document = client.getDatabase(DB_NAME).getCollection("simple-object-ref")
 					.find(Filters.eq("_id", source.getPointer().get("ref-key-from-custom-write-converter"))).first();
@@ -1961,9 +1959,8 @@ public class MongoTemplateDocumentReferenceTests {
 	static class SimpleObjectRefWithReadingConverterToDocumentConverter
 			implements Converter<SimpleObjectRefWithReadingConverter, DocumentPointer<Document>> {
 
-		@Nullable
 		@Override
-		public DocumentPointer<Document> convert(SimpleObjectRefWithReadingConverter source) {
+		public @Nullable DocumentPointer<Document> convert(SimpleObjectRefWithReadingConverter source) {
 			return () -> new Document("ref-key-from-custom-write-converter", source.getId());
 		}
 	}

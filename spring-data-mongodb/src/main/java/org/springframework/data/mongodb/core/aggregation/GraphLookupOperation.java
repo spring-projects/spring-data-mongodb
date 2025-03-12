@@ -21,10 +21,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -35,14 +36,16 @@ import org.springframework.util.ClassUtils;
  * We recommend to use the static factory method {@link Aggregation#graphLookup(String)} instead of creating instances
  * of this class directly.
  *
- * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/graphLookup/">https://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
+ * @see <a href=
+ *      "https://docs.mongodb.org/manual/reference/aggregation/graphLookup/">https://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10
  */
 public class GraphLookupOperation implements InheritsFieldsAggregationOperation {
 
-	private static final Set<Class<?>> ALLOWED_START_TYPES = Set.of(AggregationExpression.class, String.class, Field.class, Document.class);
+	private static final Set<Class<?>> ALLOWED_START_TYPES = Set.of(AggregationExpression.class, String.class,
+			Field.class, Document.class);
 
 	private final String from;
 	private final List<Object> startWith;
@@ -126,7 +129,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 		List<ExposedField> fields = new ArrayList<>(2);
 		fields.add(new ExposedField(as, true));
-		if(depthField != null) {
+		if (depthField != null) {
 			fields.add(new ExposedField(depthField, true));
 		}
 		return ExposedFields.from(fields.toArray(new ExposedField[0]));
@@ -217,10 +220,11 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			implements FromBuilder, StartWithBuilder, ConnectFromBuilder, ConnectToBuilder {
 
 		private @Nullable String from;
-		private @Nullable List<? extends Object> startWith;
+		private @Nullable List<?> startWith;
 		private @Nullable String connectFrom;
 
 		@Override
+		@Contract("_ -> this")
 		public StartWithBuilder from(String collectionName) {
 
 			Assert.hasText(collectionName, "CollectionName must not be null or empty");
@@ -230,6 +234,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public ConnectFromBuilder startWith(String... fieldReferences) {
 
 			Assert.notNull(fieldReferences, "FieldReferences must not be null");
@@ -246,6 +251,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public ConnectFromBuilder startWith(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "AggregationExpressions must not be null");
@@ -256,6 +262,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public ConnectFromBuilder startWith(Object... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -297,6 +304,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public ConnectToBuilder connectFrom(String fieldName) {
 
 			Assert.hasText(fieldName, "ConnectFrom must not be null or empty");
@@ -306,10 +314,14 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public GraphLookupOperationBuilder connectTo(String fieldName) {
 
 			Assert.hasText(fieldName, "ConnectTo must not be null or empty");
 
+			Assert.notNull(from, "From must not be null");
+			Assert.notNull(startWith, "startWith must ne set first");
+			Assert.notNull(connectFrom, "ConnectFrom must be set first");
 			return new GraphLookupOperationBuilder(from, startWith, connectFrom, fieldName);
 		}
 	}
@@ -327,8 +339,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private @Nullable Field depthField;
 		private @Nullable CriteriaDefinition restrictSearchWithMatch;
 
-		private GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
-				String connectTo) {
+		private GraphLookupOperationBuilder(String from, List<?> startWith, String connectFrom, String connectTo) {
 
 			this.from = from;
 			this.startWith = new ArrayList<>(startWith);
@@ -342,6 +353,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * @param numberOfRecursions must be greater or equal to zero.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public GraphLookupOperationBuilder maxDepth(long numberOfRecursions) {
 
 			Assert.isTrue(numberOfRecursions >= 0, "Max depth must be >= 0");
@@ -356,6 +368,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * @param fieldName must not be {@literal null} or empty.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public GraphLookupOperationBuilder depthField(String fieldName) {
 
 			Assert.hasText(fieldName, "Depth field name must not be null or empty");
@@ -370,6 +383,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * @param criteriaDefinition must not be {@literal null}.
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public GraphLookupOperationBuilder restrict(CriteriaDefinition criteriaDefinition) {
 
 			Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
@@ -385,6 +399,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * @param fieldName must not be {@literal null} or empty.
 		 * @return the final {@link GraphLookupOperation}.
 		 */
+		@Contract("_ -> new")
 		public GraphLookupOperation as(String fieldName) {
 
 			Assert.hasText(fieldName, "As field name must not be null or empty");

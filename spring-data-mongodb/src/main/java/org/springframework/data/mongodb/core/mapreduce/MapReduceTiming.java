@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @deprecated since 3.4 in favor of {@link org.springframework.data.mongodb.core.aggregation}.

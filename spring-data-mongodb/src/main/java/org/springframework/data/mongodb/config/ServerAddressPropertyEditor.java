@@ -23,7 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -80,11 +80,10 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 * @param source
 	 * @return the
 	 */
-	@Nullable
-	private ServerAddress parseServerAddress(String source) {
+	private @Nullable ServerAddress parseServerAddress(String source) {
 
 		if (!StringUtils.hasText(source)) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
 			}
 			return null;
@@ -93,7 +92,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 		String[] hostAndPort = extractHostAddressAndPort(source.trim());
 
 		if (hostAndPort.length > 2) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
 			}
 			return null;
@@ -105,11 +104,11 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 			return port == null ? new ServerAddress(hostAddress) : new ServerAddress(hostAddress, port);
 		} catch (UnknownHostException e) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "host", hostAndPort[0]));
 			}
 		} catch (NumberFormatException e) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "port", hostAndPort[1]));
 			}
 		}

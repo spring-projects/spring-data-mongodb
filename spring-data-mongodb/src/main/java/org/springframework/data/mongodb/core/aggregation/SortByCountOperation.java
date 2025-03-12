@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -67,6 +67,7 @@ public class SortByCountOperation implements AggregationOperation {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public Document toDocument(AggregationOperationContext context) {
 
 		return new Document(getOperator(), groupByExpression == null ? context.getReference(groupByField).toString()

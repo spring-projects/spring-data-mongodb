@@ -15,7 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -61,6 +62,7 @@ public class Term {
 	 *
 	 * @return
 	 */
+	@Contract("-> this")
 	public Term negate() {
 		this.negated = true;
 		return this;

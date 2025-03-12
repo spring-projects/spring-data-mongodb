@@ -20,10 +20,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -497,6 +497,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		}
 
 		public ExposedField asField() {
+			Assert.notNull(key, "Key must be set first");
 			return new ExposedField(key, true);
 		}
 
@@ -506,10 +507,12 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 			if(op == null && value instanceof Document) {
 				return new Document(key, value);
 			}
+
+			Assert.notNull(op, "Operation keyword must be set");
 			return new Document(key, new Document(op.toString(), value));
 		}
 
-		public Object getValue(AggregationOperationContext context) {
+		public @Nullable Object getValue(AggregationOperationContext context) {
 
 			if (reference == null) {
 

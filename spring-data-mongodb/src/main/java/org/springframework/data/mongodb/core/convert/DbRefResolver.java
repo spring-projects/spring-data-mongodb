@@ -18,10 +18,10 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
@@ -60,7 +60,7 @@ public interface DbRefResolver extends ReferenceResolver {
 	 * @param id will never be {@literal null}.
 	 * @return new instance of {@link DBRef}.
 	 */
-	default DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
+	default DBRef createDbRef(org.springframework.data.mongodb.core.mapping.@Nullable DBRef annotation,
 			MongoPersistentEntity<?> entity, Object id) {
 
 		if (annotation != null && StringUtils.hasText(annotation.db())) {

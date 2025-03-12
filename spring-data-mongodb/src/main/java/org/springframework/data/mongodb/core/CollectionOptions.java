@@ -245,7 +245,7 @@ public class CollectionOptions {
 	 * @since 2.1
 	 */
 	public CollectionOptions schema(MongoJsonSchema schema) {
-		return validator(Validator.schema(schema));
+		return validator(schema != null ? Validator.schema(schema) : null);
 	}
 
 	/**
@@ -574,6 +574,7 @@ public class CollectionOptions {
 		 * @param validator can be {@literal null}.
 		 * @return new instance of {@link ValidationOptions}.
 		 */
+		@Contract("_ -> new")
 		public ValidationOptions validator(@Nullable Validator validator) {
 			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
@@ -584,6 +585,7 @@ public class CollectionOptions {
 		 * @param validationLevel can be {@literal null}.
 		 * @return new instance of {@link ValidationOptions}.
 		 */
+		@Contract("_ -> new")
 		public ValidationOptions validationLevel(ValidationLevel validationLevel) {
 			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
@@ -594,6 +596,7 @@ public class CollectionOptions {
 		 * @param validationAction can be {@literal null}.
 		 * @return new instance of {@link ValidationOptions}.
 		 */
+		@Contract("_ -> new")
 		public ValidationOptions validationAction(ValidationAction validationAction) {
 			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
@@ -950,6 +953,7 @@ public class CollectionOptions {
 		 * @param metaField must not be {@literal null}.
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
+		@Contract("_ -> new")
 		public TimeSeriesOptions metaField(String metaField) {
 			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
 		}
@@ -961,6 +965,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 * @see Granularity
 		 */
+		@Contract("_ -> new")
 		public TimeSeriesOptions granularity(GranularityDefinition granularity) {
 			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
 		}
@@ -973,6 +978,7 @@ public class CollectionOptions {
 		 * @see com.mongodb.client.model.CreateCollectionOptions#expireAfter(long, java.util.concurrent.TimeUnit)
 		 * @since 4.4
 		 */
+		@Contract("_ -> new")
 		public TimeSeriesOptions expireAfter(Duration ttl) {
 			return new TimeSeriesOptions(timeField, metaField, granularity, ttl);
 		}

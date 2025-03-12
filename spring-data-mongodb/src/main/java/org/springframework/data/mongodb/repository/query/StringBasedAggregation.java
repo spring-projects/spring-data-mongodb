@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link AbstractMongoQuery} implementation to run string-based aggregations using
@@ -72,8 +71,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	@Nullable
-	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
+	protected @Nullable Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> ignore) {
 
 		return AggregationUtils.doAggregate(AggregationUtils.computePipeline(this, method, accessor), method, processor,

@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.Function;
@@ -41,10 +41,10 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 	static final Set<String> KNOWN_KEYS = Arrays.stream(OptionKey.values()).map(OptionKey::getKey)
 			.collect(Collectors.toSet());
 
-	private final Duration maxCommitTime;
-	private final ReadConcern readConcern;
-	private final ReadPreference readPreference;
-	private final WriteConcern writeConcern;
+	private final @Nullable Duration maxCommitTime;
+	private final @Nullable ReadConcern readConcern;
+	private final @Nullable ReadPreference readPreference;
+	private final @Nullable WriteConcern writeConcern;
 
 	static SimpleMongoTransactionOptions of(Map<String, String> options) {
 		return new SimpleMongoTransactionOptions(options);
@@ -58,27 +58,23 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 		this.writeConcern = doGetWriteConcern(options);
 	}
 
-	@Nullable
 	@Override
-	public Duration getMaxCommitTime() {
+	public @Nullable Duration getMaxCommitTime() {
 		return maxCommitTime;
 	}
 
-	@Nullable
 	@Override
-	public ReadConcern getReadConcern() {
+	public @Nullable ReadConcern getReadConcern() {
 		return readConcern;
 	}
 
-	@Nullable
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 		return readPreference;
 	}
 
-	@Nullable
 	@Override
-	public WriteConcern getWriteConcern() {
+	public @Nullable WriteConcern getWriteConcern() {
 		return writeConcern;
 	}
 
@@ -89,8 +85,7 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 				+ ", readPreference=" + readPreference + ", writeConcern=" + writeConcern + '}';
 	}
 
-	@Nullable
-	private static Duration doGetMaxCommitTime(Map<String, String> options) {
+	private static @Nullable Duration doGetMaxCommitTime(Map<String, String> options) {
 
 		return getValue(options, OptionKey.MAX_COMMIT_TIME, value -> {
 
@@ -100,18 +95,15 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 		});
 	}
 
-	@Nullable
-	private static ReadConcern doGetReadConcern(Map<String, String> options) {
+	private static @Nullable ReadConcern doGetReadConcern(Map<String, String> options) {
 		return getValue(options, OptionKey.READ_CONCERN, value -> new ReadConcern(ReadConcernLevel.fromString(value)));
 	}
 
-	@Nullable
-	private static ReadPreference doGetReadPreference(Map<String, String> options) {
+	private static @Nullable ReadPreference doGetReadPreference(Map<String, String> options) {
 		return getValue(options, OptionKey.READ_PREFERENCE, ReadPreference::valueOf);
 	}
 
-	@Nullable
-	private static WriteConcern doGetWriteConcern(Map<String, String> options) {
+	private static @Nullable WriteConcern doGetWriteConcern(Map<String, String> options) {
 
 		return getValue(options, OptionKey.WRITE_CONCERN, value -> {
 
@@ -123,8 +115,8 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 		});
 	}
 
-	@Nullable
-	private static <T> T getValue(Map<String, String> options, OptionKey key, Function<String, T> convertFunction) {
+	private static <T> @Nullable T getValue(Map<String, String> options, OptionKey key,
+			Function<String, T> convertFunction) {
 
 		String value = options.get(key.getKey());
 		return value != null ? convertFunction.apply(value) : null;

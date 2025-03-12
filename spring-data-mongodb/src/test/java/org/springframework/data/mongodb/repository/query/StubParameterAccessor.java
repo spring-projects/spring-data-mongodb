@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
@@ -30,7 +31,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.lang.Nullable;
 
 /**
  * Simple {@link ParameterAccessor} that returns the given parameters unfiltered.
@@ -121,7 +121,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
 	@Override
-	public Object[] getValues() {
+	public Object @Nullable[] getValues() {
 		return this.values;
 	}
 

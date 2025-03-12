@@ -15,11 +15,13 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Collections;
 import java.util.HashMap;
-
-import org.springframework.lang.Nullable;
+import java.util.Map;
 
 import com.mongodb.MongoException;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.yml}.
@@ -128,7 +130,9 @@ public final class MongoDbErrorCodes {
 		clientSessionCodes.put(263, "OperationNotSupportedInTransaction");
 		clientSessionCodes.put(264, "TooManyLogicalSessions");
 
-		errorCodes = new HashMap<>(
+		transactionCodes = new HashMap<>(0);
+
+ 		errorCodes = new HashMap<>(
 				dataAccessResourceFailureCodes.size() + dataIntegrityViolationCodes.size() + duplicateKeyCodes.size()
 						+ invalidDataAccessApiUsageException.size() + permissionDeniedCodes.size() + clientSessionCodes.size(),
 				1f);
@@ -140,8 +144,7 @@ public final class MongoDbErrorCodes {
 		errorCodes.putAll(clientSessionCodes);
 	}
 
-	@Nullable
-	public static String getErrorDescription(@Nullable Integer errorCode) {
+	public static @Nullable String getErrorDescription(@Nullable Integer errorCode) {
 		return errorCode == null ? null : errorCodes.get(errorCode);
 	}
 

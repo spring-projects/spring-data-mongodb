@@ -66,9 +66,8 @@ class EmptyDocument extends Document {
 		throw new UnsupportedOperationException();
 	}
 
-	@Nullable
 	@Override
-	public Object replace(String key, Object value) {
+	public @Nullable Object replace(String key, Object value) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -27,6 +27,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ChangeStreamEvent;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,7 +40,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ErrorHandler;
 import org.springframework.util.StringUtils;
@@ -224,21 +224,18 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			this.messageProperties = messageProperties;
 		}
 
-		@Nullable
 		@Override
-		public ChangeStreamDocument<Document> getRaw() {
+		public @Nullable ChangeStreamDocument<Document> getRaw() {
 			return delegate.getRaw();
 		}
 
-		@Nullable
 		@Override
-		public T getBody() {
+		public @Nullable T getBody() {
 			return delegate.getBody();
 		}
 
-		@Nullable
 		@Override
-		public T getBodyBeforeChange() {
+		public @Nullable T getBodyBeforeChange() {
 			return delegate.getBodyBeforeChange();
 		}
 

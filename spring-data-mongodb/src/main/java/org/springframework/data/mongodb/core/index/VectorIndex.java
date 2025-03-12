@@ -28,6 +28,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Contract;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -149,7 +150,8 @@ public class VectorIndex implements SearchIndexDefinition {
 
 		for (Object entry : definition.get("fields", List.class)) {
 			if (entry instanceof Document field) {
-				if (field.get("type").equals("vector")) {
+				Object fieldType = field.get("type");
+				if (ObjectUtils.nullSafeEquals(fieldType, "vector")) {
 					index.addField(new VectorIndexField(field.getString("path"), "vector", field.getInteger("numDimensions"),
 							field.getString("similarity"), field.getString("quantization")));
 				} else {

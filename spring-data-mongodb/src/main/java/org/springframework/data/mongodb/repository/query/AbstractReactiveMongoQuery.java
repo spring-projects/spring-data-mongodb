@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.convert.converter.Converter;
@@ -57,7 +58,6 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.spel.ExpressionDependencies;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -195,6 +195,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return new ResultProcessingExecution(getExecutionToWrap(accessor, operation), resultProcessing);
 	}
 
+	@SuppressWarnings("NullAway")
 	private ReactiveMongoQueryExecution getExecutionToWrap(MongoParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
@@ -334,6 +335,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @throws IllegalStateException if no update could be found.
 	 * @since 3.4
 	 */
+	@SuppressWarnings("NullAway")
 	protected Mono<UpdateDefinition> createUpdate(MongoParameterAccessor accessor) {
 
 		if (accessor.getUpdate() != null) {
@@ -425,7 +427,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return new ValueExpressionEvaluator() {
 
 			@Override
-			public <T> T evaluate(String expressionString) {
+			public <T> @Nullable T evaluate(String expressionString) {
 				ValueExpression expression = valueExpressionDelegate.parse(expressionString);
 				ValueEvaluationContext evaluationContext = valueEvaluationContextProvider
 						.getEvaluationContext(accessor.getValues(), expression.getExpressionDependencies());

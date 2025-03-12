@@ -17,13 +17,13 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -78,6 +78,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(operations);

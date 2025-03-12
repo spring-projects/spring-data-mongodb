@@ -81,7 +81,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	}
 
 	@Override
-	public Object decrypt(Object encryptedValue, EncryptionContext context) {
+	public @Nullable Object decrypt(Object encryptedValue, EncryptionContext context) {
 
 		Object decryptedValue = encryptedValue;
 		if (encryptedValue instanceof Binary || encryptedValue instanceof BsonBinary) {
@@ -155,7 +155,8 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	}
 
 	@Override
-	public Object encrypt(Object value, EncryptionContext context) {
+	@SuppressWarnings("NullAway")
+	public Object encrypt(@Nullable Object value, EncryptionContext context) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Encrypting %s.%s.", getProperty(context).getOwner().getName(),

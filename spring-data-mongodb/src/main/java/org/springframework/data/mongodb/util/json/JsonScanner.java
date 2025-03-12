@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.util.json;
 
 import org.bson.BsonRegularExpression;
 import org.bson.json.JsonParseException;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Parses the string representation of a JSON object into a set of {@link JsonToken}-derived objects. <br />
@@ -32,6 +33,7 @@ import org.bson.json.JsonParseException;
  * @author Christoph Strobl
  * @since 2.2
  */
+@NullUnmarked
 class JsonScanner {
 
 	private final JsonBuffer buffer;

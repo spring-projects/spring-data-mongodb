@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -90,27 +90,23 @@ class MongoTransactionOptionsUnitTests {
 		assertThat(MongoTransactionOptions.NONE) //
 				.isSameAs(MongoTransactionOptions.NONE) //
 				.isNotEqualTo(new MongoTransactionOptions() {
-					@Nullable
 					@Override
-					public Duration getMaxCommitTime() {
+					public @Nullable Duration getMaxCommitTime() {
 						return null;
 					}
 
-					@Nullable
 					@Override
-					public ReadConcern getReadConcern() {
+					public @Nullable ReadConcern getReadConcern() {
 						return null;
 					}
 
-					@Nullable
 					@Override
-					public ReadPreference getReadPreference() {
+					public @Nullable ReadPreference getReadPreference() {
 						return null;
 					}
 
-					@Nullable
 					@Override
-					public WriteConcern getWriteConcern() {
+					public @Nullable WriteConcern getWriteConcern() {
 						return null;
 					}
 				});

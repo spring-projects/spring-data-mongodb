@@ -24,13 +24,14 @@ import java.util.stream.Collectors;
 import org.bson.BinaryVector;
 import org.bson.Document;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.lang.Contract;
-import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -55,12 +56,12 @@ public class VectorSearchOperation implements AggregationOperation {
 	private final @Nullable Integer numCandidates;
 	private final QueryPaths path;
 	private final Vector vector;
-	private final String score;
-	private final Consumer<Criteria> scoreCriteria;
+	private final @Nullable String score;
+	private final @Nullable Consumer<Criteria> scoreCriteria;
 
 	private VectorSearchOperation(SearchType searchType, @Nullable CriteriaDefinition filter, String indexName,
 			Limit limit, @Nullable Integer numCandidates, QueryPaths path, Vector vector, @Nullable String searchScore,
-			Consumer<Criteria> scoreCriteria) {
+			@Nullable Consumer<Criteria> scoreCriteria) {
 
 		this.searchType = searchType;
 		this.filter = filter;
@@ -296,9 +297,9 @@ public class VectorSearchOperation implements AggregationOperation {
 	 */
 	private static class VectorSearchBuilder implements PathContributor, VectorContributor, LimitContributor {
 
-		String index;
-		QueryPath<String> paths;
-		Vector vector;
+		@Nullable String index;
+		@Nullable QueryPath<String> paths;
+		@Nullable Vector vector;
 
 		PathContributor index(String index) {
 			this.index = index;
@@ -314,6 +315,11 @@ public class VectorSearchOperation implements AggregationOperation {
 
 		@Override
 		public VectorSearchOperation limit(Limit limit) {
+
+			Assert.notNull(index, "Index must be set first");
+			Assert.notNull(paths, "Path must be set first");
+			Assert.notNull(vector, "Vector must be set first");
+			
 			return new VectorSearchOperation(index, QueryPaths.of(paths), limit, vector);
 		}
 

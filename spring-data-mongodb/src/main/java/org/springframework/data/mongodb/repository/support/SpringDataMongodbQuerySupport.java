@@ -27,6 +27,8 @@ import com.querydsl.core.support.QueryMixin;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.mongodb.document.AbstractMongodbQuery;
 import com.querydsl.mongodb.document.MongodbDocumentSerializer;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 /**
  * Support query type to augment Spring Data-specific {@link #toString} representations and

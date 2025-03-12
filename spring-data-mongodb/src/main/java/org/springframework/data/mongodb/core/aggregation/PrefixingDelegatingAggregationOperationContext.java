@@ -25,8 +25,8 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link AggregationOperationContext} implementation prefixing non-command keys on root level with the given prefix.

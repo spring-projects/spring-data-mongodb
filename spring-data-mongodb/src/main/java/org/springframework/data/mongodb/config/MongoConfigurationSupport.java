@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -52,7 +53,7 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Return the name of the database to connect to.
 	 *
-	 * @return must not be {@literal null}.
+	 * @return never {@literal null}.
 	 */
 	protected abstract String getDatabaseName();
 
@@ -76,7 +77,7 @@ public abstract class MongoConfigurationSupport {
 	 * Creates a {@link MongoMappingContext} equipped with entity classes scanned from the mapping base package.
 	 *
 	 * @see #getMappingBasePackages()
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	@Bean
 	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions,
@@ -172,8 +173,10 @@ public abstract class MongoConfigurationSupport {
 
 			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 
-				initialEntitySet
-						.add(ClassUtils.forName(candidate.getBeanClassName(), MongoConfigurationSupport.class.getClassLoader()));
+				String beanClassName = candidate.getBeanClassName();
+				Assert.notNull(beanClassName, "BeanClassName cannot be null");
+
+				initialEntitySet.add(ClassUtils.forName(beanClassName, MongoConfigurationSupport.class.getClassLoader()));
 			}
 		}
 

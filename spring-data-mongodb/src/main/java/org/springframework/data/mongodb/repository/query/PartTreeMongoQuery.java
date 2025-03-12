@@ -78,6 +78,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);

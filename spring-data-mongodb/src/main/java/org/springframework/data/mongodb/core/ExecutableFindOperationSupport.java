@@ -16,18 +16,17 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -53,6 +52,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableFind<T> query(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -84,6 +84,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public FindWithProjection<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty");
@@ -92,6 +93,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public <T1> FindWithQuery<T1> as(Class<T1> returnType) {
 
 			Assert.notNull(returnType, "ReturnType must not be null");
@@ -100,6 +102,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingFind<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");
@@ -108,7 +111,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public T oneValue() {
+		public @Nullable T oneValue() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(2));
 
@@ -124,7 +127,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public T firstValue() {
+		public @Nullable T firstValue() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(1));
 
@@ -206,10 +209,10 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class DelegatingQueryCursorPreparer implements SortingQueryCursorPreparer {
+	static class DelegatingQueryCursorPreparer implements CursorPreparer {
 
 		private final @Nullable CursorPreparer delegate;
-		private Optional<Integer> limit = Optional.empty();
+		private int limit = -1;
 
 		DelegatingQueryCursorPreparer(@Nullable CursorPreparer delegate) {
 			this.delegate = delegate;
@@ -219,25 +222,22 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
 			FindIterable<Document> target = delegate != null ? delegate.prepare(iterable) : iterable;
-			return limit.map(target::limit).orElse(target);
+			if (limit >= 0) {
+				target.limit(limit);
+			}
+			return target;
 		}
 
+		@Contract("_ -> this")
 		CursorPreparer limit(int limit) {
 
-			this.limit = Optional.of(limit);
+			this.limit = limit;
 			return this;
 		}
 
 		@Override
-		@Nullable
-		public ReadPreference getReadPreference() {
-			return delegate.getReadPreference();
-		}
-
-		@Override
-		@Nullable
-		public Document getSortObject() {
-			return delegate instanceof SortingQueryCursorPreparer sqcp ? sqcp.getSortObject() : null;
+		public @Nullable ReadPreference getReadPreference() {
+			return delegate != null ? delegate.getReadPreference() : null;
 		}
 	}
 
@@ -258,6 +258,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		@SuppressWarnings("unchecked")
+		@Contract("_ -> new")
 		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
 
 			Assert.notNull(resultType, "ResultType must not be null");
@@ -266,6 +267,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingDistinct<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");

@@ -18,13 +18,13 @@ package org.springframework.data.mongodb.core.spel;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.SpelNode;
 import org.springframework.expression.spel.ast.Literal;
 import org.springframework.expression.spel.ast.MethodReference;
 import org.springframework.expression.spel.ast.Operator;
 import org.springframework.expression.spel.ast.OperatorNot;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -150,8 +150,7 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 	 *
 	 * @return
 	 */
-	@Nullable
-	public Object getValue() {
+	public @Nullable Object getValue() {
 		return node.getValue(state);
 	}
 

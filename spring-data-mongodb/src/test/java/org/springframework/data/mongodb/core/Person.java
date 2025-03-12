@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.bson.types.ObjectId;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class Person {
 

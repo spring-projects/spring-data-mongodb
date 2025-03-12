@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.expression.ValueEvaluationContext;
 import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
@@ -34,7 +35,7 @@ class ValueExpressionDelegateValueExpressionEvaluator implements ValueExpression
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T evaluate(String expressionString) {
+	public <T> @Nullable T evaluate(String expressionString) {
 		ValueExpression expression = delegate.parse(expressionString);
 		return (T) expression.evaluate(expressionToContext.apply(expression));
 	}

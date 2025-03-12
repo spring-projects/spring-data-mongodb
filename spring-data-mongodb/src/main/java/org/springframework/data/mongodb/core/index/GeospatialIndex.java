@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -60,6 +61,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param name must not be {@literal null} or empty.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex named(String name) {
 
 		this.name = name;
@@ -70,6 +72,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param min
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex withMin(int min) {
 		this.min = min;
 		return this;
@@ -79,6 +82,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param max
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex withMax(int max) {
 		this.max = max;
 		return this;
@@ -88,6 +92,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param bits
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex withBits(int bits) {
 		this.bits = bits;
 		return this;
@@ -97,6 +102,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param type must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex typed(GeoSpatialIndexType type) {
 
 		Assert.notNull(type, "Type must not be null");
@@ -109,6 +115,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param fieldName
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex withAdditionalField(String fieldName) {
 		this.additionalField = fieldName;
 		return this;
@@ -123,6 +130,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 	 * @since 1.10
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex partial(@Nullable IndexFilter filter) {
 
 		this.filter = Optional.ofNullable(filter);
@@ -139,6 +147,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @return this.
 	 * @since 2.0
 	 */
+	@Contract("_ -> this")
 	public GeospatialIndex collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);

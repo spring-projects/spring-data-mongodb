@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -71,8 +71,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	 * @return the single already mapped result object or raise an error if more than one found.
 	 * @throws IllegalArgumentException in case more than one result is available.
 	 */
-	@Nullable
-	public T getUniqueMappedResult() {
+	public @Nullable T getUniqueMappedResult() {
 		Assert.isTrue(mappedResults.size() < 2, "Expected unique result or null, but got more than one");
 		return mappedResults.size() == 1 ? mappedResults.get(0) : null;
 	}
@@ -101,8 +100,7 @@ public class AggregationResults<T> implements Iterable<T> {
 		return rawResults;
 	}
 
-	@Nullable
-	private String parseServerUsed() {
+	private @Nullable String parseServerUsed() {
 
 		Object object = rawResults.get("serverUsed");
 		return object instanceof String stringValue ? stringValue : null;

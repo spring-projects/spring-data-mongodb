@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -223,8 +223,7 @@ public class VariableOperators {
 
 		private final List<ExpressionVariable> vars;
 
-		@Nullable //
-		private final AggregationExpression expression;
+		private final @Nullable AggregationExpression expression;
 
 		private Let(List<ExpressionVariable> vars, @Nullable AggregationExpression expression) {
 
@@ -333,6 +332,7 @@ public class VariableOperators {
 			return new Document(var.variableName, var.expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object getMappedIn(AggregationOperationContext context) {
 			return expression.toDocument(new NestedDelegatingExpressionAggregationOperationContext(context,
 					this.vars.stream().map(var -> Fields.field(var.variableName)).collect(Collectors.toList())));

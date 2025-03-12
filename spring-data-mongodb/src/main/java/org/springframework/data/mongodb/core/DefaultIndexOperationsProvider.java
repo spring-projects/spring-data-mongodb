@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexOperations;
@@ -43,7 +44,7 @@ class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 	}
 
 	@Override
-	public IndexOperations indexOps(String collectionName, Class<?> type) {
+	public IndexOperations indexOps(String collectionName, @Nullable Class<?> type) {
 		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper, type);
 	}
 }

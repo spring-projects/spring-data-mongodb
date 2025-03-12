@@ -18,11 +18,11 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Map;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.TypedValue;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link PropertyAccessor} to allow entity based field access to {@link Document}s.

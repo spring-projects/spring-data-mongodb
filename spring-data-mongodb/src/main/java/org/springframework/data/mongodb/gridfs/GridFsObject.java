@@ -16,9 +16,10 @@
 package org.springframework.data.mongodb.gridfs;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import org.springframework.lang.Contract;
 
 /**
  * A common interface when dealing with GridFs items using Spring Data.
@@ -110,6 +111,7 @@ public interface GridFsObject<ID, CONTENT> {
 		 * @param contentType must not be {@literal null}.
 		 * @return new instance of {@link Options}.
 		 */
+		@Contract("_ -> new")
 		public Options contentType(String contentType) {
 
 			Options target = new Options(new Document(metadata), chunkSize);
@@ -121,6 +123,7 @@ public interface GridFsObject<ID, CONTENT> {
 		 * @param metadata
 		 * @return new instance of {@link Options}.
 		 */
+		@Contract("_ -> new")
 		public Options metadata(Document metadata) {
 			return new Options(metadata, chunkSize);
 		}
@@ -129,6 +132,7 @@ public interface GridFsObject<ID, CONTENT> {
 		 * @param chunkSize the file chunk size to use.
 		 * @return new instance of {@link Options}.
 		 */
+		@Contract("_ -> new")
 		public Options chunkSize(int chunkSize) {
 			return new Options(metadata, chunkSize);
 		}

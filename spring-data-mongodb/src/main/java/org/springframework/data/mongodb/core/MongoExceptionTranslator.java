@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Set;
 
 import org.bson.BsonInvalidOperationException;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.TransientClientSessionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoBulkWriteException;
@@ -69,12 +68,12 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	private static final Set<String> SECURITY_EXCEPTIONS = Set.of("MongoCryptException");
 
 	@Override
-	@Nullable
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+	public @Nullable DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return doTranslateException(ex);
 	}
 
 	@Nullable
+	@SuppressWarnings("NullAway")
 	DataAccessException doTranslateException(RuntimeException ex) {
 
 		// Check for well-known MongoException subclasses.
