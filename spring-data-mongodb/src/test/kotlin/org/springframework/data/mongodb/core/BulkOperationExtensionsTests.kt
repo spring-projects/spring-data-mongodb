@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2025 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core
 
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
@@ -25,50 +25,55 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition
 import org.springframework.data.util.Pair.of
 
 /**
+ * Unit tests for BulkOperationExtensions.
  * @author 2tsumo-hitori
  */
 class BulkOperationExtensionsTests {
 
-    private val bulkOperation = mockk<BulkOperations>(relaxed = true)
+	private val bulkOperation = mockk<BulkOperations>(relaxed = true)
 
-    @Test // GH-4911
-    fun `BulkOperation#updateMulti#updates() using kotlin#Pair should call its Java counterpart`() {
-        val list : MutableList<Pair<Query, UpdateDefinition>> = mutableListOf()
-        list.add(where("value", "v2") to set("value", "v3"))
+	@Test // GH-4911
+	fun `BulkOperation#updateMulti using kotlin#Pair should call its Java counterpart`() {
 
-        bulkOperation.updateMulti(list)
+		val list: MutableList<Pair<Query, UpdateDefinition>> = mutableListOf()
+		list.add(where("value", "v2") to set("value", "v3"))
 
-        val expected = list.map { (query, update) -> of(query, update) }
-        verify { bulkOperation.updateMulti(expected) }
-    }
+		bulkOperation.updateMulti(list)
 
-    @Test // GH-4911
-    fun `BulkOperation#upsert#updates() using kotlin#Pair should call its Java counterpart`() {
-        val list : MutableList<Pair<Query, Update>> = mutableListOf()
-        list.add(where("value", "v2") to set("value", "v3"))
+		val expected = list.map { (query, update) -> of(query, update) }
+		verify { bulkOperation.updateMulti(expected) }
+	}
 
-        bulkOperation.upsert(list)
+	@Test // GH-4911
+	fun `BulkOperation#upsert using kotlin#Pair should call its Java counterpart`() {
 
-        val expected = list.map { (query, update) -> of(query, update) }
-        verify { bulkOperation.upsert(expected) }
-    }
+		val list: MutableList<Pair<Query, Update>> = mutableListOf()
+		list.add(where("value", "v2") to set("value", "v3"))
 
-    @Test // GH-4911
-    fun `BulkOperation#updateOne#updates() using kotlin#Pair should call its Java counterpart`() {
-        val list : MutableList<Pair<Query, UpdateDefinition>> = mutableListOf()
-        list.add(where("value", "v2") to set("value", "v3"))
+		bulkOperation.upsert(list)
 
-        bulkOperation.updateOne(list)
+		val expected = list.map { (query, update) -> of(query, update) }
+		verify { bulkOperation.upsert(expected) }
+	}
 
-        val expected = list.map { (query, update) -> of(query, update) }
-        verify { bulkOperation.updateOne(expected) }
-    }
+	@Test // GH-4911
+	fun `BulkOperation#updateOne using kotlin#Pair should call its Java counterpart`() {
 
-    private fun where(field: String, value: String): Query {
-        return Query().addCriteria(Criteria.where(field).`is`(value))
-    }
+		val list: MutableList<Pair<Query, UpdateDefinition>> = mutableListOf()
+		list.add(where("value", "v2") to set("value", "v3"))
 
-    private fun set(field: String, value: String): Update {
-        return Update().set(field, value)
-    }
+		bulkOperation.updateOne(list)
+
+		val expected = list.map { (query, update) -> of(query, update) }
+		verify { bulkOperation.updateOne(expected) }
+	}
+
+	private fun where(field: String, value: String): Query {
+		return Query().addCriteria(Criteria.where(field).`is`(value))
+	}
+
+	private fun set(field: String, value: String): Update {
+		return Update().set(field, value)
+	}
+
 }

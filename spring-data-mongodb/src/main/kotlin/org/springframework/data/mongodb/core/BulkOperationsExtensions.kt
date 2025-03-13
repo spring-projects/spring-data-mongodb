@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2025 the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,30 +21,32 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition
 import org.springframework.data.util.Pair.of
 
 /**
- * Extension for [BulkOperations.updateMulti] that converts a [kotlin.Pair] to [org.springframework.data.util.Pair].
+ * Extension for [BulkOperations.updateMulti] that converts a list of [kotlin.Pair] to list of [org.springframework.data.util.Pair].
  *
  * @author 2tsumo-hitori
+ * @since 4.5
  */
 fun BulkOperations.updateMulti(kotlinPairs: List<Pair<Query, UpdateDefinition>>): BulkOperations =
-        updateMulti(kotlinPairs.toSpringPairs())
+	updateMulti(kotlinPairs.toSpringPairs())
 
 /**
- * Extension for [BulkOperations.upsert] that converts a [kotlin.Pair] to [org.springframework.data.util.Pair].
+ * Extension for [BulkOperations.upsert] that converts a list of [kotlin.Pair] to list of [org.springframework.data.util.Pair].
  *
  * @author 2tsumo-hitori
+ * @since 4.5
  */
-fun BulkOperations.upsert(kotlinPairs: List<Pair<Query, Update>>) : BulkOperations =
-        upsert(kotlinPairs.toSpringPairs())
+fun BulkOperations.upsert(kotlinPairs: List<Pair<Query, Update>>): BulkOperations =
+	upsert(kotlinPairs.toSpringPairs())
 
 /**
  * Extension for [BulkOperations.updateOne] that converts a [kotlin.Pair] to [org.springframework.data.util.Pair].
  *
  * @author 2tsumo-hitori
+ * @since 4.5
  */
 fun BulkOperations.updateOne(kotlinPairs: List<Pair<Query, UpdateDefinition>>): BulkOperations =
-        updateOne(kotlinPairs.toSpringPairs())
+	updateOne(kotlinPairs.toSpringPairs())
 
 private fun <A : Query, B : UpdateDefinition> List<Pair<A, B>>.toSpringPairs(): List<org.springframework.data.util.Pair<A, B>> {
-
-    return map { (first, second) -> of(first, second) }
+	return map { (first, second) -> of(first, second) }
 }
