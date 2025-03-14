@@ -68,12 +68,12 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T write(@Nullable Object value, TypeInformation<T> target) {
+	public <T> @Nullable T write(@Nullable Object value, TypeInformation<T> target) {
 		return (T) mongoConverter.convertToMongoType(value, target);
 	}
 
 	@Override
-	public <T> T read(@Nullable Object value, TypeInformation<T> target) {
+	public <T> @Nullable T read(@Nullable Object value, TypeInformation<T> target) {
 		return value instanceof Bson bson ? mongoConverter.read(target.getType(), bson)
 				: ValueConversionContext.super.read(value, target);
 	}

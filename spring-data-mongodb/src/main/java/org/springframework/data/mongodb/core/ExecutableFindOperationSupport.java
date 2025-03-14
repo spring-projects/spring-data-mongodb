@@ -107,7 +107,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public T oneValue() {
+		public @Nullable T oneValue() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(2));
 
@@ -123,7 +123,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public T firstValue() {
+		public @Nullable T firstValue() {
 
 			List<T> result = doFind(new DelegatingQueryCursorPreparer(getCursorPreparer(query, null)).limit(1));
 
@@ -228,8 +228,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
-		public ReadPreference getReadPreference() {
-			return delegate.getReadPreference();
+		public @Nullable ReadPreference getReadPreference() {
+			 return delegate != null ? delegate.getReadPreference() : null;
 		}
 	}
 

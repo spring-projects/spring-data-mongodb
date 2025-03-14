@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
@@ -40,8 +41,8 @@ import org.springframework.util.Assert;
 public abstract class BucketOperationSupport<T extends BucketOperationSupport<T, B>, B extends OutputBuilder<B, T>>
 		implements FieldsExposingAggregationOperation {
 
-	private final Field groupByField;
-	private final AggregationExpression groupByExpression;
+	private final @Nullable Field groupByField;
+	private final @Nullable AggregationExpression groupByExpression;
 	private final Outputs outputs;
 
 	/**
@@ -142,12 +143,17 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	}
 
 	@Override
+
 	public Document toDocument(AggregationOperationContext context) {
 
 		Document document = new Document();
 
-		document.put("groupBy", groupByExpression == null ? context.getReference(groupByField).toString()
-				: groupByExpression.toDocument(context));
+		if(groupByExpression != null) {
+			document.put("groupBy", groupByExpression.toDocument(context));
+		} else if (groupByField != null) {
+			document.put("groupBy", context.getReference(groupByField).toString());
+
+		}
 
 		if (!outputs.isEmpty()) {
 			document.put("output", outputs.toDocument(context));
@@ -625,7 +631,9 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
-			return (Document) TRANSFORMER.transform(expression, context, params);
+
+			Object o =  TRANSFORMER.transform(expression, context, params);
+			return o instanceof Document document ? document : new Document();
 		}
 	}
 

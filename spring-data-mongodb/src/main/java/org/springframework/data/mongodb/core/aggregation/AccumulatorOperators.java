@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -60,8 +61,8 @@ public class AccumulatorOperators {
 	 */
 	public static class AccumulatorOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link AccumulatorOperatorFactory} for given {@literal fieldReference}.
@@ -93,6 +94,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Sum}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Sum sum() {
 			return usesFieldRef() ? Sum.sumOf(fieldReference) : Sum.sumOf(expression);
 		}
@@ -103,6 +105,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Avg}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Avg avg() {
 			return usesFieldRef() ? Avg.avgOf(fieldReference) : Avg.avgOf(expression);
 		}
@@ -113,6 +116,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Max}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Max max() {
 			return usesFieldRef() ? Max.maxOf(fieldReference) : Max.maxOf(expression);
 		}
@@ -134,6 +138,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link Min}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Min min() {
 			return usesFieldRef() ? Min.minOf(fieldReference) : Min.minOf(expression);
 		}
@@ -155,6 +160,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link StdDevPop}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StdDevPop stdDevPop() {
 			return usesFieldRef() ? StdDevPop.stdDevPopOf(fieldReference) : StdDevPop.stdDevPopOf(expression);
 		}
@@ -165,6 +171,7 @@ public class AccumulatorOperators {
 		 *
 		 * @return new instance of {@link StdDevSamp}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StdDevSamp stdDevSamp() {
 			return usesFieldRef() ? StdDevSamp.stdDevSampOf(fieldReference) : StdDevSamp.stdDevSampOf(expression);
 		}
@@ -193,6 +200,7 @@ public class AccumulatorOperators {
 			return covariancePop().and(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private CovariancePop covariancePop() {
 			return usesFieldRef() ? CovariancePop.covariancePopOf(fieldReference) : CovariancePop.covariancePopOf(expression);
 		}
@@ -221,6 +229,7 @@ public class AccumulatorOperators {
 			return covarianceSamp().and(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private CovarianceSamp covarianceSamp() {
 			return usesFieldRef() ? CovarianceSamp.covarianceSampOf(fieldReference)
 					: CovarianceSamp.covarianceSampOf(expression);
@@ -233,6 +242,7 @@ public class AccumulatorOperators {
 		 * @return new instance of {@link ExpMovingAvg}.
 		 * @since 3.3
 		 */
+		@SuppressWarnings("NullAway")
 		public ExpMovingAvgBuilder expMovingAvg() {
 
 			ExpMovingAvg expMovingAvg = usesFieldRef() ? ExpMovingAvg.expMovingAvgOf(fieldReference)
@@ -259,6 +269,7 @@ public class AccumulatorOperators {
 		 * @param percentages must not be {@literal null}.
 		 * @since 4.2
 		 */
+		@SuppressWarnings("NullAway")
 		public Percentile percentile(Double... percentages) {
 			Percentile percentile = usesFieldRef() ? Percentile.percentileOf(fieldReference)
 					: Percentile.percentileOf(expression);
@@ -271,6 +282,7 @@ public class AccumulatorOperators {
 		 * @return new instance of {@link Median}.
 		 * @since 4.2
 		 */
+		@SuppressWarnings("NullAway")
 		public Median median() {
 			return usesFieldRef() ? Median.medianOf(fieldReference) : Median.medianOf(expression);
 		}
@@ -386,7 +398,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -464,7 +475,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -553,6 +563,7 @@ public class AccumulatorOperators {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Document toDocument(AggregationOperationContext context) {
 			if (get("n") == null) {
 				return toDocument(get("input"), context);
@@ -650,6 +661,7 @@ public class AccumulatorOperators {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Document toDocument(AggregationOperationContext context) {
 
 			if (get("n") == null) {
@@ -659,7 +671,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -737,7 +748,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {
@@ -815,7 +825,6 @@ public class AccumulatorOperators {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
 
 			if (value instanceof List<?> list && list.size() == 1) {

@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.config.MongoParsingUtils.*;
 
 import java.util.Set;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -47,6 +48,7 @@ import com.mongodb.ConnectionString;
  * @author Viktor Khoroshko
  * @author Mark Paluch
  */
+@NullUnmarked
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 	private static final Set<String> MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Set.of("id", "write-concern");

@@ -96,10 +96,10 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 	 */
 	public static class GridFsUploadBuilder<T> {
 
-		private Object id;
-		private Lazy<InputStream> dataStream;
-		private String filename;
-		private Options options = Options.none();
+		private @Nullable Object id;
+		private @Nullable Lazy<InputStream> dataStream;
+		private @Nullable String filename;
+		private @Nullable Options options = Options.none();
 
 		private GridFsUploadBuilder() {}
 
@@ -137,6 +137,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 * @param <T1>
 		 * @return this.
 		 */
+		@SuppressWarnings("unchecked")
 		public <T1> GridFsUploadBuilder<T1> id(T1 id) {
 
 			this.id = id;

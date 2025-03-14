@@ -688,9 +688,9 @@ public class SetWindowFieldsOperation
 	 */
 	public static class SetWindowFieldsOperationBuilder {
 
-		private Object partitionBy;
-		private SortOperation sortOperation;
-		private WindowOutput output;
+		private @Nullable Object partitionBy;
+		private @Nullable SortOperation sortOperation;
+		private @Nullable WindowOutput output;
 
 		/**
 		 * Specify the field to group by.
@@ -850,6 +850,8 @@ public class SetWindowFieldsOperation
 		 * @return new instance of {@link SetWindowFieldsOperation}.
 		 */
 		public SetWindowFieldsOperation build() {
+
+			Assert.notNull(output, "Output must be set first");
 			return new SetWindowFieldsOperation(partitionBy, sortOperation, output);
 		}
 	}

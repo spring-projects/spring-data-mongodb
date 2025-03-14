@@ -83,7 +83,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 	 * @param params must not be {@literal null}
 	 * @return
 	 */
-	public Object transform(String expression, AggregationOperationContext context, Object... params) {
+	public @Nullable Object transform(String expression, AggregationOperationContext context, Object... params) {
 
 		Assert.notNull(expression, "Expression must not be null");
 		Assert.notNull(context, "AggregationOperationContext must not be null");
@@ -96,7 +96,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		return transform(new AggregationExpressionTransformationContext<>(node, null, null, context));
 	}
 
-	public Object transform(AggregationExpressionTransformationContext<ExpressionNode> context) {
+	public @Nullable Object transform(AggregationExpressionTransformationContext<ExpressionNode> context) {
 		return lookupConversionFor(context.getCurrentNode()).convert(context);
 	}
 
@@ -137,7 +137,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 *
 		 * @param transformer must not be {@literal null}.
 		 */
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked", "NullAway"})
 		public ExpressionNodeConversion(AggregationExpressionTransformer transformer) {
 
 			Assert.notNull(transformer, "Transformer must not be null");
@@ -165,7 +165,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 * @param context must not be {@literal null}.
 		 * @return
 		 */
-		protected Object transform(ExpressionNode node, AggregationExpressionTransformationContext<?> context) {
+		protected @Nullable Object transform(ExpressionNode node, AggregationExpressionTransformationContext<?> context) {
 
 			Assert.notNull(node, "ExpressionNode must not be null");
 			Assert.notNull(context, "AggregationExpressionTransformationContext must not be null");
@@ -183,7 +183,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 * @param context must not be {@literal null}.
 		 * @return
 		 */
-		protected Object transform(ExpressionNode node, @Nullable ExpressionNode parent, @Nullable Document operation,
+		protected @Nullable Object transform(ExpressionNode node, @Nullable ExpressionNode parent, @Nullable Document operation,
 				AggregationExpressionTransformationContext<?> context) {
 
 			Assert.notNull(node, "ExpressionNode must not be null");
@@ -194,7 +194,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		public Object transform(AggregationExpressionTransformationContext<ExpressionNode> context) {
+		public @Nullable Object transform(AggregationExpressionTransformationContext<ExpressionNode> context) {
 			return transformer.transform(context);
 		}
 
@@ -204,7 +204,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		 * @param context
 		 * @return
 		 */
-		protected abstract Object convert(AggregationExpressionTransformationContext<T> context);
+		protected abstract @Nullable Object convert(AggregationExpressionTransformationContext<T> context);
 	}
 
 	/**
@@ -247,6 +247,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return operationObject;
 		}
 
+		@SuppressWarnings("NullAway")
 		private Document createOperationObjectAndAddToPreviousArgumentsIfNecessary(
 				AggregationExpressionTransformationContext<OperatorNode> context, OperatorNode currentNode) {
 
@@ -301,7 +302,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 			return context.addToPreviousOrReturn(context.getCurrentNode().getValue());
 		}
 
@@ -354,7 +355,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
 			String fieldReference = context.getFieldReference().toString();
 			return context.addToPreviousOrReturn(fieldReference);
@@ -380,14 +381,14 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		protected Object convert(AggregationExpressionTransformationContext<LiteralNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<LiteralNode> context) {
 
 			LiteralNode node = context.getCurrentNode();
 			Object value = node.getValue();
 
 			if (context.hasPreviousOperation()) {
 
-				if (node.isUnaryMinus(context.getParentNode())) {
+				if (node.isUnaryMinus(context.getParentNode()) && value != null) {
 					// unary minus operator
 					return NumberUtils.convertNumberToTargetClass(((Number) value).doubleValue() * -1,
 							(Class<Number>) value.getClass()); // retain type, e.g. int to -int
@@ -418,7 +419,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<MethodReferenceNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<MethodReferenceNode> context) {
 
 			MethodReferenceNode node = context.getCurrentNode();
 			AggregationMethodReference methodReference = node.getMethodReference();
@@ -468,7 +469,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
 			ExpressionNode currentNode = context.getCurrentNode();
 
@@ -502,7 +503,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<NotOperatorNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<NotOperatorNode> context) {
 
 			NotOperatorNode node = context.getCurrentNode();
 			List<Object> args = new ArrayList<>();
@@ -536,7 +537,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		}
 
 		@Override
-		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
+		protected @Nullable Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
 			Object value = context.getCurrentNode().getValue();
 			return ObjectUtils.isArray(value) ? Arrays.asList(ObjectUtils.toObjectArray(value)) : value;

@@ -20,6 +20,7 @@ import java.util.Collection;
 import org.bson.Document;
 
 import org.bson.codecs.configuration.CodecRegistry;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExpressionFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
@@ -57,7 +58,7 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	}
 
 	@Override
-	public Document getMappedObject(Document document, Class<?> type) {
+	public Document getMappedObject(Document document, @Nullable Class<?> type) {
 		return delegate.getMappedObject(document, type);
 	}
 

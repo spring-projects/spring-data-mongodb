@@ -31,7 +31,7 @@ import com.mongodb.ServerApiVersion;
  */
 public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 
-	private String version;
+	private @Nullable String version;
 	private @Nullable Boolean deprecationErrors;
 	private @Nullable Boolean strict;
 
@@ -80,6 +80,11 @@ public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 	}
 
 	private ServerApiVersion version() {
+
+		if(version == null) {
+			return ServerApiVersion.V1;
+		}
+
 		try {
 			// lookup by name eg. 'V1'
 			return ObjectUtils.caseInsensitiveValueOf(ServerApiVersion.values(), version);

@@ -139,7 +139,7 @@ public class GeoJsonModule extends SimpleModule {
 	private static abstract class GeoJsonDeserializer<T extends GeoJson<?>> extends JsonDeserializer<T> {
 
 		@Override
-		public @Nullable T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt) throws IOException {
+		public @Nullable T deserialize(JsonParser jp, @Nullable DeserializationContext ctxt) throws IOException {
 
 			JsonNode node = jp.readValueAsTree();
 			JsonNode coordinates = node.get("coordinates");

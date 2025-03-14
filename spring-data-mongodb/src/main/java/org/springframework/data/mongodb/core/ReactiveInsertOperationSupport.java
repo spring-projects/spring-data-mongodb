@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -50,9 +51,9 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 
 		private final ReactiveMongoTemplate template;
 		private final Class<T> domainType;
-		private final String collection;
+		private final @Nullable String collection;
 
-		ReactiveInsertSupport(ReactiveMongoTemplate template, Class<T> domainType, String collection) {
+		ReactiveInsertSupport(ReactiveMongoTemplate template, Class<T> domainType, @Nullable String collection) {
 
 			this.template = template;
 			this.domainType = domainType;

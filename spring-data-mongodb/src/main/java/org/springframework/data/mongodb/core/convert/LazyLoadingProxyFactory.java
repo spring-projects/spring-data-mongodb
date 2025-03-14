@@ -124,7 +124,7 @@ public final class LazyLoadingProxyFactory {
 	}
 
 	public Object createLazyLoadingProxy(MongoPersistentProperty property, DbRefResolverCallback callback,
-			Object source) {
+			@Nullable Object source) {
 
 		Class<?> propertyType = property.getType();
 		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, callback, source, exceptionTranslator);
@@ -180,10 +180,10 @@ public final class LazyLoadingProxyFactory {
 		private final Lock readLock = Lock.of(rwLock.readLock());
 		private final Lock writeLock = Lock.of(rwLock.writeLock());
 
-		private final MongoPersistentProperty property;
-		private final DbRefResolverCallback callback;
-		private final Object source;
-		private final PersistenceExceptionTranslator exceptionTranslator;
+		private final @Nullable MongoPersistentProperty property;
+		private final @Nullable DbRefResolverCallback callback;
+		private final @Nullable Object source;
+		private final @Nullable PersistenceExceptionTranslator exceptionTranslator;
 		private volatile boolean resolved;
 		private @Nullable Object result;
 
@@ -201,7 +201,7 @@ public final class LazyLoadingProxyFactory {
 				}
 
 				@Override
-				public @Nullable Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+				public @Nullable Object intercept(Object o, Method method, @Nullable Object @Nullable[] args, @Nullable MethodProxy proxy) throws Throwable {
 
 					ReflectionUtils.makeAccessible(method);
 					return method.invoke(o, args);
@@ -209,8 +209,8 @@ public final class LazyLoadingProxyFactory {
 			};
 		}
 
-		public LazyLoadingInterceptor(MongoPersistentProperty property, DbRefResolverCallback callback, Object source,
-				PersistenceExceptionTranslator exceptionTranslator) {
+		public LazyLoadingInterceptor(@Nullable MongoPersistentProperty property, @Nullable DbRefResolverCallback callback, @Nullable Object source,
+			@Nullable PersistenceExceptionTranslator exceptionTranslator) {
 
 			this.property = property;
 			this.callback = callback;
@@ -224,7 +224,7 @@ public final class LazyLoadingProxyFactory {
 		}
 
 		@Override
-		public @Nullable Object intercept(Object o, Method method, Object @Nullable[] args, @Nullable MethodProxy proxy) throws Throwable {
+		public @Nullable Object intercept(Object o, Method method, @Nullable Object @Nullable[] args, @Nullable MethodProxy proxy) throws Throwable {
 
 			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();
@@ -244,7 +244,7 @@ public final class LazyLoadingProxyFactory {
 					return proxyToString(source);
 				}
 
-				if (ReflectionUtils.isEqualsMethod(method)) {
+				if (ReflectionUtils.isEqualsMethod(method) && args != null) {
 					return proxyEquals(o, args[0]);
 				}
 

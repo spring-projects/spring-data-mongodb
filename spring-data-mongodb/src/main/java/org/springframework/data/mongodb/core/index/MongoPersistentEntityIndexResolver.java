@@ -165,7 +165,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 
 			if (persistentProperty.isEntity()) {
-				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+				indexes.addAll(resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(persistentProperty),
 						persistentProperty.isUnwrapped() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
 						root.getCollection(), guard));
 			}
@@ -232,7 +232,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (persistentProperty.isEntity()) {
 			try {
-				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+				indexes.addAll(resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(persistentProperty),
 						propertyDotPath.toString(), propertyPath, collection, guard));
 			} catch (CyclicPropertyReferenceException e) {
 				LOGGER.info(e.getMessage());
@@ -385,7 +385,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 						try {
 							appendTextIndexInformation(propertyDotPath, propertyPath, indexDefinitionBuilder,
-									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
+									mappingContext.getRequiredPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage());
 						} catch (InvalidDataAccessApiUsageException e) {
@@ -576,7 +576,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?, ?> entity) {
+	private PartialIndexFilter evaluatePartialFilter(String filterExpression, @Nullable PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(filterExpression, () -> getEvaluationContextForProperty(entity));
 
@@ -587,7 +587,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
 	}
 
-	private org.bson.Document evaluateWildcardProjection(String projectionExpression, PersistentEntity<?, ?> entity) {
+	private org.bson.Document evaluateWildcardProjection(String projectionExpression, @Nullable PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(projectionExpression, () -> getEvaluationContextForProperty(entity));
 
@@ -598,7 +598,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return BsonUtils.parse(projectionExpression, null);
 	}
 
-	private Collation evaluateCollation(String collationExpression, PersistentEntity<?, ?> entity) {
+	private Collation evaluateCollation(String collationExpression, @Nullable PersistentEntity<?, ?> entity) {
 
 		Object result = ExpressionUtils.evaluate(collationExpression, () -> getEvaluationContextForProperty(entity));
 		if (result instanceof org.bson.Document document) {

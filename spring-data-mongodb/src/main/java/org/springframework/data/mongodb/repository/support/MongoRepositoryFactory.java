@@ -77,14 +77,14 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	@Override
-	public void setBeanClassLoader(ClassLoader classLoader) {
+	public void setBeanClassLoader(@Nullable ClassLoader classLoader) {
 
 		super.setBeanClassLoader(classLoader);
 		crudMethodMetadataPostProcessor.setBeanClassLoader(classLoader);
 	}
 
 	@Override
-	protected ProjectionFactory getProjectionFactory(ClassLoader classLoader, BeanFactory beanFactory) {
+	protected ProjectionFactory getProjectionFactory(@Nullable ClassLoader classLoader, @Nullable BeanFactory beanFactory) {
 		return this.operations.getConverter().getProjectionFactory();
 	}
 

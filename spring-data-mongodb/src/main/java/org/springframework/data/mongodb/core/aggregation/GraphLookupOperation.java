@@ -217,7 +217,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			implements FromBuilder, StartWithBuilder, ConnectFromBuilder, ConnectToBuilder {
 
 		private @Nullable String from;
-		private @Nullable List<? extends Object> startWith;
+		private @Nullable List<?> startWith;
 		private @Nullable String connectFrom;
 
 		@Override
@@ -310,6 +310,9 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 
 			Assert.hasText(fieldName, "ConnectTo must not be null or empty");
 
+			Assert.notNull(from, "From must not be null");
+			Assert.notNull(startWith, "startWith must ne set first");
+			Assert.notNull(connectFrom, "ConnectFrom must be set first");
 			return new GraphLookupOperationBuilder(from, startWith, connectFrom, fieldName);
 		}
 	}
@@ -327,7 +330,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private @Nullable Field depthField;
 		private @Nullable CriteriaDefinition restrictSearchWithMatch;
 
-		private GraphLookupOperationBuilder(String from, List<? extends Object> startWith, String connectFrom,
+		private GraphLookupOperationBuilder(String from, List<?> startWith, String connectFrom,
 				String connectTo) {
 
 			this.from = from;

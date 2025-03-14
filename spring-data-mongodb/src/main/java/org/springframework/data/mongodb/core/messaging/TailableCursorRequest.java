@@ -136,7 +136,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		}
 
 		@Override
-		public String getCollectionName() {
+		public @Nullable String getCollectionName() {
 			return collectionName;
 		}
 

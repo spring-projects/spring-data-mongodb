@@ -211,6 +211,7 @@ public class ConditionalOperators {
 			return createThenBuilder().thenValueOf(fieldReference);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ThenBuilder createThenBuilder() {
 
 			if (usesFieldRef()) {
@@ -303,6 +304,7 @@ public class ConditionalOperators {
 			}
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object resolve(Object value, AggregationOperationContext context) {
 
 			if (value instanceof Field field) {
@@ -389,7 +391,7 @@ public class ConditionalOperators {
 		 */
 		static final class IfNullOperatorBuilder implements IfNullBuilder, ThenBuilder {
 
-			private @Nullable List<Object> conditions;
+			private List<Object> conditions;
 
 			private IfNullOperatorBuilder() {
 				conditions = new ArrayList<>();
@@ -623,6 +625,7 @@ public class ConditionalOperators {
 			return new Document("$cond", condObject);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object resolveValue(AggregationOperationContext context, Object value) {
 
 			if (value instanceof Document || value instanceof Field) {
@@ -946,6 +949,8 @@ public class ConditionalOperators {
 			public Cond otherwise(Object otherwiseValue) {
 
 				Assert.notNull(otherwiseValue, "Value must not be null");
+				Assert.notNull(condition, "Condition value needs to be set first");
+				Assert.notNull(thenValue, "Then value needs to be set first");
 				return new Cond(condition, thenValue, otherwiseValue);
 			}
 
@@ -953,6 +958,8 @@ public class ConditionalOperators {
 			public Cond otherwiseValueOf(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null");
+				Assert.notNull(condition, "Condition value needs to be set first");
+				Assert.notNull(thenValue, "Then value needs to be set first");
 				return new Cond(condition, thenValue, Fields.field(fieldReference));
 			}
 
@@ -960,6 +967,8 @@ public class ConditionalOperators {
 			public Cond otherwiseValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "AggregationExpression must not be null");
+				Assert.notNull(condition, "Condition value needs to be set first");
+				Assert.notNull(thenValue, "Then value needs to be set first");
 				return new Cond(condition, thenValue, expression);
 			}
 		}

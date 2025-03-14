@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -176,6 +177,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return schemaProperties;
 	}
 
+	@SuppressWarnings("NullAway")
 	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
 
 		String stringPath = path.stream().map(MongoPersistentProperty::getName).collect(Collectors.joining("."));
@@ -337,7 +339,9 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return schemaObject;
 	}
 
-	private String computePropertyFieldName(PersistentProperty<?> property) {
+	private String computePropertyFieldName(@Nullable PersistentProperty<?> property) {
+		
+		Assert.notNull(property, "Property must not be null");
 
 		return property instanceof MongoPersistentProperty mongoPersistentProperty ? mongoPersistentProperty.getFieldName()
 				: property.getName();
@@ -409,7 +413,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		@Override
-		public <T> MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property) {
+		@SuppressWarnings("unchecked")
+		public <T> @Nullable MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property) {
 			return (MongoPersistentEntity<T>) mappingContext.getPersistentEntity(property);
 		}
 	}

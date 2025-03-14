@@ -70,6 +70,7 @@ class DocumentPointerFactory {
 		this.cache = new WeakHashMap<>();
 	}
 
+	@SuppressWarnings("NullAway")
 	DocumentPointer<?> computePointer(
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			MongoPersistentProperty property, Object value, Class<?> typeHint) {
@@ -87,7 +88,7 @@ class DocumentPointerFactory {
 
 		if (usesDefaultLookup(property)) {
 
-			MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+			MongoPersistentProperty idProperty = persistentEntity.getRequiredIdProperty();
 			Object idValue = persistentEntity.getIdentifierAccessor(value).getIdentifier();
 
 			if (idProperty.hasExplicitWriteTarget()
@@ -114,6 +115,7 @@ class DocumentPointerFactory {
 				.getDocumentPointer(mappingContext, persistentEntity, propertyAccessor);
 	}
 
+	@SuppressWarnings("NullAway")
 	private boolean usesDefaultLookup(MongoPersistentProperty property) {
 
 		if (property.isDocumentReference()) {
@@ -216,9 +218,16 @@ class DocumentPointerFactory {
 					MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(entry.getKey());
 					if (persistentProperty != null && persistentProperty.isEntity()) {
 
-						MongoPersistentEntity<?> nestedEntity = mappingContext.getPersistentEntity(persistentProperty.getType());
-						target.put(entry.getKey(), updatePlaceholders(document, new Document(), mappingContext,
-								nestedEntity, nestedEntity.getPropertyAccessor(propertyAccessor.getProperty(persistentProperty))));
+						MongoPersistentEntity<?> nestedEntity = mappingContext.getRequiredPersistentEntity(persistentProperty.getType());
+						Object propertyValue = propertyAccessor.getProperty(persistentProperty);
+
+						if(propertyValue == null) {
+							target.put(entry.getKey(), propertyValue);
+						} else {
+							PersistentPropertyAccessor<?> nestedAccessor = nestedEntity.getPropertyAccessor(propertyValue);
+							target.put(entry.getKey(), updatePlaceholders(document, new Document(), mappingContext,
+								nestedEntity, nestedAccessor));
+						}
 					} else {
 						target.put(entry.getKey(), updatePlaceholders((Document) entry.getValue(), new Document(), mappingContext,
 								persistentEntity, propertyAccessor));
@@ -236,7 +245,7 @@ class DocumentPointerFactory {
 					String fieldName = entry.getKey().equals(FieldName.ID.name()) ? "id" : entry.getKey();
 					if (!fieldName.contains(".")) {
 
-						Object targetValue = propertyAccessor.getProperty(persistentEntity.getPersistentProperty(fieldName));
+						Object targetValue = propertyAccessor.getProperty(persistentEntity.getRequiredPersistentProperty(fieldName));
 						target.put(attribute, targetValue);
 						continue;
 					}

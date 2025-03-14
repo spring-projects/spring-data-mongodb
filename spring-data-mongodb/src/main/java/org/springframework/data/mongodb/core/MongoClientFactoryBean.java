@@ -315,13 +315,13 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 		settingsBuilder.accept(value);
 	}
 
-	private <S, T> T computeSettingsValue(Function<S, T> function, S defaultValueHolder, S settingsValueHolder,
+	private <S, T> @Nullable T computeSettingsValue(Function<S, T> function, S defaultValueHolder, S settingsValueHolder,
 			@Nullable T connectionStringValue) {
 		return computeSettingsValue(function.apply(defaultValueHolder), function.apply(settingsValueHolder),
 				connectionStringValue);
 	}
 
-	private <T> T computeSettingsValue(T defaultValue, T fromSettings, T fromConnectionString) {
+	private <T> @Nullable T computeSettingsValue(@Nullable T defaultValue, T fromSettings, @Nullable T fromConnectionString) {
 
 		boolean fromSettingsIsDefault = ObjectUtils.nullSafeEquals(defaultValue, fromSettings);
 		boolean fromConnectionStringIsDefault = ObjectUtils.nullSafeEquals(defaultValue, fromConnectionString);
@@ -336,7 +336,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 		return MongoClients.create(settings, SpringDataMongoDB.driverInformation());
 	}
 
-	private String getOrDefault(Object value, String defaultValue) {
+	private String getOrDefault(@Nullable Object value, String defaultValue) {
 
 		if(value == null) {
 			return defaultValue;

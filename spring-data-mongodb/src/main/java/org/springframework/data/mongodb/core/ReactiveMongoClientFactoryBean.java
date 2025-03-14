@@ -89,7 +89,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 	}
 
 	@Override
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+	public @Nullable DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 
@@ -124,7 +124,9 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 
 	@Override
 	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
-		instance.close();
+		if(instance != null) {
+			instance.close();
+		}
 	}
 
 }

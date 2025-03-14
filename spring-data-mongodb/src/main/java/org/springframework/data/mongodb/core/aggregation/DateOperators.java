@@ -848,6 +848,7 @@ public class DateOperators {
 			return TsSecond.tsSecond(dateReference());
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object dateReference() {
 
 			if (usesFieldRef()) {

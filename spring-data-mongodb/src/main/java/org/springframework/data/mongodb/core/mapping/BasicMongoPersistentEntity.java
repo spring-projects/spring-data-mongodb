@@ -189,7 +189,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	}
 
 	@Override
-	public EvaluationContext getEvaluationContext(Object rootObject) {
+	public EvaluationContext getEvaluationContext(@Nullable Object rootObject) {
 		return super.getEvaluationContext(rootObject);
 	}
 
@@ -247,7 +247,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 				return o1.getFieldOrder() - o2.getFieldOrder();
 			}
 
-			return o1.getFieldOrder();
+			return o1 != null ? o1.getFieldOrder() : -1;
 		}
 	}
 
@@ -281,7 +281,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		}
 
-		@SuppressWarnings("null")
+		@SuppressWarnings("NullAway")
 		Field currentIdPropertyField = currentIdProperty.getField();
 
 		if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
@@ -355,7 +355,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	}
 
 	@Override
-	public Collection<Object> getEncryptionKeyIds() {
+	public @Nullable Collection<Object> getEncryptionKeyIds() {
 
 		Encrypted encrypted = findAnnotation(Encrypted.class);
 		if (encrypted == null) {
@@ -408,6 +408,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			}
 		}
 
+		@SuppressWarnings("NullAway")
 		private static void potentiallyAssertDBRefTargetType(MongoPersistentProperty persistentProperty) {
 
 			if (persistentProperty.isDbReference() && persistentProperty.getDBRef().lazy()) {

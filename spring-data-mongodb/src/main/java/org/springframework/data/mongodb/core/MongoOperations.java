@@ -733,8 +733,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the parametrized type of the returned list.
 	 * @return the converted object.
 	 */
-	@Nullable
-	<T> T findOne(Query query, Class<T> entityClass);
+	<T> @Nullable T findOne(Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
@@ -750,8 +749,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param collectionName name of the collection to retrieve the objects from.
 	 * @return the converted object.
 	 */
-	@Nullable
-	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
+	<T> @Nullable T findOne(Query query, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Determine result of given {@link Query} contains at least one element. <br />
@@ -871,8 +869,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the type the document shall be converted into. Must not be {@literal null}.
 	 * @return the document with the given id mapped onto the given target class.
 	 */
-	@Nullable
-	<T> T findById(Object id, Class<T> entityClass);
+	<T> @Nullable T findById(Object id, Class<T> entityClass);
 
 	/**
 	 * Returns the document with the given id from the given collection mapped onto the given target class.
@@ -882,8 +879,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param collectionName the collection to query for the document.
 	 * @return he converted object or {@literal null} if document does not exist.
 	 */
-	@Nullable
-	<T> T findById(Object id, Class<T> entityClass, String collectionName);
+	<T> @Nullable T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Finds the distinct values for a specified {@literal field} across a single {@link MongoCollection} or view and
@@ -960,8 +956,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
-	@Nullable
-	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
+	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
@@ -980,8 +975,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
-	@Nullable
-	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
+	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
@@ -1003,8 +997,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
-	@Nullable
-	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
+	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
@@ -1027,8 +1020,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
-	@Nullable
-	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
+	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName);
 
 	/**
@@ -1188,8 +1180,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	@Nullable
-	<S, T> T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+	<S, T> @Nullable T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
 			String collectionName, Class<T> resultType);
 
 	/**
@@ -1205,8 +1196,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the parametrized type of the returned list.
 	 * @return the converted object
 	 */
-	@Nullable
-	<T> T findAndRemove(Query query, Class<T> entityClass);
+	<T> @Nullable T findAndRemove(Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
@@ -1223,8 +1213,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param collectionName name of the collection to retrieve the objects from.
 	 * @return the converted object.
 	 */
-	@Nullable
-	<T> T findAndRemove(Query query, Class<T> entityClass, String collectionName);
+	<T> @Nullable T findAndRemove(Query query, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.

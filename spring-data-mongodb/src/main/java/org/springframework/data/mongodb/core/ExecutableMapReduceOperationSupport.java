@@ -89,6 +89,7 @@ class ExecutableMapReduceOperationSupport implements ExecutableMapReduceOperatio
 		 * @see in org.springframework.data.mongodb.core.ExecutableMapReduceOperation.TerminatingMapReduce#all()
 		 */
 		@Override
+		@SuppressWarnings("NullAway")
 		public List<T> all() {
 			return template.mapReduce(query, domainType, getCollectionName(), mapFunction, reduceFunction, options,
 					returnType);

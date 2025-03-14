@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Collections;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -50,8 +51,8 @@ public class ComparisonOperators {
 
 	public static class ComparisonOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link ComparisonOperatorFactory} for given {@literal fieldReference}.
@@ -107,6 +108,7 @@ public class ComparisonOperators {
 			return createCmp().compareToValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Cmp createCmp() {
 			return usesFieldRef() ? Cmp.valueOf(fieldReference) : Cmp.valueOf(expression);
 		}
@@ -144,6 +146,7 @@ public class ComparisonOperators {
 			return createEq().equalToValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Eq createEq() {
 			return usesFieldRef() ? Eq.valueOf(fieldReference) : Eq.valueOf(expression);
 		}
@@ -181,6 +184,7 @@ public class ComparisonOperators {
 			return createGt().greaterThanValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Gt createGt() {
 			return usesFieldRef() ? Gt.valueOf(fieldReference) : Gt.valueOf(expression);
 		}
@@ -218,6 +222,7 @@ public class ComparisonOperators {
 			return createGte().greaterThanEqualToValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Gte createGte() {
 			return usesFieldRef() ? Gte.valueOf(fieldReference) : Gte.valueOf(expression);
 		}
@@ -255,6 +260,7 @@ public class ComparisonOperators {
 			return createLt().lessThanValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Lt createLt() {
 			return usesFieldRef() ? Lt.valueOf(fieldReference) : Lt.valueOf(expression);
 		}
@@ -292,6 +298,7 @@ public class ComparisonOperators {
 			return createLte().lessThanEqualToValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Lte createLte() {
 			return usesFieldRef() ? Lte.valueOf(fieldReference) : Lte.valueOf(expression);
 		}
@@ -329,6 +336,7 @@ public class ComparisonOperators {
 			return createNe().notEqualToValue(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Ne createNe() {
 			return usesFieldRef() ? Ne.valueOf(fieldReference) : Ne.valueOf(expression);
 		}

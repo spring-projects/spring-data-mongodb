@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
 import org.springframework.util.Assert;
 
@@ -55,8 +56,8 @@ public class SetOperators {
 	 */
 	public static class SetOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link SetOperatorFactory} for given {@literal fieldReference}.
@@ -104,6 +105,7 @@ public class SetOperators {
 			return createSetEquals().isEqualTo(expressions);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetEquals createSetEquals() {
 			return usesFieldRef() ? SetEquals.arrayAsSet(fieldReference) : SetEquals.arrayAsSet(expression);
 		}
@@ -130,6 +132,7 @@ public class SetOperators {
 			return createSetIntersection().intersects(expressions);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetIntersection createSetIntersection() {
 			return usesFieldRef() ? SetIntersection.arrayAsSet(fieldReference) : SetIntersection.arrayAsSet(expression);
 		}
@@ -156,6 +159,7 @@ public class SetOperators {
 			return createSetUnion().union(expressions);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetUnion createSetUnion() {
 			return usesFieldRef() ? SetUnion.arrayAsSet(fieldReference) : SetUnion.arrayAsSet(expression);
 		}
@@ -182,6 +186,7 @@ public class SetOperators {
 			return createSetDifference().differenceTo(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetDifference createSetDifference() {
 			return usesFieldRef() ? SetDifference.arrayAsSet(fieldReference) : SetDifference.arrayAsSet(expression);
 		}
@@ -208,6 +213,7 @@ public class SetOperators {
 			return createSetIsSubset().isSubsetOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SetIsSubset createSetIsSubset() {
 			return usesFieldRef() ? SetIsSubset.arrayAsSet(fieldReference) : SetIsSubset.arrayAsSet(expression);
 		}
@@ -218,6 +224,7 @@ public class SetOperators {
 		 *
 		 * @return new instance of {@link AnyElementTrue}.
 		 */
+		@SuppressWarnings("NullAway")
 		public AnyElementTrue anyElementTrue() {
 			return usesFieldRef() ? AnyElementTrue.arrayAsSet(fieldReference) : AnyElementTrue.arrayAsSet(expression);
 		}
@@ -228,6 +235,7 @@ public class SetOperators {
 		 *
 		 * @return new instance of {@link AllElementsTrue}.
 		 */
+		@SuppressWarnings("NullAway")
 		public AllElementsTrue allElementsTrue() {
 			return usesFieldRef() ? AllElementsTrue.arrayAsSet(fieldReference) : AllElementsTrue.arrayAsSet(expression);
 		}

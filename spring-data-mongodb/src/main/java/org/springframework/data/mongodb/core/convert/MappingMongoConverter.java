@@ -745,6 +745,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		}
 	}
 
+	@SuppressWarnings("NullAway")
 	private @Nullable Object readUnwrapped(ConversionContext context, DocumentAccessor documentAccessor,
 			MongoPersistentProperty prop, MongoPersistentEntity<?> unwrappedEntity) {
 
@@ -761,6 +762,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation;
@@ -2460,7 +2462,7 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		 *
 		 * @param <T>
 		 */
-		interface ContainerValueConverter<@Nullable T> {
+		interface ContainerValueConverter<T> {
 
 			@Nullable Object convert(ConversionContext context, @Nullable T source, TypeInformation<?> typeHint);
 

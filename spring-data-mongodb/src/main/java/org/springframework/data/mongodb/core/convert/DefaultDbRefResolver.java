@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentPropert
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
@@ -71,7 +72,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	}
 
 	@Override
-	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
+	public @Nullable Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null");
@@ -86,7 +87,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	}
 
 	@Override
-	public Document fetch(DBRef dbRef) {
+	public @Nullable Document fetch(DBRef dbRef) {
 		return getReferenceLoader().fetchOne(
 				DocumentReferenceQuery.forSingleDocument(Filters.eq(FieldName.ID.name(), dbRef.getId())),
 				ReferenceCollection.fromDBRef(dbRef));
@@ -171,7 +172,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	private static Stream<Document> documentWithId(Object identifier, Collection<Document> documents) {
 
 		return documents.stream() //
-				.filter(it -> it.get(BasicMongoPersistentProperty.ID_FIELD_NAME).equals(identifier)) //
+				.filter(it -> ObjectUtils.nullSafeEquals(it.get(BasicMongoPersistentProperty.ID_FIELD_NAME), identifier)) //
 				.limit(1);
 	}
 

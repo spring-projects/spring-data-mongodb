@@ -108,7 +108,7 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @param value
 	 * @return
 	 */
-	public Document addToPreviousOperation(Object value) {
+	public Document addToPreviousOperation(@Nullable Object value) {
 
 		Assert.state(previousOperationObject != null, "No previous operation available");
 
@@ -122,11 +122,14 @@ public class ExpressionTransformationContextSupport<T extends ExpressionNode> {
 	 * @param value
 	 * @return
 	 */
-	public Object addToPreviousOrReturn(Object value) {
+	public @Nullable Object addToPreviousOrReturn(@Nullable Object value) {
 		return hasPreviousOperation() ? addToPreviousOperation(value) : value;
 	}
 
+	@SuppressWarnings("unchecked")
 	private List<Object> extractArgumentListFrom(Document context) {
-		return (List<Object>) context.get(context.keySet().iterator().next());
+
+		Object o = context.get(context.keySet().iterator().next());
+		return o instanceof List<?> l ? (List<Object>) l : List.of();
 	}
 }

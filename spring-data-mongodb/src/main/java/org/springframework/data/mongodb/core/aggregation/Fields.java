@@ -205,7 +205,7 @@ public final class Fields implements Iterable<Field> {
 
 		private final String raw;
 		private final String name;
-		private final String target;
+		private final @Nullable String target;
 
 		/**
 		 * Creates an aggregation field with the given {@code name}.

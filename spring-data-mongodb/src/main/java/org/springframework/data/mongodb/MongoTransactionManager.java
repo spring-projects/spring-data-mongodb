@@ -80,7 +80,9 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @see #setTransactionSynchronization(int)
 	 */
 	public MongoTransactionManager() {
+
 		this.transactionOptionsResolver = MongoTransactionOptionsResolver.defaultResolver();
+		this.options = MongoTransactionOptions.NONE;
 	}
 
 	/**

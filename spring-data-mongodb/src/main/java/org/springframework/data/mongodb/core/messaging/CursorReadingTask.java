@@ -51,7 +51,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	private State state = State.CREATED;
 
-	private MongoCursor<T> cursor;
+	private @Nullable MongoCursor<T> cursor;
 
 	/**
 	 * @param template must not be {@literal null}.
@@ -109,6 +109,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * is immediately {@link MongoCursor#close() closed} and a new {@link MongoCursor} is requested until a valid one is
 	 * retrieved or the {@link #state} changes.
 	 */
+	@SuppressWarnings("NullAway")
 	private void start() {
 
 		lock.executeWithoutResult(() -> {
@@ -188,6 +189,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 		return awaitStart.await(timeout.toNanos(), TimeUnit.NANOSECONDS);
 	}
 
+	@SuppressWarnings("NullAway")
 	protected Message<T, R> createMessage(T source, Class<R> targetType, RequestOptions options) {
 
 		SimpleMessage<T, T> message = new SimpleMessage<>(source, source, MessageProperties.builder()

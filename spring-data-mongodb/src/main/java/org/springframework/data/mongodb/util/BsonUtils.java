@@ -327,14 +327,14 @@ public class BsonUtils {
 	 * @throws IllegalArgumentException if {@literal source} does not correspond to a {@link BsonValue} type.
 	 * @since 3.0
 	 */
-	public static BsonValue simpleToBsonValue(Object source) {
+	public static BsonValue simpleToBsonValue(@Nullable Object source) {
 		return simpleToBsonValue(source, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	/**
 	 * Convert a given simple value (eg. {@link String}, {@link Long}) to its corresponding {@link BsonValue}.
 	 *
-	 * @param source must not be {@literal null}.
+	 * @param source can be {@literal null}.
 	 * @param codecRegistry The {@link CodecRegistry} used as a fallback to convert types using native {@link Codec}. Must
 	 *          not be {@literal null}.
 	 * @return the corresponding {@link BsonValue} representation.
@@ -342,7 +342,12 @@ public class BsonUtils {
 	 * @since 4.2
 	 */
 	@SuppressWarnings("unchecked")
-	public static BsonValue simpleToBsonValue(Object source, CodecRegistry codecRegistry) {
+	@Contract("null, _ -> !null")
+	public static BsonValue simpleToBsonValue(@Nullable Object source, CodecRegistry codecRegistry) {
+
+		if(source == null) {
+			return BsonNull.VALUE;
+		}
 
 		if (source instanceof BsonValue bsonValue) {
 			return bsonValue;

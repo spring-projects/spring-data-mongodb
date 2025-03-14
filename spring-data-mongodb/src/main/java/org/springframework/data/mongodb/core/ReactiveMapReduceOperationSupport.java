@@ -89,8 +89,11 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public Flux<T> all() {
 
+			Assert.notNull(mapFunction, "MapFunction must be set first");
+			Assert.notNull(reduceFunction, "ReduceFunction must be set first");
+
 			return template.mapReduce(query, domainType, getCollectionName(), returnType, mapFunction, reduceFunction,
-					options);
+					options != null ? options : MapReduceOptions.options());
 		}
 
 		/*

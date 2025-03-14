@@ -121,12 +121,12 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	}
 
 	@Override
-	public DBRef getDBRef() {
+	public @Nullable DBRef getDBRef() {
 		return dbref.getNullable();
 	}
 
 	@Override
-	public DocumentReference getDocumentReference() {
+	public @Nullable DocumentReference getDocumentReference() {
 		return documentReference.getNullable();
 	}
 

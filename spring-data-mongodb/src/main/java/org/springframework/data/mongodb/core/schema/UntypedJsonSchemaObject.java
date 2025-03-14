@@ -176,14 +176,14 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 */
 	static class Restrictions {
 
-		private final Collection<? extends Object> possibleValues;
+		private final Collection<?> possibleValues;
 		private final Collection<JsonSchemaObject> allOf;
 		private final Collection<JsonSchemaObject> anyOf;
 		private final Collection<JsonSchemaObject> oneOf;
 		private final @Nullable JsonSchemaObject notMatch;
 
-		Restrictions(Collection<? extends Object> possibleValues, Collection<JsonSchemaObject> allOf,
-				Collection<JsonSchemaObject> anyOf, Collection<JsonSchemaObject> oneOf, JsonSchemaObject notMatch) {
+		Restrictions(Collection<?> possibleValues, Collection<JsonSchemaObject> allOf,
+				Collection<JsonSchemaObject> anyOf, Collection<JsonSchemaObject> oneOf, @Nullable JsonSchemaObject notMatch) {
 
 			this.possibleValues = possibleValues;
 			this.allOf = allOf;
@@ -205,7 +205,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param possibleValues must not be {@literal null}.
 		 * @return
 		 */
-		Restrictions possibleValues(Collection<? extends Object> possibleValues) {
+		Restrictions possibleValues(Collection<?> possibleValues) {
 
 			Assert.notNull(possibleValues, "PossibleValues must not be null");
 			return new Restrictions(possibleValues, allOf, anyOf, oneOf, notMatch);

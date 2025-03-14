@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * SPI interface to implement components that can transform an {@link ExpressionTransformationContextSupport} into an
  * object.
@@ -29,5 +31,5 @@ public interface ExpressionTransformer<T extends ExpressionTransformationContext
 	 * @param context will never be {@literal null}.
 	 * @return
 	 */
-	Object transform(T context);
+	@Nullable Object transform(T context);
 }

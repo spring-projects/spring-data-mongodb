@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import com.mongodb.WriteConcern;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Default {@link WriteConcernResolver} resolving the {@link WriteConcern} from the given {@link MongoAction}.
@@ -26,7 +27,7 @@ enum DefaultWriteConcernResolver implements WriteConcernResolver {
 
 	INSTANCE;
 
-	public WriteConcern resolve(MongoAction action) {
+	public @Nullable WriteConcern resolve(MongoAction action) {
 		return action.getDefaultWriteConcern();
 	}
 }

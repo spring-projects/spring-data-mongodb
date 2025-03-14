@@ -39,6 +39,7 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
@@ -62,6 +63,7 @@ import org.springframework.util.ObjectUtils;
  * @author Rocco Lagrotteria
  * @since 2.2
  */
+@NullUnmarked
 public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	private static final Pattern ENTIRE_QUERY_BINDING_PATTERN = Pattern.compile("^\\?(\\d+)$|^[\\?:][#$]\\{.*\\}$");

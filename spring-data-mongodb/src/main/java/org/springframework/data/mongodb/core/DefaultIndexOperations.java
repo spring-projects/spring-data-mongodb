@@ -115,6 +115,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public String ensureIndex(IndexDefinition indexDefinition) {
 
 		return execute(collection -> {
@@ -159,6 +160,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public void alterIndex(String name, org.springframework.data.mongodb.core.index.IndexOptions options) {
 
 		Document indexOptions = new Document("name", name);
@@ -179,6 +181,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public List<IndexInfo> getIndexInfo() {
 
 		return execute(new CollectionCallback<List<IndexInfo>>() {
@@ -226,6 +229,7 @@ public class DefaultIndexOperations implements IndexOperations {
 				mapper.getMappedSort((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
 	}
 
+	@SuppressWarnings("NullAway")
 	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops,
 			@Nullable MongoPersistentEntity<?> entity) {
 

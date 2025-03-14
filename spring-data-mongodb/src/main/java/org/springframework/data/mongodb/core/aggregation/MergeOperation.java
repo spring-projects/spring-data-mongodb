@@ -415,7 +415,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	 */
 	public static class MergeOperationBuilder {
 
-		private String collection;
+		private @Nullable String collection;
 		private @Nullable String database;
 		private UniqueMergeId id = UniqueMergeId.id();
 		private @Nullable Let let;
@@ -581,6 +581,8 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @return new instance of {@link MergeOperation}.
 		 */
 		public MergeOperation build() {
+			
+			Assert.notNull(collection, "Collection must not be null");
 			return new MergeOperation(new MergeOperationTarget(database, collection), id, let, whenMatched, whenNotMatched);
 		}
 	}
