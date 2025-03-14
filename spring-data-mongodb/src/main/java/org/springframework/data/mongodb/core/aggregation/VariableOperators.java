@@ -332,6 +332,7 @@ public class VariableOperators {
 			return new Document(var.variableName, var.expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object getMappedIn(AggregationOperationContext context) {
 			return expression.toDocument(new NestedDelegatingExpressionAggregationOperationContext(context,
 					this.vars.stream().map(var -> Fields.field(var.variableName)).collect(Collectors.toList())));

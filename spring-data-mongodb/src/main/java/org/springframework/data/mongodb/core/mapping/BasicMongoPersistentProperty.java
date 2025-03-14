@@ -255,6 +255,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public Collection<Object> getEncryptionKeyIds() {
 
 		Encrypted encrypted = findAnnotation(Encrypted.class);
@@ -279,6 +280,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return target;
 	}
 
+	@SuppressWarnings("NullAway")
 	protected MongoField doGetMongoField() {
 
 		MongoFieldBuilder builder = MongoField.builder();
@@ -292,6 +294,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return builder.build();
 	}
 
+	@SuppressWarnings("NullAway")
 	private String doGetFieldName() {
 
 		if (isIdProperty()) {

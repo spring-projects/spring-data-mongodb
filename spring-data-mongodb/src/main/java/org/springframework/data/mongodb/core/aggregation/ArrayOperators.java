@@ -158,6 +158,7 @@ public class ArrayOperators {
 			return createArrayElemAt().elementAt(fieldReference);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ArrayElemAt createArrayElemAt() {
 
 			if (usesFieldRef()) {
@@ -193,6 +194,7 @@ public class ArrayOperators {
 			return createConcatArrays().concat(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ConcatArrays createConcatArrays() {
 
 			if (usesFieldRef()) {
@@ -208,6 +210,7 @@ public class ArrayOperators {
 		 *
 		 * @return new instance of {@link AsBuilder} to create a {@link Filter}.
 		 */
+		@SuppressWarnings("NullAway")
 		public AsBuilder filter() {
 
 			if (usesFieldRef()) {
@@ -227,6 +230,7 @@ public class ArrayOperators {
 		 *
 		 * @return new instance of {@link IsArray}.
 		 */
+		@SuppressWarnings("NullAway")
 		public IsArray isArray() {
 
 			Assert.state(values == null, "Does it make sense to call isArray on an array; Maybe just skip it");
@@ -239,6 +243,7 @@ public class ArrayOperators {
 		 *
 		 * @return new instance of {@link Size}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Size length() {
 
 			if (usesFieldRef()) {
@@ -253,6 +258,7 @@ public class ArrayOperators {
 		 *
 		 * @return new instance of {@link Slice}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Slice slice() {
 
 			if (usesFieldRef()) {
@@ -269,6 +275,7 @@ public class ArrayOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link IndexOfArray}.
 		 */
+		@SuppressWarnings("NullAway")
 		public IndexOfArray indexOf(Object value) {
 
 			if (usesFieldRef()) {
@@ -284,6 +291,7 @@ public class ArrayOperators {
 		 *
 		 * @return new instance of {@link ReverseArray}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ReverseArray reverse() {
 
 			if (usesFieldRef()) {
@@ -301,6 +309,7 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReduceInitialValueBuilder} to create {@link Reduce}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(AggregationExpression expression) {
 
 			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference)
@@ -314,6 +323,7 @@ public class ArrayOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link ReduceInitialValueBuilder} to create {@link Reduce}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(PropertyExpression... expressions) {
 
 			return initialValue -> (usesFieldRef() ? Reduce.arrayOf(fieldReference) : Reduce.arrayOf(expression))
@@ -327,6 +337,7 @@ public class ArrayOperators {
 		 * @return new instance of {@link SortArray}.
 		 * @since 4.0
 		 */
+		@SuppressWarnings("NullAway")
 		public SortArray sort(Sort sort) {
 
 			if (usesFieldRef()) {
@@ -344,6 +355,7 @@ public class ArrayOperators {
 		 * @param arrays must not be {@literal null}.
 		 * @return new instance of {@link Zip}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Zip zipWith(Object... arrays) {
 
 			if (usesFieldRef()) {
@@ -360,6 +372,7 @@ public class ArrayOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link In}.
 		 */
+		@SuppressWarnings("NullAway")
 		public In containsValue(Object value) {
 
 			if (usesFieldRef()) {
@@ -376,6 +389,7 @@ public class ArrayOperators {
 		 * @return new instance of {@link ArrayToObject}.
 		 * @since 2.1
 		 */
+		@SuppressWarnings("NullAway")
 		public ArrayToObject toObject() {
 
 			if (usesFieldRef()) {
@@ -392,6 +406,7 @@ public class ArrayOperators {
 		 * @return new instance of {@link First}.
 		 * @since 3.4
 		 */
+		@SuppressWarnings("NullAway")
 		public First first() {
 
 			if (usesFieldRef()) {
@@ -408,6 +423,7 @@ public class ArrayOperators {
 		 * @return new instance of {@link Last}.
 		 * @since 3.4
 		 */
+		@SuppressWarnings("NullAway")
 		public Last last() {
 
 			if (usesFieldRef()) {
@@ -681,9 +697,12 @@ public class ArrayOperators {
 
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
+
+			Assert.notNull(as, "As must be set first");
 			return toFilter(ExposedFields.from(as), context);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Document toFilter(ExposedFields exposedFields, AggregationOperationContext context) {
 
 			Document filterExpression = new Document();
@@ -692,12 +711,13 @@ public class ArrayOperators {
 			filterExpression.putAll(context.getMappedObject(new Document("input", getMappedInput(context))));
 			filterExpression.put("as", as.getTarget());
 
+
 			filterExpression.putAll(context.getMappedObject(new Document("cond", getMappedCondition(operationContext))));
 
 			return new Document("$filter", filterExpression);
 		}
 
-		private Object getMappedInput(AggregationOperationContext context) {
+		private @Nullable Object getMappedInput(AggregationOperationContext context) {
 
 			if (input instanceof Field field) {
 				return context.getReference(field).toString();
@@ -710,7 +730,7 @@ public class ArrayOperators {
 			return input;
 		}
 
-		private Object getMappedCondition(AggregationOperationContext context) {
+		private @Nullable Object getMappedCondition(AggregationOperationContext context) {
 
 			if (!(condition instanceof AggregationExpression aggregationExpression)) {
 				return condition;
@@ -1365,6 +1385,7 @@ public class ArrayOperators {
 			return new Document("$reduce", document);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object getMappedValue(Object value, AggregationOperationContext context) {
 
 			if (value instanceof Document) {

@@ -67,10 +67,10 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		private final ReactiveMongoTemplate template;
 		private final Class<?> domainType;
 		private final Class<T> returnType;
-		private final String collection;
+		private final @Nullable String collection;
 		private final Query query;
 
-		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, String collection,
+		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, @Nullable String collection,
 				Query query) {
 
 			this.template = template;

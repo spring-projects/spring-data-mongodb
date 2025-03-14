@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.util.RegexFlags;
 import org.springframework.util.Assert;
@@ -60,8 +61,8 @@ public class StringOperators {
 	 */
 	public static class StringOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link StringOperatorFactory} for given {@literal fieldReference}.
@@ -126,6 +127,7 @@ public class StringOperators {
 			return createConcat().concat(value);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Concat createConcat() {
 			return usesFieldRef() ? Concat.valueOf(fieldReference) : Concat.valueOf(expression);
 		}
@@ -153,6 +155,7 @@ public class StringOperators {
 			return createSubstr().substring(start, nrOfChars);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Substr createSubstr() {
 			return usesFieldRef() ? Substr.valueOf(fieldReference) : Substr.valueOf(expression);
 		}
@@ -162,6 +165,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link ToLower}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ToLower toLower() {
 			return usesFieldRef() ? ToLower.lowerValueOf(fieldReference) : ToLower.lowerValueOf(expression);
 		}
@@ -171,6 +175,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link ToUpper}.
 		 */
+		@SuppressWarnings("NullAway")
 		public ToUpper toUpper() {
 			return usesFieldRef() ? ToUpper.upperValueOf(fieldReference) : ToUpper.upperValueOf(expression);
 		}
@@ -214,6 +219,7 @@ public class StringOperators {
 			return createStrCaseCmp().strcasecmpValueOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private StrCaseCmp createStrCaseCmp() {
 			return usesFieldRef() ? StrCaseCmp.valueOf(fieldReference) : StrCaseCmp.valueOf(expression);
 		}
@@ -260,6 +266,7 @@ public class StringOperators {
 			return createIndexOfBytesSubstringBuilder().indexOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private IndexOfBytes.SubstringBuilder createIndexOfBytesSubstringBuilder() {
 			return usesFieldRef() ? IndexOfBytes.valueOf(fieldReference) : IndexOfBytes.valueOf(expression);
 		}
@@ -306,6 +313,7 @@ public class StringOperators {
 			return createIndexOfCPSubstringBuilder().indexOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private IndexOfCP.SubstringBuilder createIndexOfCPSubstringBuilder() {
 			return usesFieldRef() ? IndexOfCP.valueOf(fieldReference) : IndexOfCP.valueOf(expression);
 		}
@@ -343,6 +351,7 @@ public class StringOperators {
 			return createSplit().split(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Split createSplit() {
 			return usesFieldRef() ? Split.valueOf(fieldReference) : Split.valueOf(expression);
 		}
@@ -353,6 +362,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link StrLenBytes}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StrLenBytes length() {
 			return usesFieldRef() ? StrLenBytes.stringLengthOf(fieldReference) : StrLenBytes.stringLengthOf(expression);
 		}
@@ -363,6 +373,7 @@ public class StringOperators {
 		 *
 		 * @return new instance of {@link StrLenCP}.
 		 */
+		@SuppressWarnings("NullAway")
 		public StrLenCP lengthCP() {
 			return usesFieldRef() ? StrLenCP.stringLengthOfCP(fieldReference) : StrLenCP.stringLengthOfCP(expression);
 		}
@@ -390,6 +401,7 @@ public class StringOperators {
 			return createSubstrCP().substringCP(codePointStart, nrOfCodePoints);
 		}
 
+		@SuppressWarnings("NullAway")
 		private SubstrCP createSubstrCP() {
 			return usesFieldRef() ? SubstrCP.valueOf(fieldReference) : SubstrCP.valueOf(expression);
 		}
@@ -432,6 +444,7 @@ public class StringOperators {
 			return trim().charsOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Trim createTrim() {
 			return usesFieldRef() ? Trim.valueOf(fieldReference) : Trim.valueOf(expression);
 		}
@@ -474,6 +487,7 @@ public class StringOperators {
 			return ltrim().charsOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private LTrim createLTrim() {
 			return usesFieldRef() ? LTrim.valueOf(fieldReference) : LTrim.valueOf(expression);
 		}
@@ -516,6 +530,7 @@ public class StringOperators {
 			return rtrim().charsOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RTrim createRTrim() {
 			return usesFieldRef() ? RTrim.valueOf(fieldReference) : RTrim.valueOf(expression);
 		}
@@ -572,6 +587,7 @@ public class StringOperators {
 			return createRegexFind().regex(regex).options(options);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RegexFind createRegexFind() {
 			return usesFieldRef() ? RegexFind.valueOf(fieldReference) : RegexFind.valueOf(expression);
 		}
@@ -628,6 +644,7 @@ public class StringOperators {
 			return createRegexFindAll().regex(regex).options(options);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RegexFindAll createRegexFindAll() {
 			return usesFieldRef() ? RegexFindAll.valueOf(fieldReference) : RegexFindAll.valueOf(expression);
 		}
@@ -683,6 +700,7 @@ public class StringOperators {
 			return createRegexMatch().regex(regex).options(options);
 		}
 
+		@SuppressWarnings("NullAway")
 		private RegexMatch createRegexMatch() {
 			return usesFieldRef() ? RegexMatch.valueOf(fieldReference) : RegexMatch.valueOf(expression);
 		}
@@ -713,6 +731,7 @@ public class StringOperators {
 			return createReplaceOne().findValueOf(search).replacement(replacement);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ReplaceOne createReplaceOne() {
 			return usesFieldRef() ? ReplaceOne.valueOf(fieldReference) : ReplaceOne.valueOf(expression);
 		}
@@ -743,6 +762,7 @@ public class StringOperators {
 			return createReplaceAll().findValueOf(search).replacement(replacement);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ReplaceAll createReplaceAll() {
 			return usesFieldRef() ? ReplaceAll.valueOf(fieldReference) : ReplaceAll.valueOf(expression);
 		}

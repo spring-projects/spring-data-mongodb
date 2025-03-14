@@ -277,7 +277,7 @@ public class ObjectOperators {
 			return super.toDocument(potentiallyExtractSingleValue(value), context);
 		}
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("NullAway")
 		private Object potentiallyExtractSingleValue(Object value) {
 
 			if (value instanceof Collection<?> collection && collection.size() == 1) {

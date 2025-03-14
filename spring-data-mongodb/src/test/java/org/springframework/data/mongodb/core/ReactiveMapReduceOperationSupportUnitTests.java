@@ -74,7 +74,7 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).all();
 
 		verify(template).mapReduce(any(Query.class), eq(Person.class), eq(STAR_WARS), eq(Person.class), eq(MAP_FUNCTION),
-				eq(REDUCE_FUNCTION), isNull());
+				eq(REDUCE_FUNCTION), any());
 	}
 
 	@Test // DATAMONGO-1929
@@ -84,7 +84,7 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 				.inCollection("the-night-angel").all();
 
 		verify(template).mapReduce(any(Query.class), eq(Person.class), eq("the-night-angel"), eq(Person.class),
-				eq(MAP_FUNCTION), eq(REDUCE_FUNCTION), isNull());
+				eq(MAP_FUNCTION), eq(REDUCE_FUNCTION), any());
 	}
 
 	@Test // DATAMONGO-1929
@@ -108,7 +108,7 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).matching(query).all();
 
 		verify(template).mapReduce(eq(query), eq(Person.class), eq(STAR_WARS), eq(Person.class), eq(MAP_FUNCTION),
-				eq(REDUCE_FUNCTION), isNull());
+				eq(REDUCE_FUNCTION), any());
 	}
 
 	@Test // DATAMONGO-2416
@@ -121,7 +121,7 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 				.matching(where("lastname").is("skywalker")).all();
 
 		verify(template).mapReduce(eq(query), eq(Person.class), eq(STAR_WARS), eq(Person.class), eq(MAP_FUNCTION),
-				eq(REDUCE_FUNCTION), isNull());
+				eq(REDUCE_FUNCTION), any());
 	}
 
 	@Test // DATAMONGO-1929
@@ -132,7 +132,7 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).as(Jedi.class).all();
 
 		verify(template).mapReduce(any(Query.class), eq(Person.class), eq(STAR_WARS), eq(Jedi.class), eq(MAP_FUNCTION),
-				eq(REDUCE_FUNCTION), isNull());
+				eq(REDUCE_FUNCTION), any());
 	}
 
 	interface Contact {}

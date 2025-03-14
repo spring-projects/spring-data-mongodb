@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.BucketOperation.BucketOperationOutputBuilder;
 import org.springframework.util.Assert;
 
@@ -40,7 +41,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		implements FieldsExposingAggregationOperation {
 
 	private final List<Object> boundaries;
-	private final Object defaultBucket;
+	private final @Nullable Object defaultBucket;
 
 	/**
 	 * Creates a new {@link BucketOperation} given a {@link Field group-by field}.
@@ -76,7 +77,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		this.defaultBucket = bucketOperation.defaultBucket;
 	}
 
-	private BucketOperation(BucketOperation bucketOperation, List<Object> boundaries, Object defaultBucket) {
+	private BucketOperation(BucketOperation bucketOperation, List<Object> boundaries, @Nullable Object defaultBucket) {
 
 		super(bucketOperation);
 

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert.encryption;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoValueConverter;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
@@ -28,7 +29,7 @@ import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
 
 	@Override
-	default S read(Object value, MongoConversionContext context) {
+	default @Nullable S read(Object value, MongoConversionContext context) {
 		return decrypt(value, buildEncryptionContext(context));
 	}
 
@@ -39,10 +40,10 @@ public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
 	 * @param context the context to operate in.
 	 * @return never {@literal null}.
 	 */
-	S decrypt(Object encryptedValue, EncryptionContext context);
+	@Nullable S decrypt(Object encryptedValue, EncryptionContext context);
 
 	@Override
-	default T write(Object value, MongoConversionContext context) {
+	default @Nullable T write(Object value, MongoConversionContext context) {
 		return encrypt(value, buildEncryptionContext(context));
 	}
 
@@ -53,7 +54,7 @@ public interface EncryptingConverter<S, T> extends MongoValueConverter<S, T> {
 	 * @param context the context to operate in.
 	 * @return never {@literal null}.
 	 */
-	T encrypt(Object value, EncryptionContext context);
+	T encrypt(@Nullable Object value, EncryptionContext context);
 
 	/**
 	 * Obtain the {@link EncryptionContext} for a given {@link MongoConversionContext value conversion context}.

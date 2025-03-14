@@ -50,8 +50,8 @@ public class Meta {
 
 	private Map<String, Object> values = Collections.emptyMap();
 	private Set<CursorOption> flags = Collections.emptySet();
-	private Integer cursorBatchSize;
-	private Boolean allowDiskUse;
+	private @Nullable Integer cursorBatchSize;
+	private @Nullable Boolean allowDiskUse;
 
 	public Meta() {}
 

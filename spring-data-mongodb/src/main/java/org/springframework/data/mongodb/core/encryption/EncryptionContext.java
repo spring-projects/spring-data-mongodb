@@ -43,7 +43,7 @@ public interface EncryptionContext {
 	 * @param value
 	 * @return
 	 */
-	Object convertToMongoType(Object value);
+	@Nullable Object convertToMongoType(Object value);
 
 	/**
 	 * Reads the value as an instance of the {@link PersistentProperty#getTypeInformation() property type}.
@@ -123,6 +123,6 @@ public interface EncryptionContext {
 	@Nullable
 	Object lookupValue(String path);
 
-	EvaluationContext getEvaluationContext(Object source);
+	EvaluationContext getEvaluationContext(@Nullable Object source);
 
 }

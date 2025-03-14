@@ -131,7 +131,7 @@ public class SetOperation extends DocumentEnhancingOperation {
 			return new ValueAppender() {
 
 				@Override
-				public SetOperation toValue(Object value) {
+				public SetOperation toValue(@Nullable Object value) {
 
 					valueMap.put(field, value);
 					return FieldAppender.this.build();

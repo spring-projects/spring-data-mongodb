@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
@@ -85,38 +86,27 @@ class DefaultScriptOperations implements ScriptOperations {
 	}
 
 	@Override
-	public Object execute(ExecutableMongoScript script, Object... args) {
+	public @Nullable Object execute(ExecutableMongoScript script, Object... args) {
 
 		Assert.notNull(script, "Script must not be null");
 
-		return mongoOperations.execute(new DbCallback<Object>() {
+		return mongoOperations.execute(db -> {
 
-			@Override
-			public Object doInDB(MongoDatabase db) throws MongoException, DataAccessException {
-
-				Document command = new Document("$eval", script.getCode());
-				BasicDBList commandArgs = new BasicDBList();
-				commandArgs.addAll(Arrays.asList(convertScriptArgs(false, args)));
-				command.append("args", commandArgs);
-				return db.runCommand(command).get("retval");
-			}
-		});
+            Document command = new Document("$eval", script.getCode());
+            BasicDBList commandArgs = new BasicDBList();
+            commandArgs.addAll(Arrays.asList(convertScriptArgs(false, args)));
+            command.append("args", commandArgs);
+            return db.runCommand(command).get("retval");
+        });
 	}
 
 	@Override
-	public Object call(String scriptName, Object... args) {
+	public @Nullable Object call(String scriptName, Object... args) {
 
 		Assert.hasText(scriptName, "ScriptName must not be null or empty");
 
-		return mongoOperations.execute(new DbCallback<Object>() {
-
-			@Override
-			public Object doInDB(MongoDatabase db) throws MongoException, DataAccessException {
-
-				return db.runCommand(new Document("eval", String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args))))
-						.get("retval");
-			}
-		});
+		return mongoOperations.execute(db -> db.runCommand(new Document("eval", String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args))))
+                .get("retval"));
 	}
 
 	@Override

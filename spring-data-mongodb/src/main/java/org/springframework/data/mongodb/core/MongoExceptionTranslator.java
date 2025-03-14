@@ -73,6 +73,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	}
 
 	@Nullable
+	@SuppressWarnings("NullAway")
 	DataAccessException doTranslateException(RuntimeException ex) {
 
 		// Check for well-known MongoException subclasses.

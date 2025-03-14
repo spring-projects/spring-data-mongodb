@@ -150,10 +150,12 @@ public class ScriptOperators {
 			return get(Fields.ARGS.toString());
 		}
 
+		@Nullable
 		String getBody() {
 			return get(Fields.BODY.toString());
 		}
 
+		@Nullable
 		String getLang() {
 			return get(Fields.LANG.toString());
 		}
@@ -253,7 +255,11 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			default AccumulatorAccumulateBuilder init(Function function) {
-				return init(function.getBody()).initArgs(function.getArgs());
+
+				Assert.notNull(function.getBody(), "Function body must not be null");
+
+				List<Object> args = function.getArgs();
+				return init(function.getBody()).initArgs(args != null ? args : List.of());
 			}
 
 			/**
@@ -320,7 +326,11 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			default AccumulatorMergeBuilder accumulate(Function function) {
-				return accumulate(function.getBody()).accumulateArgs(function.getArgs());
+
+				Assert.notNull(function.getBody(), "Function body must not be null");
+
+				List<Object> args = function.getArgs();
+				return accumulate(function.getBody()).accumulateArgs(args != null ? args : List.of());
 			}
 
 			/**
@@ -414,12 +424,12 @@ public class ScriptOperators {
 				implements AccumulatorInitBuilder, AccumulatorInitArgsBuilder, AccumulatorAccumulateBuilder,
 				AccumulatorAccumulateArgsBuilder, AccumulatorMergeBuilder, AccumulatorFinalizeBuilder {
 
-			private List<Object> initArgs;
-			private String initFunction;
-			private List<Object> accumulateArgs;
-			private String accumulateFunction;
-			private String mergeFunction;
-			private String finalizeFunction;
+			private @Nullable List<Object> initArgs;
+			private @Nullable String initFunction;
+			private @Nullable List<Object> accumulateArgs;
+			private @Nullable String accumulateFunction;
+			private @Nullable String mergeFunction;
+			private @Nullable String finalizeFunction;
 			private String lang = "js";
 
 			/**

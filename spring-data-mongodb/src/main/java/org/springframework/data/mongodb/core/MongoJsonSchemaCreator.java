@@ -139,8 +139,7 @@ public interface MongoJsonSchemaCreator {
 		 * @return {@literal null} if the property is not an entity. It is nevertheless recommend to check
 		 *         {@link PersistentProperty#isEntity()} first.
 		 */
-		@Nullable
-		<T> MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property);
+		<T> @Nullable MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property);
 
 	}
 
@@ -162,6 +161,7 @@ public interface MongoJsonSchemaCreator {
 				return extracted(context.getProperty(), context);
 			}
 
+			@SuppressWarnings("NullAway")
 			private boolean extracted(MongoPersistentProperty property, JsonSchemaPropertyContext context) {
 				if (property.isAnnotationPresent(Encrypted.class)) {
 					return true;

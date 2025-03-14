@@ -145,7 +145,8 @@ public class MapReduceResults<T> implements Iterable<T> {
 			return null;
 		}
 
-		return resultField instanceof Document document ? document.get("collection").toString()
+		return resultField instanceof Document document && document.containsKey("collection")
+				? document.get("collection").toString()
 				: resultField.toString();
 	}
 }

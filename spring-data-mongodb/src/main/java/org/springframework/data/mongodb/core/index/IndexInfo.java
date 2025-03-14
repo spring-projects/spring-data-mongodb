@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Index information for a MongoDB index.
@@ -89,7 +90,7 @@ public class IndexInfo {
 	 */
 	public static IndexInfo indexInfoOf(Document sourceDocument) {
 
-		Document keyDbObject = (Document) sourceDocument.get("key");
+		Document keyDbObject = sourceDocument.get("key", new Document());
 		int numberOfElements = keyDbObject.keySet().size();
 
 		List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
@@ -105,9 +106,10 @@ public class IndexInfo {
 			} else if ("text".equals(value)) {
 
 				Document weights = (Document) sourceDocument.get("weights");
-
-				for (String fieldName : weights.keySet()) {
-					indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
+				if(weights != null) {
+					for (String fieldName : weights.keySet()) {
+						indexFields.add(IndexField.text(fieldName, Float.valueOf(weights.get(fieldName).toString())));
+					}
 				}
 
 			} else {
@@ -129,7 +131,7 @@ public class IndexInfo {
 			}
 		}
 
-		String name = sourceDocument.get("name").toString();
+		String name = ObjectUtils.nullSafeToString(sourceDocument.get("name"));
 
 		boolean unique = sourceDocument.get("unique", false);
 		boolean sparse = sourceDocument.get("sparse", false);

@@ -60,7 +60,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		private final Query query;
 		@Nullable private final String collection;
 
-		public ExecutableRemoveSupport(MongoTemplate template, Class<T> domainType, Query query, String collection) {
+		public ExecutableRemoveSupport(MongoTemplate template, Class<T> domainType, Query query, @Nullable String collection) {
 			this.template = template;
 			this.domainType = domainType;
 			this.query = query;

@@ -69,7 +69,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	private long skip;
 	private Limit limit = Limit.unlimited();
 
-	private KeysetScrollPosition keysetScrollPosition;
+	private @Nullable KeysetScrollPosition keysetScrollPosition;
 	private @Nullable ReadConcern readConcern;
 	private @Nullable ReadPreference readPreference;
 
@@ -243,7 +243,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	@Override
-	public ReadConcern getReadConcern() {
+	public @Nullable ReadConcern getReadConcern() {
 		return this.readConcern;
 	}
 
@@ -253,7 +253,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	}
 
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 
 		if (readPreference == null) {
 			return getMeta().getFlags().contains(CursorOption.SECONDARY_READS) ? ReadPreference.primaryPreferred() : null;

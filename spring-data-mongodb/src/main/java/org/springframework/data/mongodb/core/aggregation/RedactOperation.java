@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
@@ -94,9 +95,9 @@ public class RedactOperation implements AggregationOperation {
 	 */
 	public static class RedactOperationBuilder {
 
-		private Object when;
-		private Object then;
-		private Object otherwise;
+		private @Nullable Object when;
+		private @Nullable Object then;
+		private @Nullable Object otherwise;
 
 		private RedactOperationBuilder() {
 
@@ -221,6 +222,10 @@ public class RedactOperation implements AggregationOperation {
 		 * @return new instance of {@link RedactOperation}.
 		 */
 		public RedactOperation build() {
+
+			Assert.notNull(then, "Then must be set first");
+			Assert.notNull(otherwise, "Otherwise must be set first");
+
 			return new RedactOperation(when().then(then).otherwise(otherwise));
 		}
 

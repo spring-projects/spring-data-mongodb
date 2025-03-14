@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -76,6 +77,7 @@ import org.w3c.dom.Element;
  * @author Zied Yaich
  * @author Tomasz Forys
  */
+@NullUnmarked
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	private static final String BASE_PACKAGE = "base-package";

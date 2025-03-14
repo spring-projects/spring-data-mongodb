@@ -113,7 +113,7 @@ public class ReactiveMongoDatabaseUtils {
 	 * @param factory the {@link ReactiveMongoDatabaseFactory} to get the {@link MongoDatabase} from.
 	 * @return the {@link MongoDatabase} that is potentially associated with a transactional {@link ClientSession}.
 	 */
-	public static Mono<MongoDatabase> getDatabase(String dbName, ReactiveMongoDatabaseFactory factory) {
+	public static Mono<MongoDatabase> getDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory) {
 		return doGetMongoDatabase(dbName, factory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 	}
 

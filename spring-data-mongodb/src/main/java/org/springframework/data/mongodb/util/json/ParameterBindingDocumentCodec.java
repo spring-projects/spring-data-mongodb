@@ -40,6 +40,7 @@ import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
@@ -65,6 +66,7 @@ import org.springframework.util.StringUtils;
  * @author Rocco Lagrotteria
  * @since 2.2
  */
+@NullUnmarked
 public class ParameterBindingDocumentCodec implements CollectibleCodec<Document> {
 
 	private static final String ID_FIELD_NAME = FieldName.ID.name();

@@ -105,7 +105,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 			return new RequestOptions() {
 
 				@Override
-				public String getCollectionName() {
+				public @Nullable String getCollectionName() {
 					return null;
 				}
 

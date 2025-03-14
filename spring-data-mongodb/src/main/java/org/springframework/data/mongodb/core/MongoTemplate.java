@@ -338,7 +338,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 		return this.readPreference;
 	}
 

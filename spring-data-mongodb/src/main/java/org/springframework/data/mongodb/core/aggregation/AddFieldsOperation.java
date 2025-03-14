@@ -139,7 +139,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 			return new ValueAppender() {
 
 				@Override
-				public AddFieldsOperationBuilder withValue(Object value) {
+				public AddFieldsOperationBuilder withValue(@Nullable Object value) {
 
 					valueMap.put(field, value);
 					return AddFieldsOperationBuilder.this;

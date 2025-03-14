@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.BeanNames.*;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -42,6 +43,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
+@NullUnmarked
 public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
 	private static boolean PROJECT_REACTOR_AVAILABLE = ClassUtils.isPresent("reactor.core.publisher.Mono",

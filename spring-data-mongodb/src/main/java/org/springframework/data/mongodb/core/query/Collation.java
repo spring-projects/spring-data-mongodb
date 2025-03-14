@@ -21,6 +21,7 @@ import java.util.Optional;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -370,6 +371,7 @@ public class Collation {
 	 *
 	 * @return the native MongoDB {@link Document} representation of the {@link Collation}.
 	 */
+	@SuppressWarnings("NullAway")
 	public Document toDocument() {
 		return map(toMongoDocumentConverter());
 	}
@@ -379,7 +381,7 @@ public class Collation {
 	 *
 	 * @return he native MongoDB representation of the {@link Collation}.
 	 */
-	public com.mongodb.client.model.Collation toMongoCollation() {
+	public com.mongodb.client.model.@Nullable Collation toMongoCollation() {
 		return map(toMongoCollationConverter());
 	}
 
@@ -390,7 +392,7 @@ public class Collation {
 	 * @param <R>
 	 * @return the converted result.
 	 */
-	public <R> R map(Converter<? super Collation, ? extends R> mapper) {
+	public <R> @Nullable R map(Converter<? super Collation, ? extends R> mapper) {
 		return mapper.convert(this);
 	}
 

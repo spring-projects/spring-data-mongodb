@@ -125,7 +125,7 @@ public final class ReferenceLookupDelegate {
 
 	@Nullable
 	private Iterable<Document> retrieveRawDocuments(MongoPersistentProperty property, Object source,
-			LookupFunction lookupFunction, Object value) {
+			LookupFunction lookupFunction, @Nullable Object value) {
 
 		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
 		if (filter instanceof NoResultsFilter) {
@@ -136,7 +136,8 @@ public final class ReferenceLookupDelegate {
 		return lookupFunction.apply(filter, referenceCollection);
 	}
 
-	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,
+	@SuppressWarnings("NullAway")
+	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, @Nullable Object value,
 			SpELContext spELContext) {
 
 		// Use the first value as a reference for others in case of collection like
@@ -194,7 +195,7 @@ public final class ReferenceLookupDelegate {
 	 * @return can be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<T> defaultValue) {
+	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<@Nullable T> defaultValue) {
 
 		if (!StringUtils.hasText(value)) {
 			return defaultValue.get();
@@ -219,7 +220,7 @@ public final class ReferenceLookupDelegate {
 		return evaluated != null ? evaluated : defaultValue.get();
 	}
 
-	ParameterBindingContext bindingContext(MongoPersistentProperty property, Object source, SpELContext spELContext) {
+	ParameterBindingContext bindingContext(MongoPersistentProperty property, @Nullable Object source, SpELContext spELContext) {
 
 		ValueProvider valueProvider = valueProviderFor(DocumentReferenceSource.getTargetSource(source));
 
@@ -227,7 +228,7 @@ public final class ReferenceLookupDelegate {
 				() -> evaluationContextFor(property, source, spELContext));
 	}
 
-	ValueProvider valueProviderFor(Object source) {
+	ValueProvider valueProviderFor(@Nullable Object source) {
 
 		return index -> {
 			if (source instanceof Document document) {
@@ -237,7 +238,7 @@ public final class ReferenceLookupDelegate {
 		};
 	}
 
-	EvaluationContext evaluationContextFor(MongoPersistentProperty property, Object source, SpELContext spELContext) {
+	EvaluationContext evaluationContextFor(MongoPersistentProperty property, @Nullable Object source, SpELContext spELContext) {
 
 		Object target = source instanceof DocumentReferenceSource documentReferenceSource
 				? documentReferenceSource.getTargetSource()
@@ -263,7 +264,7 @@ public final class ReferenceLookupDelegate {
 	 * @param spELContext must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked","NullAway"})
 	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
 		DocumentReference documentReference = property.isDocumentReference() ? property.getDocumentReference()

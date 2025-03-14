@@ -89,6 +89,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public Mono<String> ensureIndex(IndexDefinition indexDefinition) {
 
 		return mongoOperations.execute(collectionName, collection -> {
@@ -163,6 +164,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 				queryMapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
 	}
 
+	@SuppressWarnings("NullAway")
 	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops,
 			@Nullable MongoPersistentEntity<?> entity) {
 

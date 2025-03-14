@@ -324,6 +324,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		public LookupOperation as(String name) {
 
 			Assert.hasText(name, "'As' must not be null or empty");
+			Assert.notNull(from, "From must be set first");
 			as = new ExposedField(Fields.field(name), true);
 			return new LookupOperation(from, localField, foreignField, let, pipeline, as);
 		}

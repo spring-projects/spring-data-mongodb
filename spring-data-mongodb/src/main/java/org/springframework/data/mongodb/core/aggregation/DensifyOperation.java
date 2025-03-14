@@ -60,6 +60,9 @@ public class DensifyOperation implements AggregationOperation {
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
+		Assert.notNull(field, "Field must be set first");
+		Assert.notNull(range, "Range must be set first");
+
 		Document densify = new Document();
 		densify.put("field", context.getReference(field).getRaw());
 		if (!ObjectUtils.isEmpty(partitionBy)) {
@@ -149,9 +152,9 @@ public class DensifyOperation implements AggregationOperation {
 	public static abstract class DensifyRange implements Range {
 
 		private @Nullable DensifyUnit unit;
-		private Number step;
+		private @Nullable Number step;
 
-		public DensifyRange(DensifyUnit unit) {
+		public DensifyRange(@Nullable DensifyUnit unit) {
 			this.unit = unit;
 		}
 

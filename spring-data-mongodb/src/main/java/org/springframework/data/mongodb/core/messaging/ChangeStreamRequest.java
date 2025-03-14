@@ -215,12 +215,12 @@ public class ChangeStreamRequest<T>
 		}
 
 		@Override
-		public String getCollectionName() {
+		public @Nullable String getCollectionName() {
 			return collectionName;
 		}
 
 		@Override
-		public String getDatabaseName() {
+		public @Nullable String getDatabaseName() {
 			return databaseName;
 		}
 

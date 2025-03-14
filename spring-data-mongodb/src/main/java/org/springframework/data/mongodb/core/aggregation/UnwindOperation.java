@@ -201,6 +201,8 @@ public class UnwindOperation
 		@Override
 		public UnwindOperation preserveNullAndEmptyArrays() {
 
+			Assert.notNull(field, "Path needs to be set first");
+
 			if (arrayIndex != null) {
 				return new UnwindOperation(field, arrayIndex, true);
 			}
@@ -210,6 +212,8 @@ public class UnwindOperation
 
 		@Override
 		public UnwindOperation skipNullAndEmptyArrays() {
+
+			Assert.notNull(field, "Path needs to be set first");
 
 			if (arrayIndex != null) {
 				return new UnwindOperation(field, arrayIndex, false);

@@ -89,7 +89,7 @@ public class ChangeStreamEvent<T> {
 	 */
 	public @Nullable Instant getTimestamp() {
 
-		return getBsonTimestamp() != null ? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
+		return getBsonTimestamp() != null && raw != null ? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
 				: null;
 	}
 
@@ -183,6 +183,7 @@ public class ChangeStreamEvent<T> {
 		return (T) doGetConverted(fullDocument, CONVERTED_FULL_DOCUMENT_UPDATER);
 	}
 
+	@SuppressWarnings("NullAway")
 	private Object doGetConverted(Document fullDocument, AtomicReferenceFieldUpdater<ChangeStreamEvent, Object> updater) {
 
 		Object result = updater.get(this);

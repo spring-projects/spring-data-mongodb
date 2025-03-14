@@ -457,6 +457,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Document toDocument(AggregationOperationContext context) {
 
 			Document document = new Document("$set", value);

@@ -1094,7 +1094,7 @@ public class Criteria implements CriteriaDefinition {
 
 		if (Collection.class.isAssignableFrom(left.getClass())) {
 
-			if (!Collection.class.isAssignableFrom(right.getClass())) {
+			if (right == null || !Collection.class.isAssignableFrom(right.getClass())) {
 				return false;
 			}
 

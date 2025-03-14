@@ -52,6 +52,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
+	@SuppressWarnings("rawtypes")
 	static class ExecutableUpdateSupport<T>
 			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
 			FindAndReplaceWithOptions<T>, TerminatingFindAndReplace<T>, FindAndReplaceWithProjection<T> {
@@ -66,9 +67,9 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		@Nullable private final Object replacement;
 		private final Class<T> targetType;
 
-		ExecutableUpdateSupport(MongoTemplate template, Class domainType, Query query, UpdateDefinition update,
-				String collection, FindAndModifyOptions findAndModifyOptions, FindAndReplaceOptions findAndReplaceOptions,
-				Object replacement, Class<T> targetType) {
+		ExecutableUpdateSupport(MongoTemplate template, Class domainType, Query query, @Nullable UpdateDefinition update,
+				@Nullable String collection, @Nullable FindAndModifyOptions findAndModifyOptions, @Nullable FindAndReplaceOptions findAndReplaceOptions,
+				@Nullable Object replacement, Class<T> targetType) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -171,6 +172,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public @Nullable T findAndModifyValue() {
 
 			return template.findAndModify(query, update,
@@ -179,6 +181,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings({"unchecked", "NullAway"})
 		public @Nullable T findAndReplaceValue() {
 
 			return (T) template.findAndReplace(query, replacement,
@@ -187,6 +190,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings({"unchecked", "NullAway"})
 		public UpdateResult replaceFirst() {
 
 			if (replacement != null) {
@@ -198,6 +202,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
+		@SuppressWarnings("NullAway")
 		private UpdateResult doUpdate(boolean multi, boolean upsert) {
 			return template.doUpdate(getCollectionName(), query, update, domainType, upsert, multi);
 		}

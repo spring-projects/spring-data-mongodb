@@ -47,6 +47,7 @@ class EntityLifecycleEventDelegate {
 	 *
 	 * @param event the application event.
 	 */
+	@SuppressWarnings("NullAway")
 	public void publishEvent(Object event) {
 
 		if (canPublishEvent()) {

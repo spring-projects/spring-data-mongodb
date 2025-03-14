@@ -114,7 +114,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	}
 
 	private DefaultMongoTypeMapper(@Nullable String typeKey, TypeAliasAccessor<Bson> accessor,
-			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
+			@Nullable MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
 			List<? extends TypeInformationMapper> mappers) {
 
 		super(accessor, mappingContext, mappers);

@@ -133,7 +133,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	}
 
 	@Override
-	public Object[] getValues() {
+	public @Nullable Object @Nullable[] getValues() {
 		return super.getValues();
 	}
 

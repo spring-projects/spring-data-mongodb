@@ -141,7 +141,8 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	}
 
 	@Override
-	public Object encrypt(Object value, EncryptionContext context) {
+	@SuppressWarnings("NullAway")
+	public Object encrypt(@Nullable Object value, EncryptionContext context) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Encrypting %s.%s.", getProperty(context).getOwner().getName(),

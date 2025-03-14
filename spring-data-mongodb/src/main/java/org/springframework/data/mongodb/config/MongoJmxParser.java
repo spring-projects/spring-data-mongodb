@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
@@ -33,6 +34,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
+@NullUnmarked
 public class MongoJmxParser implements BeanDefinitionParser {
 
 	public BeanDefinition parse(Element element, ParserContext parserContext) {

@@ -242,10 +242,12 @@ public class ConvertOperators {
 			return DegreesToRadians.degreesToRadians(valueObject());
 		}
 
+		@SuppressWarnings("NullAway")
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object valueObject() {
 			return usesFieldRef() ? Fields.field(fieldReference) : expression;
 		}

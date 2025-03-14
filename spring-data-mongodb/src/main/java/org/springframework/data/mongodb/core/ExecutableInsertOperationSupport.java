@@ -59,7 +59,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		@Nullable private final String collection;
 		@Nullable private final BulkMode bulkMode;
 
-		ExecutableInsertSupport(MongoTemplate template, Class<T> domainType, String collection, BulkMode bulkMode) {
+		ExecutableInsertSupport(MongoTemplate template, Class<T> domainType, @Nullable String collection, @Nullable BulkMode bulkMode) {
 
 			this.template = template;
 			this.domainType = domainType;

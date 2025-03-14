@@ -47,6 +47,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public String getFieldName() {
 
 		if (!context.getProperty().isUnwrapped()) {
@@ -57,6 +58,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public boolean hasExplicitFieldName() {
 		return delegate.hasExplicitFieldName()
 				|| !ObjectUtils.isEmpty(context.getProperty().findAnnotation(Unwrapped.class).prefix());
@@ -143,6 +145,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public MongoField getMongoField() {
 
 		if (!context.getProperty().isUnwrapped()) {
@@ -333,7 +336,7 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	public TypeInformation<?> getAssociationTargetTypeInformation() {
+	public @Nullable TypeInformation<?> getAssociationTargetTypeInformation() {
 		return delegate.getAssociationTargetTypeInformation();
 	}
 

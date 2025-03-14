@@ -67,6 +67,7 @@ public class SortByCountOperation implements AggregationOperation {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public Document toDocument(AggregationOperationContext context) {
 
 		return new Document(getOperator(), groupByExpression == null ? context.getReference(groupByField).toString()

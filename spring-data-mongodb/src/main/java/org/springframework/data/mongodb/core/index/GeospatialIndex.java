@@ -41,7 +41,7 @@ public class GeospatialIndex implements IndexDefinition {
 	private @Nullable Integer max;
 	private @Nullable Integer bits;
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
-	private Double bucketSize = MongoClientVersion.isVersion5orNewer() ? null : 1.0;
+	private @Nullable Double bucketSize = MongoClientVersion.isVersion5orNewer() ? null : 1.0;
 	private @Nullable String additionalField;
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();

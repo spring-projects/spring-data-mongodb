@@ -57,16 +57,16 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		private final ReactiveMongoTemplate template;
 		private final Class<?> domainType;
 		private final Query query;
-		private final org.springframework.data.mongodb.core.query.UpdateDefinition update;
-		@Nullable private final String collection;
-		@Nullable private final FindAndModifyOptions findAndModifyOptions;
-		@Nullable private final FindAndReplaceOptions findAndReplaceOptions;
-		@Nullable private final Object replacement;
+		private final org.springframework.data.mongodb.core.query.@Nullable UpdateDefinition update;
+		private final @Nullable String collection;
+		private final @Nullable FindAndModifyOptions findAndModifyOptions;
+		private final @Nullable FindAndReplaceOptions findAndReplaceOptions;
+		private final @Nullable Object replacement;
 		private final Class<T> targetType;
 
-		ReactiveUpdateSupport(ReactiveMongoTemplate template, Class<?> domainType, Query query, UpdateDefinition update,
-				String collection, FindAndModifyOptions findAndModifyOptions, FindAndReplaceOptions findAndReplaceOptions,
-				Object replacement, Class<T> targetType) {
+		ReactiveUpdateSupport(ReactiveMongoTemplate template, Class<?> domainType, Query query, @Nullable UpdateDefinition update,
+			@Nullable String collection, @Nullable FindAndModifyOptions findAndModifyOptions, @Nullable FindAndReplaceOptions findAndReplaceOptions,
+			@Nullable Object replacement, Class<T> targetType) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -108,6 +108,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Mono<T> findAndModify() {
 
 			String collectionName = getCollectionName();
@@ -118,7 +119,11 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings({"unchecked","rawtypes"})
 		public Mono<T> findAndReplace() {
+
+			Assert.notNull(replacement, "Replacement must be set first");
+
 			return template.findAndReplace(query, replacement,
 					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.none(), (Class) domainType,
 					getCollectionName(), targetType);
@@ -186,6 +191,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		public Mono <UpdateResult> replaceFirst() {
 
 			if (replacement != null) {
@@ -197,6 +203,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions != null ? findAndReplaceOptions : ReplaceOptions.none(), getCollectionName());
 		}
 
+		@SuppressWarnings("NullAway")
 		private Mono<UpdateResult> doUpdate(boolean multi, boolean upsert) {
 			return template.doUpdate(getCollectionName(), query, update, domainType, upsert, multi);
 		}

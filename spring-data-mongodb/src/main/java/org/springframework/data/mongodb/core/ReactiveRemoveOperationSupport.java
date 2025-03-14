@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -54,9 +55,9 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 		private final ReactiveMongoTemplate template;
 		private final Class<T> domainType;
 		private final Query query;
-		private final String collection;
+		private final @Nullable String collection;
 
-		ReactiveRemoveSupport(ReactiveMongoTemplate template, Class<T> domainType, Query query, String collection) {
+		ReactiveRemoveSupport(ReactiveMongoTemplate template, Class<T> domainType, Query query, @Nullable String collection) {
 
 			this.template = template;
 			this.domainType = domainType;

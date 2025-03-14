@@ -34,11 +34,11 @@ import com.mongodb.MongoClientSettings;
 public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncryptionSettings> {
 
 	private boolean bypassAutoEncryption;
-	private String keyVaultNamespace;
-	private Map<String, Object> extraOptions;
-	private MongoClientSettings keyVaultClientSettings;
-	private Map<String, Map<String, Object>> kmsProviders;
-	private Map<String, BsonDocument> schemaMap;
+	private @Nullable String keyVaultNamespace;
+	private @Nullable Map<String, Object> extraOptions;
+	private @Nullable MongoClientSettings keyVaultClientSettings;
+	private @Nullable Map<String, Map<String, Object>> kmsProviders;
+	private @Nullable Map<String, BsonDocument> schemaMap;
 
 	/**
 	 * @param bypassAutoEncryption
@@ -90,6 +90,8 @@ public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncry
 
 	@Override
 	public AutoEncryptionSettings getObject() {
+
+
 
 		return AutoEncryptionSettings.builder() //
 				.bypassAutoEncryption(bypassAutoEncryption) //

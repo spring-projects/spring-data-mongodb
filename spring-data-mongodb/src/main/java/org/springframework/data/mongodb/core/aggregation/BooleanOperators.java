@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -77,8 +78,8 @@ public class BooleanOperators {
 	 */
 	public static class BooleanOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
 
 		/**
 		 * Creates new {@link BooleanOperatorFactory} for given {@literal fieldReference}.
@@ -130,6 +131,7 @@ public class BooleanOperators {
 			return createAnd().andField(fieldReference);
 		}
 
+		@SuppressWarnings("NullAway")
 		private And createAnd() {
 			return usesFieldRef() ? And.and(Fields.field(fieldReference)) : And.and(expression);
 		}
@@ -160,6 +162,7 @@ public class BooleanOperators {
 			return createOr().orField(fieldReference);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Or createOr() {
 			return usesFieldRef() ? Or.or(Fields.field(fieldReference)) : Or.or(expression);
 		}
@@ -169,6 +172,7 @@ public class BooleanOperators {
 		 *
 		 * @return new instance of {@link Not}.
 		 */
+		@SuppressWarnings("NullAway")
 		public Not not() {
 			return usesFieldRef() ? Not.not(fieldReference) : Not.not(expression);
 		}

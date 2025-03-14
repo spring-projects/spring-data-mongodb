@@ -402,7 +402,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				return new Document(getExposedField().getName(), toMongoExpression(context, expression, params));
 			}
 
-			protected static Object toMongoExpression(AggregationOperationContext context, String expression,
+			protected static @Nullable Object toMongoExpression(AggregationOperationContext context, String expression,
 					Object[] params) {
 				return TRANSFORMER.transform(expression, context, params);
 			}
