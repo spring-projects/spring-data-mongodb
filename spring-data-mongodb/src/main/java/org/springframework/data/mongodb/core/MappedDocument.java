@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -70,7 +71,7 @@ public class MappedDocument {
 		return hasId() && document.get(ID_FIELD) != null;
 	}
 
-	public Object getId() {
+	public @Nullable Object getId() {
 		return document.get(ID_FIELD);
 	}
 
@@ -86,7 +87,7 @@ public class MappedDocument {
 		return new Document(ID_FIELD, document.get(ID_FIELD));
 	}
 
-	public Object get(String key) {
+	public @Nullable Object get(String key) {
 		return document.get(key);
 	}
 

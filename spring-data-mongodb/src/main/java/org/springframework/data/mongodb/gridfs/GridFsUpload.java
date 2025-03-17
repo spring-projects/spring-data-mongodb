@@ -70,6 +70,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public InputStream getContent() {
 		return dataStream.orElse(InputStream.nullInputStream());
 	}
@@ -99,7 +100,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		private @Nullable Object id;
 		private @Nullable Lazy<InputStream> dataStream;
 		private @Nullable String filename;
-		private @Nullable Options options = Options.none();
+		private Options options = Options.none();
 
 		private GridFsUploadBuilder() {}
 
@@ -225,6 +226,11 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		}
 
 		public GridFsUpload<T> build() {
+
+			Assert.notNull(dataStream, "DataStream must be set first");
+			Assert.notNull(filename, "Filename must be set first");
+			Assert.notNull(options, "Options must be set first");
+
 			return new GridFsUpload(id, dataStream, filename, options);
 		}
 	}

@@ -41,7 +41,7 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @return the maximum distance to apply to the geo query or {@literal null} if there's no {@link Distance} parameter
 	 *         at all or the given value for it was {@literal null}.
 	 */
-	Range<Distance> getDistanceRange();
+	@Nullable Range<Distance> getDistanceRange();
 
 	/**
 	 * Returns the {@link Point} to use for a geo-near query.
@@ -75,7 +75,7 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @return
 	 * @since 1.8
 	 */
-	Object[] getValues();
+	Object @Nullable[] getValues();
 
 	/**
 	 * Returns the {@link Update} to be used for an update execution.

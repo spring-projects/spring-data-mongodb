@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.mongodb.MongoException;
 
@@ -128,7 +130,9 @@ public final class MongoDbErrorCodes {
 		clientSessionCodes.put(263, "OperationNotSupportedInTransaction");
 		clientSessionCodes.put(264, "TooManyLogicalSessions");
 
-		errorCodes = new HashMap<>(
+		transactionCodes = new HashMap<>(0);
+
+ 		errorCodes = new HashMap<>(
 				dataAccessResourceFailureCodes.size() + dataIntegrityViolationCodes.size() + duplicateKeyCodes.size()
 						+ invalidDataAccessApiUsageException.size() + permissionDeniedCodes.size() + clientSessionCodes.size(),
 				1f);

@@ -127,7 +127,7 @@ public class BsonUtils {
 	 * @return
 	 * @since 3.2.5
 	 */
-	public static Document asDocument(Bson bson) {
+	public static Document asDocument(@Nullable Bson bson) {
 		return asDocument(bson, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
@@ -141,7 +141,7 @@ public class BsonUtils {
 	 * @return never {@literal null}.
 	 * @since 4.0
 	 */
-	public static Document asDocument(Bson bson, CodecRegistry codecRegistry) {
+	public static Document asDocument(@Nullable Bson bson, CodecRegistry codecRegistry) {
 
 		Map<String, Object> map = asMap(bson, codecRegistry);
 
@@ -404,7 +404,9 @@ public class BsonUtils {
 			BsonCapturingWriter writer = new BsonCapturingWriter(value.getClass());
 			codec.encode(writer, value,
 					ObjectUtils.isArray(value) || value instanceof Collection<?> ? EncoderContext.builder().build() : null);
-			return writer.getCapturedValue();
+			Object captured = writer.getCapturedValue();
+			return captured instanceof BsonValue bv ? bv : BsonNull.VALUE;
+
 		} catch (CodecConfigurationException e) {
 			throw new IllegalArgumentException(
 					String.format("Unable to convert %s to BsonValue.", source != null ? source.getClass().getName() : "null"));
@@ -547,7 +549,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 4.2
 	 */
-	public static Object resolveValue(Bson bson, FieldName fieldName) {
+	public static @Nullable Object resolveValue(Bson bson, FieldName fieldName) {
 		return resolveValue(asMap(bson), fieldName);
 	}
 
@@ -562,8 +564,7 @@ public class BsonUtils {
 	 * @return can be {@literal null}.
 	 * @since 4.2
 	 */
-	@Nullable
-	public static Object resolveValue(Map<String, Object> source, FieldName fieldName) {
+	public static @Nullable Object resolveValue(Map<String, Object> source, FieldName fieldName) {
 
 		if (fieldName.isKey()) {
 			return source.get(fieldName.name());
@@ -648,9 +649,9 @@ public class BsonUtils {
 	 * @param source can be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
 	@SuppressWarnings("unchecked")
-	private static Map<String, Object> getAsMap(Object source) {
+	@Contract("null -> null")
+	private static @Nullable Map<String, Object> getAsMap(@Nullable Object source) {
 
 		if (source instanceof Document document) {
 			return document;

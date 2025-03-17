@@ -53,7 +53,12 @@ class ExplicitEncryptionContext implements EncryptionContext {
 
 	@Override
 	public EvaluationContext getEvaluationContext(@Nullable Object source) {
-		return conversionContext.getSpELContext().getEvaluationContext(source);
+
+		if(conversionContext.getSpELContext() != null) {
+			return conversionContext.getSpELContext().getEvaluationContext(source);
+		}
+
+		throw new IllegalStateException("SpEL context not present");
 	}
 
 	@Override

@@ -121,7 +121,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
 	@Override
-	public Object[] getValues() {
+	public Object @Nullable[] getValues() {
 		return this.values;
 	}
 

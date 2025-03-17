@@ -167,7 +167,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	}
 
 	@Override
-	public ClassLoader getClassLoader() {
+	public @Nullable ClassLoader getClassLoader() {
 		return null;
 	}
 

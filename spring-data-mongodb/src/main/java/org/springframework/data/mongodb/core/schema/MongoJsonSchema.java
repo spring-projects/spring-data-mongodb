@@ -212,7 +212,7 @@ public interface MongoJsonSchema {
 			/**
 			 * @return the name of the currently processed element
 			 */
-			String currentElement();
+			@Nullable String currentElement();
 
 			/**
 			 * @return the path leading to the currently processed element in dot {@literal '.'} notation.
@@ -285,11 +285,11 @@ public interface MongoJsonSchema {
 			 * @param value the value to apply.
 			 * @return
 			 */
-			static Resolution ofValue(String key, Object value) {
+			static Resolution ofValue(@Nullable String key, Object value) {
 
 				return new Resolution() {
 					@Override
-					public String getKey() {
+					public @Nullable String getKey() {
 						return key;
 					}
 

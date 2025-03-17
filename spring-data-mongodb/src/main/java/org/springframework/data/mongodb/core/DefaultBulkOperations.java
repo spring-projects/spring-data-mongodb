@@ -412,7 +412,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 			return eventPublisher == null;
 		}
 
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({"rawtypes","NullAway"})
 		public <T> T callback(Class<? extends EntityCallback> callbackType, T entity, String collectionName) {
 
 			if (skipEntityCallbacks()) {
@@ -422,7 +422,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 			return entityCallbacks.callback(callbackType, entity, collectionName);
 		}
 
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({"rawtypes","NullAway"})
 		public <T> T callback(Class<? extends EntityCallback> callbackType, T entity, Document document,
 				String collectionName) {
 
@@ -433,6 +433,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 			return entityCallbacks.callback(callbackType, entity, document, collectionName);
 		}
 
+		@SuppressWarnings("NullAway")
 		public void publishEvent(ApplicationEvent event) {
 
 			if (skipEventPublishing()) {

@@ -86,6 +86,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	protected ProjectionFactory getProjectionFactory(@Nullable ClassLoader classLoader, @Nullable BeanFactory beanFactory) {
 		return this.operations.getConverter().getProjectionFactory();
 	}
@@ -130,6 +131,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
 			ValueExpressionDelegate valueExpressionDelegate) {
 		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionDelegate));

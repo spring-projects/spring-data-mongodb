@@ -21,6 +21,7 @@ import java.net.InetSocketAddress;
 
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
 import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
@@ -67,6 +68,10 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 					.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(context.getCollectionName()));
 		}
 
+		if(context.getCommandStartedEvent() == null) {
+			throw new IllegalStateException("not command started event present");
+		}
+
 		ConnectionDescription connectionDescription = context.getCommandStartedEvent().getConnectionDescription();
 
 		if (connectionDescription != null) {
@@ -110,6 +115,8 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 
 		String collectionName = context.getCollectionName();
 		CommandStartedEvent commandStartedEvent = context.getCommandStartedEvent();
+
+		Assert.notNull(commandStartedEvent, "CommandStartedEvent must not be null");
 
 		if (ObjectUtils.isEmpty(collectionName)) {
 			return commandStartedEvent.getCommandName();

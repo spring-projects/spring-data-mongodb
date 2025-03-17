@@ -195,6 +195,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return new ResultProcessingExecution(getExecutionToWrap(accessor, operation), resultProcessing);
 	}
 
+	@SuppressWarnings("NullAway")
 	private ReactiveMongoQueryExecution getExecutionToWrap(MongoParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
@@ -334,6 +335,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @throws IllegalStateException if no update could be found.
 	 * @since 3.4
 	 */
+	@SuppressWarnings("NullAway")
 	protected Mono<UpdateDefinition> createUpdate(MongoParameterAccessor accessor) {
 
 		if (accessor.getUpdate() != null) {
@@ -425,7 +427,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		return new ValueExpressionEvaluator() {
 
 			@Override
-			public <T> T evaluate(String expressionString) {
+			public <T> @Nullable T evaluate(String expressionString) {
 				ValueExpression expression = valueExpressionDelegate.parse(expressionString);
 				ValueEvaluationContext evaluationContext = valueEvaluationContextProvider
 						.getEvaluationContext(accessor.getValues(), expression.getExpressionDependencies());

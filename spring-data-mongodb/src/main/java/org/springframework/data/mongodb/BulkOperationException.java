@@ -17,6 +17,7 @@ package org.springframework.data.mongodb;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 
 import com.mongodb.MongoBulkWriteException;
@@ -43,7 +44,7 @@ public class BulkOperationException extends DataAccessException {
 	 * @param message must not be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 */
-	public BulkOperationException(String message, MongoBulkWriteException source) {
+	public BulkOperationException(@Nullable String message, MongoBulkWriteException source) {
 
 		super(message, source);
 

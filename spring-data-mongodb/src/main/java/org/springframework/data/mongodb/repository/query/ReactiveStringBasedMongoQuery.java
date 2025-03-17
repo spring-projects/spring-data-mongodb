@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import reactor.core.publisher.Mono;
 
 import org.apache.commons.logging.Log;
@@ -45,7 +47,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private static final Log LOG = LogFactory.getLog(ReactiveStringBasedMongoQuery.class);
 
 	private final String query;
-	private final String fieldSpec;
+	private final @Nullable String fieldSpec;
 
 	private final ValueExpressionParser expressionParser;
 
@@ -62,6 +64,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param delegate must not be {@literal null}.
 	 * @since 4.4.0
 	 */
+	@SuppressWarnings("NullAway")
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ValueExpressionDelegate delegate) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, delegate);
@@ -77,7 +80,8 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param delegate must not be {@literal null}.
 	 * @since 4.4.0
 	 */
-	public ReactiveStringBasedMongoQuery(@NonNull String query, ReactiveMongoQueryMethod method,
+	@SuppressWarnings("NullAway")
+	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, ValueExpressionDelegate delegate) {
 
 		super(method, mongoOperations, delegate);
@@ -131,7 +135,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 		});
 	}
 
-	private Mono<ParameterBindingContext> getBindingContext(String json, ConvertingParameterAccessor accessor,
+	private Mono<ParameterBindingContext> getBindingContext(@Nullable String json, ConvertingParameterAccessor accessor,
 			ParameterBindingDocumentCodec codec) {
 
 		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,

@@ -171,10 +171,12 @@ interface MongoQueryExecution {
 			return isListOfGeoResult(method.getReturnType()) ? results.getContent() : results;
 		}
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked","NullAway"})
 		GeoResults<Object> doExecuteQuery(Query query) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
+			Assert.notNull(nearLocation, "[query.location] must not be null");
+
 			NearQuery nearQuery = NearQuery.near(nearLocation);
 
 			if (query != null) {
@@ -182,6 +184,8 @@ interface MongoQueryExecution {
 			}
 
 			Range<Distance> distances = accessor.getDistanceRange();
+			Assert.notNull(nearLocation, "[query.distance] must not be null");
+
 			distances.getLowerBound().getValue().ifPresent(it -> nearQuery.minDistance(it).in(it.getMetric()));
 			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));
 
@@ -267,7 +271,7 @@ interface MongoQueryExecution {
 		}
 
 		@Override
-		public Object execute(Query query) {
+		public @Nullable Object execute(Query query) {
 
 			String collectionName = method.getEntityInformation().getCollectionName();
 			Class<?> type = method.getEntityInformation().getJavaType();

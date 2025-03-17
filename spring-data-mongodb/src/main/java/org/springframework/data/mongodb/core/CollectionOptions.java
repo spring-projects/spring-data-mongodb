@@ -184,7 +184,7 @@ public class CollectionOptions {
 	 * @since 2.1
 	 */
 	public CollectionOptions schema(@Nullable MongoJsonSchema schema) {
-		return validator(Validator.schema(schema));
+		return validator(schema != null ? Validator.schema(schema) : null);
 	}
 
 	/**

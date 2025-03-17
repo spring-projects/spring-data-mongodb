@@ -427,12 +427,12 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 
 		@Override
-		public T oneValue() {
+		public @Nullable T oneValue() {
 			return createQuery().oneValue();
 		}
 
 		@Override
-		public T firstValue() {
+		public @Nullable T firstValue() {
 			return createQuery().firstValue();
 		}
 

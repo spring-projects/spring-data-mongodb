@@ -29,6 +29,7 @@ import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.EntityOperations.Entity;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.util.Assert;
 
 /**
  * Utilities to run scroll queries and create {@link Window} results.
@@ -48,7 +49,11 @@ class ScrollUtils {
 	 */
 	static KeysetScrollQuery createKeysetPaginationQuery(Query query, String idPropertyName) {
 
+
 		KeysetScrollPosition keyset = query.getKeyset();
+
+		Assert.notNull(keyset, "Query.keyset must not be null");
+
 		KeysetScrollDirector director = KeysetScrollDirector.of(keyset.getDirection());
 		Document sortObject = director.getSortObject(idPropertyName, query);
 		Document fieldsObject = director.getFieldsObject(query.getFieldsObject(), sortObject);
@@ -61,6 +66,9 @@ class ScrollUtils {
 
 		Document sortObject = query.getSortObject();
 		KeysetScrollPosition keyset = query.getKeyset();
+
+		Assert.notNull(keyset, "Query.keyset must not be null");
+
 		Direction direction = keyset.getDirection();
 		KeysetScrollDirector director = KeysetScrollDirector.of(direction);
 

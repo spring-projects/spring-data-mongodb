@@ -108,6 +108,7 @@ import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -474,7 +475,7 @@ public class MongoTemplate
 		return doStream(query, entityType, collectionName, entityType);
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	protected <T> Stream<T> doStream(Query query, Class<?> entityType, String collectionName, Class<T> returnType) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -507,7 +508,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	public Document executeCommand(String jsonCommand) {
 
 		Assert.hasText(jsonCommand, "JsonCommand must not be null nor empty");
@@ -516,7 +517,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	public Document executeCommand(Document command) {
 
 		Assert.notNull(command, "Command must not be null");
@@ -525,7 +526,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	public Document executeCommand(Document command, @Nullable ReadPreference readPreference) {
 
 		Assert.notNull(command, "Command must not be null");
@@ -572,7 +573,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	public <T> T execute(DbCallback<T> action) {
+	public <T> @Nullable T execute(DbCallback<T> action) {
 
 		Assert.notNull(action, "DbCallback must not be null");
 
@@ -585,14 +586,14 @@ public class MongoTemplate
 	}
 
 	@Override
-	public <T> T execute(Class<?> entityClass, CollectionCallback<T> callback) {
+	public <T> @Nullable T execute(Class<?> entityClass, CollectionCallback<T> callback) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null");
 		return execute(getCollectionName(entityClass), callback);
 	}
 
 	@Override
-	public <T> T execute(String collectionName, CollectionCallback<T> callback) {
+	public <T> @Nullable T execute(String collectionName, CollectionCallback<T> callback) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(callback, "CollectionCallback must not be null");
@@ -687,6 +688,7 @@ public class MongoTemplate
 		return doCreateView(name, source, aggregation.getAggregationPipeline(), options);
 	}
 
+	@SuppressWarnings("NullAway")
 	protected MongoCollection<Document> doCreateView(String name, String source, List<Document> pipeline,
 			@Nullable ViewOptions options) {
 
@@ -702,8 +704,9 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
-	public MongoCollection<Document> getCollection(String collectionName) {
+	@SuppressWarnings({"ConstantConditions","NullAway"})
+	@Contract("null -> fail")
+	public MongoCollection<Document> getCollection(@Nullable String collectionName) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 
@@ -716,7 +719,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	public boolean collectionExists(String collectionName) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null");
@@ -833,7 +836,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions", "NullAway"})
 	public boolean exists(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		if (query == null) {
@@ -933,7 +936,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked","NullAway"})
 	public <T> List<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
 			Class<T> resultClass) {
 
@@ -1084,7 +1087,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	public <S, T> T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
+	public <S, T> @Nullable T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
 			String collectionName, Class<T> resultType) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -1194,6 +1197,7 @@ public class MongoTemplate
 		return doEstimatedCount(CollectionPreparerDelegate.of(this), collectionName, new EstimatedDocumentCountOptions());
 	}
 
+	@SuppressWarnings("NullAway")
 	protected long doEstimatedCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			String collectionName, EstimatedDocumentCountOptions options) {
 		return execute(collectionName,
@@ -1211,6 +1215,7 @@ public class MongoTemplate
 		return doExactCount(createDelegate(query), collectionName, mappedQuery, options);
 	}
 
+	@SuppressWarnings("NullAway")
 	protected long doExactCount(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
 			Document filter, CountOptions options) {
 		return execute(collectionName, collection -> collectionPreparer.prepare(collection)
@@ -1509,7 +1514,7 @@ public class MongoTemplate
 		return maybeCallAfterSave(saved, dbDoc, collectionName);
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	protected Object insertDocument(String collectionName, Document document, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
@@ -1563,6 +1568,7 @@ public class MongoTemplate
 		return MappedDocument.toIds(documents);
 	}
 
+	@SuppressWarnings("NullAway")
 	protected Object saveDocument(String collectionName, Document dbDoc, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
@@ -1661,7 +1667,7 @@ public class MongoTemplate
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions", "NullAway"})
 	protected UpdateResult doUpdate(String collectionName, Query query, UpdateDefinition update,
 			@Nullable Class<?> entityClass, boolean upsert, boolean multi) {
 
@@ -1777,7 +1783,7 @@ public class MongoTemplate
 		return doRemove(collectionName, query, entityClass, true);
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	protected <T> DeleteResult doRemove(String collectionName, Query query, @Nullable Class<T> entityClass,
 			boolean multi) {
 
@@ -2102,6 +2108,7 @@ public class MongoTemplate
 	 * @param entityClass
 	 * @return
 	 */
+	@SuppressWarnings("NullAway")
 	protected <T> List<T> doFindAndDelete(String collectionName, Query query, Class<T> entityClass) {
 
 		List<T> result = find(query, entityClass, collectionName);
@@ -2135,7 +2142,7 @@ public class MongoTemplate
 		return doAggregate(aggregation, collectionName, outputType, context.getAggregationOperationContext());
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
 			AggregationOperationContext context) {
 
@@ -2218,7 +2225,7 @@ public class MongoTemplate
 		});
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	protected <O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType,
 			@Nullable AggregationOperationContext context) {
 
@@ -2333,7 +2340,7 @@ public class MongoTemplate
 	}
 
 	@Override
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	public Set<String> getCollectionNames() {
 		return execute(db -> {
 			Set<String> result = new LinkedHashSet<>();
@@ -2417,7 +2424,7 @@ public class MongoTemplate
 	 * @return the collection that was created
 	 * @since 3.3.3
 	 */
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions","NullAway"})
 	protected MongoCollection<Document> doCreateCollection(String collectionName,
 			CreateCollectionOptions collectionOptions) {
 
@@ -2688,8 +2695,8 @@ public class MongoTemplate
 	 * @return the List of converted objects.
 	 */
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindAndRemove(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Document sort, @Nullable Collation collation, Class<T> entityClass) {
+	protected <T> @Nullable T doFindAndRemove(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			@Nullable Document fields, @Nullable Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
@@ -2704,8 +2711,8 @@ public class MongoTemplate
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Document query,
-			Document fields, Document sort, Class<T> entityClass, UpdateDefinition update,
+	protected <T> @Nullable T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName, Document query,
+			@Nullable Document fields, @Nullable Document sort, Class<T> entityClass, UpdateDefinition update,
 			@Nullable FindAndModifyOptions options) {
 
 		if (options == null) {
@@ -2809,6 +2816,7 @@ public class MongoTemplate
 				collectionName);
 	}
 
+	@SuppressWarnings("NullAway")
 	private <S> UpdateResult doReplace(ReplaceOptions options, Class<S> entityType, String collectionName,
 			UpdateContext updateContext, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
 			Document replacement) {
@@ -3082,10 +3090,10 @@ public class MongoTemplate
 
 		private final CollectionPreparer collectionPreparer;
 		private final Document mappedQuery;
-		private final com.mongodb.client.model.Collation collation;
+		private final com.mongodb.client.model.@Nullable Collation collation;
 
 		ExistsCallback(CollectionPreparer collectionPreparer, Document mappedQuery,
-				com.mongodb.client.model.Collation collation) {
+				com.mongodb.client.model.@Nullable Collation collation) {
 
 			this.collectionPreparer = collectionPreparer;
 			this.mappedQuery = mappedQuery;
@@ -3110,12 +3118,12 @@ public class MongoTemplate
 
 		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
-		private final Document fields;
-		private final Document sort;
+		private final @Nullable Document fields;
+		private final @Nullable Document sort;
 		private final Optional<Collation> collation;
 
 		FindAndRemoveCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort, @Nullable Collation collation) {
+				@Nullable Document fields, @Nullable Document sort, @Nullable Collation collation) {
 			this.collectionPreparer = collectionPreparer;
 
 			this.query = query;
@@ -3138,14 +3146,14 @@ public class MongoTemplate
 
 		private final CollectionPreparer<MongoCollection<Document>> collectionPreparer;
 		private final Document query;
-		private final Document fields;
-		private final Document sort;
+		private final @Nullable Document fields;
+		private final @Nullable Document sort;
 		private final Object update;
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
 		FindAndModifyCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				Document fields, Document sort, Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
+				@Nullable Document fields, @Nullable Document sort, Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
 
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
@@ -3585,7 +3593,7 @@ public class MongoTemplate
 		}
 
 		@Override
-		public MongoCollection<Document> getCollection(String collectionName) {
+		public MongoCollection<Document> getCollection(@Nullable String collectionName) {
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getCollection(collectionName);

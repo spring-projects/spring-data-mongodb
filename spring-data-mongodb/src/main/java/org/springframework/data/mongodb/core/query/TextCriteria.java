@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -71,7 +72,8 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @param language
 	 * @return
 	 */
-	public static TextCriteria forLanguage(String language) {
+	@Contract("null -> fail")
+	public static TextCriteria forLanguage(@Nullable String language) {
 
 		Assert.hasText(language, "Language must not be null or empty");
 		return new TextCriteria(language);

@@ -115,7 +115,7 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	}
 
 	@Override
-	public Object getFileId() {
+	public @Nullable Object getFileId() {
 		return id instanceof BsonValue bsonValue ? BsonUtils.toJavaType(bsonValue) : id;
 	}
 

@@ -304,7 +304,7 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 
 		@Override
 		public synchronized Throwable fillInStackTrace() {
-			return null;
+			return this;
 		}
 	}
 }

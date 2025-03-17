@@ -478,7 +478,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return the {@link Update} or {@literal null} if not present.
 	 * @since 3.4
 	 */
-	public Update getUpdateSource() {
+	public @Nullable Update getUpdateSource() {
 		return lookupUpdateAnnotation().orElse(null);
 	}
 
@@ -488,6 +488,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 3.4
 	 * @throws IllegalStateException
 	 */
+	@SuppressWarnings("NullAway")
 	public void verify() {
 
 		if (isModifyingQuery()) {
@@ -526,6 +527,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 	}
 
+	@SuppressWarnings("NullAway")
 	private boolean isNumericOrVoidReturnValue() {
 
 		Class<?> resultType = getReturnedObjectType();

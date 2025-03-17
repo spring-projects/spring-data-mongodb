@@ -44,6 +44,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
  * @author Christoph Strobl
  * @since 4.3
  */
+@SuppressWarnings("NullAway")
 public class MongoCompatibilityAdapter {
 
 	private static final String NO_LONGER_SUPPORTED = "%s is no longer supported on Mongo Client 5 or newer";
@@ -198,7 +199,7 @@ public class MongoCompatibilityAdapter {
 		MongoDatabaseAdapter forDb(com.mongodb.client.MongoDatabase db);
 	}
 
-	@SuppressWarnings({ "unchecked", "DataFlowIssue" })
+	@SuppressWarnings({ "unchecked", "DataFlowIssue", "NullAway" })
 	public static class MongoDatabaseAdapter {
 
 		private static final @Nullable Method LIST_COLLECTION_NAMES_METHOD;
