@@ -214,7 +214,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	private @Nullable T getNext() {
 
 		return lock.execute(() -> {
-			if (State.RUNNING.equals(state)) {
+			if (cursor != null && State.RUNNING.equals(state)) {
 				return cursor.tryNext();
 			}
 			throw new IllegalStateException(String.format("Cursor %s is not longer open", cursor));

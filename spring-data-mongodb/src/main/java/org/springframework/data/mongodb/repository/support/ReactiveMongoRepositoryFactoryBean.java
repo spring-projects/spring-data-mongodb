@@ -78,6 +78,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(operations);

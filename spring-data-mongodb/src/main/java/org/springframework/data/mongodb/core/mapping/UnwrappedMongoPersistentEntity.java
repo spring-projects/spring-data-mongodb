@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.Streamable;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Contract;
 
 /**
  * Unwrapped variant of {@link MongoPersistentEntity}.
@@ -282,7 +283,9 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 		return delegate.spliterator();
 	}
 
-	private MongoPersistentProperty wrap(MongoPersistentProperty source) {
+	@Contract("null -> null; !null -> !null")
+	private @Nullable MongoPersistentProperty wrap(@Nullable MongoPersistentProperty source) {
+
 		if (source == null) {
 			return source;
 		}
@@ -325,7 +328,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	public Collection<Object> getEncryptionKeyIds() {
+	public @Nullable Collection<Object> getEncryptionKeyIds() {
 		return delegate.getEncryptionKeyIds();
 	}
 }

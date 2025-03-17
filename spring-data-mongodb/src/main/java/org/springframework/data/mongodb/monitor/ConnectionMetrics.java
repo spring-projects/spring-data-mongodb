@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.monitor;
 
 import org.bson.Document;
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
@@ -27,6 +28,7 @@ import com.mongodb.client.MongoClient;
  *
  * @author Mark Pollack
  */
+@NullUnmarked
 @ManagedResource(description = "Connection metrics")
 public class ConnectionMetrics extends AbstractMonitor {
 

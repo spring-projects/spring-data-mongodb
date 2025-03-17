@@ -55,6 +55,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param expressionSupport must not be {@literal null}.
 	 * @since 4.4.0
 	 */
+	@SuppressWarnings("NullAway")
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
 			ValueExpressionDelegate expressionSupport) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionSupport);
@@ -70,6 +71,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param expressionSupport must not be {@literal null}.
 	 * @since 4.3
 	 */
+	@SuppressWarnings("NullAway")
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
 			ValueExpressionDelegate expressionSupport) {
 

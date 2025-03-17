@@ -154,7 +154,7 @@ class TypeUnifyingMergeFunction implements BiFunction<Map<String, Object>, Map<S
 		}
 
 		@Override
-		public String currentElement() {
+		public @Nullable String currentElement() {
 			return CollectionUtils.lastElement(path);
 		}
 

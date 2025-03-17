@@ -54,7 +54,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 	private @Nullable ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
 
 	@Override
-	public void setBeanClassLoader(ClassLoader classLoader) {
+	public void setBeanClassLoader(@Nullable ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
@@ -121,7 +121,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		}
 
 		@Override
-		public Object invoke(MethodInvocation invocation) throws Throwable {
+		public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
 
 			Method method = invocation.getMethod();
 
@@ -220,7 +220,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		}
 
 		@Override
-		public Object getTarget() {
+		public @Nullable Object getTarget() {
 
 			MethodInvocation invocation = CrudMethodMetadataPopulatingMethodInterceptor.currentInvocation();
 			return TransactionSynchronizationManager.getResource(invocation.getMethod());

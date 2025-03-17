@@ -30,6 +30,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.core.SpringNamingPolicy;
@@ -160,6 +161,7 @@ public final class LazyLoadingProxyFactory {
 		return enhancer.createClass();
 	}
 
+	@NullUnmarked
 	public static class LazyLoadingInterceptor
 			implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor, Serializable {
 
@@ -344,6 +346,7 @@ public final class LazyLoadingProxyFactory {
 			}
 		}
 
+		@SuppressWarnings("NullAway")
 		private @Nullable Object resolve() {
 
 			try (AcquiredLock l = readLock.lock()) {
@@ -366,7 +369,7 @@ public final class LazyLoadingProxyFactory {
 				return writeLock.execute(() -> callback.resolve(property));
 			} catch (RuntimeException ex) {
 
-				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
+				DataAccessException translatedException =  exceptionTranslator != null ? exceptionTranslator.translateExceptionIfPossible(ex) : null;
 
 				if (translatedException instanceof ClientSessionException) {
 					throw new LazyLoadingException("Unable to lazily resolve DBRef; Invalid session state", ex);

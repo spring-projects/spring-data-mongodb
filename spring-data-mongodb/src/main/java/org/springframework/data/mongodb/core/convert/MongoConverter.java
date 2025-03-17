@@ -101,7 +101,7 @@ public interface MongoConverter
 	 * @throws IllegalArgumentException if {@literal targetType} is {@literal null}.
 	 * @since 2.1
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked","NullAway"})
 	default <S, T> @Nullable T mapValueToTargetType(S source, Class<T> targetType, DbRefResolver dbRefResolver) {
 
 		Assert.notNull(targetType, "TargetType must not be null");

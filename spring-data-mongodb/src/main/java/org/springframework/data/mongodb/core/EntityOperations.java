@@ -24,11 +24,13 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonNull;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.EnvironmentCapable;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.expression.ValueEvaluationContext;
@@ -64,6 +66,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.TargetAware;
 import org.springframework.data.util.Optionals;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -413,7 +416,7 @@ class EntityOperations {
 		 *
 		 * @return
 		 */
-		Object getId();
+		@Nullable Object getId();
 
 		/**
 		 * Returns the property value for {@code key}.
@@ -521,7 +524,7 @@ class EntityOperations {
 		 * @param id must not be {@literal null}.
 		 * @return
 		 */
-		@Nullable
+		@Contract("null -> fail")
 		T populateIdIfNecessary(@Nullable Object id);
 
 		/**
@@ -564,12 +567,12 @@ class EntityOperations {
 		}
 
 		@Override
-		public Object getId() {
+		public @Nullable Object getId() {
 			return getPropertyValue(ID_FIELD);
 		}
 
 		@Override
-		public Object getPropertyValue(String key) {
+		public @Nullable Object getPropertyValue(String key) {
 			return map.get(key);
 		}
 
@@ -579,7 +582,7 @@ class EntityOperations {
 		}
 
 		@Override
-		public @Nullable T populateIdIfNecessary(@Nullable Object id) {
+		public T populateIdIfNecessary(@Nullable Object id) {
 
 			map.put(ID_FIELD, id);
 
@@ -721,7 +724,7 @@ class EntityOperations {
 		}
 
 		@Override
-		public Object getPropertyValue(String key) {
+		public @Nullable Object getPropertyValue(String key) {
 			return propertyAccessor.getProperty(entity.getRequiredPersistentProperty(key));
 		}
 
@@ -836,7 +839,6 @@ class EntityOperations {
 			return keyset;
 		}
 
-		@Nullable
 		private Object getNestedPropertyValue(String key) {
 
 			String[] segments = key.split("\\.");
@@ -849,6 +851,10 @@ class EntityOperations {
 				currentValue = currentEntity.getPropertyValue(segment);
 
 				if (i < segments.length - 1) {
+					if(currentValue == null) {
+						return BsonNull.VALUE;
+					}
+
 					currentEntity = entityOperations.forEntity(currentValue);
 				}
 			}
@@ -886,7 +892,7 @@ class EntityOperations {
 		}
 
 		@Override
-		public @Nullable T populateIdIfNecessary(@Nullable Object id) {
+		public T populateIdIfNecessary(@Nullable Object id) {
 
 			if (id == null) {
 				return propertyAccessor.getBean();
@@ -1122,7 +1128,7 @@ class EntityOperations {
 
 		@Override
 		public String getIdKeyName() {
-			return entity.getIdProperty().getName();
+			return entity.getIdProperty() != null ? entity.getIdProperty().getName() : ID_FIELD;
 		}
 
 		private String mappedNameOrDefault(String name) {
@@ -1142,7 +1148,7 @@ class EntityOperations {
 				return mongoEntity.getValueEvaluationContext(null);
 			}
 
-			return ValueEvaluationContext.of(this.environment, SimpleEvaluationContext.forReadOnlyDataBinding().build());
+			return ValueEvaluationContext.of(this.environment != null ? this.environment : new StandardEnvironment(), SimpleEvaluationContext.forReadOnlyDataBinding().build());
 		}
 
 		/**

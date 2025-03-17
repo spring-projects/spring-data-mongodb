@@ -52,7 +52,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
 	 */
-	default <T> T read(@Nullable Object value) {
+	default <T> @Nullable T read(@Nullable Object value) {
 		return (T) read(value, getProperty().getTypeInformation());
 	}
 
@@ -64,7 +64,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
 	 */
-	default <T> T read(@Nullable Object value, Class<T> target) {
+	default <T> @Nullable T read(@Nullable Object value, Class<T> target) {
 		return read(value, TypeInformation.of(target));
 	}
 
@@ -76,7 +76,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
 	 */
-	<T> T read(@Nullable Object value, TypeInformation<T> target);
+	<T> @Nullable T read(@Nullable Object value, TypeInformation<T> target);
 
 	/**
 	 * Write the value as an instance of the {@link PersistentProperty#getTypeInformation() property type}.

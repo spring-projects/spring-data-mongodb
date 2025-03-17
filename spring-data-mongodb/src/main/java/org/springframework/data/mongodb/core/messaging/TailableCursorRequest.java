@@ -121,6 +121,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 
 		TailableCursorRequestOptions() {}
 
+		@SuppressWarnings("NullAway")
 		public static TailableCursorRequestOptions of(RequestOptions options) {
 			return builder().collection(options.getCollectionName()).build();
 		}

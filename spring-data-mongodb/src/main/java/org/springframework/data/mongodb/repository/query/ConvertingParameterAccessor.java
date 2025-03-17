@@ -74,7 +74,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public ScrollPosition getScrollPosition() {
+	public @Nullable ScrollPosition getScrollPosition() {
 		return delegate.getScrollPosition();
 	}
 
@@ -87,34 +87,34 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public Class<?> findDynamicProjection() {
+	public @Nullable Class<?> findDynamicProjection() {
 		return delegate.findDynamicProjection();
 	}
 
-	public Object getBindableValue(int index) {
+	public @Nullable Object getBindableValue(int index) {
 		return getConvertedValue(delegate.getBindableValue(index), null);
 	}
 
 	@Override
-	public Range<Distance> getDistanceRange() {
+	public @Nullable Range<Distance> getDistanceRange() {
 		return delegate.getDistanceRange();
 	}
 
-	public Point getGeoNearLocation() {
+	public @Nullable Point getGeoNearLocation() {
 		return delegate.getGeoNearLocation();
 	}
 
-	public TextCriteria getFullText() {
+	public @Nullable TextCriteria getFullText() {
 		return delegate.getFullText();
 	}
 
 	@Override
-	public Collation getCollation() {
+	public @Nullable Collation getCollation() {
 		return delegate.getCollation();
 	}
 
 	@Override
-	public UpdateDefinition getUpdate() {
+	public @Nullable UpdateDefinition getUpdate() {
 		return delegate.getUpdate();
 	}
 
@@ -130,7 +130,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @param typeInformation can be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	private @Nullable Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
+	private @Nullable Object getConvertedValue(@Nullable Object value, @Nullable TypeInformation<?> typeInformation) {
 		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
 	}
 
@@ -160,11 +160,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 			return delegate.hasNext();
 		}
 
-		public Object next() {
+		public @Nullable Object next() {
 			return delegate.next();
 		}
 
-		public Object nextConverted(MongoPersistentProperty property) {
+		public @Nullable Object nextConverted(MongoPersistentProperty property) {
 
 			Object next = next();
 
@@ -227,7 +227,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public Object[] getValues() {
+	public Object @Nullable[] getValues() {
 		return delegate.getValues();
 	}
 
@@ -243,6 +243,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		 *
 		 * @return
 		 */
-		Object nextConverted(MongoPersistentProperty property);
+		@Nullable Object nextConverted(MongoPersistentProperty property);
 	}
 }

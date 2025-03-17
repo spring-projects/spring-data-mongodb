@@ -54,7 +54,7 @@ class EvaluationContextExpressionEvaluator implements ValueExpressionEvaluator {
 	}
 
 	@SuppressWarnings("unchecked")
-	<T> T evaluateExpression(String expressionString, Map<String, Object> variables) {
+	<T> @Nullable T evaluateExpression(String expressionString, Map<String, Object> variables) {
 
 		Expression expression = getParsedExpression(expressionString);
 		EvaluationContext ctx = getEvaluationContext(expressionString);

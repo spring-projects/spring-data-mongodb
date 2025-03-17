@@ -44,6 +44,7 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -133,7 +134,7 @@ abstract class MongoConverters {
 	enum StringToObjectIdConverter implements Converter<String, ObjectId> {
 		INSTANCE;
 
-		public ObjectId convert(String source) {
+		public @Nullable ObjectId convert(String source) {
 			return StringUtils.hasText(source) ? new ObjectId(source) : null;
 		}
 	}
@@ -186,7 +187,7 @@ abstract class MongoConverters {
 	enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
 		INSTANCE;
 
-		public BigDecimal convert(String source) {
+		public @Nullable BigDecimal convert(String source) {
 			return StringUtils.hasText(source) ? new BigDecimal(source) : null;
 		}
 	}
@@ -213,7 +214,7 @@ abstract class MongoConverters {
 	enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
 		INSTANCE;
 
-		public BigInteger convert(String source) {
+		public @Nullable BigInteger convert(String source) {
 			return StringUtils.hasText(source) ? new BigInteger(source) : null;
 		}
 	}
@@ -290,19 +291,24 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
+	@SuppressWarnings("NullAway")
 	enum DocumentToNamedMongoScriptConverter implements Converter<Document, NamedMongoScript> {
 
 		INSTANCE;
 
 		@Override
-		public NamedMongoScript convert(Document source) {
+		public @Nullable NamedMongoScript convert(Document source) {
 
 			if (source.isEmpty()) {
 				return null;
 			}
 
 			String id = source.get(FieldName.ID.name()).toString();
+			Assert.notNull(id, "Script id must not be null");
+
 			Object rawValue = source.get("value");
+
+			Assert.isInstanceOf(Code.class, rawValue);
 
 			return new NamedMongoScript(id, ((Code) rawValue).getCode());
 		}
@@ -357,7 +363,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		@Override
-		public Currency convert(String source) {
+		public @Nullable Currency convert(String source) {
 			return StringUtils.hasText(source) ? Currency.getInstance(source) : null;
 		}
 	}

@@ -113,7 +113,7 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 	}
 
 	@Override
-	public Object getVersion(T entity) {
+	public @Nullable Object getVersion(T entity) {
 
 		if (!isVersioned()) {
 			return null;

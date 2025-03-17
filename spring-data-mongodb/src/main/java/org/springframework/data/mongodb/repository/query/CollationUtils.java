@@ -25,6 +25,7 @@ import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
+import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -96,6 +97,7 @@ abstract class CollationUtils {
 					ObjectUtils.nullSafeClassName(placeholderValue)));
 		}
 
+		Assert.notNull(placeholderValue, "PlaceholderValue must not be null");
 		return Collation.parse(collationExpression.replace(placeholder, placeholderValue.toString()));
 	}
 

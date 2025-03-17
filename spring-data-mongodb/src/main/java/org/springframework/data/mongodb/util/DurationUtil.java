@@ -71,12 +71,12 @@ public class DurationUtil {
 
 		return evaluate(value, new ValueEvaluationContext() {
 			@Override
-			public @Nullable Environment getEnvironment() {
-				return null;
+			public Environment getEnvironment() {
+				throw new IllegalStateException();
 			}
 
 			@Override
-			public @Nullable EvaluationContext getEvaluationContext() {
+			public EvaluationContext getEvaluationContext() {
 				return evaluationContext.get();
 			}
 		});

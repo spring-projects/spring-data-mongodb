@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.monitor;
 
 import java.net.UnknownHostException;
 
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -32,6 +33,7 @@ import com.mongodb.client.MongoClient;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
+@NullUnmarked
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
 

@@ -95,8 +95,8 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 	public static class ReactiveGridFsUploadBuilder<T> {
 
 		private @Nullable Object id;
-		private Publisher<DataBuffer> dataStream;
-		private String filename;
+		private @Nullable Publisher<DataBuffer> dataStream;
+		private @Nullable String filename;
 		private Options options = Options.none();
 
 		private ReactiveGridFsUploadBuilder() {}
@@ -206,6 +206,11 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		}
 
 		public ReactiveGridFsUpload<T> build() {
+
+			Assert.notNull(dataStream, "DataStream must be set first");
+			Assert.notNull(filename, "Filename must be set first");
+			Assert.notNull(options, "Options must be set first");
+
 			return new ReactiveGridFsUpload(id, dataStream, filename, options);
 		}
 	}

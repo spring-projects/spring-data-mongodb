@@ -91,6 +91,7 @@ public class BasicQuery extends Query {
 	 * @param query the query to copy.
 	 * @since 4.4
 	 */
+	@SuppressWarnings("NullAway")
 	public BasicQuery(Query query) {
 
 		super(query);

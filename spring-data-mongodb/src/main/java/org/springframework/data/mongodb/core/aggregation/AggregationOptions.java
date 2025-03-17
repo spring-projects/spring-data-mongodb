@@ -299,7 +299,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	@Override
-	public ReadConcern getReadConcern() {
+	public @Nullable ReadConcern getReadConcern() {
 		return readConcern.orElse(null);
 	}
 
@@ -309,7 +309,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 		return readPreference.orElse(null);
 	}
 
@@ -426,7 +426,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public static class Builder {
 
-		private Boolean allowDiskUse;
+		private @Nullable Boolean allowDiskUse;
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;

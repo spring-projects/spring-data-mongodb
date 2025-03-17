@@ -67,7 +67,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	}
 
 	@Override
-	public Object decrypt(Object encryptedValue, EncryptionContext context) {
+	public @Nullable Object decrypt(Object encryptedValue, EncryptionContext context) {
 
 		Object decryptedValue = encryptedValue;
 		if (encryptedValue instanceof Binary || encryptedValue instanceof BsonBinary) {

@@ -46,12 +46,12 @@ class SimpleMessage<S, T> implements Message<S, T> {
 	}
 
 	@Override
-	public S getRaw() {
+	public @Nullable S getRaw() {
 		return raw;
 	}
 
 	@Override
-	public T getBody() {
+	public @Nullable T getBody() {
 		return body;
 	}
 

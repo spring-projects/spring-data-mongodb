@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -48,6 +49,7 @@ import com.querydsl.mongodb.document.MongodbDocumentSerializer;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@NullUnmarked
 class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 
 	private static final String ID_KEY = FieldName.ID.name();

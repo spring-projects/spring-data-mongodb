@@ -105,7 +105,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	@Override
-	public Object execute(Object[] parameters) {
+	public @Nullable Object execute(Object[] parameters) {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				new MongoParametersParameterAccessor(method, parameters));
@@ -160,6 +160,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
 	}
 
+	@SuppressWarnings("NullAway")
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
@@ -280,6 +281,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @throws IllegalStateException if no update could be found.
 	 * @since 3.4
 	 */
+	@SuppressWarnings("NullAway")
 	protected UpdateDefinition createUpdate(ConvertingParameterAccessor accessor) {
 
 		if (accessor.getUpdate() != null) {
@@ -373,6 +375,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return the {@link CodecRegistry} used.
 	 * @since 2.4
 	 */
+	@SuppressWarnings("NullAway")
 	protected CodecRegistry getCodecRegistry() {
 		return operations.execute(MongoDatabase::getCodecRegistry);
 	}

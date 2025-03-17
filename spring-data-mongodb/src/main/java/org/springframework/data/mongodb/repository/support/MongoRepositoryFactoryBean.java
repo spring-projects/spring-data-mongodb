@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  *
  * @author Oliver Gierke
  */
+@SuppressWarnings("NullAway")
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
