@@ -52,6 +52,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBig
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -188,6 +189,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param converter must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerConverter(Converter<?, ?> converter) {
 
 			Assert.notNull(converter, "Converter must not be null");
@@ -202,6 +204,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param converters must not be {@literal null} nor contain {@literal null} values.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerConverters(Collection<?> converters) {
 
 			Assert.notNull(converters, "Converters must not be null");
@@ -217,6 +220,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param converterFactory must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerConverterFactory(ConverterFactory<?, ?> converterFactory) {
 
 			Assert.notNull(converterFactory, "ConverterFactory must not be null");
@@ -232,6 +236,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @since 3.4
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerPropertyValueConverterFactory(
 				PropertyValueConverterFactory converterFactory) {
 
@@ -249,6 +254,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @since 3.4
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter configurePropertyConversions(
 				Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> configurationAdapter) {
 
@@ -271,6 +277,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param useNativeDriverJavaTimeCodecs
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter useNativeDriverJavaTimeCodecs(boolean useNativeDriverJavaTimeCodecs) {
 
 			this.useNativeDriverJavaTimeCodecs = useNativeDriverJavaTimeCodecs;
@@ -285,6 +292,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @see #useNativeDriverJavaTimeCodecs(boolean)
 		 */
+		@Contract("-> this")
 		public MongoConverterConfigurationAdapter useNativeDriverJavaTimeCodecs() {
 			return useNativeDriverJavaTimeCodecs(true);
 		}
@@ -299,6 +307,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @see #useNativeDriverJavaTimeCodecs(boolean)
 		 */
+		@Contract("-> this")
 		public MongoConverterConfigurationAdapter useSpringDataJavaTimeCodecs() {
 			return useNativeDriverJavaTimeCodecs(false);
 		}

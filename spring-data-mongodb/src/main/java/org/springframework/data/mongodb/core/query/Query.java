@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
-import static org.springframework.util.ObjectUtils.*;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
+import static org.springframework.util.ObjectUtils.nullSafeEquals;
+import static org.springframework.util.ObjectUtils.nullSafeHashCode;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 import com.mongodb.ReadConcern;
@@ -123,6 +125,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 1.6
 	 */
+	@Contract("_ -> this")
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
 
 		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null");
@@ -157,6 +160,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param skip number of documents to skip. Use {@literal zero} or a {@literal negative} value to avoid skipping.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query skip(long skip) {
 		this.skip = skip;
 		return this;
@@ -169,6 +173,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param limit number of documents to return. Use {@literal zero} or {@literal negative} for unlimited.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query limit(int limit) {
 		this.limit = limit > 0 ? Limit.of(limit) : Limit.unlimited();
 		return this;
@@ -181,6 +186,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 4.2
 	 */
+	@Contract("_ -> this")
 	public Query limit(Limit limit) {
 
 		Assert.notNull(limit, "Limit must not be null");
@@ -202,6 +208,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @see Document#parse(String)
 	 */
+	@Contract("_ -> this")
 	public Query withHint(String hint) {
 
 		Assert.hasText(hint, "Hint must not be empty or null");
@@ -216,6 +223,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 3.1
 	 */
+	@Contract("_ -> this")
 	public Query withReadConcern(ReadConcern readConcern) {
 
 		Assert.notNull(readConcern, "ReadConcern must not be null");
@@ -230,6 +238,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 4.1
 	 */
+	@Contract("_ -> this")
 	public Query withReadPreference(ReadPreference readPreference) {
 
 		Assert.notNull(readPreference, "ReadPreference must not be null");
@@ -269,6 +278,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 2.2
 	 */
+	@Contract("_ -> this")
 	public Query withHint(Document hint) {
 
 		Assert.notNull(hint, "Hint must not be null");
@@ -283,6 +293,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param pageable must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query with(Pageable pageable) {
 
 		if (pageable.isPaged()) {
@@ -299,6 +310,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param position must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query with(ScrollPosition position) {
 
 		Assert.notNull(position, "ScrollPosition must not be null");
@@ -320,6 +332,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param position must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query with(OffsetScrollPosition position) {
 
 		Assert.notNull(position, "ScrollPosition must not be null");
@@ -335,6 +348,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param position must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query with(KeysetScrollPosition position) {
 
 		Assert.notNull(position, "ScrollPosition must not be null");
@@ -359,6 +373,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param sort must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Query with(Sort sort) {
 
 		Assert.notNull(sort, "Sort must not be null");
@@ -392,6 +407,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @param additionalTypes may not be {@literal null}
 	 * @return this.
 	 */
+	@Contract("_, _ -> this")
 	public Query restrict(Class<?> type, Class<?>... additionalTypes) {
 
 		Assert.notNull(type, "Type must not be null");
@@ -517,6 +533,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see Meta#setMaxTimeMsec(long)
 	 * @since 1.6
 	 */
+	@Contract("_ -> this")
 	public Query maxTimeMsec(long maxTimeMsec) {
 
 		meta.setMaxTimeMsec(maxTimeMsec);
@@ -529,6 +546,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see Meta#setMaxTime(Duration)
 	 * @since 2.1
 	 */
+	@Contract("_ -> this")
 	public Query maxTime(Duration timeout) {
 
 		meta.setMaxTime(timeout);
@@ -543,6 +561,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see Meta#setComment(String)
 	 * @since 1.6
 	 */
+	@Contract("_ -> this")
 	public Query comment(String comment) {
 
 		meta.setComment(comment);
@@ -561,6 +580,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see Meta#setAllowDiskUse(Boolean)
 	 * @since 3.2
 	 */
+	@Contract("_ -> this")
 	public Query allowDiskUse(boolean allowDiskUse) {
 
 		meta.setAllowDiskUse(allowDiskUse);
@@ -577,6 +597,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see Meta#setCursorBatchSize(int)
 	 * @since 2.1
 	 */
+	@Contract("_ -> this")
 	public Query cursorBatchSize(int batchSize) {
 
 		meta.setCursorBatchSize(batchSize);
@@ -588,6 +609,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#NO_TIMEOUT
 	 * @since 1.10
 	 */
+	@Contract("-> this")
 	public Query noCursorTimeout() {
 
 		meta.addFlag(Meta.CursorOption.NO_TIMEOUT);
@@ -599,6 +621,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#EXHAUST
 	 * @since 1.10
 	 */
+	@Contract("-> this")
 	public Query exhaust() {
 
 		meta.addFlag(Meta.CursorOption.EXHAUST);
@@ -612,6 +635,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SECONDARY_READS
 	 * @since 3.0.2
 	 */
+	@Contract("-> this")
 	public Query allowSecondaryReads() {
 
 		meta.addFlag(Meta.CursorOption.SECONDARY_READS);
@@ -623,6 +647,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#PARTIAL
 	 * @since 1.10
 	 */
+	@Contract("-> this")
 	public Query partialResults() {
 
 		meta.addFlag(Meta.CursorOption.PARTIAL);
@@ -654,6 +679,7 @@ public class Query implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 2.0
 	 */
+	@Contract("_ -> this")
 	public Query collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);

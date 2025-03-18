@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.lang.Contract;
+
 /**
  * Options for
  * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>.
@@ -95,6 +97,7 @@ public class FindAndReplaceOptions extends ReplaceOptions {
 	 *
 	 * @return this.
 	 */
+	@Contract("-> this")
 	public FindAndReplaceOptions returnNew() {
 
 		this.returnNew = true;
@@ -106,6 +109,7 @@ public class FindAndReplaceOptions extends ReplaceOptions {
 	 *
 	 * @return this.
 	 */
+	@Contract("-> this")
 	public FindAndReplaceOptions upsert() {
 
 		super.upsert();

@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -522,6 +523,7 @@ public class ArrayOperators {
 		 * @param index the index number
 		 * @return new instance of {@link ArrayElemAt}.
 		 */
+		@Contract("_ -> new")
 		public ArrayElemAt elementAt(int index) {
 			return new ArrayElemAt(append(index));
 		}
@@ -532,6 +534,7 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ArrayElemAt}.
 		 */
+		@Contract("_ -> new")
 		public ArrayElemAt elementAt(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -544,6 +547,7 @@ public class ArrayOperators {
 		 * @param arrayFieldReference the field name.
 		 * @return new instance of {@link ArrayElemAt}.
 		 */
+		@Contract("_ -> new")
 		public ArrayElemAt elementAt(String arrayFieldReference) {
 
 			Assert.notNull(arrayFieldReference, "ArrayReference must not be null");
@@ -610,6 +614,7 @@ public class ArrayOperators {
 		 * @param arrayFieldReference must not be {@literal null}.
 		 * @return new instance of {@link ConcatArrays}.
 		 */
+		@Contract("_ -> new")
 		public ConcatArrays concat(String arrayFieldReference) {
 
 			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null");
@@ -622,6 +627,7 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ConcatArrays}.
 		 */
+		@Contract("_ -> new")
 		public ConcatArrays concat(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -710,7 +716,6 @@ public class ArrayOperators {
 
 			filterExpression.putAll(context.getMappedObject(new Document("input", getMappedInput(context))));
 			filterExpression.put("as", as.getTarget());
-
 
 			filterExpression.putAll(context.getMappedObject(new Document("cond", getMappedCondition(operationContext))));
 
@@ -837,6 +842,7 @@ public class ArrayOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public AsBuilder filter(List<?> array) {
 
 				Assert.notNull(array, "Array must not be null");
@@ -845,6 +851,7 @@ public class ArrayOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public AsBuilder filter(Field field) {
 
 				Assert.notNull(field, "Field must not be null");
@@ -853,6 +860,7 @@ public class ArrayOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public AsBuilder filter(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null");
@@ -861,6 +869,7 @@ public class ArrayOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ConditionBuilder as(String variableName) {
 
 				Assert.notNull(variableName, "Variable name  must not be null");
@@ -1048,6 +1057,7 @@ public class ArrayOperators {
 		 * @param count number of elements to slice.
 		 * @return new instance of {@link Slice}.
 		 */
+		@Contract("_ -> new")
 		public Slice itemCount(int count) {
 			return new Slice(append(count));
 		}
@@ -1060,6 +1070,7 @@ public class ArrayOperators {
 		 * @return new instance of {@link Slice}.
 		 * @since 4.5
 		 */
+		@Contract("_ -> new")
 		public Slice itemCount(AggregationExpression count) {
 			return new Slice(append(count));
 		}
@@ -1178,6 +1189,7 @@ public class ArrayOperators {
 		 * @param range the lookup range.
 		 * @return new instance of {@link IndexOfArray}.
 		 */
+		@Contract("_ -> new")
 		public IndexOfArray within(Range<Long> range) {
 			return new IndexOfArray(append(AggregationUtils.toRangeValues(range)));
 		}
@@ -1253,6 +1265,7 @@ public class ArrayOperators {
 			return new RangeOperatorBuilder(value);
 		}
 
+		@Contract("_ -> new")
 		public RangeOperator withStepSize(long stepSize) {
 			return new RangeOperator(append(stepSize));
 		}
@@ -1705,6 +1718,7 @@ public class ArrayOperators {
 		 *
 		 * @return new instance of {@link Zip}.
 		 */
+		@Contract("-> new")
 		public Zip useLongestLength() {
 			return new Zip(append("useLongestLength", true));
 		}
@@ -1715,6 +1729,7 @@ public class ArrayOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Zip}.
 		 */
+		@Contract("_ -> new")
 		public Zip defaultTo(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1727,6 +1742,7 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Zip}.
 		 */
+		@Contract("_ -> new")
 		public Zip defaultTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1739,6 +1755,7 @@ public class ArrayOperators {
 		 * @param array must not be {@literal null}.
 		 * @return new instance of {@link Zip}.
 		 */
+		@Contract("_ -> new")
 		public Zip defaultTo(Object[] array) {
 
 			Assert.notNull(array, "Array must not be null");
@@ -2076,6 +2093,7 @@ public class ArrayOperators {
 		 * @param sort must not be {@literal null}.
 		 * @return new instance of {@link SortArray}.
 		 */
+		@Contract("_ -> new")
 		public SortArray by(Sort sort) {
 			return new SortArray(append("sortBy", sort));
 		}

@@ -32,6 +32,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -114,6 +115,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/update/set/">MongoDB Update operator: $set</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update set(String key, @Nullable Object value) {
 		addMultiFieldOperation("$set", key, value);
 		return this;
@@ -128,6 +130,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator:
 	 *      $setOnInsert</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update setOnInsert(String key, @Nullable Object value) {
 		addMultiFieldOperation("$setOnInsert", key, value);
 		return this;
@@ -140,6 +143,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/unset/">MongoDB Update operator: $unset</a>
 	 */
+	@Contract("_ -> this")
 	public Update unset(String key) {
 		addMultiFieldOperation("$unset", key, 1);
 		return this;
@@ -153,12 +157,14 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update inc(String key, Number inc) {
 		addMultiFieldOperation("$inc", key, inc);
 		return this;
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public void inc(String key) {
 		inc(key, 1L);
 	}
@@ -171,6 +177,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update push(String key, @Nullable Object value) {
 		addMultiFieldOperation("$push", key, value);
 		return this;
@@ -207,6 +214,7 @@ public class Update implements UpdateDefinition {
 	 * @return new instance of {@link AddToSetBuilder}.
 	 * @since 1.5
 	 */
+	@Contract("_ -> new")
 	public AddToSetBuilder addToSet(String key) {
 		return new AddToSetBuilder(key);
 	}
@@ -220,6 +228,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator:
 	 *      $addToSet</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update addToSet(String key, @Nullable Object value) {
 		addMultiFieldOperation("$addToSet", key, value);
 		return this;
@@ -233,6 +242,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pop/">MongoDB Update operator: $pop</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update pop(String key, Position pos) {
 		addMultiFieldOperation("$pop", key, pos == Position.FIRST ? -1 : 1);
 		return this;
@@ -246,6 +256,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pull/">MongoDB Update operator: $pull</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update pull(String key, @Nullable Object value) {
 		addMultiFieldOperation("$pull", key, value);
 		return this;
@@ -260,6 +271,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator:
 	 *      $pullAll</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update pullAll(String key, Object[] values) {
 		addMultiFieldOperation("$pullAll", key, Arrays.asList(values));
 		return this;
@@ -274,6 +286,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/rename/">MongoDB Update operator:
 	 *      $rename</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update rename(String oldName, String newName) {
 		addMultiFieldOperation("$rename", oldName, newName);
 		return this;
@@ -288,6 +301,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
 	 *      $currentDate</a>
 	 */
+	@Contract("_ -> this")
 	public Update currentDate(String key) {
 
 		addMultiFieldOperation("$currentDate", key, true);
@@ -303,6 +317,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
 	 *      $currentDate</a>
 	 */
+	@Contract("_ -> this")
 	public Update currentTimestamp(String key) {
 
 		addMultiFieldOperation("$currentDate", key, new Document("$type", "timestamp"));
@@ -318,6 +333,7 @@ public class Update implements UpdateDefinition {
 	 * @since 1.7
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/mul/">MongoDB Update operator: $mul</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update multiply(String key, Number multiplier) {
 
 		Assert.notNull(multiplier, "Multiplier must not be null");
@@ -335,6 +351,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/max/">MongoDB Update operator: $max</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update max(String key, Object value) {
 
 		Assert.notNull(value, "Value for max operation must not be null");
@@ -352,6 +369,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/min/">MongoDB Update operator: $min</a>
 	 */
+	@Contract("_, _ -> this")
 	public Update min(String key, Object value) {
 
 		Assert.notNull(value, "Value for min operation must not be null");
@@ -366,6 +384,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @since 1.7
 	 */
+	@Contract("_ -> new")
 	public BitwiseOperatorBuilder bitwise(String key) {
 		return new BitwiseOperatorBuilder(this, key);
 	}
@@ -378,6 +397,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @since 2.0
 	 */
+	@Contract("-> this")
 	public Update isolated() {
 
 		isolated = true;
@@ -392,6 +412,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @since 2.2
 	 */
+	@Contract("_ -> this")
 	public Update filterArray(CriteriaDefinition criteria) {
 
 		if (arrayFilters == Collections.EMPTY_LIST) {
@@ -411,6 +432,7 @@ public class Update implements UpdateDefinition {
 	 * @return this.
 	 * @since 2.2
 	 */
+	@Contract("_, _ -> this")
 	public Update filterArray(String identifier, Object expression) {
 
 		if (arrayFilters == Collections.EMPTY_LIST) {
@@ -815,6 +837,7 @@ public class Update implements UpdateDefinition {
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
+		@Contract("_ -> this")
 		public PushOperatorBuilder slice(int count) {
 
 			this.modifiers.addModifier(new Slice(count));
@@ -829,6 +852,7 @@ public class Update implements UpdateDefinition {
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
+		@Contract("_ -> this")
 		public PushOperatorBuilder sort(Direction direction) {
 
 			Assert.notNull(direction, "Direction must not be null");
@@ -844,6 +868,7 @@ public class Update implements UpdateDefinition {
 		 * @return never {@literal null}.
 		 * @since 1.10
 		 */
+		@Contract("_ -> this")
 		public PushOperatorBuilder sort(Sort sort) {
 
 			Assert.notNull(sort, "Sort must not be null");
@@ -859,6 +884,7 @@ public class Update implements UpdateDefinition {
 		 * @return never {@literal null}.
 		 * @since 1.7
 		 */
+		@Contract("_ -> this")
 		public PushOperatorBuilder atPosition(int position) {
 
 			this.modifiers.addModifier(new PositionModifier(position));
@@ -872,6 +898,7 @@ public class Update implements UpdateDefinition {
 		 * @return never {@literal null}.
 		 * @since 1.7
 		 */
+		@Contract("_ -> this")
 		public PushOperatorBuilder atPosition(@Nullable Position position) {
 
 			if (position == null || Position.LAST.equals(position)) {

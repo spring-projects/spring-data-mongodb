@@ -26,6 +26,7 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -248,6 +249,7 @@ public class ChangeStreamOptions {
 		 * @param collation must not be {@literal null} nor {@literal empty}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder collation(Collation collation) {
 
 			Assert.notNull(collation, "Collation must not be null nor empty");
@@ -270,6 +272,7 @@ public class ChangeStreamOptions {
 		 *          {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder filter(Aggregation filter) {
 
 			Assert.notNull(filter, "Filter must not be null");
@@ -284,6 +287,7 @@ public class ChangeStreamOptions {
 		 * @param filter must not be {@literal null} nor contain {@literal null} values.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder filter(Document... filter) {
 
 			Assert.noNullElements(filter, "Filter must not contain null values");
@@ -299,6 +303,7 @@ public class ChangeStreamOptions {
 		 * @param resumeToken must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder resumeToken(BsonValue resumeToken) {
 
 			Assert.notNull(resumeToken, "ResumeToken must not be null");
@@ -328,6 +333,7 @@ public class ChangeStreamOptions {
 		 * @param lookup must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder fullDocumentLookup(FullDocument lookup) {
 
 			Assert.notNull(lookup, "Lookup must not be null");
@@ -343,6 +349,7 @@ public class ChangeStreamOptions {
 		 * @return this.
 		 * @since 4.0
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder fullDocumentBeforeChangeLookup(FullDocumentBeforeChange lookup) {
 
 			Assert.notNull(lookup, "Lookup must not be null");
@@ -368,6 +375,7 @@ public class ChangeStreamOptions {
 		 * @param resumeTimestamp must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder resumeAt(Instant resumeTimestamp) {
 
 			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null");
@@ -383,6 +391,7 @@ public class ChangeStreamOptions {
 		 * @return this.
 		 * @since 2.2
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder resumeAt(BsonTimestamp resumeTimestamp) {
 
 			Assert.notNull(resumeTimestamp, "ResumeTimestamp must not be null");
@@ -398,6 +407,7 @@ public class ChangeStreamOptions {
 		 * @return this.
 		 * @since 2.2
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder resumeAfter(BsonValue resumeToken) {
 
 			resumeToken(resumeToken);
@@ -413,6 +423,7 @@ public class ChangeStreamOptions {
 		 * @return this.
 		 * @since 2.2
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamOptionsBuilder startAfter(BsonValue resumeToken) {
 
 			resumeToken(resumeToken);
@@ -424,6 +435,7 @@ public class ChangeStreamOptions {
 		/**
 		 * @return the built {@link ChangeStreamOptions}
 		 */
+		@Contract("-> new")
 		public ChangeStreamOptions build() {
 
 			ChangeStreamOptions options = new ChangeStreamOptions();

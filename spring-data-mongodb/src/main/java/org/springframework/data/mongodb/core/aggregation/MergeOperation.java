@@ -26,6 +26,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -430,6 +431,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param collection must not be {@literal null} nor empty.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder intoCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
@@ -444,6 +446,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param database must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder inDatabase(String database) {
 
 			this.database = database;
@@ -456,6 +459,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param into must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder into(MergeOperationTarget into) {
 
 			this.database = into.database;
@@ -469,6 +473,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param target must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder target(MergeOperationTarget target) {
 			return into(target);
 		}
@@ -482,6 +487,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param fields must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder on(String... fields) {
 			return id(UniqueMergeId.ofIdFields(fields));
 		}
@@ -493,6 +499,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param id must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder id(UniqueMergeId id) {
 
 			this.id = id;
@@ -506,6 +513,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param let the variable expressions
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder let(Let let) {
 
 			this.let = let;
@@ -519,6 +527,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param let the variable expressions
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder exposeVariablesOf(Let let) {
 			return let(let);
 		}
@@ -529,6 +538,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param whenMatched must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder whenMatched(WhenDocumentsMatch whenMatched) {
 
 			this.whenMatched = whenMatched;
@@ -541,6 +551,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param whenMatched must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder whenDocumentsMatch(WhenDocumentsMatch whenMatched) {
 			return whenMatched(whenMatched);
 		}
@@ -551,6 +562,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param aggregation must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder whenDocumentsMatchApply(Aggregation aggregation) {
 			return whenMatched(WhenDocumentsMatch.updateWith(aggregation));
 		}
@@ -561,6 +573,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param whenNotMatched must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder whenNotMatched(WhenDocumentsDontMatch whenNotMatched) {
 
 			this.whenNotMatched = whenNotMatched;
@@ -573,6 +586,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @param whenNotMatched must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MergeOperationBuilder whenDocumentsDontMatch(WhenDocumentsDontMatch whenNotMatched) {
 			return whenNotMatched(whenNotMatched);
 		}
@@ -580,6 +594,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		/**
 		 * @return new instance of {@link MergeOperation}.
 		 */
+		@Contract("-> new")
 		public MergeOperation build() {
 			
 			Assert.notNull(collection, "Collection must not be null");

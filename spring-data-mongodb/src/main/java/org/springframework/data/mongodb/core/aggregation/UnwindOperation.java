@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -223,6 +224,7 @@ public class UnwindOperation
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public EmptyArraysBuilder arrayIndex(String field) {
 
 			Assert.hasText(field, "'ArrayIndex' must not be null or empty");
@@ -231,6 +233,7 @@ public class UnwindOperation
 		}
 
 		@Override
+		@Contract("-> this")
 		public EmptyArraysBuilder noArrayIndex() {
 
 			arrayIndex = null;
@@ -238,6 +241,7 @@ public class UnwindOperation
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public UnwindOperationBuilder path(String path) {
 
 			Assert.hasText(path, "'Path' must not be null or empty");

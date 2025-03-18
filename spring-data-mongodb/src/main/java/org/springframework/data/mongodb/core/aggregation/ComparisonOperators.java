@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -392,6 +393,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Cmp}.
 		 */
+		@Contract("_ -> new")
 		public Cmp compareTo(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -404,6 +406,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Cmp}.
 		 */
+		@Contract("_ -> new")
 		public Cmp compareTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -416,6 +419,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Cmp}.
 		 */
+		@Contract("_ -> new")
 		public Cmp compareToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -469,6 +473,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Eq}.
 		 */
+		@Contract("_ -> new")
 		public Eq equalTo(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -481,6 +486,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Eq}.
 		 */
+		@Contract("_ -> new")
 		public Eq equalTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -493,6 +499,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Eq}.
 		 */
+		@Contract("_ -> new")
 		public Eq equalToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -546,6 +553,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Gt}.
 		 */
+		@Contract("_ -> new")
 		public Gt greaterThan(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -558,6 +566,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Gt}.
 		 */
+		@Contract("_ -> new")
 		public Gt greaterThan(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -570,6 +579,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Gt}.
 		 */
+		@Contract("_ -> new")
 		public Gt greaterThanValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -623,6 +633,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Lt}.
 		 */
+		@Contract("_ -> new")
 		public Lt lessThan(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -635,6 +646,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Lt}.
 		 */
+		@Contract("_ -> new")
 		public Lt lessThan(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -647,6 +659,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Lt}.
 		 */
+		@Contract("_ -> new")
 		public Lt lessThanValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -700,6 +713,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Gte}.
 		 */
+		@Contract("_ -> new")
 		public Gte greaterThanEqualTo(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -712,6 +726,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Gte}.
 		 */
+		@Contract("_ -> new")
 		public Gte greaterThanEqualTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -724,6 +739,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Gte}.
 		 */
+		@Contract("_ -> new")
 		public Gte greaterThanEqualToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -777,6 +793,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Lte}.
 		 */
+		@Contract("_ -> new")
 		public Lte lessThanEqualTo(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -789,6 +806,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Lte}.
 		 */
+		@Contract("_ -> new")
 		public Lte lessThanEqualTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -801,6 +819,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Lte}.
 		 */
+		@Contract("_ -> new")
 		public Lte lessThanEqualToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -854,6 +873,7 @@ public class ComparisonOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Ne}.
 		 */
+		@Contract("_ -> new")
 		public Ne notEqualTo(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -866,6 +886,7 @@ public class ComparisonOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Ne}.
 		 */
+		@Contract("_ -> new")
 		public Ne notEqualTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -878,6 +899,7 @@ public class ComparisonOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Ne}.
 		 */
+		@Contract("_ -> new")
 		public Ne notEqualToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");

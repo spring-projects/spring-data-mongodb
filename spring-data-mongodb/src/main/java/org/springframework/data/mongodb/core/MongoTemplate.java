@@ -650,6 +650,7 @@ public class MongoTemplate
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public MongoTemplate withSession(ClientSession session) {
 
 		Assert.notNull(session, "ClientSession must not be null");

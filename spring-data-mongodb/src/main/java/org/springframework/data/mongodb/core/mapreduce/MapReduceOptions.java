@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
 
 import com.mongodb.client.model.MapReduceAction;
+import org.springframework.lang.Contract;
 
 /**
  * @author Mark Pollack
@@ -65,6 +66,7 @@ public class MapReduceOptions {
 	 * @param limit Limit the number of objects to process
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions limit(int limit) {
 
 		this.limit = limit;
@@ -78,6 +80,7 @@ public class MapReduceOptions {
 	 * @param collectionName The name of the collection where the results of the map-reduce operation will be stored.
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions outputCollection(String collectionName) {
 
 		this.outputCollection = collectionName;
@@ -91,6 +94,7 @@ public class MapReduceOptions {
 	 * @param outputDatabase The name of the database where the results of the map-reduce operation will be stored.
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions outputDatabase(@Nullable String outputDatabase) {
 
 		this.outputDatabase = Optional.ofNullable(outputDatabase);
@@ -105,6 +109,7 @@ public class MapReduceOptions {
 	 * @return this.
 	 * @since 3.0
 	 */
+	@Contract("-> this")
 	public MapReduceOptions actionInline() {
 
 		this.mapReduceAction = null;
@@ -119,6 +124,7 @@ public class MapReduceOptions {
 	 * @return this.
 	 * @since 3.0
 	 */
+	@Contract("-> this")
 	public MapReduceOptions actionMerge() {
 
 		this.mapReduceAction = MapReduceAction.MERGE;
@@ -133,6 +139,7 @@ public class MapReduceOptions {
 	 * @return this.
 	 * @since 3.0
 	 */
+	@Contract("-> this")
 	public MapReduceOptions actionReduce() {
 
 		this.mapReduceAction = MapReduceAction.REDUCE;
@@ -146,6 +153,7 @@ public class MapReduceOptions {
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 * @since 3.0
 	 */
+	@Contract("-> this")
 	public MapReduceOptions actionReplace() {
 
 		this.mapReduceAction = MapReduceAction.REPLACE;
@@ -159,6 +167,7 @@ public class MapReduceOptions {
 	 * @param outputShared if true, output will be sharded based on _id key.
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions outputSharded(boolean outputShared) {
 
 		this.outputSharded = Optional.of(outputShared);
@@ -171,6 +180,7 @@ public class MapReduceOptions {
 	 * @param finalizeFunction The finalize function. Can be a JSON string or a Spring Resource URL
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions finalizeFunction(@Nullable String finalizeFunction) {
 
 		this.finalizeFunction = Optional.ofNullable(finalizeFunction);
@@ -184,6 +194,7 @@ public class MapReduceOptions {
 	 * @param scopeVariables variables that can be accessed from map, reduce, and finalize scripts
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions scopeVariables(Map<String, Object> scopeVariables) {
 
 		this.scopeVariables = scopeVariables;
@@ -197,6 +208,7 @@ public class MapReduceOptions {
 	 * @param javaScriptMode if true, have the execution of map-reduce stay in JavaScript
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions javaScriptMode(boolean javaScriptMode) {
 
 		this.jsMode = javaScriptMode;
@@ -208,6 +220,7 @@ public class MapReduceOptions {
 	 *
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions verbose(boolean verbose) {
 
 		this.verbose = verbose;
@@ -221,6 +234,7 @@ public class MapReduceOptions {
 	 * @return
 	 * @since 2.0
 	 */
+	@Contract("_ -> this")
 	public MapReduceOptions collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);

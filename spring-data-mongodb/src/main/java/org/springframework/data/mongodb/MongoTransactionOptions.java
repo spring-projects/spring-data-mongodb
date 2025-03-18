@@ -28,6 +28,7 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
+import org.springframework.lang.Contract;
 
 /**
  * Options to be applied within a specific transaction scope.
@@ -72,6 +73,7 @@ public interface MongoTransactionOptions
 	 * @return new instance of {@link MongoTransactionOptions} or this if {@literal fallbackOptions} is {@literal null} or
 	 *         {@link #NONE}.
 	 */
+	@Contract("null -> this")
 	default MongoTransactionOptions mergeWith(@Nullable MongoTransactionOptions fallbackOptions) {
 
 		if (fallbackOptions == null || MongoTransactionOptions.NONE.equals(fallbackOptions)) {

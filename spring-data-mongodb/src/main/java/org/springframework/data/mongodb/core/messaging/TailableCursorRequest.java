@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions.TailableCursorRequestOptionsBuilder;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -164,6 +165,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 			 * @param collection must not be {@literal null} nor {@literal empty}.
 			 * @return this.
 			 */
+			@Contract("_ -> this")
 			public TailableCursorRequestOptionsBuilder collection(String collection) {
 
 				Assert.hasText(collection, "Collection must not be null nor empty");
@@ -178,6 +180,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 			 * @param filter the {@link Query } to apply for filtering events. Must not be {@literal null}.
 			 * @return this.
 			 */
+			@Contract("_ -> this")
 			public TailableCursorRequestOptionsBuilder filter(Query filter) {
 
 				Assert.notNull(filter, "Filter must not be null");
@@ -189,6 +192,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 			/**
 			 * @return the built {@link TailableCursorRequestOptions}.
 			 */
+			@Contract("-> new")
 			public TailableCursorRequestOptions build() {
 
 				TailableCursorRequestOptions options = new TailableCursorRequestOptions();
@@ -221,6 +225,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		 * @param collectionName must not be {@literal null} nor empty.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public TailableCursorRequestBuilder<T> collection(String collectionName) {
 
 			Assert.hasText(collectionName, "CollectionName must not be null");
@@ -235,6 +240,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		 * @param messageListener must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public TailableCursorRequestBuilder<T> publishTo(MessageListener<Document, ? super T> messageListener) {
 
 			Assert.notNull(messageListener, "MessageListener must not be null");
@@ -249,6 +255,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		 * @param filter the {@link Query } to apply for filtering events. Must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public TailableCursorRequestBuilder<T> filter(Query filter) {
 
 			Assert.notNull(filter, "Filter must not be null");
@@ -260,6 +267,7 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 		/**
 		 * @return the build {@link ChangeStreamRequest}.
 		 */
+		@Contract("_ -> new")
 		public TailableCursorRequest<T> build() {
 
 			Assert.notNull(listener, "MessageListener must not be null");

@@ -27,6 +27,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -1077,6 +1078,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DayOfYear withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1149,6 +1151,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DayOfMonth withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1221,6 +1224,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DayOfWeek withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1293,6 +1297,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Year withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1365,6 +1370,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Month withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1437,6 +1443,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Week withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1509,6 +1516,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Hour withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1581,6 +1589,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Minute withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1653,6 +1662,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Second withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1725,6 +1735,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public Millisecond withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1811,6 +1822,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DateToString withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -1825,6 +1837,7 @@ public class DateOperators {
 		 * @return new instance of {@link DateToString}.
 		 * @since 2.1
 		 */
+		@Contract("_ -> new")
 		public DateToString onNullReturn(Object value) {
 			return new DateToString(append("onNull", value));
 		}
@@ -1837,6 +1850,7 @@ public class DateOperators {
 		 * @return new instance of {@link DateToString}.
 		 * @since 2.1
 		 */
+		@Contract("_ -> new")
 		public DateToString onNullReturnValueOf(String fieldReference) {
 			return onNullReturn(Fields.field(fieldReference));
 		}
@@ -1849,6 +1863,7 @@ public class DateOperators {
 		 * @return new instance of {@link DateToString}.
 		 * @since 2.1
 		 */
+		@Contract("_ -> new")
 		public DateToString onNullReturnValueOf(AggregationExpression expression) {
 			return onNullReturn(expression);
 		}
@@ -1974,6 +1989,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public IsoDayOfWeek withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -2046,6 +2062,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public IsoWeek withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -2118,6 +2135,7 @@ public class DateOperators {
 		 * @since 2.1
 		 */
 		@Override
+		@Contract("_ -> new")
 		public IsoWeekYear withTimezone(Timezone timezone) {
 
 			Assert.notNull(timezone, "Timezone must not be null");
@@ -2302,6 +2320,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal month} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromParts month(Object month) {
 			return new DateFromParts(append("month", month));
 		}
@@ -2313,6 +2332,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromParts monthOf(String fieldReference) {
 			return month(Fields.field(fieldReference));
 		}
@@ -2324,6 +2344,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromParts monthOf(AggregationExpression expression) {
 			return month(expression);
 		}
@@ -2336,6 +2357,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal day} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromParts day(Object day) {
 			return new DateFromParts(append("day", day));
 		}
@@ -2347,6 +2369,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromParts dayOf(String fieldReference) {
 			return day(Fields.field(fieldReference));
 		}
@@ -2358,26 +2381,31 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromParts dayOf(AggregationExpression expression) {
 			return day(expression);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateFromParts hour(Object hour) {
 			return new DateFromParts(append("hour", hour));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateFromParts minute(Object minute) {
 			return new DateFromParts(append("minute", minute));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateFromParts second(Object second) {
 			return new DateFromParts(append("second", second));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public DateFromParts millisecond(Object millisecond) {
 			return new DateFromParts(append("millisecond", millisecond));
 		}
@@ -2391,6 +2419,7 @@ public class DateOperators {
 		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DateFromParts withTimezone(Timezone timezone) {
 			return new DateFromParts(appendTimezone(argumentMap(), timezone));
 		}
@@ -2478,6 +2507,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal isoWeek} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public IsoDateFromParts isoWeek(Object isoWeek) {
 			return new IsoDateFromParts(append("isoWeek", isoWeek));
 		}
@@ -2489,6 +2519,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public IsoDateFromParts isoWeekOf(String fieldReference) {
 			return isoWeek(Fields.field(fieldReference));
 		}
@@ -2500,6 +2531,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public IsoDateFromParts isoWeekOf(AggregationExpression expression) {
 			return isoWeek(expression);
 		}
@@ -2512,6 +2544,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal isoWeek} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public IsoDateFromParts isoDayOfWeek(Object day) {
 			return new IsoDateFromParts(append("isoDayOfWeek", day));
 		}
@@ -2523,6 +2556,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public IsoDateFromParts isoDayOfWeekOf(String fieldReference) {
 			return isoDayOfWeek(Fields.field(fieldReference));
 		}
@@ -2534,26 +2568,31 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public IsoDateFromParts isoDayOfWeekOf(AggregationExpression expression) {
 			return isoDayOfWeek(expression);
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public IsoDateFromParts hour(Object hour) {
 			return new IsoDateFromParts(append("hour", hour));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public IsoDateFromParts minute(Object minute) {
 			return new IsoDateFromParts(append("minute", minute));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public IsoDateFromParts second(Object second) {
 			return new IsoDateFromParts(append("second", second));
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public IsoDateFromParts millisecond(Object millisecond) {
 			return new IsoDateFromParts(append("millisecond", millisecond));
 		}
@@ -2567,6 +2606,7 @@ public class DateOperators {
 		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 */
 		@Override
+		@Contract("_ -> new")
 		public IsoDateFromParts withTimezone(Timezone timezone) {
 			return new IsoDateFromParts(appendTimezone(argumentMap(), timezone));
 		}
@@ -2677,6 +2717,7 @@ public class DateOperators {
 		 *
 		 * @return new instance of {@link DateToParts}.
 		 */
+		@Contract("_ -> new")
 		public DateToParts iso8601() {
 			return new DateToParts(append("iso8601", true));
 		}
@@ -2690,6 +2731,7 @@ public class DateOperators {
 		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DateToParts withTimezone(Timezone timezone) {
 			return new DateToParts(appendTimezone(argumentMap(), timezone));
 		}
@@ -2734,6 +2776,7 @@ public class DateOperators {
 		 * @return new instance of {@link DateFromString}.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public static DateFromString fromStringOf(String fieldReference) {
 			return fromString(Fields.field(fieldReference));
 		}
@@ -2745,6 +2788,7 @@ public class DateOperators {
 		 * @return new instance of {@link DateFromString}.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public static DateFromString fromStringOf(AggregationExpression expression) {
 			return fromString(expression);
 		}
@@ -2758,6 +2802,7 @@ public class DateOperators {
 		 * @throws IllegalArgumentException if given {@literal timezone} is {@literal null}.
 		 */
 		@Override
+		@Contract("_ -> new")
 		public DateFromString withTimezone(Timezone timezone) {
 			return new DateFromString(appendTimezone(argumentMap(), timezone));
 		}
@@ -2770,6 +2815,7 @@ public class DateOperators {
 		 * @return new instance of {@link DateFromString}.
 		 * @throws IllegalArgumentException if given {@literal format} is {@literal null}.
 		 */
+		@Contract("_ -> new")
 		public DateFromString withFormat(String format) {
 
 			Assert.notNull(format, "Format must not be null");
@@ -2839,6 +2885,7 @@ public class DateOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateAdd toDateOf(AggregationExpression expression) {
 			return toDate(expression);
 		}
@@ -2849,6 +2896,7 @@ public class DateOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateAdd toDateOf(String fieldReference) {
 			return toDate(Fields.field(fieldReference));
 		}
@@ -2859,6 +2907,7 @@ public class DateOperators {
 		 * @param dateExpression anything that evaluates to a valid date. Must not be {@literal null}.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateAdd toDate(Object dateExpression) {
 			return new DateAdd(append("startDate", dateExpression));
 		}
@@ -2869,6 +2918,7 @@ public class DateOperators {
 		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateAdd withTimezone(Timezone timezone) {
 			return new DateAdd(appendTimezone(argumentMap(), timezone));
 		}
@@ -2936,6 +2986,7 @@ public class DateOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link DateSubtract}.
 		 */
+		@Contract("_ -> new")
 		public DateSubtract fromDateOf(AggregationExpression expression) {
 			return fromDate(expression);
 		}
@@ -2946,6 +2997,7 @@ public class DateOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link DateSubtract}.
 		 */
+		@Contract("_ -> new")
 		public DateSubtract fromDateOf(String fieldReference) {
 			return fromDate(Fields.field(fieldReference));
 		}
@@ -2956,6 +3008,7 @@ public class DateOperators {
 		 * @param dateExpression anything that evaluates to a valid date. Must not be {@literal null}.
 		 * @return new instance of {@link DateSubtract}.
 		 */
+		@Contract("_ -> new")
 		public DateSubtract fromDate(Object dateExpression) {
 			return new DateSubtract(append("startDate", dateExpression));
 		}
@@ -2966,6 +3019,7 @@ public class DateOperators {
 		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
 		 * @return new instance of {@link DateSubtract}.
 		 */
+		@Contract("_ -> new")
 		public DateSubtract withTimezone(Timezone timezone) {
 			return new DateSubtract(appendTimezone(argumentMap(), timezone));
 		}
@@ -3033,6 +3087,7 @@ public class DateOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateDiff toDateOf(AggregationExpression expression) {
 			return toDate(expression);
 		}
@@ -3043,6 +3098,7 @@ public class DateOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateDiff toDateOf(String fieldReference) {
 			return toDate(Fields.field(fieldReference));
 		}
@@ -3053,6 +3109,7 @@ public class DateOperators {
 		 * @param dateExpression anything that evaluates to a valid date. Must not be {@literal null}.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateDiff toDate(Object dateExpression) {
 			return new DateDiff(append("startDate", dateExpression));
 		}
@@ -3063,6 +3120,7 @@ public class DateOperators {
 		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
 		 * @return new instance of {@link DateAdd}.
 		 */
+		@Contract("_ -> new")
 		public DateDiff withTimezone(Timezone timezone) {
 			return new DateDiff(appendTimezone(argumentMap(), timezone));
 		}
@@ -3074,6 +3132,7 @@ public class DateOperators {
 		 * @param day must not be {@literal null}.
 		 * @return new instance of {@link DateDiff}.
 		 */
+		@Contract("_ -> new")
 		public DateDiff startOfWeek(Object day) {
 			return new DateDiff(append("startOfWeek", day));
 		}
@@ -3133,6 +3192,7 @@ public class DateOperators {
 		 * @param unit must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc to(String unit) {
 			return new DateTrunc(append("unit", unit));
 		}
@@ -3143,6 +3203,7 @@ public class DateOperators {
 		 * @param unit must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc to(AggregationExpression unit) {
 			return new DateTrunc(append("unit", unit));
 		}
@@ -3153,6 +3214,7 @@ public class DateOperators {
 		 * @param day must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc startOfWeek(java.time.DayOfWeek day) {
 			return startOfWeek(day.name().toLowerCase(Locale.US));
 		}
@@ -3163,6 +3225,7 @@ public class DateOperators {
 		 * @param day must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc startOfWeek(String day) {
 			return new DateTrunc(append("startOfWeek", day));
 		}
@@ -3173,6 +3236,7 @@ public class DateOperators {
 		 * @param binSize must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc binSize(int binSize) {
 			return binSize((Object) binSize);
 		}
@@ -3183,6 +3247,7 @@ public class DateOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc binSize(AggregationExpression expression) {
 			return binSize((Object) expression);
 		}
@@ -3193,6 +3258,7 @@ public class DateOperators {
 		 * @param binSize must not be {@literal null}.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc binSize(Object binSize) {
 			return new DateTrunc(append("binSize", binSize));
 		}
@@ -3203,6 +3269,7 @@ public class DateOperators {
 		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
 		 * @return new instance of {@link DateTrunc}.
 		 */
+		@Contract("_ -> new")
 		public DateTrunc withTimezone(Timezone timezone) {
 			return new DateTrunc(appendTimezone(argumentMap(), timezone));
 		}

@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.St
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnit;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnits;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -975,8 +976,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
-		 * numeric value.
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the numeric value.
 		 *
 		 * @return new instance of {@link Percentile}.
 		 * @param percentages must not be {@literal null}.
@@ -990,8 +990,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the
-		 * numeric value.
+		 * Creates new {@link AggregationExpression} that calculates the requested percentile(s) of the numeric value.
 		 *
 		 * @return new instance of {@link Median}.
 		 * @since 4.2
@@ -1118,6 +1117,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
+		@Contract("_ -> new")
 		public Add add(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1130,6 +1130,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
+		@Contract("_ -> new")
 		public Add add(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1142,6 +1143,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
+		@Contract("_ -> new")
 		public Add add(Number value) {
 			return new Add(append(value));
 		}
@@ -1258,6 +1260,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
+		@Contract("_ -> new")
 		public Divide divideBy(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1270,6 +1273,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
+		@Contract("_ -> new")
 		public Divide divideBy(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1282,6 +1286,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
+		@Contract("_ -> new")
 		public Divide divideBy(Number value) {
 			return new Divide(append(value));
 		}
@@ -1504,6 +1509,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
+		@Contract("_ -> new")
 		public Log log(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1516,6 +1522,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
+		@Contract("_ -> new")
 		public Log log(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1528,6 +1535,7 @@ public class ArithmeticOperators {
 		 * @param base must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
+		@Contract("_ -> new")
 		public Log log(Number base) {
 			return new Log(append(base));
 		}
@@ -1644,6 +1652,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
+		@Contract("_ -> new")
 		public Mod mod(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1656,6 +1665,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
+		@Contract("_ -> new")
 		public Mod mod(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1668,6 +1678,7 @@ public class ArithmeticOperators {
 		 * @param base must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
+		@Contract("_ -> new")
 		public Mod mod(Number base) {
 			return new Mod(append(base));
 		}
@@ -1731,6 +1742,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
+		@Contract("_ -> new")
 		public Multiply multiplyBy(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1743,6 +1755,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
+		@Contract("_ -> new")
 		public Multiply multiplyBy(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1755,6 +1768,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
+		@Contract("_ -> new")
 		public Multiply multiplyBy(Number value) {
 			return new Multiply(append(value));
 		}
@@ -1818,6 +1832,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Pow pow(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1830,6 +1845,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Pow pow(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1842,6 +1858,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Pow pow(Number value) {
 			return new Pow(append(value));
 		}
@@ -1958,6 +1975,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Subtract subtract(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -1970,6 +1988,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Subtract subtract(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -1982,6 +2001,7 @@ public class ArithmeticOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
+		@Contract("_ -> new")
 		public Subtract subtract(Number value) {
 			return new Subtract(append(value));
 		}
@@ -2101,6 +2121,7 @@ public class ArithmeticOperators {
 		 * @param place value between -20 and 100, exclusive.
 		 * @return new instance of {@link Round}.
 		 */
+		@Contract("_ -> new")
 		public Round place(int place) {
 			return new Round(append(place));
 		}
@@ -2111,6 +2132,7 @@ public class ArithmeticOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Round}.
 		 */
+		@Contract("_ -> new")
 		public Round placeOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -2124,6 +2146,7 @@ public class ArithmeticOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Round}.
 		 */
+		@Contract("_ -> new")
 		public Round placeOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null");
@@ -2174,6 +2197,7 @@ public class ArithmeticOperators {
 			return new Derivative(Collections.singletonMap("input", value));
 		}
 
+		@Contract("_ -> new")
 		public Derivative unit(String unit) {
 			return new Derivative(append("unit", unit));
 		}
@@ -2224,6 +2248,7 @@ public class ArithmeticOperators {
 		 * @param unit the unit of measure.
 		 * @return new instance of {@link Integral}.
 		 */
+		@Contract("_ -> new")
 		public Integral unit(String unit) {
 			return new Integral(append("unit", unit));
 		}
@@ -2258,8 +2283,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
-		 * {@link AngularUnit#RADIANS radians}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS radians}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2371,8 +2395,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * the given {@link AngularUnit unit}.
-		 * <br />
+		 * the given {@link AngularUnit unit}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2391,8 +2414,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * {@link AngularUnit#RADIANS}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -2475,8 +2497,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASin}.
@@ -2525,8 +2546,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASinh}.
@@ -2566,8 +2586,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
-		 * {@link AngularUnit#RADIANS radians}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS radians}. <br />
 		 * Use {@code cosOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2677,8 +2696,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * the given {@link AngularUnit unit}.
-		 * <br />
+		 * the given {@link AngularUnit unit}. <br />
 		 * Use {@code coshOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2695,8 +2713,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * {@link AngularUnit#RADIANS}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -2779,8 +2796,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ACos}.
@@ -2829,8 +2845,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ACosh}.
@@ -2870,8 +2885,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
-		 * {@link AngularUnit#RADIANS radians}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS radians}. <br />
 		 * Use {@code tanOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -3049,8 +3063,8 @@ public class ArithmeticOperators {
 		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
 		 * the first and second values passed to the expression respectively.
 		 *
-		 * @param fieldReference anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
-		 *          numeric value.
+		 * @param fieldReference anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves
+		 *          to a numeric value.
 		 * @return new instance of {@link ATan2}.
 		 */
 		public ATan2 atan2of(String fieldReference) {
@@ -3063,8 +3077,8 @@ public class ArithmeticOperators {
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
 		 * {@link AngularUnit#RADIANS}.
 		 *
-		 * @param expression anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
-		 *          numeric value.
+		 * @param expression anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to
+		 *          a numeric value.
 		 * @return new instance of {@link ATan2}.
 		 */
 		public ATan2 atan2of(AggregationExpression expression) {
@@ -3116,8 +3130,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * the given {@link AngularUnit unit}.
-		 * <br />
+		 * the given {@link AngularUnit unit}. <br />
 		 * Use {@code tanhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -3134,8 +3147,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * {@link AngularUnit#RADIANS}.
-		 * <br />
+		 * {@link AngularUnit#RADIANS}. <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -3206,11 +3218,9 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse
-		 * hyperbolic tangent of a value.
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
 		 *
-		 * @param fieldReference the name of the {@link Field field} that resolves to a
-		 *                       numeric value.
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link ATanh}.
 		 */
 		public static ATanh atanhOf(String fieldReference) {
@@ -3218,8 +3228,7 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
-		 * <br />
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value. <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ATanh}.
@@ -3229,11 +3238,10 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates a new {@link AggregationExpression} that calculates the inverse
-		 * hyperbolic tangent of a value.
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
 		 *
-		 * @param value anything ({@link Field field}, {@link AggregationExpression
-		 *              expression}, ...) that resolves to a numeric value.
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
 		 * @return new instance of {@link ATanh}.
 		 */
 		public static ATanh atanhOf(Object value) {

@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Contract;
 
 /**
  * Immutable object holding additional options to be applied when creating a MongoDB
@@ -59,6 +60,7 @@ public class ViewOptions {
 	 * @param collation the {@link Collation} to use for language-specific string comparison.
 	 * @return new instance of {@link ViewOptions}.
 	 */
+	@Contract("_ -> new")
 	public ViewOptions collation(Collation collation) {
 		return new ViewOptions(collation);
 	}

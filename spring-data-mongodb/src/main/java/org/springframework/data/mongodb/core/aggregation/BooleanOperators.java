@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -215,6 +216,7 @@ public class BooleanOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link And}.
 		 */
+		@Contract("_ -> new")
 		public And andExpression(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -227,6 +229,7 @@ public class BooleanOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link And}.
 		 */
+		@Contract("_ -> new")
 		public And andField(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -239,6 +242,7 @@ public class BooleanOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link And}.
 		 */
+		@Contract("_ -> new")
 		public And andValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");
@@ -281,6 +285,7 @@ public class BooleanOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Or}.
 		 */
+		@Contract("_ -> new")
 		public Or orExpression(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -293,6 +298,7 @@ public class BooleanOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Or}.
 		 */
+		@Contract("_ -> new")
 		public Or orField(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -305,6 +311,7 @@ public class BooleanOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Or}.
 		 */
+		@Contract("_ -> new")
 		public Or orValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null");

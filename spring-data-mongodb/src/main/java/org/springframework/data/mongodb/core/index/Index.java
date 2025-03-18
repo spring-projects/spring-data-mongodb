@@ -27,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.IndexOptions.Unique;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -52,11 +53,13 @@ public class Index implements IndexDefinition {
 		fieldSpec.put(key, direction);
 	}
 
+	@Contract("_, _ -> this")
 	public Index on(String key, Direction direction) {
 		fieldSpec.put(key, direction);
 		return this;
 	}
 
+	@Contract("_ -> this")
 	public Index named(String name) {
 		this.name = name;
 		return this;
@@ -69,6 +72,7 @@ public class Index implements IndexDefinition {
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
+	@Contract("-> this")
 	public Index unique() {
 
 		this.options.setUnique(Unique.YES);
@@ -82,6 +86,7 @@ public class Index implements IndexDefinition {
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
+	@Contract("-> this")
 	public Index sparse() {
 		this.sparse = true;
 		return this;
@@ -92,7 +97,7 @@ public class Index implements IndexDefinition {
 	 *
 	 * @return this.
 	 * @since 1.5
-	 */
+	 */@Contract("-> this")
 	public Index background() {
 
 		this.background = true;
@@ -107,6 +112,7 @@ public class Index implements IndexDefinition {
 	 *      "https://www.mongodb.com/docs/manual/core/index-hidden/">https://www.mongodb.com/docs/manual/core/index-hidden/</a>
 	 * @since 4.1
 	 */
+	@Contract("-> this")
 	public Index hidden() {
 
 		options.setHidden(true);
@@ -120,6 +126,7 @@ public class Index implements IndexDefinition {
 	 * @return this.
 	 * @since 1.5
 	 */
+	@Contract("_ -> this")
 	public Index expire(long value) {
 		return expire(value, TimeUnit.SECONDS);
 	}
@@ -132,6 +139,7 @@ public class Index implements IndexDefinition {
 	 * @throws IllegalArgumentException if given {@literal timeout} is {@literal null}.
 	 * @since 2.2
 	 */
+	@Contract("_ -> this")
 	public Index expire(Duration timeout) {
 
 		Assert.notNull(timeout, "Timeout must not be null");
@@ -146,6 +154,7 @@ public class Index implements IndexDefinition {
 	 * @return this.
 	 * @since 1.5
 	 */
+	@Contract("_, _ -> this")
 	public Index expire(long value, TimeUnit unit) {
 
 		Assert.notNull(unit, "TimeUnit for expiration must not be null");
@@ -162,6 +171,7 @@ public class Index implements IndexDefinition {
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 	 * @since 1.10
 	 */
+	@Contract("_ -> this")
 	public Index partial(@Nullable IndexFilter filter) {
 
 		this.filter = Optional.ofNullable(filter);
@@ -178,6 +188,7 @@ public class Index implements IndexDefinition {
 	 * @return this.
 	 * @since 2.0
 	 */
+	@Contract("_ -> this")
 	public Index collation(@Nullable Collation collation) {
 
 		this.collation = Optional.ofNullable(collation);

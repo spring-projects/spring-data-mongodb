@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.lang.Contract;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -107,6 +108,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public ReactiveBulkOperations insert(Object document) {
 
 		Assert.notNull(document, "Document must not be null");
@@ -120,6 +122,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public ReactiveBulkOperations insert(List<? extends Object> documents) {
 
 		Assert.notNull(documents, "Documents must not be null");
@@ -130,6 +133,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_, _, _ -> this")
 	public ReactiveBulkOperations updateOne(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -140,6 +144,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public ReactiveBulkOperations updateMulti(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -150,11 +155,13 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public ReactiveBulkOperations upsert(Query query, UpdateDefinition update) {
 		return update(query, update, true, true);
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public ReactiveBulkOperations remove(Query query) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -169,6 +176,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public ReactiveBulkOperations remove(List<Query> removes) {
 
 		Assert.notNull(removes, "Removals must not be null");
@@ -181,6 +189,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 	}
 
 	@Override
+	@Contract("_, _, _ -> this")
 	public ReactiveBulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
 
 		Assert.notNull(query, "Query must not be null");

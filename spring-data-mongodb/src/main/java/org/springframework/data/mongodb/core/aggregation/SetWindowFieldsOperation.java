@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -31,7 +32,8 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @since 3.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/">https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/</a>
+ * @see <a href=
+ *      "https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/">https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/</a>
  */
 public class SetWindowFieldsOperation
 		implements AggregationOperation, FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation {
@@ -137,6 +139,7 @@ public class SetWindowFieldsOperation
 		 * @param field must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public WindowOutput append(ComputedField field) {
 
 			Assert.notNull(field, "Field must not be null");
@@ -152,6 +155,7 @@ public class SetWindowFieldsOperation
 		 * @return new instance of {@link ComputedFieldAppender}.
 		 * @see #append(ComputedField)
 		 */
+		@Contract("_ -> new")
 		public ComputedFieldAppender append(AggregationExpression expression) {
 
 			return new ComputedFieldAppender() {
@@ -359,6 +363,7 @@ public class SetWindowFieldsOperation
 		 * @param lower eg. {@literal current} or {@literal unbounded}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RangeWindowBuilder from(String lower) {
 
 			this.lower = lower;
@@ -371,6 +376,7 @@ public class SetWindowFieldsOperation
 		 * @param upper eg. {@literal current} or {@literal unbounded}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RangeWindowBuilder to(String upper) {
 
 			this.upper = upper;
@@ -385,6 +391,7 @@ public class SetWindowFieldsOperation
 		 * @param lower
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RangeWindowBuilder from(Number lower) {
 
 			this.lower = lower;
@@ -399,6 +406,7 @@ public class SetWindowFieldsOperation
 		 * @param upper
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RangeWindowBuilder to(Number upper) {
 
 			this.upper = upper;
@@ -410,6 +418,7 @@ public class SetWindowFieldsOperation
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RangeWindowBuilder fromCurrent() {
 			return from(CURRENT);
 		}
@@ -419,6 +428,7 @@ public class SetWindowFieldsOperation
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RangeWindowBuilder fromUnbounded() {
 			return from(UNBOUNDED);
 		}
@@ -428,6 +438,7 @@ public class SetWindowFieldsOperation
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RangeWindowBuilder toCurrent() {
 			return to(CURRENT);
 		}
@@ -437,6 +448,7 @@ public class SetWindowFieldsOperation
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RangeWindowBuilder toUnbounded() {
 			return to(UNBOUNDED);
 		}
@@ -447,6 +459,7 @@ public class SetWindowFieldsOperation
 		 * @param windowUnit must not be {@literal null}. Can be on of {@link Windows}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RangeWindowBuilder unit(WindowUnit windowUnit) {
 
 			Assert.notNull(windowUnit, "WindowUnit must not be null");
@@ -459,6 +472,7 @@ public class SetWindowFieldsOperation
 		 *
 		 * @return new instance of {@link RangeWindow}.
 		 */
+		@Contract("-> new")
 		public RangeWindow build() {
 
 			Assert.notNull(lower, "Lower bound must not be null");
@@ -487,20 +501,24 @@ public class SetWindowFieldsOperation
 		 * @param lower
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public DocumentWindowBuilder from(Number lower) {
 
 			this.lower = lower;
 			return this;
 		}
 
+		@Contract("-> this")
 		public DocumentWindowBuilder fromCurrent() {
 			return from(CURRENT);
 		}
 
+		@Contract("-> this")
 		public DocumentWindowBuilder fromUnbounded() {
 			return from(UNBOUNDED);
 		}
 
+		@Contract("-> this")
 		public DocumentWindowBuilder to(String upper) {
 
 			this.upper = upper;
@@ -513,6 +531,7 @@ public class SetWindowFieldsOperation
 		 * @param lower eg. {@literal current} or {@literal unbounded}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public DocumentWindowBuilder from(String lower) {
 
 			this.lower = lower;
@@ -527,20 +546,24 @@ public class SetWindowFieldsOperation
 		 * @param upper
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public DocumentWindowBuilder to(Number upper) {
 
 			this.upper = upper;
 			return this;
 		}
 
+		@Contract("-> this")
 		public DocumentWindowBuilder toCurrent() {
 			return to(CURRENT);
 		}
 
+		@Contract("-> this")
 		public DocumentWindowBuilder toUnbounded() {
 			return to(UNBOUNDED);
 		}
 
+		@Contract("-> new")
 		public DocumentWindow build() {
 
 			Assert.notNull(lower, "Lower bound must not be null");
@@ -698,6 +721,7 @@ public class SetWindowFieldsOperation
 		 * @param fieldName must not be {@literal null} or null.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder partitionByField(String fieldName) {
 
 			Assert.hasText(fieldName, "Field name must not be empty or null");
@@ -710,6 +734,7 @@ public class SetWindowFieldsOperation
 		 * @param expression must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder partitionByExpression(AggregationExpression expression) {
 			return partitionBy(expression);
 		}
@@ -720,6 +745,7 @@ public class SetWindowFieldsOperation
 		 * @param fields must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder sortBy(String... fields) {
 			return sortBy(Sort.by(fields));
 		}
@@ -730,6 +756,7 @@ public class SetWindowFieldsOperation
 		 * @param sort must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder sortBy(Sort sort) {
 			return sortBy(new SortOperation(sort));
 		}
@@ -740,6 +767,7 @@ public class SetWindowFieldsOperation
 		 * @param sort must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder sortBy(SortOperation sort) {
 
 			Assert.notNull(sort, "SortOperation must not be null");
@@ -754,6 +782,7 @@ public class SetWindowFieldsOperation
 		 * @param output must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder output(WindowOutput output) {
 
 			Assert.notNull(output, "WindowOutput must not be null");
@@ -768,6 +797,7 @@ public class SetWindowFieldsOperation
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link WindowChoice}.
 		 */
+		@Contract("_ -> new")
 		public WindowChoice output(AggregationExpression expression) {
 
 			return new WindowChoice() {
@@ -836,6 +866,7 @@ public class SetWindowFieldsOperation
 		 * @param value must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public SetWindowFieldsOperationBuilder partitionBy(Object value) {
 
 			Assert.notNull(value, "Partition By must not be null");
@@ -849,6 +880,7 @@ public class SetWindowFieldsOperation
 		 *
 		 * @return new instance of {@link SetWindowFieldsOperation}.
 		 */
+		@Contract("-> new")
 		public SetWindowFieldsOperation build() {
 
 			Assert.notNull(output, "Output must be set first");

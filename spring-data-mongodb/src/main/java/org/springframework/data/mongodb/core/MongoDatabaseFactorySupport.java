@@ -21,6 +21,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -132,6 +133,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public MongoDatabaseFactory withSession(ClientSession session) {
 		return new MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory(session, this);
 	}

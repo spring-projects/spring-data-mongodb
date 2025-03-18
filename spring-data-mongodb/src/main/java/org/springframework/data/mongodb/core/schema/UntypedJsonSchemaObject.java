@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -69,6 +70,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param description must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("_ -> new")
 	public UntypedJsonSchemaObject description(String description) {
 		return new UntypedJsonSchemaObject(restrictions, description, generateDescription);
 	}
@@ -78,6 +80,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 *
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("-> new")
 	public UntypedJsonSchemaObject generatedDescription() {
 		return new UntypedJsonSchemaObject(restrictions, description, true);
 	}
@@ -88,6 +91,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param possibleValues must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("_ -> new")
 	public UntypedJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 		return new UntypedJsonSchemaObject(restrictions.possibleValues(possibleValues), description, generateDescription);
 	}
@@ -98,6 +102,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param allOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("_ -> new")
 	public UntypedJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 		return new UntypedJsonSchemaObject(restrictions.allOf(allOf), description, generateDescription);
 	}
@@ -108,6 +113,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param anyOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("_ -> new")
 	public UntypedJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 		return new UntypedJsonSchemaObject(restrictions.anyOf(anyOf), description, generateDescription);
 	}
@@ -118,6 +124,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param oneOf must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("_ -> new")
 	public UntypedJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 		return new UntypedJsonSchemaObject(restrictions.oneOf(oneOf), description, generateDescription);
 	}
@@ -128,6 +135,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @param notMatch must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
+	@Contract("_ -> new")
 	public UntypedJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 		return new UntypedJsonSchemaObject(restrictions.notMatch(notMatch), description, generateDescription);
 	}
@@ -205,6 +213,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param possibleValues must not be {@literal null}.
 		 * @return
 		 */
+		@Contract("_ -> new")
 		Restrictions possibleValues(Collection<?> possibleValues) {
 
 			Assert.notNull(possibleValues, "PossibleValues must not be null");
@@ -215,6 +224,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param allOf must not be {@literal null}.
 		 * @return
 		 */
+		@Contract("_ -> new")
 		Restrictions allOf(Collection<JsonSchemaObject> allOf) {
 
 			Assert.notNull(allOf, "AllOf must not be null");
@@ -225,6 +235,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param anyOf must not be {@literal null}.
 		 * @return
 		 */
+		@Contract("_ -> new")
 		Restrictions anyOf(Collection<JsonSchemaObject> anyOf) {
 
 			Assert.notNull(anyOf, "AnyOf must not be null");
@@ -235,6 +246,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param oneOf must not be {@literal null}.
 		 * @return
 		 */
+		@Contract("_ -> new")
 		Restrictions oneOf(Collection<JsonSchemaObject> oneOf) {
 
 			Assert.notNull(oneOf, "OneOf must not be null");
@@ -245,6 +257,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		 * @param notMatch must not be {@literal null}.
 		 * @return
 		 */
+		@Contract("_ -> new")
 		Restrictions notMatch(JsonSchemaObject notMatch) {
 
 			Assert.notNull(notMatch, "NotMatch must not be null");
