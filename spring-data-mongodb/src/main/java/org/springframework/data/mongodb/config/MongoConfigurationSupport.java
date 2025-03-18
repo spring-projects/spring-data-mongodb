@@ -53,7 +53,7 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Return the name of the database to connect to.
 	 *
-	 * @return must not be {@literal null}.
+	 * @return never {@literal null}.
 	 */
 	protected abstract String getDatabaseName();
 
@@ -77,7 +77,7 @@ public abstract class MongoConfigurationSupport {
 	 * Creates a {@link MongoMappingContext} equipped with entity classes scanned from the mapping base package.
 	 *
 	 * @see #getMappingBasePackages()
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	@Bean
 	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions,
@@ -176,8 +176,7 @@ public abstract class MongoConfigurationSupport {
 				String beanClassName = candidate.getBeanClassName();
 				Assert.notNull(beanClassName, "BeanClassName cannot be null");
 
-				initialEntitySet
-						.add(ClassUtils.forName(beanClassName, MongoConfigurationSupport.class.getClassLoader()));
+				initialEntitySet.add(ClassUtils.forName(beanClassName, MongoConfigurationSupport.class.getClassLoader()));
 			}
 		}
 

@@ -218,13 +218,13 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 
 		Flux<SourceAwareWriteModelHolder> concat = Flux.concat(models).flatMapSequential(it -> {
 
-			if (it.model()instanceof InsertOneModel<Document> iom) {
+			if (it.model() instanceof InsertOneModel<Document> iom) {
 
 				Document target = iom.getDocument();
 				maybeEmitBeforeSaveEvent(it);
 				return maybeInvokeBeforeSaveCallback(it.source(), target)
 						.map(afterCallback -> new SourceAwareWriteModelHolder(afterCallback, mapWriteModel(afterCallback, iom)));
-			} else if (it.model()instanceof ReplaceOneModel<Document> rom) {
+			} else if (it.model() instanceof ReplaceOneModel<Document> rom) {
 
 				Document target = rom.getReplacement();
 				maybeEmitBeforeSaveEvent(it);
@@ -356,7 +356,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 			return eventPublisher == null;
 		}
 
-		@SuppressWarnings({"rawtypes","NullAway"})
+		@SuppressWarnings({ "rawtypes", "NullAway" })
 		public <T> Mono<T> callback(Class<? extends EntityCallback> callbackType, T entity, String collectionName) {
 
 			if (skipEntityCallbacks()) {
@@ -366,7 +366,7 @@ class DefaultReactiveBulkOperations extends BulkOperationsSupport implements Rea
 			return entityCallbacks.callback(callbackType, entity, collectionName);
 		}
 
-		@SuppressWarnings({"rawtypes","NullAway"})
+		@SuppressWarnings({ "rawtypes", "NullAway" })
 		public <T> Mono<T> callback(Class<? extends EntityCallback> callbackType, T entity, Document document,
 				String collectionName) {
 

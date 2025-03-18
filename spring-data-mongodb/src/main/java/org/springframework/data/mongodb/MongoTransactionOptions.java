@@ -149,7 +149,7 @@ public interface MongoTransactionOptions
 	/**
 	 * Factory method to wrap given MongoDB driver native {@link TransactionOptions} into {@link MongoTransactionOptions}.
 	 *
-	 * @param options
+	 * @param options can be {@literal null}.
 	 * @return {@link MongoTransactionOptions#NONE} if given object is {@literal null}.
 	 */
 	static MongoTransactionOptions of(@Nullable TransactionOptions options) {

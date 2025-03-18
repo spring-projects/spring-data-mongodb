@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonNull;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
@@ -66,7 +65,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.TargetAware;
 import org.springframework.data.util.Optionals;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
-import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -416,7 +414,8 @@ class EntityOperations {
 		 *
 		 * @return
 		 */
-		@Nullable Object getId();
+		@Nullable
+		Object getId();
 
 		/**
 		 * Returns the property value for {@code key}.
@@ -521,10 +520,9 @@ class EntityOperations {
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier
 		 * currently present.
 		 *
-		 * @param id must not be {@literal null}.
+		 * @param id can be {@literal null}.
 		 * @return
 		 */
-		@Contract("null -> fail")
 		T populateIdIfNecessary(@Nullable Object id);
 
 		/**
@@ -851,7 +849,7 @@ class EntityOperations {
 				currentValue = currentEntity.getPropertyValue(segment);
 
 				if (i < segments.length - 1) {
-					if(currentValue == null) {
+					if (currentValue == null) {
 						return BsonNull.VALUE;
 					}
 
@@ -1148,7 +1146,8 @@ class EntityOperations {
 				return mongoEntity.getValueEvaluationContext(null);
 			}
 
-			return ValueEvaluationContext.of(this.environment != null ? this.environment : new StandardEnvironment(), SimpleEvaluationContext.forReadOnlyDataBinding().build());
+			return ValueEvaluationContext.of(this.environment != null ? this.environment : new StandardEnvironment(),
+					SimpleEvaluationContext.forReadOnlyDataBinding().build());
 		}
 
 		/**

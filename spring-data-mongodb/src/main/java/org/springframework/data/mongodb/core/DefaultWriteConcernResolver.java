@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.WriteConcern;
 import org.jspecify.annotations.Nullable;
+
+import com.mongodb.WriteConcern;
 
 /**
  * Default {@link WriteConcernResolver} resolving the {@link WriteConcern} from the given {@link MongoAction}.

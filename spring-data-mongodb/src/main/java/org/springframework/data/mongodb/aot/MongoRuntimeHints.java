@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.aot;
 
-import static org.springframework.data.mongodb.aot.MongoAotPredicates.*;
+import static org.springframework.data.mongodb.aot.MongoAotPredicates.isReactorPresent;
 
 import java.util.Arrays;
 

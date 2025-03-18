@@ -23,8 +23,7 @@ import com.mongodb.client.ClientSession;
 
 /**
  * MongoDB specific {@link ResourceHolderSupport resource holder}, wrapping a {@link ClientSession}.
- * {@link MongoTransactionManager} binds instances of this class to the thread.
- * <br />
+ * {@link MongoTransactionManager} binds instances of this class to the thread. <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Christoph Strobl

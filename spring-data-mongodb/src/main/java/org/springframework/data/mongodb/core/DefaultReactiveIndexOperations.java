@@ -19,7 +19,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
-import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
@@ -48,7 +47,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private final ReactiveMongoOperations mongoOperations;
 	private final String collectionName;
 	private final QueryMapper queryMapper;
-	private final Optional<Class<?>> type;
+	private final @Nullable Class<?> type;
 
 	/**
 	 * Creates a new {@link DefaultReactiveIndexOperations}.
@@ -59,7 +58,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
 			QueryMapper queryMapper) {
-		this(mongoOperations, collectionName, queryMapper, Optional.empty());
+		this(mongoOperations, collectionName, queryMapper, null);
 	}
 
 	/**
@@ -71,12 +70,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	 * @param type used for mapping potential partial index filter expression, must not be {@literal null}.
 	 */
 	public DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
-			QueryMapper queryMapper, Class<?> type) {
-		this(mongoOperations, collectionName, queryMapper, Optional.of(type));
-	}
-
-	private DefaultReactiveIndexOperations(ReactiveMongoOperations mongoOperations, String collectionName,
-			QueryMapper queryMapper, Optional<Class<?>> type) {
+			QueryMapper queryMapper, @Nullable Class<?> type) {
 
 		Assert.notNull(mongoOperations, "ReactiveMongoOperations must not be null");
 		Assert.notNull(collectionName, "Collection must not be null");
@@ -94,9 +88,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		return mongoOperations.execute(collectionName, collection -> {
 
-			MongoPersistentEntity<?> entity = type
-					.map(val -> (MongoPersistentEntity) queryMapper.getMappingContext().getRequiredPersistentEntity(val))
-					.orElseGet(() -> lookupPersistentEntity(collectionName));
+			MongoPersistentEntity<?> entity = getConfiguredEntity();
 
 			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
@@ -150,6 +142,14 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
 				.map(IndexConverters.documentToIndexInfoConverter()::convert);
+	}
+
+	private @Nullable MongoPersistentEntity<?> getConfiguredEntity() {
+
+		if (type != null) {
+			return queryMapper.getMappingContext().getRequiredPersistentEntity(type);
+		}
+		return lookupPersistentEntity(collectionName);
 	}
 
 	private IndexOptions addPartialFilterIfPresent(IndexOptions ops, Document sourceOptions,

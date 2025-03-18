@@ -26,7 +26,6 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.MetricConversion;
-import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -155,13 +154,11 @@ class CountQuery {
 	 * @param $and potentially existing {@code $and} condition.
 	 * @return the rewritten query {@link Document}.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	private static Document createGeoWithin(String key, Document source, @Nullable Object $and) {
 
 		boolean spheric = source.containsKey("$nearSphere");
 		Object $near = spheric ? source.get("$nearSphere") : source.get("$near");
-
-		Assert.notNull($near, "Invalid near query - must contain $nearSphere or $near");
 
 		Number maxDistance = getMaxDistance(source, $near, spheric);
 
@@ -236,6 +233,7 @@ class CountQuery {
 		return source.containsKey("$minDistance");
 	}
 
+	@SuppressWarnings("NullAway")
 	private static Object toCenterCoordinates(Object value) {
 
 		if (ObjectUtils.isArray(value)) {
@@ -254,9 +252,6 @@ class CountQuery {
 
 			if (document.containsKey("$geometry")) {
 				Document geoJsonPoint = document.get("$geometry", Document.class);
-				if(!geoJsonPoint.containsKey("coordinates")) {
-					throw new IllegalStateException("Invalid geometry without coordinates.");
-				}
 				return geoJsonPoint.get("coordinates");
 			}
 		}

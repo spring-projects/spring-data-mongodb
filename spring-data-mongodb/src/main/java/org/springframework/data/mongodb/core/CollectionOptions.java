@@ -461,7 +461,8 @@ public class CollectionOptions {
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
 
-		public ValidationOptions(@Nullable Validator validator, @Nullable ValidationLevel validationLevel, @Nullable ValidationAction validationAction) {
+		public ValidationOptions(@Nullable Validator validator, @Nullable ValidationLevel validationLevel,
+				@Nullable ValidationAction validationAction) {
 
 			this.validator = validator;
 			this.validationLevel = validationLevel;

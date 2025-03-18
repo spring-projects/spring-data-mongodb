@@ -257,14 +257,12 @@ public class ChangeStreamOptions {
 		}
 
 		/**
-		 * Set the filter to apply.
-		 * <br />
+		 * Set the filter to apply. <br />
 		 * Fields on aggregation expression root level are prefixed to map to fields contained in
 		 * {@link ChangeStreamDocument#getFullDocument() fullDocument}. However {@literal operationType}, {@literal ns},
 		 * {@literal documentKey} and {@literal fullDocument} are reserved words that will be omitted, and therefore taken
 		 * as given, during the mapping procedure. You may want to have a look at the
-		 * <a href="https://docs.mongodb.com/manual/reference/change-events/">structure of Change Events</a>.
-		 * <br />
+		 * <a href="https://docs.mongodb.com/manual/reference/change-events/">structure of Change Events</a>. <br />
 		 * Use {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} to ensure filter expressions are
 		 * mapped to domain type fields.
 		 *
@@ -358,7 +356,7 @@ public class ChangeStreamOptions {
 		 *
 		 * @return this.
 		 * @since 4.0
-		 * @see #fullDocumentBeforeChangeLookup(FullDocumentBeforeChange) 
+		 * @see #fullDocumentBeforeChangeLookup(FullDocumentBeforeChange)
 		 */
 		public ChangeStreamOptionsBuilder returnFullDocumentBeforeChange() {
 			return fullDocumentBeforeChangeLookup(FullDocumentBeforeChange.WHEN_AVAILABLE);
