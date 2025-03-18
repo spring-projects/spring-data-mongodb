@@ -16,10 +16,9 @@
 package org.springframework.data.mongodb;
 
 import reactor.core.publisher.Mono;
-
-import org.jspecify.annotations.Nullable;
 import reactor.util.context.Context;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.reactive.ReactiveResourceSynchronization;
 import org.springframework.transaction.reactive.TransactionSynchronization;
@@ -36,8 +35,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 /**
  * Helper class for managing reactive {@link MongoDatabase} instances via {@link ReactiveMongoDatabaseFactory}. Used for
  * obtaining {@link ClientSession session bound} resources, such as {@link MongoDatabase} and {@link MongoCollection}
- * suitable for transactional usage.
- * <br />
+ * suitable for transactional usage. <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Mark Paluch
@@ -75,8 +73,7 @@ public class ReactiveMongoDatabaseUtils {
 
 	/**
 	 * Obtain the default {@link MongoDatabase database} form the given {@link ReactiveMongoDatabaseFactory factory} using
-	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <br />
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}. <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -104,12 +101,12 @@ public class ReactiveMongoDatabaseUtils {
 
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link ReactiveMongoDatabaseFactory
-	 * factory} using {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <br />
+	 * factory} using {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}. <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
-	 * @param dbName the name of the {@link MongoDatabase} to get.
+	 * @param dbName the name of the {@link MongoDatabase} to get. If {@literal null} the default database of the
+	 *          {@link ReactiveMongoDatabaseFactory}.
 	 * @param factory the {@link ReactiveMongoDatabaseFactory} to get the {@link MongoDatabase} from.
 	 * @return the {@link MongoDatabase} that is potentially associated with a transactional {@link ClientSession}.
 	 */
@@ -119,17 +116,17 @@ public class ReactiveMongoDatabaseUtils {
 
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link ReactiveMongoDatabaseFactory
-	 * factory}.
-	 * <br />
+	 * factory}. <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
-	 * @param dbName the name of the {@link MongoDatabase} to get.
+	 * @param dbName the name of the {@link MongoDatabase} to get. If {@literal null} the default database of the *
+	 *          {@link ReactiveMongoDatabaseFactory}.
 	 * @param factory the {@link ReactiveMongoDatabaseFactory} to get the {@link MongoDatabase} from.
 	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
 	 * @return the {@link MongoDatabase} that is potentially associated with a transactional {@link ClientSession}.
 	 */
-	public static Mono<MongoDatabase> getDatabase(String dbName, ReactiveMongoDatabaseFactory factory,
+	public static Mono<MongoDatabase> getDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 		return doGetMongoDatabase(dbName, factory, sessionSynchronization);
 	}

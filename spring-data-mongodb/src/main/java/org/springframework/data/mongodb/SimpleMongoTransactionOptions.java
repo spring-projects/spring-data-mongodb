@@ -115,7 +115,8 @@ class SimpleMongoTransactionOptions implements MongoTransactionOptions {
 		});
 	}
 
-	private static <T> @Nullable T getValue(Map<String, String> options, OptionKey key, Function<String, T> convertFunction) {
+	private static <T> @Nullable T getValue(Map<String, String> options, OptionKey key,
+			Function<String, T> convertFunction) {
 
 		String value = options.get(key.getKey());
 		return value != null ? convertFunction.apply(value) : null;

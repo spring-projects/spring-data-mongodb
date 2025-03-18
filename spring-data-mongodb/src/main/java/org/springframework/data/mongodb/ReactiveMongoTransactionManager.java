@@ -64,7 +64,7 @@ import com.mongodb.reactivestreams.client.ClientSession;
 public class ReactiveMongoTransactionManager extends AbstractReactiveTransactionManager implements InitializingBean {
 
 	private @Nullable ReactiveMongoDatabaseFactory databaseFactory;
-	private @Nullable MongoTransactionOptions options;
+	private MongoTransactionOptions options;
 	private final MongoTransactionOptionsResolver transactionOptionsResolver;
 
 	/**
@@ -79,7 +79,9 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 * @see #setDatabaseFactory(ReactiveMongoDatabaseFactory)
 	 */
 	public ReactiveMongoTransactionManager() {
+
 		this.transactionOptionsResolver = MongoTransactionOptionsResolver.defaultResolver();
+		this.options = MongoTransactionOptions.NONE;
 	}
 
 	/**
@@ -98,7 +100,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 * starting a new transaction.
 	 *
 	 * @param databaseFactory must not be {@literal null}.
-	 * @param options can be {@literal null}.
+	 * @param options can be {@literal null}. Will default {@link MongoTransactionOptions#NONE} if {@literal null}.
 	 */
 	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
 			@Nullable TransactionOptions options) {
@@ -112,7 +114,8 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 *
 	 * @param databaseFactory must not be {@literal null}.
 	 * @param transactionOptionsResolver must not be {@literal null}.
-	 * @param defaultTransactionOptions can be {@literal null}.
+	 * @param defaultTransactionOptions can be {@literal null}. Will default {@link MongoTransactionOptions#NONE} if
+	 *          {@literal null}.
 	 * @since 4.3
 	 */
 	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
@@ -124,7 +127,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 		this.databaseFactory = databaseFactory;
 		this.transactionOptionsResolver = transactionOptionsResolver;
-		this.options = defaultTransactionOptions;
+		this.options = defaultTransactionOptions != null ? defaultTransactionOptions : MongoTransactionOptions.NONE;
 	}
 
 	@Override

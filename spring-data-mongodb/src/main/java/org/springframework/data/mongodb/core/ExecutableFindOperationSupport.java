@@ -16,14 +16,13 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -208,7 +207,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	static class DelegatingQueryCursorPreparer implements CursorPreparer {
 
 		private final @Nullable CursorPreparer delegate;
-		private Optional<Integer> limit = Optional.empty();
+		private int limit = -1;
 
 		DelegatingQueryCursorPreparer(@Nullable CursorPreparer delegate) {
 			this.delegate = delegate;
@@ -218,18 +217,21 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
 			FindIterable<Document> target = delegate != null ? delegate.prepare(iterable) : iterable;
-			return limit.map(target::limit).orElse(target);
+			if (limit >= 0) {
+				target.limit(limit);
+			}
+			return target;
 		}
 
 		CursorPreparer limit(int limit) {
 
-			this.limit = Optional.of(limit);
+			this.limit = limit;
 			return this;
 		}
 
 		@Override
 		public @Nullable ReadPreference getReadPreference() {
-			 return delegate != null ? delegate.getReadPreference() : null;
+			return delegate != null ? delegate.getReadPreference() : null;
 		}
 	}
 

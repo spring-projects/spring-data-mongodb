@@ -124,7 +124,7 @@ public class ReactiveMongoClientFactoryBean extends AbstractFactoryBean<MongoCli
 
 	@Override
 	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
-		if(instance != null) {
+		if (instance != null) {
 			instance.close();
 		}
 	}

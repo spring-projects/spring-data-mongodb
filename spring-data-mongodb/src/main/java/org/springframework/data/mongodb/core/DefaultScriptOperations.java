@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static java.util.UUID.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
+import static java.util.UUID.randomUUID;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,8 +28,8 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
@@ -39,8 +39,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.MongoException;
-import com.mongodb.client.MongoDatabase;
 
 /**
  * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ExecutableMongoScript}.
@@ -52,6 +50,7 @@ import com.mongodb.client.MongoDatabase;
  * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0.
  */
 @Deprecated
+@NullUnmarked
 class DefaultScriptOperations implements ScriptOperations {
 
 	private static final String SCRIPT_COLLECTION_NAME = "system.js";
@@ -92,12 +91,12 @@ class DefaultScriptOperations implements ScriptOperations {
 
 		return mongoOperations.execute(db -> {
 
-            Document command = new Document("$eval", script.getCode());
-            BasicDBList commandArgs = new BasicDBList();
-            commandArgs.addAll(Arrays.asList(convertScriptArgs(false, args)));
-            command.append("args", commandArgs);
-            return db.runCommand(command).get("retval");
-        });
+			Document command = new Document("$eval", script.getCode());
+			BasicDBList commandArgs = new BasicDBList();
+			commandArgs.addAll(Arrays.asList(convertScriptArgs(false, args)));
+			command.append("args", commandArgs);
+			return db.runCommand(command).get("retval");
+		});
 	}
 
 	@Override
@@ -105,8 +104,9 @@ class DefaultScriptOperations implements ScriptOperations {
 
 		Assert.hasText(scriptName, "ScriptName must not be null or empty");
 
-		return mongoOperations.execute(db -> db.runCommand(new Document("eval", String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args))))
-                .get("retval"));
+		return mongoOperations.execute(
+				db -> db.runCommand(new Document("eval", String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args))))
+						.get("retval"));
 	}
 
 	@Override

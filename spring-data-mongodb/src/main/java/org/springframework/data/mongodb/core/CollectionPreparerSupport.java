@@ -20,13 +20,12 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import jakarta.validation.constraints.Null;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoCollection;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Support class for delegate implementations to apply {@link ReadConcern} and {@link ReadPreference} settings upon

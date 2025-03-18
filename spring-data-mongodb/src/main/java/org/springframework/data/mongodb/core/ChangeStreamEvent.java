@@ -89,7 +89,8 @@ public class ChangeStreamEvent<T> {
 	 */
 	public @Nullable Instant getTimestamp() {
 
-		return getBsonTimestamp() != null && raw != null ? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
+		return getBsonTimestamp() != null && raw != null
+				? converter.getConversionService().convert(raw.getClusterTime(), Instant.class)
 				: null;
 	}
 
@@ -136,8 +137,7 @@ public class ChangeStreamEvent<T> {
 	 *
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public String getCollectionName() {
+	public @Nullable String getCollectionName() {
 		return raw != null ? raw.getNamespace().getCollectionName() : null;
 	}
 
@@ -157,14 +157,14 @@ public class ChangeStreamEvent<T> {
 	}
 
 	/**
-	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocumentBeforeChange() document} before being changed.
+	 * Get the potentially converted {@link ChangeStreamDocument#getFullDocumentBeforeChange() document} before being
+	 * changed.
 	 *
 	 * @return {@literal null} when {@link #getRaw()} or {@link ChangeStreamDocument#getFullDocumentBeforeChange()} is
 	 *         {@literal null}.
 	 * @since 4.0
 	 */
-	@Nullable
-	public T getBodyBeforeChange() {
+	public @Nullable T getBodyBeforeChange() {
 
 		if (raw == null || raw.getFullDocumentBeforeChange() == null) {
 			return null;

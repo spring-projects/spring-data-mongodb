@@ -83,7 +83,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	private @Nullable ServerAddress parseServerAddress(String source) {
 
 		if (!StringUtils.hasText(source)) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
 			}
 			return null;
@@ -92,7 +92,7 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 		String[] hostAndPort = extractHostAddressAndPort(source.trim());
 
 		if (hostAndPort.length > 2) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
 			}
 			return null;
@@ -104,11 +104,11 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 			return port == null ? new ServerAddress(hostAddress) : new ServerAddress(hostAddress, port);
 		} catch (UnknownHostException e) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "host", hostAndPort[0]));
 			}
 		} catch (NumberFormatException e) {
-			if(LOG.isWarnEnabled()) {
+			if (LOG.isWarnEnabled()) {
 				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "port", hostAndPort[1]));
 			}
 		}

@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
 
-import org.springframework.lang.Contract;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -48,7 +47,6 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -111,7 +109,18 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.mongodb.core.mapping.event.*;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -123,6 +132,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -346,7 +356,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param writeConcernResolver can be {@literal null}.
 	 */
 	public void setWriteConcernResolver(@Nullable WriteConcernResolver writeConcernResolver) {
-		this.writeConcernResolver = writeConcernResolver != null ? writeConcernResolver : DefaultWriteConcernResolver.INSTANCE;
+		this.writeConcernResolver = writeConcernResolver != null ? writeConcernResolver
+				: DefaultWriteConcernResolver.INSTANCE;
 	}
 
 	/**
@@ -740,10 +751,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Mono<Boolean> collectionExists(String collectionName) {
-		return createMono(db -> Flux.from(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames()) //
-				.filter(s -> s.equals(collectionName)) //
-				.map(s -> true) //
-				.single(false));
+		return createMono(
+				db -> Flux.from(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames()) //
+						.filter(s -> s.equals(collectionName)) //
+						.map(s -> true) //
+						.single(false));
 	}
 
 	@Override
@@ -900,7 +912,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
 					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
 					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback)
-							.collectList();
+					.collectList();
 
 			return result.map(it -> ScrollUtils.createWindow(query, it, sourceClass, operations));
 		}
@@ -908,7 +920,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
 				query.getFieldsObject(), sourceClass,
 				new QueryFindPublisherPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass), callback)
-						.collectList();
+				.collectList();
 
 		return result.map(
 				it -> ScrollUtils.createWindow(it, query.getLimit(), OffsetScrollPosition.positionFunction(query.getSkip())));
@@ -1818,7 +1830,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 					Document updateObj = updateContext.getMappedUpdate(entity);
 					if (containsVersionProperty(queryObj, entity))
-						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity %s to collection %s".formatted(entity.getName(),  collectionName));
+						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity %s to collection %s"
+								.formatted(entity.getName(), collectionName));
 				}
 			}
 		});
@@ -2390,8 +2403,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName));
 		}
 
-		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields), preparer != null ? preparer : FindPublisherPreparer.NO_OP_PREPARER,
-				objectCallback, collectionName);
+		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields),
+				preparer != null ? preparer : FindPublisherPreparer.NO_OP_PREPARER, objectCallback, collectionName);
 	}
 
 	CollectionPreparer<MongoCollection<Document>> createCollectionPreparer(Query query) {
@@ -2456,8 +2469,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @return the List of converted objects.
 	 */
 	protected <T> Mono<T> doFindAndRemove(String collectionName,
-			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields, @Nullable Document sort,
-			@Nullable Collation collation, Class<T> entityClass) {
+			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
+			@Nullable Document sort, @Nullable Collation collation, Class<T> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
@@ -2473,8 +2486,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> doFindAndModify(String collectionName,
 			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
-		@Nullable Document sort,
-			Class<T> entityClass, UpdateDefinition update, FindAndModifyOptions options) {
+			@Nullable Document sort, Class<T> entityClass, UpdateDefinition update, FindAndModifyOptions options) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		UpdateContext updateContext = queryOperations.updateSingleContext(update, query, false);
@@ -2490,8 +2502,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				LOGGER.debug(String.format(
 						"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s " + "in collection: %s",
 						serializeToJsonSafely(mappedQuery), fields, serializeToJsonSafely(sort), entityClass,
-						serializeToJsonSafely(mappedUpdate),
-						collectionName));
+						serializeToJsonSafely(mappedUpdate), collectionName));
 			}
 
 			return executeFindOneInternal(
@@ -2687,7 +2698,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)) {
 			if (wc == null || wc.getWObject() == null
-					|| (wc.getWObject()instanceof Number concern && concern.intValue() < 1)) {
+					|| (wc.getWObject() instanceof Number concern && concern.intValue() < 1)) {
 				return WriteConcern.ACKNOWLEDGED;
 			}
 		}
@@ -2869,7 +2880,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			this(collectionPreparer, query, null);
 		}
 
-		FindCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, @Nullable Document query, @Nullable Document fields) {
+		FindCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, @Nullable Document query,
+				@Nullable Document fields) {
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
 			this.fields = fields;
@@ -2942,7 +2954,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final FindAndModifyOptions options;
 
 		FindAndModifyCallback(CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query,
-				@Nullable Document fields, @Nullable Document sort, Object update, List<Document> arrayFilters, FindAndModifyOptions options) {
+				@Nullable Document fields, @Nullable Document sort, Object update, List<Document> arrayFilters,
+				FindAndModifyOptions options) {
 
 			this.collectionPreparer = collectionPreparer;
 			this.query = query;
@@ -3056,7 +3069,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
-	private static FindOneAndDeleteOptions convertToFindOneAndDeleteOptions(@Nullable Document fields, @Nullable Document sort) {
+	private static FindOneAndDeleteOptions convertToFindOneAndDeleteOptions(@Nullable Document fields,
+			@Nullable Document sort) {
 
 		FindOneAndDeleteOptions result = new FindOneAndDeleteOptions();
 		result = result.projection(fields).sort(sort);

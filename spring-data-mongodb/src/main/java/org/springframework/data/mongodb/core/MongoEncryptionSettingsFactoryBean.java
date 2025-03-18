@@ -91,8 +91,6 @@ public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncry
 	@Override
 	public AutoEncryptionSettings getObject() {
 
-
-
 		return AutoEncryptionSettings.builder() //
 				.bypassAutoEncryption(bypassAutoEncryption) //
 				.keyVaultNamespace(keyVaultNamespace) //
