@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -90,6 +91,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter) {
 		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter, mergeProperties);
 	}
@@ -107,6 +109,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	 * @return new instance of {@link MongoJsonSchemaCreator}.
 	 * @since 3.4
 	 */
+	@Contract("_, _ -> new")
 	public MongoJsonSchemaCreator withTypesFor(String path, Class<?>... types) {
 
 		LinkedMultiValueMap<String, Class<?>> clone = mergeProperties.clone();

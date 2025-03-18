@@ -19,6 +19,7 @@ import static org.springframework.util.ObjectUtils.*;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -102,6 +103,7 @@ public class BasicQuery extends Query {
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public Query addCriteria(CriteriaDefinition criteria) {
 
 		this.queryObject.putAll(criteria.getCriteriaObject());

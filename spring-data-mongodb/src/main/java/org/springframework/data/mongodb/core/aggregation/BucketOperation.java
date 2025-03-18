@@ -23,6 +23,7 @@ import java.util.List;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.BucketOperation.BucketOperationOutputBuilder;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -112,6 +113,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 * @param literal must not be {@literal null}.
 	 * @return new instance of {@link BucketOperation}.
 	 */
+	@Contract("_ -> new")
 	public BucketOperation withDefaultBucket(Object literal) {
 
 		Assert.notNull(literal, "Default bucket literal must not be null");
@@ -125,6 +127,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 * @param boundaries must not be {@literal null}.
 	 * @return new instance of {@link BucketOperation}.
 	 */
+	@Contract("_ -> new")
 	public BucketOperation withBoundaries(Object... boundaries) {
 
 		Assert.notNull(boundaries, "Boundaries must not be null");

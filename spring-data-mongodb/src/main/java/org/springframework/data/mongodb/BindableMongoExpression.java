@@ -23,6 +23,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.util.Lazy;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -92,6 +93,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @param codecRegistry must not be {@literal null}.
 	 * @return new instance of {@link BindableMongoExpression}.
 	 */
+	@Contract("_ -> new")
 	public BindableMongoExpression withCodecRegistry(CodecRegistry codecRegistry) {
 		return new BindableMongoExpression(expressionString, () -> codecRegistry, args);
 	}
@@ -102,6 +104,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @param args must not be {@literal null}.
 	 * @return new instance of {@link BindableMongoExpression}.
 	 */
+	@Contract("_ -> new")
 	public BindableMongoExpression bind(Object... args) {
 		return new BindableMongoExpression(expressionString, codecRegistryProvider, args);
 	}

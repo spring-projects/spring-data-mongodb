@@ -20,6 +20,7 @@ import java.util.Collections;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 
 /**
  * @author Thomas Risberg
@@ -43,48 +44,56 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update set(String key, @Nullable Object value) {
 		updateObject.put("$set", Collections.singletonMap(key, value));
 		return this;
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public Update unset(String key) {
 		updateObject.put("$unset", Collections.singletonMap(key, 1));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update inc(String key, Number inc) {
 		updateObject.put("$inc", Collections.singletonMap(key, inc));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update push(String key, @Nullable Object value) {
 		updateObject.put("$push", Collections.singletonMap(key, value));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update addToSet(String key, @Nullable Object value) {
 		updateObject.put("$addToSet", Collections.singletonMap(key, value));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update pop(String key, Position pos) {
 		updateObject.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update pull(String key, @Nullable Object value) {
 		updateObject.put("$pull", Collections.singletonMap(key, value));
 		return this;
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update pullAll(String key, Object[] values) {
 		Document keyValue = new Document();
 		keyValue.put(key, Arrays.copyOf(values, values.length));
@@ -93,6 +102,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public Update rename(String oldName, String newName) {
 		updateObject.put("$rename", Collections.singletonMap(oldName, newName));
 		return this;

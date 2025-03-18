@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -73,6 +74,7 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
 	 */
+	@Contract("_ -> new")
 	public OutOperation in(@Nullable String database) {
 		return new OutOperation(database, collectionName, uniqueKey, mode);
 	}
@@ -102,6 +104,7 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
 	 */
+	@Contract("_ -> new")
 	public OutOperation uniqueKey(@Nullable String key) {
 
 		Document uniqueKey = key == null ? null : BsonUtils.toDocumentOrElse(key, it -> new Document(it, 1));
@@ -126,6 +129,7 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
 	 */
+	@Contract("_ -> new")
 	public OutOperation uniqueKeyOf(Iterable<String> fields) {
 
 		Assert.notNull(fields, "Fields must not be null");
@@ -144,6 +148,7 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
 	 */
+	@Contract("_ -> new")
 	public OutOperation mode(OutMode mode) {
 
 		Assert.notNull(mode, "Mode must not be null");
@@ -158,6 +163,7 @@ public class OutOperation implements AggregationOperation {
 	 * @see OutMode#REPLACE_COLLECTION
 	 * @since 2.2
 	 */
+	@Contract("-> new")
 	public OutOperation replaceCollection() {
 		return mode(OutMode.REPLACE_COLLECTION);
 	}
@@ -170,6 +176,7 @@ public class OutOperation implements AggregationOperation {
 	 * @see OutMode#REPLACE
 	 * @since 2.2
 	 */
+	@Contract("-> new")
 	public OutOperation replaceDocuments() {
 		return mode(OutMode.REPLACE);
 	}
@@ -182,6 +189,7 @@ public class OutOperation implements AggregationOperation {
 	 * @see OutMode#INSERT
 	 * @since 2.2
 	 */
+	@Contract("-> new")
 	public OutOperation insertDocuments() {
 		return mode(OutMode.INSERT);
 	}

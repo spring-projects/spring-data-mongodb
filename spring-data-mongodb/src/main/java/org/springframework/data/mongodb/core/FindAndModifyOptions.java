@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Contract;
 
 /**
  * @author Mark Pollak
@@ -99,16 +100,19 @@ public class FindAndModifyOptions {
 		return options;
 	}
 
+	@Contract("_ -> this")
 	public FindAndModifyOptions returnNew(boolean returnNew) {
 		this.returnNew = returnNew;
 		return this;
 	}
 
+	@Contract("_ -> this")
 	public FindAndModifyOptions upsert(boolean upsert) {
 		this.upsert = upsert;
 		return this;
 	}
 
+	@Contract("_ -> this")
 	public FindAndModifyOptions remove(boolean remove) {
 		this.remove = remove;
 		return this;
@@ -121,6 +125,7 @@ public class FindAndModifyOptions {
 	 * @return this.
 	 * @since 2.0
 	 */
+	@Contract("_ -> this")
 	public FindAndModifyOptions collation(@Nullable Collation collation) {
 
 		this.collation = collation;

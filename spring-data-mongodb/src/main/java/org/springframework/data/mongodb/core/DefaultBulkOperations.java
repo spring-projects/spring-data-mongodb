@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.Pair;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 import com.mongodb.MongoBulkWriteException;
@@ -115,6 +116,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations insert(Object document) {
 
 		Assert.notNull(document, "Document must not be null");
@@ -127,6 +129,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations insert(List<? extends Object> documents) {
 
 		Assert.notNull(documents, "Documents must not be null");
@@ -137,6 +140,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public BulkOperations updateOne(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -146,6 +150,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations updateOne(List<Pair<Query, UpdateDefinition>> updates) {
 
 		Assert.notNull(updates, "Updates must not be null");
@@ -158,6 +163,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public BulkOperations updateMulti(Query query, UpdateDefinition update) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -169,6 +175,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations updateMulti(List<Pair<Query, UpdateDefinition>> updates) {
 
 		Assert.notNull(updates, "Updates must not be null");
@@ -181,11 +188,13 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_, _ -> this")
 	public BulkOperations upsert(Query query, UpdateDefinition update) {
 		return update(query, update, true, true);
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations upsert(List<Pair<Query, Update>> updates) {
 
 		for (Pair<Query, Update> update : updates) {
@@ -196,6 +205,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations remove(Query query) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -209,6 +219,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_ -> this")
 	public BulkOperations remove(List<Query> removes) {
 
 		Assert.notNull(removes, "Removals must not be null");
@@ -221,6 +232,7 @@ class DefaultBulkOperations extends BulkOperationsSupport implements BulkOperati
 	}
 
 	@Override
+	@Contract("_, _, _ -> this")
 	public BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
 
 		Assert.notNull(query, "Query must not be null");

@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -235,6 +236,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @param name
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public TextIndexDefinitionBuilder named(String name) {
 			this.instance.name = name;
 			return this;
@@ -246,6 +248,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 *
 		 * @return
 		 */
+		@Contract("-> this")
 		public TextIndexDefinitionBuilder onAllFields() {
 
 			if (!instance.fieldSpecs.isEmpty()) {
@@ -262,6 +265,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @param fieldnames
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public TextIndexDefinitionBuilder onFields(String... fieldnames) {
 
 			for (String fieldname : fieldnames) {
@@ -276,6 +280,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @param fieldname
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public TextIndexDefinitionBuilder onField(String fieldname) {
 			return onField(fieldname, 1F);
 		}
@@ -286,6 +291,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @param fieldname
 		 * @return
 		 */
+		@Contract("_, _ -> this")
 		public TextIndexDefinitionBuilder onField(String fieldname, Float weight) {
 
 			if (this.instance.fieldSpecs.contains(ALL_FIELDS)) {
@@ -305,6 +311,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @see <a href=
 		 *      "https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index">https://docs.mongodb.org/manual/tutorial/specify-language-for-text-index/#specify-default-language-text-index</a>
 		 */
+		@Contract("_ -> this")
 		public TextIndexDefinitionBuilder withDefaultLanguage(String language) {
 
 			this.instance.defaultLanguage = language;
@@ -317,6 +324,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @param fieldname
 		 * @return
 		 */
+		@Contract("_ -> this")
 		public TextIndexDefinitionBuilder withLanguageOverride(String fieldname) {
 
 			if (StringUtils.hasText(this.instance.languageOverride)) {
@@ -338,6 +346,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 		 * @since 1.10
 		 */
+		@Contract("_ -> this")
 		public TextIndexDefinitionBuilder partial(@Nullable IndexFilter filter) {
 
 			this.instance.filter = filter;
@@ -349,12 +358,14 @@ public class TextIndexDefinition implements IndexDefinition {
 		 *
 		 * @since 2.2
 		 */
+		@Contract("-> this")
 		public TextIndexDefinitionBuilder withSimpleCollation() {
 
 			this.instance.collation = Collation.simple();
 			return this;
 		}
 
+		@Contract("-> new")
 		public TextIndexDefinition build() {
 			return this.instance;
 		}

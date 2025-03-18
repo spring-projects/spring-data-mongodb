@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.util.RegexFlags;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -184,6 +185,7 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @return new instance of {@link Criteria}.
 	 */
+	@Contract("_ -> new")
 	public Criteria and(String key) {
 		return new Criteria(this.criteriaChain, key);
 	}
@@ -194,6 +196,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param value can be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Criteria is(@Nullable Object value) {
 
 		if (!NOT_SET.equals(isValue)) {
@@ -221,6 +224,7 @@ public class Criteria implements CriteriaDefinition {
 	 *      Missing Fields: Equality Filter</a>
 	 * @since 3.3
 	 */
+	@Contract("_ -> this")
 	public Criteria isNull() {
 		return is(null);
 	}
@@ -237,6 +241,7 @@ public class Criteria implements CriteriaDefinition {
 	 *      Fields: Type Check</a>
 	 * @since 3.3
 	 */
+	@Contract("_ -> this")
 	public Criteria isNullValue() {
 
 		criteria.put("$type", BsonType.NULL.getValue());
@@ -254,6 +259,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/ne/">MongoDB Query operator: $ne</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria ne(@Nullable Object value) {
 		criteria.put("$ne", value);
 		return this;
@@ -266,6 +272,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/lt/">MongoDB Query operator: $lt</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria lt(Object value) {
 		criteria.put("$lt", value);
 		return this;
@@ -278,6 +285,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/lte/">MongoDB Query operator: $lte</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria lte(Object value) {
 		criteria.put("$lte", value);
 		return this;
@@ -290,6 +298,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/gt/">MongoDB Query operator: $gt</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria gt(Object value) {
 		criteria.put("$gt", value);
 		return this;
@@ -302,6 +311,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/gte/">MongoDB Query operator: $gte</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria gte(Object value) {
 		criteria.put("$gte", value);
 		return this;
@@ -314,6 +324,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/in/">MongoDB Query operator: $in</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria in(@Nullable Object ... values) {
 		if (values.length > 1 && values[1] instanceof Collection) {
 			throw new InvalidMongoDbApiUsageException(
@@ -330,6 +341,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/in/">MongoDB Query operator: $in</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria in(Collection<?> values) {
 		criteria.put("$in", values);
 		return this;
@@ -342,6 +354,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nin/">MongoDB Query operator: $nin</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria nin(Object... values) {
 		return nin(Arrays.asList(values));
 	}
@@ -353,6 +366,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nin/">MongoDB Query operator: $nin</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria nin(Collection<?> values) {
 		criteria.put("$nin", values);
 		return this;
@@ -366,6 +380,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/mod/">MongoDB Query operator: $mod</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria mod(Number value, Number remainder) {
 		List<Object> l = new ArrayList<>(2);
 		l.add(value);
@@ -381,6 +396,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/all/">MongoDB Query operator: $all</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria all(Object... values) {
 		return all(Arrays.asList(values));
 	}
@@ -392,6 +408,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/all/">MongoDB Query operator: $all</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria all(Collection<?> values) {
 		criteria.put("$all", values);
 		return this;
@@ -404,6 +421,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/size/">MongoDB Query operator: $size</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria size(int size) {
 		criteria.put("$size", size);
 		return this;
@@ -416,6 +434,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/exists/">MongoDB Query operator: $exists</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria exists(boolean value) {
 		criteria.put("$exists", value);
 		return this;
@@ -431,6 +450,7 @@ public class Criteria implements CriteriaDefinition {
 	 *      $sampleRate</a>
 	 * @since 3.3
 	 */
+	@Contract("_ -> this")
 	public Criteria sampleRate(double sampleRate) {
 
 		Assert.isTrue(sampleRate >= 0, "The sample rate must be greater than zero");
@@ -447,6 +467,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria type(int typeNumber) {
 		criteria.put("$type", typeNumber);
 		return this;
@@ -460,6 +481,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 2.1
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria type(Type... types) {
 
 		Assert.notNull(types, "Types must not be null");
@@ -476,6 +498,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 3.2
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria type(Collection<Type> types) {
 
 		Assert.notNull(types, "Types must not be null");
@@ -490,6 +513,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">MongoDB Query operator: $not</a>
 	 */
+	@Contract("-> this")
 	public Criteria not() {
 		return not(null);
 	}
@@ -501,6 +525,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">MongoDB Query operator: $not</a>
 	 */
+	@Contract("_ -> this")
 	private Criteria not(@Nullable Object value) {
 		criteria.put("$not", value);
 		return this;
@@ -513,6 +538,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/regex/">MongoDB Query operator: $regex</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria regex(String regex) {
 		return regex(regex, null);
 	}
@@ -525,6 +551,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/regex/">MongoDB Query operator: $regex</a>
 	 */
+	@Contract("_, _ -> this")
 	public Criteria regex(String regex, @Nullable String options) {
 		return regex(toPattern(regex, options));
 	}
@@ -535,6 +562,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param pattern must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Criteria regex(Pattern pattern) {
 
 		Assert.notNull(pattern, "Pattern must not be null");
@@ -553,6 +581,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param regex must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Criteria regex(BsonRegularExpression regex) {
 
 		if (lastOperatorWasNot()) {
@@ -581,6 +610,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/centerSphere/">MongoDB Query operator:
 	 *      $centerSphere</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria withinSphere(Circle circle) {
 
 		Assert.notNull(circle, "Circle must not be null");
@@ -597,6 +627,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator:
 	 *      $geoWithin</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria within(Shape shape) {
 
 		Assert.notNull(shape, "Shape must not be null");
@@ -612,6 +643,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/near/">MongoDB Query operator: $near</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria near(Point point) {
 
 		Assert.notNull(point, "Point must not be null");
@@ -629,6 +661,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nearSphere/">MongoDB Query operator:
 	 *      $nearSphere</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria nearSphere(Point point) {
 
 		Assert.notNull(point, "Point must not be null");
@@ -646,6 +679,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 1.8
 	 */
 	@SuppressWarnings("rawtypes")
+	@Contract("_ -> this")
 	public Criteria intersects(GeoJson geoJson) {
 
 		Assert.notNull(geoJson, "GeoJson must not be null");
@@ -665,6 +699,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/maxDistance/">MongoDB Query operator:
 	 *      $maxDistance</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria maxDistance(double maxDistance) {
 
 		if (createNearCriteriaForCommand("$near", "$maxDistance", maxDistance)
@@ -687,6 +722,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @since 1.7
 	 */
+	@Contract("_ -> this")
 	public Criteria minDistance(double minDistance) {
 
 		if (createNearCriteriaForCommand("$near", "$minDistance", minDistance)
@@ -706,6 +742,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/elemMatch/">MongoDB Query operator:
 	 *      $elemMatch</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria elemMatch(Criteria criteria) {
 		this.criteria.put("$elemMatch", criteria.getCriteriaObject());
 		return this;
@@ -718,6 +755,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @since 1.8
 	 */
+	@Contract("_ -> this")
 	public Criteria alike(Example<?> sample) {
 
 		if (StringUtils.hasText(this.getKey())) {
@@ -745,6 +783,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/">MongoDB Query operator:
 	 *      $jsonSchema</a>
 	 */
+	@Contract("_ -> this")
 	public Criteria andDocumentStructureMatches(MongoJsonSchema schema) {
 
 		Assert.notNull(schema, "Schema must not be null");
@@ -776,6 +815,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Criteria orOperator(Criteria... criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
@@ -793,6 +833,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @since 3.2
 	 */
+	@Contract("_ -> this")
 	public Criteria orOperator(Collection<Criteria> criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
@@ -810,6 +851,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Criteria norOperator(Criteria... criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
@@ -827,6 +869,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @since 3.2
 	 */
+	@Contract("_ -> this")
 	public Criteria norOperator(Collection<Criteria> criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
@@ -844,6 +887,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
 	 */
+	@Contract("_ -> this")
 	public Criteria andOperator(Criteria... criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");
@@ -861,6 +905,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @since 3.2
 	 */
+	@Contract("_ -> this")
 	public Criteria andOperator(Collection<Criteria> criteria) {
 
 		Assert.notNull(criteria, "Criteria must not be null");

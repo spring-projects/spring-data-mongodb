@@ -20,6 +20,7 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -107,6 +108,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @param source the upload content.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> content(Publisher<DataBuffer> source) {
 			this.dataStream = source;
 			return this;
@@ -119,6 +121,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @param <T1>
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public <T1> ReactiveGridFsUploadBuilder<T1> id(T1 id) {
 
 			this.id = id;
@@ -131,6 +134,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @param filename the filename to use.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> filename(String filename) {
 
 			this.filename = filename;
@@ -143,6 +147,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @param options must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> options(Options options) {
 
 			Assert.notNull(options, "Options must not be null");
@@ -155,8 +160,9 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * Set the file metadata.
 		 *
 		 * @param metadata must not be {@literal null}.
-		 * @return
+		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> metadata(Document metadata) {
 
 			this.options = this.options.metadata(metadata);
@@ -167,8 +173,9 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * Set the upload chunk size in bytes.
 		 *
 		 * @param chunkSize use negative number for default.
-		 * @return
+		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> chunkSize(int chunkSize) {
 
 			this.options = this.options.chunkSize(chunkSize);
@@ -181,6 +188,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @param gridFSFile must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> gridFsFile(GridFSFile gridFSFile) {
 
 			Assert.notNull(gridFSFile, "GridFSFile must not be null");
@@ -199,12 +207,14 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @param contentType must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ReactiveGridFsUploadBuilder<T> contentType(String contentType) {
 
 			this.options = this.options.contentType(contentType);
 			return this;
 		}
 
+		@Contract("-> new")
 		public ReactiveGridFsUpload<T> build() {
 
 			Assert.notNull(dataStream, "DataStream must be set first");

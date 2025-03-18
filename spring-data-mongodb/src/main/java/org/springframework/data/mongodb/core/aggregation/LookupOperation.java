@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.lang.Contract;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -281,6 +282,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public LocalFieldBuilder from(String name) {
 
 			Assert.hasText(name, "'From' must not be null or empty");
@@ -289,6 +291,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public AsBuilder foreignField(String name) {
 
 			Assert.hasText(name, "'ForeignField' must not be null or empty");
@@ -297,6 +300,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public ForeignFieldBuilder localField(String name) {
 
 			Assert.hasText(name, "'LocalField' must not be null or empty");
@@ -305,6 +309,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public PipelineBuilder let(Let let) {
 
 			Assert.notNull(let, "Let must not be null");
@@ -313,6 +318,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		}
 
 		@Override
+		@Contract("_ -> this")
 		public AsBuilder pipeline(AggregationPipeline pipeline) {
 
 			Assert.notNull(pipeline, "Pipeline must not be null");
@@ -321,6 +327,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public LookupOperation as(String name) {
 
 			Assert.hasText(name, "'As' must not be null or empty");

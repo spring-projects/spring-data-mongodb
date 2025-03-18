@@ -23,6 +23,7 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.expression.spel.ast.Projection;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**

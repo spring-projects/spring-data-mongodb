@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -41,6 +42,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -94,6 +96,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public InsertWithBulkMode<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
@@ -102,6 +105,7 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode) {
 
 			Assert.notNull(bulkMode, "BulkMode must not be null");

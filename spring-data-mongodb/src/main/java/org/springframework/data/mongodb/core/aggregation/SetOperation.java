@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.SetOperation.FieldAppender.ValueAppender;
+import org.springframework.lang.Contract;
 
 /**
  * Adds new fields to documents. {@code $set} outputs documents that contain all existing fields from the input
@@ -82,6 +83,7 @@ public class SetOperation extends DocumentEnhancingOperation {
 	 * @param value the value to assign.
 	 * @return new instance of {@link SetOperation}.
 	 */
+	@Contract("_, _ -> new")
 	public SetOperation set(Object field, Object value) {
 
 		LinkedHashMap<Object, Object> target = new LinkedHashMap<>(getValueMap());

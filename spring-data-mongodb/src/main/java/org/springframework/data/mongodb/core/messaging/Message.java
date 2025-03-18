@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.messaging;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -159,6 +160,7 @@ public interface Message<S, T> {
 			 * @param dbName must not be {@literal null}.
 			 * @return this.
 			 */
+			@Contract("_ -> this")
 			public MessagePropertiesBuilder databaseName(String dbName) {
 
 				Assert.notNull(dbName, "Database name must not be null");
@@ -171,6 +173,7 @@ public interface Message<S, T> {
 			 * @param collectionName must not be {@literal null}.
 			 * @return this
 			 */
+			@Contract("_ -> this")
 			public MessagePropertiesBuilder collectionName(String collectionName) {
 
 				Assert.notNull(collectionName, "Collection name must not be null");
@@ -182,6 +185,7 @@ public interface Message<S, T> {
 			/**
 			 * @return the built {@link MessageProperties}.
 			 */
+			@Contract("-> new")
 			public MessageProperties build() {
 
 				MessageProperties properties = new MessageProperties();

@@ -26,6 +26,7 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -51,6 +52,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public <T> ExecutableFind<T> query(Class<T> domainType) {
 
 		Assert.notNull(domainType, "DomainType must not be null");
@@ -82,6 +84,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public FindWithProjection<T> inCollection(String collection) {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty");
@@ -90,6 +93,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public <T1> FindWithQuery<T1> as(Class<T1> returnType) {
 
 			Assert.notNull(returnType, "ReturnType must not be null");
@@ -98,6 +102,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingFind<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");
@@ -223,6 +228,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return target;
 		}
 
+		@Contract("_ -> this")
 		CursorPreparer limit(int limit) {
 
 			this.limit = limit;
@@ -252,6 +258,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		@SuppressWarnings("unchecked")
+		@Contract("_ -> new")
 		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
 
 			Assert.notNull(resultType, "ResultType must not be null");
@@ -260,6 +267,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		}
 
 		@Override
+		@Contract("_ -> new")
 		public TerminatingDistinct<T> matching(Query query) {
 
 			Assert.notNull(query, "Query must not be null");

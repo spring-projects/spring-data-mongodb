@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -291,6 +292,7 @@ public class SetOperators {
 		 * @param arrayReferences must not be {@literal null}.
 		 * @return new instance of {@link SetEquals}.
 		 */
+		@Contract("_ -> new")
 		public SetEquals isEqualTo(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
@@ -303,6 +305,7 @@ public class SetOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link SetEquals}.
 		 */
+		@Contract("_ -> new")
 		public SetEquals isEqualTo(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -315,6 +318,7 @@ public class SetOperators {
 		 * @param array must not be {@literal null}.
 		 * @return new instance of {@link SetEquals}.
 		 */
+		@Contract("_ -> new")
 		public SetEquals isEqualTo(Object[] array) {
 
 			Assert.notNull(array, "Array must not be null");
@@ -368,6 +372,7 @@ public class SetOperators {
 		 * @param arrayReferences must not be {@literal null}.
 		 * @return new instance of {@link SetIntersection}.
 		 */
+		@Contract("_ -> new")
 		public SetIntersection intersects(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
@@ -380,6 +385,7 @@ public class SetOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link SetIntersection}.
 		 */
+		@Contract("_ -> new")
 		public SetIntersection intersects(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -433,6 +439,7 @@ public class SetOperators {
 		 * @param arrayReferences must not be {@literal null}.
 		 * @return new instance of {@link SetUnion}.
 		 */
+		@Contract("_ -> new")
 		public SetUnion union(String... arrayReferences) {
 
 			Assert.notNull(arrayReferences, "ArrayReferences must not be null");
@@ -445,6 +452,7 @@ public class SetOperators {
 		 * @param expressions must not be {@literal null}.
 		 * @return new instance of {@link SetUnion}.
 		 */
+		@Contract("_ -> new")
 		public SetUnion union(AggregationExpression... expressions) {
 
 			Assert.notNull(expressions, "Expressions must not be null");
@@ -498,6 +506,7 @@ public class SetOperators {
 		 * @param arrayReference must not be {@literal null}.
 		 * @return new instance of {@link SetDifference}.
 		 */
+		@Contract("_ -> new")
 		public SetDifference differenceTo(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null");
@@ -510,6 +519,7 @@ public class SetOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link SetDifference}.
 		 */
+		@Contract("_ -> new")
 		public SetDifference differenceTo(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -563,6 +573,7 @@ public class SetOperators {
 		 * @param arrayReference must not be {@literal null}.
 		 * @return new instance of {@link SetIsSubset}.
 		 */
+		@Contract("_ -> new")
 		public SetIsSubset isSubsetOf(String arrayReference) {
 
 			Assert.notNull(arrayReference, "ArrayReference must not be null");
@@ -575,6 +586,7 @@ public class SetOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link SetIsSubset}.
 		 */
+		@Contract("_ -> new")
 		public SetIsSubset isSubsetOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null");
@@ -622,6 +634,7 @@ public class SetOperators {
 			return new AnyElementTrue(Collections.singletonList(expression));
 		}
 
+		@Contract("-> this")
 		public AnyElementTrue anyElementTrue() {
 			return this;
 		}
@@ -667,6 +680,7 @@ public class SetOperators {
 			return new AllElementsTrue(Collections.singletonList(expression));
 		}
 
+		@Contract("-> this")
 		public AllElementsTrue allElementsTrue() {
 			return this;
 		}
