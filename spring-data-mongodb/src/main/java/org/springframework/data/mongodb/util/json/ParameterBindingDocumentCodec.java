@@ -40,14 +40,14 @@ import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
-
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -66,6 +66,7 @@ import org.springframework.util.StringUtils;
  * @author Rocco Lagrotteria
  * @since 2.2
  */
+@NullUnmarked
 public class ParameterBindingDocumentCodec implements CollectibleCodec<Document> {
 
 	private static final String ID_FIELD_NAME = FieldName.ID.name();
@@ -396,9 +397,8 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			this.expressionParser = expressionParser;
 		}
 
-		@Nullable
 		@Override
-		public <T> T evaluate(String expression) {
+		public <T> @Nullable T evaluate(String expression) {
 
 			dependencies.add(expressionParser.parse(expression).getExpressionDependencies());
 			return (T) PLACEHOLDER;

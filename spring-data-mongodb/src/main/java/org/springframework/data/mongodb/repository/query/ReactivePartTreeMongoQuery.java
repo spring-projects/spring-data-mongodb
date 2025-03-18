@@ -87,6 +87,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 		return Mono.fromSupplier(() -> createQueryInternal(accessor, true));
 	}
 
+	@SuppressWarnings("NullAway")
 	private Query createQueryInternal(ConvertingParameterAccessor accessor, boolean isCountQuery) {
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, !isCountQuery && isGeoNearQuery);

@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.repository.core.EntityInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * Mongo specific {@link EntityInformation}.
@@ -58,8 +58,7 @@ public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> 
 	 * @return can be {@literal null}.
 	 * @since 2.2
 	 */
-	@Nullable
-	default Object getVersion(T entity) {
+	default @Nullable Object getVersion(T entity) {
 		return null;
 	}
 

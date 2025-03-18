@@ -21,11 +21,11 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -119,8 +119,7 @@ class DocumentAccessor {
 	 * @param property must not be {@literal null}.
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public Object get(MongoPersistentProperty property) {
+	public @Nullable Object get(MongoPersistentProperty property) {
 		return BsonUtils.resolveValue(document, getFieldName(property));
 	}
 
@@ -131,8 +130,7 @@ class DocumentAccessor {
 	 * @param entity must not be {@literal null}.
 	 * @return
 	 */
-	@Nullable
-	public Object getRawId(MongoPersistentEntity<?> entity) {
+	public @Nullable Object getRawId(MongoPersistentEntity<?> entity) {
 		return entity.hasIdProperty() ? get(entity.getRequiredIdProperty()) : BsonUtils.get(document, FieldName.ID.name());
 	}
 

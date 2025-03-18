@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**

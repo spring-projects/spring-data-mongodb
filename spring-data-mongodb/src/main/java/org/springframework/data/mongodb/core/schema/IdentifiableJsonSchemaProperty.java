@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -33,7 +33,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Numeri
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -97,6 +97,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty possibleValues(Object... possibleValues) {
 			return possibleValues(Arrays.asList(possibleValues));
 		}
@@ -106,6 +107,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty allOf(JsonSchemaObject... allOf) {
 			return allOf(new LinkedHashSet<>(Arrays.asList(allOf)));
 		}
@@ -115,6 +117,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty anyOf(JsonSchemaObject... anyOf) {
 			return anyOf(new LinkedHashSet<>(Arrays.asList(anyOf)));
 		}
@@ -124,6 +127,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty oneOf(JsonSchemaObject... oneOf) {
 			return oneOf(new LinkedHashSet<>(Arrays.asList(oneOf)));
 		}
@@ -133,6 +137,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty possibleValues(Collection<Object> possibleValues) {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
@@ -142,6 +147,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty allOf(Collection<JsonSchemaObject> allOf) {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.allOf(allOf));
 		}
@@ -151,6 +157,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.anyOf(anyOf));
 		}
@@ -160,6 +167,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.oneOf(oneOf));
 		}
@@ -169,6 +177,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty notMatch(JsonSchemaObject notMatch) {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.notMatch(notMatch));
 		}
@@ -178,6 +187,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty description(String description) {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -186,6 +196,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#generateDescription()
 		 */
+		@Contract("_ -> new")
 		public UntypedJsonSchemaProperty generatedDescription() {
 			return new UntypedJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
@@ -213,6 +224,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#minLength(int)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty minLength(int length) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.minLength(length));
 		}
@@ -222,6 +234,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#maxLength(int)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty maxLength(int length) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.maxLength(length));
 		}
@@ -231,6 +244,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#matching(String)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty matching(String pattern) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.matching(pattern));
 		}
@@ -240,6 +254,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty possibleValues(String... possibleValues) {
 			return possibleValues(Arrays.asList(possibleValues));
 		}
@@ -249,6 +264,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty allOf(JsonSchemaObject... allOf) {
 			return allOf(new LinkedHashSet<>(Arrays.asList(allOf)));
 		}
@@ -258,6 +274,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty anyOf(JsonSchemaObject... anyOf) {
 			return anyOf(new LinkedHashSet<>(Arrays.asList(anyOf)));
 		}
@@ -267,6 +284,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty oneOf(JsonSchemaObject... oneOf) {
 			return oneOf(new LinkedHashSet<>(Arrays.asList(oneOf)));
 		}
@@ -276,6 +294,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty possibleValues(Collection<String> possibleValues) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
@@ -285,6 +304,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty allOf(Collection<JsonSchemaObject> allOf) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.allOf(allOf));
 		}
@@ -294,6 +314,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.anyOf(anyOf));
 		}
@@ -303,6 +324,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.oneOf(oneOf));
 		}
@@ -312,6 +334,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty notMatch(JsonSchemaObject notMatch) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.notMatch(notMatch));
 		}
@@ -321,6 +344,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty description(String description) {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -329,6 +353,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link StringJsonSchemaProperty}.
 		 * @see StringJsonSchemaObject#generateDescription()
 		 */
+		@Contract("_ -> new")
 		public StringJsonSchemaProperty generatedDescription() {
 			return new StringJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
@@ -355,6 +380,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty propertiesCount(Range<Integer> range) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.propertiesCount(range));
 		}
@@ -364,6 +390,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#minProperties(int)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty minProperties(int count) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.minProperties(count));
 		}
@@ -373,6 +400,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#maxProperties(int)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty maxProperties(int count) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.maxProperties(count));
 		}
@@ -382,6 +410,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#required(String...)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty required(String... properties) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.required(properties));
 		}
@@ -391,6 +420,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(boolean)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty additionalProperties(boolean additionalPropertiesAllowed) {
 			return new ObjectJsonSchemaProperty(identifier,
 					jsonSchemaObjectDelegate.additionalProperties(additionalPropertiesAllowed));
@@ -401,6 +431,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(ObjectJsonSchemaObject)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty additionalProperties(ObjectJsonSchemaObject additionalProperties) {
 			return new ObjectJsonSchemaProperty(identifier,
 					jsonSchemaObjectDelegate.additionalProperties(additionalProperties));
@@ -411,6 +442,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#properties(JsonSchemaProperty...)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty properties(JsonSchemaProperty... properties) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.properties(properties));
 		}
@@ -420,6 +452,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty possibleValues(Object... possibleValues) {
 			return possibleValues(Arrays.asList(possibleValues));
 		}
@@ -429,6 +462,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty allOf(JsonSchemaObject... allOf) {
 			return allOf(new LinkedHashSet<>(Arrays.asList(allOf)));
 		}
@@ -438,6 +472,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty anyOf(JsonSchemaObject... anyOf) {
 			return anyOf(new LinkedHashSet<>(Arrays.asList(anyOf)));
 		}
@@ -447,6 +482,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty oneOf(JsonSchemaObject... oneOf) {
 			return oneOf(new LinkedHashSet<>(Arrays.asList(oneOf)));
 		}
@@ -456,6 +492,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty possibleValues(Collection<Object> possibleValues) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
@@ -465,6 +502,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty allOf(Collection<JsonSchemaObject> allOf) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.allOf(allOf));
 		}
@@ -474,6 +512,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.anyOf(anyOf));
 		}
@@ -483,6 +522,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.oneOf(oneOf));
 		}
@@ -492,6 +532,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty notMatch(JsonSchemaObject notMatch) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.notMatch(notMatch));
 		}
@@ -501,6 +542,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty description(String description) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -509,6 +551,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
 		 * @see ObjectJsonSchemaObject#generateDescription()
 		 */
+		@Contract("_ -> new")
 		public ObjectJsonSchemaProperty generatedDescription() {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
@@ -540,6 +583,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#multipleOf
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty multipleOf(Number value) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.multipleOf(value));
 		}
@@ -549,6 +593,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#within(Range)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty within(Range<? extends Number> range) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.within(range));
 		}
@@ -558,6 +603,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#gt(Number)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty gt(Number min) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.gt(min));
 		}
@@ -567,6 +613,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#gte(Number)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty gte(Number min) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.gte(min));
 		}
@@ -576,6 +623,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#lt(Number)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty lt(Number max) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.lt(max));
 		}
@@ -585,6 +633,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#lte(Number)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty lte(Number max) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.lte(max));
 		}
@@ -594,6 +643,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty possibleValues(Number... possibleValues) {
 			return possibleValues(new LinkedHashSet<>(Arrays.asList(possibleValues)));
 		}
@@ -603,6 +653,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty allOf(JsonSchemaObject... allOf) {
 			return allOf(Arrays.asList(allOf));
 		}
@@ -612,6 +663,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty anyOf(JsonSchemaObject... anyOf) {
 			return anyOf(new LinkedHashSet<>(Arrays.asList(anyOf)));
 		}
@@ -621,6 +673,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty oneOf(JsonSchemaObject... oneOf) {
 			return oneOf(new LinkedHashSet<>(Arrays.asList(oneOf)));
 		}
@@ -630,6 +683,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty possibleValues(Collection<Number> possibleValues) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
@@ -639,6 +693,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty allOf(Collection<JsonSchemaObject> allOf) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.allOf(allOf));
 		}
@@ -648,6 +703,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.anyOf(anyOf));
 		}
@@ -657,6 +713,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.oneOf(oneOf));
 		}
@@ -666,6 +723,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty notMatch(JsonSchemaObject notMatch) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.notMatch(notMatch));
 		}
@@ -675,6 +733,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see NumericJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public NumericJsonSchemaProperty description(String description) {
 			return new NumericJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -710,6 +769,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#uniqueItems(boolean)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty uniqueItems(boolean uniqueItems) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.uniqueItems(uniqueItems));
 		}
@@ -719,6 +779,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#range(Range)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty range(Range<Integer> range) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.range(range));
 		}
@@ -728,6 +789,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#minItems(int)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty minItems(int count) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.minItems(count));
 		}
@@ -737,6 +799,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#maxItems(int)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty maxItems(int count) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.maxItems(count));
 		}
@@ -746,6 +809,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#items(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty items(JsonSchemaObject... items) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.items(Arrays.asList(items)));
 		}
@@ -755,6 +819,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#items(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty items(Collection<JsonSchemaObject> items) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.items(items));
 		}
@@ -764,6 +829,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#additionalItems(boolean)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty additionalItems(boolean additionalItemsAllowed) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.additionalItems(additionalItemsAllowed));
 		}
@@ -773,6 +839,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty possibleValues(Object... possibleValues) {
 			return possibleValues(new LinkedHashSet<>(Arrays.asList(possibleValues)));
 		}
@@ -782,6 +849,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty allOf(JsonSchemaObject... allOf) {
 			return allOf(new LinkedHashSet<>(Arrays.asList(allOf)));
 		}
@@ -791,6 +859,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty anyOf(JsonSchemaObject... anyOf) {
 			return anyOf(new LinkedHashSet<>(Arrays.asList(anyOf)));
 		}
@@ -800,6 +869,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty oneOf(JsonSchemaObject... oneOf) {
 			return oneOf(new LinkedHashSet<>(Arrays.asList(oneOf)));
 		}
@@ -809,6 +879,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty possibleValues(Collection<Object> possibleValues) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.possibleValues(possibleValues));
 		}
@@ -818,6 +889,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty allOf(Collection<JsonSchemaObject> allOf) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.allOf(allOf));
 		}
@@ -827,6 +899,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.anyOf(anyOf));
 		}
@@ -836,6 +909,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.oneOf(oneOf));
 		}
@@ -845,6 +919,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link ArrayJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty notMatch(JsonSchemaObject notMatch) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.notMatch(notMatch));
 		}
@@ -854,6 +929,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see ArrayJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public ArrayJsonSchemaProperty description(String description) {
 			return new ArrayJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -884,6 +960,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NumericJsonSchemaProperty}.
 		 * @see BooleanJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public BooleanJsonSchemaProperty description(String description) {
 			return new BooleanJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -914,6 +991,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link NullJsonSchemaProperty}.
 		 * @see NullJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> new")
 		public NullJsonSchemaProperty description(String description) {
 			return new NullJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -944,6 +1022,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link DateJsonSchemaProperty}.
 		 * @see DateJsonSchemaProperty#description(String)
 		 */
+		@Contract("_ -> new")
 		public DateJsonSchemaProperty description(String description) {
 			return new DateJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -974,6 +1053,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link TimestampJsonSchemaProperty}.
 		 * @see TimestampJsonSchemaProperty#description(String)
 		 */
+		@Contract("_ -> new")
 		public TimestampJsonSchemaProperty description(String description) {
 			return new TimestampJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.description(description));
 		}
@@ -1073,6 +1153,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 *
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
+		@Contract("-> new")
 		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_random() {
 			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Random");
 		}
@@ -1082,6 +1163,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 *
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
+		@Contract("-> new")
 		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_deterministic() {
 			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic");
 		}
@@ -1091,6 +1173,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 *
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
+		@Contract("_ -> new")
 		public EncryptedJsonSchemaProperty algorithm(String algorithm) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, keyIds);
 		}
@@ -1099,6 +1182,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @param keyId must not be {@literal null}.
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
+		@Contract("_ -> new")
 		public EncryptedJsonSchemaProperty keyId(String keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
@@ -1107,6 +1191,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @param keyId must not be {@literal null}.
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
+		@Contract("_ -> new")
 		public EncryptedJsonSchemaProperty keys(UUID... keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
 		}
@@ -1115,6 +1200,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @param keyId must not be {@literal null}.
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
+		@Contract("_ -> new")
 		public EncryptedJsonSchemaProperty keys(Object... keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
 		}
@@ -1159,8 +1245,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return targetProperty.getTypes();
 		}
 
-		@Nullable
-		private Type extractPropertyType(Document source) {
+		private @Nullable Type extractPropertyType(Document source) {
 
 			if (source.containsKey("type")) {
 				return Type.of(source.get("type", String.class));

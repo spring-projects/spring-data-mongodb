@@ -22,12 +22,13 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -211,6 +212,7 @@ public class ConditionalOperators {
 			return createThenBuilder().thenValueOf(fieldReference);
 		}
 
+		@SuppressWarnings("NullAway")
 		private ThenBuilder createThenBuilder() {
 
 			if (usesFieldRef()) {
@@ -303,6 +305,7 @@ public class ConditionalOperators {
 			}
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object resolve(Object value, AggregationOperationContext context) {
 
 			if (value instanceof Field field) {
@@ -389,7 +392,7 @@ public class ConditionalOperators {
 		 */
 		static final class IfNullOperatorBuilder implements IfNullBuilder, ThenBuilder {
 
-			private @Nullable List<Object> conditions;
+			private List<Object> conditions;
 
 			private IfNullOperatorBuilder() {
 				conditions = new ArrayList<>();
@@ -404,6 +407,7 @@ public class ConditionalOperators {
 				return new IfNullOperatorBuilder();
 			}
 
+			@Contract("_ -> this")
 			public ThenBuilder ifNull(String fieldReference) {
 
 				Assert.hasText(fieldReference, "FieldReference name must not be null or empty");
@@ -412,6 +416,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ThenBuilder ifNull(AggregationExpression expression) {
 
 				Assert.notNull(expression, "AggregationExpression name must not be null or empty");
@@ -420,25 +425,30 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ThenBuilder orIfNull(String fieldReference) {
 				return ifNull(fieldReference);
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ThenBuilder orIfNull(AggregationExpression expression) {
 				return ifNull(expression);
 			}
 
+			@Contract("_ -> new")
 			public IfNull then(Object value) {
 				return new IfNull(conditions, value);
 			}
 
+			@Contract("_ -> new")
 			public IfNull thenValueOf(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null");
 				return new IfNull(conditions, Fields.field(fieldReference));
 			}
 
+			@Contract("_ -> new")
 			public IfNull thenValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null");
@@ -491,6 +501,7 @@ public class ConditionalOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Switch}.
 		 */
+		@Contract("_ -> new")
 		public Switch defaultTo(Object value) {
 			return new Switch(append("default", value));
 		}
@@ -623,6 +634,7 @@ public class ConditionalOperators {
 			return new Document("$cond", condObject);
 		}
 
+		@SuppressWarnings("NullAway")
 		private Object resolveValue(AggregationOperationContext context, Object value) {
 
 			if (value instanceof Document || value instanceof Field) {
@@ -886,6 +898,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ConditionalExpressionBuilder when(Document booleanExpression) {
 
 				Assert.notNull(booleanExpression, "'Boolean expression' must not be null");
@@ -895,6 +908,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ThenBuilder when(CriteriaDefinition criteria) {
 
 				Assert.notNull(criteria, "Criteria must not be null");
@@ -903,6 +917,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ThenBuilder when(AggregationExpression expression) {
 
 				Assert.notNull(expression, "AggregationExpression field must not be null");
@@ -911,6 +926,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public ThenBuilder when(String booleanField) {
 
 				Assert.hasText(booleanField, "Boolean field name must not be null or empty");
@@ -919,6 +935,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public OtherwiseBuilder then(Object thenValue) {
 
 				Assert.notNull(thenValue, "Then-value must not be null");
@@ -927,6 +944,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public OtherwiseBuilder thenValueOf(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null");
@@ -935,6 +953,7 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> this")
 			public OtherwiseBuilder thenValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "AggregationExpression must not be null");
@@ -943,23 +962,32 @@ public class ConditionalOperators {
 			}
 
 			@Override
+			@Contract("_ -> new")
 			public Cond otherwise(Object otherwiseValue) {
 
 				Assert.notNull(otherwiseValue, "Value must not be null");
+				Assert.notNull(condition, "Condition value needs to be set first");
+				Assert.notNull(thenValue, "Then value needs to be set first");
 				return new Cond(condition, thenValue, otherwiseValue);
 			}
 
 			@Override
+			@Contract("_ -> new")
 			public Cond otherwiseValueOf(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null");
+				Assert.notNull(condition, "Condition value needs to be set first");
+				Assert.notNull(thenValue, "Then value needs to be set first");
 				return new Cond(condition, thenValue, Fields.field(fieldReference));
 			}
 
 			@Override
+			@Contract("_ -> new")
 			public Cond otherwiseValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "AggregationExpression must not be null");
+				Assert.notNull(condition, "Condition value needs to be set first");
+				Assert.notNull(thenValue, "Then value needs to be set first");
 				return new Cond(condition, thenValue, expression);
 			}
 		}

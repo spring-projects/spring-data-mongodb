@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ListAssert;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -36,9 +36,8 @@ public class CapturingTransactionOptionsResolver implements MongoTransactionOpti
 		this.delegateResolver = delegateResolver;
 	}
 
-	@Nullable
 	@Override
-	public String getLabelPrefix() {
+	public @Nullable String getLabelPrefix() {
 		return delegateResolver.getLabelPrefix();
 	}
 

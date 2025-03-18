@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,6 @@ import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.lang.Nullable;
 
 import com.mysema.commons.lang.CloseableIterator;
 import com.mysema.commons.lang.EmptyCloseableIterator;
@@ -44,6 +44,7 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
+import org.springframework.lang.Contract;
 
 /**
  * Spring Data specific simple {@link com.querydsl.core.Fetchable} {@link com.querydsl.core.SimpleQuery Query}
@@ -183,7 +184,7 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	}
 
 	@Override
-	public T fetchFirst() {
+	public @Nullable T fetchFirst() {
 		try {
 			return find.matching(createQuery()).firstValue();
 		} catch (RuntimeException e) {
@@ -192,7 +193,7 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	}
 
 	@Override
-	public T fetchOne() {
+	public @Nullable T fetchOne() {
 		try {
 			return find.matching(createQuery()).oneValue();
 		} catch (RuntimeException e) {
@@ -262,7 +263,8 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		return mongoOperations.findDistinct(query, FieldName.ID.name(), targetType, Object.class);
 	}
 
-	private static <T> T handleException(RuntimeException e, T defaultValue) {
+	@Contract("_, !null -> !null")
+	private static <T> @Nullable T handleException(RuntimeException e, @Nullable T defaultValue) {
 
 		if (e.getClass().getName().endsWith("$NoResults")) {
 			return defaultValue;

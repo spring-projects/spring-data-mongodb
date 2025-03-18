@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
@@ -53,7 +54,7 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 	}
 
 	@Override
-	public Object resolve(MongoPersistentProperty property) {
+	public @Nullable Object resolve(MongoPersistentProperty property) {
 		return resolver.getValueInternal(property, surroundingObject, evaluator, path);
 	}
 }

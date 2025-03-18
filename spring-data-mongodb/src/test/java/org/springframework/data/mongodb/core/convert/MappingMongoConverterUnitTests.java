@@ -38,6 +38,8 @@ import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -101,8 +103,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.projection.EntityProjectionIntrospector;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -3161,15 +3161,14 @@ class MappingMongoConverterUnitTests {
 				registrar.registerConverter(WithValueConverters.class, "viaRegisteredConverter",
 						new PropertyValueConverter<String, org.bson.Document, MongoConversionContext>() {
 
-							@Nullable
 							@Override
-							public String read(@Nullable org.bson.Document nativeValue, MongoConversionContext context) {
+							public @Nullable String read(org.bson.@Nullable Document nativeValue, MongoConversionContext context) {
 								return nativeValue.getString("bar");
 							}
 
-							@Nullable
+
 							@Override
-							public org.bson.Document write(@Nullable String domainValue, MongoConversionContext context) {
+							public org.bson.@Nullable Document write(@Nullable String domainValue, MongoConversionContext context) {
 								return new org.bson.Document("bar", domainValue);
 							}
 						});
@@ -4104,9 +4103,9 @@ class MappingMongoConverterUnitTests {
 	@WritingConverter
 	static class TypeImplementingMapToDocumentConverter implements Converter<TypeImplementingMap, org.bson.Document> {
 
-		@Nullable
+
 		@Override
-		public org.bson.Document convert(TypeImplementingMap source) {
+		public org.bson.@Nullable Document convert(TypeImplementingMap source) {
 			return new org.bson.Document("1st", source.val1).append("2nd", source.val2);
 		}
 	}
@@ -4114,9 +4113,8 @@ class MappingMongoConverterUnitTests {
 	@ReadingConverter
 	static class DocumentToTypeImplementingMapConverter implements Converter<org.bson.Document, TypeImplementingMap> {
 
-		@Nullable
 		@Override
-		public TypeImplementingMap convert(org.bson.Document source) {
+		public @Nullable TypeImplementingMap convert(org.bson.Document source) {
 			return new TypeImplementingMap(source.getString("1st"), source.getInteger("2nd"));
 		}
 	}
@@ -4302,30 +4300,28 @@ class MappingMongoConverterUnitTests {
 
 		INSTANCE;
 
-		@Nullable
 		@Override
-		public String read(@Nullable org.bson.Document value, MongoConversionContext context) {
+		public @Nullable String read(org.bson.@Nullable Document value, MongoConversionContext context) {
 			return value.getString("bar");
 		}
 
-		@Nullable
+
 		@Override
-		public org.bson.Document write(@Nullable String value, MongoConversionContext context) {
+		public org.bson.@Nullable Document write(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("bar", value);
 		}
 	}
 
 	static class Converter1 implements MongoValueConverter<String, org.bson.Document> {
 
-		@Nullable
 		@Override
-		public String read(@Nullable org.bson.Document value, MongoConversionContext context) {
+		public @Nullable String read(org.bson.@Nullable Document value, MongoConversionContext context) {
 			return value.getString("foo");
 		}
 
-		@Nullable
+
 		@Override
-		public org.bson.Document write(@Nullable String value, MongoConversionContext context) {
+		public org.bson.@Nullable Document write(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("foo", value);
 		}
 	}

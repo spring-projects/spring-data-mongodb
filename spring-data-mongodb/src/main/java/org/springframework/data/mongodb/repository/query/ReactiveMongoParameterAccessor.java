@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -51,16 +52,21 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 	 * @see org.springframework.data.mongodb.repository.query.MongoParametersParameterAccessor#getValues()
 	 */
 	@Override
-	public Object[] getValues() {
+	public Object @Nullable[] getValues() {
 
-		Object[] result = new Object[super.getValues().length];
+		Object[] values = super.getValues();
+		if(values == null) {
+			return new Object[0];
+		}
+
+		Object[] result = new Object[values.length];
 		for (int i = 0; i < result.length; i++) {
 			result[i] = getValue(i);
 		}
 		return result;
 	}
 
-	public Object getBindableValue(int index) {
+	public @Nullable Object getBindableValue(int index) {
 		return getValue(getParameters().getBindableParameter(index).getIndex());
 	}
 

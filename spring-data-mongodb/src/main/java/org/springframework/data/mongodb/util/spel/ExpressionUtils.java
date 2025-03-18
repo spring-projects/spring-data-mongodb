@@ -17,12 +17,12 @@ package org.springframework.data.mongodb.util.spel;
 
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -42,8 +42,7 @@ public final class ExpressionUtils {
 	 * @param potentialExpression can be {@literal null}
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
-	public static Expression detectExpression(@Nullable String potentialExpression) {
+	public static @Nullable Expression detectExpression(@Nullable String potentialExpression) {
 
 		if (!StringUtils.hasText(potentialExpression)) {
 			return null;
@@ -53,8 +52,7 @@ public final class ExpressionUtils {
 		return expression instanceof LiteralExpression ? null : expression;
 	}
 
-	@Nullable
-	public static Object evaluate(String value, Supplier<EvaluationContext> evaluationContext) {
+	public static @Nullable Object evaluate(String value, Supplier<EvaluationContext> evaluationContext) {
 
 		Expression expression = detectExpression(value);
 		if (expression == null) {

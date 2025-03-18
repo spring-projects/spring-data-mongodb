@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -212,7 +213,7 @@ public interface MongoJsonSchema {
 			/**
 			 * @return the name of the currently processed element
 			 */
-			String currentElement();
+			@Nullable String currentElement();
 
 			/**
 			 * @return the path leading to the currently processed element in dot {@literal '.'} notation.
@@ -285,11 +286,11 @@ public interface MongoJsonSchema {
 			 * @param value the value to apply.
 			 * @return
 			 */
-			static Resolution ofValue(String key, Object value) {
+			static Resolution ofValue(@Nullable String key, Object value) {
 
 				return new Resolution() {
 					@Override
-					public String getKey() {
+					public @Nullable String getKey() {
 						return key;
 					}
 
@@ -311,8 +312,7 @@ public interface MongoJsonSchema {
 
 		private ObjectJsonSchemaObject root;
 
-		@Nullable //
-		private Document encryptionMetadata;
+		private @Nullable Document encryptionMetadata;
 
 		MongoJsonSchemaBuilder() {
 			root = new ObjectJsonSchemaObject();
@@ -323,6 +323,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#minProperties(int)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder minProperties(int count) {
 
 			root = root.minProperties(count);
@@ -334,6 +335,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#maxProperties(int)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder maxProperties(int count) {
 
 			root = root.maxProperties(count);
@@ -345,6 +347,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#required(String...)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder required(String... properties) {
 
 			root = root.required(properties);
@@ -356,6 +359,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(boolean)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder additionalProperties(boolean additionalPropertiesAllowed) {
 
 			root = root.additionalProperties(additionalPropertiesAllowed);
@@ -367,6 +371,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(ObjectJsonSchemaObject)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder additionalProperties(ObjectJsonSchemaObject schema) {
 
 			root = root.additionalProperties(schema);
@@ -378,6 +383,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#properties(JsonSchemaProperty...)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder properties(JsonSchemaProperty... properties) {
 
 			root = root.properties(properties);
@@ -389,6 +395,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#patternProperties(JsonSchemaProperty...)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder patternProperties(JsonSchemaProperty... properties) {
 
 			root = root.patternProperties(properties);
@@ -400,6 +407,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#property(JsonSchemaProperty)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder property(JsonSchemaProperty property) {
 
 			root = root.property(property);
@@ -411,6 +419,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#possibleValues(Collection)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder possibleValues(Set<Object> possibleValues) {
 
 			root = root.possibleValues(possibleValues);
@@ -422,6 +431,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#allOf(Collection)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder allOf(Set<JsonSchemaObject> allOf) {
 
 			root = root.allOf(allOf);
@@ -433,6 +443,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#anyOf(Collection)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder anyOf(Set<JsonSchemaObject> anyOf) {
 
 			root = root.anyOf(anyOf);
@@ -444,6 +455,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#oneOf(Collection)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder oneOf(Set<JsonSchemaObject> oneOf) {
 
 			root = root.oneOf(oneOf);
@@ -455,6 +467,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder notMatch(JsonSchemaObject notMatch) {
 
 			root = root.notMatch(notMatch);
@@ -466,6 +479,7 @@ public interface MongoJsonSchema {
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#description(String)
 		 */
+		@Contract("_ -> this")
 		public MongoJsonSchemaBuilder description(String description) {
 
 			root = root.description(description);
@@ -487,6 +501,7 @@ public interface MongoJsonSchema {
 		 *
 		 * @return new instance of {@link MongoJsonSchema}.
 		 */
+		@Contract("-> new")
 		public MongoJsonSchema build() {
 			return new DefaultMongoJsonSchema(root, encryptionMetadata);
 		}

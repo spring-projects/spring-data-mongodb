@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -46,12 +46,12 @@ class SimpleMessage<S, T> implements Message<S, T> {
 	}
 
 	@Override
-	public S getRaw() {
+	public @Nullable S getRaw() {
 		return raw;
 	}
 
 	@Override
-	public T getBody() {
+	public @Nullable T getBody() {
 		return body;
 	}
 

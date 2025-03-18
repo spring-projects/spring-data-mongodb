@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBRef;
@@ -54,8 +54,7 @@ public interface ReferenceResolver {
 	 */
 	class ReferenceCollection {
 
-		@Nullable //
-		private final String database;
+		private final @Nullable String database;
 		private final String collection;
 
 		/**
@@ -95,8 +94,7 @@ public interface ReferenceResolver {
 		 *
 		 * @return can be {@literal null}.
 		 */
-		@Nullable
-		public String getDatabase() {
+		public @Nullable String getDatabase() {
 			return database;
 		}
 	}

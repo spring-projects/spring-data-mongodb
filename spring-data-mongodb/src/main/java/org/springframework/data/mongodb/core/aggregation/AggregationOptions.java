@@ -19,11 +19,12 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 import com.mongodb.ReadConcern;
@@ -299,7 +300,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	@Override
-	public ReadConcern getReadConcern() {
+	public @Nullable ReadConcern getReadConcern() {
 		return readConcern.orElse(null);
 	}
 
@@ -309,7 +310,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	}
 
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 		return readPreference.orElse(null);
 	}
 
@@ -426,7 +427,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 	 */
 	public static class Builder {
 
-		private Boolean allowDiskUse;
+		private @Nullable Boolean allowDiskUse;
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
@@ -444,6 +445,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @param allowDiskUse use {@literal true} to allow disk use during the aggregation.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public Builder allowDiskUse(boolean allowDiskUse) {
 
 			this.allowDiskUse = allowDiskUse;
@@ -456,6 +458,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @param explain use {@literal true} to enable explain feature.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public Builder explain(boolean explain) {
 
 			this.explain = explain;
@@ -468,6 +471,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @param cursor must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public Builder cursor(Document cursor) {
 
 			this.cursor = cursor;
@@ -481,6 +485,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 2.0
 		 */
+		@Contract("_ -> this")
 		public Builder cursorBatchSize(int batchSize) {
 
 			this.cursor = createCursor(batchSize);
@@ -494,6 +499,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 2.0
 		 */
+		@Contract("_ -> this")
 		public Builder collation(@Nullable Collation collation) {
 
 			this.collation = collation;
@@ -507,6 +513,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 2.2
 		 */
+		@Contract("_ -> this")
 		public Builder comment(@Nullable String comment) {
 
 			this.comment = comment;
@@ -520,6 +527,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 3.1
 		 */
+		@Contract("_ -> this")
 		public Builder hint(@Nullable Document hint) {
 
 			this.hint = hint;
@@ -533,6 +541,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 4.1
 		 */
+		@Contract("_ -> this")
 		public Builder hint(@Nullable String indexName) {
 
 			this.hint = indexName;
@@ -546,6 +555,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 4.1
 		 */
+		@Contract("_ -> this")
 		public Builder readConcern(@Nullable ReadConcern readConcern) {
 
 			this.readConcern = readConcern;
@@ -559,6 +569,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 4.1
 		 */
+		@Contract("_ -> this")
 		public Builder readPreference(@Nullable ReadPreference readPreference) {
 
 			this.readPreference = readPreference;
@@ -573,6 +584,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 3.0
 		 */
+		@Contract("_ -> this")
 		public Builder maxTime(@Nullable Duration maxTime) {
 
 			this.maxTime = maxTime;
@@ -587,6 +599,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 3.0.2
 		 */
+		@Contract("-> this")
 		public Builder skipOutput() {
 
 			this.resultOptions = ResultOptions.SKIP;
@@ -600,6 +613,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 3.2
 		 */
+		@Contract("-> this")
 		public Builder strictMapping() {
 
 			this.domainTypeMapping = DomainTypeMapping.STRICT;
@@ -613,6 +627,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 3.2
 		 */
+		@Contract("-> this")
 		public Builder relaxedMapping() {
 
 			this.domainTypeMapping = DomainTypeMapping.RELAXED;
@@ -625,6 +640,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 * @return this.
 		 * @since 3.2
 		 */
+		@Contract("-> this")
 		public Builder noMapping() {
 
 			this.domainTypeMapping = DomainTypeMapping.NONE;
@@ -636,6 +652,7 @@ public class AggregationOptions implements ReadConcernAware, ReadPreferenceAware
 		 *
 		 * @return new instance of {@link AggregationOptions}.
 		 */
+		@Contract("-> new")
 		public AggregationOptions build() {
 
 			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);

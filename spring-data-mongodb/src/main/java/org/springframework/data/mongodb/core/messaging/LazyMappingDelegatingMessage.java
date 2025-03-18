@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.messaging;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.util.ClassUtils;
 
@@ -38,12 +39,12 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 	}
 
 	@Override
-	public S getRaw() {
+	public @Nullable S getRaw() {
 		return delegate.getRaw();
 	}
 
 	@Override
-	public T getBody() {
+	public @Nullable T getBody() {
 
 		if (delegate.getBody() == null || targetType.equals(delegate.getBody().getClass())) {
 			return targetType.cast(delegate.getBody());

@@ -24,6 +24,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.connection.ServerDescription;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database
@@ -32,6 +33,7 @@ import com.mongodb.connection.ServerDescription;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
+@NullUnmarked
 public abstract class AbstractMonitor {
 
 	private final MongoClient mongoClient;

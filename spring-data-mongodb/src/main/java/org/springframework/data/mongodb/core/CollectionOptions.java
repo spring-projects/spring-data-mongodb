@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -26,7 +27,7 @@ import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -184,7 +185,7 @@ public class CollectionOptions {
 	 * @since 2.1
 	 */
 	public CollectionOptions schema(@Nullable MongoJsonSchema schema) {
-		return validator(Validator.schema(schema));
+		return validator(schema != null ? Validator.schema(schema) : null);
 	}
 
 	/**
@@ -461,7 +462,8 @@ public class CollectionOptions {
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
 
-		public ValidationOptions(Validator validator, ValidationLevel validationLevel, ValidationAction validationAction) {
+		public ValidationOptions(@Nullable Validator validator, @Nullable ValidationLevel validationLevel,
+				@Nullable ValidationAction validationAction) {
 
 			this.validator = validator;
 			this.validationLevel = validationLevel;
@@ -483,6 +485,7 @@ public class CollectionOptions {
 		 * @param validator can be {@literal null}.
 		 * @return new instance of {@link ValidationOptions}.
 		 */
+		@Contract("_ -> new")
 		public ValidationOptions validator(@Nullable Validator validator) {
 			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
@@ -493,6 +496,7 @@ public class CollectionOptions {
 		 * @param validationLevel can be {@literal null}.
 		 * @return new instance of {@link ValidationOptions}.
 		 */
+		@Contract("_ -> new")
 		public ValidationOptions validationLevel(ValidationLevel validationLevel) {
 			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
@@ -503,6 +507,7 @@ public class CollectionOptions {
 		 * @param validationAction can be {@literal null}.
 		 * @return new instance of {@link ValidationOptions}.
 		 */
+		@Contract("_ -> new")
 		public ValidationOptions validationAction(ValidationAction validationAction) {
 			return new ValidationOptions(validator, validationLevel, validationAction);
 		}
@@ -677,6 +682,7 @@ public class CollectionOptions {
 		 * @param metaField must not be {@literal null}.
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
+		@Contract("_ -> new")
 		public TimeSeriesOptions metaField(String metaField) {
 			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
 		}
@@ -688,6 +694,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 * @see Granularity
 		 */
+		@Contract("_ -> new")
 		public TimeSeriesOptions granularity(GranularityDefinition granularity) {
 			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
 		}
@@ -700,6 +707,7 @@ public class CollectionOptions {
 		 * @see com.mongodb.client.model.CreateCollectionOptions#expireAfter(long, java.util.concurrent.TimeUnit)
 		 * @since 4.4
 		 */
+		@Contract("_ -> new")
 		public TimeSeriesOptions expireAfter(Duration ttl) {
 			return new TimeSeriesOptions(timeField, metaField, granularity, ttl);
 		}
@@ -715,8 +723,7 @@ public class CollectionOptions {
 		 * @return can be {@literal null}. Might be an {@literal empty} {@link String} as well, so maybe check via
 		 *         {@link org.springframework.util.StringUtils#hasText(String)}.
 		 */
-		@Nullable
-		public String getMetaField() {
+		public @Nullable String getMetaField() {
 			return metaField;
 		}
 

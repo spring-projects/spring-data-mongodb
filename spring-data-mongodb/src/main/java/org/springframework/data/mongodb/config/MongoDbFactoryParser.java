@@ -20,6 +20,8 @@ import static org.springframework.data.mongodb.config.MongoParsingUtils.*;
 
 import java.util.Set;
 
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
@@ -31,7 +33,6 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -47,6 +48,7 @@ import com.mongodb.ConnectionString;
  * @author Viktor Khoroshko
  * @author Mark Paluch
  */
+@NullUnmarked
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 	private static final Set<String> MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Set.of("id", "write-concern");
@@ -125,8 +127,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	 * @param parserContext
 	 * @return {@literal null} in case no client-/uri defined.
 	 */
-	@Nullable
-	private BeanDefinition getConnectionString(Element element, ParserContext parserContext) {
+	private @Nullable BeanDefinition getConnectionString(Element element, ParserContext parserContext) {
 
 		String type = null;
 

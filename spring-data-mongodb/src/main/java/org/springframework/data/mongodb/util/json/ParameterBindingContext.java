@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
@@ -27,7 +28,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.ParserContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Reusable context for binding parameters to a placeholder or a SpEL expression within a JSON structure. <br />
@@ -128,18 +128,15 @@ public class ParameterBindingContext {
 		return new ParameterBindingContext(valueProvider, expressionEvaluator);
 	}
 
-	@Nullable
-	public Object bindableValueForIndex(int index) {
+	public @Nullable Object bindableValueForIndex(int index) {
 		return valueProvider.getBindableValue(index);
 	}
 
-	@Nullable
-	public Object evaluateExpression(String expressionString) {
+	public @Nullable Object evaluateExpression(String expressionString) {
 		return expressionEvaluator.evaluate(expressionString);
 	}
 
-	@Nullable
-	public Object evaluateExpression(String expressionString, Map<String, Object> variables) {
+	public @Nullable Object evaluateExpression(String expressionString, Map<String, Object> variables) {
 
 		if (expressionEvaluator instanceof EvaluationContextExpressionEvaluator expressionEvaluator) {
 			return expressionEvaluator.evaluateExpression(expressionString, variables);

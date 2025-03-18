@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.monitor;
 import java.util.Date;
 
 import org.bson.Document;
+import org.jspecify.annotations.NullUnmarked;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
@@ -30,6 +31,7 @@ import com.mongodb.client.MongoClient;
  * @author Mark Pollack
  */
 @ManagedResource(description = "Background Flushing Metrics")
+@NullUnmarked
 public class BackgroundFlushingMetrics extends AbstractMonitor {
 
 	/**

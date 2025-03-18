@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Arrays;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.CustomMetric;
 import org.springframework.data.geo.Distance;
@@ -27,7 +28,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ReadConcernAware;
 import org.springframework.data.mongodb.core.ReadPreferenceAware;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -278,6 +279,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return
 	 * @since 2.2
 	 */
+	@Contract("_ -> this")
 	public NearQuery limit(long limit) {
 		this.limit = limit;
 		return this;
@@ -289,6 +291,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param skip
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery skip(long skip) {
 		this.skip = skip;
 		return this;
@@ -300,6 +303,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param pageable must not be {@literal null}
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery with(Pageable pageable) {
 
 		Assert.notNull(pageable, "Pageable must not be 'null'");
@@ -323,6 +327,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param maxDistance
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery maxDistance(double maxDistance) {
 		return maxDistance(new Distance(maxDistance, getMetric()));
 	}
@@ -335,6 +340,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param metric must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_, _ -> this")
 	public NearQuery maxDistance(double maxDistance, Metric metric) {
 
 		Assert.notNull(metric, "Metric must not be null");
@@ -349,6 +355,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param distance must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery maxDistance(Distance distance) {
 
 		Assert.notNull(distance, "Distance must not be null");
@@ -379,6 +386,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return
 	 * @since 1.7
 	 */
+	@Contract("_ -> this")
 	public NearQuery minDistance(double minDistance) {
 		return minDistance(new Distance(minDistance, getMetric()));
 	}
@@ -392,6 +400,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return
 	 * @since 1.7
 	 */
+	@Contract("_, _ -> this")
 	public NearQuery minDistance(double minDistance, Metric metric) {
 
 		Assert.notNull(metric, "Metric must not be null");
@@ -407,6 +416,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return
 	 * @since 1.7
 	 */
+	@Contract("_ -> this")
 	public NearQuery minDistance(Distance distance) {
 
 		Assert.notNull(distance, "Distance must not be null");
@@ -428,8 +438,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 *
 	 * @return
 	 */
-	@Nullable
-	public Distance getMaxDistance() {
+	public @Nullable Distance getMaxDistance() {
 		return this.maxDistance;
 	}
 
@@ -439,8 +448,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return
 	 * @since 1.7
 	 */
-	@Nullable
-	public Distance getMinDistance() {
+	public @Nullable Distance getMinDistance() {
 		return this.minDistance;
 	}
 
@@ -450,6 +458,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param distanceMultiplier
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery distanceMultiplier(double distanceMultiplier) {
 
 		this.metric = new CustomMetric(distanceMultiplier);
@@ -462,6 +471,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param spherical
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery spherical(boolean spherical) {
 		this.spherical = spherical;
 		return this;
@@ -482,6 +492,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 *
 	 * @return
 	 */
+	@Contract("-> this")
 	public NearQuery inKilometers() {
 		return adaptMetric(Metrics.KILOMETERS);
 	}
@@ -492,6 +503,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 *
 	 * @return
 	 */
+	@Contract("-> this")
 	public NearQuery inMiles() {
 		return adaptMetric(Metrics.MILES);
 	}
@@ -504,6 +516,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 *          passed.
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery in(@Nullable Metric metric) {
 		return adaptMetric(metric == null ? Metrics.NEUTRAL : metric);
 	}
@@ -514,6 +527,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 *
 	 * @param metric
 	 */
+	@Contract("_ -> this")
 	private NearQuery adaptMetric(Metric metric) {
 
 		if (metric != Metrics.NEUTRAL) {
@@ -530,6 +544,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @param query must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_ -> this")
 	public NearQuery query(Query query) {
 
 		Assert.notNull(query, "Cannot apply 'null' query on NearQuery");
@@ -546,8 +561,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	/**
 	 * @return the number of elements to skip.
 	 */
-	@Nullable
-	public Long getSkip() {
+	public @Nullable Long getSkip() {
 		return skip;
 	}
 
@@ -557,8 +571,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return the {@link Collation} if set. {@literal null} otherwise.
 	 * @since 2.2
 	 */
-	@Nullable
-	public Collation getCollation() {
+	public @Nullable Collation getCollation() {
 		return query != null ? query.getCollation().orElse(null) : null;
 	}
 
@@ -570,6 +583,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 4.1
 	 */
+	@Contract("_ -> this")
 	public NearQuery withReadConcern(ReadConcern readConcern) {
 
 		Assert.notNull(readConcern, "ReadConcern must not be null");
@@ -585,6 +599,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @return this.
 	 * @since 4.1
 	 */
+	@Contract("_ -> this")
 	public NearQuery withReadPreference(ReadPreference readPreference) {
 
 		Assert.notNull(readPreference, "ReadPreference must not be null");
@@ -601,9 +616,8 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @since 4.1
 	 * @see ReadConcernAware
 	 */
-	@Nullable
 	@Override
-	public ReadConcern getReadConcern() {
+	public @Nullable ReadConcern getReadConcern() {
 
 		if (query != null && query.hasReadConcern()) {
 			return query.getReadConcern();
@@ -620,9 +634,8 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * @since 4.1
 	 * @see ReadPreferenceAware
 	 */
-	@Nullable
 	@Override
-	public ReadPreference getReadPreference() {
+	public @Nullable ReadPreference getReadPreference() {
 
 		if (query != null && query.hasReadPreference()) {
 			return query.getReadPreference();

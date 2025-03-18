@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.util;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Version;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.internal.build.MongoDriverVersion;
@@ -91,8 +91,7 @@ public class MongoClientVersion {
 		return version == null ? guessDriverVersionFromClassPath(classLoader) : version;
 	}
 
-	@Nullable
-	private static Version getVersionFromPackage(ClassLoader classLoader) {
+	private static @Nullable Version getVersionFromPackage(ClassLoader classLoader) {
 
 		if (ClassUtils.isPresent("com.mongodb.internal.build.MongoDriverVersion", classLoader)) {
 			try {

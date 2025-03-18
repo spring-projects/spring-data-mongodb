@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
@@ -47,7 +48,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -133,7 +134,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return new HashSet<>(Arrays.asList(localeToString, booleanToString));
 		}
 
-		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+		public @Nullable Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return source != null ? source.toString() : null;
 		}
 	}
@@ -183,6 +184,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param converter must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerConverter(Converter<?, ?> converter) {
 
 			Assert.notNull(converter, "Converter must not be null");
@@ -197,6 +199,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param converters must not be {@literal null} nor contain {@literal null} values.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerConverters(Collection<?> converters) {
 
 			Assert.notNull(converters, "Converters must not be null");
@@ -212,6 +215,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param converterFactory must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerConverterFactory(ConverterFactory<?, ?> converterFactory) {
 
 			Assert.notNull(converterFactory, "ConverterFactory must not be null");
@@ -227,6 +231,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @since 3.4
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter registerPropertyValueConverterFactory(
 				PropertyValueConverterFactory converterFactory) {
 
@@ -244,6 +249,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @since 3.4
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter configurePropertyConversions(
 				Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> configurationAdapter) {
 
@@ -266,6 +272,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @param useNativeDriverJavaTimeCodecs
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public MongoConverterConfigurationAdapter useNativeDriverJavaTimeCodecs(boolean useNativeDriverJavaTimeCodecs) {
 
 			this.useNativeDriverJavaTimeCodecs = useNativeDriverJavaTimeCodecs;
@@ -280,6 +287,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @see #useNativeDriverJavaTimeCodecs(boolean)
 		 */
+		@Contract("-> this")
 		public MongoConverterConfigurationAdapter useNativeDriverJavaTimeCodecs() {
 			return useNativeDriverJavaTimeCodecs(true);
 		}
@@ -294,6 +302,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * @return this.
 		 * @see #useNativeDriverJavaTimeCodecs(boolean)
 		 */
+		@Contract("-> this")
 		public MongoConverterConfigurationAdapter useSpringDataJavaTimeCodecs() {
 			return useNativeDriverJavaTimeCodecs(false);
 		}

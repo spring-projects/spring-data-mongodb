@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ServerApi;
@@ -31,7 +31,7 @@ import com.mongodb.ServerApiVersion;
  */
 public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 
-	private String version;
+	private @Nullable String version;
 	private @Nullable Boolean deprecationErrors;
 	private @Nullable Boolean strict;
 
@@ -59,9 +59,8 @@ public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 		this.strict = strict;
 	}
 
-	@Nullable
 	@Override
-	public ServerApi getObject() throws Exception {
+	public @Nullable ServerApi getObject() throws Exception {
 
 		Builder builder = ServerApi.builder().version(version());
 
@@ -81,6 +80,11 @@ public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 	}
 
 	private ServerApiVersion version() {
+
+		if(version == null) {
+			return ServerApiVersion.V1;
+		}
+
 		try {
 			// lookup by name eg. 'V1'
 			return ObjectUtils.caseInsensitiveValueOf(ServerApiVersion.values(), version);

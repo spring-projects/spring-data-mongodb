@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +47,6 @@ import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.ReplSetClient;
-import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.transaction.AfterTransaction;
@@ -205,9 +205,8 @@ public class PersonRepositoryTransactionalTests {
 
 		AfterTransactionAssertion assertion = new AfterTransactionAssertion<>(new Persistable<Object>() {
 
-			@Nullable
 			@Override
-			public Object getId() {
+			public @Nullable Object getId() {
 				return person.id;
 			}
 

@@ -25,8 +25,7 @@ import java.util.Set;
 
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
-
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.RequestContext;
@@ -55,12 +54,12 @@ public class MongoHandlerContext extends SenderContext<Object> {
 					"killCursors", "listIndexes", "reIndex"));
 
 	private final @Nullable ConnectionString connectionString;
-	private final CommandStartedEvent commandStartedEvent;
-	private final RequestContext requestContext;
-	private final String collectionName;
+	private final @Nullable CommandStartedEvent commandStartedEvent;
+	private final @Nullable RequestContext requestContext;
+	private final @Nullable String collectionName;
 
-	private CommandSucceededEvent commandSucceededEvent;
-	private CommandFailedEvent commandFailedEvent;
+	private @Nullable CommandSucceededEvent commandSucceededEvent;
+	private @Nullable CommandFailedEvent commandFailedEvent;
 
 	public MongoHandlerContext(@Nullable ConnectionString connectionString, CommandStartedEvent commandStartedEvent,
 			RequestContext requestContext) {
@@ -72,28 +71,27 @@ public class MongoHandlerContext extends SenderContext<Object> {
 		this.collectionName = getCollectionName(commandStartedEvent);
 	}
 
-	public CommandStartedEvent getCommandStartedEvent() {
+	public @Nullable CommandStartedEvent getCommandStartedEvent() {
 		return this.commandStartedEvent;
 	}
 
-	public RequestContext getRequestContext() {
+	public @Nullable RequestContext getRequestContext() {
 		return this.requestContext;
 	}
 
 	public String getDatabaseName() {
-		return commandStartedEvent.getDatabaseName();
+		return commandStartedEvent != null ? commandStartedEvent.getDatabaseName() : "n/a";
 	}
 
-	public String getCollectionName() {
+	public @Nullable String getCollectionName() {
 		return this.collectionName;
 	}
 
 	public String getCommandName() {
-		return commandStartedEvent.getCommandName();
+		return commandStartedEvent != null ? commandStartedEvent.getCommandName() : "n/a";
 	}
 
-	@Nullable
-	public ConnectionString getConnectionString() {
+	public @Nullable ConnectionString getConnectionString() {
 		return connectionString;
 	}
 
@@ -135,8 +133,7 @@ public class MongoHandlerContext extends SenderContext<Object> {
 	 *
 	 * @return trimmed string from {@code bsonValue} or null if the trimmed string was empty or the value wasn't a string
 	 */
-	@Nullable
-	private static String getNonEmptyBsonString(@Nullable BsonValue bsonValue) {
+	private static @Nullable String getNonEmptyBsonString(@Nullable BsonValue bsonValue) {
 
 		if (bsonValue == null || !bsonValue.isString()) {
 			return null;

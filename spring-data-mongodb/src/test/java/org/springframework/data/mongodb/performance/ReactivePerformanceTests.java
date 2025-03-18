@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
@@ -99,9 +99,8 @@ public class ReactivePerformanceTests {
 
 		converter = new MappingMongoConverter(new DbRefResolver() {
 
-			@Nullable
 			@Override
-			public Object resolveReference(MongoPersistentProperty property, Object source,
+			public @Nullable Object resolveReference(MongoPersistentProperty property, Object source,
 					ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
 				return null;
 			}

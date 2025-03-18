@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
@@ -37,8 +38,8 @@ import org.springframework.util.Assert;
  */
 public class MatchOperation implements AggregationOperation {
 
-	private final CriteriaDefinition criteriaDefinition;
-	private final AggregationExpression expression;
+	private final @Nullable CriteriaDefinition criteriaDefinition;
+	private final @Nullable AggregationExpression expression;
 
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
@@ -68,6 +69,7 @@ public class MatchOperation implements AggregationOperation {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public Document toDocument(AggregationOperationContext context) {
 
 		return new Document(getOperator(),

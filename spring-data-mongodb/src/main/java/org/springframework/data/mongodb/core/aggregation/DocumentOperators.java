@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Collections;
 
 import org.bson.Document;
+import org.springframework.lang.Contract;
 
 /**
  * Gateway to {@literal document expressions} such as {@literal $rank, $documentNumber, etc.}
@@ -190,6 +191,7 @@ public class DocumentOperators {
 		 * @param shiftBy value to add to the current position.
 		 * @return new instance of {@link Shift}.
 		 */
+		@Contract("_ -> new")
 		public Shift by(int shiftBy) {
 			return new Shift(append("by", shiftBy));
 		}
@@ -200,6 +202,7 @@ public class DocumentOperators {
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Shift}.
 		 */
+		@Contract("_ -> new")
 		public Shift defaultTo(Object value) {
 			return new Shift(append("default", value));
 		}
@@ -210,6 +213,7 @@ public class DocumentOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Shift}.
 		 */
+		@Contract("_ -> new")
 		public Shift defaultToValueOf(AggregationExpression expression) {
 			return defaultTo(expression);
 		}

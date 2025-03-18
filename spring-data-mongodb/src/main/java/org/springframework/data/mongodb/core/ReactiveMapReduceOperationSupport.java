@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import reactor.core.publisher.Flux;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -89,8 +89,11 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		@Override
 		public Flux<T> all() {
 
+			Assert.notNull(mapFunction, "MapFunction must be set first");
+			Assert.notNull(reduceFunction, "ReduceFunction must be set first");
+
 			return template.mapReduce(query, domainType, getCollectionName(), returnType, mapFunction, reduceFunction,
-					options);
+					options != null ? options : MapReduceOptions.options());
 		}
 
 		/*

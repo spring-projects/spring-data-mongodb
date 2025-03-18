@@ -66,6 +66,8 @@ public class AggregationSpELExpression implements AggregationExpression {
 
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return (Document) TRANSFORMER.transform(rawExpression, context, parameters);
+
+		Document doc = (Document) TRANSFORMER.transform(rawExpression, context, parameters);
+		return doc != null ? doc : new Document();
 	}
 }

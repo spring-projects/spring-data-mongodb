@@ -23,8 +23,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.FieldName;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -145,14 +146,17 @@ public final class Fields implements Iterable<Field> {
 	 * @param name must not be {@literal null}.
 	 * @return
 	 */
+	@Contract("_ -> new")
 	public Fields and(String name) {
 		return and(new AggregationField(name));
 	}
 
+	@Contract("_ -> new")
 	public Fields and(String name, String target) {
 		return and(new AggregationField(name, target));
 	}
 
+	@Contract("_ -> new")
 	public Fields and(Field field) {
 		return new Fields(this, field);
 	}
@@ -172,8 +176,7 @@ public final class Fields implements Iterable<Field> {
 		return fields.size();
 	}
 
-	@Nullable
-	public Field getField(String name) {
+	public @Nullable Field getField(String name) {
 
 		for (Field field : fields) {
 			if (field.getName().equals(name)) {
@@ -206,7 +209,7 @@ public final class Fields implements Iterable<Field> {
 
 		private final String raw;
 		private final String name;
-		private final String target;
+		private final @Nullable String target;
 
 		/**
 		 * Creates an aggregation field with the given {@code name}.

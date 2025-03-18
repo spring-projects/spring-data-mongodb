@@ -37,7 +37,8 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -66,7 +67,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -135,6 +136,7 @@ public class QueryMapper {
 	 * @param entity can be {@literal null}.
 	 * @return
 	 */
+	@SuppressWarnings("NullAway")
 	public Document getMappedObject(Bson query, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (isNestedKeyword(query)) {
@@ -275,6 +277,7 @@ public class QueryMapper {
 		return mapMetaAttributes(source, entity, MetaMapping.FORCE);
 	}
 
+	@SuppressWarnings("NullAway")
 	private Document mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity,
 			MetaMapping metaMapping) {
 
@@ -347,7 +350,7 @@ public class QueryMapper {
 	 * @param rawValue
 	 * @return
 	 */
-	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
+	protected Entry<String, @Nullable Object> getMappedObjectForField(Field field, @Nullable Object rawValue) {
 
 		String key = field.getMappedKey();
 		Object value;
@@ -411,7 +414,9 @@ public class QueryMapper {
 		}
 
 		if (keyword.isSample()) {
-			return exampleMapper.getMappedExample(keyword.getValue(), entity);
+
+			Example<?> example = keyword.getValue();
+			return exampleMapper.getMappedExample(example, entity != null ? entity : mappingContext.getRequiredPersistentEntity(example.getProbeType()));
 		}
 
 		if (keyword.isJsonSchema()) {
@@ -452,9 +457,8 @@ public class QueryMapper {
 	 * @param sourceValue the source object to be mapped
 	 * @return
 	 */
-	@Nullable
-	@SuppressWarnings("unchecked")
-	protected Object getMappedValue(Field documentField, Object sourceValue) {
+	@SuppressWarnings("NullAway")
+	protected @Nullable Object getMappedValue(Field documentField, @Nullable Object sourceValue) {
 
 		Object value = applyFieldTargetTypeHintToValue(documentField, sourceValue);
 
@@ -491,6 +495,7 @@ public class QueryMapper {
 				&& documentField.getProperty().getOwner().isIdProperty(documentField.getProperty());
 	}
 
+	@SuppressWarnings("NullAway")
 	private Class<?> getIdTypeForField(Field documentField) {
 		return isIdField(documentField) ? documentField.getProperty().getFieldType() : ObjectId.class;
 	}
@@ -529,7 +534,7 @@ public class QueryMapper {
 		}
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
-		return entity.hasIdProperty()
+		return entity != null && entity.hasIdProperty()
 				&& (type.equals(DBRef.class) || entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
 	}
 
@@ -540,8 +545,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	@Nullable
-	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
+	protected @Nullable Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (source instanceof Example<?> example) {
 			return exampleMapper.getMappedExample(example, entity);
@@ -601,8 +605,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return the converted mongo type or null if source is null
 	 */
-	@Nullable
-	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
+	protected @Nullable Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (entity != null && entity.isUnwrapped()) {
 			return converter.convertToMongoType(source, entity);
@@ -611,8 +614,7 @@ public class QueryMapper {
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
-	@Nullable
-	protected Object convertAssociation(Object source, Field field) {
+	protected @Nullable Object convertAssociation(Object source, Field field) {
 		Object value = convertAssociation(source, field.getProperty());
 		if (value != null && field.isIdField() && field.getFieldType() != value.getClass()) {
 			return convertId(value, field.getFieldType());
@@ -665,8 +667,7 @@ public class QueryMapper {
 		return createReferenceFor(source, property);
 	}
 
-	@Nullable
-	private Object convertValue(Field documentField, Object sourceValue, Object value,
+	private @Nullable Object convertValue(Field documentField, @Nullable Object sourceValue, @Nullable Object value,
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter) {
 
 		MongoPersistentProperty property = documentField.getProperty();
@@ -688,7 +689,7 @@ public class QueryMapper {
 			return converted;
 		}
 
-		if (property != null && !documentField.getProperty().isMap() && sourceValue instanceof Document document) {
+		if (property != null && !property.isMap() && sourceValue instanceof Document document) {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
@@ -698,11 +699,11 @@ public class QueryMapper {
 			});
 		}
 
-		return valueConverter.write(value, conversionContext);
+		return value != null ? valueConverter.write(value, conversionContext) : value;
 	}
 
 	@Nullable
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "NullAway"})
 	private Object convertIdField(Field documentField, Object source) {
 
 		Object value = source;
@@ -807,8 +808,7 @@ public class QueryMapper {
 	 * @return
 	 * @since 2.2
 	 */
-	@Nullable
-	public Object convertId(@Nullable Object id) {
+	public @Nullable Object convertId(@Nullable Object id) {
 		return convertId(id, ObjectId.class);
 	}
 
@@ -820,8 +820,7 @@ public class QueryMapper {
 	 * @return the converted {@literal id} or {@literal null} if the source was already {@literal null}.
 	 * @since 2.2
 	 */
-	@Nullable
-	public Object convertId(@Nullable Object id, Class<?> targetType) {
+	public @Nullable Object convertId(@Nullable Object id, Class<?> targetType) {
 
 		if (Quirks.skipConversion(id)) {
 			return id;
@@ -836,6 +835,7 @@ public class QueryMapper {
 	 * @param candidate
 	 * @return
 	 */
+	@Contract("null -> false")
 	protected boolean isNestedKeyword(@Nullable Object candidate) {
 
 		if (!(candidate instanceof Document)) {
@@ -884,8 +884,7 @@ public class QueryMapper {
 	 * @param value the actual value. Can be {@literal null}.
 	 * @return the potentially converted target value.
 	 */
-	@Nullable
-	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
+	private @Nullable Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
 		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()
 				|| value instanceof Document || value instanceof DBObject || Quirks.skipConversion(value)) {
@@ -916,6 +915,7 @@ public class QueryMapper {
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
 	 */
+	@SuppressWarnings("NullAway")
 	static class Keyword {
 
 		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = Set.of("$", "$size", "$slice", "$gt", "$lt");
@@ -1053,8 +1053,7 @@ public class QueryMapper {
 		 *
 		 * @return can be {@literal null}.
 		 */
-		@Nullable
-		public MongoPersistentProperty getProperty() {
+		public @Nullable MongoPersistentProperty getProperty() {
 			return null;
 		}
 
@@ -1063,8 +1062,7 @@ public class QueryMapper {
 		 *
 		 * @return can be {@literal null}.
 		 */
-		@Nullable
-		public MongoPersistentEntity<?> getPropertyEntity() {
+		public @Nullable MongoPersistentEntity<?> getPropertyEntity() {
 			return null;
 		}
 
@@ -1100,8 +1098,7 @@ public class QueryMapper {
 			return false;
 		}
 
-		@Nullable
-		public Association<MongoPersistentProperty> getAssociation() {
+		public @Nullable Association<MongoPersistentProperty> getAssociation() {
 			return null;
 		}
 
@@ -1164,6 +1161,7 @@ public class QueryMapper {
 		 * @param context must not be {@literal null}.
 		 * @param property may be {@literal null}.
 		 */
+		@SuppressWarnings("NullAway")
 		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
 				@Nullable MongoPersistentProperty property) {
@@ -1207,14 +1205,13 @@ public class QueryMapper {
 		}
 
 		@Override
-		public MongoPersistentEntity<?> getPropertyEntity() {
+		public @Nullable MongoPersistentEntity<?> getPropertyEntity() {
 			MongoPersistentProperty property = getProperty();
 			return property == null ? null : mappingContext.getPersistentEntity(property);
 		}
 
-		@Nullable
 		@Override
-		public MongoPersistentEntity<?> getEntity() {
+		public @Nullable MongoPersistentEntity<?> getEntity() {
 			return entity;
 		}
 
@@ -1224,7 +1221,7 @@ public class QueryMapper {
 		}
 
 		@Override
-		public Association<MongoPersistentProperty> getAssociation() {
+		public @Nullable Association<MongoPersistentProperty> getAssociation() {
 			return association;
 		}
 
@@ -1265,8 +1262,7 @@ public class QueryMapper {
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 
-		@Nullable
-		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
+		protected @Nullable PersistentPropertyPath<MongoPersistentProperty> getPath() {
 			return path;
 		}
 
@@ -1276,8 +1272,7 @@ public class QueryMapper {
 		 * @param pathExpression
 		 * @return
 		 */
-		@Nullable
-		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
+		private @Nullable PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
 				@Nullable MongoPersistentProperty sourceProperty) {
 
 			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
@@ -1327,8 +1322,7 @@ public class QueryMapper {
 			return propertyPath;
 		}
 
-		@Nullable
-		private PersistentPropertyPath<MongoPersistentProperty> tryToResolvePersistentPropertyPath(PropertyPath path) {
+		private @Nullable PersistentPropertyPath<MongoPersistentProperty> tryToResolvePersistentPropertyPath(PropertyPath path) {
 
 			try {
 				return mappingContext.getPersistentPropertyPath(path);
@@ -1427,6 +1421,7 @@ public class QueryMapper {
 		 * @return
 		 * @since 1.7
 		 */
+		@SuppressWarnings("NullAway")
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
 			return new AssociationConverter(name, getAssociation());
 		}
@@ -1578,7 +1573,7 @@ public class QueryMapper {
 		}
 
 		@Override
-		public String convert(MongoPersistentProperty source) {
+		public @Nullable String convert(MongoPersistentProperty source) {
 
 			if (associationFound) {
 				return null;

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
@@ -48,7 +49,6 @@ import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -478,7 +478,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return the {@link Update} or {@literal null} if not present.
 	 * @since 3.4
 	 */
-	public Update getUpdateSource() {
+	public @Nullable Update getUpdateSource() {
 		return lookupUpdateAnnotation().orElse(null);
 	}
 
@@ -488,6 +488,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 3.4
 	 * @throws IllegalStateException
 	 */
+	@SuppressWarnings("NullAway")
 	public void verify() {
 
 		if (isModifyingQuery()) {
@@ -526,6 +527,7 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 	}
 
+	@SuppressWarnings("NullAway")
 	private boolean isNumericOrVoidReturnValue() {
 
 		Class<?> resultType = getReturnedObjectType();

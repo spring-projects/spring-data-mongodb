@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Value object to encapsulate results of a map-reduce count.

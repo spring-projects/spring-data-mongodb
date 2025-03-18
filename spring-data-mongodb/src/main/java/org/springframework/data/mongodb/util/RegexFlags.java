@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.util;
 
 import java.util.regex.Pattern;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Utility to translate {@link Pattern#flags() regex flags} to MongoDB regex options and vice versa.

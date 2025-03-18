@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.aot;
 
-import static org.springframework.data.mongodb.aot.MongoAotPredicates.*;
+import static org.springframework.data.mongodb.aot.MongoAotPredicates.isReactorPresent;
 
 import java.util.Arrays;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -31,7 +32,6 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertC
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoClientSettings;

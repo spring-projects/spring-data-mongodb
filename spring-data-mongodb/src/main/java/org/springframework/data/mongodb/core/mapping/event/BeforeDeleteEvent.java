@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.mapping.event;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Event being thrown before a document is deleted. The {@link Document} held in the event will represent the query

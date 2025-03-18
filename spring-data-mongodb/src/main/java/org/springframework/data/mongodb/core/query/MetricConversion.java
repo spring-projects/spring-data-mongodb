@@ -20,9 +20,11 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
+import org.springframework.util.Assert;
 
 /**
  * {@link Metric} and {@link Distance} conversions using the metric system.
@@ -151,8 +153,8 @@ public class MetricConversion {
 	 */
 	private static class ConversionMultiplierBuilder {
 
-		private Number from;
-		private Number to;
+		private @Nullable Number from;
+		private @Nullable Number to;
 
 		ConversionMultiplierBuilder() {}
 
@@ -177,6 +179,9 @@ public class MetricConversion {
 		}
 
 		ConversionMultiplier build() {
+
+			Assert.notNull(from, "[From] must be set first");
+			Assert.notNull(to, "[To] must be set first");
 			return new ConversionMultiplier(this.from, this.to);
 		}
 	}
