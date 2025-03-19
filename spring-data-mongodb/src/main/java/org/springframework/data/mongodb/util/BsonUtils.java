@@ -33,6 +33,7 @@ import org.bson.AbstractBsonWriter;
 import org.bson.BSONObject;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
 import org.bson.BsonBoolean;
 import org.bson.BsonContextType;
 import org.bson.BsonDateTime;
