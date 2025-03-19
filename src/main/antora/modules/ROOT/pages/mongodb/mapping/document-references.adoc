@@ -487,7 +487,9 @@ We know it is tempting to use all kinds of MongoDB query operators in the lookup
 But there a few aspects to consider:
 
 * Make sure to have indexes in place that support your lookup.
-* Mind that resolution requires a server rountrip inducing latency, consider a lazy strategy.
+* Make sure to use the same data types: `@DocumentReference(lookup="{'someRef':?#{#self._id} }")` can easily fail when using `@Id String id` and `String someRef` as ``String @Id``'s are subject to automatic ObjectId conversion (but not other `String` properties containing `ObjectId.toString()`).
+Reference lookup uses values from the resulting `Document` and in that case, it would query a String field using an `ObjectId` yielding no results.
+* Mind that resolution requires a server roundtrip inducing latency, consider a lazy strategy.
 * A collection of document references is bulk loaded using the `$or` operator. +
 The original element order is restored in memory on a best-effort basis.
 Restoring the order is only possible when using equality expressions and cannot be done when using MongoDB query operators.
