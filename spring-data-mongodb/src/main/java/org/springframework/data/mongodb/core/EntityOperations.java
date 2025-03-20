@@ -380,11 +380,7 @@ class EntityOperations {
 		collectionOptions.getChangeStreamOptions().ifPresent(it -> result
 				.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(it.getPreAndPostImages())));
 
-		if(collectionOptions.getEncryptedFields().isPresent()) {
-			EncryptedCollectionOptions encryptedCollectionOptions = collectionOptions.getEncryptedFields().get();
-
-			result.encryptedFields(encryptedCollectionOptions.toDocument());
-		}
+		collectionOptions.getEncryptedFields().map(EncryptedCollectionOptions::toDocument).ifPresent(result::encryptedFields);
 		return result;
 	}
 

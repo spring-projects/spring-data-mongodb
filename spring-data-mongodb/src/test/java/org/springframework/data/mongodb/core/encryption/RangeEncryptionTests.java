@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,7 +37,6 @@ import org.bson.BsonNull;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,7 +76,8 @@ import com.mongodb.client.model.CreateEncryptedCollectionParams;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.vault.DataKeyOptions;
+import com.mongodb.client.model.vault.EncryptOptions;
+import com.mongodb.client.model.vault.RangeOptions;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
@@ -92,6 +91,8 @@ import com.mongodb.client.vault.ClientEncryptions;
 class RangeEncryptionTests {
 
 	@Autowired MongoTemplate template;
+	@Autowired MongoClientEncryption clientEncryption;
+	@Autowired EncryptionKeyHolder keyHolder;
 
 	@AfterEach
 	void tearDown() {
@@ -100,11 +101,33 @@ class RangeEncryptionTests {
 
 	@Test
 	void canGreaterThanEqualMatchRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
 
-		Person loaded = template.query(Person.class).matching(where("encryptedInt").gte(source.encryptedInt)).firstValue();
-		assertThat(loaded).isEqualTo(source);
+		EncryptOptions encryptOptions = new EncryptOptions("Range").contentionFactor(1L)
+				.keyId(keyHolder.getEncryptionKey("encryptedInt"))
+				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)).sparsity(1L));
+
+		EncryptOptions encryptExpressionOptions = new EncryptOptions("Range").contentionFactor(1L)
+				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)))
+				.keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
+
+		Document source = new Document("_id", "id-1");
+		source.put("name", "It's a Me, Mario!");
+		source.put("encryptedInt", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), encryptOptions));
+		source.put("_class", Person.class.getName());
+
+		template.execute(Person.class, col -> col.insertOne(source));
+
+		Document result = template.execute(Person.class, col -> {
+
+			BsonDocument filter = clientEncryption.getClientEncryption().encryptExpression(
+				new Document("$and", List.of(new BsonDocument("encryptedInt", new BsonDocument("$gte", new BsonInt32(100))))),
+				encryptExpressionOptions);
+			Document first = col.find(filter).first();
+			System.out.println("first.toJson(): " + first.toJson());
+			return first;
+		});
+
+		assertThat(result).containsEntry("encryptedInt", 101);
 	}
 
 	@Test
@@ -205,17 +228,15 @@ class RangeEncryptionTests {
 		}
 
 		@Bean
-		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption) {
+		EncryptionKeyHolder keyHolder(MongoClientEncryption mongoClientEncryption) {
+
 			Lazy<Map<String, BsonBinary>> lazyDataKeyMap = Lazy.of(() -> {
 				try (MongoClient client = mongoClient()) {
+
 					MongoDatabase database = client.getDatabase(getDatabaseName());
 					database.getCollection("test").drop();
 
 					ClientEncryption clientEncryption = mongoClientEncryption.getClientEncryption();
-					BsonBinary dataKey1 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER,
-							new DataKeyOptions().keyAltNames(List.of("dek-1")));
-					// BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new
-					// DataKeyOptions().keyAltNames(List.of("dek-2")));
 
 					BsonDocument encryptedFields = new BsonDocument().append("fields",
 							new BsonArray(asList(
@@ -231,69 +252,29 @@ class RangeEncryptionTests {
 															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
 															.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
 
-					// BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new
-					// DataKeyOptions().keyAltNames(List.of("dek-2")));
-					//
-					// BsonDocument encryptedFields = new BsonDocument().append("fields",
-					// new BsonArray(asList(
-					// new BsonDocument("keyId", dataKey1).append("path", new BsonString("encryptedInt"))
-					// .append("bsonType", new BsonString("int"))
-					// .append("queries",
-					// new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-					// .append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-					// .append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-					// new BsonDocument("keyId", dataKey2).append("path", new BsonString("encryptedLong"))
-					// .append("bsonType", new BsonString("long")).append("queries",
-					// new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-					// .append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-					// .append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
-					//
-
-					// CollectionOptions encOptions = CollectionOptions.encrypted(options ->
-					// options
-					// .queryable(
-					// encrypted(int32("encryptedInt")),
-					// range().contention(0).trimFactor(1).sparsity(1).min(0).max(200)
-					// ).queryable(
-					// encrypted(int64("encryptedLong")),
-					// range().contention(0).trimFactor(1).sparsity(1).min(1000L).max(9999L)
-					// )
-					// );
-
 					MongoJsonSchema personSchema = MongoJsonSchemaCreator.create(new MongoMappingContext())
 							.filter(MongoJsonSchemaCreator.encryptedOnly()).createSchemaFor(Person.class);
 
 					CollectionOptions options = CollectionOptions.encrypted(personSchema);
-					System.out.println("encrypted: " + options.getEncryptedFields().get().toDocument()
-							.toJson(JsonWriterSettings.builder().indent(true).build()));
-
-					// Document document = personSchema.toDocument();
-					// System.out.println("document.toJson(): " +
-					// document.toJson(JsonWriterSettings.builder().indent(true).build()));
-					//
-					// Document fromGenerated = encOptions.getEncryptedFields().get().toDocument();
-					// System.out.println(fromGenerated.toJson(JsonWriterSettings.builder().indent(true).build()));
-					//
-					// System.out.println("-----");
-					//
-					// System.out.println( encryptedFields.toJson(JsonWriterSettings.builder().indent(true).build()));
 
 					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test",
 							// new CreateCollectionOptions().encryptedFields(encryptedFields),
-							// new CreateCollectionOptions().encryptedFields(fromGenerated),
 							new CreateCollectionOptions().encryptedFields(options.getEncryptedFields().get().toDocument()),
 							new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
 
-					Map<String, BsonBinary> x = local.getArray("fields").stream().map(BsonValue::asDocument).collect(
+					return local.getArray("fields").stream().map(BsonValue::asDocument).collect(
 							Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
-
-					HashMap<String, BsonBinary> stringBsonBinaryHashMap = new HashMap<>(x);
-					stringBsonBinaryHashMap.put("name", dataKey1);
-					return stringBsonBinaryHashMap;
 				}
 			});
+
+			return new EncryptionKeyHolder(lazyDataKeyMap);
+		}
+
+		@Bean
+		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption,
+				EncryptionKeyHolder keyHolder) {
 			return new MongoEncryptionConverter(mongoClientEncryption, EncryptionKeyResolver
-					.annotated((ctx) -> EncryptionKey.keyId(lazyDataKeyMap.get().get(ctx.getProperty().getFieldName()))));
+					.annotated((ctx) -> EncryptionKey.keyId(keyHolder.getEncryptionKey(ctx.getProperty().getFieldName()))));
 		}
 
 		@Bean
@@ -309,7 +290,6 @@ class RangeEncryptionTests {
 				builder.autoEncryptionSettings(AutoEncryptionSettings.builder() //
 						.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
 						.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
-						// .bypassAutoEncryption(true)
 						.bypassQueryAnalysis(true).build());
 			}
 		}
@@ -359,6 +339,19 @@ class RangeEncryptionTests {
 				clientEncryption.close();
 				cache.set(null);
 			}
+		}
+	}
+
+	static class EncryptionKeyHolder {
+
+		Supplier<Map<String, BsonBinary>> lazyDataKeyMap;
+
+		public EncryptionKeyHolder(Supplier<Map<String, BsonBinary>> lazyDataKeyMap) {
+			this.lazyDataKeyMap = Lazy.of(lazyDataKeyMap);
+		}
+
+		BsonBinary getEncryptionKey(String path) {
+			return lazyDataKeyMap.get().get(path);
 		}
 	}
 
