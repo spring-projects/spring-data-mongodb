@@ -15,14 +15,10 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static java.util.Arrays.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.encrypted;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int32;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int64;
-import static org.springframework.data.mongodb.core.schema.QueryCharacteristics.range;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -32,6 +28,41 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import org.bson.BsonArray;
+import org.bson.BsonBinary;
+import org.bson.BsonDocument;
+import org.bson.BsonInt32;
+import org.bson.BsonInt64;
+import org.bson.BsonNull;
+import org.bson.BsonString;
+import org.bson.BsonValue;
+import org.bson.Document;
+import org.bson.json.JsonWriterSettings;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.convert.PropertyValueConverterFactory;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.CollectionOptions;
+import org.springframework.data.mongodb.core.MongoJsonSchemaCreator;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
+import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.util.Lazy;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
@@ -50,42 +81,6 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
-
-import org.bson.BsonArray;
-import org.bson.BsonBinary;
-import org.bson.BsonDocument;
-import org.bson.BsonInt32;
-import org.bson.BsonInt64;
-import org.bson.BsonNull;
-import org.bson.BsonString;
-import org.bson.BsonValue;
-import org.bson.Document;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.convert.PropertyValueConverterFactory;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.CollectionOptions.EncryptedCollectionOptions;
-import org.springframework.data.mongodb.core.EncryptionAlgorithms;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
-import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
-import org.springframework.data.mongodb.core.mapping.ExplicitEncrypted;
-import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
-import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.util.Lazy;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * @author Ross Lawley
@@ -216,64 +211,81 @@ class RangeEncryptionTests {
 					MongoDatabase database = client.getDatabase(getDatabaseName());
 					database.getCollection("test").drop();
 
-
 					ClientEncryption clientEncryption = mongoClientEncryption.getClientEncryption();
-					BsonBinary dataKey1 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-1")));
-//					BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-2")));
+					BsonBinary dataKey1 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER,
+							new DataKeyOptions().keyAltNames(List.of("dek-1")));
+					// BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new
+					// DataKeyOptions().keyAltNames(List.of("dek-2")));
 
 					BsonDocument encryptedFields = new BsonDocument().append("fields",
 							new BsonArray(asList(
-//									new BsonDocument("keyId", dataKey1).append("path", new BsonString("name"))
-//											.append("bsonType", new BsonString("string")),
-
 									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
 											.append("bsonType", new BsonString("int"))
 											.append("queries",
 													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
 															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
 															.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-										new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
+									new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
 											.append("bsonType", new BsonString("long")).append("queries",
 													new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
 															.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
 															.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
 
+					// BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new
+					// DataKeyOptions().keyAltNames(List.of("dek-2")));
+					//
+					// BsonDocument encryptedFields = new BsonDocument().append("fields",
+					// new BsonArray(asList(
+					// new BsonDocument("keyId", dataKey1).append("path", new BsonString("encryptedInt"))
+					// .append("bsonType", new BsonString("int"))
+					// .append("queries",
+					// new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
+					// .append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
+					// .append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
+					// new BsonDocument("keyId", dataKey2).append("path", new BsonString("encryptedLong"))
+					// .append("bsonType", new BsonString("long")).append("queries",
+					// new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
+					// .append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
+					// .append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
+					//
 
-//					BsonBinary dataKey2 = clientEncryption.createDataKey(LOCAL_KMS_PROVIDER, new DataKeyOptions().keyAltNames(List.of("dek-2")));
-//
-//					BsonDocument encryptedFields = new BsonDocument().append("fields",
-//						new BsonArray(asList(
-//							new BsonDocument("keyId", dataKey1).append("path", new BsonString("encryptedInt"))
-//								.append("bsonType", new BsonString("int"))
-//								.append("queries",
-//									new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-//										.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-//										.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-//							new BsonDocument("keyId", dataKey2).append("path", new BsonString("encryptedLong"))
-//								.append("bsonType", new BsonString("long")).append("queries",
-//									new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-//										.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-//										.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
-//
+					// CollectionOptions encOptions = CollectionOptions.encrypted(options ->
+					// options
+					// .queryable(
+					// encrypted(int32("encryptedInt")),
+					// range().contention(0).trimFactor(1).sparsity(1).min(0).max(200)
+					// ).queryable(
+					// encrypted(int64("encryptedLong")),
+					// range().contention(0).trimFactor(1).sparsity(1).min(1000L).max(9999L)
+					// )
+					// );
 
-					CollectionOptions.encrypted(options ->
-						options
-							.queryable(
-								encrypted(int32("encryptedInt")),
-								range().contention(0).trimFactor(1).sparsity(1).min(0).max(200)
-							).queryable(
-								encrypted(int64("encryptedLong")),
-								range().contention(0).trimFactor(1).sparsity(1).min(1000L).max(9999L)
-							)
+					MongoJsonSchema personSchema = MongoJsonSchemaCreator.create(new MongoMappingContext())
+							.filter(MongoJsonSchemaCreator.encryptedOnly()).createSchemaFor(Person.class);
 
-					);
+					CollectionOptions options = CollectionOptions.encrypted(personSchema);
+					System.out.println("encrypted: " + options.getEncryptedFields().get().toDocument()
+							.toJson(JsonWriterSettings.builder().indent(true).build()));
+
+					// Document document = personSchema.toDocument();
+					// System.out.println("document.toJson(): " +
+					// document.toJson(JsonWriterSettings.builder().indent(true).build()));
+					//
+					// Document fromGenerated = encOptions.getEncryptedFields().get().toDocument();
+					// System.out.println(fromGenerated.toJson(JsonWriterSettings.builder().indent(true).build()));
+					//
+					// System.out.println("-----");
+					//
+					// System.out.println( encryptedFields.toJson(JsonWriterSettings.builder().indent(true).build()));
 
 					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test",
-							new CreateCollectionOptions().encryptedFields(encryptedFields),
+							// new CreateCollectionOptions().encryptedFields(encryptedFields),
+							// new CreateCollectionOptions().encryptedFields(fromGenerated),
+							new CreateCollectionOptions().encryptedFields(options.getEncryptedFields().get().toDocument()),
 							new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
 
 					Map<String, BsonBinary> x = local.getArray("fields").stream().map(BsonValue::asDocument).collect(
-						Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
+							Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
 
 					HashMap<String, BsonBinary> stringBsonBinaryHashMap = new HashMap<>(x);
 					stringBsonBinaryHashMap.put("name", dataKey1);
@@ -297,7 +309,7 @@ class RangeEncryptionTests {
 				builder.autoEncryptionSettings(AutoEncryptionSettings.builder() //
 						.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
 						.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
-//						.bypassAutoEncryption(true)
+						// .bypassAutoEncryption(true)
 						.bypassQueryAnalysis(true).build());
 			}
 		}

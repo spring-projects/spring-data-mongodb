@@ -18,7 +18,10 @@ package org.springframework.data.mongodb.core;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
+import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -42,10 +46,10 @@ import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
-import org.springframework.util.StringUtils;
 
 /**
  * Provides a simple wrapper to encapsulate the variety of settings you can use when creating a collection.
@@ -66,12 +70,12 @@ public class CollectionOptions {
 	private ValidationOptions validationOptions;
 	private @Nullable TimeSeriesOptions timeSeriesOptions;
 	private @Nullable CollectionChangeStreamOptions changeStreamOptions;
-//	private @Nullable Bson encryptedFields;
 	private @Nullable EncryptedCollectionOptions encryptedCollectionOptions;
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
 			@Nullable Collation collation, ValidationOptions validationOptions, @Nullable TimeSeriesOptions timeSeriesOptions,
-			@Nullable CollectionChangeStreamOptions changeStreamOptions, @Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
+			@Nullable CollectionChangeStreamOptions changeStreamOptions,
+			@Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
@@ -350,8 +354,11 @@ public class CollectionOptions {
 	 * @since 4.5.0
 	 */
 	public static CollectionOptions encrypted(@Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
-		return new CollectionOptions(null, null, null, null, null, null,
-			null, encryptedCollectionOptions);
+		return new CollectionOptions(null, null, null, null, null, null, null, encryptedCollectionOptions);
+	}
+
+	public static CollectionOptions encrypted(MongoJsonSchema schema) {
+		return encrypted(new EncryptedCollectionOptions(schema));
 	}
 
 	public static CollectionOptions encrypted(Consumer<EncryptedCollectionOptions> options) {
@@ -442,10 +449,10 @@ public class CollectionOptions {
 	public String toString() {
 		return "CollectionOptions{" + "maxDocuments=" + maxDocuments + ", size=" + size + ", capped=" + capped
 				+ ", collation=" + collation + ", validationOptions=" + validationOptions + ", timeSeriesOptions="
-				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", encryptedCollectionOptions=" + encryptedCollectionOptions
-				+ ", disableValidation=" + disableValidation() + ", strictValidation=" + strictValidation()
-				+ ", moderateValidation=" + moderateValidation() + ", warnOnValidationError=" + warnOnValidationError()
-				+ ", failOnValidationError=" + failOnValidationError() + '}';
+				+ timeSeriesOptions + ", changeStreamOptions=" + changeStreamOptions + ", encryptedCollectionOptions="
+				+ encryptedCollectionOptions + ", disableValidation=" + disableValidation() + ", strictValidation="
+				+ strictValidation() + ", moderateValidation=" + moderateValidation() + ", warnOnValidationError="
+				+ warnOnValidationError() + ", failOnValidationError=" + failOnValidationError() + '}';
 	}
 
 	@Override
@@ -629,33 +636,110 @@ public class CollectionOptions {
 	public static class EncryptedCollectionOptions {
 
 		private List<QueryableJsonSchemaProperty> queryableProperties = new ArrayList<>();
+		private @Nullable MongoJsonSchema schema;
 
-		public EncryptedCollectionOptions queryable(JsonSchemaProperty schemaObject, QueryCharacteristic... characteristics) {
+		public EncryptedCollectionOptions() {
+			this(null);
+		}
+
+		public EncryptedCollectionOptions(@Nullable MongoJsonSchema schema) {
+			this.schema = schema;
+		}
+
+		public EncryptedCollectionOptions queryable(JsonSchemaProperty schemaObject,
+				QueryCharacteristic... characteristics) {
 
 			QueryCharacteristics characteristics1 = new QueryCharacteristics(List.of(characteristics));
 			queryableProperties.add(JsonSchemaProperty.queryable(schemaObject, characteristics1));
 			return this;
-
 		}
 
 		public Document toDocument() {
 
+			List<Document> fields = schema != null ? fromSchema() : new ArrayList<>(queryableProperties.size());
 
-			List<Document> fields = new ArrayList<>(queryableProperties.size());
-			for(QueryableJsonSchemaProperty property : queryableProperties) {
+			for (QueryableJsonSchemaProperty property : queryableProperties) {
 				Document field = new Document("path", property.getIdentifier());
-				if(!property.getTypes().isEmpty()) {
+				if (!property.getTypes().isEmpty()) {
 					field.append("bsonType", property.getTypes().iterator().next().toBsonType().value());
 				}
-				if(property.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
-					if(StringUtils.hasText(encrypted.getKeyId())) {
-						new BsonBinary(BsonBinarySubType.UUID_STANDARD, encrypted.getKeyId().getBytes(StandardCharsets.UTF_8));
+				if (property
+						.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
+					if (StringUtils.hasText(encrypted.getKeyId())) {
+						field.append("keyId",
+								new BsonBinary(BsonBinarySubType.UUID_STANDARD, encrypted.getKeyId().getBytes(StandardCharsets.UTF_8)));
 					}
 				}
-				field.append("queries", property.getCharacteristics().getCharacteristics().stream().map(QueryCharacteristic::toDocument).collect(Collectors.toList()));
+				field.append("queries", property.getCharacteristics().getCharacteristics().stream()
+						.map(QueryCharacteristic::toDocument).collect(Collectors.toList()));
+				if (!field.containsKey("keyId")) {
+					field.append("keyId", BsonNull.VALUE);
+				}
+				fields.add(field);
 			}
 
 			return new Document("fields", fields);
+		}
+
+		private List<Document> fromSchema() {
+
+			Document root = schema.schemaDocument();
+			Map<String, Document> paths = new LinkedHashMap<>();
+			collectPaths(root, null, paths);
+
+			List<Document> fields = new ArrayList<>();
+			if (!paths.isEmpty()) {
+
+				for (Entry<String, Document> entry : paths.entrySet()) {
+					Document field = new Document("path", entry.getKey());
+					field.append("keyId",
+							entry.getValue().containsValue("keyId") ? entry.getValue().get("keyId") : BsonNull.VALUE);
+					if (entry.getValue().containsKey("bsonType")) {
+						field.append("bsonType", entry.getValue().get("bsonType"));
+					}
+					Document query = new Document("queryType", entry.getValue().get("algorithm", "range").toLowerCase());
+					query.append("contention", entry.getValue().get("contention"));
+					query.append("trimFactor", entry.getValue().get("trimFactor"));
+					query.append("sparsity", entry.getValue().get("sparsity"));
+					query.append("min", entry.getValue().get("min"));
+					query.append("max", entry.getValue().get("max"));
+					field.append("queries", List.of(query));
+					fields.add(field);
+				}
+			}
+
+			return fields;
+		}
+
+	}
+
+	private static void collectPaths(Document document, String currentPath, Map<String, Document> paths) {
+
+		if (document.containsKey("type") && document.get("type").equals("object")) {
+			Object o = document.get("properties");
+			if (o == null) {
+				return;
+			}
+
+			if (o instanceof Document properties) {
+				for (Entry<String, Object> entry : properties.entrySet()) {
+					if (entry.getValue() instanceof Document nested) {
+						String path = currentPath == null ? entry.getKey() : (currentPath + "." + entry.getKey());
+						if (nested.containsKey("encrypt")) {
+							Document target = new Document(nested.get("encrypt", Document.class));
+							if(nested.containsKey("queries")) {
+								List<?> queries = nested.get("queries", List.class);
+								if(!queries.isEmpty() && queries.iterator().next() instanceof Document qd) {
+									target.putAll(qd);
+								}
+							}
+							paths.put(path, target);
+						} else {
+							collectPaths(nested, currentPath, paths);
+						}
+					}
+				}
+			}
 		}
 	}
 

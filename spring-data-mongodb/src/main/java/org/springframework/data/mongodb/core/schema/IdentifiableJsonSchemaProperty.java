@@ -21,7 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.data.domain.Range;
@@ -91,17 +90,17 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			this.characteristics = characteristics;
 		}
 
-
 		@Override
 		public Document toDocument() {
 
 			Document doc = targetProperty.toDocument();
 			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
 
-			List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument).toList();
+			List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument)
+					.toList();
 			propertySpecification.append("queries", queries);
 
-			return propertySpecification;
+			return doc;
 		}
 
 		@Override

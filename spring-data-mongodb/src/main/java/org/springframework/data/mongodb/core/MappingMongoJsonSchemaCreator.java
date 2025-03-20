@@ -31,14 +31,18 @@ import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -290,6 +294,28 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 		if (!ObjectUtils.isEmpty(encrypted.keyId())) {
 			enc = enc.keys(property.getEncryptionKeyIds());
+		}
+
+		RangeEncrypted rangeEncrypted = property.findAnnotation(RangeEncrypted.class);
+		if (rangeEncrypted != null) {
+
+			QueryCharacteristic characteristic = new QueryCharacteristic() {
+
+				@Override
+				public String type() {
+					return "range";
+				}
+
+				@Override
+				public Document toDocument() {
+					Document options = new Document("queryType", "range");
+					if (!rangeEncrypted.rangeOptions().isEmpty()) {
+						options.putAll(Document.parse(rangeEncrypted.rangeOptions()));
+					}
+					return options;
+				}
+			};
+			return new QueryableJsonSchemaProperty(enc, new QueryCharacteristics(List.of(characteristic)));
 		}
 		return enc;
 	}
