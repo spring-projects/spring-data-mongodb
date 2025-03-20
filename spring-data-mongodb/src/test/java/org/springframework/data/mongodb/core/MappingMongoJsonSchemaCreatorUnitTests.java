@@ -15,7 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
 
 import java.util.Collections;
 import java.util.Date;
@@ -38,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -282,6 +284,38 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 				.containsEntry("properties.domainTypeValue", Document.parse("{'encrypt': {'bsonType': 'object' } }"));
 	}
 
+	@Test // GH-4454
+	void qeRangeEncryptedProperties() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
+				.createSchemaFor(RangeEncryptedRoot.class);
+
+		String expectedForInt = """
+				{ 'encrypt' : {
+					'algorithm' : 'Range',
+					'bsonType' : 'int',
+					'queries' : [
+						{ 'contention' : { '$numberLong' : '0' }, 'max' : 200, 'min' : 0, 'queryType' : 'range', 'sparsity' : 1, 'trimFactor' : 1 }
+					]
+				}}""";
+
+		String expectedForLong = """
+				{ 'encrypt' : {
+					'algorithm' : 'Range',
+					'bsonType' : 'long',
+					'queries' : [
+						{ contention : { '$numberLong' : '1' }, 'max' : 1, 'min' : -1, 'queryType' : 'range', 'sparsity' : 1, 'trimFactor' : 1 }
+					]
+				}}""";
+
+		assertThat(schema.schemaDocument()) //
+				.doesNotContainKey("properties.unencrypted") //
+				.containsEntry("properties.encryptedInt", Document.parse(expectedForInt))
+				.containsEntry("properties.nested.properties.encrypted_long", Document.parse(expectedForLong));
+
+	}
+
 	// --> TYPES AND JSON
 
 	// --> ENUM
@@ -311,7 +345,8 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 			"        'binaryDataProperty' : { 'bsonType' : 'binData' }," + //
 			"        'collectionProperty' : { 'type' : 'array' }," + //
 			"        'simpleTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'string' } }," + //
-			"        'complexTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'object', 'properties' : { 'field' : { 'type' : 'string'} } } }" + //
+			"        'complexTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'object', 'properties' : { 'field' : { 'type' : 'string'} } } }"
+			+ //
 			"        'enumTypeCollectionProperty' : { 'type' : 'array', 'items' : " + JUST_SOME_ENUM + " }" + //
 			"        'mapProperty' : { 'type' : 'object' }," + //
 			"        'objectProperty' : { 'type' : 'object' }," + //
@@ -692,4 +727,23 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 	static class WithEncryptedEntityLikeProperty {
 		@Encrypted SomeDomainType domainTypeValue;
 	}
+
+	static class RangeEncryptedRoot {
+
+		String unencrypted;
+
+		@RangeEncrypted(contentionFactor = 0L, rangeOptions = "{ 'min': 0, 'max': 200, 'trimFactor': 1, 'sparsity': 1}") //
+		Integer encryptedInt;
+
+		NestedRangeEncrypted nested;
+
+	}
+
+	static class NestedRangeEncrypted {
+
+		@Field("encrypted_long")
+		@RangeEncrypted(contentionFactor = 1L, rangeOptions = "{ 'min': -1, 'max': 1, 'trimFactor': 1, 'sparsity': 1}") //
+		Long encryptedLong;
+	}
+
 }

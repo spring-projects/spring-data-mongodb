@@ -119,10 +119,12 @@ class RangeEncryptionTests {
 
 		Document result = template.execute(Person.class, col -> {
 
+			BsonDocument filterSource = new BsonDocument("encryptedInt", new BsonDocument("$gte", new BsonInt32(100)));
 			BsonDocument filter = clientEncryption.getClientEncryption().encryptExpression(
-				new Document("$and", List.of(new BsonDocument("encryptedInt", new BsonDocument("$gte", new BsonInt32(100))))),
+				new Document("$and", List.of(filterSource)),
 				encryptExpressionOptions);
 			Document first = col.find(filter).first();
+//			Document first = col.find(filterSource).first();
 			System.out.println("first.toJson(): " + first.toJson());
 			return first;
 		});
@@ -290,7 +292,8 @@ class RangeEncryptionTests {
 				builder.autoEncryptionSettings(AutoEncryptionSettings.builder() //
 						.kmsProviders(clientEncryptionSettings.getKmsProviders()) //
 						.keyVaultNamespace(clientEncryptionSettings.getKeyVaultNamespace()) //
-						.bypassQueryAnalysis(true).build());
+						.bypassQueryAnalysis(true)
+					.build());
 			}
 		}
 

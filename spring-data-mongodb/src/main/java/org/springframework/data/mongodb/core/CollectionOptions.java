@@ -697,13 +697,7 @@ public class CollectionOptions {
 					if (entry.getValue().containsKey("bsonType")) {
 						field.append("bsonType", entry.getValue().get("bsonType"));
 					}
-					Document query = new Document("queryType", entry.getValue().get("algorithm", "range").toLowerCase());
-					query.append("contention", entry.getValue().get("contention"));
-					query.append("trimFactor", entry.getValue().get("trimFactor"));
-					query.append("sparsity", entry.getValue().get("sparsity"));
-					query.append("min", entry.getValue().get("min"));
-					query.append("max", entry.getValue().get("max"));
-					field.append("queries", List.of(query));
+					field.put("queries", entry.getValue().get("queries"));
 					fields.add(field);
 				}
 			}
@@ -727,9 +721,9 @@ public class CollectionOptions {
 						String path = currentPath == null ? entry.getKey() : (currentPath + "." + entry.getKey());
 						if (nested.containsKey("encrypt")) {
 							Document target = new Document(nested.get("encrypt", Document.class));
-							if(nested.containsKey("queries")) {
+							if (nested.containsKey("queries")) {
 								List<?> queries = nested.get("queries", List.class);
-								if(!queries.isEmpty() && queries.iterator().next() instanceof Document qd) {
+								if (!queries.isEmpty() && queries.iterator().next() instanceof Document qd) {
 									target.putAll(qd);
 								}
 							}

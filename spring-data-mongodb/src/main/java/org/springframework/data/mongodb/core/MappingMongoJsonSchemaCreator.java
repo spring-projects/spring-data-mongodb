@@ -312,6 +312,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 					if (!rangeEncrypted.rangeOptions().isEmpty()) {
 						options.putAll(Document.parse(rangeEncrypted.rangeOptions()));
 					}
+					options.put("contention", rangeEncrypted.contentionFactor());
 					return options;
 				}
 			};

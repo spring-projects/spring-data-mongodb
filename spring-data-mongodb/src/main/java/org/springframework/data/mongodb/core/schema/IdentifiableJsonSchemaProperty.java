@@ -96,9 +96,12 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			Document doc = targetProperty.toDocument();
 			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
 
-			List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument)
-					.toList();
-			propertySpecification.append("queries", queries);
+			if (propertySpecification.containsKey("encrypt")) {
+				Document encrypt = propertySpecification.get("encrypt", Document.class);
+				List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument)
+						.toList();
+				encrypt.append("queries", queries);
+			}
 
 			return doc;
 		}
