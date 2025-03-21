@@ -113,9 +113,9 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 						range().min(-1L).max(1L).contention(0)));
 
 		CollectionOptions schemaOptions = CollectionOptions.encrypted(MongoJsonSchema.builder()
-				.property(queryable(encrypted(int32("encryptedInt")).keys(key1),
+				.property(queryable(encrypted(int32("encryptedInt")).keyId(key1),
 						new QueryCharacteristics(List.of(range().min(5).max(100).contention(1)))))
-				.property(queryable(encrypted(int64("nested.encryptedLong")).keys(key2),
+				.property(queryable(encrypted(int64("nested.encryptedLong")).keyId(key2),
 						new QueryCharacteristics(List.of(range().min(-1L).max(1L).contention(0)))))
 				.build());
 

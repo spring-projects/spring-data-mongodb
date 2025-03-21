@@ -1085,7 +1085,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		private final JsonSchemaProperty targetProperty;
 		private final @Nullable String algorithm;
-		private final @Nullable String keyId;
+		private final @Nullable Object keyId;
 		private final @Nullable List<?> keyIds;
 
 		/**
@@ -1097,7 +1097,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			this(target, null, null, null);
 		}
 
-		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId,
+		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable Object keyId,
 				@Nullable List<?> keyIds) {
 
 			Assert.notNull(target, "Target must not be null");
@@ -1152,6 +1152,10 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
 
+		public EncryptedJsonSchemaProperty keyId(Object keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
+		}
+
 		/**
 		 * @param keyId must not be {@literal null}.
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
@@ -1179,11 +1183,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			if (!ObjectUtils.isEmpty(keyId)) {
 				enc.append("keyId", keyId);
 			} else if (!ObjectUtils.isEmpty(keyIds)) {
-				if(keyIds.size() == 1) {
-					enc.append("keyId", keyIds.iterator().next());
-				} else {
-					enc.append("keyId", keyIds);
-				}
+				enc.append("keyId", keyIds);
 			}
 
 			Type type = extractPropertyType(propertySpecification);
@@ -1226,10 +1226,10 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		}
 
 		public Object getKeyId() {
-			if(keyId != null) {
+			if (keyId != null) {
 				return keyId;
 			}
-			if(keyIds != null && keyIds.size() == 1) {
+			if (keyIds != null && keyIds.size() == 1) {
 				return keyIds.iterator().next();
 			}
 			return null;
