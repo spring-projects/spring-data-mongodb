@@ -1179,7 +1179,11 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			if (!ObjectUtils.isEmpty(keyId)) {
 				enc.append("keyId", keyId);
 			} else if (!ObjectUtils.isEmpty(keyIds)) {
-				enc.append("keyId", keyIds);
+				if(keyIds.size() == 1) {
+					enc.append("keyId", keyIds.iterator().next());
+				} else {
+					enc.append("keyId", keyIds);
+				}
 			}
 
 			Type type = extractPropertyType(propertySpecification);
@@ -1221,8 +1225,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return null;
 		}
 
-		public String getKeyId() {
-			return keyId;
+		public Object getKeyId() {
+			if(keyId != null) {
+				return keyId;
+			}
+			if(keyIds != null && keyIds.size() == 1) {
+				return keyIds.iterator().next();
+			}
+			return null;
 		}
 	}
 }

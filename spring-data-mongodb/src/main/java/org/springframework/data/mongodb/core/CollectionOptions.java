@@ -46,7 +46,6 @@ import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
@@ -354,7 +353,8 @@ public class CollectionOptions {
 	 * @since 4.5.0
 	 */
 	public static CollectionOptions encrypted(@Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
-		return new CollectionOptions(null, null, null, null, null, null, null, encryptedCollectionOptions);
+		return new CollectionOptions(null, null, null, null, ValidationOptions.NONE, null, null,
+				encryptedCollectionOptions);
 	}
 
 	public static CollectionOptions encrypted(MongoJsonSchema schema) {
@@ -665,9 +665,13 @@ public class CollectionOptions {
 				}
 				if (property
 						.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
-					if (StringUtils.hasText(encrypted.getKeyId())) {
-						field.append("keyId",
-								new BsonBinary(BsonBinarySubType.UUID_STANDARD, encrypted.getKeyId().getBytes(StandardCharsets.UTF_8)));
+					if (encrypted.getKeyId() != null) {
+						if (encrypted.getKeyId() instanceof String stringKey) {
+							field.append("keyId",
+									new BsonBinary(BsonBinarySubType.UUID_STANDARD, stringKey.getBytes(StandardCharsets.UTF_8)));
+						} else {
+							field.append("keyId", encrypted.getKeyId());
+						}
 					}
 				}
 				field.append("queries", property.getCharacteristics().getCharacteristics().stream()
@@ -692,8 +696,7 @@ public class CollectionOptions {
 
 				for (Entry<String, Document> entry : paths.entrySet()) {
 					Document field = new Document("path", entry.getKey());
-					field.append("keyId",
-							entry.getValue().containsValue("keyId") ? entry.getValue().get("keyId") : BsonNull.VALUE);
+					field.append("keyId", entry.getValue().getOrDefault("keyId", BsonNull.VALUE));
 					if (entry.getValue().containsKey("bsonType")) {
 						field.append("bsonType", entry.getValue().get("bsonType"));
 					}

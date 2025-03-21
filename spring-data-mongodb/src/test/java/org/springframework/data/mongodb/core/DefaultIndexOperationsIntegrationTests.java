@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.index.PartialIndexFilter.of;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -79,7 +79,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("q-t-y").gte(10)));
 
-		indexOps.ensureIndex(id);
+		indexOps.createIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-criteria");
 		assertThat(Document.parse(info.getPartialFilterExpression()))
@@ -92,7 +92,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("quantity").gte(10)));
 
-		template.indexOps(DefaultIndexOperationsIntegrationTestsSample.class).ensureIndex(id);
+		template.indexOps(DefaultIndexOperationsIntegrationTestsSample.class).createIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-mapped-criteria");
 		assertThat(Document.parse(info.getPartialFilterExpression()))
@@ -105,7 +105,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
 				.partial(of(new org.bson.Document("qty", new org.bson.Document("$gte", 10))));
 
-		indexOps.ensureIndex(id);
+		indexOps.createIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-dbo");
 		assertThat(Document.parse(info.getPartialFilterExpression()))
@@ -120,7 +120,7 @@ public class DefaultIndexOperationsIntegrationTests {
 
 		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
 
-		indexOps.ensureIndex(id);
+		indexOps.createIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-inheritance");
 		assertThat(Document.parse(info.getPartialFilterExpression()))
@@ -150,7 +150,7 @@ public class DefaultIndexOperationsIntegrationTests {
 
 		new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
 
-		indexOps.ensureIndex(id);
+		indexOps.createIndex(id);
 
 		Document expected = new Document("locale", "de_AT") //
 				.append("caseLevel", false) //
@@ -179,7 +179,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition index = new Index().named("my-index").on("a", Direction.ASC);
 
 		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
-		indexOps.ensureIndex(index);
+		indexOps.createIndex(index);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "my-index");
 		assertThat(info.isHidden()).isFalse();
@@ -191,7 +191,7 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexDefinition index = new Index().named("my-hidden-index").on("a", Direction.ASC).hidden();
 
 		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME, MappingToSameCollection.class);
-		indexOps.ensureIndex(index);
+		indexOps.createIndex(index);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "my-hidden-index");
 		assertThat(info.isHidden()).isTrue();
