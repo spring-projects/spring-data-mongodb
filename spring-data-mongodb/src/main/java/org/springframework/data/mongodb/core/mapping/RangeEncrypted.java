@@ -20,12 +20,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.core.annotation.AliasFor;
-import org.springframework.data.convert.PropertyValueConverter;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.convert.encryption.EncryptingConverter;
-import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
-
 /**
  * @author Christoph Strobl
  * @author Ross Lawley
@@ -34,7 +28,6 @@ import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionC
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Encrypted(algorithm = "Range")
-@ValueConverter
 public @interface RangeEncrypted {
 
 	/**
@@ -55,13 +48,4 @@ public @interface RangeEncrypted {
 	 * @return the json representation of range options
 	 */
 	String rangeOptions() default "";
-
-	/**
-	 * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.
-	 *
-	 * @return the configured {@link EncryptingConverter}. A {@link MongoEncryptionConverter} by default.
-	 */
-	@AliasFor(annotation = ValueConverter.class, value = "value")
-	Class<? extends PropertyValueConverter> value() default MongoEncryptionConverter.class;
-
 }

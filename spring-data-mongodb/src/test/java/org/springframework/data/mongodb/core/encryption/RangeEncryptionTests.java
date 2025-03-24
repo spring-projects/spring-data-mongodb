@@ -16,8 +16,6 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -49,7 +47,6 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions.Mong
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
@@ -79,6 +76,7 @@ import com.mongodb.client.vault.ClientEncryptions;
 
 /**
  * @author Ross Lawley
+ * @author Christoph Strobl
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
@@ -95,7 +93,7 @@ class RangeEncryptionTests {
 		template.getDb().getCollection("test").deleteMany(new BsonDocument());
 	}
 
-	@Test
+	@Test // GH-4185
 	void canGreaterThanEqualMatchRangeEncryptedField() {
 
 		EncryptOptions encryptOptions = new EncryptOptions("Range").contentionFactor(1L)
@@ -118,81 +116,11 @@ class RangeEncryptionTests {
 			BsonDocument filterSource = new BsonDocument("encryptedInt", new BsonDocument("$gte", new BsonInt32(100)));
 			BsonDocument filter = clientEncryption.getClientEncryption()
 					.encryptExpression(new Document("$and", List.of(filterSource)), encryptExpressionOptions);
-			Document first = col.find(filter).first();
-			// Document first = col.find(filterSource).first();
-			System.out.println("first.toJson(): " + first.toJson());
-			return first;
+
+			return col.find(filter).first();
 		});
 
 		assertThat(result).containsEntry("encryptedInt", 101);
-	}
-
-	@Test
-	void canLesserThanEqualMatchRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
-
-		Person loaded = template.query(Person.class).matching(where("encryptedInt").lte(source.encryptedInt)).firstValue();
-		assertThat(loaded).isEqualTo(source);
-	}
-
-	@Test
-	void canRangeMatchRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
-
-		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
-		q.fields().exclude("__safeContent__");
-		Person loaded = template.query(Person.class).matching(q).firstValue();
-		assertThat(loaded).isEqualTo(source);
-	}
-
-	@Test
-	void canUpdateRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
-
-		source.encryptedInt = 123;
-		source.encryptedLong = 9999L;
-		template.save(source);
-
-		Person loaded = template.query(Person.class).matching(where("id").is(source.id)).firstValue();
-		assertThat(loaded).isEqualTo(source);
-	}
-
-	@Test
-	void errorsWhenUsingNonRangeOperatorEqOnRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
-
-		assertThatThrownBy(
-				() -> template.query(Person.class).matching(where("encryptedInt").is(source.encryptedInt)).firstValue())
-				.isInstanceOf(AssertionError.class)
-				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
-						+ "the query operator '$eq' for field path 'encryptedInt' is not a range query.");
-
-	}
-
-	@Test
-	void errorsWhenUsingNonRangeOperatorInOnRangeEncryptedField() {
-		Person source = createPerson();
-		template.insert(source);
-
-		assertThatThrownBy(
-				() -> template.query(Person.class).matching(where("encryptedLong").in(1001L, 9999L)).firstValue())
-				.isInstanceOf(AssertionError.class)
-				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
-						+ "the query operator '$in' for field path 'encryptedLong' is not a range query.");
-
-	}
-
-	private Person createPerson() {
-		Person source = new Person();
-		source.id = "id-1";
-		source.name = "it'se me mario!";
-		source.encryptedInt = 101;
-		source.encryptedLong = 1001L;
-		return source;
 	}
 
 	protected static class EncryptionConfig extends AbstractMongoClientConfiguration {
@@ -235,36 +163,20 @@ class RangeEncryptionTests {
 
 					ClientEncryption clientEncryption = mongoClientEncryption.getClientEncryption();
 
-					// BsonDocument encryptedFields = new BsonDocument().append("fields",
-					// new BsonArray(asList(
-					// new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
-					// .append("bsonType", new BsonString("int"))
-					// .append("queries",
-					// new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-					// .append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-					// .append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-					// new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
-					// .append("bsonType", new BsonString("long")).append("queries",
-					// new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-					// .append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-					// .append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
-
 					MongoJsonSchema personSchema = MongoJsonSchemaCreator.create(new MongoMappingContext()) // init schema creator
-							.filter(MongoJsonSchemaCreator.encryptedOnly()) // should be obvious
-							.createSchemaFor(Person.class); // create it for given type
+							.filter(MongoJsonSchemaCreator.encryptedOnly()) //
+							.createSchemaFor(Person.class); //
 
-					Document encryptedFields = CollectionOptions.encryptedCollection(personSchema) // pass in the schema
-							.getEncryptionOptions() // get the fields just because we need to use createEncryptedCollection which not
-																		// part of the driver
-							.map(EncryptedCollectionOptions::toDocument) // now map them into the raw format
+					Document encryptedFields = CollectionOptions.encryptedCollection(personSchema) //
+							.getEncryptionOptions() //
+							.map(EncryptedCollectionOptions::toDocument) //
 							.orElseThrow();
 
 					CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions()
-							.encryptedFields(encryptedFields); // that's it
+							.encryptedFields(encryptedFields);
 
-					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test",
-							// new CreateCollectionOptions().encryptedFields(encryptedFields),
-							createCollectionOptions, new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
+					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test", createCollectionOptions,
+							new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
 
 					return local.getArray("fields").stream().map(BsonValue::asDocument).collect(
 							Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
