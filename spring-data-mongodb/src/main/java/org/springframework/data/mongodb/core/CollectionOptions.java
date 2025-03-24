@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,12 +36,14 @@ import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProper
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
-import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristic;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
+import org.springframework.lang.CheckReturnValue;
+import org.springframework.lang.Contract;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -345,6 +346,15 @@ public class CollectionOptions {
 				changeStreamOptions, encryptedCollectionOptions);
 	}
 
+	@Contract("_ -> new")
+	@CheckReturnValue
+	public CollectionOptions encrypted(EncryptedCollectionOptions encryptedCollectionOptions) {
+
+		Assert.notNull(encryptedCollectionOptions, "EncryptedCollectionOptions must not be null");
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions,
+				changeStreamOptions, encryptedCollectionOptions);
+	}
+
 	/**
 	 * Create new {@link CollectionOptions} with the given {@code encryptedFields}.
 	 *
@@ -352,19 +362,38 @@ public class CollectionOptions {
 	 * @return new instance of {@link CollectionOptions}.
 	 * @since 4.5.0
 	 */
-	public static CollectionOptions encrypted(@Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
+	@Contract("_ -> new")
+	@CheckReturnValue
+	public static CollectionOptions encryptedCollection(@Nullable EncryptedCollectionOptions encryptedCollectionOptions) {
 		return new CollectionOptions(null, null, null, null, ValidationOptions.NONE, null, null,
 				encryptedCollectionOptions);
 	}
 
-	public static CollectionOptions encrypted(MongoJsonSchema schema) {
-		return encrypted(new EncryptedCollectionOptions(schema));
+	/**
+	 * Create new {@link CollectionOptions} reading encryption options from the given {@link MongoJsonSchema}.
+	 *
+	 * @param schema must not be {@literal null}.
+	 * @return new instance of {@link CollectionOptions}.
+	 * @since 4.5.0
+	 */
+	@Contract("_ -> new")
+	@CheckReturnValue
+	public static CollectionOptions encryptedCollection(MongoJsonSchema schema) {
+		return encryptedCollection(EncryptedCollectionOptions.fromSchema(schema));
 	}
 
-	public static CollectionOptions encrypted(Consumer<EncryptedCollectionOptions> options) {
-		EncryptedCollectionOptions theOptions = new EncryptedCollectionOptions();
-		options.accept(theOptions);
-		return encrypted(theOptions);
+	/**
+	 * Create new {@link CollectionOptions} building encryption options in a fluent style.
+	 *
+	 * @param optionsFunction must not be {@literal null}.
+	 * @return new instance of {@link CollectionOptions}.
+	 * @since 4.5.0
+	 */
+	@Contract("_ -> new")
+	@CheckReturnValue
+	public static CollectionOptions encryptedCollection(
+			Function<EncryptedCollectionOptions, EncryptedCollectionOptions> optionsFunction) {
+		return encryptedCollection(optionsFunction.apply(new EncryptedCollectionOptions()));
 	}
 
 	/**
@@ -441,7 +470,7 @@ public class CollectionOptions {
 	 * @return {@link Optional#empty()} if not specified.
 	 * @since 4.5.0
 	 */
-	public Optional<EncryptedCollectionOptions> getEncryptedFields() {
+	public Optional<EncryptedCollectionOptions> getEncryptionOptions() {
 		return Optional.ofNullable(encryptedCollectionOptions);
 	}
 
@@ -633,31 +662,98 @@ public class CollectionOptions {
 		}
 	}
 
+	/**
+	 * Encapsulation of Encryption options for collections.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 4.5
+	 */
 	public static class EncryptedCollectionOptions {
 
-		private List<QueryableJsonSchemaProperty> queryableProperties = new ArrayList<>();
+		private static final EncryptedCollectionOptions NONE = new EncryptedCollectionOptions();
+
 		private @Nullable MongoJsonSchema schema;
+		private List<QueryableJsonSchemaProperty> queryableProperties;
 
-		public EncryptedCollectionOptions() {
-			this(null);
+		/**
+		 * @return {@link EncryptedCollectionOptions#NONE}
+		 */
+		public static EncryptedCollectionOptions none() {
+			return NONE;
 		}
 
-		public EncryptedCollectionOptions(@Nullable MongoJsonSchema schema) {
+		/**
+		 * @return new instance of {@link EncryptedCollectionOptions}.
+		 */
+		public static EncryptedCollectionOptions fromSchema(MongoJsonSchema schema) {
+			return new EncryptedCollectionOptions(schema, List.of());
+		}
+
+		/**
+		 * @return new instance of {@link EncryptedCollectionOptions}.
+		 */
+		public static EncryptedCollectionOptions fromProperties(List<QueryableJsonSchemaProperty> properties) {
+			return new EncryptedCollectionOptions(null, List.copyOf(properties));
+		}
+
+		EncryptedCollectionOptions() {
+			this(null, List.of());
+		}
+
+		private EncryptedCollectionOptions(@Nullable MongoJsonSchema schema,
+				List<QueryableJsonSchemaProperty> queryableProperties) {
+
 			this.schema = schema;
+			this.queryableProperties = queryableProperties;
 		}
 
-		public EncryptedCollectionOptions queryable(JsonSchemaProperty schemaObject,
-				QueryCharacteristic... characteristics) {
+		/**
+		 * Add a new {@link QueryableJsonSchemaProperty queryable property} for the given source property.
+		 * <p>
+		 * Please note that, a given {@link JsonSchemaProperty} may override options from a given {@link MongoJsonSchema} if
+		 * set.
+		 *
+		 * @param property the queryable source - typically
+		 *          {@link org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty
+		 *          encrypted}.
+		 * @param characteristics the query options to set.
+		 * @return new instance of {@link EncryptedCollectionOptions}.
+		 */
+		@Contract("_, _ -> new")
+		@CheckReturnValue
+		public EncryptedCollectionOptions queryable(JsonSchemaProperty property, QueryCharacteristic... characteristics) {
 
-			QueryCharacteristics characteristics1 = new QueryCharacteristics(List.of(characteristics));
-			queryableProperties.add(JsonSchemaProperty.queryable(schemaObject, characteristics1));
-			return this;
+			List<QueryableJsonSchemaProperty> targetPropertyList = new ArrayList<>(queryableProperties.size() + 1);
+			targetPropertyList.addAll(queryableProperties);
+			targetPropertyList.add(JsonSchemaProperty.queryable(property, List.of(characteristics)));
+
+			return new EncryptedCollectionOptions(schema, targetPropertyList);
 		}
 
 		public Document toDocument() {
+			return new Document("fields", selectPaths());
+		}
 
-			List<Document> fields = schema != null ? fromSchema() : new ArrayList<>(queryableProperties.size());
+		@NonNull
+		private List<Document> selectPaths() {
 
+			Map<String, Document> fields = new LinkedHashMap<>();
+			for (Document field : fromSchema()) {
+				fields.put(field.get("path", String.class), field);
+			}
+			for (Document field : fromProperties()) {
+				fields.put(field.get("path", String.class), field);
+			}
+			return List.copyOf(fields.values());
+		}
+
+		private List<Document> fromProperties() {
+
+			if (queryableProperties.isEmpty()) {
+				return List.of();
+			}
+
+			List<Document> converted = new ArrayList<>(queryableProperties.size());
 			for (QueryableJsonSchemaProperty property : queryableProperties) {
 				Document field = new Document("path", property.getIdentifier());
 				if (!property.getTypes().isEmpty()) {
@@ -679,13 +775,16 @@ public class CollectionOptions {
 				if (!field.containsKey("keyId")) {
 					field.append("keyId", BsonNull.VALUE);
 				}
-				fields.add(field);
+				converted.add(field);
 			}
-
-			return new Document("fields", fields);
+			return converted;
 		}
 
 		private List<Document> fromSchema() {
+
+			if (schema == null) {
+				return List.of();
+			}
 
 			Document root = schema.schemaDocument();
 			Map<String, Document> paths = new LinkedHashMap<>();
@@ -707,7 +806,6 @@ public class CollectionOptions {
 
 			return fields;
 		}
-
 	}
 
 	private static void collectPaths(Document document, String currentPath, Map<String, Document> paths) {
@@ -721,6 +819,7 @@ public class CollectionOptions {
 			if (o instanceof Document properties) {
 				for (Entry<String, Object> entry : properties.entrySet()) {
 					if (entry.getValue() instanceof Document nested) {
+
 						String path = currentPath == null ? entry.getKey() : (currentPath + "." + entry.getKey());
 						if (nested.containsKey("encrypt")) {
 							Document target = new Document(nested.get("encrypt", Document.class));
@@ -732,7 +831,7 @@ public class CollectionOptions {
 							}
 							paths.put(path, target);
 						} else {
-							collectPaths(nested, currentPath, paths);
+							collectPaths(nested, path, paths);
 						}
 					}
 				}

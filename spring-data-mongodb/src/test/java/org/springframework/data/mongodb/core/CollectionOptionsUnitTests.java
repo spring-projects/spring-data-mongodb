@@ -15,12 +15,22 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.CollectionOptions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.mongodb.core.CollectionOptions.EncryptedCollectionOptions;
+import static org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
+import static org.springframework.data.mongodb.core.CollectionOptions.emitChangedRevisions;
+import static org.springframework.data.mongodb.core.CollectionOptions.empty;
+import static org.springframework.data.mongodb.core.CollectionOptions.encryptedCollection;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.queryable;
 
+import java.util.List;
+
+import org.bson.BsonNull;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.validation.Validator;
 
 /**
@@ -75,5 +85,80 @@ class CollectionOptionsUnitTests {
 				.isNotEqualTo(empty()) //
 				.isNotEqualTo(empty().validator(Validator.document(new Document("three", "four"))))
 				.isNotEqualTo(empty().validator(Validator.document(new Document("one", "two"))).moderateValidation());
+	}
+
+	@Test // GH-4185
+	@SuppressWarnings("unchecked")
+	void queryableEncryptionOptionsFromSchemaRenderCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder()
+				.property(JsonSchemaProperty.object("spring")
+						.properties(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int32("data")), List.of())))
+				.property(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("mongodb")), List.of())).build();
+
+		EncryptedCollectionOptions encryptionOptions = EncryptedCollectionOptions.fromSchema(schema);
+
+		assertThat(encryptionOptions.toDocument().get("fields", List.class)).hasSize(2)
+				.contains(new Document("path", "mongodb").append("bsonType", "long").append("queries", List.of())
+						.append("keyId", BsonNull.VALUE))
+				.contains(new Document("path", "spring.data").append("bsonType", "int").append("queries", List.of())
+						.append("keyId", BsonNull.VALUE));
+	}
+
+	@Test // GH-4185
+	@SuppressWarnings("unchecked")
+	void queryableEncryptionPropertiesOverrideByPath() {
+
+		CollectionOptions collectionOptions = encryptedCollection(options -> options //
+				.queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int32("spring")))
+				.queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("data")))
+
+				// override first with data type long
+				.queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("spring"))));
+
+		assertThat(collectionOptions.getEncryptionOptions()).map(EncryptedCollectionOptions::toDocument)
+				.hasValueSatisfying(it -> {
+					assertThat(it.get("fields", List.class)).hasSize(2).contains(new Document("path", "spring")
+							.append("bsonType", "long").append("queries", List.of()).append("keyId", BsonNull.VALUE));
+				});
+	}
+
+	@Test // GH-4185
+	@SuppressWarnings("unchecked")
+	void queryableEncryptionPropertiesOverridesPathFromSchema() {
+
+		EncryptedCollectionOptions encryptionOptions = EncryptedCollectionOptions.fromSchema(MongoJsonSchema.builder()
+				.property(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int32("spring")), List.of()))
+				.property(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("data")), List.of())).build());
+
+		// override spring from schema with data type long
+		CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(
+				encryptionOptions.queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("spring"))));
+
+		assertThat(collectionOptions.getEncryptionOptions()).map(EncryptedCollectionOptions::toDocument)
+				.hasValueSatisfying(it -> {
+					assertThat(it.get("fields", List.class)).hasSize(2).contains(new Document("path", "spring")
+							.append("bsonType", "long").append("queries", List.of()).append("keyId", BsonNull.VALUE));
+				});
+	}
+
+	@Test // GH-4185
+	@SuppressWarnings("unchecked")
+	void queryableEncryptionPropertiesOverridesNestedPathFromSchema() {
+
+		EncryptedCollectionOptions encryptionOptions = EncryptedCollectionOptions.fromSchema(MongoJsonSchema.builder()
+				.property(JsonSchemaProperty.object("spring")
+						.properties(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int32("data")), List.of())))
+				.property(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("mongodb")), List.of())).build());
+
+		// override spring from schema with data type long
+		CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(
+				encryptionOptions.queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("spring.data"))));
+
+		assertThat(collectionOptions.getEncryptionOptions()).map(EncryptedCollectionOptions::toDocument)
+				.hasValueSatisfying(it -> {
+					assertThat(it.get("fields", List.class)).hasSize(2).contains(new Document("path", "spring.data")
+							.append("bsonType", "long").append("queries", List.of()).append("keyId", BsonNull.VALUE));
+				});
 	}
 }

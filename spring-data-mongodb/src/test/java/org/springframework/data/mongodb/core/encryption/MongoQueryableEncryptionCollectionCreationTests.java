@@ -41,7 +41,6 @@ import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
@@ -107,16 +106,16 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 		BsonBinary key1 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 		BsonBinary key2 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 
-		CollectionOptions manualOptions = CollectionOptions.encrypted(options -> options //
+		CollectionOptions manualOptions = CollectionOptions.encryptedCollection(options -> options //
 				.queryable(encrypted(int32("encryptedInt")).keys(key1), range().min(5).max(100).contention(1)) //
 				.queryable(encrypted(JsonSchemaProperty.int64("nested.encryptedLong")).keys(key2),
 						range().min(-1L).max(1L).contention(0)));
 
-		CollectionOptions schemaOptions = CollectionOptions.encrypted(MongoJsonSchema.builder()
-				.property(queryable(encrypted(int32("encryptedInt")).keyId(key1),
-						new QueryCharacteristics(List.of(range().min(5).max(100).contention(1)))))
+		CollectionOptions schemaOptions = CollectionOptions.encryptedCollection(MongoJsonSchema.builder()
+				.property(
+						queryable(encrypted(int32("encryptedInt")).keyId(key1), List.of(range().min(5).max(100).contention(1))))
 				.property(queryable(encrypted(int64("nested.encryptedLong")).keyId(key2),
-						new QueryCharacteristics(List.of(range().min(-1L).max(1L).contention(0)))))
+						List.of(range().min(-1L).max(1L).contention(0))))
 				.build());
 
 		return Stream.of(Arguments.of(manualOptions), Arguments.of(schemaOptions));

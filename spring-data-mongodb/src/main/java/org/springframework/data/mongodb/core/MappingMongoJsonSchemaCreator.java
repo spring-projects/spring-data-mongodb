@@ -41,8 +41,8 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
+import org.springframework.data.mongodb.core.schema.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
-import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -302,21 +302,24 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			QueryCharacteristic characteristic = new QueryCharacteristic() {
 
 				@Override
-				public String type() {
+				public String queryType() {
 					return "range";
 				}
 
 				@Override
 				public Document toDocument() {
-					Document options = new Document("queryType", "range");
+
+					Document options = QueryCharacteristic.super.toDocument();
+					options.put("contention", rangeEncrypted.contentionFactor());
+
 					if (!rangeEncrypted.rangeOptions().isEmpty()) {
 						options.putAll(Document.parse(rangeEncrypted.rangeOptions()));
 					}
-					options.put("contention", rangeEncrypted.contentionFactor());
+
 					return options;
 				}
 			};
-			return new QueryableJsonSchemaProperty(enc, new QueryCharacteristics(List.of(characteristic)));
+			return new QueryableJsonSchemaProperty(enc, QueryCharacteristics.of(List.of(characteristic)));
 		}
 		return enc;
 	}

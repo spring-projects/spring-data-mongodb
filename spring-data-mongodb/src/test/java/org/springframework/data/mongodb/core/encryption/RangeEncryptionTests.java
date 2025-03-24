@@ -253,8 +253,8 @@ class RangeEncryptionTests {
 							.filter(MongoJsonSchemaCreator.encryptedOnly()) // should be obvious
 							.createSchemaFor(Person.class); // create it for given type
 
-					Document encryptedFields = CollectionOptions.encrypted(personSchema) // pass in the schema
-							.getEncryptedFields() // get the fields just because we need to use createEncryptedCollection which not
+					Document encryptedFields = CollectionOptions.encryptedCollection(personSchema) // pass in the schema
+							.getEncryptionOptions() // get the fields just because we need to use createEncryptedCollection which not
 																		// part of the driver
 							.map(EncryptedCollectionOptions::toDocument) // now map them into the raw format
 							.orElseThrow();

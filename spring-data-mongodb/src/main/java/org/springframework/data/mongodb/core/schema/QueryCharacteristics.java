@@ -1,27 +1,11 @@
 /*
- * Copyright 2025. the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.bson.BsonNull;
@@ -42,6 +26,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
+ * @since 4.5
  */
 public class QueryCharacteristics {
 
@@ -49,7 +34,7 @@ public class QueryCharacteristics {
 
 	private final List<QueryCharacteristic> characteristics;
 
-	public QueryCharacteristics(List<QueryCharacteristic> characteristics) {
+	QueryCharacteristics(List<QueryCharacteristic> characteristics) {
 		this.characteristics = characteristics;
 	}
 
@@ -57,16 +42,12 @@ public class QueryCharacteristics {
 		return NONE;
 	}
 
-	QueryCharacteristics(QueryCharacteristic... characteristics) {
-
-		this.characteristics = new ArrayList<>(characteristics.length);
-		for (QueryCharacteristic characteristic : characteristics) {
-			addQuery(characteristic);
-		}
+	public static QueryCharacteristics of(List<QueryCharacteristic> characteristics) {
+		return new QueryCharacteristics(List.copyOf(characteristics));
 	}
 
-	public void addQuery(QueryCharacteristic characteristic) {
-		this.characteristics.add(characteristic);
+	QueryCharacteristics(QueryCharacteristic... characteristics) {
+		this.characteristics = Arrays.asList(characteristics);
 	}
 
 	public List<QueryCharacteristic> getCharacteristics() {
@@ -75,15 +56,6 @@ public class QueryCharacteristics {
 
 	public static <T> RangeQuery<T> range() {
 		return new RangeQuery<>();
-	}
-
-	public interface QueryCharacteristic {
-
-		String type();
-
-		default Document toDocument() {
-			return new Document("queryType", type());
-		}
 	}
 
 	public static class RangeQuery<T> implements QueryCharacteristic {
@@ -105,7 +77,7 @@ public class QueryCharacteristics {
 		}
 
 		@Override
-		public String type() {
+		public String queryType() {
 			return "range";
 		}
 
@@ -136,11 +108,12 @@ public class QueryCharacteristics {
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public Document toDocument() {
 
 			return QueryCharacteristic.super.toDocument().append("contention", contention).append("trimFactor", trimFactor)
-					.append("sparsity", sparsity).append("min", valueRange.getLowerBound().getValue().orElse((T)BsonNull.VALUE))
-					.append("max", valueRange.getUpperBound().getValue().orElse((T)BsonNull.VALUE));
+					.append("sparsity", sparsity).append("min", valueRange.getLowerBound().getValue().orElse((T) BsonNull.VALUE))
+					.append("max", valueRange.getUpperBound().getValue().orElse((T) BsonNull.VALUE));
 		}
 	}
 

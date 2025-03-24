@@ -28,7 +28,8 @@ import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionC
 
 /**
  * @author Christoph Strobl
- * @since 2025/03
+ * @author Ross Lawley
+ * @since 4.5
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -36,30 +37,31 @@ import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionC
 @ValueConverter
 public @interface RangeEncrypted {
 
-    /**
-     * Set the contention factor
-     * <p>
-     * Only required when using {@literal range} encryption.
-     * @return the contention factor
-     */
-    long contentionFactor() default -1;
+	/**
+	 * Set the contention factor
+	 *
+	 * @return the contention factor
+	 */
+	long contentionFactor() default -1;
 
-    /**
-     * Set the {@literal range} options
-     * <p>
-     * Should be valid extended json representing the range options and including the following values:
-     * {@code min}, {@code max}, {@code trimFactor} and {@code sparsity}.
-     *
-     * @return the json representation of range options
-     */
-    String rangeOptions() default "";
+	/**
+	 * Set the {@literal range} options
+	 * <p>
+	 * Should be valid extended json representing the range options and including the following values: {@code min},
+	 * {@code max}, {@code trimFactor} and {@code sparsity}.
+	 * <p>
+	 * Please note that values are data type sensitive and may require proper identification via eg. {@code $numberLong}.
+	 *
+	 * @return the json representation of range options
+	 */
+	String rangeOptions() default "";
 
-    /**
-     * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.
-     *
-     * @return the configured {@link EncryptingConverter}. A {@link MongoEncryptionConverter} by default.
-     */
-    @AliasFor(annotation = ValueConverter.class, value = "value")
-    Class<? extends PropertyValueConverter> value() default MongoEncryptionConverter.class;
+	/**
+	 * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.
+	 *
+	 * @return the configured {@link EncryptingConverter}. A {@link MongoEncryptionConverter} by default.
+	 */
+	@AliasFor(annotation = ValueConverter.class, value = "value")
+	Class<? extends PropertyValueConverter> value() default MongoEncryptionConverter.class;
 
 }

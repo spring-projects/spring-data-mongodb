@@ -25,7 +25,6 @@ import java.util.UUID;
 import org.bson.Document;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.EncryptionAlgorithms;
-import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.DateJsonSchemaObject;

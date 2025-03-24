@@ -114,11 +114,10 @@ class MongoJsonSchemaUnitTests {
 	@Test // GH-4185
 	void rendersQueryablePropertyCorrectly() {
 
-		QueryCharacteristics characteristics = new QueryCharacteristics();
-		characteristics.addQuery(QueryCharacteristics.range().contention(0).trimFactor(1).sparsity(1).min(0).max(200));
-
 		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
-				queryable(rangeEncrypted(number("ssn")), characteristics)).build();
+				queryable(rangeEncrypted(number("ssn")),
+						List.of(QueryCharacteristics.range().contention(0).trimFactor(1).sparsity(1).min(0).max(200))))
+				.build();
 
 		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
 				new Document("type", "object").append("properties",

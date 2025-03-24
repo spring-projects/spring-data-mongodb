@@ -305,7 +305,7 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 					'algorithm' : 'Range',
 					'bsonType' : 'long',
 					'queries' : [
-						{ contention : { '$numberLong' : '1' }, 'max' : 1, 'min' : -1, 'queryType' : 'range', 'sparsity' : 1, 'trimFactor' : 1 }
+						{ contention : { '$numberLong' : '1' }, 'max' : { '$numberLong' : '1' }, 'min' : { '$numberLong' : '-1' }, 'queryType' : 'range', 'sparsity' : 1, 'trimFactor' : 1 }
 					]
 				}}""";
 
@@ -742,7 +742,8 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 	static class NestedRangeEncrypted {
 
 		@Field("encrypted_long")
-		@RangeEncrypted(contentionFactor = 1L, rangeOptions = "{ 'min': -1, 'max': 1, 'trimFactor': 1, 'sparsity': 1}") //
+		@RangeEncrypted(contentionFactor = 1L,
+				rangeOptions = "{ 'min': { '$numberLong' : '-1' }, 'max': { '$numberLong' : '1' }, 'trimFactor': 1, 'sparsity': 1}") //
 		Long encryptedLong;
 	}
 
