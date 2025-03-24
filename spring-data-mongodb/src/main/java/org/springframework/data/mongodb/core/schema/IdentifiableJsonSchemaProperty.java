@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.bson.Document;
 import org.springframework.data.domain.Range;
+import org.springframework.data.mongodb.core.EncryptionAlgorithms;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics.QueryCharacteristic;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -1118,12 +1119,24 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		}
 
 		/**
+		 * Create new instance of {@link EncryptedJsonSchemaProperty} with {@literal Range} encryption, wrapping the given
+		 * {@link JsonSchemaProperty target}.
+		 *
+		 * @param target must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 * @since 4.5
+		 */
+		public static EncryptedJsonSchemaProperty rangeEncrypted(JsonSchemaProperty target) {
+			return new EncryptedJsonSchemaProperty(target).algorithm(EncryptionAlgorithms.RANGE);
+		}
+
+		/**
 		 * Use {@literal AEAD_AES_256_CBC_HMAC_SHA_512-Random} algorithm.
 		 *
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_random() {
-			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Random");
+			return algorithm(EncryptionAlgorithms.AEAD_AES_256_CBC_HMAC_SHA_512_Random);
 		}
 
 		/**
@@ -1132,7 +1145,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_deterministic() {
-			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic");
+			return algorithm(EncryptionAlgorithms.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic);
 		}
 
 		/**

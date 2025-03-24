@@ -15,26 +15,23 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import static java.util.Arrays.asList;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty.rangeEncrypted;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.encrypted;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.number;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.queryable;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.string;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
-import org.bson.BsonArray;
-import org.bson.BsonDocument;
-import org.bson.BsonInt32;
-import org.bson.BsonInt64;
-import org.bson.BsonNull;
-import org.bson.BsonString;
 import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
 
 /**
  * Unit tests for {@link MongoJsonSchema}.
@@ -120,27 +117,16 @@ class MongoJsonSchemaUnitTests {
 		QueryCharacteristics characteristics = new QueryCharacteristics();
 		characteristics.addQuery(QueryCharacteristics.range().contention(0).trimFactor(1).sparsity(1).min(0).max(200));
 
-		QueryableJsonSchemaProperty property = queryable(encrypted(number("mypath")), characteristics);
+		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
+				queryable(rangeEncrypted(number("ssn")), characteristics)).build();
 
-		//Document document = MongoJsonSchema.builder().property(property).build().schemaDocument();
-		Document document = property.toDocument();
-		System.out.println(document.toJson(JsonWriterSettings.builder().indent(true).build()));
-
-
-		BsonDocument encryptedFields = new BsonDocument().append("fields",
-			new BsonArray(asList(
-				new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedInt"))
-					.append("bsonType", new BsonString("int"))
-					.append("queries",
-						new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-							.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-							.append("min", new BsonInt32(0)).append("max", new BsonInt32(200))),
-				new BsonDocument("keyId", BsonNull.VALUE).append("path", new BsonString("encryptedLong"))
-					.append("bsonType", new BsonString("long")).append("queries",
-						new BsonDocument("queryType", new BsonString("range")).append("contention", new BsonInt64(0L))
-							.append("trimFactor", new BsonInt32(1)).append("sparsity", new BsonInt64(1))
-							.append("min", new BsonInt64(1000)).append("max", new BsonInt64(9999))))));
-
+		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("properties",
+						new Document("ssn",
+								new Document("encrypt",
+										new Document("bsonType", "long").append("algorithm", "Range").append("queries",
+												List.of(new Document("contention", 0L).append("trimFactor", 1).append("sparsity", 1L)
+														.append("queryType", "range").append("min", 0).append("max", 200))))))));
 	}
 
 	@Test // DATAMONGO-1835
