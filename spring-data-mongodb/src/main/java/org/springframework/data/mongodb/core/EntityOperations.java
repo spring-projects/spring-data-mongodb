@@ -39,7 +39,7 @@ import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mongodb.core.CollectionOptions.EncryptedCollectionOptions;
+import org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
@@ -380,7 +380,7 @@ class EntityOperations {
 		collectionOptions.getChangeStreamOptions().ifPresent(it -> result
 				.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(it.getPreAndPostImages())));
 
-		collectionOptions.getEncryptionOptions().map(EncryptedCollectionOptions::toDocument).ifPresent(encryptedFields -> {
+		collectionOptions.getEncryptedFieldsOptions().map(EncryptedFieldsOptions::toDocument).ifPresent(encryptedFields -> {
 			if (!encryptedFields.isEmpty()) {
 				result.encryptedFields(encryptedFields);
 			}

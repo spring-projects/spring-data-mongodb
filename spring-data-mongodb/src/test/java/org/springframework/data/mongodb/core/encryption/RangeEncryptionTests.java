@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.CollectionOptions.EncryptedCollectionOptions;
+import org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
 import org.springframework.data.mongodb.core.MongoJsonSchemaCreator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
@@ -168,8 +168,8 @@ class RangeEncryptionTests {
 							.createSchemaFor(Person.class); //
 
 					Document encryptedFields = CollectionOptions.encryptedCollection(personSchema) //
-							.getEncryptionOptions() //
-							.map(EncryptedCollectionOptions::toDocument) //
+							.getEncryptedFieldsOptions() //
+							.map(EncryptedFieldsOptions::toDocument) //
 							.orElseThrow();
 
 					CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions()
