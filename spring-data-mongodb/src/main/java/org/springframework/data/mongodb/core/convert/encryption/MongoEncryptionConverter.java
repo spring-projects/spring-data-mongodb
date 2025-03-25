@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.core.convert.encryption;
 
-import static java.util.Arrays.*;
-import static java.util.Collections.*;
-import static org.springframework.data.mongodb.core.EncryptionAlgorithms.*;
-import static org.springframework.data.mongodb.core.encryption.EncryptionOptions.*;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.springframework.data.mongodb.core.encryption.EncryptionOptions.QueryableEncryptionOptions;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -188,12 +187,12 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 				QueryableEncryptionOptions queryableEncryptionOptions = QueryableEncryptionOptions.none();
 				String rangeOptions = rangeEncryptedAnnotation.rangeOptions();
 				if (!rangeOptions.isEmpty()) {
-					queryableEncryptionOptions = queryableEncryptionOptions.rangeOptions(Document.parse(rangeOptions));
+					queryableEncryptionOptions = queryableEncryptionOptions.attributes(Document.parse(rangeOptions));
 				}
 
 				if (rangeEncryptedAnnotation.contentionFactor() >= 0) {
 					queryableEncryptionOptions = queryableEncryptionOptions
-						.contentionFactor(rangeEncryptedAnnotation.contentionFactor());
+							.contentionFactor(rangeEncryptedAnnotation.contentionFactor());
 				}
 
 				boolean isPartOfARangeQuery = fieldNameAndQueryOperator != null;
@@ -240,9 +239,9 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 
 	/**
 	 * Encrypts a range query expression.
-	 *
-	 * <p>The mongodb-crypt {@code encryptExpression} has strict formatting requirements so this method
-	 * ensures these requirements are met and then picks out and returns just the value for use with a range query.
+	 * <p>
+	 * The mongodb-crypt {@code encryptExpression} has strict formatting requirements so this method ensures these
+	 * requirements are met and then picks out and returns just the value for use with a range query.
 	 *
 	 * @param fieldNameAndQueryOperator field name and query operator
 	 * @param value the value of the expression to be encrypted

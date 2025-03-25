@@ -15,15 +15,19 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.springframework.data.mongodb.core.encryption.EncryptionKey.Type;
+import org.springframework.data.mongodb.core.encryption.EncryptionOptions.QueryableEncryptionOptions;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.model.vault.EncryptOptions;
+import com.mongodb.client.model.vault.RangeOptions;
 import com.mongodb.client.vault.ClientEncryption;
 
 /**
@@ -74,6 +78,7 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 	}
 
 	private EncryptOptions createEncryptOptions(EncryptionOptions options) {
+
 		EncryptOptions encryptOptions = new EncryptOptions(options.algorithm());
 
 		if (Type.ALT.equals(options.key().type())) {
@@ -82,10 +87,58 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 			encryptOptions = encryptOptions.keyId((BsonBinary) options.key().value());
 		}
 
-		options.queryableEncryptionOptions().getQueryType().map(encryptOptions::queryType);
-		options.queryableEncryptionOptions().getContentionFactor().map(encryptOptions::contentionFactor);
-		options.queryableEncryptionOptions().getRangeOptions().map(encryptOptions::rangeOptions);
+		if (options.queryableEncryptionOptions().isEmpty()) {
+			return encryptOptions;
+		}
+
+		QueryableEncryptionOptions qeOptions = options.queryableEncryptionOptions();
+		if (qeOptions.getQueryType() != null) {
+			encryptOptions.queryType(qeOptions.getQueryType());
+		}
+		if (qeOptions.getContentionFactor() != null) {
+			encryptOptions.contentionFactor(qeOptions.getContentionFactor());
+		}
+		if (!qeOptions.getAttributes().isEmpty()) {
+			encryptOptions.rangeOptions(rangeOptions(qeOptions.getAttributes()));
+		}
 		return encryptOptions;
+	}
+
+	protected RangeOptions rangeOptions(Map<String, Object> attributes) {
+
+		RangeOptions encryptionRangeOptions = new RangeOptions();
+		if (attributes.isEmpty()) {
+			return encryptionRangeOptions;
+		}
+
+		if (attributes.containsKey("min")) {
+			encryptionRangeOptions.min(BsonUtils.simpleToBsonValue(attributes.get("min")));
+		}
+		if (attributes.containsKey("max")) {
+			encryptionRangeOptions.max(BsonUtils.simpleToBsonValue(attributes.get("max")));
+		}
+		if (attributes.containsKey("trimFactor")) {
+			Object trimFactor = attributes.get("trimFactor");
+			Assert.isInstanceOf(Integer.class, trimFactor, () -> String
+					.format("Expected to find a %s but it turned out to be %s.", Integer.class, trimFactor.getClass()));
+
+			encryptionRangeOptions.trimFactor((Integer) trimFactor);
+		}
+
+		if (attributes.containsKey("sparsity")) {
+			Object sparsity = attributes.get("sparsity");
+			Assert.isInstanceOf(Number.class, sparsity,
+					() -> String.format("Expected to find a %s but it turned out to be %s.", Long.class, sparsity.getClass()));
+			encryptionRangeOptions.sparsity(((Number) sparsity).longValue());
+		}
+
+		if (attributes.containsKey("precision")) {
+			Object precision = attributes.get("precision");
+			Assert.isInstanceOf(Number.class, precision, () -> String
+					.format("Expected to find a %s but it turned out to be %s.", Integer.class, precision.getClass()));
+			encryptionRangeOptions.precision(((Number) precision).intValue());
+		}
+		return encryptionRangeOptions;
 	}
 
 }

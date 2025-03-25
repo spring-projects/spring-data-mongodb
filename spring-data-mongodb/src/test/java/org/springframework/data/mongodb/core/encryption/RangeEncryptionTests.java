@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core.encryption;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -38,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.convert.PropertyValueConverterFactory;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
@@ -47,6 +50,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions.Mong
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
@@ -121,6 +125,74 @@ class RangeEncryptionTests {
 		});
 
 		assertThat(result).containsEntry("encryptedInt", 101);
+	}
+
+	@Test
+	void canLesserThanEqualMatchRangeEncryptedField() {
+		Person source = createPerson();
+		template.insert(source);
+
+		Person loaded = template.query(Person.class).matching(where("encryptedInt").lte(source.encryptedInt)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void canRangeMatchRangeEncryptedField() {
+		Person source = createPerson();
+		template.insert(source);
+
+		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
+		q.fields().exclude("__safeContent__");
+		Person loaded = template.query(Person.class).matching(q).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void canUpdateRangeEncryptedField() {
+		Person source = createPerson();
+		template.insert(source);
+
+		source.encryptedInt = 123;
+		source.encryptedLong = 9999L;
+		template.save(source);
+
+		Person loaded = template.query(Person.class).matching(where("id").is(source.id)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void errorsWhenUsingNonRangeOperatorEqOnRangeEncryptedField() {
+		Person source = createPerson();
+		template.insert(source);
+
+		assertThatThrownBy(
+				() -> template.query(Person.class).matching(where("encryptedInt").is(source.encryptedInt)).firstValue())
+				.isInstanceOf(AssertionError.class)
+				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
+						+ "the query operator '$eq' for field path 'encryptedInt' is not a range query.");
+
+	}
+
+	@Test
+	void errorsWhenUsingNonRangeOperatorInOnRangeEncryptedField() {
+		Person source = createPerson();
+		template.insert(source);
+
+		assertThatThrownBy(
+				() -> template.query(Person.class).matching(where("encryptedLong").in(1001L, 9999L)).firstValue())
+				.isInstanceOf(AssertionError.class)
+				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
+						+ "the query operator '$in' for field path 'encryptedLong' is not a range query.");
+
+	}
+
+	private Person createPerson() {
+		Person source = new Person();
+		source.id = "id-1";
+		source.name = "it'se me mario!";
+		source.encryptedInt = 101;
+		source.encryptedLong = 1001L;
+		return source;
 	}
 
 	protected static class EncryptionConfig extends AbstractMongoClientConfiguration {
@@ -277,10 +349,15 @@ class RangeEncryptionTests {
 		String id;
 		String name;
 
+		@ValueConverter(MongoEncryptionConverter.class)
 		@RangeEncrypted(contentionFactor = 0L,
-				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}") Integer encryptedInt;
+				rangeOptions = "{\"min\": 0, \"max\": 200, \"trimFactor\": 1, \"sparsity\": 1}") //
+		Integer encryptedInt;
+
+		@ValueConverter(MongoEncryptionConverter.class)
 		@RangeEncrypted(contentionFactor = 0L,
-				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") Long encryptedLong;
+				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") //
+		Long encryptedLong;
 
 		public String getId() {
 			return this.id;
