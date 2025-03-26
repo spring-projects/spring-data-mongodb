@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionC
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 4.1
  * @see ValueConverter
  */
@@ -60,7 +61,8 @@ public @interface ExplicitEncrypted {
 	 * Define the algorithm to use.
 	 * <p>
 	 * A {@literal Deterministic} algorithm ensures that a given input value always encrypts to the same output while a
-	 * {@literal randomized} one will produce different results every time.
+	 * {@literal randomized} one will produce different results every time.  A {@literal range} algorithm allows for
+	 * the value to be queried whilst encrypted.
 	 * <p>
 	 * Please make sure to use an algorithm that is in line with MongoDB's encryption rules for simple types, complex
 	 * objects and arrays as well as the query limitations that come with each of them.
@@ -85,10 +87,29 @@ public @interface ExplicitEncrypted {
 	String keyAltName() default "";
 
 	/**
+	 * Set the contention factor
+	 * <p>
+	 * Only required when using {@literal range} encryption.
+	 * @return the contention factor
+	 */
+	long contentionFactor() default -1;
+
+	/**
+	 * Set the {@literal range} options
+	 * <p>
+	 * Should be valid extended json representing the range options and including the following values:
+	 * {@code min}, {@code max}, {@code trimFactor} and {@code sparsity}.
+	 *
+	 * @return the json representation of range options
+	 */
+	String rangeOptions() default "";
+
+	/**
 	 * The {@link EncryptingConverter} type handling the {@literal en-/decryption} of the annotated property.
 	 *
 	 * @return the configured {@link EncryptingConverter}. A {@link MongoEncryptionConverter} by default.
 	 */
 	@AliasFor(annotation = ValueConverter.class, value = "value")
 	Class<? extends PropertyValueConverter> value() default MongoEncryptionConverter.class;
+
 }
