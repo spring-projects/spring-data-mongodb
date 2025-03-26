@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 package org.springframework.data.mongodb.core.query
 
 import org.springframework.data.mapping.toDotPath
@@ -26,7 +27,7 @@ import kotlin.reflect.KProperty
  * @since 4.4
  * @see Update.update
  */
-fun <T> update(key: KProperty<T>, value: T?) =
+fun <@kotlin.internal.OnlyInputTypes T> update(key: KProperty<T>, value: T?) =
     Update.update(key.toDotPath(), value)
 
 /**
@@ -36,7 +37,7 @@ fun <T> update(key: KProperty<T>, value: T?) =
  * @since 4.4
  * @see Update.set
  */
-fun <T> Update.set(key: KProperty<T>, value: T?) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.set(key: KProperty<T>, value: T?) =
     set(key.toDotPath(), value)
 
 /**
@@ -46,7 +47,7 @@ fun <T> Update.set(key: KProperty<T>, value: T?) =
  * @since 4.4
  * @see Update.setOnInsert
  */
-fun <T> Update.setOnInsert(key: KProperty<T>, value: T?) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.setOnInsert(key: KProperty<T>, value: T?) =
     setOnInsert(key.toDotPath(), value)
 
 /**
@@ -56,7 +57,7 @@ fun <T> Update.setOnInsert(key: KProperty<T>, value: T?) =
  * @since 4.4
  * @see Update.unset
  */
-fun <T> Update.unset(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.unset(key: KProperty<T>) =
     unset(key.toDotPath())
 
 /**
@@ -66,10 +67,10 @@ fun <T> Update.unset(key: KProperty<T>) =
  * @since 4.4
  * @see Update.inc
  */
-fun <T> Update.inc(key: KProperty<T>, inc: Number) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.inc(key: KProperty<T>, inc: Number) =
     inc(key.toDotPath(), inc)
 
-fun <T> Update.inc(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.inc(key: KProperty<T>) =
     inc(key.toDotPath())
 
 /**
@@ -79,7 +80,7 @@ fun <T> Update.inc(key: KProperty<T>) =
  * @since 4.4
  * @see Update.push
  */
-fun <T> Update.push(key: KProperty<Collection<T>>, value: T?) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.push(key: KProperty<Collection<T>>, value: T?) =
     push(key.toDotPath(), value)
 
 /**
@@ -91,7 +92,7 @@ fun <T> Update.push(key: KProperty<Collection<T>>, value: T?) =
  * @since 4.4
  * @see Update.push
  */
-fun <T> Update.push(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.push(key: KProperty<T>) =
     push(key.toDotPath())
 
 /**
@@ -102,7 +103,7 @@ fun <T> Update.push(key: KProperty<T>) =
  * @since 4.4
  * @see Update.addToSet
  */
-fun <T> Update.addToSet(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.addToSet(key: KProperty<T>) =
     addToSet(key.toDotPath())
 
 /**
@@ -112,7 +113,7 @@ fun <T> Update.addToSet(key: KProperty<T>) =
  * @since 4.4
  * @see Update.addToSet
  */
-fun <T> Update.addToSet(key: KProperty<Collection<T>>, value: T?) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.addToSet(key: KProperty<Collection<T>>, value: T?) =
     addToSet(key.toDotPath(), value)
 
 /**
@@ -122,7 +123,7 @@ fun <T> Update.addToSet(key: KProperty<Collection<T>>, value: T?) =
  * @since 4.4
  * @see Update.pop
  */
-fun <T> Update.pop(key: KProperty<T>, pos: Position) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.pop(key: KProperty<T>, pos: Position) =
     pop(key.toDotPath(), pos)
 
 /**
@@ -132,7 +133,7 @@ fun <T> Update.pop(key: KProperty<T>, pos: Position) =
  * @since 4.4
  * @see Update.pull
  */
-fun <T> Update.pull(key: KProperty<T>, value: Any) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.pull(key: KProperty<T>, value: Any) =
     pull(key.toDotPath(), value)
 
 /**
@@ -142,7 +143,7 @@ fun <T> Update.pull(key: KProperty<T>, value: Any) =
  * @since 4.4
  * @see Update.pullAll
  */
-fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
     pullAll(key.toDotPath(), values)
 
 /**
@@ -152,7 +153,7 @@ fun <T> Update.pullAll(key: KProperty<Collection<T>>, values: Array<T>) =
  * @since 4.4
  * @see Update.currentDate
  */
-fun <T> Update.currentDate(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.currentDate(key: KProperty<T>) =
     currentDate(key.toDotPath())
 
 /**
@@ -162,7 +163,7 @@ fun <T> Update.currentDate(key: KProperty<T>) =
  * @since 4.4
  * @see Update.currentTimestamp
  */
-fun <T> Update.currentTimestamp(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.currentTimestamp(key: KProperty<T>) =
     currentTimestamp(key.toDotPath())
 
 /**
@@ -172,7 +173,7 @@ fun <T> Update.currentTimestamp(key: KProperty<T>) =
  * @since 4.4
  * @see Update.multiply
  */
-fun <T> Update.multiply(key: KProperty<T>, multiplier: Number) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.multiply(key: KProperty<T>, multiplier: Number) =
     multiply(key.toDotPath(), multiplier)
 
 /**
@@ -202,7 +203,7 @@ fun <T : Any> Update.min(key: KProperty<T>, value: T) =
  * @since 4.4
  * @see Update.bitwise
  */
-fun <T> Update.bitwise(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.bitwise(key: KProperty<T>) =
     bitwise(key.toDotPath())
 
 /**
@@ -213,7 +214,7 @@ fun <T> Update.bitwise(key: KProperty<T>) =
  * @since 4.4
  * @see Update.filterArray
  */
-fun <T> Update.filterArray(identifier: KProperty<T>, expression: Any) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.filterArray(identifier: KProperty<T>, expression: Any) =
     filterArray(identifier.toDotPath(), expression)
 
 /**
@@ -223,6 +224,6 @@ fun <T> Update.filterArray(identifier: KProperty<T>, expression: Any) =
  * @since 4.4
  * @see Update.modifies
  */
-fun <T> Update.modifies(key: KProperty<T>) =
+fun <@kotlin.internal.OnlyInputTypes T> Update.modifies(key: KProperty<T>) =
     modifies(key.toDotPath())
 
