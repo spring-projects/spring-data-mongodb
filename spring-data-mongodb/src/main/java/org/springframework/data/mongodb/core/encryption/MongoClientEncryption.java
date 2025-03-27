@@ -87,7 +87,7 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 			encryptOptions = encryptOptions.keyId((BsonBinary) options.key().value());
 		}
 
-		if (options.queryableEncryptionOptions().isEmpty()) {
+		if (options.queryableEncryptionOptions() == null) {
 			return encryptOptions;
 		}
 

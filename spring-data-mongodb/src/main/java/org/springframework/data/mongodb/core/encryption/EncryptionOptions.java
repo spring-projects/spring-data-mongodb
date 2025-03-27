@@ -18,13 +18,9 @@ package org.springframework.data.mongodb.core.encryption;
 import java.util.Map;
 import java.util.Objects;
 
-import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.client.model.vault.RangeOptions;
 
 /**
  * Options used to provide additional information when {@link Encryption encrypting} values. like the
@@ -38,13 +34,14 @@ public class EncryptionOptions {
 
 	private final String algorithm;
 	private final EncryptionKey key;
-	private final QueryableEncryptionOptions queryableEncryptionOptions;
+	private final @Nullable QueryableEncryptionOptions queryableEncryptionOptions;
 
 	public EncryptionOptions(String algorithm, EncryptionKey key) {
-		this(algorithm, key, QueryableEncryptionOptions.NONE);
+		this(algorithm, key, null);
 	}
 
-	public EncryptionOptions(String algorithm, EncryptionKey key, QueryableEncryptionOptions queryableEncryptionOptions) {
+	public EncryptionOptions(String algorithm, EncryptionKey key,
+			@Nullable QueryableEncryptionOptions queryableEncryptionOptions) {
 
 		Assert.hasText(algorithm, "Algorithm must not be empty");
 		Assert.notNull(key, "EncryptionKey must not be empty");
@@ -63,7 +60,11 @@ public class EncryptionOptions {
 		return algorithm;
 	}
 
-	public QueryableEncryptionOptions queryableEncryptionOptions() {
+	/**
+	 * @return {@literal null} if not set.
+	 * @since 4.5
+	 */
+	public @Nullable QueryableEncryptionOptions queryableEncryptionOptions() {
 		return queryableEncryptionOptions;
 	}
 
@@ -113,7 +114,7 @@ public class EncryptionOptions {
 	 */
 	public static class QueryableEncryptionOptions {
 
-		public static final QueryableEncryptionOptions NONE = new QueryableEncryptionOptions(null, null, Map.of());
+		private static final QueryableEncryptionOptions NONE = new QueryableEncryptionOptions(null, null, Map.of());
 
 		private final @Nullable String queryType;
 		private final @Nullable Long contentionFactor;

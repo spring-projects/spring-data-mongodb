@@ -45,6 +45,7 @@ import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Default implementation of {@link EncryptingConverter}. Properties used with this converter must be annotated with
@@ -168,7 +169,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 
 		if (annotation == null) {
 			throw new IllegalStateException(String.format("Property %s.%s is not annotated with @Encrypted",
-					getProperty(context).getOwner().getName(), getProperty(context).getName()));
+					persistentProperty.getOwner().getName(), persistentProperty.getName()));
 		}
 
 		String algorithm = annotation.algorithm();
@@ -178,42 +179,45 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		EncryptionOptions encryptionOptions = new EncryptionOptions(algorithm, key,
 				getEQOptions(persistentProperty, fieldNameAndQueryOperator));
 
-		if (fieldNameAndQueryOperator != null
-				&& !encryptionOptions.queryableEncryptionOptions().equals(QueryableEncryptionOptions.none())) {
+		if (fieldNameAndQueryOperator != null && encryptionOptions.queryableEncryptionOptions() != null) {
 			return encryptExpression(fieldNameAndQueryOperator, value, encryptionOptions);
 		} else {
 			return encryptValue(value, context, persistentProperty, encryptionOptions);
 		}
 	}
 
-	private static QueryableEncryptionOptions getEQOptions(MongoPersistentProperty persistentProperty,
+	private static @Nullable QueryableEncryptionOptions getEQOptions(MongoPersistentProperty persistentProperty,
 			String fieldNameAndQueryOperator) {
 
+		Encrypted encryptedAnnotation = persistentProperty.findAnnotation(Encrypted.class);
+		if (encryptedAnnotation != null && !StringUtils.hasText(encryptedAnnotation.queryType())) {
+			return null;
+		}
+
 		QueryableEncryptionOptions queryableEncryptionOptions = QueryableEncryptionOptions.none();
+
+		String queryAttributes = encryptedAnnotation.queryAttributes();
+		if (!queryAttributes.isEmpty()) {
+			queryableEncryptionOptions = queryableEncryptionOptions.attributes(Document.parse(queryAttributes));
+		}
+
 		RangeEncrypted rangeEncryptedAnnotation = persistentProperty.findAnnotation(RangeEncrypted.class);
-		if (rangeEncryptedAnnotation == null) {
-			return queryableEncryptionOptions;
-		}
-
-		String rangeOptions = rangeEncryptedAnnotation.rangeOptions();
-		if (!rangeOptions.isEmpty()) {
-			queryableEncryptionOptions = queryableEncryptionOptions.attributes(Document.parse(rangeOptions));
-		}
-
-		if (rangeEncryptedAnnotation.contentionFactor() >= 0) {
+		if (rangeEncryptedAnnotation != null && rangeEncryptedAnnotation.contentionFactor() >= 0) {
 			queryableEncryptionOptions = queryableEncryptionOptions
 					.contentionFactor(rangeEncryptedAnnotation.contentionFactor());
 		}
 
 		boolean isPartOfARangeQuery = fieldNameAndQueryOperator != null;
-		if (isPartOfARangeQuery) {
-			queryableEncryptionOptions = queryableEncryptionOptions.queryType("range");
+		if (isPartOfARangeQuery || !encryptedAnnotation.queryType().isEmpty()) {
+			queryableEncryptionOptions = queryableEncryptionOptions.queryType(encryptedAnnotation.queryType()); // should the type move to an extra annotation?
+			queryableEncryptionOptions = queryableEncryptionOptions.contentionFactor(1l);
 		}
 		return queryableEncryptionOptions;
 	}
 
 	private BsonBinary encryptValue(Object value, EncryptionContext context, MongoPersistentProperty persistentProperty,
 			EncryptionOptions encryptionOptions) {
+
 		if (!persistentProperty.isEntity()) {
 
 			if (persistentProperty.isCollectionLike()) {
@@ -227,6 +231,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			}
 			return encryption.encrypt(BsonUtils.simpleToBsonValue(value), encryptionOptions);
 		}
+
 		if (persistentProperty.isCollectionLike()) {
 			return encryption.encrypt(collectionLikeToBsonValue(value, persistentProperty, context), encryptionOptions);
 		}
@@ -251,6 +256,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	 */
 	private BsonValue encryptExpression(String fieldNameAndQueryOperator, Object value,
 			EncryptionOptions encryptionOptions) {
+
 		BsonValue doc = BsonUtils.simpleToBsonValue(value);
 
 		String fieldName = fieldNameAndQueryOperator;

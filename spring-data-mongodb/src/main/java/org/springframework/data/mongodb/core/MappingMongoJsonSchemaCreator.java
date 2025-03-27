@@ -296,32 +296,34 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			enc = enc.keys(property.getEncryptionKeyIds());
 		}
 
-		RangeEncrypted rangeEncrypted = property.findAnnotation(RangeEncrypted.class);
-		if (rangeEncrypted != null) {
-
-			QueryCharacteristic characteristic = new QueryCharacteristic() {
-
-				@Override
-				public String queryType() {
-					return "range";
-				}
-
-				@Override
-				public Document toDocument() {
-
-					Document options = QueryCharacteristic.super.toDocument();
-					options.put("contention", rangeEncrypted.contentionFactor());
-
-					if (!rangeEncrypted.rangeOptions().isEmpty()) {
-						options.putAll(Document.parse(rangeEncrypted.rangeOptions()));
-					}
-
-					return options;
-				}
-			};
-			return new QueryableJsonSchemaProperty(enc, QueryCharacteristics.of(List.of(characteristic)));
+		if (!StringUtils.hasText(encrypted.queryType())) {
+			return enc;
 		}
-		return enc;
+
+		QueryCharacteristic characteristic = new QueryCharacteristic() {
+
+			@Override
+			public String queryType() {
+				return encrypted.queryType();
+			}
+
+			@Override
+			public Document toDocument() {
+
+				Document options = QueryCharacteristic.super.toDocument();
+
+				RangeEncrypted rangeEncrypted = property.findAnnotation(RangeEncrypted.class);
+				if (rangeEncrypted != null) {
+					options.put("contention", rangeEncrypted.contentionFactor());
+				}
+				if (!encrypted.queryAttributes().isEmpty()) {
+					options.putAll(Document.parse(encrypted.queryAttributes()));
+				}
+
+				return options;
+			}
+		};
+		return new QueryableJsonSchemaProperty(enc, QueryCharacteristics.of(List.of(characteristic)));
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,

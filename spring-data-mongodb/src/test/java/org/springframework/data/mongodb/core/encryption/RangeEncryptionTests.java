@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
+import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +49,7 @@ import org.springframework.data.mongodb.core.MongoJsonSchemaCreator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.query.Query;
@@ -108,8 +110,12 @@ class RangeEncryptionTests {
 				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)))
 				.keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
 
+		EncryptOptions stringEncOptions = new EncryptOptions("Range")
+			.contentionFactor(8L).rangeOptions(new RangeOptions())
+			.keyId(keyHolder.getEncryptionKey("name")).queryType("equality");
+
 		Document source = new Document("_id", "id-1");
-		source.put("name", "It's a Me, Mario!");
+		source.put("name", clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), stringEncOptions));
 		source.put("encryptedInt", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), encryptOptions));
 		source.put("_class", Person.class.getName());
 
@@ -129,6 +135,7 @@ class RangeEncryptionTests {
 
 	@Test
 	void canLesserThanEqualMatchRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -138,6 +145,7 @@ class RangeEncryptionTests {
 
 	@Test
 	void canRangeMatchRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -149,6 +157,7 @@ class RangeEncryptionTests {
 
 	@Test
 	void canUpdateRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -162,6 +171,7 @@ class RangeEncryptionTests {
 
 	@Test
 	void errorsWhenUsingNonRangeOperatorEqOnRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -175,6 +185,7 @@ class RangeEncryptionTests {
 
 	@Test
 	void errorsWhenUsingNonRangeOperatorInOnRangeEncryptedField() {
+
 		Person source = createPerson();
 		template.insert(source);
 
@@ -347,6 +358,8 @@ class RangeEncryptionTests {
 	static class Person {
 
 		String id;
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Range", queryType = "equality")
 		String name;
 
 		@ValueConverter(MongoEncryptionConverter.class)
@@ -358,6 +371,9 @@ class RangeEncryptionTests {
 		@RangeEncrypted(contentionFactor = 0L,
 				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") //
 		Long encryptedLong;
+
+
+
 
 		public String getId() {
 			return this.id;

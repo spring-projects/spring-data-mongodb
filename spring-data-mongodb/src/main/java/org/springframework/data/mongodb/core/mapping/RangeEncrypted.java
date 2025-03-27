@@ -20,6 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+
 /**
  * @author Christoph Strobl
  * @author Ross Lawley
@@ -27,7 +29,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-@Encrypted(algorithm = "Range")
+@Encrypted(algorithm = "Range", queryType = "range")
 public @interface RangeEncrypted {
 
 	/**
@@ -47,5 +49,6 @@ public @interface RangeEncrypted {
 	 *
 	 * @return the json representation of range options
 	 */
+	@AliasFor(annotation = Encrypted.class, value = "queryAttributes")
 	String rangeOptions() default "";
 }
