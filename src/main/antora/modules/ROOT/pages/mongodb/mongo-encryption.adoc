@@ -1,8 +1,8 @@
 [[mongo.encryption]]
-= Encryption (CSFLE)
+= Encryption
 
 Client Side Encryption is a feature that encrypts data in your application before it is sent to MongoDB.
-We recommend you get familiar with the concepts, ideally from the https://www.mongodb.com/docs/manual/core/csfle/[MongoDB Documentation] to learn more about its capabilities and restrictions before you continue applying Encryption through Spring Data.
+We recommend you get familiar with the concepts, ideally from the https://www.mongodb.com/docs/manual/core/security-in-use-encryption/[MongoDB Documentation] to learn more about its capabilities and restrictions before you continue applying Encryption through Spring Data.
 
 [NOTE]
 ====
@@ -11,8 +11,13 @@ MongoDB does not support encryption for all field types.
 Specific data types require deterministic encryption to preserve equality comparison functionality.
 ====
 
+== Client Side Field Level Encryption (CSFLE)
+
+Choosing CSFLE gives you full flexibility and allows you to use different keys for a single field, eg. in a one key per tenant scenario. +
+Please make sure to consult the https://www.mongodb.com/docs/manual/core/csfle/[MongoDB CSFLE Documentation] before you continue reading.
+
 [[mongo.encryption.automatic]]
-== Automatic Encryption
+=== Automatic Encryption (CSFLE)
 
 MongoDB supports https://www.mongodb.com/docs/manual/core/csfle/[Client-Side Field Level Encryption] out of the box using the MongoDB driver with its Automatic Encryption feature.
 Automatic Encryption requires a xref:mongodb/mapping/mapping-schema.adoc[JSON Schema] that allows to perform encrypted read and write operations without the need to provide an explicit en-/decryption step.
@@ -47,7 +52,7 @@ MongoClientSettingsBuilderCustomizer customizer(MappingContext mappingContext) {
 ----
 
 [[mongo.encryption.explicit]]
-== Explicit Encryption
+=== Explicit Encryption (CSFLE)
 
 Explicit encryption uses the MongoDB driver's encryption library (`org.mongodb:mongodb-crypt`) to perform encryption and decryption tasks.
 The `@ExplicitEncrypted` annotation is a combination of the `@Encrypted` annotation used for xref:mongodb/mapping/mapping-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema creation] and a xref:mongodb/mapping/property-converters.adoc[Property Converter].
@@ -168,3 +173,15 @@ Spring takes care of this because `ClientEncryption` is ``Closeable``.
 <3> Create the `MongoEncryptionConverter`.
 <4> Enable for a `PropertyValueConverter` lookup from the `BeanFactory`.
 ====
+
+[[mongo.encryption.queryable]]
+== Queryable Encryption (QE)
+
+You are developing a new application and want to use the latest cryptographic advancements from MongoDB.
+
+You expect users to run ranged, prefix, suffix, or substring queries against encrypted data.
+
+Your application can use a single key for a given field, rather than requiring separate keys on a per-user or per-tenant basis.
+
+Choosing QE enables you to run different types of queries, like _ranged_, against encrypted fields. +
+Please make sure to consult the https://www.mongodb.com/docs/manual/core/queryable-encryption/[MongoDB QE Documentation] before you continue reading.
