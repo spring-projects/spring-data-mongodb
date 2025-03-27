@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.Queryable;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
@@ -296,7 +297,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			enc = enc.keys(property.getEncryptionKeyIds());
 		}
 
-		if (!StringUtils.hasText(encrypted.queryType())) {
+		Queryable queryable = property.findAnnotation(Queryable.class);
+		if (queryable == null || !StringUtils.hasText(queryable.queryType())) {
 			return enc;
 		}
 
@@ -304,7 +306,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 			@Override
 			public String queryType() {
-				return encrypted.queryType();
+				return queryable.queryType();
 			}
 
 			@Override
@@ -312,12 +314,11 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 				Document options = QueryCharacteristic.super.toDocument();
 
-				RangeEncrypted rangeEncrypted = property.findAnnotation(RangeEncrypted.class);
-				if (rangeEncrypted != null) {
-					options.put("contention", rangeEncrypted.contentionFactor());
+				if (queryable.contentionFactor() >= 0) {
+					options.put("contention", queryable.contentionFactor());
 				}
-				if (!encrypted.queryAttributes().isEmpty()) {
-					options.putAll(Document.parse(encrypted.queryAttributes()));
+				if (!queryable.queryAttributes().isEmpty()) {
+					options.putAll(Document.parse(queryable.queryAttributes()));
 				}
 
 				return options;

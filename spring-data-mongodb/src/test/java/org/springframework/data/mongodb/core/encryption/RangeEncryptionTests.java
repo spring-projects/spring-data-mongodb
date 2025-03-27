@@ -51,6 +51,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions.Mong
 import org.springframework.data.mongodb.core.convert.encryption.MongoEncryptionConverter;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Queryable;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -110,12 +111,22 @@ class RangeEncryptionTests {
 				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)))
 				.keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
 
-		EncryptOptions stringEncOptions = new EncryptOptions("Range")
-			.contentionFactor(8L).rangeOptions(new RangeOptions())
-			.keyId(keyHolder.getEncryptionKey("name")).queryType("equality");
+		/*
+		@Encrypted(algorithm = "Indexed")
+		@Queryable(queryType = "equality", contentionFactor = 0)
+		 */
+		EncryptOptions equalityEncOptions = new EncryptOptions("Indexed")
+			.contentionFactor(0L)
+			.keyId(keyHolder.getEncryptionKey("age"));;
+
+		EncryptOptions equalityEncOptionsString = new EncryptOptions("Indexed")
+			.contentionFactor(0L)
+			.keyId(keyHolder.getEncryptionKey("name"));;
 
 		Document source = new Document("_id", "id-1");
-		source.put("name", clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), stringEncOptions));
+
+		source.put("name", clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), equalityEncOptionsString));
+		source.put("age", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), equalityEncOptions));
 		source.put("encryptedInt", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), encryptOptions));
 		source.put("_class", Person.class.getName());
 
@@ -140,6 +151,16 @@ class RangeEncryptionTests {
 		template.insert(source);
 
 		Person loaded = template.query(Person.class).matching(where("encryptedInt").lte(source.encryptedInt)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void eqQueryWorksOnEncryptedField() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		Person loaded = template.query(Person.class).matching(where("age").is(source.age)).firstValue();
 		assertThat(loaded).isEqualTo(source);
 	}
 
@@ -200,7 +221,8 @@ class RangeEncryptionTests {
 	private Person createPerson() {
 		Person source = new Person();
 		source.id = "id-1";
-		source.name = "it'se me mario!";
+		source.name = "it's a me mario!";
+		source.age = 42;
 		source.encryptedInt = 101;
 		source.encryptedLong = 1001L;
 		return source;
@@ -358,9 +380,16 @@ class RangeEncryptionTests {
 	static class Person {
 
 		String id;
+
 		@ValueConverter(MongoEncryptionConverter.class)
-		@Encrypted(algorithm = "Range", queryType = "equality")
+		@Encrypted(algorithm = "Indexed")
+		@Queryable(queryType = "equality", contentionFactor = 0)
 		String name;
+
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Indexed")
+		@Queryable(queryType = "equality", contentionFactor = 0)
+		Integer age;
 
 		@ValueConverter(MongoEncryptionConverter.class)
 		@RangeEncrypted(contentionFactor = 0L,

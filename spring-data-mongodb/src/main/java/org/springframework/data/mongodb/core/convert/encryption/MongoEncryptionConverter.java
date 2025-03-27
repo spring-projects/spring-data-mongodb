@@ -41,7 +41,7 @@ import org.springframework.data.mongodb.core.encryption.EncryptionKeyResolver;
 import org.springframework.data.mongodb.core.encryption.EncryptionOptions;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
+import org.springframework.data.mongodb.core.mapping.Queryable;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
@@ -179,7 +179,8 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 		EncryptionOptions encryptionOptions = new EncryptionOptions(algorithm, key,
 				getEQOptions(persistentProperty, fieldNameAndQueryOperator));
 
-		if (fieldNameAndQueryOperator != null && encryptionOptions.queryableEncryptionOptions() != null) {
+		if (fieldNameAndQueryOperator != null && encryptionOptions.queryableEncryptionOptions() != null
+				&& !encryptionOptions.queryableEncryptionOptions().getQueryType().equals("equality")) {
 			return encryptExpression(fieldNameAndQueryOperator, value, encryptionOptions);
 		} else {
 			return encryptValue(value, context, persistentProperty, encryptionOptions);
@@ -189,28 +190,28 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	private static @Nullable QueryableEncryptionOptions getEQOptions(MongoPersistentProperty persistentProperty,
 			String fieldNameAndQueryOperator) {
 
-		Encrypted encryptedAnnotation = persistentProperty.findAnnotation(Encrypted.class);
-		if (encryptedAnnotation != null && !StringUtils.hasText(encryptedAnnotation.queryType())) {
+		Queryable queryableAnnotation = persistentProperty.findAnnotation(Queryable.class);
+		if (queryableAnnotation == null || !StringUtils.hasText(queryableAnnotation.queryType())) {
 			return null;
 		}
 
 		QueryableEncryptionOptions queryableEncryptionOptions = QueryableEncryptionOptions.none();
 
-		String queryAttributes = encryptedAnnotation.queryAttributes();
+		String queryAttributes = queryableAnnotation.queryAttributes();
 		if (!queryAttributes.isEmpty()) {
 			queryableEncryptionOptions = queryableEncryptionOptions.attributes(Document.parse(queryAttributes));
 		}
 
-		RangeEncrypted rangeEncryptedAnnotation = persistentProperty.findAnnotation(RangeEncrypted.class);
-		if (rangeEncryptedAnnotation != null && rangeEncryptedAnnotation.contentionFactor() >= 0) {
-			queryableEncryptionOptions = queryableEncryptionOptions
-					.contentionFactor(rangeEncryptedAnnotation.contentionFactor());
+		if (queryableAnnotation.contentionFactor() >= 0) {
+			queryableEncryptionOptions = queryableEncryptionOptions.contentionFactor(queryableAnnotation.contentionFactor());
 		}
 
 		boolean isPartOfARangeQuery = fieldNameAndQueryOperator != null;
-		if (isPartOfARangeQuery || !encryptedAnnotation.queryType().isEmpty()) {
-			queryableEncryptionOptions = queryableEncryptionOptions.queryType(encryptedAnnotation.queryType()); // should the type move to an extra annotation?
-			queryableEncryptionOptions = queryableEncryptionOptions.contentionFactor(1l);
+		if (isPartOfARangeQuery) {
+			queryableEncryptionOptions = queryableEncryptionOptions.queryType(queryableAnnotation.queryType()); // should the
+																																																					// type move
+																																																					// to an extra
+																																																					// annotation?
 		}
 		return queryableEncryptionOptions;
 	}

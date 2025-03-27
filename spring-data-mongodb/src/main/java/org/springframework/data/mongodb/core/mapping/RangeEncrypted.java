@@ -29,7 +29,8 @@ import org.springframework.core.annotation.AliasFor;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-@Encrypted(algorithm = "Range", queryType = "range")
+@Encrypted(algorithm = "Range")
+@Queryable(queryType = "range")
 public @interface RangeEncrypted {
 
 	/**
@@ -37,6 +38,7 @@ public @interface RangeEncrypted {
 	 *
 	 * @return the contention factor
 	 */
+	@AliasFor(annotation = Queryable.class, value = "contentionFactor")
 	long contentionFactor() default -1;
 
 	/**
@@ -49,6 +51,6 @@ public @interface RangeEncrypted {
 	 *
 	 * @return the json representation of range options
 	 */
-	@AliasFor(annotation = Encrypted.class, value = "queryAttributes")
+	@AliasFor(annotation = Queryable.class, value = "queryAttributes")
 	String rangeOptions() default "";
 }

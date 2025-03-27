@@ -109,16 +109,4 @@ public @interface Encrypted {
 	 * @see org.springframework.data.mongodb.core.EncryptionAlgorithms
 	 */
 	String algorithm() default "";
-
-	/**
-	 * @return empty {@link String} if not set.
-	 * @since 4.5
-	 */
-	String queryType() default "";
-
-	/**
-	 * @return empty {@link String} if not set.
-	 * @since 4.5
-	 */
-	String queryAttributes() default "";
 }
