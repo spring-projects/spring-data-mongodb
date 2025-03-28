@@ -683,7 +683,7 @@ public class QueryMapper {
 	}
 
 	@Nullable
-	private Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
+	protected Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
 			MongoConversionContext conversionContext) {
 
@@ -1624,7 +1624,7 @@ public class QueryMapper {
 		return converter;
 	}
 
-	private enum NoPropertyPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
+	enum NoPropertyPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
 		INSTANCE;
 

@@ -24,6 +24,8 @@ import java.util.Map.Entry;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
@@ -158,6 +160,17 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		return super.getMappedObjectForField(field, rawValue);
+	}
+
+	protected Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
+
+		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
+		MongoConversionContext conversionContext) {
+
+		MongoConversionContext ctx = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
+			conversionContext.getProperty(), converter, conversionContext.getSpELContext(), null);
+
+		return super.convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, ctx);
 	}
 
 	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {

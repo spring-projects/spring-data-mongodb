@@ -54,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Queryable;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
@@ -78,6 +79,7 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.model.vault.RangeOptions;
+import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
 
@@ -101,7 +103,7 @@ class RangeEncryptionTests {
 	}
 
 	@Test // GH-4185
-	void canGreaterThanEqualMatchRangeEncryptedField() {
+	void manuallyEncryptedValuesCanBeSavedAndRetrievedCorrectly() {
 
 		EncryptOptions encryptOptions = new EncryptOptions("Range").contentionFactor(1L)
 				.keyId(keyHolder.getEncryptionKey("encryptedInt"))
@@ -111,21 +113,18 @@ class RangeEncryptionTests {
 				.rangeOptions(new RangeOptions().min(new BsonInt32(0)).max(new BsonInt32(200)))
 				.keyId(keyHolder.getEncryptionKey("encryptedInt")).queryType("range");
 
-		/*
-		@Encrypted(algorithm = "Indexed")
-		@Queryable(queryType = "equality", contentionFactor = 0)
-		 */
-		EncryptOptions equalityEncOptions = new EncryptOptions("Indexed")
-			.contentionFactor(0L)
-			.keyId(keyHolder.getEncryptionKey("age"));;
+		EncryptOptions equalityEncOptions = new EncryptOptions("Indexed").contentionFactor(0L)
+				.keyId(keyHolder.getEncryptionKey("age"));
+		;
 
-		EncryptOptions equalityEncOptionsString = new EncryptOptions("Indexed")
-			.contentionFactor(0L)
-			.keyId(keyHolder.getEncryptionKey("name"));;
+		EncryptOptions equalityEncOptionsString = new EncryptOptions("Indexed").contentionFactor(0L)
+				.keyId(keyHolder.getEncryptionKey("name"));
+		;
 
 		Document source = new Document("_id", "id-1");
 
-		source.put("name", clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), equalityEncOptionsString));
+		source.put("name",
+				clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), equalityEncOptionsString));
 		source.put("age", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), equalityEncOptions));
 		source.put("encryptedInt", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), encryptOptions));
 		source.put("_class", Person.class.getName());
@@ -155,12 +154,25 @@ class RangeEncryptionTests {
 	}
 
 	@Test
-	void eqQueryWorksOnEncryptedField() {
+	void canQueryEqualityEncryptedField() {
 
 		Person source = createPerson();
 		template.insert(source);
 
 		Person loaded = template.query(Person.class).matching(where("age").is(source.age)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void canExcludeSafeContentFromResult() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
+		q.fields().exclude("__safeContent__");
+
+		Person loaded = template.query(Person.class).matching(q).firstValue();
 		assertThat(loaded).isEqualTo(source);
 	}
 
@@ -171,13 +183,12 @@ class RangeEncryptionTests {
 		template.insert(source);
 
 		Query q = Query.query(where("encryptedLong").lte(1001L).gte(1001L));
-		q.fields().exclude("__safeContent__");
 		Person loaded = template.query(Person.class).matching(q).firstValue();
 		assertThat(loaded).isEqualTo(source);
 	}
 
 	@Test
-	void canUpdateRangeEncryptedField() {
+	void canReplaceEntityWithRangeEncryptedField() {
 
 		Person source = createPerson();
 		template.insert(source);
@@ -188,6 +199,20 @@ class RangeEncryptionTests {
 
 		Person loaded = template.query(Person.class).matching(where("id").is(source.id)).firstValue();
 		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void canUpdateRangeEncryptedField() {
+
+		Person source = createPerson();
+		template.insert(source);
+
+		UpdateResult updateResult = template.update(Person.class).matching(where("id").is(source.id))
+				.apply(Update.update("encryptedLong", 5000L)).first();
+		assertThat(updateResult.getModifiedCount()).isOne();
+
+		Person loaded = template.query(Person.class).matching(where("id").is(source.id)).firstValue();
+		assertThat(loaded.encryptedLong).isEqualTo(5000L);
 	}
 
 	@Test
@@ -382,13 +407,14 @@ class RangeEncryptionTests {
 		String id;
 
 		@ValueConverter(MongoEncryptionConverter.class)
-		@Encrypted(algorithm = "Indexed")
-		@Queryable(queryType = "equality", contentionFactor = 0)
+		@Encrypted(algorithm = "Indexed") //
+		@Queryable(queryType = "equality", contentionFactor = 0) //
 		String name;
 
 		@ValueConverter(MongoEncryptionConverter.class)
-		@Encrypted(algorithm = "Indexed")
-		@Queryable(queryType = "equality", contentionFactor = 0)
+		//@Encrypted(algorithm = "Indexed", queries = {@Queryable(queryType = "equality", contentionFactor = 0)})
+		@Encrypted(algorithm = "Indexed") //
+		@Queryable(queryType = "equality", contentionFactor = 0) //
 		Integer age;
 
 		@ValueConverter(MongoEncryptionConverter.class)
@@ -400,9 +426,6 @@ class RangeEncryptionTests {
 		@RangeEncrypted(contentionFactor = 0L,
 				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") //
 		Long encryptedLong;
-
-
-
 
 		public String getId() {
 			return this.id;
