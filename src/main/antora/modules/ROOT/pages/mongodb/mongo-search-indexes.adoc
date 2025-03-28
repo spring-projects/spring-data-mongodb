@@ -84,7 +84,6 @@ VectorSearchOperation search = VectorSearchOperation.search("vector_index") <1>
   .vector( ... )
   .numCandidates(150)
   .limit(10)
-  .quantization(SCALAR)
   .withSearchScore("score"); <3>
 
 AggregationResults<MovieWithSearchScore> results = mongoTemplate
@@ -107,8 +106,7 @@ db.embedded_movies.aggregate([
       "path": "plot_embedding", <1>
       "queryVector": [ ... ],
       "numCandidates": 150,
-      "limit": 10,
-      "quantization": "scalar"
+      "limit": 10
     }
   },
   {
