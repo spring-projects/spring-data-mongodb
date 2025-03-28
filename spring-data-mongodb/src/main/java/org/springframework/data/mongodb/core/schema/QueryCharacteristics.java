@@ -58,6 +58,33 @@ public class QueryCharacteristics {
 		return new RangeQuery<>();
 	}
 
+	public static <T> EqualityQuery<T> equality() {
+		return new EqualityQuery<>(null);
+	}
+
+	public static class EqualityQuery<T> implements QueryCharacteristic {
+
+		private final @Nullable Long contention;
+
+		public EqualityQuery(@Nullable Long contention) {
+			this.contention = contention;
+		}
+
+		public EqualityQuery<T> contention(long contention) {
+			return new EqualityQuery<>(contention);
+		}
+
+		@Override
+		public String queryType() {
+			return "equality";
+		}
+
+		@Override
+		public Document toDocument() {
+			return QueryCharacteristic.super.toDocument().append("contention", contention);
+		}
+	}
+
 	public static class RangeQuery<T> implements QueryCharacteristic {
 
 		private final @Nullable Range<T> valueRange;

@@ -177,11 +177,125 @@ Spring takes care of this because `ClientEncryption` is ``Closeable``.
 [[mongo.encryption.queryable]]
 == Queryable Encryption (QE)
 
-You are developing a new application and want to use the latest cryptographic advancements from MongoDB.
+Choosing QE enables you to run different types of queries, like _range_ or _equality_, against encrypted fields. +
+Please make sure to consult the https://www.mongodb.com/docs/manual/core/queryable-encryption/[MongoDB QE Documentation] before you continue reading to learn more about QE features and limitations.
 
-You expect users to run ranged, prefix, suffix, or substring queries against encrypted data.
+=== Collection Setup
 
-Your application can use a single key for a given field, rather than requiring separate keys on a per-user or per-tenant basis.
+Queryable Encryption requires upfront declaration of certain aspects allowed within an actual query against an encrypted field.
+The information covers the algorithm in use as well as allowed query types along with their attributes and must be provided when creating the collection and will
 
-Choosing QE enables you to run different types of queries, like _ranged_, against encrypted fields. +
-Please make sure to consult the https://www.mongodb.com/docs/manual/core/queryable-encryption/[MongoDB QE Documentation] before you continue reading.
+`MongoOperations#createCollection(...)` can be used to do the initial setup for collections utilizing QE.
+The configuration for QE via Spring Data uses the same building blocks (a xref:mongodb/mapping/mapping-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema creation]) as CSFLE, converting the schema/properties into the configuration format required by MongoDB.
+
+[tabs]
+======
+Manual Collection Setup::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+----
+CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(options -> options
+	.queryable(encrypted(string("ssn")), equality().contention(0))
+	.queryable(encrypted(int32("age")).algorithm("Range"), range().contention(8).min(0).max(150))
+	.queryable(encrypted(int64("address.sign")), range().contention(2).min(-10L).max(10L))
+);
+
+mongoTemplate.createCollection(Patient.class, collectionOptions);
+----
+====
+
+Derived Collection Setup::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="secondary"]
+----
+class Patient {
+
+    @Id String id;
+
+    @Encrypted(algorithm = "Indexed") //
+    @Queryable(queryType = "equality", contentionFactor = 0)
+    String ssn;
+
+    @RangeEncrypted(contentionFactor = 8, rangeOptions = "{ 'min' : 0, 'max' : 150 }")
+    Integer age;
+
+    Address address;
+}
+
+MongoJsonSchema patientSchema = MongoJsonSchemaCreator.create(mappingContext)
+    .filter(MongoJsonSchemaCreator.encryptedOnly())
+    .createSchemaFor(Patient.class);
+
+CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(patientSchema);
+
+mongoTemplate.createCollection(Patient.class, collectionOptions);
+----
+====
+
+MongoDB Collection Info::
++
+====
+[source,java,indent=0,subs="verbatim,quotes",role="thrid"]
+----
+{
+    name: 'patient',
+    type: 'collection',
+    options: {
+      encryptedFields: {
+        escCollection: 'enxcol_.test.esc',
+        ecocCollection: 'enxcol_.test.ecoc',
+        fields: [
+          {
+            keyId: ...,
+            path: 'ssn',
+            bsonType: 'string',
+            queries: [ { queryType: 'equality', contention: Long('0') } ]
+          },
+          {
+            keyId: ...,
+            path: 'age',
+            bsonType: 'int',
+            queries: [ { queryType: 'range', contention: Long('8'), min: 0, max: 150 } ]
+          },
+          {
+            keyId: ...,
+            path: 'address.sign',
+            bsonType: 'long',
+            queries: [ { queryType: 'range', contention: Long('2'), min: Long('-10'), max: Long('10') } ]
+          }
+        ]
+      }
+    }
+}
+----
+====
+======
+
+[WARNING]
+====
+It is not possible to use both QE and CSFLE within the same collection.
+====
+
+[WARNING]
+====
+//add big warnings in here
+- types
+- indexes
+- queries
+====
+
+[NOTE]
+====
+Queryable Encryption will an extra field `__safeContent__` to each of your documents.
+Unless explicitly excluded the field will be loaded into memory when retrieving results.
+====
+
+
+
+[[mongo.encryption.queryable.automatic]]
+=== Automatic Encryption (QE)
+
+MongoDB supports Queryable Encryption out of the box using the MongoDB driver with its Automatic Encryption feature.
+Automatic Encryption requires a xref:mongodb/mapping/mapping-schema.adoc[JSON Schema] that allows to perform encrypted read and write operations without the need to provide an explicit en-/decryption step.
