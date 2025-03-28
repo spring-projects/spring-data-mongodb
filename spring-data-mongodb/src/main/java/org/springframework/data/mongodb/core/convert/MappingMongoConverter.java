@@ -45,6 +45,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -2222,6 +2223,11 @@ public class MappingMongoConverter extends AbstractMongoConverter
 		@Override
 		public TypeDescriptor toTypeDescriptor() {
 			return delegate.toTypeDescriptor();
+		}
+
+		@Override
+		public ResolvableType toResolvableType() {
+			return delegate.toResolvableType();
 		}
 	}
 
