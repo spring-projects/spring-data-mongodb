@@ -18,10 +18,13 @@ package org.springframework.data.mongodb.aot.generated;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+
+import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
@@ -33,7 +36,8 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Del
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecutionX.Type;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
-import org.springframework.data.repository.aot.generate.AotRepositoryMethodGenerationContext;
+import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
+import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.javapoet.ClassName;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
@@ -50,25 +54,29 @@ public class MongoBlocks {
 
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
-	static QueryBlockBuilder queryBlockBuilder(AotRepositoryMethodGenerationContext context) {
-		return new QueryBlockBuilder(context);
+	static QueryBlockBuilder queryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		return new QueryBlockBuilder(context, queryMethod);
 	}
 
-	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotRepositoryMethodGenerationContext context) {
-		return new QueryExecutionBlockBuilder(context);
+	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new QueryExecutionBlockBuilder(context, queryMethod);
 	}
 
-	static DeleteExecutionBuilder deleteExecutionBlockBuilder(AotRepositoryMethodGenerationContext context) {
-		return new DeleteExecutionBuilder(context);
+	static DeleteExecutionBuilder deleteExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new DeleteExecutionBuilder(context, queryMethod);
 	}
 
 	static class DeleteExecutionBuilder {
 
-		AotRepositoryMethodGenerationContext context;
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
 		String queryVariableName;
 
-		public DeleteExecutionBuilder(AotRepositoryMethodGenerationContext context) {
+		public DeleteExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.context = context;
+			this.queryMethod = queryMethod;
 		}
 
 		public DeleteExecutionBuilder referencing(String queryVariableName) {
@@ -85,15 +93,16 @@ public class MongoBlocks {
 					&& !ObjectUtils.nullSafeEquals(TypeName.get(context.getRepositoryInformation().getDomainType()),
 							context.getActualReturnType());
 
-			Object actualReturnType = isProjecting ? context.getActualReturnType()
+			Object actualReturnType = isProjecting ? context.getActualReturnType().getType()
 					: context.getRepositoryInformation().getDomainType();
 
 			builder.add("\n");
-			builder.addStatement("$T<$T> remover = $L.remove($T.class)", ExecutableRemove.class, actualReturnType,
+			builder.addStatement("$T<$T> remover = $L.remove($T.class)", ExecutableRemove.class,
+					context.getRepositoryInformation().getDomainType(),
 					mongoOpsRef, context.getRepositoryInformation().getDomainType());
 
 			Type type = Type.FIND_AND_REMOVE_ALL;
-			if (context.returnsSingleValue()) {
+			if (!queryMethod.isCollectionQuery()) {
 				if (!ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())) {
 					type = Type.FIND_AND_REMOVE_ONE;
 				} else {
@@ -103,7 +112,7 @@ public class MongoBlocks {
 
 			actualReturnType = ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())
 					? ClassName.get(context.getMethod().getReturnType())
-					: context.returnsSingleValue() ? actualReturnType : context.getReturnType();
+					: queryMethod.isCollectionQuery() ? context.getReturnTypeName() : actualReturnType;
 
 			builder.addStatement("return ($T) new $T(remover, $T.$L).execute($L)", actualReturnType, DeleteExecutionX.class,
 					DeleteExecutionX.Type.class, type.name(), queryVariableName);
@@ -114,16 +123,29 @@ public class MongoBlocks {
 
 	static class QueryExecutionBlockBuilder {
 
-		AotRepositoryMethodGenerationContext context;
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
 		private String queryVariableName;
+		private boolean count, exists;
 
-		public QueryExecutionBlockBuilder(AotRepositoryMethodGenerationContext context) {
+		public QueryExecutionBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.context = context;
+			this.queryMethod = queryMethod;
 		}
 
 		QueryExecutionBlockBuilder referencing(String queryVariableName) {
 
 			this.queryVariableName = queryVariableName;
+			return this;
+		}
+
+		QueryExecutionBlockBuilder count(boolean count) {
+			this.count = count;
+			return this;
+		}
+
+		QueryExecutionBlockBuilder exists(boolean exists) {
+			this.exists = exists;
 			return this;
 		}
 
@@ -133,10 +155,8 @@ public class MongoBlocks {
 
 			Builder builder = CodeBlock.builder();
 
-			boolean isProjecting = context.getActualReturnType() != null
-					&& !ObjectUtils.nullSafeEquals(TypeName.get(context.getRepositoryInformation().getDomainType()),
-							context.getActualReturnType());
-			Object actualReturnType = isProjecting ? context.getActualReturnType()
+			boolean isProjecting = context.getReturnedType().isProjecting();
+			Object actualReturnType = isProjecting ? context.getActualReturnType().getType()
 					: context.getRepositoryInformation().getDomainType();
 
 			builder.add("\n");
@@ -150,24 +170,23 @@ public class MongoBlocks {
 						context.getRepositoryInformation().getDomainType());
 			}
 
-			String terminatingMethod = "all()";
-			if (context.returnsSingleValue()) {
+			String terminatingMethod;
 
-				if (context.returnsOptionalValue()) {
-					terminatingMethod = "one()";
-				} else if (context.isCountMethod()) {
-					terminatingMethod = "count()";
-				} else if (context.isExistsMethod()) {
-					terminatingMethod = "exists()";
-				} else {
-					terminatingMethod = "oneValue()";
-				}
+			if (queryMethod.isCollectionQuery() || queryMethod.isPageQuery() || queryMethod.isSliceQuery()) {
+				terminatingMethod = "all()";
+			} else if (count) {
+				terminatingMethod = "count()";
+
+			} else if (exists) {
+				terminatingMethod = "exists()";
+			} else {
+				terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()" : "oneValue()";
 			}
 
-			if (context.returnsPage()) {
+			if (queryMethod.isPageQuery()) {
 				builder.addStatement("return new $T(finder, $L).execute($L)", PagedExecution.class,
 						context.getPageableParameterName(), queryVariableName);
-			} else if (context.returnsSlice()) {
+			} else if (queryMethod.isSliceQuery()) {
 				builder.addStatement("return new $T(finder, $L).execute($L)", SlicedExecution.class,
 						context.getPageableParameterName(), queryVariableName);
 			} else {
@@ -181,12 +200,14 @@ public class MongoBlocks {
 
 	static class QueryBlockBuilder {
 
-		AotRepositoryMethodGenerationContext context;
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+
 		StringQuery source;
 		List<String> arguments;
 		private String queryVariableName;
 
-		public QueryBlockBuilder(AotRepositoryMethodGenerationContext context) {
+		public QueryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.context = context;
 			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
 					.collect(Collectors.toList());
@@ -194,6 +215,7 @@ public class MongoBlocks {
 			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
 			// this.argumentSource = new MongoParameters(parametersSource, false);
 
+			this.queryMethod = queryMethod;
 		}
 
 		public QueryBlockBuilder filter(StringQuery query) {
@@ -239,17 +261,20 @@ public class MongoBlocks {
 			}
 
 			String pageableParameter = context.getPageableParameterName();
-			if (StringUtils.hasText(pageableParameter) && !context.returnsPage() && !context.returnsSlice()) {
+			if (StringUtils.hasText(pageableParameter) && !queryMethod.isPageQuery() && !queryMethod.isSliceQuery()) {
 				builder.addStatement("$L.with($L)", queryVariableName, pageableParameter);
 			}
 
-			String hint = context.annotationValue(Hint.class, "value");
+			MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
+			String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
 
 			if (StringUtils.hasText(hint)) {
 				builder.addStatement("$L.withHint($S)", queryVariableName, hint);
 			}
 
-			String readPreference = context.annotationValue(ReadPreference.class, "value");
+			MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
+			String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") : null;
+
 			if (StringUtils.hasText(readPreference)) {
 				builder.addStatement("$L.withReadPreference($T.valueOf($S))", queryVariableName,
 						com.mongodb.ReadPreference.class, readPreference);
