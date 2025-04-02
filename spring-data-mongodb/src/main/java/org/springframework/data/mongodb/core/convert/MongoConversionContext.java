@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
-
 import org.springframework.data.convert.ValueConversionContext;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
@@ -38,7 +37,7 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	@Nullable private final MongoPersistentProperty persistentProperty;
 	@Nullable private final SpELContext spELContext;
-	@Nullable private final String fieldNameAndQueryOperator;
+	@Nullable private final ConversionOperation conversionOperation;
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
@@ -53,19 +52,19 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
-			@Nullable String fieldNameAndQueryOperator) {
-		this(accessor, persistentProperty, mongoConverter, null, fieldNameAndQueryOperator);
+			@Nullable ConversionOperation conversionOperation) {
+		this(accessor, persistentProperty, mongoConverter, null, conversionOperation);
 	}
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
-			@Nullable SpELContext spELContext, @Nullable String fieldNameAndQueryOperator) {
+			@Nullable SpELContext spELContext, @Nullable ConversionOperation conversionOperation) {
 
 		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
 		this.spELContext = spELContext;
-		this.fieldNameAndQueryOperator = fieldNameAndQueryOperator;
+		this.conversionOperation = conversionOperation;
 	}
 
 	@Override
@@ -101,7 +100,52 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	}
 
 	@Nullable
-	public String getFieldNameAndQueryOperator() {
-		return fieldNameAndQueryOperator;
+	public ConversionOperation getConversionOperation() {
+		return conversionOperation;
+	}
+
+	public interface ConversionOperation {
+		 String getOperator();
+
+		 String getPath();
+	}
+
+	public static class WriteConversionOperation implements ConversionOperation {
+
+		private final String path;
+
+		public WriteConversionOperation(String path) {
+			this.path = path;
+		}
+
+
+		@Override
+		public String getOperator() {
+			return "write";
+		}
+
+		@Override
+		public String getPath() {
+			return path;
+		}
+	}
+
+	public static class QueryConversionOperation implements ConversionOperation {
+
+		private final String operator;
+		private final String path;
+
+		public QueryConversionOperation(@Nullable String operator, String path) {
+			this.operator = operator != null ? operator : "$eq";
+			this.path = path;
+		}
+
+		public String getOperator() {
+			return operator;
+		}
+
+		public String getPath() {
+			return path;
+		}
 	}
 }

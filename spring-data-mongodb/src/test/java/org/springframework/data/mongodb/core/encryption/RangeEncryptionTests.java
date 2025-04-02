@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,7 @@ import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,6 +84,7 @@ import com.mongodb.client.model.vault.RangeOptions;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Ross Lawley
@@ -272,6 +275,8 @@ class RangeEncryptionTests {
 		source.age = 42;
 		source.encryptedInt = 101;
 		source.encryptedLong = 1001L;
+		source.nested = new NestedWithQEFields();
+		source.nested.value = "Luigi time!";
 		return source;
 	}
 
@@ -330,8 +335,17 @@ class RangeEncryptionTests {
 					BsonDocument local = clientEncryption.createEncryptedCollection(database, "test", createCollectionOptions,
 							new CreateEncryptedCollectionParams(LOCAL_KMS_PROVIDER));
 
-					return local.getArray("fields").stream().map(BsonValue::asDocument).collect(
-							Collectors.toMap(field -> field.getString("path").getValue(), field -> field.getBinary("keyId")));
+					Map<String, BsonBinary> keyMap = new LinkedHashMap<>();
+					for (Object o : local.getArray("fields")) {
+						if (o instanceof BsonDocument db) {
+							String path = db.getString("path").getValue();
+							BsonBinary binary = db.getBinary("keyId");
+							for (String part : path.split("\\.")) {
+								keyMap.put(part, binary);
+							}
+						}
+					}
+					return keyMap;
 				}
 			});
 
@@ -341,8 +355,18 @@ class RangeEncryptionTests {
 		@Bean
 		MongoEncryptionConverter encryptingConverter(MongoClientEncryption mongoClientEncryption,
 				EncryptionKeyHolder keyHolder) {
-			return new MongoEncryptionConverter(mongoClientEncryption, EncryptionKeyResolver
-					.annotated((ctx) -> EncryptionKey.keyId(keyHolder.getEncryptionKey(ctx.getProperty().getFieldName()))));
+			return new MongoEncryptionConverter(mongoClientEncryption, EncryptionKeyResolver.annotated((ctx) -> {
+
+				String path = ctx.getProperty().getFieldName();
+
+				if (ctx.getProperty().getMongoField().getName().isPath()) {
+					path = StringUtils.arrayToDelimitedString(ctx.getProperty().getMongoField().getName().parts(), ".");
+				}
+				if (ctx.getConversionOperation() != null) {
+					path = ctx.getConversionOperation().getPath();
+				}
+				return EncryptionKey.keyId(keyHolder.getEncryptionKey(path));
+			}));
 		}
 
 		@Bean
@@ -451,6 +475,8 @@ class RangeEncryptionTests {
 				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") //
 		Long encryptedLong;
 
+		NestedWithQEFields nested;
+
 		public String getId() {
 			return this.id;
 		}
@@ -506,6 +532,36 @@ class RangeEncryptionTests {
 		public String toString() {
 			return "Person{" + "id='" + id + '\'' + ", unencryptedValue='" + unencryptedValue + '\'' + ", name='" + name
 					+ '\'' + ", age=" + age + ", encryptedInt=" + encryptedInt + ", encryptedLong=" + encryptedLong + '}';
+		}
+	}
+
+	static class NestedWithQEFields {
+
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Indexed") //
+		@Queryable(queryType = "equality", contentionFactor = 0) //
+		String value;
+
+		@Override
+		public String toString() {
+			return "NestedWithQEFields{" + "value='" + value + '\'' + '}';
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			NestedWithQEFields that = (NestedWithQEFields) o;
+			return Objects.equals(value, that.value);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(value);
 		}
 	}
 

@@ -58,6 +58,8 @@ import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.ConversionOperation;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.QueryConversionOperation;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -672,12 +674,9 @@ public class QueryMapper {
 
 		MongoPersistentProperty property = documentField.getProperty();
 
-		String fieldNameAndQueryOperator = property != null && !property.getFieldName().equals(documentField.name)
-				? property.getFieldName() + "." + documentField.name
-				: documentField.name;
-
+		ConversionOperation criteriaContext = new QueryConversionOperation(isKeyword(documentField.name) ? documentField.name : "$eq", property.getFieldName());
 		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
-				property, converter, fieldNameAndQueryOperator);
+				property, converter, criteriaContext);
 
 		return convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, conversionContext);
 	}
@@ -707,9 +706,10 @@ public class QueryMapper {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
+
 					MongoConversionContext fieldConversionContext = new MongoConversionContext(
 							NoPropertyPropertyValueProvider.INSTANCE, property, converter,
-							conversionContext.getFieldNameAndQueryOperator() + "." + key);
+							new QueryConversionOperation(key, conversionContext.getConversionOperation().getPath()));
 					return convertValueWithConversionContext(documentField, val, val, valueConverter, fieldConversionContext);
 				}
 				return val;

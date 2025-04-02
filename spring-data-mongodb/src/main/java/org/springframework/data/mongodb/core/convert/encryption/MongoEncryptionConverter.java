@@ -34,6 +34,7 @@ import org.bson.Document;
 import org.bson.types.Binary;
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.ConversionOperation;
 import org.springframework.data.mongodb.core.encryption.Encryption;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.encryption.EncryptionKey;
@@ -174,21 +175,21 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 
 		String algorithm = annotation.algorithm();
 		EncryptionKey key = keyResolver.getKey(context);
-		String fieldNameAndQueryOperator = context.getFieldNameAndQueryOperator();
+		ConversionOperation conversionOperation = context.getConversionOperation();
 
 		EncryptionOptions encryptionOptions = new EncryptionOptions(algorithm, key,
-				getEQOptions(persistentProperty, fieldNameAndQueryOperator));
+				getEQOptions(persistentProperty, conversionOperation));
 
-		if (fieldNameAndQueryOperator != null && encryptionOptions.queryableEncryptionOptions() != null
+		if (conversionOperation != null && encryptionOptions.queryableEncryptionOptions() != null
 				&& !encryptionOptions.queryableEncryptionOptions().getQueryType().equals("equality")) {
-			return encryptExpression(fieldNameAndQueryOperator, value, encryptionOptions);
+			return encryptExpression(conversionOperation, value, encryptionOptions);
 		} else {
 			return encryptValue(value, context, persistentProperty, encryptionOptions);
 		}
 	}
 
 	private static @Nullable QueryableEncryptionOptions getEQOptions(MongoPersistentProperty persistentProperty,
-			String fieldNameAndQueryOperator) {
+			ConversionOperation conversionOperation) {
 
 		Queryable queryableAnnotation = persistentProperty.findAnnotation(Queryable.class);
 		if (queryableAnnotation == null || !StringUtils.hasText(queryableAnnotation.queryType())) {
@@ -206,7 +207,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			queryableEncryptionOptions = queryableEncryptionOptions.contentionFactor(queryableAnnotation.contentionFactor());
 		}
 
-		boolean isPartOfARangeQuery = fieldNameAndQueryOperator != null;
+		boolean isPartOfARangeQuery = conversionOperation != null;
 		if (isPartOfARangeQuery) {
 			queryableEncryptionOptions = queryableEncryptionOptions.queryType(queryableAnnotation.queryType()); // should the
 																																																					// type move
@@ -255,19 +256,13 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	 * @param encryptionOptions the options
 	 * @return the encrypted range value for use in a range query
 	 */
-	private BsonValue encryptExpression(String fieldNameAndQueryOperator, Object value,
+	private BsonValue encryptExpression(ConversionOperation conversionOperation, Object value,
 			EncryptionOptions encryptionOptions) {
 
 		BsonValue doc = BsonUtils.simpleToBsonValue(value);
 
-		String fieldName = fieldNameAndQueryOperator;
-		String queryOperator = EQUALITY_OPERATOR;
-
-		int pos = fieldNameAndQueryOperator.lastIndexOf(".$");
-		if (pos > -1) {
-			fieldName = fieldNameAndQueryOperator.substring(0, pos);
-			queryOperator = fieldNameAndQueryOperator.substring(pos + 1);
-		}
+		String fieldName = conversionOperation.getPath();
+		String queryOperator = conversionOperation.getOperator();
 
 		if (!RANGE_OPERATORS.contains(queryOperator)) {
 			throw new AssertionError(String.format("Not a valid range query. Querying a range encrypted field but the "
