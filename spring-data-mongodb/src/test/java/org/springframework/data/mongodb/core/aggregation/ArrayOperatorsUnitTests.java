@@ -24,6 +24,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToObject;
 
 /**
@@ -178,5 +179,12 @@ public class ArrayOperatorsUnitTests {
 
 		assertThat(ArrayOperators.arrayOf("team").sort(Sort.by("name")).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $sortArray: { input: \"$team\", sortBy: { name: 1 } } }");
+	}
+
+	@Test // GH-4929
+	void sortByWithDirection() {
+
+		assertThat(ArrayOperators.arrayOf(List.of("a", "b", "d", "c")).sort(Direction.DESC).toDocument(Aggregation.DEFAULT_CONTEXT))
+			.isEqualTo("{ $sortArray: { input: [\"a\", \"b\", \"d\", \"c\"], sortBy: -1 } }");
 	}
 }
