@@ -154,6 +154,27 @@ class RangeEncryptionTests {
 	}
 
 	@Test
+	void canQueryMixOfEqualityEncryptedAndUnencrypted() {
+
+		Person source = template.insert(createPerson());
+
+		Person loaded = template.query(Person.class)
+				.matching(where("name").is(source.name).and("unencryptedValue").is(source.unencryptedValue)).firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
+	void canQueryMixOfRangeEncryptedAndUnencrypted() {
+
+		Person source = template.insert(createPerson());
+
+		Person loaded = template.query(Person.class)
+				.matching(where("encryptedInt").lte(source.encryptedInt).and("unencryptedValue").is(source.unencryptedValue))
+				.firstValue();
+		assertThat(loaded).isEqualTo(source);
+	}
+
+	@Test
 	void canQueryEqualityEncryptedField() {
 
 		Person source = createPerson();
@@ -246,6 +267,7 @@ class RangeEncryptionTests {
 	private Person createPerson() {
 		Person source = new Person();
 		source.id = "id-1";
+		source.unencryptedValue = "y2k";
 		source.name = "it's a me mario!";
 		source.age = 42;
 		source.encryptedInt = 101;
@@ -406,13 +428,15 @@ class RangeEncryptionTests {
 
 		String id;
 
+		String unencryptedValue;
+
 		@ValueConverter(MongoEncryptionConverter.class)
 		@Encrypted(algorithm = "Indexed") //
 		@Queryable(queryType = "equality", contentionFactor = 0) //
 		String name;
 
 		@ValueConverter(MongoEncryptionConverter.class)
-		//@Encrypted(algorithm = "Indexed", queries = {@Queryable(queryType = "equality", contentionFactor = 0)})
+		// @Encrypted(algorithm = "Indexed", queries = {@Queryable(queryType = "equality", contentionFactor = 0)})
 		@Encrypted(algorithm = "Indexed") //
 		@Queryable(queryType = "equality", contentionFactor = 0) //
 		Integer age;
@@ -461,29 +485,27 @@ class RangeEncryptionTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (o == this) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
-
+			}
 			Person person = (Person) o;
-			return Objects.equals(id, person.id) && Objects.equals(name, person.name)
+			return Objects.equals(id, person.id) && Objects.equals(unencryptedValue, person.unencryptedValue)
+					&& Objects.equals(name, person.name) && Objects.equals(age, person.age)
 					&& Objects.equals(encryptedInt, person.encryptedInt) && Objects.equals(encryptedLong, person.encryptedLong);
 		}
 
 		@Override
 		public int hashCode() {
-			int result = Objects.hashCode(id);
-			result = 31 * result + Objects.hashCode(name);
-			result = 31 * result + Objects.hashCode(encryptedInt);
-			result = 31 * result + Objects.hashCode(encryptedLong);
-			return result;
+			return Objects.hash(id, unencryptedValue, name, age, encryptedInt, encryptedLong);
 		}
 
 		@Override
 		public String toString() {
-			return "Person{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", encryptedInt=" + encryptedInt
-					+ ", encryptedLong=" + encryptedLong + '}';
+			return "Person{" + "id='" + id + '\'' + ", unencryptedValue='" + unencryptedValue + '\'' + ", name='" + name
+					+ '\'' + ", age=" + age + ", encryptedInt=" + encryptedInt + ", encryptedLong=" + encryptedLong + '}';
 		}
 	}
 
