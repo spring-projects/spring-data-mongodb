@@ -25,6 +25,7 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -346,6 +347,22 @@ public class ArrayOperators {
 			}
 
 			return (usesExpression() ? SortArray.sortArrayOf(expression) : SortArray.sortArray(values)).by(sort);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort
+		 * order}.
+		 *
+		 * @return new instance of {@link SortArray}.
+		 * @since 4.0
+		 */
+		public SortArray sort(Direction direction) {
+
+			if (usesFieldRef()) {
+				return SortArray.sortArrayOf(fieldReference).by(direction);
+			}
+
+			return (usesExpression() ? SortArray.sortArrayOf(expression) : SortArray.sortArray(values)).by(direction);
 		}
 
 		/**
@@ -2120,10 +2137,20 @@ public class ArrayOperators {
 			return new SortArray(append("sortBy", -1));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		/**
+		 * Set the order to put elements in.
+		 *
+		 * @param direction must not be {@literal null}.
+		 * @return new instance of {@link SortArray}.
 		 */
+		public SortArray by(Direction direction) {
+			return new SortArray(append("sortBy", direction.isAscending() ? 1 : -1));
+		}
+
+		/*
+		* (non-Javadoc)
+		* @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		*/
 		@Override
 		protected String getMongoMethod() {
 			return "$sortArray";
