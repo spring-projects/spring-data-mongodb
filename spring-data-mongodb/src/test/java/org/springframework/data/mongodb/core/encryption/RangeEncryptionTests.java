@@ -26,15 +26,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
-import org.bson.BsonValue;
 import org.bson.Document;
-import org.bson.types.Binary;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,6 +61,7 @@ import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
@@ -84,7 +82,6 @@ import com.mongodb.client.model.vault.RangeOptions;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Ross Lawley
@@ -146,7 +143,7 @@ class RangeEncryptionTests {
 		assertThat(result).containsEntry("encryptedInt", 101);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canLesserThanEqualMatchRangeEncryptedField() {
 
 		Person source = createPerson();
@@ -156,7 +153,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canQueryMixOfEqualityEncryptedAndUnencrypted() {
 
 		Person source = template.insert(createPerson());
@@ -166,7 +163,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canQueryMixOfRangeEncryptedAndUnencrypted() {
 
 		Person source = template.insert(createPerson());
@@ -177,7 +174,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canQueryEqualityEncryptedField() {
 
 		Person source = createPerson();
@@ -187,7 +184,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canExcludeSafeContentFromResult() {
 
 		Person source = createPerson();
@@ -200,7 +197,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canRangeMatchRangeEncryptedField() {
 
 		Person source = createPerson();
@@ -211,7 +208,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canReplaceEntityWithRangeEncryptedField() {
 
 		Person source = createPerson();
@@ -225,7 +222,7 @@ class RangeEncryptionTests {
 		assertThat(loaded).isEqualTo(source);
 	}
 
-	@Test
+	@Test // GH-4185
 	void canUpdateRangeEncryptedField() {
 
 		Person source = createPerson();
@@ -239,7 +236,7 @@ class RangeEncryptionTests {
 		assertThat(loaded.encryptedLong).isEqualTo(5000L);
 	}
 
-	@Test
+	@Test // GH-4185
 	void errorsWhenUsingNonRangeOperatorEqOnRangeEncryptedField() {
 
 		Person source = createPerson();
@@ -250,10 +247,9 @@ class RangeEncryptionTests {
 				.isInstanceOf(AssertionError.class)
 				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
 						+ "the query operator '$eq' for field path 'encryptedInt' is not a range query.");
-
 	}
 
-	@Test
+	@Test // GH-4185
 	void errorsWhenUsingNonRangeOperatorInOnRangeEncryptedField() {
 
 		Person source = createPerson();
@@ -264,10 +260,10 @@ class RangeEncryptionTests {
 				.isInstanceOf(AssertionError.class)
 				.hasMessageStartingWith("Not a valid range query. Querying a range encrypted field but "
 						+ "the query operator '$in' for field path 'encryptedLong' is not a range query.");
-
 	}
 
 	private Person createPerson() {
+
 		Person source = new Person();
 		source.id = "id-1";
 		source.unencryptedValue = "y2k";
@@ -460,7 +456,6 @@ class RangeEncryptionTests {
 		String name;
 
 		@ValueConverter(MongoEncryptionConverter.class)
-		// @Encrypted(algorithm = "Indexed", queries = {@Queryable(queryType = "equality", contentionFactor = 0)})
 		@Encrypted(algorithm = "Indexed") //
 		@Queryable(queryType = "equality", contentionFactor = 0) //
 		Integer age;

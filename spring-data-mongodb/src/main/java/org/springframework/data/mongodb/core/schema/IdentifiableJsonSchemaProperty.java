@@ -80,55 +80,6 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		return jsonSchemaObjectDelegate.getTypes();
 	}
 
-	public static class QueryableJsonSchemaProperty implements JsonSchemaProperty {
-
-		private final JsonSchemaProperty targetProperty;
-		private final QueryCharacteristics characteristics;
-
-		public QueryableJsonSchemaProperty(JsonSchemaProperty target, QueryCharacteristics characteristics) {
-			this.targetProperty = target;
-			this.characteristics = characteristics;
-		}
-
-		@Override
-		public Document toDocument() {
-
-			Document doc = targetProperty.toDocument();
-			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
-
-			if (propertySpecification.containsKey("encrypt")) {
-				Document encrypt = propertySpecification.get("encrypt", Document.class);
-				List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument)
-						.toList();
-				encrypt.append("queries", queries);
-			}
-
-			return doc;
-		}
-
-		@Override
-		public String getIdentifier() {
-			return targetProperty.getIdentifier();
-		}
-
-		@Override
-		public Set<Type> getTypes() {
-			return targetProperty.getTypes();
-		}
-
-		boolean isEncrypted() {
-			return targetProperty instanceof EncryptedJsonSchemaProperty;
-		}
-
-		public JsonSchemaProperty getTargetProperty() {
-			return targetProperty;
-		}
-
-		public QueryCharacteristics getCharacteristics() {
-			return characteristics;
-		}
-	}
-
 	/**
 	 * Convenience {@link JsonSchemaProperty} implementation without a {@code type} property.
 	 *
@@ -1164,6 +1115,11 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
 
+		/**
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 * @since 4.5
+		 */
 		public EncryptedJsonSchemaProperty keyId(Object keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
@@ -1245,6 +1201,62 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 				return keyIds.iterator().next();
 			}
 			return null;
+		}
+	}
+
+	/**
+	 * {@link JsonSchemaProperty} implementation typically wrapping {@link EncryptedJsonSchemaProperty encrypted
+	 * properties} to mark them as queryable.
+	 *
+	 * @author Christoph Strobl
+	 * @since 4.5
+	 */
+	public static class QueryableJsonSchemaProperty implements JsonSchemaProperty {
+
+		private final JsonSchemaProperty targetProperty;
+		private final QueryCharacteristics characteristics;
+
+		public QueryableJsonSchemaProperty(JsonSchemaProperty target, QueryCharacteristics characteristics) {
+			this.targetProperty = target;
+			this.characteristics = characteristics;
+		}
+
+		@Override
+		public Document toDocument() {
+
+			Document doc = targetProperty.toDocument();
+			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
+
+			if (propertySpecification.containsKey("encrypt")) {
+				Document encrypt = propertySpecification.get("encrypt", Document.class);
+				List<Document> queries = characteristics.getCharacteristics().stream().map(QueryCharacteristic::toDocument)
+						.toList();
+				encrypt.append("queries", queries);
+			}
+
+			return doc;
+		}
+
+		@Override
+		public String getIdentifier() {
+			return targetProperty.getIdentifier();
+		}
+
+		@Override
+		public Set<Type> getTypes() {
+			return targetProperty.getTypes();
+		}
+
+		boolean isEncrypted() {
+			return targetProperty instanceof EncryptedJsonSchemaProperty;
+		}
+
+		public JsonSchemaProperty getTargetProperty() {
+			return targetProperty;
+		}
+
+		public QueryCharacteristics getCharacteristics() {
+			return characteristics;
 		}
 	}
 }

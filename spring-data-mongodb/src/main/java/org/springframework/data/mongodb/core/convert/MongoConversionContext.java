@@ -37,7 +37,7 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	@Nullable private final MongoPersistentProperty persistentProperty;
 	@Nullable private final SpELContext spELContext;
-	@Nullable private final ConversionOperation conversionOperation;
+	@Nullable private final OperatorContext operatorContext;
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter) {
@@ -52,19 +52,19 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
-			@Nullable ConversionOperation conversionOperation) {
-		this(accessor, persistentProperty, mongoConverter, null, conversionOperation);
+			@Nullable OperatorContext operatorContext) {
+		this(accessor, persistentProperty, mongoConverter, null, operatorContext);
 	}
 
 	public MongoConversionContext(PropertyValueProvider<MongoPersistentProperty> accessor,
 			@Nullable MongoPersistentProperty persistentProperty, MongoConverter mongoConverter,
-			@Nullable SpELContext spELContext, @Nullable ConversionOperation conversionOperation) {
+			@Nullable SpELContext spELContext, @Nullable OperatorContext operatorContext) {
 
 		this.accessor = accessor;
 		this.persistentProperty = persistentProperty;
 		this.mongoConverter = mongoConverter;
 		this.spELContext = spELContext;
-		this.conversionOperation = conversionOperation;
+		this.operatorContext = operatorContext;
 	}
 
 	@Override
@@ -100,24 +100,38 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	}
 
 	@Nullable
-	public ConversionOperation getConversionOperation() {
-		return conversionOperation;
+	public OperatorContext getOperatorContext() {
+		return operatorContext;
 	}
 
-	public interface ConversionOperation {
-		 String getOperator();
+	/**
+	 * The {@link OperatorContext} provides access to the actual conversion intent like a write operation or a query
+	 * operator such as {@literal $gte}.
+	 * 
+	 * @since 4.5
+	 */
+	public interface OperatorContext {
 
-		 String getPath();
+		/**
+		 * The operator the conversion is used in.
+		 * @return {@literal write} for simple write operations during save, or a query operator.
+		 */
+		String getOperator();
+
+		/**
+		 * The context path the operator is used in.
+		 * @return never {@literal null}.
+		 */
+		String getPath();
 	}
 
-	public static class WriteConversionOperation implements ConversionOperation {
+	public static class WriteOperatorContext implements OperatorContext {
 
 		private final String path;
 
-		public WriteConversionOperation(String path) {
+		public WriteOperatorContext(String path) {
 			this.path = path;
 		}
-
 
 		@Override
 		public String getOperator() {
@@ -130,12 +144,12 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		}
 	}
 
-	public static class QueryConversionOperation implements ConversionOperation {
+	public static class QueryOperatorContext implements OperatorContext {
 
 		private final String operator;
 		private final String path;
 
-		public QueryConversionOperation(@Nullable String operator, String path) {
+		public QueryOperatorContext(@Nullable String operator, String path) {
 			this.operator = operator != null ? operator : "$eq";
 			this.path = path;
 		}

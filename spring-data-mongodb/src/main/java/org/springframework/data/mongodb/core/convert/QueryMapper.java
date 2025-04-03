@@ -58,8 +58,8 @@ import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
-import org.springframework.data.mongodb.core.convert.MongoConversionContext.ConversionOperation;
-import org.springframework.data.mongodb.core.convert.MongoConversionContext.QueryConversionOperation;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.QueryOperatorContext;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -674,7 +674,7 @@ public class QueryMapper {
 
 		MongoPersistentProperty property = documentField.getProperty();
 
-		ConversionOperation criteriaContext = new QueryConversionOperation(isKeyword(documentField.name) ? documentField.name : "$eq", property.getFieldName());
+		OperatorContext criteriaContext = new QueryOperatorContext(isKeyword(documentField.name) ? documentField.name : "$eq", property.getFieldName());
 		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
 				property, converter, criteriaContext);
 
@@ -709,7 +709,7 @@ public class QueryMapper {
 
 					MongoConversionContext fieldConversionContext = new MongoConversionContext(
 							NoPropertyPropertyValueProvider.INSTANCE, property, converter,
-							new QueryConversionOperation(key, conversionContext.getConversionOperation().getPath()));
+							new QueryOperatorContext(key, conversionContext.getOperatorContext().getPath()));
 					return convertValueWithConversionContext(documentField, val, val, valueConverter, fieldConversionContext);
 				}
 				return val;

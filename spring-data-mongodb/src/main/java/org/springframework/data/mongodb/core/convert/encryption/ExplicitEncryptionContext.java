@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.convert.encryption;
 
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
-import org.springframework.data.mongodb.core.convert.MongoConversionContext.ConversionOperation;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
 import org.springframework.data.mongodb.core.encryption.EncryptionContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
@@ -71,7 +71,7 @@ class ExplicitEncryptionContext implements EncryptionContext {
 
 	@Override
 	@Nullable
-	public ConversionOperation getConversionOperation() {
-		return conversionContext.getConversionOperation();
+	public OperatorContext getConversionOperation() {
+		return conversionContext.getOperatorContext();
 	}
 }
