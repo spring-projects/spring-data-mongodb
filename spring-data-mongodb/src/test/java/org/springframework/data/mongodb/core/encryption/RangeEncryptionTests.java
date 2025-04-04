@@ -358,8 +358,8 @@ class RangeEncryptionTests {
 				if (ctx.getProperty().getMongoField().getName().isPath()) {
 					path = StringUtils.arrayToDelimitedString(ctx.getProperty().getMongoField().getName().parts(), ".");
 				}
-				if (ctx.getConversionOperation() != null) {
-					path = ctx.getConversionOperation().getPath();
+				if (ctx.getOperatorContext() != null) {
+					path = ctx.getOperatorContext().getPath();
 				}
 				return EncryptionKey.keyId(keyHolder.getEncryptionKey(path));
 			}));

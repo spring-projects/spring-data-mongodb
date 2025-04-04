@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.convert.MongoConversionContext.WriteOperatorContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -163,14 +164,10 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	protected Object convertValueWithConversionContext(Field documentField, Object sourceValue, Object value,
-
 		PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
 		MongoConversionContext conversionContext) {
 
-		MongoConversionContext ctx = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
-			conversionContext.getProperty(), converter, conversionContext.getSpELContext(), null);
-
-		return super.convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, ctx);
+		return super.convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, conversionContext.forOperator(new WriteOperatorContext(documentField.name)));
 	}
 
 	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {

@@ -136,7 +136,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	default OperatorContext getConversionOperation() {
+	default OperatorContext getOperatorContext() {
 		return null;
 	}
 }

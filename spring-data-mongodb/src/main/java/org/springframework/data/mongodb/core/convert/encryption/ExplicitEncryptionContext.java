@@ -71,7 +71,7 @@ class ExplicitEncryptionContext implements EncryptionContext {
 
 	@Override
 	@Nullable
-	public OperatorContext getConversionOperation() {
+	public OperatorContext getOperatorContext() {
 		return conversionContext.getOperatorContext();
 	}
 }

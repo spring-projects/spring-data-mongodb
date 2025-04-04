@@ -175,12 +175,12 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 
 		String algorithm = annotation.algorithm();
 		EncryptionKey key = keyResolver.getKey(context);
-		OperatorContext operatorContext = context.getConversionOperation();
+		OperatorContext operatorContext = context.getOperatorContext();
 
 		EncryptionOptions encryptionOptions = new EncryptionOptions(algorithm, key,
 				getEQOptions(persistentProperty, operatorContext));
 
-		if (operatorContext != null && encryptionOptions.queryableEncryptionOptions() != null
+		if (operatorContext != null && !operatorContext.isWriteOperation() && encryptionOptions.queryableEncryptionOptions() != null
 				&& !encryptionOptions.queryableEncryptionOptions().getQueryType().equals("equality")) {
 			return encryptExpression(operatorContext, value, encryptionOptions);
 		} else {
@@ -207,7 +207,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 			queryableEncryptionOptions = queryableEncryptionOptions.contentionFactor(queryableAnnotation.contentionFactor());
 		}
 
-		boolean isPartOfARangeQuery = operatorContext != null;
+		boolean isPartOfARangeQuery = operatorContext != null && !operatorContext.isWriteOperation();
 		if (isPartOfARangeQuery) {
 			queryableEncryptionOptions = queryableEncryptionOptions.queryType(queryableAnnotation.queryType());
 		}

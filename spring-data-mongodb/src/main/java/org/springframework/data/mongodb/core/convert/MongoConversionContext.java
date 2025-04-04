@@ -21,6 +21,7 @@ import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.CheckReturnValue;
 import org.springframework.lang.Nullable;
 
 /**
@@ -77,6 +78,17 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		return persistentProperty;
 	}
 
+	/**
+	 *
+	 * @param operatorContext
+	 * @return new instance of {@link MongoConversionContext}.
+	 * @since 4.5
+	 */
+	@CheckReturnValue
+	public MongoConversionContext forOperator(@Nullable OperatorContext operatorContext) {
+		return new MongoConversionContext(accessor, persistentProperty, mongoConverter, spELContext, operatorContext);
+	}
+
 	@Nullable
 	public Object getValue(String propertyPath) {
 		return accessor.getPropertyValue(getProperty().getOwner().getRequiredPersistentProperty(propertyPath));
@@ -123,6 +135,8 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		 * @return never {@literal null}.
 		 */
 		String getPath();
+
+		boolean isWriteOperation();
 	}
 
 	public static class WriteOperatorContext implements OperatorContext {
@@ -142,6 +156,11 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		public String getPath() {
 			return path;
 		}
+
+		@Override
+		public boolean isWriteOperation() {
+			return true;
+		}
 	}
 
 	public static class QueryOperatorContext implements OperatorContext {
@@ -160,6 +179,11 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 
 		public String getPath() {
 			return path;
+		}
+
+		@Override
+		public boolean isWriteOperation() {
+			return false;
 		}
 	}
 }
