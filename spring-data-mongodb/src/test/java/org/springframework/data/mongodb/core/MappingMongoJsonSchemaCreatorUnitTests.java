@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Queryable;
 import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
@@ -284,35 +285,45 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 				.containsEntry("properties.domainTypeValue", Document.parse("{'encrypt': {'bsonType': 'object' } }"));
 	}
 
-	@Test // GH-4454
+	@Test // GH-4185
 	void qeRangeEncryptedProperties() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
-				.createSchemaFor(RangeEncryptedRoot.class);
+				.createSchemaFor(QueryableEncryptedRoot.class);
 
 		String expectedForInt = """
 				{ 'encrypt' : {
 					'algorithm' : 'Range',
 					'bsonType' : 'int',
 					'queries' : [
-						{ 'contention' : { '$numberLong' : '0' }, 'max' : 200, 'min' : 0, 'queryType' : 'range', 'sparsity' : 1, 'trimFactor' : 1 }
+						{ 'queryType' : 'range', 'contention' : { '$numberLong' : '0' }, 'max' : 200, 'min' : 0, 'sparsity' : 1, 'trimFactor' : 1 }
 					]
 				}}""";
 
-		String expectedForLong = """
+		String expectedForRootLong = """
 				{ 'encrypt' : {
 					'algorithm' : 'Range',
 					'bsonType' : 'long',
 					'queries' : [
-						{ contention : { '$numberLong' : '1' }, 'max' : { '$numberLong' : '1' }, 'min' : { '$numberLong' : '-1' }, 'queryType' : 'range', 'sparsity' : 1, 'trimFactor' : 1 }
+						{ 'queryType' : 'range', contention : { '$numberLong' : '0' }, 'sparsity' : 0 }
+					]
+				}}""";
+
+		String expectedForNestedLong = """
+				{ 'encrypt' : {
+					'algorithm' : 'Range',
+					'bsonType' : 'long',
+					'queries' : [
+						{ 'queryType' : 'range', contention : { '$numberLong' : '1' }, 'max' : { '$numberLong' : '1' }, 'min' : { '$numberLong' : '-1' }, 'sparsity' : 1, 'trimFactor' : 1 }
 					]
 				}}""";
 
 		assertThat(schema.schemaDocument()) //
 				.doesNotContainKey("properties.unencrypted") //
 				.containsEntry("properties.encryptedInt", Document.parse(expectedForInt))
-				.containsEntry("properties.nested.properties.encrypted_long", Document.parse(expectedForLong));
+				.containsEntry("properties.encryptedLong", Document.parse(expectedForRootLong))
+				.containsEntry("properties.nested.properties.encrypted_long", Document.parse(expectedForNestedLong));
 
 	}
 
@@ -728,12 +739,16 @@ class MappingMongoJsonSchemaCreatorUnitTests {
 		@Encrypted SomeDomainType domainTypeValue;
 	}
 
-	static class RangeEncryptedRoot {
+	static class QueryableEncryptedRoot {
 
 		String unencrypted;
 
 		@RangeEncrypted(contentionFactor = 0L, rangeOptions = "{ 'min': 0, 'max': 200, 'trimFactor': 1, 'sparsity': 1}") //
 		Integer encryptedInt;
+
+		@Encrypted(algorithm = "Range")
+		@Queryable(contentionFactor = 0L, queryType = "range", queryAttributes = "{ 'sparsity': 0 }") //
+		Long encryptedLong;
 
 		NestedRangeEncrypted nested;
 
