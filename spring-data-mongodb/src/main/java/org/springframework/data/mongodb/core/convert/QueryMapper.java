@@ -37,7 +37,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -674,9 +673,15 @@ public class QueryMapper {
 
 		MongoPersistentProperty property = documentField.getProperty();
 
-		OperatorContext criteriaContext = new QueryOperatorContext(isKeyword(documentField.name) ? documentField.name : "$eq", property.getFieldName());
-		MongoConversionContext conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE,
-				property, converter, criteriaContext);
+		OperatorContext criteriaContext = new QueryOperatorContext(
+				isKeyword(documentField.name) ? documentField.name : "$eq", property.getFieldName());
+		MongoConversionContext conversionContext;
+		if (valueConverter instanceof MongoConversionContext mcc) {
+			conversionContext = mcc.forOperator(criteriaContext);
+		} else {
+			conversionContext = new MongoConversionContext(NoPropertyPropertyValueProvider.INSTANCE, property, converter,
+					criteriaContext);
+		}
 
 		return convertValueWithConversionContext(documentField, sourceValue, value, valueConverter, conversionContext);
 	}
@@ -706,11 +711,7 @@ public class QueryMapper {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
-
-					MongoConversionContext fieldConversionContext = new MongoConversionContext(
-							NoPropertyPropertyValueProvider.INSTANCE, property, converter,
-							new QueryOperatorContext(key, conversionContext.getOperatorContext().getPath()));
-					return convertValueWithConversionContext(documentField, val, val, valueConverter, fieldConversionContext);
+					return convertValueWithConversionContext(documentField, val, val, valueConverter, conversionContext.forOperator(new QueryOperatorContext(key, conversionContext.getOperatorContext().getPath())));
 				}
 				return val;
 			});
