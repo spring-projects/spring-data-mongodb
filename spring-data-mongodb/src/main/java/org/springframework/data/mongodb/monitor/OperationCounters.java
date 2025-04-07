@@ -27,7 +27,9 @@ import com.mongodb.client.MongoClient;
  * JMX Metrics for Operation counters
  *
  * @author Mark Pollack
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Operation Counters")
 public class OperationCounters extends AbstractMonitor {
 

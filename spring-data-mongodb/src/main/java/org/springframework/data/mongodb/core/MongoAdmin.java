@@ -30,7 +30,9 @@ import com.mongodb.client.MongoDatabase;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
 

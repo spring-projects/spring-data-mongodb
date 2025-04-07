@@ -31,7 +31,9 @@ import com.mongodb.connection.ServerDescription;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 public abstract class AbstractMonitor {
 
 	private final MongoClient mongoClient;

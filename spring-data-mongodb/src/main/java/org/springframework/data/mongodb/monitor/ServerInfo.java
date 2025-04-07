@@ -31,7 +31,9 @@ import com.mongodb.client.MongoClient;
  * @author Mark Pollack
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
 

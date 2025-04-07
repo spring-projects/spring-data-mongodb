@@ -21,6 +21,7 @@ import org.springframework.jmx.export.annotation.ManagedOperation;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
+@Deprecated(since = "4.5", forRemoval = true)
 public interface MongoAdminOperations {
 
 	@ManagedOperation
