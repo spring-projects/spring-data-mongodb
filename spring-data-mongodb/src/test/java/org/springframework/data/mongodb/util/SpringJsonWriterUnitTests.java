@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.util.json;
+package org.springframework.data.mongodb.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,10 +25,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for {@link SpringJsonWriter}.
+ *
  * @author Christoph Strobl
- * @since 2025/01
+ * @since 5.0
  */
-public class SpringJsonWriterUnitTests {
+class SpringJsonWriterUnitTests {
 
 	StringBuffer buffer;
 	SpringJsonWriter writer;

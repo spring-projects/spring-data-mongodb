@@ -15,20 +15,23 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -41,6 +44,7 @@ import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableF
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFindNear;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -78,6 +82,7 @@ class MongoQueryExecutionUnitTests {
 	@Mock FindWithQuery<Object> operationMock;
 	@Mock TerminatingFind<Object> terminatingMock;
 	@Mock TerminatingFindNear<Object> terminatingGeoMock;
+	@Mock ExecutableRemove<Object> removeMock;
 	@Mock DbRefResolver dbRefResolver;
 
 	private Point POINT = new Point(10, 20);
@@ -183,38 +188,36 @@ class MongoQueryExecutionUnitTests {
 	@Test // DATAMONGO-2351
 	void acknowledgedDeleteReturnsDeletedCount() {
 
+		doReturn(removeMock).when(removeMock).matching(any(Query.class));
+		when(removeMock.all()).thenReturn(DeleteResult.acknowledged(10));
 		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteAllByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString()))
-				.thenReturn(DeleteResult.acknowledged(10));
-
-		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(10L);
+		assertThat(new DeleteExecution(removeMock, queryMethod).execute(new Query())).isEqualTo(10L);
 	}
 
 	@Test // DATAMONGO-2351
 	void unacknowledgedDeleteReturnsZeroDeletedCount() {
 
+		doReturn(removeMock).when(removeMock).matching(any(Query.class));
+		when(removeMock.all()).thenReturn(DeleteResult.unacknowledged());
 		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteAllByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString()))
-				.thenReturn(DeleteResult.unacknowledged());
-
-		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(0L);
+		assertThat(new DeleteExecution(removeMock, queryMethod).execute(new Query())).isEqualTo(0L);
 	}
 
 	@Test // DATAMONGO-1997
 	void deleteExecutionWithEntityReturnTypeTriggersFindAndRemove() {
 
+		Person person = new Person();
+		doReturn(removeMock).when(removeMock).matching(any(Query.class));
+		when(removeMock.findAndRemove()).thenReturn(List.of(person));
+
 		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		Person person = new Person();
-
-		when(mongoOperationsMock.findAndRemove(any(Query.class), any(Class.class), anyString())).thenReturn(person);
-
-		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(person);
+		assertThat(new DeleteExecution(removeMock, queryMethod).execute(new Query())).isEqualTo(person);
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
