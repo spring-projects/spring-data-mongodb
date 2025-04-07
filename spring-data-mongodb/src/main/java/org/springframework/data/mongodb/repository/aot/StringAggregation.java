@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package example.aot;
-
-import java.time.Instant;
+package org.springframework.data.mongodb.repository.aot;
 
 /**
+ * Value object holding the raw representation of an Aggregation Pipeline.
+ * 
  * @author Christoph Strobl
+ * @since 5.0
  */
-public interface UserProjection {
+record StringAggregation(String[] pipeline) {
 
-	String getUsername();
-
-	Instant getLastSeen();
 }

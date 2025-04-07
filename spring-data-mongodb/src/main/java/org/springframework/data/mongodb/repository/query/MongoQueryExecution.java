@@ -37,11 +37,11 @@ import org.springframework.data.mongodb.core.ExecutableRemoveOperation;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.util.SliceUtils;
+import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -251,19 +251,39 @@ public interface MongoQueryExecution {
 		}
 	}
 
-	final class DeleteExecutionX<T> implements MongoQueryExecution {
+	/**
+	 * {@link MongoQueryExecution} removing documents matching the query.
+	 *
+	 * @author Oliver Gierke
+	 * @author Mark Paluch
+	 * @author Artyom Gabeev
+	 * @author Christoph Strobl
+	 * @since 1.5
+	 */
+	final class DeleteExecution<T> implements MongoQueryExecution {
 
-		ExecutableRemoveOperation.ExecutableRemove<T> remove;
-		Type type;
+		private ExecutableRemoveOperation.ExecutableRemove<T> remove;
+		private Type type;
 
-		public DeleteExecutionX(ExecutableRemove<T> remove, Type type) {
+		public DeleteExecution(ExecutableRemove<T> remove, QueryMethod queryMethod) {
+			this.remove = remove;
+			if (queryMethod.isCollectionQuery()) {
+				this.type = Type.FIND_AND_REMOVE_ALL;
+			} else if (queryMethod.isQueryForEntity()
+					&& !ClassUtils.isPrimitiveOrWrapper(queryMethod.getReturnedObjectType())) {
+				this.type = Type.FIND_AND_REMOVE_ONE;
+			} else {
+				this.type = Type.ALL;
+			}
+		}
+
+		public DeleteExecution(ExecutableRemove<T> remove, Type type) {
 			this.remove = remove;
 			this.type = type;
 		}
 
-		@Nullable
 		@Override
-		public Object execute(Query query) {
+		public @Nullable Object execute(Query query) {
 
 			TerminatingRemove<T> doRemove = remove.matching(query);
 			if (Type.ALL.equals(type)) {
@@ -274,55 +294,12 @@ public interface MongoQueryExecution {
 			} else if (Type.FIND_AND_REMOVE_ONE.equals(type)) {
 				Iterator<T> removed = doRemove.findAndRemove().iterator();
 				return removed.hasNext() ? removed.next() : null;
-
 			}
 			throw new RuntimeException();
 		}
 
 		public enum Type {
 			FIND_AND_REMOVE_ONE, FIND_AND_REMOVE_ALL, ALL
-		}
-	}
-
-	/**
-	 * {@link MongoQueryExecution} removing documents matching the query.
-	 *
-	 * @author Oliver Gierke
-	 * @author Mark Paluch
-	 * @author Artyom Gabeev
-	 * @author Christoph Strobl
-	 * @since 1.5
-	 */
-	final class DeleteExecution implements MongoQueryExecution {
-
-		private final MongoOperations operations;
-		private final MongoQueryMethod method;
-
-		public DeleteExecution(MongoOperations operations, MongoQueryMethod method) {
-
-			Assert.notNull(operations, "Operations must not be null");
-			Assert.notNull(method, "Method must not be null");
-
-			this.operations = operations;
-			this.method = method;
-		}
-
-		@Override
-		public @Nullable Object execute(Query query) {
-
-			String collectionName = method.getEntityInformation().getCollectionName();
-			Class<?> type = method.getEntityInformation().getJavaType();
-
-			if (method.isCollectionQuery()) {
-				return operations.findAllAndRemove(query, type, collectionName);
-			}
-
-			if (method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
-				return operations.findAndRemove(query, type, collectionName);
-			}
-
-			DeleteResult writeResult = operations.remove(query, type, collectionName);
-			return writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
 		}
 	}
 

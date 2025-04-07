@@ -184,9 +184,17 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case IS_NULL:
 				return criteria.is(null);
 			case NOT_IN:
-				return criteria.nin(nextAsList(parameters, part));
+				Object ninValue = parameters.next();
+				if(ninValue instanceof Placeholder) {
+					return criteria.raw("$nin", ninValue);
+				}
+				return criteria.nin(valueAsList(ninValue, part));
 			case IN:
-				return criteria.in(nextAsList(parameters, part));
+				Object inValue = parameters.next();
+				if(inValue instanceof Placeholder) {
+					return criteria.raw("$in", inValue);
+				}
+				return criteria.in(valueAsList(inValue, part));
 			case LIKE:
 			case STARTING_WITH:
 			case ENDING_WITH:
@@ -201,7 +209,12 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				Object param = parameters.next();
 				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 			case EXISTS:
-				return criteria.exists((Boolean) parameters.next());
+				Object next = parameters.next();
+				if(next instanceof Placeholder placeholder) {
+					return criteria.raw("$exists", placeholder);
+				} else {
+					return criteria.exists((Boolean) next);
+				}
 			case TRUE:
 				return criteria.is(true);
 			case FALSE:
@@ -320,7 +333,11 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			Iterator<Object> parameters) {
 
 		if (property.isCollectionLike()) {
-			return criteria.in(nextAsList(parameters, part));
+			Object next = parameters.next();
+			if(next instanceof Placeholder) {
+				return criteria.raw("$in", next);
+			}
+			return criteria.in(valueAsList(next, part));
 		}
 
 		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
@@ -384,19 +401,19 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				String.format("Expected parameter type of %s but got %s", type, parameter.getClass()));
 	}
 
-	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
+	private java.util.List<?> valueAsList(Object value, Part part) {
 
-		Streamable<?> streamable = asStreamable(iterator.next());
+		Streamable<?> streamable = asStreamable(value);
 		if (!isSimpleComparisonPossible(part)) {
 
 			MatchMode matchMode = toMatchMode(part.getType());
 			String regexOptions = toRegexOptions(part);
 
 			streamable = streamable.map(it -> {
-				if (it instanceof String value) {
+				if (it instanceof String sv) {
 
-					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(value, matchMode),
-							regexOptions);
+					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, matchMode),
+						regexOptions);
 				}
 				return it;
 			});

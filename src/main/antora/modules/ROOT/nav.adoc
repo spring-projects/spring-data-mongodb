@@ -53,6 +53,7 @@
 ** xref:mongodb/repositories/cdi-integration.adoc[]
 ** xref:repositories/query-keywords-reference.adoc[]
 ** xref:repositories/query-return-types-reference.adoc[]
+** xref:mongodb/aot.adoc[]
 
 // Observability
 * xref:observability/observability.adoc[]

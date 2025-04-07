@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot.generated;
+package org.springframework.data.mongodb.repository.aot;
 
 import java.util.Iterator;
 import java.util.List;
@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.ScrollPosition;
@@ -41,15 +43,14 @@ import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
 /**
  * @author Christoph Strobl
- * @since 2025/01
+ * @since 5.0
  */
-public class AotQueryCreator {
+class AotQueryCreator {
 
 	private MongoMappingContext mappingContext;
 
@@ -64,13 +65,14 @@ public class AotQueryCreator {
 		this.mappingContext = mongoMappingContext;
 	}
 
+	@SuppressWarnings("NullAway")
 	StringQuery createQuery(PartTree partTree, int parameterCount) {
 
 		Query query = new MongoQueryCreator(partTree,
 				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(parameterCount)), mappingContext)
 				.createQuery();
 
-		if(partTree.isLimiting()) {
+		if (partTree.isLimiting()) {
 			query.limit(partTree.getMaxResults());
 		}
 		return new StringQuery(query);
@@ -88,13 +90,13 @@ public class AotQueryCreator {
 		}
 	}
 
+	@NullUnmarked
 	enum PlaceholderWriter implements MongoWriter<Object> {
 
 		INSTANCE;
 
-		@Nullable
 		@Override
-		public Object convertToMongoType(@Nullable Object obj, @Nullable TypeInformation<?> typeInformation) {
+		public @Nullable Object convertToMongoType(@Nullable Object obj, @Nullable TypeInformation<?> typeInformation) {
 			return obj instanceof Placeholder p ? p.getValue() : obj;
 		}
 
@@ -109,6 +111,7 @@ public class AotQueryCreator {
 		}
 	}
 
+	@NullUnmarked
 	static class PlaceholderParameterAccessor implements MongoParameterAccessor {
 
 		private final List<Placeholder> placeholders;
@@ -117,8 +120,7 @@ public class AotQueryCreator {
 			if (parameterCount == 0) {
 				placeholders = List.of();
 			} else {
-				placeholders = IntStream.range(0, parameterCount).mapToObj(it -> new Placeholder("?" + it))
-						.collect(Collectors.toList());
+				placeholders = IntStream.range(0, parameterCount).mapToObj(Placeholder::indexed).collect(Collectors.toList());
 			}
 		}
 
@@ -127,21 +129,18 @@ public class AotQueryCreator {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public Point getGeoNearLocation() {
+		public @Nullable Point getGeoNearLocation() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public TextCriteria getFullText() {
+		public @Nullable TextCriteria getFullText() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public Collation getCollation() {
+		public @Nullable Collation getCollation() {
 			return null;
 		}
 
@@ -150,15 +149,13 @@ public class AotQueryCreator {
 			return placeholders.toArray();
 		}
 
-		@Nullable
 		@Override
-		public UpdateDefinition getUpdate() {
+		public @Nullable UpdateDefinition getUpdate() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public ScrollPosition getScrollPosition() {
+		public @Nullable ScrollPosition getScrollPosition() {
 			return null;
 		}
 
@@ -172,15 +169,13 @@ public class AotQueryCreator {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public Class<?> findDynamicProjection() {
+		public @Nullable Class<?> findDynamicProjection() {
 			return null;
 		}
 
-		@Nullable
 		@Override
-		public Object getBindableValue(int index) {
+		public @Nullable Object getBindableValue(int index) {
 			return placeholders.get(index).getValue();
 		}
 
@@ -195,5 +190,4 @@ public class AotQueryCreator {
 			return ((List) placeholders).iterator();
 		}
 	}
-
 }

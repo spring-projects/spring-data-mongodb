@@ -40,16 +40,36 @@ public interface CriteriaDefinition {
 	@Nullable
 	String getKey();
 
+	/**
+	 * A placeholder expression used when rending queries to JSON.
+	 *
+	 * @since 5.0
+	 * @author Christoph Strobl
+	 */
 	class Placeholder {
 
-		Object value;
+		private final Object expression;
 
-		public Placeholder(Object value) {
-			this.value = value;
+		/**
+		 * Create a new placeholder for index bindable parameter.
+		 * 
+		 * @param position the index of the parameter to bind.
+		 * @return new instance of {@link Placeholder}.
+		 */
+		public static Placeholder indexed(int position) {
+			return new Placeholder("?%s".formatted(position));
+		}
+
+		public static Placeholder placeholder(String expression) {
+			return new Placeholder(expression);
+		}
+
+		Placeholder(Object value) {
+			this.expression = value;
 		}
 
 		public Object getValue() {
-			return value;
+			return expression;
 		}
 
 		@Override
