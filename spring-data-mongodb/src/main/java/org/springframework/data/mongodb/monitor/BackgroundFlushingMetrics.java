@@ -28,7 +28,9 @@ import com.mongodb.client.MongoClient;
  * JMX Metrics for Background Flushing
  *
  * @author Mark Pollack
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Background Flushing Metrics")
 public class BackgroundFlushingMetrics extends AbstractMonitor {
 

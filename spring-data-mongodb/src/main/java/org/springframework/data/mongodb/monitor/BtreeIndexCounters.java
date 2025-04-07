@@ -26,7 +26,9 @@ import com.mongodb.client.MongoClient;
  * JMX Metrics for B-tree index counters
  *
  * @author Mark Pollack
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Btree Metrics")
 public class BtreeIndexCounters extends AbstractMonitor {
 

@@ -27,7 +27,9 @@ import com.mongodb.client.MongoClient;
  * JMX Metrics for Global Locks
  *
  * @author Mark Pollack
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Global Lock Metrics")
 public class GlobalLockMetrics extends AbstractMonitor {
 

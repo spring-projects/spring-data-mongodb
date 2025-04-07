@@ -22,7 +22,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  *
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @deprecated since 4.5.
  */
+@Deprecated(since = "4.5", forRemoval = true)
 public class JmxServer {
 
 	public static void main(String[] args) {

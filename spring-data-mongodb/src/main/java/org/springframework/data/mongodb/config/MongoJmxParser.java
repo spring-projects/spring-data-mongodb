@@ -32,7 +32,9 @@ import org.w3c.dom.Element;
  * @author John Brisbin
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 public class MongoJmxParser implements BeanDefinitionParser {
 
 	public BeanDefinition parse(Element element, ParserContext parserContext) {

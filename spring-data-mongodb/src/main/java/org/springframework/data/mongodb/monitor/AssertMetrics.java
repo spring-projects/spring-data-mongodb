@@ -26,7 +26,9 @@ import com.mongodb.client.MongoClient;
  * JMX Metrics for assertions
  *
  * @author Mark Pollack
+ * @deprecated since 4.5
  */
+@Deprecated(since = "4.5", forRemoval = true)
 @ManagedResource(description = "Assertion Metrics")
 public class AssertMetrics extends AbstractMonitor {
 

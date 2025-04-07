@@ -1,6 +1,12 @@
 [[mongo.jmx]]
 = JMX support
 
+[NOTE]
+====
+JMX support has been deprecated in 4.5 and will be removed in 5.0. +
+We recommend switching to Spring Boot https://docs.spring.io/spring-boot/reference/actuator/endpoints.html[Actuator Endpoints] and expose those over JMX if needed.
+====
+
 The JMX support for MongoDB exposes the results of running the 'serverStatus' command on the admin database for a single MongoDB server instance. It also exposes an administrative MBean, `MongoAdmin`, that lets you perform administrative operations, such as dropping or creating a database. The JMX features build upon the JMX feature set available in the Spring Framework. See link:{springDocsUrl}/integration.html#jmx[here] for more details.
 
 [[mongodb:jmx-configuration]]
