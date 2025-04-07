@@ -32,6 +32,7 @@
 package org.springframework.data.mongodb.aot.generated;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
@@ -49,7 +50,6 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @since 2025/01
  */
-
 class StubRepositoryInformation implements RepositoryInformation {
 
 	private final RepositoryMetadata metadata;
@@ -124,11 +124,15 @@ class StubRepositoryInformation implements RepositoryInformation {
 
 	@Override
 	public boolean isQueryMethod(Method method) {
-		return false;
+		if (isBaseClassMethod(method)) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
-	public Streamable<Method> getQueryMethods() {
+	public List<Method> getQueryMethods() {
 		return null;
 	}
 
@@ -140,5 +144,10 @@ class StubRepositoryInformation implements RepositoryInformation {
 	@Override
 	public Method getTargetClassMethod(Method method) {
 		return null;
+	}
+
+	@Override
+	public RepositoryComposition getRepositoryComposition() {
+		return baseComposition;
 	}
 }

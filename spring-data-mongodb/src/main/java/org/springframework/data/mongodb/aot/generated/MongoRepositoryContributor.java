@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.aot.generated;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
@@ -30,6 +31,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.MethodContributor;
+import org.springframework.data.repository.aot.generate.QueryMetadata;
 import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -78,7 +80,13 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, repositoryInformation, getProjectionFactory(),
 				mappingContext);
 
-		return MethodContributor.forQueryMethod(queryMethod).contribute(context -> {
+		QueryMetadata qm = new QueryMetadata() {
+			@Override
+			public Map<String, Object> serialize() {
+				return Map.of();
+			}
+		};
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(qm).contribute(context -> {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
 			boolean count, delete, exists;
