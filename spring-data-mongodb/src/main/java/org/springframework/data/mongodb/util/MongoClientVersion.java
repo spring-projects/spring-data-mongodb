@@ -27,6 +27,7 @@ import com.mongodb.internal.build.MongoDriverVersion;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Vladimir Vishnevskii
  * @since 1.7
  */
 public class MongoClientVersion {
@@ -96,12 +97,18 @@ public class MongoClientVersion {
 
 		if (ClassUtils.isPresent("com.mongodb.internal.build.MongoDriverVersion", classLoader)) {
 			try {
-				return Version.parse(MongoDriverVersion.VERSION);
+				return Version.parse(loadVersionFromMongoDriverVersion());
 			} catch (IllegalArgumentException exception) {
 				// well not much we can do, right?
 			}
 		}
 		return null;
+	}
+
+	@Nullable
+	private static String loadVersionFromMongoDriverVersion() {
+		Field versionField = ReflectionUtils.findField(MongoDriverVersion.class, "VERSION");
+		return (String) ReflectionUtils.getField(versionField, null);
 	}
 
 	private static Version guessDriverVersionFromClassPath(ClassLoader classLoader) {
