@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.util.ObjectUtils.*;
+import static org.springframework.util.ObjectUtils.nullSafeHashCode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,21 +29,9 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.mongodb.MongoClientSettings;
-import org.bson.BsonReader;
 import org.bson.BsonRegularExpression;
 import org.bson.BsonType;
-import org.bson.BsonWriter;
 import org.bson.Document;
-import org.bson.codecs.Codec;
-import org.bson.codecs.DecoderContext;
-import org.bson.codecs.DocumentCodec;
-import org.bson.codecs.DocumentCodecProvider;
-import org.bson.codecs.Encoder;
-import org.bson.codecs.EncoderContext;
-import org.bson.codecs.configuration.CodecProvider;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.Binary;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Example;
@@ -342,8 +330,7 @@ public class Criteria implements CriteriaDefinition {
 			throw new InvalidMongoDbApiUsageException(
 					"You can only pass in one argument of type " + values[1].getClass().getName());
 		}
-		criteria.put("$in", Arrays.asList(values));
-		return this;
+		return this.in(Arrays.asList(values));
 	}
 
 	/**
@@ -355,7 +342,13 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	@Contract("_ -> this")
 	public Criteria in(Collection<?> values) {
-		criteria.put("$in", values);
+
+		ArrayList<?> objects = new ArrayList<>(values);
+		if (objects.size() == 1 && CollectionUtils.firstElement(objects) instanceof Placeholder placeholder) {
+			criteria.put("$in", placeholder);
+		} else {
+			criteria.put("$in", objects);
+		}
 		return this;
 	}
 
@@ -380,7 +373,13 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	@Contract("_ -> this")
 	public Criteria nin(Collection<?> values) {
-		criteria.put("$nin", values);
+
+		ArrayList<?> objects = new ArrayList<>(values);
+		if (objects.size() == 1 && CollectionUtils.firstElement(objects) instanceof Placeholder placeholder) {
+			criteria.put("$nin", placeholder);
+		} else {
+			criteria.put("$nin", objects);
+		}
 		return this;
 	}
 
@@ -924,6 +923,19 @@ public class Criteria implements CriteriaDefinition {
 
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
+	}
+
+	/**
+	 * Creates a criterion using the given {@literal operator}.
+	 *
+	 * @param operator the native MongoDB operator.
+	 * @param value the operator value
+	 * @return this
+	 * @since 5.0
+	 */
+	public Criteria raw(String operator, Object value) {
+		criteria.put(operator, value);
+		return this;
 	}
 
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
