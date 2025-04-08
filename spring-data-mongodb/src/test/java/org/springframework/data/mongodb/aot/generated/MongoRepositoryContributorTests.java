@@ -38,43 +38,28 @@ import example.aot.User;
 import example.aot.UserProjection;
 import example.aot.UserRepository;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.bson.Document;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.aot.test.generate.TestGenerationContext;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.core.test.tools.TestCompiler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.repository.aot.AotFragmentTestConfigurationSupport;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
-import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
-import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.data.util.Lazy;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.MongoClient;
@@ -84,30 +69,24 @@ import com.mongodb.client.MongoClient;
  * @since 2025/01
  */
 @ExtendWith(MongoClientExtension.class)
+@SpringJUnitConfig(classes = MongoRepositoryContributorTests.JpaRepositoryContributorConfiguration.class)
 public class MongoRepositoryContributorTests {
 
 	private static final String DB_NAME = "aot-repo-tests";
-	private static Verifyer generated;
 
 	@Client static MongoClient client;
+	@Autowired UserRepository fragment;
 
-	@BeforeAll
-	static void beforeAll() {
+	@Configuration
+	static class JpaRepositoryContributorConfiguration extends AotFragmentTestConfigurationSupport {
+		public JpaRepositoryContributorConfiguration() {
+			super(UserRepository.class);
+		}
 
-		TestMongoAotRepositoryContext aotContext = new TestMongoAotRepositoryContext(UserRepository.class, null);
-		TestGenerationContext generationContext = new TestGenerationContext(UserRepository.class);
-
-		new MongoRepositoryContributor(aotContext).contribute(generationContext);
-
-		AbstractBeanDefinition mongoTemplate = BeanDefinitionBuilder.rootBeanDefinition(MongoTestTemplate.class)
-				.addConstructorArgValue(DB_NAME).getBeanDefinition();
-		AbstractBeanDefinition aotGeneratedRepository = BeanDefinitionBuilder
-				.genericBeanDefinition("example.aot.UserRepositoryImpl__Aot").addConstructorArgReference("mongoOperations")
-				.addConstructorArgValue(getCreationContext(aotContext)).getBeanDefinition();
-
-		generated = generateContext(generationContext) //
-				.register("mongoOperations", mongoTemplate) //
-				.register("aotUserRepository", aotGeneratedRepository);
+		@Bean
+		MongoOperations mongoOperations() {
+			return new MongoTemplate(client, DB_NAME);
+		}
 	}
 
 	@BeforeEach
@@ -120,403 +99,278 @@ public class MongoRepositoryContributorTests {
 	@Test
 	void testFindDerivedFinderSingleEntity() {
 
-		generated.verify(methodInvoker -> {
-
-			User user = methodInvoker.invoke("findOneByUsername", "yoda").onBean("aotUserRepository");
-			assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
-		});
+		User user = fragment.findOneByUsername("yoda");
+		assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
 	}
 
 	@Test
 	void testFindDerivedFinderOptionalEntity() {
 
-		generated.verify(methodInvoker -> {
-
-			Optional<User> user = methodInvoker.invoke("findOptionalOneByUsername", "yoda").onBean("aotUserRepository");
-			assertThat(user).isNotNull().containsInstanceOf(User.class)
-					.hasValueSatisfying(it -> assertThat(it).extracting(User::getUsername).isEqualTo("yoda"));
-		});
+		Optional<User> user = fragment.findOptionalOneByUsername("yoda");
+		assertThat(user).isNotNull().containsInstanceOf(User.class)
+				.hasValueSatisfying(it -> assertThat(it).extracting(User::getUsername).isEqualTo("yoda"));
 	}
 
 	@Test
 	void testDerivedCount() {
 
-		generated.verify(methodInvoker -> {
-
-			Long value = methodInvoker.invoke("countUsersByLastname", "Skywalker").onBean("aotUserRepository");
-			assertThat(value).isEqualTo(2L);
-		});
+		Long value = fragment.countUsersByLastname("Skywalker");
+		assertThat(value).isEqualTo(2L);
 	}
 
 	@Test
 	void testDerivedExists() {
 
-		generated.verify(methodInvoker -> {
-
-			Boolean exists = methodInvoker.invoke("existsUserByLastname", "Skywalker").onBean("aotUserRepository");
-			assertThat(exists).isTrue();
-		});
+		assertThat(fragment.existsUserByLastname("Skywalker")).isTrue();
 	}
 
 	@Test
 	void testDerivedFinderWithoutArguments() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findUserNoArgumentsBy").onBean("aotUserRepository");
-			assertThat(users).hasSize(7).hasOnlyElementsOfType(User.class);
-		});
+		List<User> users = fragment.findUserNoArgumentsBy();
+		assertThat(users).hasSize(7).hasOnlyElementsOfType(User.class);
 	}
 
 	@Test
 	void testCountWorksAsExpected() {
 
-		generated.verify(methodInvoker -> {
-
-			Long value = methodInvoker.invoke("countUsersByLastname", "Skywalker").onBean("aotUserRepository");
-			assertThat(value).isEqualTo(2L);
-		});
+		Long value = fragment.countUsersByLastname("Skywalker");
+		assertThat(value).isEqualTo(2L);
 	}
 
 	@Test
 	void testDerivedFinderReturningList() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S").onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("luke", "vader", "kylo", "han");
-		});
+		List<User> users = fragment.findByLastnameStartingWith("S");
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("luke", "vader", "kylo", "han");
 	}
 
 	@Test
 	void testLimitedDerivedFinder() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findTop2ByLastnameStartingWith", "S").onBean("aotUserRepository");
-			assertThat(users).hasSize(2);
-		});
+		List<User> users = fragment.findTop2ByLastnameStartingWith("S");
+		assertThat(users).hasSize(2);
 	}
 
 	@Test
 	void testSortedDerivedFinder() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findByLastnameStartingWithOrderByUsername", "S")
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
-		});
+		List<User> users = fragment.findByLastnameStartingWithOrderByUsername("S");
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testDerivedFinderWithLimitArgument() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S", Limit.of(2))
-					.onBean("aotUserRepository");
-			assertThat(users).hasSize(2);
-		});
+		List<User> users = fragment.findByLastnameStartingWith("S", Limit.of(2));
+		assertThat(users).hasSize(2);
 	}
 
 	@Test
 	void testDerivedFinderWithSort() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S", Sort.by("username"))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
-		});
+		List<User> users = fragment.findByLastnameStartingWith("S", Sort.by("username"));
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testDerivedFinderWithSortAndLimit() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findByLastnameStartingWith", "S", Sort.by("username"), Limit.of(2))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		List<User> users = fragment.findByLastnameStartingWith("S", Sort.by("username"), Limit.of(2));
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testDerivedFinderReturningListWithPageable() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker
-					.invoke("findByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		List<User> users = fragment.findByLastnameStartingWith("S", PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testDerivedFinderReturningPage() {
 
-		generated.verify(methodInvoker -> {
-
-			Page<User> page = methodInvoker
-					.invoke("findPageOfUsersByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(page.getTotalElements()).isEqualTo(4);
-			assertThat(page.getSize()).isEqualTo(2);
-			assertThat(page.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		Page<User> page = fragment.findPageOfUsersByLastnameStartingWith("S", PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(page.getTotalElements()).isEqualTo(4);
+		assertThat(page.getSize()).isEqualTo(2);
+		assertThat(page.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testDerivedFinderReturningSlice() {
 
-		generated.verify(methodInvoker -> {
-
-			Slice<User> slice = methodInvoker
-					.invoke("findSliceOfUserByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(slice.hasNext()).isTrue();
-			assertThat(slice.getSize()).isEqualTo(2);
-			assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		Slice<User> slice = fragment.findSliceOfUserByLastnameStartingWith("S", PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(slice.hasNext()).isTrue();
+		assertThat(slice.getSize()).isEqualTo(2);
+		assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testAnnotatedFinderReturningSingleValueWithQuery() {
 
-		generated.verify(methodInvoker -> {
-
-			User user = methodInvoker.invoke("findAnnotatedQueryByUsername", "yoda").onBean("aotUserRepository");
-			assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
-		});
+		User user = fragment.findAnnotatedQueryByUsername("yoda");
+		assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
 	}
 
 	@Test
 	void testAnnotatedCount() {
 
-		generated.verify(methodInvoker -> {
-
-			Long value = methodInvoker.invoke("countAnnotatedQueryByLastname", "Skywalker").onBean("aotUserRepository");
-			assertThat(value).isEqualTo(2L);
-		});
+		Long value = fragment.countAnnotatedQueryByLastname("Skywalker");
+		assertThat(value).isEqualTo(2L);
 	}
 
 	@Test
 	void testAnnotatedFinderReturningListWithQuery() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S").onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
-		});
+		List<User> users = fragment.findAnnotatedQueryByLastname("S");
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testAnnotatedMultilineFinderWithQuery() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findAnnotatedMultilineQueryByLastname", "S").onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
-		});
+		List<User> users = fragment.findAnnotatedMultilineQueryByLastname("S");
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testAnnotatedFinderWithQueryAndLimit() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S", Limit.of(2))
-					.onBean("aotUserRepository");
-			assertThat(users).hasSize(2);
-		});
+		List<User> users = fragment.findAnnotatedQueryByLastname("S", Limit.of(2));
+		assertThat(users).hasSize(2);
 	}
 
 	@Test
 	void testAnnotatedFinderWithQueryAndSort() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S", Sort.by("username"))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
-		});
+		List<User> users = fragment.findAnnotatedQueryByLastname("S", Sort.by("username"));
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testAnnotatedFinderWithQueryLimitAndSort() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findAnnotatedQueryByLastname", "S", Limit.of(2), Sort.by("username"))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		List<User> users = fragment.findAnnotatedQueryByLastname("S", Limit.of(2), Sort.by("username"));
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testAnnotatedFinderReturningListWithPageable() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker
-					.invoke("findAnnotatedQueryByLastname", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		List<User> users = fragment.findAnnotatedQueryByLastname("S", PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testAnnotatedFinderReturningPage() {
 
-		generated.verify(methodInvoker -> {
-
-			Page<User> page = methodInvoker
-					.invoke("findAnnotatedQueryPageOfUsersByLastname", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(page.getTotalElements()).isEqualTo(4);
-			assertThat(page.getSize()).isEqualTo(2);
-			assertThat(page.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		Page<User> page = fragment.findAnnotatedQueryPageOfUsersByLastname("S", PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(page.getTotalElements()).isEqualTo(4);
+		assertThat(page.getSize()).isEqualTo(2);
+		assertThat(page.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
 	@Test
 	void testAnnotatedFinderReturningSlice() {
 
-		generated.verify(methodInvoker -> {
-
-			Slice<User> slice = methodInvoker
-					.invoke("findAnnotatedQuerySliceOfUsersByLastname", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(slice.hasNext()).isTrue();
-			assertThat(slice.getSize()).isEqualTo(2);
-			assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
-		});
+		Slice<User> slice = fragment.findAnnotatedQuerySliceOfUsersByLastname("S",
+				PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(slice.hasNext()).isTrue();
+		assertThat(slice.getSize()).isEqualTo(2);
+		assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
-	@ParameterizedTest
-	@ValueSource(strings = { "deleteByUsername", "deleteAnnotatedQueryByUsername" })
-	void testDeleteSingle(String methodName) {
+	@Test
+	void testDeleteSingle() {
 
-		generated.verify(methodInvoker -> {
+		User result = fragment.deleteByUsername("yoda");
 
-			User result = methodInvoker.invoke(methodName, "yoda").onBean("aotUserRepository");
-
-			assertThat(result).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
-		});
-
+		assertThat(result).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
 		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(6L);
 	}
 
-	@ParameterizedTest
-	@ValueSource(strings = { "deleteByLastnameStartingWith", "deleteAnnotatedQueryByLastnameStartingWith" })
-	void testDerivedDeleteMultipleReturningDeleteCount(String methodName) {
+	@Test
+	void testDeleteSingleAnnotatedQuery() {
 
-		generated.verify(methodInvoker -> {
+		User result = fragment.deleteAnnotatedQueryByUsername("yoda");
 
-			Long result = methodInvoker.invoke(methodName, "S").onBean("aotUserRepository");
+		assertThat(result).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(6L);
+	}
 
-			assertThat(result).isEqualTo(4L);
-		});
+	@Test
+	void testDerivedDeleteMultipleReturningDeleteCount() {
 
+		Long result = fragment.deleteByLastnameStartingWith("S");
+
+		assertThat(result).isEqualTo(4L);
 		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(3L);
 	}
 
-	@ParameterizedTest
-	@ValueSource(strings = { "deleteUsersByLastnameStartingWith", "deleteUsersAnnotatedQueryByLastnameStartingWith" })
-	void testDerivedDeleteMultipleReturningDeleted(String methodName) {
+	@Test
+	void testDerivedDeleteMultipleReturningDeleteCountAnnotatedQuery() {
 
-		generated.verify(methodInvoker -> {
+		Long result = fragment.deleteAnnotatedQueryByLastnameStartingWith("S");
 
-			List<User> result = methodInvoker.invoke(methodName, "S").onBean("aotUserRepository");
+		assertThat(result).isEqualTo(4L);
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(3L);
+	}
 
-			assertThat(result).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
-		});
+	@Test
+	void testDerivedDeleteMultipleReturningDeleted() {
 
+		List<User> result = fragment.deleteUsersByLastnameStartingWith("S");
+
+		assertThat(result).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(3L);
+	}
+
+	@Test
+	void testDerivedDeleteMultipleReturningDeletedAnnotatedQuery() {
+
+		List<User> result = fragment.deleteUsersAnnotatedQueryByLastnameStartingWith("S");
+
+		assertThat(result).extracting(User::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
 		assertThat(client.getDatabase(DB_NAME).getCollection("user").countDocuments()).isEqualTo(3L);
 	}
 
 	@Test
 	void testDerivedFinderWithAnnotatedSort() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findWithAnnotatedSortByLastnameStartingWith", "S")
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
-		});
+		List<User> users = fragment.findWithAnnotatedSortByLastnameStartingWith("S");
+		assertThat(users).extracting(User::getUsername).containsExactly("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testDerivedFinderWithAnnotatedFieldsProjection() {
 
-		generated.verify(methodInvoker -> {
-
-			List<User> users = methodInvoker.invoke("findWithAnnotatedFieldsProjectionByLastnameStartingWith", "S")
-					.onBean("aotUserRepository");
-			assertThat(users).allMatch(
-					user -> StringUtils.hasText(user.getUsername()) && user.getLastname() == null && user.getFirstname() == null);
-		});
+		List<User> users = fragment.findWithAnnotatedFieldsProjectionByLastnameStartingWith("S");
+		assertThat(users).allMatch(
+				user -> StringUtils.hasText(user.getUsername()) && user.getLastname() == null && user.getFirstname() == null);
 	}
 
 	@Test
 	void testReadPreferenceAppliedToQuery() {
 
-		generated.verify(methodInvoker -> {
-
-			// check if it fails when trying to parse the read preference to indicate it would get applied
-			assertThatExceptionOfType(IllegalArgumentException.class)
-					.isThrownBy(() -> methodInvoker.invoke("findWithReadPreferenceByUsername", "S").onBean("aotUserRepository"))
-					.withMessageContaining("No match for read preference");
-		});
+		// check if it fails when trying to parse the read preference to indicate it would get applied
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> fragment.findWithReadPreferenceByUsername("S"))
+				.withMessageContaining("No match for read preference");
 	}
 
 	@Test
 	void testDerivedFinderReturningListOfProjections() {
 
-		generated.verify(methodInvoker -> {
-
-			List<UserProjection> users = methodInvoker.invoke("findUserProjectionByLastnameStartingWith", "S")
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(UserProjection::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke",
-					"vader");
-		});
+		List<UserProjection> users = fragment.findUserProjectionByLastnameStartingWith("S");
+		assertThat(users).extracting(UserProjection::getUsername).containsExactlyInAnyOrder("han", "kylo", "luke", "vader");
 	}
 
 	@Test
 	void testDerivedFinderReturningPageOfProjections() {
 
-		generated.verify(methodInvoker -> {
-
-			Page<UserProjection> users = methodInvoker
-					.invoke("findUserProjectionByLastnameStartingWith", "S", PageRequest.of(0, 2, Sort.by("username")))
-					.onBean("aotUserRepository");
-			assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
-		});
-	}
-
-	private static RepositoryFactoryBeanSupport.FragmentCreationContext getCreationContext(
-			TestMongoAotRepositoryContext repositoryContext) {
-
-		RepositoryFactoryBeanSupport.FragmentCreationContext creationContext = new RepositoryFactoryBeanSupport.FragmentCreationContext() {
-			@Override
-			public RepositoryMetadata getRepositoryMetadata() {
-				return repositoryContext.getRepositoryInformation();
-			}
-
-			@Override
-			public ValueExpressionDelegate getValueExpressionDelegate() {
-				return ValueExpressionDelegate.create();
-			}
-
-			@Override
-			public ProjectionFactory getProjectionFactory() {
-				return new SpelAwareProxyProjectionFactory();
-			}
-		};
-
-		return creationContext;
+		Page<UserProjection> users = fragment.findUserProjectionByLastnameStartingWith("S",
+				PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
 	}
 
 	private static void initUsers() {
@@ -619,72 +473,5 @@ public class MongoRepositoryContributorTests {
 
 		client.getDatabase(DB_NAME).getCollection("user")
 				.insertMany(List.of(luke, leia, han, chwebacca, yoda, vader, kylo));
-	}
-
-	static GeneratedContextBuilder generateContext(TestGenerationContext generationContext) {
-		return new GeneratedContextBuilder(generationContext);
-	}
-
-	static class GeneratedContextBuilder implements Verifyer {
-
-		TestGenerationContext generationContext;
-		Map<String, BeanDefinition> beanDefinitions = new LinkedHashMap<>();
-		Lazy<DefaultListableBeanFactory> lazyFactory;
-
-		public GeneratedContextBuilder(TestGenerationContext generationContext) {
-
-			this.generationContext = generationContext;
-			this.lazyFactory = Lazy.of(() -> {
-				DefaultListableBeanFactory freshBeanFactory = new DefaultListableBeanFactory();
-				TestCompiler.forSystem().withCompilerOptions("-parameters").with(generationContext).compile(compiled -> {
-
-					freshBeanFactory.setBeanClassLoader(compiled.getClassLoader());
-					for (Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-						freshBeanFactory.registerBeanDefinition(entry.getKey(), entry.getValue());
-					}
-				});
-				return freshBeanFactory;
-			});
-		}
-
-		GeneratedContextBuilder register(String name, BeanDefinition beanDefinition) {
-			this.beanDefinitions.put(name, beanDefinition);
-			return this;
-		}
-
-		public Verifyer verify(Consumer<GeneratedContext> methodInvoker) {
-			methodInvoker.accept(new GeneratedContext(lazyFactory));
-			return this;
-		}
-
-	}
-
-	interface Verifyer {
-		Verifyer verify(Consumer<GeneratedContext> methodInvoker);
-	}
-
-	static class GeneratedContext {
-
-		private Supplier<DefaultListableBeanFactory> delegate;
-
-		public GeneratedContext(Supplier<DefaultListableBeanFactory> defaultListableBeanFactory) {
-			this.delegate = defaultListableBeanFactory;
-		}
-
-		InvocationBuilder invoke(String method, Object... arguments) {
-
-			return new InvocationBuilder() {
-				@Override
-				public <T> T onBean(String beanName) {
-					Object bean = delegate.get().getBean(beanName);
-					return ReflectionTestUtils.invokeMethod(bean, method, arguments);
-				}
-			};
-		}
-
-		interface InvocationBuilder {
-			<T> T onBean(String beanName);
-		}
-
 	}
 }
