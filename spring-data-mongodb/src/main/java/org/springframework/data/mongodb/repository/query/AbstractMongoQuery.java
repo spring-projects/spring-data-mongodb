@@ -20,13 +20,13 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
-
 import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -70,6 +70,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private final MongoOperations operations;
 	private final ExecutableFind<?> executableFind;
 	private final ExecutableUpdate<?> executableUpdate;
+	private final ExecutableRemove<?> executableRemove;
 	private final Lazy<ParameterBindingDocumentCodec> codec = Lazy
 			.of(() -> new ParameterBindingDocumentCodec(getCodecRegistry()));
 	private final ValueExpressionDelegate valueExpressionDelegate;
@@ -96,6 +97,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		this.executableFind = operations.query(type);
 		this.executableUpdate = operations.update(type);
+		this.executableRemove = operations.remove(type);
 		this.valueExpressionDelegate = delegate;
 		this.valueEvaluationContextProvider = delegate.createValueContextProvider(method.getParameters());
 	}
@@ -165,7 +167,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
-			return new DeleteExecution(operations, method);
+			return new DeleteExecution<>(executableRemove, method);
 		}
 
 		if (method.isModifyingQuery()) {

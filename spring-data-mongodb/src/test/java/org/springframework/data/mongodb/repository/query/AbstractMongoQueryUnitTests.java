@@ -51,6 +51,7 @@ import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithQuery;
@@ -104,6 +105,7 @@ class AbstractMongoQueryUnitTests {
 	@Mock UpdateWithQuery updateWithQuery;
 	@Mock UpdateWithUpdate updateWithUpdate;
 	@Mock TerminatingUpdate terminatingUpdate;
+	@Mock ExecutableRemove executableRemove;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock DeleteResult deleteResultMock;
@@ -130,8 +132,9 @@ class AbstractMongoQueryUnitTests {
 		doReturn(executableUpdate).when(mongoOperationsMock).update(any());
 		doReturn(updateWithQuery).when(executableUpdate).matching(any(Query.class));
 		doReturn(terminatingUpdate).when(updateWithQuery).apply(any(UpdateDefinition.class));
-
-		when(mongoOperationsMock.remove(any(), any(), anyString())).thenReturn(deleteResultMock);
+		doReturn(executableRemove).when(mongoOperationsMock).remove(any());
+		doReturn(executableRemove).when(executableRemove).matching(any(Query.class));
+		when(executableRemove.all()).thenReturn(deleteResultMock);
 		when(mongoOperationsMock.updateMulti(any(), any(), any(), anyString())).thenReturn(updateResultMock);
 	}
 
@@ -140,8 +143,7 @@ class AbstractMongoQueryUnitTests {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
-		verify(mongoOperationsMock, times(0)).find(any(), any(), any());
+		verify(executableRemove, times(1)).all();
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-1040
@@ -149,7 +151,7 @@ class AbstractMongoQueryUnitTests {
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(mongoOperationsMock, times(1)).findAllAndRemove(any(), eq(Person.class), eq("persons"));
+		verify(executableRemove, times(1)).findAndRemove();
 	}
 
 	@Test // DATAMONGO-566
@@ -171,7 +173,7 @@ class AbstractMongoQueryUnitTests {
 		query.setDeleteQuery(true);
 
 		assertThat(query.execute(new Object[] { "fake" })).isEqualTo(100L);
-		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
+		verify(executableRemove, times(1)).all();
 	}
 
 	@Test // DATAMONGO-957

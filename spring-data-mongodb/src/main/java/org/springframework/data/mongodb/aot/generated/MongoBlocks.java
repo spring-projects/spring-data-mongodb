@@ -30,8 +30,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecutionX;
-import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecutionX.Type;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
@@ -99,12 +98,12 @@ public class MongoBlocks {
 					context.getRepositoryInformation().getDomainType(), mongoOpsRef,
 					context.getRepositoryInformation().getDomainType());
 
-			Type type = Type.FIND_AND_REMOVE_ALL;
+			DeleteExecution.Type type = DeleteExecution.Type.FIND_AND_REMOVE_ALL;
 			if (!queryMethod.isCollectionQuery()) {
 				if (!ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())) {
-					type = Type.FIND_AND_REMOVE_ONE;
+					type = DeleteExecution.Type.FIND_AND_REMOVE_ONE;
 				} else {
-					type = Type.ALL;
+					type = DeleteExecution.Type.ALL;
 				}
 			}
 
@@ -112,8 +111,8 @@ public class MongoBlocks {
 					? ClassName.get(context.getMethod().getReturnType())
 					: queryMethod.isCollectionQuery() ? context.getReturnTypeName() : actualReturnType;
 
-			builder.addStatement("return ($T) new $T(remover, $T.$L).execute($L)", actualReturnType, DeleteExecutionX.class,
-					DeleteExecutionX.Type.class, type.name(), queryVariableName);
+			builder.addStatement("return ($T) new $T(remover, $T.$L).execute($L)", actualReturnType, DeleteExecution.class,
+					DeleteExecution.Type.class, type.name(), queryVariableName);
 
 			return builder.build();
 		}
