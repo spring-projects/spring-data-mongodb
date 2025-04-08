@@ -20,25 +20,28 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.mongodb.aot.generated.MongoBlocks.QueryBlockBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.aot.MongoAotRepositoryFragmentSupport;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
+import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMetadata;
 import org.springframework.data.repository.aot.generate.MethodContributor;
 import org.springframework.data.repository.aot.generate.QueryMetadata;
 import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.TypeName;
+import org.springframework.javapoet.TypeSpec.Builder;
 import org.springframework.util.StringUtils;
 
 /**
@@ -57,8 +60,21 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	@Override
+	protected void customizeClass(RepositoryInformation information, AotRepositoryFragmentMetadata metadata,
+			Builder builder) {
+		builder.superclass(TypeName.get(MongoAotRepositoryFragmentSupport.class));
+	}
+
+	@Override
 	protected void customizeConstructor(AotRepositoryConstructorBuilder constructorBuilder) {
+
 		constructorBuilder.addParameter("operations", TypeName.get(MongoOperations.class));
+		constructorBuilder.addParameter("context", TypeName.get(RepositoryFactoryBeanSupport.FragmentCreationContext.class),
+				false);
+
+		constructorBuilder.customize((repositoryInformation, builder) -> {
+			builder.addStatement("super(operations, context)");
+		});
 	}
 
 	@Override
@@ -89,55 +105,46 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(qm).contribute(context -> {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
-			boolean count, delete, exists;
-			StringQuery query;
+			StringAotQuery query;
 			if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.value())) {
-				query = new StringQuery(queryAnnotation.value());
-				count = queryAnnotation.count();
-				delete = queryAnnotation.delete();
-				exists = queryAnnotation.exists();
+				query = new StringAotQuery(new StringQuery(queryAnnotation.value()), queryAnnotation.count(),
+						queryAnnotation.delete(), queryAnnotation.exists());
 
 			} else {
 				PartTree partTree = new PartTree(context.getMethod().getName(),
 						context.getRepositoryInformation().getDomainType());
-				query = queryCreator.createQuery(partTree, context.getMethod().getParameterCount());
-				count = partTree.isCountProjection();
-				delete = partTree.isDelete();
-				exists = partTree.isExistsProjection();
 
+				query = new StringAotQuery(queryCreator.createQuery(partTree, context.getMethod().getParameterCount()),
+						partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
 			}
 
 			if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {
-				query.sort(queryAnnotation.sort());
+				query = query.withSort(queryAnnotation.sort());
 			}
 			if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.fields())) {
-				query.fields(queryAnnotation.fields());
+				query = query.withFields(queryAnnotation.fields());
 			}
 
-			writeStringQuery(context, builder, count, delete, exists, query, queryMethod);
+			writeStringQuery(context, builder, query, queryMethod);
 
 			return builder.build();
 		});
 	}
 
-	private static void writeStringQuery(AotQueryMethodGenerationContext context, CodeBlock.Builder body, boolean count,
-			boolean delete, boolean exists, StringQuery query, MongoQueryMethod queryMethod) {
+	private static void writeStringQuery(AotQueryMethodGenerationContext context, CodeBlock.Builder body,
+			StringAotQuery query, MongoQueryMethod queryMethod) {
 
 		body.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-		QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query);
+		QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query.query);
 
-		if (delete) {
+		body.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
 
-			String deleteQueryVariableName = "deleteQuery";
-			body.add(queryBlockBuilder.usingQueryVariableName(deleteQueryVariableName).build());
-			body.add(
-					MongoBlocks.deleteExecutionBlockBuilder(context, queryMethod).referencing(deleteQueryVariableName).build());
+		if (query.isDeleteQuery()) {
+			body.add(MongoBlocks.deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
 		} else {
 
-			String filterQueryVariableName = "filterQuery";
-			body.add(queryBlockBuilder.usingQueryVariableName(filterQueryVariableName).build());
-			body.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).exists(exists).count(count)
-					.referencing(filterQueryVariableName).build());
+			body.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).exists(query.isExists())
+					.count(query.isCountQuery()).referencing(query.name()).build());
 		}
 	}
 

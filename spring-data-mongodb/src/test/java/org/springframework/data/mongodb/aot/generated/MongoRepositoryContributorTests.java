@@ -68,6 +68,11 @@ import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils;
@@ -98,7 +103,7 @@ public class MongoRepositoryContributorTests {
 				.addConstructorArgValue(DB_NAME).getBeanDefinition();
 		AbstractBeanDefinition aotGeneratedRepository = BeanDefinitionBuilder
 				.genericBeanDefinition("example.aot.UserRepositoryImpl__Aot").addConstructorArgReference("mongoOperations")
-				.getBeanDefinition();
+				.addConstructorArgValue(getCreationContext(aotContext)).getBeanDefinition();
 
 		generated = generateContext(generationContext) //
 				.register("mongoOperations", mongoTemplate) //
@@ -491,6 +496,29 @@ public class MongoRepositoryContributorTests {
 		});
 	}
 
+	private static RepositoryFactoryBeanSupport.FragmentCreationContext getCreationContext(
+			TestMongoAotRepositoryContext repositoryContext) {
+
+		RepositoryFactoryBeanSupport.FragmentCreationContext creationContext = new RepositoryFactoryBeanSupport.FragmentCreationContext() {
+			@Override
+			public RepositoryMetadata getRepositoryMetadata() {
+				return repositoryContext.getRepositoryInformation();
+			}
+
+			@Override
+			public ValueExpressionDelegate getValueExpressionDelegate() {
+				return ValueExpressionDelegate.create();
+			}
+
+			@Override
+			public ProjectionFactory getProjectionFactory() {
+				return new SpelAwareProxyProjectionFactory();
+			}
+		};
+
+		return creationContext;
+	}
+
 	private static void initUsers() {
 
 		Document luke = Document.parse("""
@@ -608,7 +636,7 @@ public class MongoRepositoryContributorTests {
 			this.generationContext = generationContext;
 			this.lazyFactory = Lazy.of(() -> {
 				DefaultListableBeanFactory freshBeanFactory = new DefaultListableBeanFactory();
-				TestCompiler.forSystem().with(generationContext).compile(compiled -> {
+				TestCompiler.forSystem().withCompilerOptions("-parameters").with(generationContext).compile(compiled -> {
 
 					freshBeanFactory.setBeanClassLoader(compiled.getClassLoader());
 					for (Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {

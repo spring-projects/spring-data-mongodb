@@ -23,9 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
 import org.springframework.core.annotation.MergedAnnotation;
-import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -98,8 +96,8 @@ public class MongoBlocks {
 
 			builder.add("\n");
 			builder.addStatement("$T<$T> remover = $L.remove($T.class)", ExecutableRemove.class,
-					context.getRepositoryInformation().getDomainType(),
-					mongoOpsRef, context.getRepositoryInformation().getDomainType());
+					context.getRepositoryInformation().getDomainType(), mongoOpsRef,
+					context.getRepositoryInformation().getDomainType());
 
 			Type type = Type.FIND_AND_REMOVE_ALL;
 			if (!queryMethod.isCollectionQuery()) {
@@ -233,13 +231,10 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
 			builder.add("\n");
-			String queryDocumentVariableName = "%sDocument".formatted(queryVariableName);
-			builder.add(renderExpressionToDocument(source.getQueryString(), queryVariableName));
-			builder.addStatement("$T $L = new $T($L)", BasicQuery.class, queryVariableName, BasicQuery.class,
-					queryDocumentVariableName);
+			builder.add(renderExpressionToQuery(source.getQueryString(), queryVariableName));
 
 			if (StringUtils.hasText(source.getFieldsString())) {
-				builder.add(renderExpressionToDocument(source.getFieldsString(), "fields"));
+				builder.add(renderExpressionToDocument(source.getFieldsString(), "fieldsDocument"));
 				builder.addStatement("$L.setFieldsObject(fieldsDocument)", queryVariableName);
 			}
 
@@ -249,7 +244,7 @@ public class MongoBlocks {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
 			} else if (StringUtils.hasText(source.getSortString())) {
 
-				builder.add(renderExpressionToDocument(source.getSortString(), "sort"));
+				builder.add(renderExpressionToDocument(source.getSortString(), "sortDocument"));
 				builder.addStatement("$L.setSortObject(sortDocument)", queryVariableName);
 			}
 
@@ -286,22 +281,42 @@ public class MongoBlocks {
 		}
 
 		private CodeBlock renderExpressionToDocument(@Nullable String source, String variableName) {
+			Builder builder = CodeBlock.builder();
+			if (!StringUtils.hasText(source)) {
+				builder.addStatement("$T $L = new $T()", Document.class, variableName, Document.class);
+			} else if (!containsPlaceholder(source)) {
+				String tmpVarName = "%sString".formatted(variableName);
+				builder.addStatement("String $L = $S", tmpVarName, source);
+
+				builder.addStatement("$T $L = $T.parse($L)", Document.class, variableName, Document.class, tmpVarName);
+			} else {
+				String tmpVarName = "%sString".formatted(variableName);
+				builder.addStatement("String $L = $S", tmpVarName, source);
+				builder.addStatement("$T $L = bindParameters($L, new $T[]{ $L })", Document.class, variableName, tmpVarName,
+						Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
+			}
+			return builder.build();
+		}
+
+		private CodeBlock renderExpressionToQuery(@Nullable String source, String variableName) {
 
 			Builder builder = CodeBlock.builder();
 			if (!StringUtils.hasText(source)) {
-				builder.addStatement("$T $L = new $T()", Document.class, "%sDocument".formatted(variableName), Document.class);
+				builder.addStatement("$T $L = new $T(new $T())", BasicQuery.class, variableName, BasicQuery.class,
+						Document.class);
 			} else if (!containsPlaceholder(source)) {
-				builder.addStatement("$T $L = $T.parse($S)", Document.class, "%sDocument".formatted(variableName),
-						Document.class, source);
+
+				String tmpVarName = "%sString".formatted(variableName);
+				builder.addStatement("String $L = $S", tmpVarName, source);
+
+				builder.addStatement("$T $L = new $T($T.parse($L))", BasicQuery.class, variableName, BasicQuery.class,
+						Document.class, tmpVarName);
 			} else {
 
-				String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 				String tmpVarName = "%sString".formatted(variableName);
-
 				builder.addStatement("String $L = $S", tmpVarName, source);
-				builder.addStatement("$T $L = new $T($L, $L.getConverter(), new $T[]{ $L }).toDocument()", Document.class,
-						"%sDocument".formatted(variableName), BindableMongoExpression.class, tmpVarName, mongoOpsRef, Object.class,
-						StringUtils.collectionToDelimitedString(arguments, ", "));
+				builder.addStatement("$T $L = createQuery($L, new $T[]{ $L })", BasicQuery.class, variableName, tmpVarName,
+						Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
 			}
 
 			return builder.build();
