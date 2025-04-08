@@ -15,43 +15,68 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import org.springframework.data.repository.aot.generate.QueryMetadata;
+import org.springframework.util.StringUtils;
+
 /**
  * @author Christoph Strobl
  * @since 2025/04
  */
-public class StringAotQuery extends AotQuery {
+public class StringAotQuery extends AotQuery implements QueryMetadata {
 
 	StringQuery query;
-	boolean count, delete, exists;
+	ExecutionType executionType;
 
 	public StringAotQuery(StringQuery query, boolean count, boolean delete, boolean exists) {
 		this.query = query;
-		this.count = count;
-		this.delete = delete;
-		this.exists = exists;
+		if(count) {
+			executionType = ExecutionType.COUNT;
+		} else if (exists) {
+			executionType = ExecutionType.EXISTS;
+		} else if (delete) {
+			executionType = ExecutionType.DELETE;
+		} else {
+			executionType = ExecutionType.QUERY;
+		}
+	}
+
+	public StringAotQuery(StringQuery query, ExecutionType executionType) {
+		this.query = query;
+		this.executionType = executionType;
 	}
 
 	StringAotQuery withSort(String sort) {
 		query.sort(sort);
-		return new StringAotQuery(query, count, delete, exists);
+		return new StringAotQuery(query, executionType);
 	}
 
 	StringAotQuery withFields(String fields) {
-		return new StringAotQuery(query.fields(fields), count, delete, exists);
+		return new StringAotQuery(query.fields(fields), executionType);
 	}
 
 	@Override
-	boolean isCountQuery() {
-		return count;
+	ExecutionType getExecutionType() {
+		return executionType;
 	}
 
 	@Override
-	boolean isDeleteQuery() {
-		return delete;
-	}
+	public Map<String, Object> serialize() {
 
-	@Override
-	boolean isExists() {
-		return exists;
+		Map<String, Object> serialized = new LinkedHashMap<>();
+
+		serialized.put("filter", query.getQueryString());
+		if(query.isSorted()) {
+			serialized.put("sort", query.getSortString());
+		}
+		if(StringUtils.hasText(query.getFieldsString())) {
+			serialized.put("fields", query.getFieldsString());
+		}
+
+		return serialized;
+
 	}
 }

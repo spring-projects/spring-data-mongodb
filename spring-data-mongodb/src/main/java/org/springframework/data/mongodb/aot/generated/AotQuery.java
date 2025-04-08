@@ -21,20 +21,32 @@ package org.springframework.data.mongodb.aot.generated;
  */
 abstract class AotQuery {
 
-	abstract boolean isCountQuery();
+	boolean isCountQuery() {
+		return ExecutionType.COUNT.equals(getExecutionType());
+	}
 
-	abstract boolean isDeleteQuery();
+	boolean isDeleteQuery() {
+		return ExecutionType.DELETE.equals(getExecutionType());
+	}
 
-	abstract boolean isExists();
+	boolean isExists() {
+		return ExecutionType.EXISTS.equals(getExecutionType());
+	}
+
+	abstract ExecutionType getExecutionType();
 
 	String name() {
 
 		if (isDeleteQuery()) {
 			return "deleteQuery";
 		}
-		if(isCountQuery()) {
+		if (isCountQuery()) {
 			return "countQuery";
 		}
 		return "filterQuery";
+	}
+
+	enum ExecutionType {
+		QUERY, COUNT, DELETE, EXISTS
 	}
 }

@@ -96,55 +96,52 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, repositoryInformation, getProjectionFactory(),
 				mappingContext);
 
-		QueryMetadata qm = new QueryMetadata() {
-			@Override
-			public Map<String, Object> serialize() {
-				return Map.of();
-			}
-		};
-		return MethodContributor.forQueryMethod(queryMethod).withMetadata(qm).contribute(context -> {
+		StringAotQuery query = createStringQuery(repositoryInformation, queryMethod, queryAnnotation,
+				method.getParameterCount());
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(query).contribute(context -> {
+
 			CodeBlock.Builder builder = CodeBlock.builder();
-
-			StringAotQuery query;
-			if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.value())) {
-				query = new StringAotQuery(new StringQuery(queryAnnotation.value()), queryAnnotation.count(),
-						queryAnnotation.delete(), queryAnnotation.exists());
-
-			} else {
-				PartTree partTree = new PartTree(context.getMethod().getName(),
-						context.getRepositoryInformation().getDomainType());
-
-				query = new StringAotQuery(queryCreator.createQuery(partTree, context.getMethod().getParameterCount()),
-						partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
-			}
-
-			if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {
-				query = query.withSort(queryAnnotation.sort());
-			}
-			if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.fields())) {
-				query = query.withFields(queryAnnotation.fields());
-			}
-
 			writeStringQuery(context, builder, query, queryMethod);
-
 			return builder.build();
 		});
+	}
+
+	private StringAotQuery createStringQuery(RepositoryInformation repositoryInformation, QueryMethod queryMethod,
+			Query queryAnnotation, int parameterCount) {
+
+		StringAotQuery query;
+		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.value())) {
+			query = new StringAotQuery(new StringQuery(queryAnnotation.value()), queryAnnotation.count(),
+					queryAnnotation.delete(), queryAnnotation.exists());
+		} else {
+			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
+
+			query = new StringAotQuery(queryCreator.createQuery(partTree, parameterCount), partTree.isCountProjection(),
+					partTree.isDelete(), partTree.isExistsProjection());
+		}
+
+		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {
+			query = query.withSort(queryAnnotation.sort());
+		}
+		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.fields())) {
+			query = query.withFields(queryAnnotation.fields());
+		}
+
+		return query;
 	}
 
 	private static void writeStringQuery(AotQueryMethodGenerationContext context, CodeBlock.Builder body,
 			StringAotQuery query, MongoQueryMethod queryMethod) {
 
 		body.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-		QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query.query);
+		QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query);
 
 		body.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
-
 		if (query.isDeleteQuery()) {
 			body.add(MongoBlocks.deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
 		} else {
-
-			body.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).exists(query.isExists())
-					.count(query.isCountQuery()).referencing(query.name()).build());
+			body.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).forQuery(query).build());
 		}
 	}
 

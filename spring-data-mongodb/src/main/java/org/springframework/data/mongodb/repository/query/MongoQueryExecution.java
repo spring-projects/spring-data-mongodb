@@ -258,8 +258,8 @@ public interface MongoQueryExecution {
 	 */
 	final class DeleteExecution<T> implements MongoQueryExecution {
 
-		ExecutableRemoveOperation.ExecutableRemove<T> remove;
-		Type type;
+		private ExecutableRemoveOperation.ExecutableRemove<T> remove;
+		private Type type;
 
 		public DeleteExecution(ExecutableRemove<T> remove, QueryMethod queryMethod) {
 			this.remove = remove;
@@ -277,7 +277,6 @@ public interface MongoQueryExecution {
 			this.remove = remove;
 			this.type = type;
 		}
-
 
 		@Override
 		public @Nullable Object execute(Query query) {

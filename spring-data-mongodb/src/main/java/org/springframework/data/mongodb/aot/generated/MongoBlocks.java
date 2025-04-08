@@ -69,7 +69,7 @@ public class MongoBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		String queryVariableName;
+		private String queryVariableName;
 
 		public DeleteExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.context = context;
@@ -122,28 +122,11 @@ public class MongoBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		private String queryVariableName;
-		private boolean count, exists;
+		private StringAotQuery query;
 
 		public QueryExecutionBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.context = context;
 			this.queryMethod = queryMethod;
-		}
-
-		QueryExecutionBlockBuilder referencing(String queryVariableName) {
-
-			this.queryVariableName = queryVariableName;
-			return this;
-		}
-
-		QueryExecutionBlockBuilder count(boolean count) {
-			this.count = count;
-			return this;
-		}
-
-		QueryExecutionBlockBuilder exists(boolean exists) {
-			this.exists = exists;
-			return this;
 		}
 
 		CodeBlock build() {
@@ -171,10 +154,9 @@ public class MongoBlocks {
 
 			if (queryMethod.isCollectionQuery() || queryMethod.isPageQuery() || queryMethod.isSliceQuery()) {
 				terminatingMethod = "all()";
-			} else if (count) {
+			} else if (query.isCountQuery()) {
 				terminatingMethod = "count()";
-
-			} else if (exists) {
+			} else if (query.isExists()) {
 				terminatingMethod = "exists()";
 			} else {
 				terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()" : "oneValue()";
@@ -182,16 +164,20 @@ public class MongoBlocks {
 
 			if (queryMethod.isPageQuery()) {
 				builder.addStatement("return new $T(finder, $L).execute($L)", PagedExecution.class,
-						context.getPageableParameterName(), queryVariableName);
+						context.getPageableParameterName(), query.name());
 			} else if (queryMethod.isSliceQuery()) {
 				builder.addStatement("return new $T(finder, $L).execute($L)", SlicedExecution.class,
-						context.getPageableParameterName(), queryVariableName);
+						context.getPageableParameterName(), query.name());
 			} else {
-				builder.addStatement("return finder.matching($L).$L", queryVariableName, terminatingMethod);
+				builder.addStatement("return finder.matching($L).$L", query.name(), terminatingMethod);
 			}
 
 			return builder.build();
+		}
 
+		public QueryExecutionBlockBuilder forQuery(StringAotQuery query) {
+			this.query = query;
+			return this;
 		}
 	}
 
@@ -200,7 +186,7 @@ public class MongoBlocks {
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 
-		StringQuery source;
+		StringAotQuery source;
 		List<String> arguments;
 		private String queryVariableName;
 
@@ -215,7 +201,7 @@ public class MongoBlocks {
 			this.queryMethod = queryMethod;
 		}
 
-		public QueryBlockBuilder filter(StringQuery query) {
+		public QueryBlockBuilder filter(StringAotQuery query) {
 			this.source = query;
 			return this;
 		}
@@ -230,28 +216,27 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
 			builder.add("\n");
-			builder.add(renderExpressionToQuery(source.getQueryString(), queryVariableName));
+			builder.add(renderExpressionToQuery(source.query.getQueryString(), queryVariableName));
 
-			if (StringUtils.hasText(source.getFieldsString())) {
-				builder.add(renderExpressionToDocument(source.getFieldsString(), "fields"));
+			if (StringUtils.hasText(source.query.getFieldsString())) {
+				builder.add(renderExpressionToDocument(source.query.getFieldsString(), "fields"));
 				builder.addStatement("$L.setFieldsObject(fields)", queryVariableName);
 			}
 
 			String sortParameter = context.getSortParameterName();
 			if (StringUtils.hasText(sortParameter)) {
-
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
-			} else if (StringUtils.hasText(source.getSortString())) {
+			} else if (StringUtils.hasText(source.query.getSortString())) {
 
-				builder.add(renderExpressionToDocument(source.getSortString(), "sort"));
+				builder.add(renderExpressionToDocument(source.query.getSortString(), "sort"));
 				builder.addStatement("$L.setSortObject(sort)", queryVariableName);
 			}
 
 			String limitParameter = context.getLimitParameterName();
 			if (StringUtils.hasText(limitParameter)) {
 				builder.addStatement("$L.limit($L)", queryVariableName, limitParameter);
-			} else if (context.getPageableParameterName() == null && source.isLimited()) {
-				builder.addStatement("$L.limit($L)", queryVariableName, source.getLimit());
+			} else if (context.getPageableParameterName() == null && source.query.isLimited()) {
+				builder.addStatement("$L.limit($L)", queryVariableName, source.query.getLimit());
 			}
 
 			String pageableParameter = context.getPageableParameterName();

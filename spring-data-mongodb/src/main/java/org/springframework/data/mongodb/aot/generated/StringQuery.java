@@ -58,8 +58,6 @@ class StringQuery extends Query {
 	private @Nullable String sort;
 	private @Nullable String fields;
 
-	private ExecutionType executionType = ExecutionType.QUERY;
-
 	public StringQuery(Query query) {
 		this.delegate = query;
 	}
@@ -67,11 +65,6 @@ class StringQuery extends Query {
 	public StringQuery(String query) {
 		this.delegate = new Query();
 		this.raw = query;
-	}
-
-	public StringQuery forCount() {
-		this.executionType = ExecutionType.COUNT;
-		return this;
 	}
 
 	@Nullable
@@ -221,7 +214,4 @@ class StringQuery extends Query {
 		return buffer.toString();
 	}
 
-	enum ExecutionType {
-		QUERY, COUNT, DELETE
-	}
 }
