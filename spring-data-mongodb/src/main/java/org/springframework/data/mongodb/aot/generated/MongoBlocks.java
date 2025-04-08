@@ -233,8 +233,8 @@ public class MongoBlocks {
 			builder.add(renderExpressionToQuery(source.getQueryString(), queryVariableName));
 
 			if (StringUtils.hasText(source.getFieldsString())) {
-				builder.add(renderExpressionToDocument(source.getFieldsString(), "fieldsDocument"));
-				builder.addStatement("$L.setFieldsObject(fieldsDocument)", queryVariableName);
+				builder.add(renderExpressionToDocument(source.getFieldsString(), "fields"));
+				builder.addStatement("$L.setFieldsObject(fields)", queryVariableName);
 			}
 
 			String sortParameter = context.getSortParameterName();
@@ -243,8 +243,8 @@ public class MongoBlocks {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
 			} else if (StringUtils.hasText(source.getSortString())) {
 
-				builder.add(renderExpressionToDocument(source.getSortString(), "sortDocument"));
-				builder.addStatement("$L.setSortObject(sortDocument)", queryVariableName);
+				builder.add(renderExpressionToDocument(source.getSortString(), "sort"));
+				builder.addStatement("$L.setSortObject(sort)", queryVariableName);
 			}
 
 			String limitParameter = context.getLimitParameterName();
