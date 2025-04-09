@@ -16,21 +16,25 @@
 package org.springframework.data.mongodb.core.schema;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.bson.BsonNull;
 import org.bson.Document;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  * @since 4.5
  */
-public class QueryCharacteristics {
+public class QueryCharacteristics implements Streamable<QueryCharacteristic> {
 
-	private static final QueryCharacteristics NONE = new QueryCharacteristics(List.of());
+	private static final QueryCharacteristics NONE = new QueryCharacteristics(Collections.emptyList());
 
 	private final List<QueryCharacteristic> characteristics;
 
@@ -46,12 +50,17 @@ public class QueryCharacteristics {
 		return new QueryCharacteristics(List.copyOf(characteristics));
 	}
 
-	QueryCharacteristics(QueryCharacteristic... characteristics) {
-		this.characteristics = Arrays.asList(characteristics);
+	public static QueryCharacteristics of(QueryCharacteristic... characteristics) {
+		return new QueryCharacteristics(Arrays.asList(characteristics));
 	}
 
 	public List<QueryCharacteristic> getCharacteristics() {
 		return characteristics;
+	}
+
+	@Override
+	public Iterator<QueryCharacteristic> iterator() {
+		return this.characteristics.iterator();
 	}
 
 	public static <T> RangeQuery<T> range() {
@@ -96,7 +105,8 @@ public class QueryCharacteristics {
 			this(Range.unbounded(), null, null, null);
 		}
 
-		public RangeQuery(Range<T> valueRange, Integer trimFactor, Long sparsity, Long contention) {
+		public RangeQuery(@Nullable Range<T> valueRange, @Nullable Integer trimFactor, @Nullable Long sparsity,
+				@Nullable Long contention) {
 			this.valueRange = valueRange;
 			this.trimFactor = trimFactor;
 			this.sparsity = sparsity;

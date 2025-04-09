@@ -1,5 +1,5 @@
 /*
- * Copyright 2025. the original author or authors.
+ * Copyright 2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,11 @@ public @interface Queryable {
 
 	/**
 	 * @return empty {@link String} if not set.
-	 * @since 4.5
 	 */
 	String queryType() default "";
 
 	/**
 	 * @return empty {@link String} if not set.
-	 * @since 4.5
 	 */
 	String queryAttributes() default "";
 
@@ -46,4 +44,5 @@ public @interface Queryable {
 	 * @return the contention factor
 	 */
 	long contentionFactor() default -1;
+
 }
