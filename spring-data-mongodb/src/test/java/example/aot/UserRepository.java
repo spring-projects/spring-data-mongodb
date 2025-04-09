@@ -66,6 +66,9 @@ public interface UserRepository extends CrudRepository<User, String> {
 	// TODO: Streaming
 	// TODO: Scrolling
 	// TODO: GeoQueries
+	// TODO: TextSearch
+	// TODO: Updates
+	// TODO: Aggregations
 
 	/* Annotated Queries */
 
@@ -120,9 +123,6 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	@Query(value = "{ 'lastname' : { '$regex' : '^?0' } }", delete = true)
 	List<User> deleteUsersAnnotatedQueryByLastnameStartingWith(String lastname);
-
-	// TODO: updates
-	// TODO: Aggregations
 
 	/* Derived With Annotated Options */
 

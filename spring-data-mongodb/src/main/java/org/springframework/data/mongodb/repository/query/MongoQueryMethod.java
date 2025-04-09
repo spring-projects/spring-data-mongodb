@@ -116,7 +116,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	@Nullable
-	String getAnnotatedQuery() {
+	public String getAnnotatedQuery() {
 		return findAnnotatedQuery().orElse(null);
 	}
 

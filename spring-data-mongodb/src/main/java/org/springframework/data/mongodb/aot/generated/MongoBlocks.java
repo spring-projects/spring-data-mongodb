@@ -186,8 +186,8 @@ public class MongoBlocks {
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 
-		StringAotQuery source;
-		List<String> arguments;
+		private StringAotQuery source;
+		private List<String> arguments;
 		private String queryVariableName;
 
 		public QueryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
@@ -269,11 +269,12 @@ public class MongoBlocks {
 			if (!StringUtils.hasText(source)) {
 				builder.addStatement("$T $L = new $T()", Document.class, variableName, Document.class);
 			} else if (!containsPlaceholder(source)) {
+
 				String tmpVarName = "%sString".formatted(variableName);
 				builder.addStatement("String $L = $S", tmpVarName, source);
-
 				builder.addStatement("$T $L = $T.parse($L)", Document.class, variableName, Document.class, tmpVarName);
 			} else {
+
 				String tmpVarName = "%sString".formatted(variableName);
 				builder.addStatement("String $L = $S", tmpVarName, source);
 				builder.addStatement("$T $L = bindParameters($L, new $T[]{ $L })", Document.class, variableName, tmpVarName,
