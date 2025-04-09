@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core.convert.encryption;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.springframework.data.mongodb.core.encryption.EncryptionOptions.QueryableEncryptionOptions;
+import static java.util.Arrays.*;
+import static java.util.Collections.*;
+import static org.springframework.data.mongodb.core.encryption.EncryptionOptions.*;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -32,6 +32,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.Binary;
+
 import org.springframework.core.CollectionFactory;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
@@ -59,8 +60,8 @@ import org.springframework.util.StringUtils;
 public class MongoEncryptionConverter implements EncryptingConverter<Object, Object> {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoEncryptionConverter.class);
-	private static final String EQUALITY_OPERATOR = "$eq";
 	private static final List<String> RANGE_OPERATORS = asList("$gt", "$gte", "$lt", "$lte");
+	public static final String AND_OPERATOR = "$and";
 
 	private final Encryption<BsonValue, BsonBinary> encryption;
 	private final EncryptionKeyResolver keyResolver;
@@ -189,7 +190,7 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	}
 
 	private static @Nullable QueryableEncryptionOptions getEQOptions(MongoPersistentProperty persistentProperty,
-			OperatorContext operatorContext) {
+			@Nullable OperatorContext operatorContext) {
 
 		Queryable queryableAnnotation = persistentProperty.findAnnotation(Queryable.class);
 		if (queryableAnnotation == null || !StringUtils.hasText(queryableAnnotation.queryType())) {
@@ -248,29 +249,29 @@ public class MongoEncryptionConverter implements EncryptingConverter<Object, Obj
 	 * The mongodb-crypt {@code encryptExpression} has strict formatting requirements so this method ensures these
 	 * requirements are met and then picks out and returns just the value for use with a range query.
 	 *
-	 * @param fieldNameAndQueryOperator field name and query operator
-	 * @param value the value of the expression to be encrypted
-	 * @param encryptionOptions the options
-	 * @return the encrypted range value for use in a range query
+	 * @param operatorContext field name and query operator.
+	 * @param value the value of the expression to be encrypted.
+	 * @param encryptionOptions the options.
+	 * @return the encrypted range value for use in a range query.
 	 */
 	private BsonValue encryptExpression(OperatorContext operatorContext, Object value,
 			EncryptionOptions encryptionOptions) {
 
 		BsonValue doc = BsonUtils.simpleToBsonValue(value);
 
-		String fieldName = operatorContext.getPath();
-		String queryOperator = operatorContext.getOperator();
+		String fieldName = operatorContext.path();
+		String queryOperator = operatorContext.operator();
 
 		if (!RANGE_OPERATORS.contains(queryOperator)) {
 			throw new AssertionError(String.format("Not a valid range query. Querying a range encrypted field but the "
 					+ "query operator '%s' for field path '%s' is not a range query.", queryOperator, fieldName));
 		}
 
-		BsonDocument encryptExpression = new BsonDocument("$and",
+		BsonDocument encryptExpression = new BsonDocument(AND_OPERATOR,
 				new BsonArray(singletonList(new BsonDocument(fieldName, new BsonDocument(queryOperator, doc)))));
 
 		BsonDocument result = encryption.encryptExpression(encryptExpression, encryptionOptions);
-		return result.getArray("$and").get(0).asDocument().getDocument(fieldName).getBinary(queryOperator);
+		return result.getArray(AND_OPERATOR).get(0).asDocument().getDocument(fieldName).getBinary(queryOperator);
 	}
 
 	private BsonValue collectionLikeToBsonValue(Object value, MongoPersistentProperty property,

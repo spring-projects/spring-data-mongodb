@@ -711,7 +711,8 @@ public class QueryMapper {
 
 			return BsonUtils.mapValues(document, (key, val) -> {
 				if (isKeyword(key)) {
-					return convertValueWithConversionContext(documentField, val, val, valueConverter, conversionContext.forOperator(new QueryOperatorContext(key, conversionContext.getOperatorContext().getPath())));
+					return convertValueWithConversionContext(documentField, val, val, valueConverter, conversionContext
+							.forOperator(new QueryOperatorContext(key, conversionContext.getOperatorContext().path())));
 				}
 				return val;
 			});

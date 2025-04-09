@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.bson.BsonNull;
 import org.bson.Document;
@@ -377,14 +378,16 @@ class EntityOperations {
 			result.timeSeriesOptions(options);
 		});
 
-		collectionOptions.getChangeStreamOptions().ifPresent(it -> result
-				.changeStreamPreAndPostImagesOptions(new ChangeStreamPreAndPostImagesOptions(it.getPreAndPostImages())));
+		collectionOptions.getChangeStreamOptions() //
+				.map(CollectionOptions.CollectionChangeStreamOptions::getPreAndPostImages) //
+				.map(ChangeStreamPreAndPostImagesOptions::new) //
+				.ifPresent(result::changeStreamPreAndPostImagesOptions);
 
-		collectionOptions.getEncryptedFieldsOptions().map(EncryptedFieldsOptions::toDocument).ifPresent(encryptedFields -> {
-			if (!encryptedFields.isEmpty()) {
-				result.encryptedFields(encryptedFields);
-			}
-		});
+		collectionOptions.getEncryptedFieldsOptions() //
+				.map(EncryptedFieldsOptions::toDocument) //
+				.filter(Predicate.not(Document::isEmpty)) //
+				.ifPresent(result::encryptedFields);
+
 		return result;
 	}
 
