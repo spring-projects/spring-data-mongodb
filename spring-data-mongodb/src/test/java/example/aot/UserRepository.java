@@ -25,6 +25,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -123,6 +124,15 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	@Query(value = "{ 'lastname' : { '$regex' : '^?0' } }", delete = true)
 	List<User> deleteUsersAnnotatedQueryByLastnameStartingWith(String lastname);
+
+	/* Updates */
+
+	@Update("{ '$inc' : { 'visits' : ?1 } }")
+	int findUserAndIncrementVisitsByLastname(String lastname, int increment);
+
+	@Query("{ 'lastname' : ?0 }")
+	@Update("{ '$inc' : { 'visits' : ?1 } }")
+	int updateAllByLastname(String lastname, int increment);
 
 	/* Derived With Annotated Options */
 

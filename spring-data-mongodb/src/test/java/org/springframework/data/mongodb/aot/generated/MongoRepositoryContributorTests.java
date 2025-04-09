@@ -373,6 +373,26 @@ public class MongoRepositoryContributorTests {
 		assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
 	}
 
+	@Test
+	void testUpdateWithDerivedQuery() {
+
+		int modifiedCount = fragment.findUserAndIncrementVisitsByLastname("Organa", 42);
+
+		assertThat(modifiedCount).isOne();
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").find(new Document("_id", "id-2")).first().get("visits",
+				Integer.class)).isEqualTo(42);
+	}
+
+	@Test
+	void testUpdateWithAnnotatedQuery() {
+
+		int modifiedCount = fragment.updateAllByLastname("Organa", 42);
+
+		assertThat(modifiedCount).isOne();
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").find(new Document("_id", "id-2")).first().get("visits",
+				Integer.class)).isEqualTo(42);
+	}
+
 	private static void initUsers() {
 
 		Document luke = Document.parse("""

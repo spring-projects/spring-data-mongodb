@@ -19,34 +19,15 @@ package org.springframework.data.mongodb.aot.generated;
  * @author Christoph Strobl
  * @since 2025/04
  */
-abstract class AotQuery {
+class StringUpdate {
 
-	boolean isCountQuery() {
-		return ExecutionType.COUNT.equals(getExecutionType());
+	String raw;
+
+	public StringUpdate(String raw) {
+		this.raw = raw;
 	}
 
-	boolean isDeleteQuery() {
-		return ExecutionType.DELETE.equals(getExecutionType());
-	}
-
-	boolean isExists() {
-		return ExecutionType.EXISTS.equals(getExecutionType());
-	}
-
-	abstract ExecutionType getExecutionType();
-
-	String name() {
-
-		if (isDeleteQuery()) {
-			return "deleteQuery";
-		}
-		if (isCountQuery()) {
-			return "countQuery";
-		}
-		return "filterQuery";
-	}
-
-	enum ExecutionType {
-		QUERY, COUNT, DELETE, EXISTS, UPDATE, AGGREGATION
+	public String getUpdateString() {
+		return raw;
 	}
 }

@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.aot.generated.MongoBlocks.QueryBlockBuil
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.mongodb.repository.aot.MongoAotRepositoryFragmentSupport;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
@@ -95,6 +96,17 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			}
 		}
 
+		if (query.isDeleteQuery()) {
+			return deleteMethodContributor(queryMethod, query);
+		}
+
+		if (queryMethod.isModifyingQuery()) {
+
+			Update updateSource = queryMethod.getUpdateSource();
+			StringAotUpdate update = new StringAotUpdate(query, new StringUpdate(updateSource.value()));
+			return updateMethodContributor(queryMethod, update);
+		}
+
 		return queryMethodContributor(queryMethod, query);
 	}
 
@@ -123,8 +135,46 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	private static boolean backoff(MongoQueryMethod method) {
-		return method.hasAnnotatedAggregation() || method.isGeoNearQuery() || method.isModifyingQuery()
-				|| method.isScrollQuery();
+		return method.hasAnnotatedAggregation() || method.isGeoNearQuery() || method.isScrollQuery();
+	}
+
+	private static MethodContributor<MongoQueryMethod> updateMethodContributor(MongoQueryMethod queryMethod,
+			StringAotUpdate update) {
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(update).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
+
+			// update filter
+			String filterVariableName = update.name();
+			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(update.filter);
+			builder.add(queryBlockBuilder.usingQueryVariableName(filterVariableName).build());
+
+			// update definition
+			String updateVariableName = "updateDefinition";
+			builder.add(MongoBlocks.updateBlockBuilder(context, queryMethod).update(update)
+					.usingUpdateVariableName(updateVariableName).build());
+
+			builder.add(MongoBlocks.updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
+					.referencingUpdate(updateVariableName).build());
+			return builder.build();
+		});
+	}
+
+	private static MethodContributor<MongoQueryMethod> deleteMethodContributor(MongoQueryMethod queryMethod,
+			StringAotQuery query) {
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(query).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
+			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query);
+
+			builder.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
+			builder.add(MongoBlocks.deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
+			return builder.build();
+		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> queryMethodContributor(MongoQueryMethod queryMethod,
@@ -137,11 +187,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query);
 
 			builder.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
-			if (query.isDeleteQuery()) {
-				builder.add(MongoBlocks.deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
-			} else {
-				builder.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).forQuery(query).build());
-			}
+			builder.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).forQuery(query).build());
 			return builder.build();
 		});
 	}

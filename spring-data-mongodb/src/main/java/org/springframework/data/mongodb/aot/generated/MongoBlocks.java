@@ -26,8 +26,10 @@ import org.bson.Document;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
@@ -41,6 +43,7 @@ import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -55,6 +58,10 @@ public class MongoBlocks {
 		return new QueryBlockBuilder(context, queryMethod);
 	}
 
+	static UpdateBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		return new UpdateBlockBuilder(context, queryMethod);
+	}
+
 	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 		return new QueryExecutionBlockBuilder(context, queryMethod);
@@ -63,6 +70,11 @@ public class MongoBlocks {
 	static DeleteExecutionBuilder deleteExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 		return new DeleteExecutionBuilder(context, queryMethod);
+	}
+
+	static UpdateExecutionBuilder updateExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new UpdateExecutionBuilder(context, queryMethod);
 	}
 
 	static class DeleteExecutionBuilder {
@@ -113,6 +125,53 @@ public class MongoBlocks {
 
 			builder.addStatement("return ($T) new $T(remover, $T.$L).execute($L)", actualReturnType, DeleteExecution.class,
 					DeleteExecution.Type.class, type.name(), queryVariableName);
+
+			return builder.build();
+		}
+	}
+
+	static class UpdateExecutionBuilder {
+
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private String queryVariableName;
+		private String updateVariableName;
+
+		public UpdateExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+			this.context = context;
+			this.queryMethod = queryMethod;
+		}
+
+		public UpdateExecutionBuilder withFilter(String queryVariableName) {
+			this.queryVariableName = queryVariableName;
+			return this;
+		}
+
+		public UpdateExecutionBuilder referencingUpdate(String updateVariableName) {
+			this.updateVariableName = updateVariableName;
+			return this;
+		}
+
+		public CodeBlock build() {
+
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+			Builder builder = CodeBlock.builder();
+
+			builder.add("\n");
+			builder.addStatement("$T<$T> updater = $L.update($T.class)", ExecutableUpdate.class,
+					context.getRepositoryInformation().getDomainType(), mongoOpsRef,
+					context.getRepositoryInformation().getDomainType());
+
+			Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
+			if (ClassUtils.isAssignable(Long.class, returnType)) {
+				builder.addStatement("return updater.matching($L).apply($L).all().getModifiedCount()", queryVariableName,
+						updateVariableName);
+			} else {
+				builder.addStatement("$T modifiedCount = updater.matching($L).apply($L).all().getModifiedCount()", Long.class,
+						queryVariableName, updateVariableName);
+				builder.addStatement("return $T.convertNumberToTargetClass(modifiedCount, $T.class)", NumberUtils.class,
+						returnType);
+			}
 
 			return builder.build();
 		}
@@ -219,7 +278,7 @@ public class MongoBlocks {
 			builder.add(renderExpressionToQuery(source.query.getQueryString(), queryVariableName));
 
 			if (StringUtils.hasText(source.query.getFieldsString())) {
-				builder.add(renderExpressionToDocument(source.query.getFieldsString(), "fields"));
+				builder.add(renderExpressionToDocument(source.query.getFieldsString(), "fields", arguments));
 				builder.addStatement("$L.setFieldsObject(fields)", queryVariableName);
 			}
 
@@ -228,7 +287,7 @@ public class MongoBlocks {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
 			} else if (StringUtils.hasText(source.query.getSortString())) {
 
-				builder.add(renderExpressionToDocument(source.query.getSortString(), "sort"));
+				builder.add(renderExpressionToDocument(source.query.getSortString(), "sort", arguments));
 				builder.addStatement("$L.setSortObject(sort)", queryVariableName);
 			}
 
@@ -264,25 +323,6 @@ public class MongoBlocks {
 			return builder.build();
 		}
 
-		private CodeBlock renderExpressionToDocument(@Nullable String source, String variableName) {
-			Builder builder = CodeBlock.builder();
-			if (!StringUtils.hasText(source)) {
-				builder.addStatement("$T $L = new $T()", Document.class, variableName, Document.class);
-			} else if (!containsPlaceholder(source)) {
-
-				String tmpVarName = "%sString".formatted(variableName);
-				builder.addStatement("String $L = $S", tmpVarName, source);
-				builder.addStatement("$T $L = $T.parse($L)", Document.class, variableName, Document.class, tmpVarName);
-			} else {
-
-				String tmpVarName = "%sString".formatted(variableName);
-				builder.addStatement("String $L = $S", tmpVarName, source);
-				builder.addStatement("$T $L = bindParameters($L, new $T[]{ $L })", Document.class, variableName, tmpVarName,
-						Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
-			}
-			return builder.build();
-		}
-
 		private CodeBlock renderExpressionToQuery(@Nullable String source, String variableName) {
 
 			Builder builder = CodeBlock.builder();
@@ -306,10 +346,73 @@ public class MongoBlocks {
 
 			return builder.build();
 		}
+	}
 
-		private boolean containsPlaceholder(String source) {
-			return PARAMETER_BINDING_PATTERN.matcher(source).find();
+	static class UpdateBlockBuilder {
+
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+
+		private StringAotUpdate source;
+		private List<String> arguments;
+		private String updateVariableName;
+
+		public UpdateBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+			this.context = context;
+			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
+					.collect(Collectors.toList());
+
+			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
+			// this.argumentSource = new MongoParameters(parametersSource, false);
+
+			this.queryMethod = queryMethod;
 		}
 
+		public UpdateBlockBuilder update(StringAotUpdate update) {
+			this.source = update;
+			return this;
+		}
+
+		public UpdateBlockBuilder usingUpdateVariableName(String updateVariableName) {
+			this.updateVariableName = updateVariableName;
+			return this;
+		}
+
+		CodeBlock build() {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+
+			builder.add("\n");
+			String tmpVarName = updateVariableName + "Definition";
+			builder.add(
+					renderExpressionToDocument(source.update.getUpdateString(), updateVariableName + "Definition", arguments));
+			builder.addStatement("$T $L = new $T($L)", BasicUpdate.class, updateVariableName, BasicUpdate.class, tmpVarName);
+
+			return builder.build();
+		}
+	}
+
+	private static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
+			List<String> arguments) {
+		Builder builder = CodeBlock.builder();
+		if (!StringUtils.hasText(source)) {
+			builder.addStatement("$T $L = new $T()", Document.class, variableName, Document.class);
+		} else if (!containsPlaceholder(source)) {
+
+			String tmpVarName = "%sString".formatted(variableName);
+			builder.addStatement("String $L = $S", tmpVarName, source);
+			builder.addStatement("$T $L = $T.parse($L)", Document.class, variableName, Document.class, tmpVarName);
+		} else {
+
+			String tmpVarName = "%sString".formatted(variableName);
+			builder.addStatement("String $L = $S", tmpVarName, source);
+			builder.addStatement("$T $L = bindParameters($L, new $T[]{ $L })", Document.class, variableName, tmpVarName,
+					Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
+		}
+		return builder.build();
+	}
+
+	private static boolean containsPlaceholder(String source) {
+		return PARAMETER_BINDING_PATTERN.matcher(source).find();
 	}
 }

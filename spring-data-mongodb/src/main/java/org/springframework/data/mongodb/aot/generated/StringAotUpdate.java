@@ -15,38 +15,33 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
+import java.util.Map;
+
+import org.springframework.data.repository.aot.generate.QueryMetadata;
+
 /**
  * @author Christoph Strobl
  * @since 2025/04
  */
-abstract class AotQuery {
+class StringAotUpdate extends AotQuery implements QueryMetadata {
 
-	boolean isCountQuery() {
-		return ExecutionType.COUNT.equals(getExecutionType());
+	StringAotQuery filter;
+	StringUpdate update;
+
+	public StringAotUpdate(StringAotQuery filter, StringUpdate update) {
+		this.filter = filter;
+		this.update = update;
 	}
 
-	boolean isDeleteQuery() {
-		return ExecutionType.DELETE.equals(getExecutionType());
+	@Override
+	public Map<String, Object> serialize() {
+		Map<String, Object> serialized = filter.serialize();
+		serialized.put("update", update.raw);
+		return serialized;
 	}
 
-	boolean isExists() {
-		return ExecutionType.EXISTS.equals(getExecutionType());
-	}
-
-	abstract ExecutionType getExecutionType();
-
-	String name() {
-
-		if (isDeleteQuery()) {
-			return "deleteQuery";
-		}
-		if (isCountQuery()) {
-			return "countQuery";
-		}
-		return "filterQuery";
-	}
-
-	enum ExecutionType {
-		QUERY, COUNT, DELETE, EXISTS, UPDATE, AGGREGATION
+	@Override
+	ExecutionType getExecutionType() {
+		return ExecutionType.UPDATE;
 	}
 }

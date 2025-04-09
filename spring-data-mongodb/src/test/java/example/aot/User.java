@@ -51,6 +51,7 @@ public class User {
 
 	Instant registrationDate;
 	Instant lastSeen;
+	Long visits;
 
 	public String getId() {
 		return id;
@@ -98,5 +99,13 @@ public class User {
 
 	public void setLastSeen(Instant lastSeen) {
 		this.lastSeen = lastSeen;
+	}
+
+	public Long getVisits() {
+		return visits;
+	}
+
+	public void setVisits(Long visits) {
+		this.visits = visits;
 	}
 }
