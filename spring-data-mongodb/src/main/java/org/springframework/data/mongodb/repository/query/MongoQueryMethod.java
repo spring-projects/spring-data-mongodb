@@ -15,18 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.data.geo.GeoPage;
-import org.springframework.data.geo.GeoResult;
-import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -65,15 +60,12 @@ import org.springframework.util.StringUtils;
  */
 public class MongoQueryMethod extends QueryMethod {
 
-	@SuppressWarnings("unchecked") private static final List<Class<? extends Serializable>> GEO_NEAR_RESULTS = Arrays
-			.asList(GeoResult.class, GeoResults.class, GeoPage.class);
-
 	private final Method method;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final Map<Class<? extends Annotation>, Optional<Annotation>> annotationCache;
 
 	private @Nullable MongoEntityMetadata<?> metadata;
-	private Lazy<Boolean> isModifying = Lazy.of(this::resolveModifyingQueryIndicators);
+	private final Lazy<Boolean> isModifying = Lazy.of(this::resolveModifyingQueryIndicators);
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
@@ -85,19 +77,28 @@ public class MongoQueryMethod extends QueryMethod {
 	 */
 	public MongoQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory projectionFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this(method, metadata, projectionFactory, mappingContext, MongoParameters::new);
+	}
 
-		super(method, metadata, projectionFactory);
+	/**
+	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
+	 *
+	 * @param method must not be {@literal null}.
+	 * @param metadata must not be {@literal null}.
+	 * @param projectionFactory must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
+	 */
+	MongoQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory projectionFactory,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			Function<ParametersSource, ? extends MongoParameters> parametersFunction) {
+
+		super(method, metadata, projectionFactory, parametersFunction);
 
 		Assert.notNull(mappingContext, "MappingContext must not be null");
 
 		this.method = method;
 		this.mappingContext = mappingContext;
 		this.annotationCache = new ConcurrentReferenceHashMap<>();
-	}
-
-	@Override
-	protected MongoParameters createParameters(ParametersSource parametersSource) {
-		return new MongoParameters(parametersSource, isGeoNearQuery(parametersSource.getMethod()));
 	}
 
 	/**
@@ -186,25 +187,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	public boolean isGeoNearQuery() {
-		return isGeoNearQuery(this.method);
-	}
-
-	private boolean isGeoNearQuery(Method method) {
-
-		Class<?> returnType = method.getReturnType();
-
-		for (Class<?> type : GEO_NEAR_RESULTS) {
-			if (type.isAssignableFrom(returnType)) {
-				return true;
-			}
-		}
-
-		if (Iterable.class.isAssignableFrom(returnType)) {
-			TypeInformation<?> from = TypeInformation.fromReturnTypeOf(method);
-			return GeoResult.class.equals(from.getRequiredComponentType().getType());
-		}
-
-		return false;
+		return MongoParameters.isGeoNearQuery(this.method);
 	}
 
 	/**

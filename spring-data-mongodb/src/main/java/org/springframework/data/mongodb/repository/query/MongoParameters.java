@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,9 @@ import java.util.List;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
@@ -44,6 +48,9 @@ import org.springframework.lang.Nullable;
  */
 public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
+	private static final List<Class<? extends Serializable>> GEO_NEAR_RESULTS = Arrays.asList(GeoResult.class,
+			GeoResults.class, GeoPage.class);
+
 	private final int rangeIndex;
 	private final int maxDistanceIndex;
 	private final @Nullable Integer fullTextIndex;
@@ -56,7 +63,17 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
 	 *
 	 * @param parametersSource must not be {@literal null}.
-	 * @param isGeoNearMethod indicate if this is a geo spatial query method
+	 * @since 4.5
+	 */
+	public MongoParameters(ParametersSource parametersSource) {
+		this(parametersSource, isGeoNearQuery(parametersSource.getMethod()));
+	}
+
+	/**
+	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
+	 *
+	 * @param parametersSource must not be {@literal null}.
+	 * @param isGeoNearMethod indicate if this is a geo-spatial query method
 	 */
 	public MongoParameters(ParametersSource parametersSource, boolean isGeoNearMethod) {
 		this(parametersSource, new NearIndex(parametersSource, isGeoNearMethod));
@@ -102,6 +119,24 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.collationIndex = collationIndex;
 		this.updateIndex = updateIndex;
 		this.domainType = domainType;
+	}
+
+	static boolean isGeoNearQuery(Method method) {
+
+		Class<?> returnType = method.getReturnType();
+
+		for (Class<?> type : GEO_NEAR_RESULTS) {
+			if (type.isAssignableFrom(returnType)) {
+				return true;
+			}
+		}
+
+		if (Iterable.class.isAssignableFrom(returnType)) {
+			TypeInformation<?> from = TypeInformation.fromReturnTypeOf(method);
+			return GeoResult.class.equals(from.getRequiredComponentType().getType());
+		}
+
+		return false;
 	}
 
 	static class NearIndex {

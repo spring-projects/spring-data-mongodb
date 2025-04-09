@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.repository.util.ClassUtils.*;
-
 import java.lang.reflect.Method;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -31,10 +29,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -64,16 +62,14 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	public ReactiveMongoQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory projectionFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-		super(method, metadata, projectionFactory, mappingContext);
+		super(method, metadata, projectionFactory, mappingContext, parametersSource -> {
+			return new MongoParameters(parametersSource,
+					MongoParameters.isGeoNearQuery(parametersSource.getMethod()) || isGeoNearQuery(parametersSource.getMethod()));
+		});
 
 		this.method = method;
 		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery() || isScrollQuery())
 				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
-	}
-
-	@Override
-	protected MongoParameters createParameters(ParametersSource parametersSource) {
-		return new MongoParameters(parametersSource, isGeoNearQuery(parametersSource.getMethod()));
 	}
 
 	@Override
@@ -86,7 +82,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		return isGeoNearQuery(method);
 	}
 
-	private boolean isGeoNearQuery(Method method) {
+	private static boolean isGeoNearQuery(Method method) {
 
 		if (ReactiveWrappers.supports(method.getReturnType())) {
 			TypeInformation<?> from = TypeInformation.fromReturnTypeOf(method);
@@ -130,7 +126,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	@Override
 	public void verify() {
 
-		if (hasParameterOfType(method, Pageable.class)) {
+		if (ReflectionUtils.hasParameterOfType(method, Pageable.class)) {
 
 			TypeInformation<?> returnType = TypeInformation.fromReturnTypeOf(method);
 
@@ -139,7 +135,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
 							|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
 
-			if (hasParameterOfType(method, Sort.class)) {
+			if (ReflectionUtils.hasParameterOfType(method, Sort.class)) {
 				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter;"
 						+ " Use sorting capabilities on Pageable instead; Offending method: %s", method));
 			}
