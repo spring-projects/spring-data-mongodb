@@ -393,6 +393,13 @@ public class MongoRepositoryContributorTests {
 				Integer.class)).isEqualTo(42);
 	}
 
+	@Test
+	void testAggregationWithExtractedSimpleResults() {
+
+		List<String> allLastnames = fragment.findAllLastnames();
+		assertThat(allLastnames).containsExactlyInAnyOrder("Skywalker", "Solo", "Organa", "Solo", "Skywalker");
+	}
+
 	private static void initUsers() {
 
 		Document luke = Document.parse("""

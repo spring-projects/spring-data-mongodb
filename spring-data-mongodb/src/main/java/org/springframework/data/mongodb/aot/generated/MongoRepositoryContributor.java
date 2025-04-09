@@ -86,6 +86,12 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return null;
 		}
 
+		if (queryMethod.hasAnnotatedAggregation()) {
+
+			StringAotAggregation aggregation = new StringAotAggregation(queryMethod.getAnnotatedAggregation());
+			return aggregationMethodContributor(queryMethod, aggregation);
+		}
+
 		StringAotQuery query = createStringQuery(repositoryInformation, queryMethod,
 				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method.getParameterCount());
 
@@ -135,7 +141,24 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	private static boolean backoff(MongoQueryMethod method) {
-		return method.hasAnnotatedAggregation() || method.isGeoNearQuery() || method.isScrollQuery();
+		return method.isGeoNearQuery() || method.isScrollQuery();
+	}
+
+	private static MethodContributor<MongoQueryMethod> aggregationMethodContributor(MongoQueryMethod queryMethod,
+			StringAotAggregation aggregation) {
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(aggregation).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
+
+			builder.add(MongoBlocks.aggregationBlockBuilder(context, queryMethod).stages(aggregation)
+					.usingAggregationVariableName("aggregation").build());
+			builder
+					.add(MongoBlocks.aggregationExecutionBlockBuilder(context, queryMethod).referencing("aggregation").build());
+
+			return builder.build();
+		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> updateMethodContributor(MongoQueryMethod queryMethod,

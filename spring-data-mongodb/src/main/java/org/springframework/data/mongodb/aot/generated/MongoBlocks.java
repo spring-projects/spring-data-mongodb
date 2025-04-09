@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.aot.generated;
 
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +29,11 @@ import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQue
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.repository.Hint;
@@ -62,6 +68,11 @@ public class MongoBlocks {
 		return new UpdateBlockBuilder(context, queryMethod);
 	}
 
+	static AggregationBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new AggregationBlockBuilder(context, queryMethod);
+	}
+
 	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 		return new QueryExecutionBlockBuilder(context, queryMethod);
@@ -75,6 +86,11 @@ public class MongoBlocks {
 	static UpdateExecutionBuilder updateExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 		return new UpdateExecutionBuilder(context, queryMethod);
+	}
+
+	static AggregationExecutionBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new AggregationExecutionBuilder(context, queryMethod);
 	}
 
 	static class DeleteExecutionBuilder {
@@ -177,6 +193,49 @@ public class MongoBlocks {
 		}
 	}
 
+	static class AggregationExecutionBuilder {
+
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private String aggregationVariableName;
+
+		public AggregationExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+			this.context = context;
+			this.queryMethod = queryMethod;
+		}
+
+		public AggregationExecutionBuilder referencing(String aggregationVariableName) {
+			this.aggregationVariableName = aggregationVariableName;
+			return this;
+		}
+
+		public CodeBlock build() {
+
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+			Builder builder = CodeBlock.builder();
+
+			builder.add("\n");
+
+			Class<?> outputType = queryMethod.getReturnedObjectType();
+			if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
+				outputType = Document.class;
+			} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
+				// ahahahaha
+			}
+
+			builder.addStatement("$T results = $L.aggregate($L, $T.class)", AggregationResults.class, mongoOpsRef,
+					aggregationVariableName, outputType);
+			if (outputType == Document.class) {
+				builder.addStatement("return convertSimpleRawResults($T.class, results.getMappedResults())",
+						queryMethod.getReturnedObjectType());
+			} else {
+				builder.addStatement("return results.getMappedResults()");
+			}
+
+			return builder.build();
+		}
+	}
+
 	static class QueryExecutionBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
@@ -237,6 +296,84 @@ public class MongoBlocks {
 		public QueryExecutionBlockBuilder forQuery(StringAotQuery query) {
 			this.query = query;
 			return this;
+		}
+	}
+
+	static class AggregationBlockBuilder {
+
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+
+		private StringAotAggregation source;
+		private List<String> arguments;
+		private String aggregationVariableName;
+
+		public AggregationBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+			this.context = context;
+			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
+					.collect(Collectors.toList());
+
+			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
+			// this.argumentSource = new MongoParameters(parametersSource, false);
+
+			this.queryMethod = queryMethod;
+		}
+
+		public AggregationBlockBuilder stages(StringAotAggregation aggregation) {
+			this.source = aggregation;
+			return this;
+		}
+
+		public AggregationBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
+			this.aggregationVariableName = aggregationVariableName;
+			return this;
+		}
+
+		CodeBlock build() {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+			builder.add("\n");
+
+			List<String> stageNames = new ArrayList<>();
+			for (String stage : source.stages()) {
+				String stageName = "stage_%s".formatted(stageNames.size());
+				builder.add(renderExpressionToDocument(stage, stageName, arguments));
+				stageNames.add(stageName);
+			}
+
+			// TODO: render limit and offset stages AggregationUtil#appendLimitAndOffsetIfPresent
+
+			String pipelineName = aggregationVariableName + "Pipeline";
+			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineName,
+					StringUtils.collectionToCommaDelimitedString(stageNames));
+			builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
+					context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
+					context.getRepositoryInformation().getDomainType(), pipelineName);
+
+			// Aggregation Options
+			// TODO: aggregation options
+			/* 
+			AggregationOptions options = AggregationOptions.builder().build()
+			Aggregation aggregation = Aggregation.newAggregation();
+			aggregation.withOptions();
+			 */
+			// MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
+			// String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
+			//
+			// if (StringUtils.hasText(hint)) {
+			// builder.addStatement("$L.withHint($S)", queryVariableName, hint);
+			// }
+
+			// MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
+			// String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") :
+			// null;
+			//
+			// if (StringUtils.hasText(readPreference)) {
+			// builder.addStatement("$L.withReadPreference($T.valueOf($S))", queryVariableName,
+			// com.mongodb.ReadPreference.class, readPreference);
+			// }
+
+			return builder.build();
 		}
 	}
 

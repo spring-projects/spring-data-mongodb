@@ -15,14 +15,24 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.bson.Document;
 import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
@@ -56,6 +66,68 @@ public class MongoAotRepositoryFragmentSupport {
 
 		Document queryDocument = bindParameters(queryString, parameters);
 		return new BasicQuery(queryDocument);
+	}
+
+	protected AggregationPipeline createPipeline(Document... rawStages) {
+
+		List<AggregationOperation> stages = new ArrayList<>(rawStages.length);
+		for (Document rawStage : rawStages) {
+			stages.add((ctx) -> rawStage);
+		}
+		return new AggregationPipeline(stages);
+	}
+
+	protected List<Object> convertSimpleRawResults(Class<?> targetType, List<Document> rawResults) {
+
+		List<Object> list = new ArrayList<>(rawResults.size());
+		for (Document it : rawResults) {
+			list.add(extractSimpleTypeResult(it, targetType, mongoConverter));
+		}
+		return list;
+	}
+
+	private static <T> T extractSimpleTypeResult(@Nullable Document source, Class<T> targetType,
+			MongoConverter converter) {
+
+		if (ObjectUtils.isEmpty(source)) {
+			return null;
+		}
+
+		if (source.size() == 1) {
+			return getPotentiallyConvertedSimpleTypeValue(converter, source.values().iterator().next(), targetType);
+		}
+
+		Document intermediate = new Document(source);
+		intermediate.remove(FieldName.ID.name());
+
+		if (intermediate.size() == 1) {
+			return getPotentiallyConvertedSimpleTypeValue(converter, intermediate.values().iterator().next(), targetType);
+		}
+
+		for (Map.Entry<String, Object> entry : intermediate.entrySet()) {
+			if (entry != null && ClassUtils.isAssignable(targetType, entry.getValue().getClass())) {
+				return targetType.cast(entry.getValue());
+			}
+		}
+
+		throw new IllegalArgumentException(
+				String.format("o_O no entry of type %s found in %s.", targetType.getSimpleName(), source.toJson()));
+	}
+
+	@Nullable
+	@SuppressWarnings("unchecked")
+	private static <T> T getPotentiallyConvertedSimpleTypeValue(MongoConverter converter, @Nullable Object value,
+			Class<T> targetType) {
+
+		if (value == null) {
+			return null;
+		}
+
+		if (ClassUtils.isAssignableValue(targetType, value)) {
+			return (T) value;
+		}
+
+		return converter.getConversionService().convert(value, targetType);
 	}
 
 }

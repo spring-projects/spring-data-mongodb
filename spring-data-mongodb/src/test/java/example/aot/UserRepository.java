@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Update;
@@ -153,4 +154,10 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	Page<UserProjection> findUserProjectionByLastnameStartingWith(String lastname, Pageable page);
 
+	/* Aggregations */
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$project': { '_id' : '$last_name' } }" })
+	List<String> findAllLastnames();
 }
