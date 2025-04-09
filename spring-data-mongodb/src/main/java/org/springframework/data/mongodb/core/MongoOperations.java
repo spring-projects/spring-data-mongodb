@@ -77,6 +77,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Thomas Darimont
  * @author Maninder Singh
  * @author Mark Paluch
+ * @author Woojin Shin
  */
 public interface MongoOperations extends FluentMongoOperations {
 
@@ -227,7 +228,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
 	 * {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link String} that wraps the Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed.
+	 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.
