@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.schema;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -31,8 +31,7 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 
 	private final JsonSchemaObject root;
 
-	@Nullable //
-	private final Document encryptionMetadata;
+	private final @Nullable Document encryptionMetadata;
 
 	DefaultMongoJsonSchema(JsonSchemaObject root) {
 		this(root, null);

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -26,8 +26,7 @@ public abstract class IndexPredicate {
 	private IndexDirection direction = IndexDirection.ASCENDING;
 	private boolean unique = false;
 
-	@Nullable
-	public String getName() {
+	public @Nullable String getName() {
 		return name;
 	}
 

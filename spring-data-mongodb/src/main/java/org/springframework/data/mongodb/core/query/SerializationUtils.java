@@ -23,9 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -110,8 +110,8 @@ public abstract class SerializationUtils {
 	 * @param value
 	 * @return the serialized value or {@literal null}.
 	 */
-	@Nullable
-	public static String serializeToJsonSafely(@Nullable Object value) {
+	@Contract("null -> null; !null -> !null")
+	public static @Nullable String serializeToJsonSafely(@Nullable Object value) {
 
 		if (value == null) {
 			return null;

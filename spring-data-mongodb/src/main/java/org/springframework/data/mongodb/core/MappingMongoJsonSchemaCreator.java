@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -41,6 +42,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -89,6 +91,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	@Override
+	@Contract("_ -> new")
 	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter) {
 		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter, mergeProperties);
 	}
@@ -106,6 +109,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	 * @return new instance of {@link MongoJsonSchemaCreator}.
 	 * @since 3.4
 	 */
+	@Contract("_, _ -> new")
 	public MongoJsonSchemaCreator withTypesFor(String path, Class<?>... types) {
 
 		LinkedMultiValueMap<String, Class<?>> clone = mergeProperties.clone();
@@ -176,6 +180,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return schemaProperties;
 	}
 
+	@SuppressWarnings("NullAway")
 	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
 
 		String stringPath = path.stream().map(MongoPersistentProperty::getName).collect(Collectors.joining("."));
@@ -337,7 +342,9 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return schemaObject;
 	}
 
-	private String computePropertyFieldName(PersistentProperty<?> property) {
+	private String computePropertyFieldName(@Nullable PersistentProperty<?> property) {
+		
+		Assert.notNull(property, "Property must not be null");
 
 		return property instanceof MongoPersistentProperty mongoPersistentProperty ? mongoPersistentProperty.getFieldName()
 				: property.getName();
@@ -409,7 +416,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		@Override
-		public <T> MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property) {
+		@SuppressWarnings("unchecked")
+		public <T> @Nullable MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property) {
 			return (MongoPersistentEntity<T>) mappingContext.getPersistentEntity(property);
 		}
 	}

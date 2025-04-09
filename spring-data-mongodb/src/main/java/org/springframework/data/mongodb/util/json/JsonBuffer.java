@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.util.json;
 
 import org.bson.json.JsonParseException;
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * JsonBuffer implementation borrowed from <a href=
@@ -27,6 +28,7 @@ import org.bson.json.JsonParseException;
  * @author Ross Lawley
  * @since 2.2
  */
+@NullUnmarked
 class JsonBuffer {
 
 	private final String buffer;

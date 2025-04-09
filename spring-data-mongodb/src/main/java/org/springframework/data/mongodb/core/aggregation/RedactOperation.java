@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -33,7 +35,8 @@ import org.springframework.util.Assert;
  * </pre>
  *
  * @author Christoph Strobl
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/redact/">https://docs.mongodb.com/manual/reference/operator/aggregation/redact/</a>
+ * @see <a href=
+ *      "https://docs.mongodb.com/manual/reference/operator/aggregation/redact/">https://docs.mongodb.com/manual/reference/operator/aggregation/redact/</a>
  * @since 3.0
  */
 public class RedactOperation implements AggregationOperation {
@@ -94,9 +97,9 @@ public class RedactOperation implements AggregationOperation {
 	 */
 	public static class RedactOperationBuilder {
 
-		private Object when;
-		private Object then;
-		private Object otherwise;
+		private @Nullable Object when;
+		private @Nullable Object then;
+		private @Nullable Object otherwise;
 
 		private RedactOperationBuilder() {
 
@@ -108,6 +111,7 @@ public class RedactOperation implements AggregationOperation {
 		 * @param criteria must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RedactOperationBuilder when(CriteriaDefinition criteria) {
 
 			this.when = criteria;
@@ -120,6 +124,7 @@ public class RedactOperation implements AggregationOperation {
 		 * @param condition must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RedactOperationBuilder when(AggregationExpression condition) {
 
 			this.when = condition;
@@ -132,6 +137,7 @@ public class RedactOperation implements AggregationOperation {
 		 * @param condition must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RedactOperationBuilder when(Document condition) {
 
 			this.when = condition;
@@ -143,6 +149,7 @@ public class RedactOperation implements AggregationOperation {
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RedactOperationBuilder thenDescend() {
 			return then(DESCEND);
 		}
@@ -152,6 +159,7 @@ public class RedactOperation implements AggregationOperation {
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RedactOperationBuilder thenKeep() {
 			return then(KEEP);
 		}
@@ -161,6 +169,7 @@ public class RedactOperation implements AggregationOperation {
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RedactOperationBuilder thenPrune() {
 			return then(PRUNE);
 		}
@@ -172,6 +181,7 @@ public class RedactOperation implements AggregationOperation {
 		 * @param then must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RedactOperationBuilder then(Object then) {
 
 			this.then = then;
@@ -183,6 +193,7 @@ public class RedactOperation implements AggregationOperation {
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RedactOperationBuilder otherwiseDescend() {
 			return otherwise(DESCEND);
 		}
@@ -192,6 +203,7 @@ public class RedactOperation implements AggregationOperation {
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RedactOperationBuilder otherwiseKeep() {
 			return otherwise(KEEP);
 		}
@@ -201,6 +213,7 @@ public class RedactOperation implements AggregationOperation {
 		 *
 		 * @return this.
 		 */
+		@Contract("-> this")
 		public RedactOperationBuilder otherwisePrune() {
 			return otherwise(PRUNE);
 		}
@@ -212,6 +225,7 @@ public class RedactOperation implements AggregationOperation {
 		 * @param otherwise must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public RedactOperationBuilder otherwise(Object otherwise) {
 			this.otherwise = otherwise;
 			return this;
@@ -220,7 +234,12 @@ public class RedactOperation implements AggregationOperation {
 		/**
 		 * @return new instance of {@link RedactOperation}.
 		 */
+		@Contract("-> new")
 		public RedactOperation build() {
+
+			Assert.notNull(then, "Then must be set first");
+			Assert.notNull(otherwise, "Otherwise must be set first");
+
 			return new RedactOperation(when().then(then).otherwise(otherwise));
 		}
 

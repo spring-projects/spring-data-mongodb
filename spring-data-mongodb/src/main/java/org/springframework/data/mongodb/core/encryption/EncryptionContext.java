@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Context to encapsulate encryption for a specific {@link MongoPersistentProperty}.
@@ -43,7 +43,7 @@ public interface EncryptionContext {
 	 * @param value
 	 * @return
 	 */
-	Object convertToMongoType(Object value);
+	@Nullable Object convertToMongoType(Object value);
 
 	/**
 	 * Reads the value as an instance of the {@link PersistentProperty#getTypeInformation() property type}.
@@ -52,7 +52,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
 	 */
-	default <T> T read(@Nullable Object value) {
+	default <T> @Nullable T read(@Nullable Object value) {
 		return (T) read(value, getProperty().getTypeInformation());
 	}
 
@@ -64,7 +64,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
 	 */
-	default <T> T read(@Nullable Object value, Class<T> target) {
+	default <T> @Nullable T read(@Nullable Object value, Class<T> target) {
 		return read(value, TypeInformation.of(target));
 	}
 
@@ -76,7 +76,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be read as an instance of {@link Class type}.
 	 */
-	<T> T read(@Nullable Object value, TypeInformation<T> target);
+	<T> @Nullable T read(@Nullable Object value, TypeInformation<T> target);
 
 	/**
 	 * Write the value as an instance of the {@link PersistentProperty#getTypeInformation() property type}.
@@ -88,8 +88,7 @@ public interface EncryptionContext {
 	 * @see PersistentProperty#getTypeInformation()
 	 * @see #write(Object, TypeInformation)
 	 */
-	@Nullable
-	default <T> T write(@Nullable Object value) {
+	default <T> @Nullable T write(@Nullable Object value) {
 		return (T) write(value, getProperty().getTypeInformation());
 	}
 
@@ -101,8 +100,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be written as an instance of {@link Class type}.
 	 */
-	@Nullable
-	default <T> T write(@Nullable Object value, Class<T> target) {
+	default <T> @Nullable T write(@Nullable Object value, Class<T> target) {
 		return write(value, TypeInformation.of(target));
 	}
 
@@ -114,8 +112,7 @@ public interface EncryptionContext {
 	 * @return can be {@literal null}.
 	 * @throws IllegalStateException if value cannot be written as an instance of {@link Class type}.
 	 */
-	@Nullable
-	<T> T write(@Nullable Object value, TypeInformation<T> target);
+	<T> @Nullable T write(@Nullable Object value, TypeInformation<T> target);
 
 	/**
 	 * Lookup the value for a given path within the current context.
@@ -126,6 +123,6 @@ public interface EncryptionContext {
 	@Nullable
 	Object lookupValue(String path);
 
-	EvaluationContext getEvaluationContext(Object source);
+	EvaluationContext getEvaluationContext(@Nullable Object source);
 
 }

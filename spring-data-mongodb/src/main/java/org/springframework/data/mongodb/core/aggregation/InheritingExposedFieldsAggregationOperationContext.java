@@ -16,8 +16,8 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link ExposedFieldsAggregationOperationContext} that inherits fields from its parent

@@ -24,6 +24,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mapping.*;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
@@ -31,7 +32,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.Streamable;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 
 /**
  * Unwrapped variant of {@link MongoPersistentEntity}.
@@ -62,8 +63,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public MongoPersistentProperty getTextScoreProperty() {
+	public @Nullable MongoPersistentProperty getTextScoreProperty() {
 		return delegate.getTextScoreProperty();
 	}
 
@@ -73,8 +73,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public Collation getCollation() {
+	public @Nullable Collation getCollation() {
 		return delegate.getCollation();
 	}
 
@@ -120,8 +119,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public MongoPersistentProperty getIdProperty() {
+	public @Nullable MongoPersistentProperty getIdProperty() {
 		return delegate.getIdProperty();
 	}
 
@@ -131,8 +129,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public MongoPersistentProperty getVersionProperty() {
+	public @Nullable MongoPersistentProperty getVersionProperty() {
 		return delegate.getVersionProperty();
 	}
 
@@ -142,8 +139,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public MongoPersistentProperty getPersistentProperty(String name) {
+	public @Nullable MongoPersistentProperty getPersistentProperty(String name) {
 		return wrap(delegate.getPersistentProperty(name));
 	}
 
@@ -159,8 +155,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public MongoPersistentProperty getPersistentProperty(Class<? extends Annotation> annotationType) {
+	public @Nullable MongoPersistentProperty getPersistentProperty(Class<? extends Annotation> annotationType) {
 		return wrap(delegate.getPersistentProperty(annotationType));
 	}
 
@@ -226,8 +221,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	@Nullable
-	public <A extends Annotation> A findAnnotation(Class<A> annotationType) {
+	public <A extends Annotation> @Nullable A findAnnotation(Class<A> annotationType) {
 		return delegate.findAnnotation(annotationType);
 	}
 
@@ -289,7 +283,9 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 		return delegate.spliterator();
 	}
 
-	private MongoPersistentProperty wrap(MongoPersistentProperty source) {
+	@Contract("null -> null; !null -> !null")
+	private @Nullable MongoPersistentProperty wrap(@Nullable MongoPersistentProperty source) {
+
 		if (source == null) {
 			return source;
 		}
@@ -332,7 +328,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	public Collection<Object> getEncryptionKeyIds() {
+	public @Nullable Collection<Object> getEncryptionKeyIds() {
 		return delegate.getEncryptionKeyIds();
 	}
 }

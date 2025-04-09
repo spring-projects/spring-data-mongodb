@@ -20,12 +20,13 @@ import java.time.Instant;
 
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.ChangeStreamOptions.ChangeStreamOptionsBuilder;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -215,12 +216,12 @@ public class ChangeStreamRequest<T>
 		}
 
 		@Override
-		public String getCollectionName() {
+		public @Nullable String getCollectionName() {
 			return collectionName;
 		}
 
 		@Override
-		public String getDatabaseName() {
+		public @Nullable String getDatabaseName() {
 			return databaseName;
 		}
 
@@ -253,6 +254,7 @@ public class ChangeStreamRequest<T>
 		 * @param databaseName must not be {@literal null} nor empty.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> database(String databaseName) {
 
 			Assert.hasText(databaseName, "DatabaseName must not be null");
@@ -267,6 +269,7 @@ public class ChangeStreamRequest<T>
 		 * @param collectionName must not be {@literal null} nor empty.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> collection(String collectionName) {
 
 			Assert.hasText(collectionName, "CollectionName must not be null");
@@ -281,6 +284,7 @@ public class ChangeStreamRequest<T>
 		 * @param messageListener must not be {@literal null}.
 		 * @return this.
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> publishTo(
 				MessageListener<ChangeStreamDocument<Document>, ? super T> messageListener) {
 
@@ -308,6 +312,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getFilter()
 		 * @see ChangeStreamOptionsBuilder#filter(Aggregation)
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> filter(Aggregation aggregation) {
 
 			Assert.notNull(aggregation, "Aggregation must not be null");
@@ -323,6 +328,7 @@ public class ChangeStreamRequest<T>
 		 * @return this.
 		 * @see ChangeStreamOptions#getFilter()
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> filter(Document... pipeline) {
 
 			Assert.notNull(pipeline, "Aggregation pipeline must not be null");
@@ -340,6 +346,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getCollation()
 		 * @see ChangeStreamOptionsBuilder#collation(Collation)
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> collation(Collation collation) {
 
 			Assert.notNull(collation, "Collation must not be null");
@@ -357,6 +364,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getResumeToken()
 		 * @see ChangeStreamOptionsBuilder#resumeToken(org.bson.BsonValue)
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> resumeToken(BsonValue resumeToken) {
 
 			Assert.notNull(resumeToken, "Resume token not be null");
@@ -373,6 +381,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getResumeTimestamp()
 		 * @see ChangeStreamOptionsBuilder#resumeAt(java.time.Instant)
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> resumeAt(Instant clusterTime) {
 
 			Assert.notNull(clusterTime, "ClusterTime must not be null");
@@ -388,6 +397,7 @@ public class ChangeStreamRequest<T>
 		 * @return this.
 		 * @since 2.2
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> resumeAfter(BsonValue resumeToken) {
 
 			Assert.notNull(resumeToken, "ResumeToken must not be null");
@@ -403,6 +413,7 @@ public class ChangeStreamRequest<T>
 		 * @return this.
 		 * @since 2.2
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> startAfter(BsonValue resumeToken) {
 
 			Assert.notNull(resumeToken, "ResumeToken must not be null");
@@ -418,6 +429,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getFullDocumentLookup()
 		 * @see ChangeStreamOptionsBuilder#fullDocumentLookup(FullDocument)
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> fullDocumentLookup(FullDocument lookup) {
 
 			Assert.notNull(lookup, "FullDocument not be null");
@@ -434,6 +446,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getFullDocumentBeforeChangeLookup()
 		 * @see ChangeStreamOptionsBuilder#fullDocumentBeforeChangeLookup(FullDocumentBeforeChange)
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> fullDocumentBeforeChangeLookup(FullDocumentBeforeChange lookup) {
 
 			Assert.notNull(lookup, "FullDocumentBeforeChange not be null");
@@ -448,6 +461,7 @@ public class ChangeStreamRequest<T>
 		 * @param timeout must not be {@literal null}.
 		 * @since 3.0
 		 */
+		@Contract("_ -> this")
 		public ChangeStreamRequestBuilder<T> maxAwaitTime(Duration timeout) {
 
 			Assert.notNull(timeout, "timeout not be null");
@@ -459,6 +473,7 @@ public class ChangeStreamRequest<T>
 		/**
 		 * @return the build {@link ChangeStreamRequest}.
 		 */
+		@Contract("-> new")
 		public ChangeStreamRequest<T> build() {
 
 			Assert.notNull(listener, "MessageListener must not be null");

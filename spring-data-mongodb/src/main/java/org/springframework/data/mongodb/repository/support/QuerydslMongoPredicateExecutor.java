@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -245,12 +246,12 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		}
 
 		@Override
-		public T oneValue() {
+		public @Nullable T oneValue() {
 			return createQuery().fetchOne();
 		}
 
 		@Override
-		public T firstValue() {
+		public @Nullable T firstValue() {
 			return createQuery().fetchFirst();
 		}
 

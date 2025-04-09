@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -52,7 +53,6 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -111,7 +111,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	protected Criteria create(Part part, Iterator<Object> iterator) {
 
 		if (isGeoNearQuery && part.getType().equals(Type.NEAR)) {
-			return null;
+			return new Criteria();
 		}
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
@@ -141,7 +141,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	@Override
-	protected Query complete(Criteria criteria, Sort sort) {
+	protected Query complete(@Nullable Criteria criteria, Sort sort) {
 
 		Query query = (criteria == null ? new Query() : new Query(criteria)).with(sort);
 
@@ -161,6 +161,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param parameters
 	 * @return
 	 */
+	@SuppressWarnings("NullAway")
 	private Criteria from(Part part, MongoPersistentProperty property, Criteria criteria, Iterator<Object> parameters) {
 
 		Type type = part.getType();
@@ -333,6 +334,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param value
 	 * @return the criteria extended with the regex.
 	 */
+	@SuppressWarnings("NullAway")
 	private Criteria addAppropriateLikeRegexTo(Criteria criteria, Part part, Object value) {
 
 		if (value == null) {
@@ -348,8 +350,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param part
 	 * @return the regex options or {@literal null}.
 	 */
-	@Nullable
-	private String toRegexOptions(Part part) {
+	private @Nullable String toRegexOptions(Part part) {
 
 		String regexOptions = null;
 		switch (part.shouldIgnoreCase()) {
@@ -414,10 +415,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return Streamable.of(value);
 	}
 
-	private String toLikeRegex(String source, Part part) {
+	private @Nullable String toLikeRegex(String source, Part part) {
 		return MongoRegexCreator.INSTANCE.toRegularExpression(source, toMatchMode(part.getType()));
 	}
 
+	@SuppressWarnings("NullAway")
 	private boolean isSpherical(MongoPersistentProperty property) {
 
 		if (property.isAnnotationPresent(GeoSpatialIndexed.class)) {

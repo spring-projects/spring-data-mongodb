@@ -17,13 +17,13 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
  *
  * @author Oliver Gierke
  */
+@SuppressWarnings("NullAway")
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 

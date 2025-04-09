@@ -18,9 +18,9 @@ package org.springframework.data.mongodb.core;
 import java.util.function.Function;
 
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**

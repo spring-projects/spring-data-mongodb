@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.util.json;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A value provider to retrieve bindable values by their parameter index.

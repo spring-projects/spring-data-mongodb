@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.bson.Document;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -45,6 +46,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
@@ -130,7 +132,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Point convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Point convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -157,7 +160,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Document convert(Point source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable Point source) {
 			return source == null ? null : new Document("x", source.getX()).append("y", source.getY());
 		}
 	}
@@ -174,7 +178,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Document convert(Box source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable Box source) {
 
 			if (source == null) {
 				return null;
@@ -199,7 +204,9 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Box convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		@SuppressWarnings("NullAway")
+		public @Nullable Box convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -223,7 +230,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Document convert(Circle source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable Circle source) {
 
 			if (source == null) {
 				return null;
@@ -249,7 +257,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Circle convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Circle convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -286,7 +295,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Document convert(Sphere source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable Sphere source) {
 
 			if (source == null) {
 				return null;
@@ -312,7 +322,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Sphere convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Sphere convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -349,7 +360,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Document convert(Polygon source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable Polygon source) {
 
 			if (source == null) {
 				return null;
@@ -381,18 +393,20 @@ abstract class GeoConverters {
 
 		@Override
 		@SuppressWarnings({ "unchecked" })
-		public Polygon convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Polygon convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
 			}
 
 			List<Document> points = (List<Document>) source.get("points");
-			List<Point> newPoints = new ArrayList<>(points.size());
+			Assert.notNull(points, "Points elements of polygon must not be null");
 
+			List<Point> newPoints = new ArrayList<>(points.size());
 			for (Document element : points) {
 
-				Assert.notNull(element, "Point elements of polygon must not be null");
+				Assert.notNull(element, "Point elements of polygon must not contain null");
 				newPoints.add(DocumentToPointConverter.INSTANCE.convert(element));
 			}
 
@@ -412,7 +426,8 @@ abstract class GeoConverters {
 
 		@Override
 		@SuppressWarnings("rawtypes")
-		public Document convert(GeoCommand source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable GeoCommand source) {
 
 			if (source == null) {
 				return null;
@@ -463,7 +478,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public Document convert(GeoJson<?> source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable Document convert(@Nullable GeoJson<?> source) {
 
 			if (source == null) {
 				return null;
@@ -490,7 +506,7 @@ abstract class GeoConverters {
 
 		private Object convertIfNecessary(Object candidate) {
 
-			if (candidate instanceof GeoJson geoJson) {
+			if (candidate instanceof GeoJson<?> geoJson) {
 				return convertIfNecessary(geoJson.getCoordinates());
 			}
 
@@ -551,7 +567,8 @@ abstract class GeoConverters {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public GeoJsonPoint convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonPoint convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -560,7 +577,10 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "Point"),
 					String.format("Cannot convert type '%s' to Point", source.get("type")));
 
-			List<Number> dbl = (List<Number>) source.get("coordinates");
+			if(!(source.get("coordinates") instanceof List<?> sourceCoordinates)) {
+				throw new IllegalArgumentException("Coordinates need to be present");
+			}
+			List<Number> dbl = (List<Number>) sourceCoordinates;
 			return new GeoJsonPoint(toPrimitiveDoubleValue(dbl.get(0)), toPrimitiveDoubleValue(dbl.get(1)));
 		}
 	}
@@ -574,7 +594,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonPolygon convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonPolygon convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -596,7 +617,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonMultiPolygon convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonMultiPolygon convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -606,8 +628,9 @@ abstract class GeoConverters {
 					String.format("Cannot convert type '%s' to MultiPolygon", source.get("type")));
 
 			List<?> dbl = (List<?>) source.get("coordinates");
-			List<GeoJsonPolygon> polygones = new ArrayList<>();
+			Assert.notNull(dbl, "Source needs to contain coordinates");
 
+			List<GeoJsonPolygon> polygones = new ArrayList<>(dbl.size());
 			for (Object polygon : dbl) {
 				polygones.add(toGeoJsonPolygon((List<?>) polygon));
 			}
@@ -625,7 +648,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonLineString convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonLineString convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -649,7 +673,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonMultiPoint convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonMultiPoint convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -673,7 +698,8 @@ abstract class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonMultiLineString convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonMultiLineString convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -682,10 +708,13 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "MultiLineString"),
 					String.format("Cannot convert type '%s' to MultiLineString", source.get("type")));
 
-			List<GeoJsonLineString> lines = new ArrayList<>();
-			List<?> cords = (List<?>) source.get("coordinates");
+			if(!(source.get("coordinates") instanceof List<?> coordinates)) {
+				throw new IllegalArgumentException("coordinates need to be present");
+			}
+			
+			List<GeoJsonLineString> lines = new ArrayList<>(coordinates.size());
 
-			for (Object line : cords) {
+			for (Object line : coordinates) {
 				lines.add(new GeoJsonLineString(toListOfPoint((List<?>) line)));
 			}
 			return new GeoJsonMultiLineString(lines);
@@ -700,9 +729,9 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		@SuppressWarnings("rawtypes")
 		@Override
-		public GeoJsonGeometryCollection convert(Document source) {
+		@Contract("null -> null; !null -> !null")
+		public @Nullable GeoJsonGeometryCollection convert(@Nullable Document source) {
 
 			if (source == null) {
 				return null;
@@ -711,8 +740,12 @@ abstract class GeoConverters {
 			Assert.isTrue(ObjectUtils.nullSafeEquals(source.get("type"), "GeometryCollection"),
 					String.format("Cannot convert type '%s' to GeometryCollection", source.get("type")));
 
-			List<GeoJson<?>> geometries = new ArrayList<>();
-			for (Object o : (List) source.get("geometries")) {
+			if(!(source.get("geometries") instanceof List<?> sourceGeometries)) {
+				throw new IllegalArgumentException("Geometries need to be present");
+			}
+			
+			List<GeoJson<?>> geometries = new ArrayList<>(sourceGeometries.size());
+			for (Object o : sourceGeometries) {
 				geometries.add(toGenericGeoJson((Document) o));
 			}
 
@@ -732,7 +765,10 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	@SuppressWarnings("unchecked")
-	static List<Point> toListOfPoint(List<?> listOfCoordinatePairs) {
+	@Contract("null -> fail")
+	static List<Point> toListOfPoint(@Nullable List<?> listOfCoordinatePairs) {
+
+		Assert.notNull(listOfCoordinatePairs, "ListOfCoordinatePairs must not be null");
 
 		List<Point> points = new ArrayList<>(listOfCoordinatePairs.size());
 
@@ -755,7 +791,10 @@ abstract class GeoConverters {
 	 * @return never {@literal null}.
 	 * @since 1.7
 	 */
-	static GeoJsonPolygon toGeoJsonPolygon(List<?> dbList) {
+	@Contract("null -> fail")
+	static GeoJsonPolygon toGeoJsonPolygon(@Nullable List<?> dbList) {
+
+		Assert.notNull(dbList, "DbList must not be null");
 
 		GeoJsonPolygon polygon = new GeoJsonPolygon(toListOfPoint((List<?>) dbList.get(0)));
 		return dbList.size() > 1 ? polygon.withInnerRing(toListOfPoint((List<?>) dbList.get(1))) : polygon;
@@ -794,7 +833,8 @@ abstract class GeoConverters {
 		throw new IllegalArgumentException(String.format("No converter found capable of converting GeoJson type %s", type));
 	}
 
-	private static double toPrimitiveDoubleValue(Object value) {
+	@Contract("null -> fail")
+	private static double toPrimitiveDoubleValue(@Nullable Object value) {
 
 		Assert.isInstanceOf(Number.class, value, "Argument must be a Number");
 		return NumberUtils.convertNumberToTargetClass((Number) value, Double.class);

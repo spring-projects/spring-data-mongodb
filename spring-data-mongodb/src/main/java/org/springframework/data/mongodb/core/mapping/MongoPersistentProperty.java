@@ -17,12 +17,12 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.util.Collection;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 /**
  * MongoDB specific {@link org.springframework.data.mapping.PersistentProperty} extension.

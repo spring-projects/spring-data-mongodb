@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
@@ -48,7 +48,6 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -106,7 +105,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	@Override
-	public Object execute(Object[] parameters) {
+	public @Nullable Object execute(Object[] parameters) {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				new MongoParametersParameterAccessor(method, parameters));
@@ -126,8 +125,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param accessor for providing invocation arguments. Never {@literal null}.
 	 * @param typeToRead the desired component target type. Can be {@literal null}.
 	 */
-	@Nullable
-	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
+	protected @Nullable Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {
 
 		Query query = createQuery(accessor);
@@ -162,6 +160,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		return query.withReadPreference(com.mongodb.ReadPreference.valueOf(method.getAnnotatedReadPreference()));
 	}
 
+	@SuppressWarnings("NullAway")
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
@@ -282,6 +281,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @throws IllegalStateException if no update could be found.
 	 * @since 3.4
 	 */
+	@SuppressWarnings("NullAway")
 	protected UpdateDefinition createUpdate(ConvertingParameterAccessor accessor) {
 
 		if (accessor.getUpdate() != null) {
@@ -375,6 +375,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return the {@link CodecRegistry} used.
 	 * @since 2.4
 	 */
+	@SuppressWarnings("NullAway")
 	protected CodecRegistry getCodecRegistry() {
 		return operations.execute(MongoDatabase::getCodecRegistry);
 	}

@@ -22,8 +22,8 @@ import java.util.function.BiFunction;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodClassKey;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -34,8 +34,7 @@ import com.mongodb.session.ClientSession;
 
 /**
  * {@link MethodInterceptor} implementation looking up and invoking an alternative target method having
- * {@link ClientSession} as its first argument. This allows seamless integration with the existing code base.
- * <br />
+ * {@link ClientSession} as its first argument. This allows seamless integration with the existing code base. <br />
  * The {@link MethodInterceptor} is aware of methods on {@code MongoCollection} that my return new instances of itself
  * like (eg. {@link com.mongodb.reactivestreams.client.MongoCollection#withWriteConcern(WriteConcern)} and decorate them
  * if not already proxied.
@@ -95,13 +94,13 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		this.sessionType = sessionType;
 	}
 
-	@Nullable
 	@Override
-	public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+	public @Nullable Object invoke(MethodInvocation methodInvocation) throws Throwable {
 
 		if (requiresDecoration(methodInvocation.getMethod())) {
 
 			Object target = methodInvocation.proceed();
+			Assert.notNull(target, "invocation target was null");
 			if (target instanceof Proxy) {
 				return target;
 			}

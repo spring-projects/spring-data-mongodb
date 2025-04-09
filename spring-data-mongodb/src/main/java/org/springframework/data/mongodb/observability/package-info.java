@@ -1,5 +1,5 @@
 /**
  * Infrastructure to provide driver observability using Micrometer.
  */
-@org.springframework.lang.NonNullApi
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.mongodb.observability;

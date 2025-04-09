@@ -25,9 +25,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonNull;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.EnvironmentCapable;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.expression.ValueEvaluationContext;
@@ -63,7 +65,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.TargetAware;
 import org.springframework.data.util.Optionals;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -413,6 +414,7 @@ class EntityOperations {
 		 *
 		 * @return
 		 */
+		@Nullable
 		Object getId();
 
 		/**
@@ -518,10 +520,9 @@ class EntityOperations {
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier
 		 * currently present.
 		 *
-		 * @param id must not be {@literal null}.
+		 * @param id can be {@literal null}.
 		 * @return
 		 */
-		@Nullable
 		T populateIdIfNecessary(@Nullable Object id);
 
 		/**
@@ -564,12 +565,12 @@ class EntityOperations {
 		}
 
 		@Override
-		public Object getId() {
+		public @Nullable Object getId() {
 			return getPropertyValue(ID_FIELD);
 		}
 
 		@Override
-		public Object getPropertyValue(String key) {
+		public @Nullable Object getPropertyValue(String key) {
 			return map.get(key);
 		}
 
@@ -578,7 +579,6 @@ class EntityOperations {
 			return Query.query(Criteria.where(ID_FIELD).is(map.get(ID_FIELD)));
 		}
 
-		@Nullable
 		@Override
 		public T populateIdIfNecessary(@Nullable Object id) {
 
@@ -605,8 +605,7 @@ class EntityOperations {
 		}
 
 		@Override
-		@Nullable
-		public Number getVersion() {
+		public @Nullable Number getVersion() {
 			return null;
 		}
 
@@ -723,7 +722,7 @@ class EntityOperations {
 		}
 
 		@Override
-		public Object getPropertyValue(String key) {
+		public @Nullable Object getPropertyValue(String key) {
 			return propertyAccessor.getProperty(entity.getRequiredPersistentProperty(key));
 		}
 
@@ -790,8 +789,7 @@ class EntityOperations {
 		}
 
 		@Override
-		@Nullable
-		public Object getVersion() {
+		public @Nullable Object getVersion() {
 			return propertyAccessor.getProperty(entity.getRequiredVersionProperty());
 		}
 
@@ -839,7 +837,6 @@ class EntityOperations {
 			return keyset;
 		}
 
-		@Nullable
 		private Object getNestedPropertyValue(String key) {
 
 			String[] segments = key.split("\\.");
@@ -852,6 +849,10 @@ class EntityOperations {
 				currentValue = currentEntity.getPropertyValue(segment);
 
 				if (i < segments.length - 1) {
+					if (currentValue == null) {
+						return BsonNull.VALUE;
+					}
+
 					currentEntity = entityOperations.forEntity(currentValue);
 				}
 			}
@@ -888,7 +889,6 @@ class EntityOperations {
 					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), entityOperations);
 		}
 
-		@Nullable
 		@Override
 		public T populateIdIfNecessary(@Nullable Object id) {
 
@@ -910,8 +910,7 @@ class EntityOperations {
 		}
 
 		@Override
-		@Nullable
-		public Number getVersion() {
+		public @Nullable Number getVersion() {
 
 			MongoPersistentProperty versionProperty = entity.getRequiredVersionProperty();
 
@@ -1127,7 +1126,7 @@ class EntityOperations {
 
 		@Override
 		public String getIdKeyName() {
-			return entity.getIdProperty().getName();
+			return entity.getIdProperty() != null ? entity.getIdProperty().getName() : ID_FIELD;
 		}
 
 		private String mappedNameOrDefault(String name) {
@@ -1147,7 +1146,8 @@ class EntityOperations {
 				return mongoEntity.getValueEvaluationContext(null);
 			}
 
-			return ValueEvaluationContext.of(this.environment, SimpleEvaluationContext.forReadOnlyDataBinding().build());
+			return ValueEvaluationContext.of(this.environment != null ? this.environment : new StandardEnvironment(),
+					SimpleEvaluationContext.forReadOnlyDataBinding().build());
 		}
 
 		/**

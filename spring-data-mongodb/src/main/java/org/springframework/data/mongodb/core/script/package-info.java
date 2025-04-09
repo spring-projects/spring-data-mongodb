@@ -3,6 +3,6 @@
  *
  * @since 1.7
  */
-@org.springframework.lang.NonNullApi
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.mongodb.core.script;
 

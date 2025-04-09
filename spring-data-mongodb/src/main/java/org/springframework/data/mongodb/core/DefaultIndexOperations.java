@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -28,7 +29,6 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 
@@ -115,6 +115,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public String ensureIndex(IndexDefinition indexDefinition) {
 
 		return execute(collection -> {
@@ -131,8 +132,7 @@ public class DefaultIndexOperations implements IndexOperations {
 		});
 	}
 
-	@Nullable
-	private MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
+	private @Nullable MongoPersistentEntity<?> lookupPersistentEntity(@Nullable Class<?> entityType, String collection) {
 
 		if (entityType != null) {
 			return mapper.getMappingContext().getRequiredPersistentEntity(entityType);
@@ -160,6 +160,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public void alterIndex(String name, org.springframework.data.mongodb.core.index.IndexOptions options) {
 
 		Document indexOptions = new Document("name", name);
@@ -180,6 +181,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
+	@SuppressWarnings("NullAway")
 	public List<IndexInfo> getIndexInfo() {
 
 		return execute(new CollectionCallback<List<IndexInfo>>() {
@@ -208,8 +210,7 @@ public class DefaultIndexOperations implements IndexOperations {
 		});
 	}
 
-	@Nullable
-	public <T> T execute(CollectionCallback<T> callback) {
+	public <T> @Nullable T execute(CollectionCallback<T> callback) {
 
 		Assert.notNull(callback, "CollectionCallback must not be null");
 
@@ -228,6 +229,7 @@ public class DefaultIndexOperations implements IndexOperations {
 				mapper.getMappedSort((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
 	}
 
+	@SuppressWarnings("NullAway")
 	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops,
 			@Nullable MongoPersistentEntity<?> entity) {
 

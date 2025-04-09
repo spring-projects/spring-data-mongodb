@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.NearQuery;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -80,6 +81,7 @@ public class GeoNearOperation implements AggregationOperation {
 	 * @return new instance of {@link GeoNearOperation}.
 	 * @since 2.1
 	 */
+	@Contract("_ -> new")
 	public GeoNearOperation useIndex(String key) {
 		return new GeoNearOperation(nearQuery, distanceField, key);
 	}

@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -67,6 +68,7 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 	 * @param fields must not be {@literal null}.
 	 * @return new instance of {@link UnsetOperation}.
 	 */
+	@Contract("_ -> new")
 	public UnsetOperation and(String... fields) {
 
 		List<Object> target = new ArrayList<>(this.fields);
@@ -80,6 +82,7 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 	 * @param fields must not be {@literal null}.
 	 * @return new instance of {@link UnsetOperation}.
 	 */
+	@Contract("_ -> new")
 	public UnsetOperation and(Field... fields) {
 
 		List<Object> target = new ArrayList<>(this.fields);

@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -34,7 +35,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -129,7 +129,7 @@ public class UpdateMapper extends QueryMapper {
 	 *      org.springframework.data.mongodb.core.mapping.MongoPersistentEntity)
 	 */
 	@Override
-	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
+	protected @Nullable Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (entity != null && entity.isUnwrapped()) {
 			return converter.convertToMongoType(source, entity);
@@ -140,7 +140,8 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	@Override
-	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
+	@SuppressWarnings("NullAway")
+	protected Entry<String, @Nullable Object> getMappedObjectForField(Field field, @Nullable Object rawValue) {
 
 		if (isDocument(rawValue)) {
 
@@ -196,11 +197,12 @@ public class UpdateMapper extends QueryMapper {
 		return value instanceof Query;
 	}
 
-	private Document getMappedValue(@Nullable Field field, Modifier modifier) {
+	private @Nullable Document getMappedValue(@Nullable Field field, Modifier modifier) {
 		return new Document(modifier.getKey(), getMappedModifier(field, modifier));
 	}
 
-	private Object getMappedModifier(@Nullable Field field, Modifier modifier) {
+	@SuppressWarnings("NullAway")
+	private @Nullable Object getMappedModifier(@Nullable Field field, Modifier modifier) {
 
 		Object value = modifier.getValue();
 
@@ -211,7 +213,7 @@ public class UpdateMapper extends QueryMapper {
 					: getMappedSort(sortObject, field.getPropertyEntity());
 		}
 
-		if (isAssociationConversionNecessary(field, value)) {
+		if (field != null && isAssociationConversionNecessary(field, value)) {
 			if (ObjectUtils.isArray(value) || value instanceof Collection) {
 				List<Object> targetPointers = new ArrayList<>();
 				for (Object val : converter.getConversionService().convert(value, List.class)) {
@@ -229,7 +231,7 @@ public class UpdateMapper extends QueryMapper {
 	private TypeInformation<?> getTypeHintForEntity(@Nullable Object source, MongoPersistentEntity<?> entity) {
 
 		TypeInformation<?> info = entity.getTypeInformation();
-		Class<?> type = info.getActualType().getType();
+		Class<?> type = info.getRequiredActualType().getType();
 
 		if (source == null || type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
 			return info;
@@ -247,7 +249,7 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	@Override
-	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
+	protected Field createPropertyField(@Nullable MongoPersistentEntity<?> entity, String key,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		return entity == null ? super.createPropertyField(entity, key, mappingContext)
@@ -306,6 +308,7 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		@Override
+		@SuppressWarnings("NullAway")
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
 			return new UpdateAssociationConverter(getMappingContext(), getAssociation(), key);
 		}
@@ -333,7 +336,7 @@ public class UpdateMapper extends QueryMapper {
 			}
 
 			@Override
-			public String convert(MongoPersistentProperty source) {
+			public @Nullable String convert(MongoPersistentProperty source) {
 				return super.convert(source) == null ? null : mapper.mapPropertyName(source);
 			}
 		}

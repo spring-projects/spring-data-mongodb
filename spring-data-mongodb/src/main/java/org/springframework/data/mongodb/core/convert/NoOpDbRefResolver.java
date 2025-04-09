@@ -18,9 +18,8 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.List;
 
 import org.bson.Document;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
@@ -37,16 +36,14 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 	INSTANCE;
 
 	@Override
-	@Nullable
-	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
+	public @Nullable Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler proxyHandler) {
 
 		return handle();
 	}
 
 	@Override
-	@Nullable
-	public Document fetch(DBRef dbRef) {
+	public @Nullable Document fetch(DBRef dbRef) {
 		return handle();
 	}
 
