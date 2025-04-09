@@ -415,13 +415,34 @@ public class MongoRepositoryContributorTests {
 	}
 
 	@Test
+	void testAggregationWithProjectedResultsLimitedByPageable() {
+
+		List<UserAggregate> allLastnames = fragment.groupByLastnameAnd("first_name", PageRequest.of(1, 1, Sort.by("_id")));
+		assertThat(allLastnames).containsExactly(//
+				new UserAggregate("Skywalker", List.of("Anakin", "Luke")) //
+		);
+	}
+
+	@Test
+	void testAggregationWithProjectedResultsAsPage() {
+
+		Slice<UserAggregate> allLastnames = fragment.groupByLastnameAndReturnPage("first_name",
+				PageRequest.of(1, 1, Sort.by("_id")));
+		assertThat(allLastnames.hasPrevious()).isTrue();
+		assertThat(allLastnames.hasNext()).isTrue();
+		assertThat(allLastnames.getContent()).containsExactly(//
+				new UserAggregate("Skywalker", List.of("Anakin", "Luke")) //
+		);
+	}
+
+	@Test
 	void testAggregationWithProjectedResultsWrappedInAggregationResults() {
 
 		AggregationResults<UserAggregate> allLastnames = fragment.groupByLastnameAndAsAggregationResults("first_name");
 		assertThat(allLastnames.getMappedResults()).containsExactlyInAnyOrder(//
-			new UserAggregate("Skywalker", List.of("Anakin", "Luke")), //
-			new UserAggregate("Organa", List.of("Leia")), //
-			new UserAggregate("Solo", List.of("Han", "Ben")));
+				new UserAggregate("Skywalker", List.of("Anakin", "Luke")), //
+				new UserAggregate("Organa", List.of("Leia")), //
+				new UserAggregate("Solo", List.of("Han", "Ben")));
 	}
 
 	@Test
@@ -444,7 +465,7 @@ public class MongoRepositoryContributorTests {
 	@Test
 	void testAggregationWithCollation() {
 		assertThatException().isThrownBy(() -> fragment.findAllLastnamesWithCollation())
-			.withMessageContaining("'locale' is invalid");
+				.withMessageContaining("'locale' is invalid");
 	}
 
 	private static void initUsers() {

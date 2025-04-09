@@ -174,8 +174,18 @@ public interface UserRepository extends CrudRepository<User, String> {
 	List<UserAggregate> groupByLastnameAnd(String property);
 
 	@Aggregation(pipeline = { //
-		"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
-		"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+	List<UserAggregate> groupByLastnameAnd(String property, Pageable pageable);
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+	Slice<UserAggregate> groupByLastnameAndReturnPage(String property, Pageable pageable);
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
 	AggregationResults<UserAggregate> groupByLastnameAndAsAggregationResults(String property);
 
 	@Aggregation(pipeline = { //

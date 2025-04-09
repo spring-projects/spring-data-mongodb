@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
@@ -251,8 +253,18 @@ public class MongoBlocks {
 					builder.addStatement("return convertSimpleRawResults($T.class, results.getMappedResults())", returnType);
 				}
 			} else {
-				builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
-						aggregationVariableName, outputType);
+				if (queryMethod.isSliceQuery()) {
+					builder.addStatement("$T results = $L.aggregate($L, $T.class)", AggregationResults.class, mongoOpsRef,
+							aggregationVariableName, outputType);
+					builder.addStatement("boolean hasNext = results.getMappedResults().size() > $L.getPageSize()",
+							context.getPageableParameterName());
+					builder.addStatement(
+							"return new $T<>(hasNext ? results.getMappedResults().subList(0, $L.getPageSize()) : results.getMappedResults(), $L, hasNext)",
+							SliceImpl.class, context.getPageableParameterName(), context.getPageableParameterName());
+				} else {
+					builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
+							aggregationVariableName, outputType);
+				}
 			}
 
 			return builder.build();
@@ -357,18 +369,62 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add("\n");
 
-			List<String> stageNames = new ArrayList<>();
+			builder.addStatement("$T<$T> stages = new $T()", List.class, Object.class, ArrayList.class);
+			int stageCounter = 0;
 			for (String stage : source.stages()) {
-				String stageName = "stage_%s".formatted(stageNames.size());
+				String stageName = "stage_%s".formatted(stageCounter++);
 				builder.add(renderExpressionToDocument(stage, stageName, arguments));
-				stageNames.add(stageName);
+				builder.addStatement("stages.add($L)", stageName);
 			}
 
-			// TODO: render limit and offset stages AggregationUtil#appendLimitAndOffsetIfPresent
+			{
+				String sortParameter = context.getSortParameterName();
+				if (StringUtils.hasText(sortParameter)) {
+
+					builder.beginControlFlow("if($L.isSorted())", sortParameter);
+					builder.addStatement("$T sortDocument = new $T()", Document.class, Document.class);
+					builder.beginControlFlow("for ($T order : $L)", Order.class, sortParameter);
+					builder.addStatement("sortDocument.append(order.getProperty(), order.isAscending() ? 1 : -1);");
+					builder.endControlFlow();
+					builder.addStatement("stages.add(new $T($S, sortDocument))", Document.class, "$sort");
+					builder.endControlFlow();
+				}
+
+				String limitParameter = context.getLimitParameterName();
+				if (StringUtils.hasText(limitParameter)) {
+					builder.beginControlFlow("if($L.isLimited())", limitParameter);
+					builder.addStatement("stages.add($T.limit($L.max()))", Aggregation.class, limitParameter);
+					builder.endControlFlow();
+				}
+
+				String pageableParameter = context.getPageableParameterName();
+				if (StringUtils.hasText(pageableParameter)) {
+
+					builder.beginControlFlow("if($L.getSort().isSorted())", pageableParameter);
+					builder.addStatement("$T sortDocument = new $T()", Document.class, Document.class);
+					builder.beginControlFlow("for ($T order : $L.getSort())", Order.class, pageableParameter);
+					builder.addStatement("sortDocument.append(order.getProperty(), order.isAscending() ? 1 : -1);");
+					builder.endControlFlow();
+					builder.addStatement("stages.add(new $T($S, sortDocument))", Document.class, "$sort");
+					builder.endControlFlow();
+
+					builder.beginControlFlow("if($L.isPaged())", pageableParameter);
+					builder.beginControlFlow("if($L.getOffset() > 0)", pageableParameter);
+					builder.addStatement("stages.add($T.skip($L.getOffset()))", Aggregation.class, pageableParameter);
+					builder.endControlFlow();
+					if (queryMethod.isSliceQuery()) {
+						builder.addStatement("stages.add($T.limit($L.getPageSize() + 1))", Aggregation.class, pageableParameter);
+					} else {
+						builder.addStatement("stages.add($T.limit($L.getPageSize()))", Aggregation.class, pageableParameter);
+					}
+					builder.endControlFlow();
+				}
+
+			}
 
 			String pipelineName = aggregationVariableName + "Pipeline";
-			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineName,
-					StringUtils.collectionToDelimitedString(stageNames, ", "));
+			builder.addStatement("$T $L = createPipeline(stages)", AggregationPipeline.class, pipelineName);
+
 			builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
 					context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
 					context.getRepositoryInformation().getDomainType(), pipelineName);

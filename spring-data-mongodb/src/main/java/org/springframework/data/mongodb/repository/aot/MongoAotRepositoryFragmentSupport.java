@@ -68,11 +68,25 @@ public class MongoAotRepositoryFragmentSupport {
 		return new BasicQuery(queryDocument);
 	}
 
-	protected AggregationPipeline createPipeline(Document... rawStages) {
+	protected AggregationPipeline createPipeline(List<Object> rawStages) {
 
-		List<AggregationOperation> stages = new ArrayList<>(rawStages.length);
-		for (Document rawStage : rawStages) {
-			stages.add((ctx) -> rawStage);
+		List<AggregationOperation> stages = new ArrayList<>(rawStages.size());
+		boolean first = true;
+		for (Object rawStage : rawStages) {
+			if (rawStage instanceof Document stageDocument) {
+				if (first) {
+					stages.add((ctx) -> ctx.getMappedObject(stageDocument));
+				} else {
+					stages.add((ctx) -> stageDocument);
+				}
+			} else if (rawStage instanceof AggregationOperation aggregationOperation) {
+				stages.add(aggregationOperation);
+			} else {
+				throw new RuntimeException("%s cannot be converted to AggregationOperation".formatted(rawStage.getClass()));
+			}
+			if (first) {
+				first = false;
+			}
 		}
 		return new AggregationPipeline(stages);
 	}
