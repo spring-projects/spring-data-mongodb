@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the original author or authors.
+ * Copyright 2024-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.security.SecureRandom;
 import java.util.LinkedHashMap;
@@ -39,6 +38,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -369,7 +369,7 @@ class RangeEncryptionTests {
 					path = StringUtils.arrayToDelimitedString(ctx.getProperty().getMongoField().getName().parts(), ".");
 				}
 				if (ctx.getOperatorContext() != null) {
-					path = ctx.getOperatorContext().getPath();
+					path = ctx.getOperatorContext().path();
 				}
 				return EncryptionKey.keyId(keyHolder.getEncryptionKey(path));
 			}));

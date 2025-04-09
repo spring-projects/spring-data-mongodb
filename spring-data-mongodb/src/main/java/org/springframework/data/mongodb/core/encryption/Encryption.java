@@ -20,11 +20,13 @@ import org.bson.BsonDocument;
 /**
  * Component responsible for encrypting and decrypting values.
  *
+ * @param <P> plaintext type.
+ * @param <C> ciphertext type.
  * @author Christoph Strobl
  * @author Ross Lawley
  * @since 4.1
  */
-public interface Encryption<S, T> {
+public interface Encryption<P, C> {
 
 	/**
 	 * Encrypt the given value.
@@ -33,7 +35,7 @@ public interface Encryption<S, T> {
 	 * @param options must not be {@literal null}.
 	 * @return the encrypted value.
 	 */
-	T encrypt(S value, EncryptionOptions options);
+	C encrypt(P value, EncryptionOptions options);
 
 	/**
 	 * Decrypt the given value.
@@ -41,7 +43,7 @@ public interface Encryption<S, T> {
 	 * @param value must not be {@literal null}.
 	 * @return the decrypted value.
 	 */
-	S decrypt(T value);
+	P decrypt(C value);
 
 	/**
 	 * Encrypt the given expression.

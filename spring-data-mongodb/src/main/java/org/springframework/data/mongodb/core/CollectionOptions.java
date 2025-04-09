@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonNull;
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
@@ -43,7 +43,6 @@ import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.CheckReturnValue;
 import org.springframework.lang.Contract;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -241,11 +240,11 @@ public class CollectionOptions {
 	 * Create new {@link CollectionOptions} with already given settings and {@code validationOptions} set to given
 	 * {@link MongoJsonSchema}.
 	 *
-	 * @param schema can be {@literal null}.
+	 * @param schema must not be {@literal null}.
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.1
 	 */
-	public CollectionOptions schema(@Nullable MongoJsonSchema schema) {
+	public CollectionOptions schema(MongoJsonSchema schema) {
 		return validator(Validator.schema(schema));
 	}
 
@@ -473,7 +472,7 @@ public class CollectionOptions {
 	 * Get the {@code encryptedFields} if available.
 	 *
 	 * @return {@link Optional#empty()} if not specified.
-	 * @since 4.5.0
+	 * @since 4.5
 	 */
 	public Optional<EncryptedFieldsOptions> getEncryptedFieldsOptions() {
 		return Optional.ofNullable(encryptedFieldsOptions);
@@ -552,7 +551,8 @@ public class CollectionOptions {
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
 
-		public ValidationOptions(Validator validator, ValidationLevel validationLevel, ValidationAction validationAction) {
+		public ValidationOptions(@Nullable Validator validator, @Nullable ValidationLevel validationLevel,
+				@Nullable ValidationAction validationAction) {
 
 			this.validator = validator;
 			this.validationLevel = validationLevel;
@@ -669,7 +669,7 @@ public class CollectionOptions {
 
 	/**
 	 * Encapsulation of Encryption options for collections.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 4.5
 	 */
@@ -677,8 +677,19 @@ public class CollectionOptions {
 
 		private static final EncryptedFieldsOptions NONE = new EncryptedFieldsOptions();
 
-		private @Nullable MongoJsonSchema schema;
-		private List<QueryableJsonSchemaProperty> queryableProperties;
+		private final @Nullable MongoJsonSchema schema;
+		private final List<QueryableJsonSchemaProperty> queryableProperties;
+
+		EncryptedFieldsOptions() {
+			this(null, List.of());
+		}
+
+		private EncryptedFieldsOptions(@Nullable MongoJsonSchema schema,
+				List<QueryableJsonSchemaProperty> queryableProperties) {
+
+			this.schema = schema;
+			this.queryableProperties = queryableProperties;
+		}
 
 		/**
 		 * @return {@link EncryptedFieldsOptions#NONE}
@@ -699,17 +710,6 @@ public class CollectionOptions {
 		 */
 		public static EncryptedFieldsOptions fromProperties(List<QueryableJsonSchemaProperty> properties) {
 			return new EncryptedFieldsOptions(null, List.copyOf(properties));
-		}
-
-		EncryptedFieldsOptions() {
-			this(null, List.of());
-		}
-
-		private EncryptedFieldsOptions(@Nullable MongoJsonSchema schema,
-				List<QueryableJsonSchemaProperty> queryableProperties) {
-
-			this.schema = schema;
-			this.queryableProperties = queryableProperties;
 		}
 
 		/**
@@ -739,7 +739,6 @@ public class CollectionOptions {
 			return new Document("fields", selectPaths());
 		}
 
-		@NonNull
 		private List<Document> selectPaths() {
 
 			Map<String, Document> fields = new LinkedHashMap<>();
@@ -760,10 +759,13 @@ public class CollectionOptions {
 
 			List<Document> converted = new ArrayList<>(queryableProperties.size());
 			for (QueryableJsonSchemaProperty property : queryableProperties) {
+
 				Document field = new Document("path", property.getIdentifier());
+
 				if (!property.getTypes().isEmpty()) {
 					field.append("bsonType", property.getTypes().iterator().next().toBsonType().value());
 				}
+
 				if (property
 						.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
 					if (encrypted.getKeyId() != null) {
@@ -775,11 +777,13 @@ public class CollectionOptions {
 						}
 					}
 				}
-				field.append("queries", property.getCharacteristics().getCharacteristics().stream()
-						.map(QueryCharacteristic::toDocument).collect(Collectors.toList()));
+
+				field.append("queries", property.getCharacteristics().map(QueryCharacteristic::toDocument).toList());
+
 				if (!field.containsKey("keyId")) {
 					field.append("keyId", BsonNull.VALUE);
 				}
+
 				converted.add(field);
 			}
 			return converted;
@@ -813,7 +817,7 @@ public class CollectionOptions {
 		}
 	}
 
-	private static void collectPaths(Document document, String currentPath, Map<String, Document> paths) {
+	private static void collectPaths(Document document, @Nullable String currentPath, Map<String, Document> paths) {
 
 		if (document.containsKey("type") && document.get("type").equals("object")) {
 			Object o = document.get("properties");

@@ -79,7 +79,6 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	}
 
 	/**
-	 *
 	 * @param operatorContext
 	 * @return new instance of {@link MongoConversionContext}.
 	 * @since 4.5
@@ -119,42 +118,34 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 	/**
 	 * The {@link OperatorContext} provides access to the actual conversion intent like a write operation or a query
 	 * operator such as {@literal $gte}.
-	 * 
+	 *
 	 * @since 4.5
 	 */
 	public interface OperatorContext {
 
 		/**
 		 * The operator the conversion is used in.
+		 *
 		 * @return {@literal write} for simple write operations during save, or a query operator.
 		 */
-		String getOperator();
+		String operator();
 
 		/**
 		 * The context path the operator is used in.
+		 *
 		 * @return never {@literal null}.
 		 */
-		String getPath();
+		String path();
 
 		boolean isWriteOperation();
+
 	}
 
-	public static class WriteOperatorContext implements OperatorContext {
-
-		private final String path;
-
-		public WriteOperatorContext(String path) {
-			this.path = path;
-		}
+	record WriteOperatorContext(String path) implements OperatorContext {
 
 		@Override
-		public String getOperator() {
+		public String operator() {
 			return "write";
-		}
-
-		@Override
-		public String getPath() {
-			return path;
 		}
 
 		@Override
@@ -163,22 +154,11 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 		}
 	}
 
-	public static class QueryOperatorContext implements OperatorContext {
-
-		private final String operator;
-		private final String path;
+	record QueryOperatorContext(String operator, String path) implements OperatorContext {
 
 		public QueryOperatorContext(@Nullable String operator, String path) {
 			this.operator = operator != null ? operator : "$eq";
 			this.path = path;
-		}
-
-		public String getOperator() {
-			return operator;
-		}
-
-		public String getPath() {
-			return path;
 		}
 
 		@Override
@@ -186,4 +166,5 @@ public class MongoConversionContext implements ValueConversionContext<MongoPersi
 			return false;
 		}
 	}
+
 }
