@@ -15,15 +15,22 @@
  */
 package example.aot;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Update;
@@ -160,4 +167,79 @@ public interface UserRepository extends CrudRepository<User, String> {
 			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
 			"{ '$project': { '_id' : '$last_name' } }" })
 	List<String> findAllLastnames();
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+	List<UserAggregate> groupByLastnameAnd(String property);
+
+	@Aggregation(pipeline = { //
+		"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+		"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+	AggregationResults<UserAggregate> groupByLastnameAndAsAggregationResults(String property);
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'posts' : { '$ne' : null } } }", //
+			"{ '$project': { 'nrPosts' : {'$size': '$posts' } } }", //
+			"{ '$group' : { '_id' : null, 'total' : { $sum: '$nrPosts' } } }" })
+	int sumPosts();
+
+	@Hint("ln-idx")
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$project': { '_id' : '$last_name' } }" })
+	List<String> findAllLastnamesUsingIndex();
+
+	@ReadPreference("no-such-read-preference")
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$project': { '_id' : '$last_name' } }" })
+	List<String> findAllLastnamesWithReadPreference();
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$project': { '_id' : '$last_name' } }" }, collation = "no_collation")
+	List<String> findAllLastnamesWithCollation();
+
+	class UserAggregate {
+
+		@Id //
+		private final String lastname;
+		private final Set<String> names;
+
+		public UserAggregate(String lastname, Collection<String> names) {
+			this.lastname = lastname;
+			this.names = new HashSet<>(names);
+		}
+
+		public String getLastname() {
+			return this.lastname;
+		}
+
+		public Set<String> getNames() {
+			return this.names;
+		}
+
+		@Override
+		public String toString() {
+			return "UserAggregate{" + "lastname='" + lastname + '\'' + ", names=" + names + '}';
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			UserAggregate that = (UserAggregate) o;
+			return Objects.equals(lastname, that.lastname) && names.equals(that.names);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(lastname, names);
+		}
+	}
 }

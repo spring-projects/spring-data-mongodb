@@ -30,12 +30,14 @@ import org.springframework.data.mongodb.core.ExecutableRemoveOperation.Executabl
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.BasicUpdate;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
@@ -43,12 +45,14 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Pag
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.javapoet.ClassName;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.javapoet.TypeName;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -220,16 +224,35 @@ public class MongoBlocks {
 			if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
 				outputType = Document.class;
 			} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
-				// ahahahaha
+				outputType = queryMethod.getReturnType().getComponentType().getType();
 			}
 
-			builder.addStatement("$T results = $L.aggregate($L, $T.class)", AggregationResults.class, mongoOpsRef,
-					aggregationVariableName, outputType);
+			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
+				builder.addStatement("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
+				return builder.build();
+			}
+
+			if (ClassUtils.isAssignable(AggregationResults.class, context.getMethod().getReturnType())) {
+				builder.addStatement("return $L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
+				return builder.build();
+			}
+
 			if (outputType == Document.class) {
-				builder.addStatement("return convertSimpleRawResults($T.class, results.getMappedResults())",
-						queryMethod.getReturnedObjectType());
+
+				Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
+
+				builder.addStatement("$T results = $L.aggregate($L, $T.class)", AggregationResults.class, mongoOpsRef,
+						aggregationVariableName, outputType);
+				if (!queryMethod.isCollectionQuery()) {
+					builder.addStatement(
+							"return $T.<$T>firstElement(convertSimpleRawResults($T.class, results.getMappedResults()))",
+							CollectionUtils.class, returnType, returnType);
+				} else {
+					builder.addStatement("return convertSimpleRawResults($T.class, results.getMappedResults())", returnType);
+				}
 			} else {
-				builder.addStatement("return results.getMappedResults()");
+				builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
+						aggregationVariableName, outputType);
 			}
 
 			return builder.build();
@@ -345,33 +368,53 @@ public class MongoBlocks {
 
 			String pipelineName = aggregationVariableName + "Pipeline";
 			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineName,
-					StringUtils.collectionToCommaDelimitedString(stageNames));
+					StringUtils.collectionToDelimitedString(stageNames, ", "));
 			builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
 					context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
 					context.getRepositoryInformation().getDomainType(), pipelineName);
 
-			// Aggregation Options
-			// TODO: aggregation options
-			/* 
-			AggregationOptions options = AggregationOptions.builder().build()
-			Aggregation aggregation = Aggregation.newAggregation();
-			aggregation.withOptions();
-			 */
-			// MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
-			// String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
-			//
-			// if (StringUtils.hasText(hint)) {
-			// builder.addStatement("$L.withHint($S)", queryVariableName, hint);
-			// }
+			List<CodeBlock> hints = new ArrayList<>(5);
+			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
+				hints.add(CodeBlock.of(".skipOutput()"));
+			}
+			{
+				MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
+				String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
+				if (StringUtils.hasText(hint)) {
+					hints.add(CodeBlock.of(".hint($S)", hint));
+				}
+			}
+			{
+				MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
+				String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value")
+						: null;
+				if (StringUtils.hasText(readPreference)) {
+					hints.add(CodeBlock.of(".readPreference($T.valueOf($S))", com.mongodb.ReadPreference.class, readPreference));
+				}
+			}
+			{
+				if (queryMethod.hasAnnotatedCollation()) {
+					hints.add(CodeBlock.of(".collation($T.parse($S))", Collation.class, queryMethod.getAnnotatedCollation()));
+				}
+			}
 
-			// MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
-			// String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") :
-			// null;
-			//
-			// if (StringUtils.hasText(readPreference)) {
-			// builder.addStatement("$L.withReadPreference($T.valueOf($S))", queryVariableName,
-			// com.mongodb.ReadPreference.class, readPreference);
-			// }
+			if (!hints.isEmpty()) {
+
+				Builder optionsBuilder = CodeBlock.builder();
+				optionsBuilder.add("$T aggregationOptions = $T.builder()\n", AggregationOptions.class,
+						AggregationOptions.class);
+				optionsBuilder.indent();
+				for (CodeBlock optionBlock : hints) {
+					optionsBuilder.add(optionBlock);
+					optionsBuilder.add("\n");
+				}
+				optionsBuilder.add(".build();\n");
+				optionsBuilder.unindent();
+				builder.add(optionsBuilder.build());
+
+				builder.addStatement("$L = $L.withOptions(aggregationOptions)", aggregationVariableName,
+						aggregationVariableName);
+			}
 
 			return builder.build();
 		}

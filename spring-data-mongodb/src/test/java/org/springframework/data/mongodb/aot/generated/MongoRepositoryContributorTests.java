@@ -32,11 +32,13 @@
 package org.springframework.data.mongodb.aot.generated;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatException;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import example.aot.User;
 import example.aot.UserProjection;
 import example.aot.UserRepository;
+import example.aot.UserRepository.UserAggregate;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +57,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.repository.aot.AotFragmentTestConfigurationSupport;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
@@ -79,6 +82,7 @@ public class MongoRepositoryContributorTests {
 
 	@Configuration
 	static class JpaRepositoryContributorConfiguration extends AotFragmentTestConfigurationSupport {
+
 		public JpaRepositoryContributorConfiguration() {
 			super(UserRepository.class);
 		}
@@ -398,6 +402,49 @@ public class MongoRepositoryContributorTests {
 
 		List<String> allLastnames = fragment.findAllLastnames();
 		assertThat(allLastnames).containsExactlyInAnyOrder("Skywalker", "Solo", "Organa", "Solo", "Skywalker");
+	}
+
+	@Test
+	void testAggregationWithProjectedResults() {
+
+		List<UserAggregate> allLastnames = fragment.groupByLastnameAnd("first_name");
+		assertThat(allLastnames).containsExactlyInAnyOrder(//
+				new UserAggregate("Skywalker", List.of("Anakin", "Luke")), //
+				new UserAggregate("Organa", List.of("Leia")), //
+				new UserAggregate("Solo", List.of("Han", "Ben")));
+	}
+
+	@Test
+	void testAggregationWithProjectedResultsWrappedInAggregationResults() {
+
+		AggregationResults<UserAggregate> allLastnames = fragment.groupByLastnameAndAsAggregationResults("first_name");
+		assertThat(allLastnames.getMappedResults()).containsExactlyInAnyOrder(//
+			new UserAggregate("Skywalker", List.of("Anakin", "Luke")), //
+			new UserAggregate("Organa", List.of("Leia")), //
+			new UserAggregate("Solo", List.of("Han", "Ben")));
+	}
+
+	@Test
+	void testAggregationWithSingleResultExtraction() {
+		assertThat(fragment.sumPosts()).isEqualTo(5);
+	}
+
+	@Test
+	void testAggregationWithHint() {
+		assertThatException().isThrownBy(() -> fragment.findAllLastnamesUsingIndex())
+				.withMessageContaining("hint provided does not correspond to an existing index");
+	}
+
+	@Test
+	void testAggregationWithReadPreference() {
+		assertThatException().isThrownBy(() -> fragment.findAllLastnamesWithReadPreference())
+				.withMessageContaining("No match for read preference");
+	}
+
+	@Test
+	void testAggregationWithCollation() {
+		assertThatException().isThrownBy(() -> fragment.findAllLastnamesWithCollation())
+			.withMessageContaining("'locale' is invalid");
 	}
 
 	private static void initUsers() {
