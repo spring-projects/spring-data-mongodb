@@ -34,7 +34,7 @@ import org.springframework.core.annotation.AliasFor;
 public @interface RangeEncrypted {
 
 	/**
-	 * Set the contention factor
+	 * Set the contention factor.
 	 *
 	 * @return the contention factor
 	 */
@@ -42,15 +42,16 @@ public @interface RangeEncrypted {
 	long contentionFactor() default -1;
 
 	/**
-	 * Set the {@literal range} options
+	 * Set the {@literal range} options.
 	 * <p>
-	 * Should be valid extended json representing the range options and including the following values: {@code min},
-	 * {@code max}, {@code trimFactor} and {@code sparsity}.
+	 * Should be valid extended {@link org.bson.Document#parse(String) JSON} representing the range options and including
+	 * the following values: {@code min}, {@code max}, {@code trimFactor} and {@code sparsity}.
 	 * <p>
 	 * Please note that values are data type sensitive and may require proper identification via eg. {@code $numberLong}.
 	 *
-	 * @return the json representation of range options
+	 * @return the {@link org.bson.Document#parse(String) JSON} representation of range options.
 	 */
 	@AliasFor(annotation = Queryable.class, value = "queryAttributes")
 	String rangeOptions() default "";
+
 }

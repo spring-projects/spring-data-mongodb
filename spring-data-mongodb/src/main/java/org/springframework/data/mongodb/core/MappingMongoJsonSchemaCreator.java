@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -32,7 +33,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.Queryable;
-import org.springframework.data.mongodb.core.mapping.RangeEncrypted;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
@@ -126,29 +126,31 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
 		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
 
-		{
-			Encrypted encrypted = entity.findAnnotation(Encrypted.class);
-			if (encrypted != null) {
-
-				Document encryptionMetadata = new Document();
-
-				Collection<Object> encryptionKeyIds = entity.getEncryptionKeyIds();
-				if (!CollectionUtils.isEmpty(encryptionKeyIds)) {
-					encryptionMetadata.append("keyId", encryptionKeyIds);
-				}
-
-				if (StringUtils.hasText(encrypted.algorithm())) {
-					encryptionMetadata.append("algorithm", encrypted.algorithm());
-				}
-
-				schemaBuilder.encryptionMetadata(encryptionMetadata);
-			}
+		Encrypted encrypted = entity.findAnnotation(Encrypted.class);
+		if (encrypted != null) {
+			schemaBuilder.encryptionMetadata(getEncryptionMetadata(entity, encrypted));
 		}
 
 		List<JsonSchemaProperty> schemaProperties = computePropertiesForEntity(Collections.emptyList(), entity);
 		schemaBuilder.properties(schemaProperties.toArray(new JsonSchemaProperty[0]));
 
 		return schemaBuilder.build();
+	}
+
+	private static Document getEncryptionMetadata(MongoPersistentEntity<?> entity, Encrypted encrypted) {
+
+		Document encryptionMetadata = new Document();
+
+		Collection<Object> encryptionKeyIds = entity.getEncryptionKeyIds();
+		if (!CollectionUtils.isEmpty(encryptionKeyIds)) {
+			encryptionMetadata.append("keyId", encryptionKeyIds);
+		}
+
+		if (StringUtils.hasText(encrypted.algorithm())) {
+			encryptionMetadata.append("algorithm", encrypted.algorithm());
+		}
+
+		return encryptionMetadata;
 	}
 
 	private List<JsonSchemaProperty> computePropertiesForEntity(List<MongoPersistentProperty> path,
@@ -190,8 +192,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		Class<?> rawTargetType = computeTargetType(property); // target type before conversion
 		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
-
-		if ((rawTargetType.isPrimitive() || ClassUtils.isPrimitiveArray(rawTargetType)) && targetType == Object.class || ClassUtils.isAssignable(targetType, rawTargetType) ) {
+		if ((rawTargetType.isPrimitive() || ClassUtils.isPrimitiveArray(rawTargetType)) && targetType == Object.class
+				|| ClassUtils.isAssignable(targetType, rawTargetType)) {
 			targetType = rawTargetType;
 		}
 
@@ -317,14 +319,15 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 				if (queryable.contentionFactor() >= 0) {
 					options.put("contention", queryable.contentionFactor());
 				}
-				if (!queryable.queryAttributes().isEmpty()) {
+
+				if (StringUtils.hasText(queryable.queryAttributes())) {
 					options.putAll(Document.parse(queryable.queryAttributes()));
 				}
 
 				return options;
 			}
 		};
-		return new QueryableJsonSchemaProperty(enc, QueryCharacteristics.of(List.of(characteristic)));
+		return new QueryableJsonSchemaProperty(enc, QueryCharacteristics.of(characteristic));
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,
