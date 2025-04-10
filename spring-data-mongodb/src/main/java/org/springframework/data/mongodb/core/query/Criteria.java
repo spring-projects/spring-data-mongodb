@@ -255,6 +255,11 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	public Criteria raw(String operator, Object value) {
+		criteria.put(operator, value);
+		return this;
+	}
+
 	private boolean lastOperatorWasNot() {
 		return !this.criteria.isEmpty() && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
 	}
@@ -331,8 +336,7 @@ public class Criteria implements CriteriaDefinition {
 			throw new InvalidMongoDbApiUsageException(
 					"You can only pass in one argument of type " + values[1].getClass().getName());
 		}
-		criteria.put("$in", Arrays.asList(values));
-		return this;
+		return this.in(Arrays.asList(values));
 	}
 
 	/**
@@ -343,7 +347,13 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/in/">MongoDB Query operator: $in</a>
 	 */
 	public Criteria in(Collection<?> values) {
-		criteria.put("$in", values);
+
+		ArrayList<?> objects = new ArrayList<>(values);
+		if(objects.size() == 1 && CollectionUtils.firstElement(objects) instanceof Placeholder placeholder) {
+			criteria.put("$in", placeholder);
+		} else {
+			criteria.put("$in", objects);
+		}
 		return this;
 	}
 
@@ -366,7 +376,13 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nin/">MongoDB Query operator: $nin</a>
 	 */
 	public Criteria nin(Collection<?> values) {
-		criteria.put("$nin", values);
+
+		ArrayList<?> objects = new ArrayList<>(values);
+		if(objects.size() == 1 && CollectionUtils.firstElement(objects) instanceof Placeholder placeholder) {
+			criteria.put("$nin", placeholder);
+		} else {
+			criteria.put("$nin", objects);
+		}
 		return this;
 	}
 

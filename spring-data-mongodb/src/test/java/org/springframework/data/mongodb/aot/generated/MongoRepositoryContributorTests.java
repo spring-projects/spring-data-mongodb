@@ -40,6 +40,7 @@ import example.aot.UserProjection;
 import example.aot.UserRepository;
 import example.aot.UserRepository.UserAggregate;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +70,6 @@ import com.mongodb.client.MongoClient;
 
 /**
  * @author Christoph Strobl
- * @since 2025/01
  */
 @ExtendWith(MongoClientExtension.class)
 @SpringJUnitConfig(classes = MongoRepositoryContributorTests.JpaRepositoryContributorConfiguration.class)
@@ -147,6 +147,83 @@ public class MongoRepositoryContributorTests {
 
 		List<User> users = fragment.findByLastnameStartingWith("S");
 		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("luke", "vader", "kylo", "han");
+	}
+
+	@Test
+	void testEndingWith() {
+
+		List<User> users = fragment.findByLastnameEndsWith("er");
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("luke", "vader");
+	}
+
+	@Test
+	void testLike() {
+
+		List<User> users = fragment.findByFirstnameLike("ei");
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("leia");
+	}
+
+	@Test
+	void testNotLike() {
+
+		List<User> users = fragment.findByFirstnameNotLike("ei");
+		assertThat(users).extracting(User::getUsername).isNotEmpty().doesNotContain("leia");
+	}
+
+	@Test
+	void testIn() {
+
+		List<User> users = fragment.findByUsernameIn(List.of("chewbacca", "kylo"));
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("chewbacca", "kylo");
+	}
+
+	@Test
+	void testNotIn() {
+
+		List<User> users = fragment.findByUsernameNotIn(List.of("chewbacca", "kylo"));
+		assertThat(users).extracting(User::getUsername).isNotEmpty().doesNotContain("chewbacca", "kylo");
+	}
+
+	@Test
+	void testAnd() {
+
+		List<User> users = fragment.findByFirstnameAndLastname("Han", "Solo");
+		assertThat(users).extracting(User::getUsername).containsExactly("han");
+	}
+
+	@Test
+	void testOr() {
+
+		List<User> users = fragment.findByFirstnameOrLastname("Han", "Skywalker");
+		assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("han", "vader", "luke");
+	}
+
+	@Test
+	void testBetween() {
+
+		List<User> users = fragment.findByVisitsBetween(10, 100);
+		assertThat(users).extracting(User::getUsername).containsExactly("vader");
+	}
+
+	@Test
+	void testTimeValue() {
+
+		List<User> users = fragment.findByLastSeenGreaterThan(Instant.parse("2025-01-01T00:00:00.000Z"));
+		assertThat(users).extracting(User::getUsername).containsExactly("luke");
+	}
+
+	@Test
+	void testNot() {
+
+		List<User> users = fragment.findByLastnameNot("Skywalker");
+		assertThat(users).extracting(User::getUsername).isNotEmpty().doesNotContain("luke", "vader");
+	}
+
+	@Test
+	void testExistsCriteria() {
+
+		List<User> users = fragment.findByVisitsExists(false);
+		assertThat(users).extracting(User::getUsername).contains("kylo");
 	}
 
 	@Test
@@ -485,6 +562,10 @@ public class MongoRepositoryContributorTests {
 				  "username": "luke",
 				  "first_name": "Luke",
 				  "last_name": "Skywalker",
+				  "visits" : 2,
+				  "lastSeen" : {
+				    "$date": "2025-04-01T00:00:00.000Z"
+				   },
 				  "posts": [
 				    {
 				      "message": "I have a bad feeling about this.",
@@ -526,6 +607,9 @@ public class MongoRepositoryContributorTests {
 				{
 				  "_id": "id-4",
 				  "username": "chewbacca",
+				  "lastSeen" : {
+				    "$date": "2025-01-01T00:00:00.000Z"
+				   },
 				  "_class": "example.springdata.aot.User"
 				}""");
 
@@ -534,6 +618,7 @@ public class MongoRepositoryContributorTests {
 						{
 						  "_id": "id-5",
 						  "username": "yoda",
+						  "visits" : 1000,
 						  "posts": [
 						    {
 						      "message": "Do. Or do not. There is no try.",
@@ -556,6 +641,7 @@ public class MongoRepositoryContributorTests {
 				  "username": "vader",
 				  "first_name": "Anakin",
 				  "last_name": "Skywalker",
+				  "visits" : 50,
 				  "posts": [
 				    {
 				      "message": "I am your father",
