@@ -15,14 +15,21 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.SearchResult;
+import org.springframework.data.domain.SearchResults;
+import org.springframework.data.domain.Similarity;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.geo.Distance;
@@ -37,6 +44,10 @@ import org.springframework.data.mongodb.core.ExecutableRemoveOperation;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -207,6 +218,83 @@ public interface MongoQueryExecution {
 
 			TypeInformation<?> componentType = returnType.getComponentType();
 			return componentType != null && GeoResult.class.equals(componentType.getType());
+		}
+	}
+
+	/**
+	 * {@link MongoQueryExecution} to execute vector search.
+	 *
+	 * @author Mark Paluch
+	 * @since 5.0
+	 */
+	class VectorSearchExecution implements MongoQueryExecution {
+
+		private final MongoOperations operations;
+		private final MongoQueryMethod method;
+		private final String collectionName;
+		private final VectorSearchDelegate.QueryMetadata queryMetadata;
+		private final List<AggregationOperation> pipeline;
+
+		public VectorSearchExecution(MongoOperations operations, MongoQueryMethod method, String collectionName,
+				VectorSearchDelegate.QueryMetadata queryMetadata, MongoParameterAccessor accessor) {
+
+			this.operations = operations;
+			this.collectionName = collectionName;
+			this.queryMetadata = queryMetadata;
+			this.method = method;
+			this.pipeline = queryMetadata.getAggregationPipeline(method, accessor);
+		}
+
+		@Override
+		public Object execute(Query query) {
+
+			AggregationResults<?> aggregated = operations.aggregate(
+					TypedAggregation.newAggregation(queryMetadata.outputType(), pipeline), collectionName,
+					queryMetadata.outputType());
+
+			List<?> mappedResults = aggregated.getMappedResults();
+
+			if (isSearchResult(method.getReturnType())) {
+
+				List<org.bson.Document> rawResults = aggregated.getRawResults().getList("results", org.bson.Document.class);
+				List<SearchResult<Object>> result = new ArrayList<>(mappedResults.size());
+
+				for (int i = 0; i < mappedResults.size(); i++) {
+					Document document = rawResults.get(i);
+					SearchResult<Object> searchResult = new SearchResult<>(mappedResults.get(i),
+							Similarity.raw(document.getDouble("__score__"), queryMetadata.scoringFunction()));
+
+					result.add(searchResult);
+				}
+
+				return isListOfSearchResult(method.getReturnType()) ? result : new SearchResults<>(result);
+			}
+
+			return mappedResults;
+		}
+
+		private static boolean isListOfSearchResult(TypeInformation<?> returnType) {
+
+			if (!Collection.class.isAssignableFrom(returnType.getType())) {
+				return false;
+			}
+
+			TypeInformation<?> componentType = returnType.getComponentType();
+			return componentType != null && SearchResult.class.equals(componentType.getType());
+		}
+
+		private static boolean isSearchResult(TypeInformation<?> returnType) {
+
+			if (SearchResults.class.isAssignableFrom(returnType.getType())) {
+				return true;
+			}
+
+			if (!Iterable.class.isAssignableFrom(returnType.getType())) {
+				return false;
+			}
+
+			TypeInformation<?> componentType = returnType.getComponentType();
+			return componentType != null && SearchResult.class.equals(componentType.getType());
 		}
 	}
 

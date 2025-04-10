@@ -19,11 +19,14 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -71,6 +74,21 @@ class StubParameterAccessor implements MongoParameterAccessor {
 				this.colllation = Collation.class.cast(value);
 			}
 		}
+	}
+
+	@Override
+	public Vector getVector() {
+		return null;
+	}
+
+	@Override
+	public @org.jspecify.annotations.Nullable Score getScore() {
+		return null;
+	}
+
+	@Override
+	public @org.jspecify.annotations.Nullable Range<Score> getScoreRange() {
+		return null;
 	}
 
 	@Override

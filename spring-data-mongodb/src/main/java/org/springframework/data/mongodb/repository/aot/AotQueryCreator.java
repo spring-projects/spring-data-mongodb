@@ -25,8 +25,10 @@ import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -126,6 +128,21 @@ class AotQueryCreator {
 
 		@Override
 		public Range<Distance> getDistanceRange() {
+			return null;
+		}
+
+		@Override
+		public @Nullable Vector getVector() {
+			return null;
+		}
+
+		@Override
+		public @Nullable Score getScore() {
+			return null;
+		}
+
+		@Override
+		public @Nullable Range<Score> getScoreRange() {
 			return null;
 		}
 

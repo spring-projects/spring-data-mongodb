@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.domain.Score;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -55,7 +57,25 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	}
 
 	@SuppressWarnings("NullAway")
-	public @Nullable Range<Distance> getDistanceRange() {
+	@Override
+	public Range<Score> getScoreRange() {
+
+		MongoParameters mongoParameters = method.getParameters();
+		int rangeIndex = mongoParameters.getScoreRangeIndex();
+
+		if (rangeIndex != -1) {
+			return getValue(rangeIndex);
+		}
+
+		int scoreIndex = mongoParameters.getScoreIndex();
+		Bound<Score> maxDistance = scoreIndex == -1 ? Bound.unbounded() : Bound.inclusive((Score) getScore());
+
+		return Range.of(Bound.unbounded(), maxDistance);
+	}
+
+	@SuppressWarnings("NullAway")
+	@Override
+	public Range<Distance> getDistanceRange() {
 
 		MongoParameters mongoParameters = method.getParameters();
 

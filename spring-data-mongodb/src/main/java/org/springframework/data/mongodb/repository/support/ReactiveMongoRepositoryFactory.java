@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryMetho
 import org.springframework.data.mongodb.repository.query.ReactivePartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.ReactiveStringBasedAggregation;
 import org.springframework.data.mongodb.repository.query.ReactiveStringBasedMongoQuery;
+import org.springframework.data.mongodb.repository.query.ReactiveVectorSearchAggregation;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -179,6 +180,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, delegate);
+			} else if (queryMethod.hasAnnotatedVectorSearch()) {
+				return new ReactiveVectorSearchAggregation(queryMethod, operations, delegate);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
 				return new ReactiveStringBasedAggregation(queryMethod, operations, delegate);
 			} else if (queryMethod.hasAnnotatedQuery()) {

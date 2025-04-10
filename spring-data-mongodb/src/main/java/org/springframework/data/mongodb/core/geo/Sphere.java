@@ -63,7 +63,7 @@ public class Sphere implements Shape {
 	 * @param radius
 	 */
 	public Sphere(Point center, double radius) {
-		this(center, new Distance(radius));
+		this(center, Distance.of(radius));
 	}
 
 	/**

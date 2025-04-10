@@ -270,7 +270,7 @@ abstract class GeoConverters {
 			Assert.notNull(center, "Center must not be null");
 			Assert.notNull(radius, "Radius must not be null");
 
-			Distance distance = new Distance(toPrimitiveDoubleValue(radius));
+			Distance distance = Distance.of(toPrimitiveDoubleValue(radius));
 
 			if (source.containsKey("metric")) {
 
@@ -335,7 +335,7 @@ abstract class GeoConverters {
 			Assert.notNull(center, "Center must not be null");
 			Assert.notNull(radius, "Radius must not be null");
 
-			Distance distance = new Distance(toPrimitiveDoubleValue(radius));
+			Distance distance = Distance.of(toPrimitiveDoubleValue(radius));
 
 			if (source.containsKey("metric")) {
 

@@ -29,6 +29,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
@@ -120,7 +121,7 @@ class MongoQueryCreatorUnitTests {
 	void bindsMetricDistanceParameterToNearSphereCorrectly() throws Exception {
 
 		Point point = new Point(10, 20);
-		Distance distance = new Distance(2.5, Metrics.KILOMETERS);
+		Distance distance = Distance.of(2.5, Metrics.KILOMETERS);
 
 		Query query = query(
 				where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
@@ -131,7 +132,7 @@ class MongoQueryCreatorUnitTests {
 	void bindsDistanceParameterToNearCorrectly() throws Exception {
 
 		Point point = new Point(10, 20);
-		Distance distance = new Distance(2.5);
+		Distance distance = Distance.of(2.5);
 
 		Query query = query(
 				where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
@@ -405,7 +406,7 @@ class MongoQueryCreatorUnitTests {
 	void createsNonSphericalNearForDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
-		Distance distance = new Distance(1.0);
+		Distance distance = Distance.of(1.0);
 
 		PartTree tree = new PartTree("findByLocationNear", Venue.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, distance), context);
@@ -445,7 +446,7 @@ class MongoQueryCreatorUnitTests {
 	void shouldCreateNearSphereQueryForSphericalPropertyHavingDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
-		Distance distance = new Distance(1.0);
+		Distance distance = Distance.of(1.0);
 
 		PartTree tree = new PartTree("findByAddress2dSphere_GeoNear", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, distance), context);
@@ -458,7 +459,7 @@ class MongoQueryCreatorUnitTests {
 	void shouldCreateNearQueryForMinMaxDistance() {
 
 		Point point = new Point(10, 20);
-		Range<Distance> range = Distance.between(new Distance(10), new Distance(20));
+		Range<Distance> range = Distance.between(Distance.of(10), Distance.of(20));
 
 		PartTree tree = new PartTree("findByAddress_GeoNear", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, range), context);
@@ -664,7 +665,7 @@ class MongoQueryCreatorUnitTests {
 		GeoJsonPoint point = new GeoJsonPoint(27.987901, 86.9165379);
 		PartTree tree = new PartTree("findByLocationNear", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree,
-				getAccessor(converter, point, new Distance(1, Metrics.KILOMETERS)), context);
+				getAccessor(converter, point, Distance.of(1, Metrics.KILOMETERS)), context);
 
 		assertThat(creator.createQuery()).isEqualTo(query(where("location").nearSphere(point).maxDistance(1000.0D)));
 	}

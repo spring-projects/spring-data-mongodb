@@ -1,0 +1,15 @@
+====
+[source,java]
+----
+class Comment {
+
+  @Id String id;
+  String country;
+  String comment;
+
+  Vector embedding;
+
+  // getters, setters, …
+}
+----
+====

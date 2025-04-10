@@ -21,10 +21,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -44,7 +44,7 @@ import com.mongodb.ReadPreference;
  */
 public class NearQueryUnitTests {
 
-	private static final Distance ONE_FIFTY_KILOMETERS = new Distance(150, Metrics.KILOMETERS);
+	private static final Distance ONE_FIFTY_KILOMETERS = Distance.of(150, Metrics.KILOMETERS);
 
 	@Test
 	public void rejectsNullPoint() {
@@ -57,7 +57,7 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(2.5, 2.5, Metrics.KILOMETERS).maxDistance(150);
 
 		assertThat(query.getMaxDistance()).isEqualTo(ONE_FIFTY_KILOMETERS);
-		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.KILOMETERS);
+		assertThat(query.getMetric()).isEqualTo(Metrics.KILOMETERS);
 		assertThat(query.isSpherical()).isTrue();
 	}
 
@@ -68,27 +68,27 @@ public class NearQueryUnitTests {
 
 		query.inMiles();
 
-		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.MILES);
+		assertThat(query.getMetric()).isEqualTo(Metrics.MILES);
 	}
 
 	@Test
 	public void configuresResultMetricCorrectly() {
 
 		NearQuery query = NearQuery.near(2.5, 2.1);
-		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.NEUTRAL);
+		assertThat(query.getMetric()).isEqualTo(Metrics.NEUTRAL);
 
 		query = query.maxDistance(ONE_FIFTY_KILOMETERS);
-		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.KILOMETERS);
+		assertThat(query.getMetric()).isEqualTo(Metrics.KILOMETERS);
 		assertThat(query.getMaxDistance()).isEqualTo(ONE_FIFTY_KILOMETERS);
 		assertThat(query.isSpherical()).isTrue();
 
 		query = query.in(Metrics.MILES);
-		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.MILES);
+		assertThat(query.getMetric()).isEqualTo(Metrics.MILES);
 		assertThat(query.getMaxDistance()).isEqualTo(ONE_FIFTY_KILOMETERS);
 		assertThat(query.isSpherical()).isTrue();
 
-		query = query.maxDistance(new Distance(200, Metrics.KILOMETERS));
-		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.MILES);
+		query = query.maxDistance(Distance.of(200, Metrics.KILOMETERS));
+		assertThat(query.getMetric()).isEqualTo(Metrics.MILES);
 	}
 
 	@Test // DATAMONGO-445, DATAMONGO-2264
@@ -200,7 +200,7 @@ public class NearQueryUnitTests {
 	public void shouldUseMetersForGeoJsonDataWhenDistanceInKilometers() {
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
-		query.maxDistance(new Distance(1, Metrics.KILOMETERS));
+		query.maxDistance(Distance.of(1, Metrics.KILOMETERS));
 
 		assertThat(query.toDocument()).containsEntry("maxDistance", 1000D).containsEntry("distanceMultiplier", 0.001D);
 	}
@@ -209,7 +209,7 @@ public class NearQueryUnitTests {
 	public void shouldUseMetersForGeoJsonDataWhenDistanceInMiles() {
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
-		query.maxDistance(new Distance(1, Metrics.MILES));
+		query.maxDistance(Distance.of(1, Metrics.MILES));
 
 		assertThat(query.toDocument()).containsEntry("maxDistance", 1609.3438343D).containsEntry("distanceMultiplier",
 				0.00062137D);
@@ -219,7 +219,7 @@ public class NearQueryUnitTests {
 	public void shouldUseKilometersForDistanceWhenMaxDistanceInMiles() {
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
-		query.maxDistance(new Distance(1, Metrics.MILES)).in(Metrics.KILOMETERS);
+		query.maxDistance(Distance.of(1, Metrics.MILES)).in(Metrics.KILOMETERS);
 
 		assertThat(query.toDocument()).containsEntry("maxDistance", 1609.3438343D).containsEntry("distanceMultiplier",
 				0.001D);
@@ -229,7 +229,7 @@ public class NearQueryUnitTests {
 	public void shouldUseMilesForDistanceWhenMaxDistanceInKilometers() {
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
-		query.maxDistance(new Distance(1, Metrics.KILOMETERS)).in(Metrics.MILES);
+		query.maxDistance(Distance.of(1, Metrics.KILOMETERS)).in(Metrics.MILES);
 
 		assertThat(query.toDocument()).containsEntry("maxDistance", 1000D).containsEntry("distanceMultiplier", 0.00062137D);
 	}

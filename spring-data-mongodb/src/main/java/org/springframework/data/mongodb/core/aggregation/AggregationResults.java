@@ -105,4 +105,5 @@ public class AggregationResults<T> implements Iterable<T> {
 		Object object = rawResults.get("serverUsed");
 		return object instanceof String stringValue ? stringValue : null;
 	}
+
 }

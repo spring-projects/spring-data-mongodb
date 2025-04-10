@@ -27,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
@@ -43,6 +45,7 @@ import org.springframework.data.repository.query.ParametersSource;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 class MongoParametersUnitTests {
@@ -184,6 +187,21 @@ class MongoParametersUnitTests {
 		assertThat(parameters.getUpdateIndex()).isEqualTo(-1);
 	}
 
+	@Test // GH-2107
+	void shouldOmitVector() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("shouldOmitVector", Vector.class, Score.class,
+				Range.class, String.class);
+		MongoParameters parameters = new MongoParameters(ParametersSource.of(method), false);
+
+		assertThat(parameters.getVectorIndex()).isEqualTo(0);
+		assertThat(parameters.getScoreIndex()).isEqualTo(1);
+		assertThat(parameters.getScoreRangeIndex()).isEqualTo(2);
+
+		MongoParameters bindableParameters = parameters.getBindableParameters();
+		assertThat(bindableParameters).hasSize(3);
+	}
+
 	interface PersonRepository {
 
 		List<Person> findByLocationNear(Point point, Distance distance);
@@ -205,5 +223,8 @@ class MongoParametersUnitTests {
 		List<Person> findByText(String text, Collation collation);
 
 		List<Person> findAndModifyByFirstname(String firstname, UpdateDefinition update, Pageable page);
+
+		List<Person> shouldOmitVector(Vector vector, Score distance, Range<Score> range,
+				String country);
 	}
 }

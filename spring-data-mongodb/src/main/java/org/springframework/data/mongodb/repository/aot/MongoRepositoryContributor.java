@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -160,10 +159,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	private static boolean backoff(MongoQueryMethod method) {
 
-		boolean skip = method.isGeoNearQuery() || method.isScrollQuery() || method.isStreamQuery();
+		boolean skip = method.isGeoNearQuery() || method.isScrollQuery() || method.isStreamQuery()
+				|| method.isSearchQuery();
 
 		if (skip && logger.isDebugEnabled()) {
-			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming or scrolling query"
+			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming, search or scrolling query"
 					.formatted(method.getName()));
 		}
 		return skip;

@@ -21,8 +21,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
@@ -195,10 +197,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return index;
 	}
 
-	public int getDistanceRangeIndex() {
-		return -1;
-	}
-
 	/**
 	 * Returns the index of the {@link Distance} parameter to be used for max distance in geo queries.
 	 *
@@ -317,7 +315,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		@Override
 		public boolean isSpecialParameter() {
-			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter()
+			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType())
+					|| Vector.class.isAssignableFrom(getType()) || isNearParameter()
 					|| TextCriteria.class.isAssignableFrom(getType()) || Collation.class.isAssignableFrom(getType());
 		}
 

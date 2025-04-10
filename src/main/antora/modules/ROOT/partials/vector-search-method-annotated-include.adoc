@@ -1,0 +1,23 @@
+Annotated search methods use the `@VectorSearch` annotation to define parameters for the https://www.mongodb.com/docs/upcoming/reference/operator/aggregation/vectorSearch/[`$vectorSearch`] aggregation stage.
+
+.Using `@VectorSearch` Search Methods
+====
+[source,java]
+----
+interface CommentRepository extends Repository<Comment, String> {
+
+  @VectorSearch(indexName = "cos-index", filter = "{country: ?0}")
+  SearchResults<WithVector> searchAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding,
+      Score distance);
+
+  @VectorSearch(indexName = "my-index", filter = "{country: ?0}", numCandidates = "#{#limit * 20}",
+				searchType = VectorSearchOperation.SearchType.ANN)
+  List<WithVector> findAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding, Score distance, int limit);
+}
+----
+====
+
+Annotated Search Methods can define `filter` for pre-filter usage.
+
+`filter`, `limit`, and `numCandidates` support xref:page$mongodb/value-expressions.adoc[Value Expressions] allowing references to search method arguments.
+

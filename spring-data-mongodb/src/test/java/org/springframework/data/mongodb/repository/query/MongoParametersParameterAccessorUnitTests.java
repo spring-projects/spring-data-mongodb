@@ -22,8 +22,10 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.domain.Score;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -45,15 +47,15 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-public class MongoParametersParameterAccessorUnitTests {
+class MongoParametersParameterAccessorUnitTests {
 
-	Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
-	RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
-	MongoMappingContext context = new MongoMappingContext();
-	ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+	private Distance DISTANCE = Distance.of(2.5, Metrics.KILOMETERS);
+	private RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
+	private MongoMappingContext context = new MongoMappingContext();
+	private ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 
 	@Test
-	public void returnsUnboundedForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
+	void returnsUnboundedForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -64,7 +66,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test
-	public void returnsDistanceIfAvailable() throws NoSuchMethodException, SecurityException {
+	void returnsDistanceIfAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -75,7 +77,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void shouldReturnAsFullTextStringWhenNoneDefinedForMethod() throws NoSuchMethodException, SecurityException {
+	void shouldReturnAsFullTextStringWhenNoneDefinedForMethod() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -86,7 +88,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void shouldProperlyConvertTextCriteria() throws NoSuchMethodException, SecurityException {
+	void shouldProperlyConvertTextCriteria() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, TextCriteria.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -98,13 +100,13 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldDetectMinAndMaxDistance() throws NoSuchMethodException, SecurityException {
+	void shouldDetectMinAndMaxDistance() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		Distance min = new Distance(10, Metrics.KILOMETERS);
-		Distance max = new Distance(20, Metrics.KILOMETERS);
+		Distance min = Distance.of(10, Metrics.KILOMETERS);
+		Distance max = Distance.of(20, Metrics.KILOMETERS);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20), Distance.between(min, max) });
@@ -116,7 +118,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldDetectCollation() throws NoSuchMethodException, SecurityException {
+	void shouldDetectCollation() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Collation.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -129,7 +131,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test // GH-2107
-	public void shouldReturnUpdateIfPresent() throws NoSuchMethodException, SecurityException {
+	void shouldReturnUpdateIfPresent() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findAndModifyByFirstname", String.class, UpdateDefinition.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -142,7 +144,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	}
 
 	@Test // GH-2107
-	public void shouldReturnNullIfNoUpdatePresent() throws NoSuchMethodException, SecurityException {
+	void shouldReturnNullIfNoUpdatePresent() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -151,6 +153,23 @@ public class MongoParametersParameterAccessorUnitTests {
 				new Object[] { new Point(0,0) });
 
 		assertThat(accessor.getUpdate()).isNull();
+	}
+
+	@Test // GH-
+	void shouldReturnRangeFromScore() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Score.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { "foo", Score.of(1) });
+
+		Range<Score> scoreRange = accessor.getScoreRange();
+
+		assertThat(scoreRange).isNotNull();
+		assertThat(scoreRange.getLowerBound().isBounded()).isFalse();
+		assertThat(scoreRange.getUpperBound().isBounded()).isTrue();
+		assertThat(scoreRange.getUpperBound().getValue()).contains(Score.of(1));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
@@ -164,6 +183,8 @@ public class MongoParametersParameterAccessorUnitTests {
 		List<Person> findByFirstname(String firstname, TextCriteria fullText);
 
 		List<Person> findByFirstname(String firstname, Collation collation);
+
+		List<Person> findByFirstname(String firstname, Score score);
 
 		List<Person> findAndModifyByFirstname(String firstname, UpdateDefinition update);
 

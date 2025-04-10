@@ -71,7 +71,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		Query query = new Query();
 		when(parameterAccessor.getGeoNearLocation()).thenReturn(new Point(1, 2));
 		when(parameterAccessor.getDistanceRange())
-				.thenReturn(Range.from(Bound.inclusive(new Distance(10))).to(Bound.inclusive(new Distance(15))));
+				.thenReturn(Range.from(Bound.inclusive(Distance.of(10))).to(Bound.inclusive(Distance.of(15))));
 		when(parameterAccessor.getPageable()).thenReturn(PageRequest.of(1, 10));
 
 		new GeoNearExecution(operations, parameterAccessor, TypeInformation.fromReturnTypeOf(geoNear)).execute(query,
@@ -83,8 +83,8 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
 		assertThat(nearQuery.toDocument().get("near")).isEqualTo(Arrays.asList(1d, 2d));
 		assertThat(nearQuery.getSkip()).isEqualTo(10L);
-		assertThat(nearQuery.getMinDistance()).isEqualTo(new Distance(10));
-		assertThat(nearQuery.getMaxDistance()).isEqualTo(new Distance(15));
+		assertThat(nearQuery.getMinDistance()).isEqualTo(Distance.of(10));
+		assertThat(nearQuery.getMaxDistance()).isEqualTo(Distance.of(15));
 	}
 
 	@Test // DATAMONGO-1444
