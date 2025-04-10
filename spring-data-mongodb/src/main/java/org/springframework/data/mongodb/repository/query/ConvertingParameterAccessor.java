@@ -22,11 +22,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -74,6 +77,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
+	public Vector getVector() {
+		return delegate.getVector();
+	}
+
+	@Override
 	public @Nullable ScrollPosition getScrollPosition() {
 		return delegate.getScrollPosition();
 	}
@@ -93,6 +101,16 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	public @Nullable Object getBindableValue(int index) {
 		return getConvertedValue(delegate.getBindableValue(index), null);
+	}
+
+	@Override
+	public @org.jspecify.annotations.Nullable Score getScore() {
+		return delegate.getScore();
+	}
+
+	@Override
+	public @org.jspecify.annotations.Nullable Range<Score> getScoreRange() {
+		return delegate.getScoreRange();
 	}
 
 	@Override
@@ -208,7 +226,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 		if (source instanceof Iterable<?> iterable) {
 
-			if(source instanceof Collection<?> collection) {
+			if (source instanceof Collection<?> collection) {
 				return new ArrayList<>(collection);
 			}
 

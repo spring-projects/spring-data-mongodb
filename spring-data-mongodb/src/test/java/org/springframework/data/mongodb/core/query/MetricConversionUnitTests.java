@@ -17,6 +17,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.data.Offset.*;
 import static org.assertj.core.data.Offset.offset;
 
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ public class MetricConversionUnitTests {
 	@Test // DATAMONGO-1348
 	public void shouldConvertMilesToMeters() {
 
-		Distance distance = new Distance(1, Metrics.MILES);
+		Distance distance = Distance.of(1, Metrics.MILES);
 		double distanceInMeters = MetricConversion.getDistanceInMeters(distance);
 
 		assertThat(distanceInMeters).isCloseTo(1609.3438343d, offset(0.000000001));
@@ -43,7 +44,7 @@ public class MetricConversionUnitTests {
 	@Test // DATAMONGO-1348
 	public void shouldConvertKilometersToMeters() {
 
-		Distance distance = new Distance(1, Metrics.KILOMETERS);
+		Distance distance = Distance.of(1, Metrics.KILOMETERS);
 		double distanceInMeters = MetricConversion.getDistanceInMeters(distance);
 
 		assertThat(distanceInMeters).isCloseTo(1000, offset(0.000000001));
@@ -72,11 +73,13 @@ public class MetricConversionUnitTests {
 
 	@Test // GH-4004
 	void shouldConvertKilometersToRadians/* on an earth like sphere with r=6378.137km */() {
-		assertThat(MetricConversion.toRadians(new Distance(1, Metrics.KILOMETERS))).isCloseTo(0.000156785594d, offset(0.000000001));
+		assertThat(MetricConversion.toRadians(Distance.of(1, Metrics.KILOMETERS))).isCloseTo(0.000156785594d,
+				offset(0.000000001));
 	}
 
 	@Test // GH-4004
 	void shouldConvertMilesToRadians/* on an earth like sphere with r=6378.137km */() {
-		assertThat(MetricConversion.toRadians(new Distance(1, Metrics.MILES))).isCloseTo(0.000252321328d, offset(0.000000001));
+		assertThat(MetricConversion.toRadians(Distance.of(1, Metrics.MILES))).isCloseTo(0.000252321328d,
+				offset(0.000000001));
 	}
 }

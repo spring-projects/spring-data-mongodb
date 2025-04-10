@@ -69,7 +69,7 @@ public class GeoConvertersUnitTests {
 	@Test // DATAMONGO-858
 	public void convertsCircleToDocumentAndBackCorrectlyMilesDistance() {
 
-		Distance radius = new Distance(3, Metrics.MILES);
+		Distance radius = Distance.of(3, Metrics.MILES);
 		Circle circle = new Circle(new Point(1, 2), radius);
 
 		Document document = CircleToDocumentConverter.INSTANCE.convert(circle);
@@ -106,7 +106,7 @@ public class GeoConvertersUnitTests {
 	@Test // DATAMONGO-858
 	public void convertsSphereToDocumentAndBackCorrectlyWithKilometerDistance() {
 
-		Distance radius = new Distance(3, Metrics.KILOMETERS);
+		Distance radius = Distance.of(3, Metrics.KILOMETERS);
 		Sphere sphere = new Sphere(new Point(1, 2), radius);
 
 		Document document = SphereToDocumentConverter.INSTANCE.convert(sphere);
@@ -160,7 +160,7 @@ public class GeoConvertersUnitTests {
 		circle.put("radius", 3L);
 
 		assertThat(DocumentToCircleConverter.INSTANCE.convert(circle))
-				.isEqualTo(new Circle(new Point(1, 2), new Distance(3)));
+				.isEqualTo(new Circle(new Point(1, 2), Distance.of(3)));
 	}
 
 	@Test // DATAMONGO-1607
@@ -171,7 +171,7 @@ public class GeoConvertersUnitTests {
 		sphere.put("radius", 3L);
 
 		assertThat(DocumentToSphereConverter.INSTANCE.convert(sphere))
-				.isEqualTo(new Sphere(new Point(1, 2), new Distance(3)));
+				.isEqualTo(new Sphere(new Point(1, 2), Distance.of(3)));
 	}
 
 }

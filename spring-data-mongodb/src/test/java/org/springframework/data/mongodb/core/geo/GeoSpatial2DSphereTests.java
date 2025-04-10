@@ -23,9 +23,9 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.List;
 
 import org.junit.Test;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.GeoResults;
-import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.Venue;
@@ -67,7 +67,7 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
 
 		assertThat(result.getContent().size()).isNotEqualTo(0);
-		assertThat(result.getAverageDistance().getMetric()).isEqualTo((Metric) Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
 	}
 
 	@Test // DATAMONGO-1110

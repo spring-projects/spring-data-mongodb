@@ -81,7 +81,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@SuppressWarnings("NullAway")
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery, false);
 		Query query = creator.createQuery();
 
 		if (tree.isLimiting()) {
@@ -126,7 +126,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 	@Override
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
-		return new MongoQueryCreator(tree, accessor, context, false).createQuery();
+		return new MongoQueryCreator(tree, accessor, context, false, false).createQuery();
 	}
 
 	@Override

@@ -1626,7 +1626,7 @@ class MappingMongoConverterUnitTests {
 	void shouldWriteEntityWithGeoSphereWithMetricDistanceCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
-		Sphere sphere = new Sphere(new Point(1, 2), new Distance(3, Metrics.KILOMETERS));
+		Sphere sphere = new Sphere(new Point(1, 2), Distance.of(3, Metrics.KILOMETERS));
 		Distance radius = sphere.getRadius();
 		object.sphere = sphere;
 
@@ -4082,8 +4082,7 @@ class MappingMongoConverterUnitTests {
 		@Field(targetType = FieldType.DECIMAL128) //
 		BigDecimal bigDecimal;
 
-		@Field(targetType = FieldType.DECIMAL128)
-		BigInteger bigInteger;
+		@Field(targetType = FieldType.DECIMAL128) BigInteger bigInteger;
 
 		@Field(targetType = FieldType.INT64) //
 		Date dateAsLong;

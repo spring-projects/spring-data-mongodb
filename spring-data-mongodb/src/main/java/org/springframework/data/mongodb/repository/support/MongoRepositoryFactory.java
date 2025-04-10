@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.StringBasedAggregation;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
+import org.springframework.data.mongodb.repository.query.VectorSearchAggregation;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -176,6 +177,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, expressionSupport);
+			} else if (queryMethod.hasAnnotatedVectorSearch()) {
+				return new VectorSearchAggregation(queryMethod, operations, expressionSupport);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
 				return new StringBasedAggregation(queryMethod, operations, expressionSupport);
 			} else if (queryMethod.hasAnnotatedQuery()) {

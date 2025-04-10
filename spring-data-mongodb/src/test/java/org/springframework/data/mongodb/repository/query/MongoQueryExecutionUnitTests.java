@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -86,7 +87,7 @@ class MongoQueryExecutionUnitTests {
 	@Mock DbRefResolver dbRefResolver;
 
 	private Point POINT = new Point(10, 20);
-	private Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
+	private Distance DISTANCE = Distance.of(2.5, Metrics.KILOMETERS);
 	private RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
 	private MongoMappingContext context = new MongoMappingContext();
 	private ProjectionFactory factory = new SpelAwareProxyProjectionFactory();

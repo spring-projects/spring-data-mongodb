@@ -1,0 +1,19 @@
+.Using `SearchResult<T>` in a Repository Search Method
+====
+[source,java]
+----
+interface CommentRepository extends Repository<Comment, String> {
+
+  @VectorSearch(indexName = "my-index")
+  SearchResults<Comment> searchByCountryAndEmbeddingNear(String country, Vector vector, Score score,
+    Limit limit);
+
+  @VectorSearch(indexName = "my-index")
+  SearchResults<WithVector> searchAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding,
+      Score score);
+
+}
+
+SearchResults<Comment> results = repository.searchByCountryAndEmbeddingNear("en", Vector.of(…), Score.of(0.9), Limit.of(10));
+----
+====

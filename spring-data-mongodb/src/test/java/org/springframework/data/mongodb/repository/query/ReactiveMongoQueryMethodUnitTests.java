@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.data.mongodb.repository.query.MongoQueryMethodUnitTests.PersonRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,6 +26,7 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

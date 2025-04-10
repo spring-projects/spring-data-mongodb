@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;

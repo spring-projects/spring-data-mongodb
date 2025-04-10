@@ -70,7 +70,7 @@ public class GeoNearOperationUnitTests {
 	@Test // DATAMONGO-2264
 	public void rendersMaxDistanceCorrectly() {
 
-		NearQuery query = NearQuery.near(10.0, 20.0).maxDistance(new Distance(30.0));
+		NearQuery query = NearQuery.near(10.0, 20.0).maxDistance(Distance.of(30.0));
 
 		assertThat(new GeoNearOperation(query, "distance").toPipelineStages(Aggregation.DEFAULT_CONTEXT))
 				.containsExactly($geoNear().near(10.0, 20.0).maxDistance(30.0).doc());
@@ -79,7 +79,7 @@ public class GeoNearOperationUnitTests {
 	@Test // DATAMONGO-2264
 	public void rendersMinDistanceCorrectly() {
 
-		NearQuery query = NearQuery.near(10.0, 20.0).minDistance(new Distance(30.0));
+		NearQuery query = NearQuery.near(10.0, 20.0).minDistance(Distance.of(30.0));
 
 		assertThat(new GeoNearOperation(query, "distance").toPipelineStages(Aggregation.DEFAULT_CONTEXT))
 				.containsExactly($geoNear().near(10.0, 20.0).minDistance(30.0).doc());
