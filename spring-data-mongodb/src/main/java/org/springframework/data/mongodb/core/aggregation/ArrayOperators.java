@@ -2098,6 +2098,28 @@ public class ArrayOperators {
 			return new SortArray(append("sortBy", sort));
 		}
 
+		/**
+		 * Sort the array elements by their values in ascending order. Suitable for arrays of simple types (e.g., integers,
+		 * strings).
+		 *
+		 * @return new instance of {@link SortArray}.
+		 * @since 4.x (TBD)
+		 */
+		public SortArray byValueAscending() {
+			return new SortArray(append("sortBy", 1));
+		}
+
+		/**
+		 * Sort the array elements by their values in descending order. Suitable for arrays of simple types (e.g., integers,
+		 * strings).
+		 *
+		 * @return new instance of {@link SortArray}.
+		 * @since 4.x (TBD)
+		 */
+		public SortArray byValueDescending() {
+			return new SortArray(append("sortBy", -1));
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
