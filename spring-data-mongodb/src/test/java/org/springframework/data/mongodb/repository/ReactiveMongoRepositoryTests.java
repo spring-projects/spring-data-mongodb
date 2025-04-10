@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import reactor.core.Disposable;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -353,7 +355,7 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		repository.findByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create).consumeNextWith(actual -> {
+				Distance.of(2000, Metrics.KILOMETERS)).as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
 					assertThat(actual.getContent()).isEqualTo(dave);
@@ -372,7 +374,7 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		Thread.sleep(500);
 
 		repository.findByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS), //
+				Distance.of(2000, Metrics.KILOMETERS), //
 				PageRequest.of(0, 10)).as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 
@@ -393,7 +395,7 @@ class ReactiveMongoRepositoryTests implements DirtiesStateExtension.StateFunctio
 		Thread.sleep(500);
 
 		repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create) //
+				Distance.of(2000, Metrics.KILOMETERS)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}

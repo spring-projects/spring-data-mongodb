@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -72,6 +73,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private final MongoParameterAccessor accessor;
 	private final MappingContext<?, MongoPersistentProperty> context;
 	private final boolean isGeoNearQuery;
+	private final boolean isSearchQuery;
 
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
@@ -81,9 +83,9 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param accessor
 	 * @param context
 	 */
-	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor,
+	public MongoQueryCreator(PartTree tree, MongoParameterAccessor accessor,
 			MappingContext<?, MongoPersistentProperty> context) {
-		this(tree, accessor, context, false);
+		this(tree, accessor, context, false, false);
 	}
 
 	/**
@@ -94,9 +96,10 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param accessor
 	 * @param context
 	 * @param isGeoNearQuery
+	 * @param isSearchQuery
 	 */
-	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor,
-			MappingContext<?, MongoPersistentProperty> context, boolean isGeoNearQuery) {
+	public MongoQueryCreator(PartTree tree, MongoParameterAccessor accessor,
+			MappingContext<?, MongoPersistentProperty> context, boolean isGeoNearQuery, boolean isSearchQuery) {
 
 		super(tree, accessor);
 
@@ -104,6 +107,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		this.accessor = accessor;
 		this.isGeoNearQuery = isGeoNearQuery;
+		this.isSearchQuery = isSearchQuery;
 		this.context = context;
 	}
 
@@ -112,6 +116,10 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		if (isGeoNearQuery && part.getType().equals(Type.NEAR)) {
 			return new Criteria();
+		}
+
+		if (isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN))) {
+			return null;
 		}
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
@@ -125,6 +133,10 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		if (base == null) {
 			return create(part, iterator);
+		}
+
+		if (isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN))) {
+			return base;
 		}
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
@@ -163,6 +175,15 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 */
 	@SuppressWarnings("NullAway")
 	private Criteria from(Part part, MongoPersistentProperty property, Criteria criteria, Iterator<Object> parameters) {
+
+		if (isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN))) {
+
+			int numberOfArguments = part.getType().getNumberOfArguments();
+			for (int i = 0; i < numberOfArguments; i++) {
+				parameters.next();
+			}
+			return null;
+		}
 
 		Type type = part.getType();
 

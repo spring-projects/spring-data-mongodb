@@ -1098,7 +1098,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			result.add(geoResult);
 		}
 
-		Distance avgDistance = new Distance(
+		Distance avgDistance = Distance.of(
 				result.size() == 0 ? 0 : aggregate.divide(new BigDecimal(result.size()), RoundingMode.HALF_UP).doubleValue(),
 				near.getMetric());
 
@@ -2654,7 +2654,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (LOGGER.isDebugEnabled()) {
 
-			Document mappedSort = preparer instanceof SortingQueryCursorPreparer sqcp ?  getMappedSortObject(sqcp.getSortObject(), entity) : null;
+			Document mappedSort = preparer instanceof SortingQueryCursorPreparer sqcp
+					? getMappedSortObject(sqcp.getSortObject(), entity)
+					: null;
 			LOGGER.debug(String.format("find using query: %s fields: %s sort: %s for class: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), mappedFields, serializeToJsonSafely(mappedSort), entityClass,
 					collectionName));
@@ -3553,7 +3555,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			T doWith = delegate.doWith(object);
 
-			return new GeoResult<>(doWith, new Distance(distance, metric));
+			return new GeoResult<>(doWith, Distance.of(distance, metric));
 		}
 	}
 

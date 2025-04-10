@@ -270,9 +270,9 @@ class ReactiveFindOperationExtensionsTests {
 	fun terminatingFindNearAllAsFlow() {
 
 		val spec = mockk<ReactiveFindOperation.TerminatingFindNear<String>>()
-		val foo = GeoResult("foo", Distance(0.0))
-		val bar = GeoResult("bar", Distance(0.0))
-		val baz = GeoResult("baz", Distance(0.0))
+		val foo = GeoResult("foo", Distance.of(0.0))
+		val bar = GeoResult("bar", Distance.of(0.0))
+		val baz = GeoResult("baz", Distance.of(0.0))
 		every { spec.all() } returns Flux.just(foo, bar, baz)
 
 		runBlocking {

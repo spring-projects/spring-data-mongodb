@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -414,8 +415,26 @@ public class MongoQueryMethod extends QueryMethod {
 				.filter(it -> !ObjectUtils.isEmpty(it));
 	}
 
+	/**
+	 * Returns whether the method has an annotated vector search.
+	 *
+	 * @return true if {@link VectorSearch} is present.
+	 * @since 5.0
+	 */
+	public boolean hasAnnotatedVectorSearch() {
+		return findAnnotatedVectorSearch().isPresent();
+	}
+
+	Optional<VectorSearch> findAnnotatedVectorSearch() {
+		return lookupVectorSearchAnnotation();
+	}
+
 	Optional<Aggregation> lookupAggregationAnnotation() {
 		return doFindAnnotation(Aggregation.class);
+	}
+
+	Optional<VectorSearch> lookupVectorSearchAnnotation() {
+		return doFindAnnotation(VectorSearch.class);
 	}
 
 	Optional<Update> lookupUpdateAnnotation() {

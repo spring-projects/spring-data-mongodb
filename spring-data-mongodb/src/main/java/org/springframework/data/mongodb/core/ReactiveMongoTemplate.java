@@ -3227,7 +3227,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			double distance = getDistance(object);
 
-			return delegate.doWith(object).map(doWith -> new GeoResult<>(doWith, new Distance(distance, metric)));
+			return delegate.doWith(object).map(doWith -> new GeoResult<>(doWith, Distance.of(distance, metric)));
 		}
 
 		double getDistance(Document object) {

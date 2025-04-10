@@ -19,6 +19,7 @@ import java.util.Arrays;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.CustomMetric;
 import org.springframework.data.geo.Distance;
@@ -329,7 +330,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 */
 	@Contract("_ -> this")
 	public NearQuery maxDistance(double maxDistance) {
-		return maxDistance(new Distance(maxDistance, getMetric()));
+		return maxDistance(Distance.of(maxDistance, getMetric()));
 	}
 
 	/**
@@ -345,7 +346,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 
 		Assert.notNull(metric, "Metric must not be null");
 
-		return maxDistance(new Distance(maxDistance, metric));
+		return maxDistance(Distance.of(maxDistance, metric));
 	}
 
 	/**
@@ -388,7 +389,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 */
 	@Contract("_ -> this")
 	public NearQuery minDistance(double minDistance) {
-		return minDistance(new Distance(minDistance, getMetric()));
+		return minDistance(Distance.of(minDistance, getMetric()));
 	}
 
 	/**
@@ -405,7 +406,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 
 		Assert.notNull(metric, "Metric must not be null");
 
-		return minDistance(new Distance(minDistance, metric));
+		return minDistance(Distance.of(minDistance, metric));
 	}
 
 	/**
@@ -611,7 +612,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 	 * Get the {@link ReadConcern} to use. Will return the underlying {@link #query(Query) queries}
 	 * {@link Query#getReadConcern() ReadConcern} if present or the one defined on the {@link NearQuery#readConcern}
 	 * itself.
-	 * 
+	 *
 	 * @return can be {@literal null} if none set.
 	 * @since 4.1
 	 * @see ReadConcernAware

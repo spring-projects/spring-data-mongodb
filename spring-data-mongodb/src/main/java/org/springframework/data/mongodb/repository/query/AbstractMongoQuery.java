@@ -164,7 +164,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	@SuppressWarnings("NullAway")
-	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
+	MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution<>(executableRemove, method);
@@ -345,7 +345,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return never {@literal null}.
 	 * @since 3.4
 	 */
-	protected ParameterBindingContext prepareBindingContext(String source, ConvertingParameterAccessor accessor) {
+	protected ParameterBindingContext prepareBindingContext(String source, MongoParameterAccessor accessor) {
 
 		ValueExpressionEvaluator evaluator = getExpressionEvaluatorFor(accessor);
 		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
