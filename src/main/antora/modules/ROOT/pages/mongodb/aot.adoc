@@ -1,0 +1,40 @@
+= Ahead of Time Optimizations
+
+TODO: include commons AOT section
+
+[[aot.repositories]]
+== Ahead of Time Repositories
+
+TODO: include commons AOT section
+
+=== Eligible Methods in Data MongoDB
+
+AOT repositories filter methods that are eligible for AOT processing.
+These are typically all query methods that are not backed by an xref:repositories/custom-implementations.adoc[implementation fragment].
+
+**Supported Features**
+
+* Derived `find`, `count`, `exists` and `delete` methods
+* Query methods annotated with `@Query` (excluding those containing SpEL)
+* Methods annotated with `@Aggregation`
+* Methods using `@Update`
+* `@Hint` & `@ReadPreference` support
+* `Page`, `Slice`, and `Optional` return types
+* DTO Projections
+
+**Limitations**
+
+* `@Meta` annotations are not evaluated.
+* Queries / Aggregations / Updates containing `SpEL` cannot be generated.
+* Limited `Collation` detection.
+* Reserved parameter names (must not be used in method signature) `finder`,  `filterQuery`, `countQuery`, `deleteQuery`, `remover` `updateDefinition`, `aggregation`, `aggregationPipeline`, `aggregationUpdate`, `aggregationOptions`, `updater`, `results`, `fields`.
+
+**Excluded methods**
+
+* `CrudRepository` and other base interface methods
+* Querydsl and Query by Example methods
+* Methods whose implementation would be overly complex
+* Named query methods
+** Methods accepting `ScrollPosition` (e.g. `Keyset` pagination)
+** Dynamic projections
+** Geospatial Queries
