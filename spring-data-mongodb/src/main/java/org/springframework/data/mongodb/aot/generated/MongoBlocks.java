@@ -369,98 +369,75 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add("\n");
 
-			builder.addStatement("$T<$T> stages = new $T()", List.class, Object.class, ArrayList.class);
-			int stageCounter = 0;
-			for (String stage : source.stages()) {
-				String stageName = "stage_%s".formatted(stageCounter++);
-				builder.add(renderExpressionToDocument(stage, stageName, arguments));
-				builder.addStatement("stages.add($L)", stageName);
-			}
-
-			{
-				String sortParameter = context.getSortParameterName();
-				if (StringUtils.hasText(sortParameter)) {
-
-					builder.beginControlFlow("if($L.isSorted())", sortParameter);
-					builder.addStatement("$T sortDocument = new $T()", Document.class, Document.class);
-					builder.beginControlFlow("for ($T order : $L)", Order.class, sortParameter);
-					builder.addStatement("sortDocument.append(order.getProperty(), order.isAscending() ? 1 : -1);");
-					builder.endControlFlow();
-					builder.addStatement("stages.add(new $T($S, sortDocument))", Document.class, "$sort");
-					builder.endControlFlow();
-				}
-
-				String limitParameter = context.getLimitParameterName();
-				if (StringUtils.hasText(limitParameter)) {
-					builder.beginControlFlow("if($L.isLimited())", limitParameter);
-					builder.addStatement("stages.add($T.limit($L.max()))", Aggregation.class, limitParameter);
-					builder.endControlFlow();
-				}
-
-				String pageableParameter = context.getPageableParameterName();
-				if (StringUtils.hasText(pageableParameter)) {
-
-					builder.beginControlFlow("if($L.getSort().isSorted())", pageableParameter);
-					builder.addStatement("$T sortDocument = new $T()", Document.class, Document.class);
-					builder.beginControlFlow("for ($T order : $L.getSort())", Order.class, pageableParameter);
-					builder.addStatement("sortDocument.append(order.getProperty(), order.isAscending() ? 1 : -1);");
-					builder.endControlFlow();
-					builder.addStatement("stages.add(new $T($S, sortDocument))", Document.class, "$sort");
-					builder.endControlFlow();
-
-					builder.beginControlFlow("if($L.isPaged())", pageableParameter);
-					builder.beginControlFlow("if($L.getOffset() > 0)", pageableParameter);
-					builder.addStatement("stages.add($T.skip($L.getOffset()))", Aggregation.class, pageableParameter);
-					builder.endControlFlow();
-					if (queryMethod.isSliceQuery()) {
-						builder.addStatement("stages.add($T.limit($L.getPageSize() + 1))", Aggregation.class, pageableParameter);
-					} else {
-						builder.addStatement("stages.add($T.limit($L.getPageSize()))", Aggregation.class, pageableParameter);
-					}
-					builder.endControlFlow();
-				}
-
-			}
-
 			String pipelineName = aggregationVariableName + "Pipeline";
-			builder.addStatement("$T $L = createPipeline(stages)", AggregationPipeline.class, pipelineName);
+			builder.add(pipeline(pipelineName));
 
 			builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
 					context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
 					context.getRepositoryInformation().getDomainType(), pipelineName);
 
-			List<CodeBlock> hints = new ArrayList<>(5);
-			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
-				hints.add(CodeBlock.of(".skipOutput()"));
-			}
-			{
-				MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
-				String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
-				if (StringUtils.hasText(hint)) {
-					hints.add(CodeBlock.of(".hint($S)", hint));
-				}
-			}
-			{
-				MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
-				String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value")
-						: null;
-				if (StringUtils.hasText(readPreference)) {
-					hints.add(CodeBlock.of(".readPreference($T.valueOf($S))", com.mongodb.ReadPreference.class, readPreference));
-				}
-			}
-			{
-				if (queryMethod.hasAnnotatedCollation()) {
-					hints.add(CodeBlock.of(".collation($T.parse($S))", Collation.class, queryMethod.getAnnotatedCollation()));
-				}
+			builder.add(aggregationOptions(aggregationVariableName));
+
+			return builder.build();
+		}
+
+		private CodeBlock pipeline(String pipelineVariableName) {
+
+			Builder builder = CodeBlock.builder();
+			String stagesVariableName = "stages";
+			builder.add(aggregationStages(stagesVariableName, source.stages(), arguments));
+
+			String sortParameter = context.getSortParameterName();
+			if (StringUtils.hasText(sortParameter)) {
+				builder.add(sortingStage(sortParameter));
 			}
 
-			if (!hints.isEmpty()) {
+			String limitParameter = context.getLimitParameterName();
+			if (StringUtils.hasText(limitParameter)) {
+				builder.add(limitingStage(limitParameter));
+			}
+
+			String pageableParameter = context.getPageableParameterName();
+			if (StringUtils.hasText(pageableParameter)) {
+				builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
+			}
+
+			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
+					stagesVariableName);
+			return builder.build();
+		}
+
+		private CodeBlock aggregationOptions(String aggregationVariableName) {
+
+			Builder builder = CodeBlock.builder();
+			List<CodeBlock> options = new ArrayList<>(5);
+			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
+				options.add(CodeBlock.of(".skipOutput()"));
+			}
+
+			MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
+			String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
+			if (StringUtils.hasText(hint)) {
+				options.add(CodeBlock.of(".hint($S)", hint));
+			}
+
+			MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
+			String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") : null;
+			if (StringUtils.hasText(readPreference)) {
+				options.add(CodeBlock.of(".readPreference($T.valueOf($S))", com.mongodb.ReadPreference.class, readPreference));
+			}
+
+			if (queryMethod.hasAnnotatedCollation()) {
+				options.add(CodeBlock.of(".collation($T.parse($S))", Collation.class, queryMethod.getAnnotatedCollation()));
+			}
+
+			if (!options.isEmpty()) {
 
 				Builder optionsBuilder = CodeBlock.builder();
 				optionsBuilder.add("$T aggregationOptions = $T.builder()\n", AggregationOptions.class,
 						AggregationOptions.class);
 				optionsBuilder.indent();
-				for (CodeBlock optionBlock : hints) {
+				for (CodeBlock optionBlock : options) {
 					optionsBuilder.add(optionBlock);
 					optionsBuilder.add("\n");
 				}
@@ -471,7 +448,60 @@ public class MongoBlocks {
 				builder.addStatement("$L = $L.withOptions(aggregationOptions)", aggregationVariableName,
 						aggregationVariableName);
 			}
+			return builder.build();
+		}
 
+		private static CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages,
+				List<String> arguments) {
+			Builder builder = CodeBlock.builder();
+			builder.addStatement("$T<$T> $L = new $T()", List.class, Object.class, stageListVariableName, ArrayList.class);
+			int stageCounter = 0;
+			for (String stage : stages) {
+				String stageName = "stage_%s".formatted(stageCounter++);
+				builder.add(renderExpressionToDocument(stage, stageName, arguments));
+				builder.addStatement("stages.add($L)", stageName);
+			}
+			return builder.build();
+		}
+
+		private static CodeBlock sortingStage(String sortProvider) {
+
+			Builder builder = CodeBlock.builder();
+			builder.beginControlFlow("if($L.isSorted())", sortProvider);
+			builder.addStatement("$T sortDocument = new $T()", Document.class, Document.class);
+			builder.beginControlFlow("for ($T order : $L)", Order.class, sortProvider);
+			builder.addStatement("sortDocument.append(order.getProperty(), order.isAscending() ? 1 : -1);");
+			builder.endControlFlow();
+			builder.addStatement("stages.add(new $T($S, sortDocument))", Document.class, "$sort");
+			builder.endControlFlow();
+			return builder.build();
+		}
+
+		private static CodeBlock pagingStage(String pageableProvider, boolean slice) {
+
+			Builder builder = CodeBlock.builder();
+			builder.add(sortingStage(pageableProvider + ".getSort()"));
+
+			builder.beginControlFlow("if($L.isPaged())", pageableProvider);
+			builder.beginControlFlow("if($L.getOffset() > 0)", pageableProvider);
+			builder.addStatement("stages.add($T.skip($L.getOffset()))", Aggregation.class, pageableProvider);
+			builder.endControlFlow();
+			if (slice) {
+				builder.addStatement("stages.add($T.limit($L.getPageSize() + 1))", Aggregation.class, pageableProvider);
+			} else {
+				builder.addStatement("stages.add($T.limit($L.getPageSize()))", Aggregation.class, pageableProvider);
+			}
+			builder.endControlFlow();
+
+			return builder.build();
+		}
+
+		private static CodeBlock limitingStage(String limitProvider) {
+
+			Builder builder = CodeBlock.builder();
+			builder.beginControlFlow("if($L.isLimited())", limitProvider);
+			builder.addStatement("stages.add($T.limit($L.max()))", Aggregation.class, limitProvider);
+			builder.endControlFlow();
 			return builder.build();
 		}
 	}
