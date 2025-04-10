@@ -49,7 +49,7 @@ import com.mongodb.ReadPreference;
 
 /**
  * @author Christoph Strobl
- * @since 2025/01
+ * @since 5.0
  */
 class StringQuery extends Query {
 

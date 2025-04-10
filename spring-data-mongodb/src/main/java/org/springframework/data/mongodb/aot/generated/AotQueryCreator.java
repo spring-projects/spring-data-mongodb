@@ -47,9 +47,9 @@ import com.mongodb.DBRef;
 
 /**
  * @author Christoph Strobl
- * @since 2025/01
+ * @since 5.0
  */
-public class AotQueryCreator {
+class AotQueryCreator {
 
 	private MongoMappingContext mappingContext;
 

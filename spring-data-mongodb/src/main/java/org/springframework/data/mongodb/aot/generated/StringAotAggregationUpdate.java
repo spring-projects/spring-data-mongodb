@@ -15,40 +15,35 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-
-import org.springframework.data.repository.aot.generate.QueryMetadata;
 
 /**
  * @author Christoph Strobl
- * @since 2025/04
+ * @since 5.0
  */
-class StringAotAggregation extends AotQuery implements QueryMetadata {
+class StringAotAggregationUpdate extends StringAotAggregation {
 
-	StringAggregation aggregation;
+	private final StringAotQuery filter;
 
-	public StringAotAggregation(String[] raw) {
-		this.aggregation = new StringAggregation(raw);
+	public StringAotAggregationUpdate(StringAotQuery filter, String[] raw) {
+		super(raw);
+		this.filter = filter;
 	}
 
-	List<String> stages() {
-		return Arrays.asList(aggregation.pipeline);
-	}
-
-	@Override
-	ExecutionType getExecutionType() {
-		return ExecutionType.AGGREGATION;
+	public StringAotQuery getFilter() {
+		return filter;
 	}
 
 	@Override
 	public Map<String, Object> serialize() {
-		// TODO: serialize stages
-		return Map.of(pipelineSerializationKey(), Arrays.asList(aggregation.pipeline));
+
+		Map<String, Object> serialized = filter.serialize();
+		serialized.putAll(super.serialize());
+		return serialized;
 	}
 
+	@Override
 	protected String pipelineSerializationKey() {
-		return "pipeline";
+		return "update-" + super.pipelineSerializationKey();
 	}
 }

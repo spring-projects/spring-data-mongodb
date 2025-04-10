@@ -142,6 +142,9 @@ public interface UserRepository extends CrudRepository<User, String> {
 	@Update("{ '$inc' : { 'visits' : ?1 } }")
 	int updateAllByLastname(String lastname, int increment);
 
+	@Update(pipeline = { "{ '$set' : { 'visits' : { '$ifNull' : [ {'$add' : [ '$visits', ?1 ] }, ?1 ] } } }" })
+	void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment);
+
 	/* Derived With Annotated Options */
 
 	@Query(sort = "{ 'username' : 1 }")

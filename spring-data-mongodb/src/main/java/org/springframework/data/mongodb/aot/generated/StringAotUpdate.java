@@ -21,7 +21,7 @@ import org.springframework.data.repository.aot.generate.QueryMetadata;
 
 /**
  * @author Christoph Strobl
- * @since 2025/04
+ * @since 5.0
  */
 class StringAotUpdate extends AotQuery implements QueryMetadata {
 

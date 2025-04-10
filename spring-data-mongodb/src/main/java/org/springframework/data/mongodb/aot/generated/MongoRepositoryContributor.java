@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.mongodb.aot.generated.MongoBlocks.QueryBlockBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
@@ -39,6 +40,7 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.TypeName;
 import org.springframework.javapoet.TypeSpec.Builder;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -109,8 +111,14 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		if (queryMethod.isModifyingQuery()) {
 
 			Update updateSource = queryMethod.getUpdateSource();
-			StringAotUpdate update = new StringAotUpdate(query, new StringUpdate(updateSource.value()));
-			return updateMethodContributor(queryMethod, update);
+			if (StringUtils.hasText(updateSource.value())) {
+				StringAotUpdate update = new StringAotUpdate(query, new StringUpdate(updateSource.value()));
+				return updateMethodContributor(queryMethod, update);
+			}
+			if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
+				StringAotAggregationUpdate update = new StringAotAggregationUpdate(query, updateSource.pipeline());
+				return aggregationUpdateMethodContributor(queryMethod, update);
+			}
 		}
 
 		return queryMethodContributor(queryMethod, query);
@@ -181,6 +189,34 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			builder.add(MongoBlocks.updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
 					.referencingUpdate(updateVariableName).build());
+			return builder.build();
+		});
+	}
+
+	private static MethodContributor<MongoQueryMethod> aggregationUpdateMethodContributor(MongoQueryMethod queryMethod,
+			StringAotAggregationUpdate update) {
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(update).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
+
+			// update filter
+			String filterVariableName = update.name();
+			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod)
+					.filter(update.getFilter());
+			builder.add(queryBlockBuilder.usingQueryVariableName(filterVariableName).build());
+
+			// update definition
+			String updateVariableName = "updateDefinition";
+			builder.add(MongoBlocks.aggregationBlockBuilder(context, queryMethod).stages(update)
+					.usingAggregationVariableName(updateVariableName).pipelineOnly(true).build());
+
+			builder.addStatement("$T aggregationUpdate = $T.from($L.getOperations())", AggregationUpdate.class,
+					AggregationUpdate.class, updateVariableName);
+
+			builder.add(MongoBlocks.updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
+					.referencingUpdate("aggregationUpdate").build());
 			return builder.build();
 		});
 	}

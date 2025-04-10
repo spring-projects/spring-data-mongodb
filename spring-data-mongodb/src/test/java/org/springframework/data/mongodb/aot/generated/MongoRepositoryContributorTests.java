@@ -398,6 +398,15 @@ public class MongoRepositoryContributorTests {
 	}
 
 	@Test
+	void testAggregationPipelineUpdate() {
+
+		fragment.findAndIncrementVisitsViaPipelineByLastname("Organa", 42);
+
+		assertThat(client.getDatabase(DB_NAME).getCollection("user").find(new Document("_id", "id-2")).first().get("visits",
+				Integer.class)).isEqualTo(42);
+	}
+
+	@Test
 	void testAggregationWithExtractedSimpleResults() {
 
 		List<String> allLastnames = fragment.findAllLastnames();

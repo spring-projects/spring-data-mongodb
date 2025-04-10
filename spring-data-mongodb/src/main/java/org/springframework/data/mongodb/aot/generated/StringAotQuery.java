@@ -24,9 +24,9 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Strobl
- * @since 2025/04
+ * @since 5.0
  */
-public class StringAotQuery extends AotQuery implements QueryMetadata {
+class StringAotQuery extends AotQuery implements QueryMetadata {
 
 	StringQuery query;
 	ExecutionType executionType;

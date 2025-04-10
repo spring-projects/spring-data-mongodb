@@ -180,17 +180,21 @@ public class MongoBlocks {
 			Builder builder = CodeBlock.builder();
 
 			builder.add("\n");
+
+			String updateReference = updateVariableName;
 			builder.addStatement("$T<$T> updater = $L.update($T.class)", ExecutableUpdate.class,
 					context.getRepositoryInformation().getDomainType(), mongoOpsRef,
 					context.getRepositoryInformation().getDomainType());
 
 			Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
-			if (ClassUtils.isAssignable(Long.class, returnType)) {
+			if (ReflectionUtils.isVoid(returnType)) {
+				builder.addStatement("updater.matching($L).apply($L).all()", queryVariableName, updateReference);
+			} else if (ClassUtils.isAssignable(Long.class, returnType)) {
 				builder.addStatement("return updater.matching($L).apply($L).all().getModifiedCount()", queryVariableName,
-						updateVariableName);
+						updateReference);
 			} else {
 				builder.addStatement("$T modifiedCount = updater.matching($L).apply($L).all().getModifiedCount()", Long.class,
-						queryVariableName, updateVariableName);
+						queryVariableName, updateReference);
 				builder.addStatement("return $T.convertNumberToTargetClass(modifiedCount, $T.class)", NumberUtils.class,
 						returnType);
 			}
@@ -342,6 +346,7 @@ public class MongoBlocks {
 		private StringAotAggregation source;
 		private List<String> arguments;
 		private String aggregationVariableName;
+		private boolean pipelineOnly;
 
 		public AggregationBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.context = context;
@@ -364,19 +369,27 @@ public class MongoBlocks {
 			return this;
 		}
 
+		public AggregationBlockBuilder pipelineOnly(boolean pipelineOnly) {
+			this.pipelineOnly = pipelineOnly;
+			return this;
+		}
+
 		CodeBlock build() {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add("\n");
 
-			String pipelineName = aggregationVariableName + "Pipeline";
+			String pipelineName = aggregationVariableName + (pipelineOnly ? "" : "Pipeline");
 			builder.add(pipeline(pipelineName));
 
-			builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
-					context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
-					context.getRepositoryInformation().getDomainType(), pipelineName);
+			if (!pipelineOnly) {
 
-			builder.add(aggregationOptions(aggregationVariableName));
+				builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
+						context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
+						context.getRepositoryInformation().getDomainType(), pipelineName);
+
+				builder.add(aggregationOptions(aggregationVariableName));
+			}
 
 			return builder.build();
 		}
@@ -649,10 +662,10 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
 			builder.add("\n");
-			String tmpVarName = updateVariableName + "Definition";
-			builder.add(
-					renderExpressionToDocument(source.update.getUpdateString(), updateVariableName + "Definition", arguments));
-			builder.addStatement("$T $L = new $T($L)", BasicUpdate.class, updateVariableName, BasicUpdate.class, tmpVarName);
+			String tmpVariableName = updateVariableName + "Document";
+			builder.add(renderExpressionToDocument(source.update.getUpdateString(), tmpVariableName, arguments));
+			builder.addStatement("$T $L = new $T($L)", BasicUpdate.class, updateVariableName, BasicUpdate.class,
+					tmpVariableName);
 
 			return builder.build();
 		}

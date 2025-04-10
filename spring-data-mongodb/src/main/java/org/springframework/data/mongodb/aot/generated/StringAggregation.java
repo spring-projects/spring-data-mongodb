@@ -33,9 +33,9 @@ package org.springframework.data.mongodb.aot.generated;
 
 /**
  * @author Christoph Strobl
- * @since 2025/04
+ * @since 5.0
  */
-public class StringAggregation {
+class StringAggregation {
 
     String[] pipeline;
 
