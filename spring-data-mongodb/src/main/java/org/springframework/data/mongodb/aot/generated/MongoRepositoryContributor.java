@@ -15,9 +15,19 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.aggregationBlockBuilder;
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.aggregationExecutionBlockBuilder;
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.deleteExecutionBlockBuilder;
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.queryBlockBuilder;
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.queryExecutionBlockBuilder;
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.updateBlockBuilder;
+import static org.springframework.data.mongodb.aot.generated.MongoBlocks.updateExecutionBlockBuilder;
+
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.mongodb.aot.generated.MongoBlocks.QueryBlockBuilder;
@@ -44,10 +54,14 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * MongoDB specific {@link RepositoryContributor}.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
 public class MongoRepositoryContributor extends RepositoryContributor {
+
+	private static final Log logger = LogFactory.getLog(RepositoryContributor.class);
 
 	private final AotQueryCreator queryCreator;
 	private final MongoMappingContext mappingContext;
@@ -88,53 +102,66 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return null;
 		}
 
-		if (queryMethod.hasAnnotatedAggregation()) {
+		try {
+			if (queryMethod.hasAnnotatedAggregation()) {
 
-			StringAotAggregation aggregation = new StringAotAggregation(queryMethod.getAnnotatedAggregation());
-			return aggregationMethodContributor(queryMethod, aggregation);
-		}
+				AggregationInteraction aggregation = new AggregationInteraction(queryMethod.getAnnotatedAggregation());
+				return aggregationMethodContributor(queryMethod, aggregation);
+			}
 
-		StringAotQuery query = createStringQuery(repositoryInformation, queryMethod,
-				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method.getParameterCount());
+			QueryInteraction query = createStringQuery(repositoryInformation, queryMethod,
+					AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method.getParameterCount());
 
-		if (queryMethod.hasAnnotatedQuery()) {
-			if (StringUtils.hasText(queryMethod.getAnnotatedQuery())
-					&& Pattern.compile("[\\?:][#$]\\{.*\\}").matcher(queryMethod.getAnnotatedQuery()).find()) {
-				return MethodContributor.forQueryMethod(queryMethod).metadataOnly(query);
+			if (queryMethod.hasAnnotatedQuery()) {
+				if (StringUtils.hasText(queryMethod.getAnnotatedQuery())
+						&& Pattern.compile("[\\?:][#$]\\{.*\\}").matcher(queryMethod.getAnnotatedQuery()).find()) {
+
+					if (logger.isDebugEnabled()) {
+						logger.debug(
+								"Skipping AOT generation for [%s]. SpEL expressions are not supported".formatted(method.getName()));
+					}
+					return MethodContributor.forQueryMethod(queryMethod).metadataOnly(query);
+				}
+			}
+
+			if (query.isDelete()) {
+				return deleteMethodContributor(queryMethod, query);
+			}
+
+			if (queryMethod.isModifyingQuery()) {
+
+				Update updateSource = queryMethod.getUpdateSource();
+				if (StringUtils.hasText(updateSource.value())) {
+					UpdateInteraction update = new UpdateInteraction(query, new StringUpdate(updateSource.value()));
+					return updateMethodContributor(queryMethod, update);
+				}
+				if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
+					AggregationUpdateInteraction update = new AggregationUpdateInteraction(query, updateSource.pipeline());
+					return aggregationUpdateMethodContributor(queryMethod, update);
+				}
+			}
+
+			return queryMethodContributor(queryMethod, query);
+		} catch (RuntimeException codeGenerationError) {
+			if (logger.isErrorEnabled()) {
+				logger.error("Failed to generate code for [%s] [%s]".formatted(repositoryInformation.getRepositoryInterface(),
+						method.getName()), codeGenerationError);
 			}
 		}
-
-		if (query.isDeleteQuery()) {
-			return deleteMethodContributor(queryMethod, query);
-		}
-
-		if (queryMethod.isModifyingQuery()) {
-
-			Update updateSource = queryMethod.getUpdateSource();
-			if (StringUtils.hasText(updateSource.value())) {
-				StringAotUpdate update = new StringAotUpdate(query, new StringUpdate(updateSource.value()));
-				return updateMethodContributor(queryMethod, update);
-			}
-			if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
-				StringAotAggregationUpdate update = new StringAotAggregationUpdate(query, updateSource.pipeline());
-				return aggregationUpdateMethodContributor(queryMethod, update);
-			}
-		}
-
-		return queryMethodContributor(queryMethod, query);
+		return null;
 	}
 
-	private StringAotQuery createStringQuery(RepositoryInformation repositoryInformation, MongoQueryMethod queryMethod,
+	private QueryInteraction createStringQuery(RepositoryInformation repositoryInformation, MongoQueryMethod queryMethod,
 			Query queryAnnotation, int parameterCount) {
 
-		StringAotQuery query;
+		QueryInteraction query;
 		if (queryMethod.hasAnnotatedQuery()) {
-			query = new StringAotQuery(new StringQuery(queryMethod.getAnnotatedQuery()), queryAnnotation.count(),
+			query = new QueryInteraction(new StringQuery(queryMethod.getAnnotatedQuery()), queryAnnotation.count(),
 					queryAnnotation.delete(), queryAnnotation.exists());
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
-			query = new StringAotQuery(queryCreator.createQuery(partTree, parameterCount), partTree.isCountProjection(),
+			query = new QueryInteraction(queryCreator.createQuery(partTree, parameterCount), partTree.isCountProjection(),
 					partTree.isDelete(), partTree.isExistsProjection());
 		}
 
@@ -149,28 +176,34 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	private static boolean backoff(MongoQueryMethod method) {
-		return method.isGeoNearQuery() || method.isScrollQuery();
+
+		boolean skip = method.isGeoNearQuery() || method.isScrollQuery() || method.isStreamQuery();
+
+		if (skip && logger.isDebugEnabled()) {
+			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming or scrolling query"
+					.formatted(method.getName()));
+		}
+		return skip;
 	}
 
 	private static MethodContributor<MongoQueryMethod> aggregationMethodContributor(MongoQueryMethod queryMethod,
-			StringAotAggregation aggregation) {
+			AggregationInteraction aggregation) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(aggregation).contribute(context -> {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
 
-			builder.add(MongoBlocks.aggregationBlockBuilder(context, queryMethod).stages(aggregation)
+			builder.add(aggregationBlockBuilder(context, queryMethod).stages(aggregation)
 					.usingAggregationVariableName("aggregation").build());
-			builder
-					.add(MongoBlocks.aggregationExecutionBlockBuilder(context, queryMethod).referencing("aggregation").build());
+			builder.add(aggregationExecutionBlockBuilder(context, queryMethod).referencing("aggregation").build());
 
 			return builder.build();
 		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> updateMethodContributor(MongoQueryMethod queryMethod,
-			StringAotUpdate update) {
+			UpdateInteraction update) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(update).contribute(context -> {
 
@@ -179,22 +212,22 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			// update filter
 			String filterVariableName = update.name();
-			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(update.filter);
-			builder.add(queryBlockBuilder.usingQueryVariableName(filterVariableName).build());
+			builder.add(queryBlockBuilder(context, queryMethod).filter(update.getFilter())
+					.usingQueryVariableName(filterVariableName).build());
 
 			// update definition
 			String updateVariableName = "updateDefinition";
-			builder.add(MongoBlocks.updateBlockBuilder(context, queryMethod).update(update)
-					.usingUpdateVariableName(updateVariableName).build());
+			builder.add(
+					updateBlockBuilder(context, queryMethod).update(update).usingUpdateVariableName(updateVariableName).build());
 
-			builder.add(MongoBlocks.updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
+			builder.add(updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
 					.referencingUpdate(updateVariableName).build());
 			return builder.build();
 		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> aggregationUpdateMethodContributor(MongoQueryMethod queryMethod,
-			StringAotAggregationUpdate update) {
+			AggregationUpdateInteraction update) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(update).contribute(context -> {
 
@@ -203,50 +236,49 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			// update filter
 			String filterVariableName = update.name();
-			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod)
-					.filter(update.getFilter());
+			QueryBlockBuilder queryBlockBuilder = queryBlockBuilder(context, queryMethod).filter(update.getFilter());
 			builder.add(queryBlockBuilder.usingQueryVariableName(filterVariableName).build());
 
 			// update definition
 			String updateVariableName = "updateDefinition";
-			builder.add(MongoBlocks.aggregationBlockBuilder(context, queryMethod).stages(update)
+			builder.add(aggregationBlockBuilder(context, queryMethod).stages(update)
 					.usingAggregationVariableName(updateVariableName).pipelineOnly(true).build());
 
 			builder.addStatement("$T aggregationUpdate = $T.from($L.getOperations())", AggregationUpdate.class,
 					AggregationUpdate.class, updateVariableName);
 
-			builder.add(MongoBlocks.updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
+			builder.add(updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
 					.referencingUpdate("aggregationUpdate").build());
 			return builder.build();
 		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> deleteMethodContributor(MongoQueryMethod queryMethod,
-			StringAotQuery query) {
+			QueryInteraction query) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(query).contribute(context -> {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query);
+			QueryBlockBuilder queryBlockBuilder = queryBlockBuilder(context, queryMethod).filter(query);
 
 			builder.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
-			builder.add(MongoBlocks.deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
+			builder.add(deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
 			return builder.build();
 		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> queryMethodContributor(MongoQueryMethod queryMethod,
-			StringAotQuery query) {
+			QueryInteraction query) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(query).contribute(context -> {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-			QueryBlockBuilder queryBlockBuilder = MongoBlocks.queryBlockBuilder(context, queryMethod).filter(query);
+			QueryBlockBuilder queryBlockBuilder = queryBlockBuilder(context, queryMethod).filter(query);
 
 			builder.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
-			builder.add(MongoBlocks.queryExecutionBlockBuilder(context, queryMethod).forQuery(query).build());
+			builder.add(queryExecutionBlockBuilder(context, queryMethod).forQuery(query).build());
 			return builder.build();
 		});
 	}

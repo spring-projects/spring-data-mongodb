@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.core.annotation.MergedAnnotation;
@@ -60,42 +57,99 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * {@link CodeBlock} generator for common tasks.
+ *
  * @author Christoph Strobl
+ * @since 5.0
  */
-public class MongoBlocks {
+class MongoBlocks {
 
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
+	/**
+	 * Builder for generating query parsing {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return new instance of {@link QueryBlockBuilder}.
+	 */
 	static QueryBlockBuilder queryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 		return new QueryBlockBuilder(context, queryMethod);
 	}
 
+	/**
+	 * Builder for generating finder query execution {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return
+	 */
+	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+
+		return new QueryExecutionBlockBuilder(context, queryMethod);
+	}
+
+	/**
+	 * Builder for generating delete execution {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return
+	 */
+	static DeleteExecutionBuilder deleteExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+
+		return new DeleteExecutionBuilder(context, queryMethod);
+	}
+
+	/**
+	 * Builder for generating update parsing {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return
+	 */
 	static UpdateBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 		return new UpdateBlockBuilder(context, queryMethod);
 	}
 
-	static AggregationBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
-			MongoQueryMethod queryMethod) {
-		return new AggregationBlockBuilder(context, queryMethod);
-	}
-
-	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
-			MongoQueryMethod queryMethod) {
-		return new QueryExecutionBlockBuilder(context, queryMethod);
-	}
-
-	static DeleteExecutionBuilder deleteExecutionBlockBuilder(AotQueryMethodGenerationContext context,
-			MongoQueryMethod queryMethod) {
-		return new DeleteExecutionBuilder(context, queryMethod);
-	}
-
+	/**
+	 * Builder for generating update execution {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return
+	 */
 	static UpdateExecutionBuilder updateExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
+
 		return new UpdateExecutionBuilder(context, queryMethod);
 	}
 
+	/**
+	 * Builder for generating aggregation (pipeline) parsing {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return
+	 */
+	static AggregationBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+
+		return new AggregationBlockBuilder(context, queryMethod);
+	}
+
+	/**
+	 * Builder for generating aggregation execution {@link CodeBlock}.
+	 *
+	 * @param context
+	 * @param queryMethod
+	 * @return
+	 */
 	static AggregationExecutionBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
+
 		return new AggregationExecutionBuilder(context, queryMethod);
 	}
 
@@ -105,17 +159,19 @@ public class MongoBlocks {
 		private final MongoQueryMethod queryMethod;
 		private String queryVariableName;
 
-		public DeleteExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		DeleteExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		public DeleteExecutionBuilder referencing(String queryVariableName) {
+		DeleteExecutionBuilder referencing(String queryVariableName) {
+
 			this.queryVariableName = queryVariableName;
 			return this;
 		}
 
-		public CodeBlock build() {
+		CodeBlock build() {
 
 			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 			Builder builder = CodeBlock.builder();
@@ -159,22 +215,25 @@ public class MongoBlocks {
 		private String queryVariableName;
 		private String updateVariableName;
 
-		public UpdateExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		UpdateExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		public UpdateExecutionBuilder withFilter(String queryVariableName) {
+		UpdateExecutionBuilder withFilter(String queryVariableName) {
+
 			this.queryVariableName = queryVariableName;
 			return this;
 		}
 
-		public UpdateExecutionBuilder referencingUpdate(String updateVariableName) {
+		UpdateExecutionBuilder referencingUpdate(String updateVariableName) {
+
 			this.updateVariableName = updateVariableName;
 			return this;
 		}
 
-		public CodeBlock build() {
+		CodeBlock build() {
 
 			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 			Builder builder = CodeBlock.builder();
@@ -209,17 +268,19 @@ public class MongoBlocks {
 		private final MongoQueryMethod queryMethod;
 		private String aggregationVariableName;
 
-		public AggregationExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		AggregationExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		public AggregationExecutionBuilder referencing(String aggregationVariableName) {
+		AggregationExecutionBuilder referencing(String aggregationVariableName) {
+
 			this.aggregationVariableName = aggregationVariableName;
 			return this;
 		}
 
-		public CodeBlock build() {
+		CodeBlock build() {
 
 			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
 			Builder builder = CodeBlock.builder();
@@ -279,11 +340,18 @@ public class MongoBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		private StringAotQuery query;
+		private QueryInteraction query;
 
-		public QueryExecutionBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		QueryExecutionBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
 			this.context = context;
 			this.queryMethod = queryMethod;
+		}
+
+		QueryExecutionBlockBuilder forQuery(QueryInteraction query) {
+
+			this.query = query;
+			return this;
 		}
 
 		CodeBlock build() {
@@ -311,7 +379,7 @@ public class MongoBlocks {
 
 			if (queryMethod.isCollectionQuery() || queryMethod.isPageQuery() || queryMethod.isSliceQuery()) {
 				terminatingMethod = "all()";
-			} else if (query.isCountQuery()) {
+			} else if (query.isCount()) {
 				terminatingMethod = "count()";
 			} else if (query.isExists()) {
 				terminatingMethod = "exists()";
@@ -331,11 +399,6 @@ public class MongoBlocks {
 
 			return builder.build();
 		}
-
-		public QueryExecutionBlockBuilder forQuery(StringAotQuery query) {
-			this.query = query;
-			return this;
-		}
 	}
 
 	static class AggregationBlockBuilder {
@@ -343,33 +406,32 @@ public class MongoBlocks {
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 
-		private StringAotAggregation source;
+		private AggregationInteraction source;
 		private List<String> arguments;
 		private String aggregationVariableName;
 		private boolean pipelineOnly;
 
-		public AggregationBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		AggregationBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
 			this.context = context;
-			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
-					.collect(Collectors.toList());
-
-			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
-			// this.argumentSource = new MongoParameters(parametersSource, false);
-
+			this.arguments = context.getBindableParameterNames();
 			this.queryMethod = queryMethod;
 		}
 
-		public AggregationBlockBuilder stages(StringAotAggregation aggregation) {
+		AggregationBlockBuilder stages(AggregationInteraction aggregation) {
+
 			this.source = aggregation;
 			return this;
 		}
 
-		public AggregationBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
+		AggregationBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
+
 			this.aggregationVariableName = aggregationVariableName;
 			return this;
 		}
 
-		public AggregationBlockBuilder pipelineOnly(boolean pipelineOnly) {
+		AggregationBlockBuilder pipelineOnly(boolean pipelineOnly) {
+
 			this.pipelineOnly = pipelineOnly;
 			return this;
 		}
@@ -396,22 +458,38 @@ public class MongoBlocks {
 
 		private CodeBlock pipeline(String pipelineVariableName) {
 
+			String sortParameter = context.getSortParameterName();
+			String limitParameter = context.getLimitParameterName();
+			String pageableParameter = context.getPageableParameterName();
+
+			boolean mightBeSorted = StringUtils.hasText(sortParameter);
+			boolean mightBeLimited = StringUtils.hasText(limitParameter);
+			boolean mightBePaged = StringUtils.hasText(pageableParameter);
+
+			int stageCount = source.stages().size();
+			if (mightBeSorted) {
+				stageCount++;
+			}
+			if (mightBeLimited) {
+				stageCount++;
+			}
+			if (mightBePaged) {
+				stageCount += 3;
+			}
+
 			Builder builder = CodeBlock.builder();
 			String stagesVariableName = "stages";
-			builder.add(aggregationStages(stagesVariableName, source.stages(), arguments));
+			builder.add(aggregationStages(stagesVariableName, source.stages(), stageCount, arguments));
 
-			String sortParameter = context.getSortParameterName();
-			if (StringUtils.hasText(sortParameter)) {
+			if (mightBeSorted) {
 				builder.add(sortingStage(sortParameter));
 			}
 
-			String limitParameter = context.getLimitParameterName();
-			if (StringUtils.hasText(limitParameter)) {
+			if (mightBeLimited) {
 				builder.add(limitingStage(limitParameter));
 			}
 
-			String pageableParameter = context.getPageableParameterName();
-			if (StringUtils.hasText(pageableParameter)) {
+			if (mightBePaged) {
 				builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
 			}
 
@@ -464,10 +542,12 @@ public class MongoBlocks {
 			return builder.build();
 		}
 
-		private static CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages,
+		private static CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages, int stageCount,
 				List<String> arguments) {
+
 			Builder builder = CodeBlock.builder();
-			builder.addStatement("$T<$T> $L = new $T()", List.class, Object.class, stageListVariableName, ArrayList.class);
+			builder.addStatement("$T<$T> $L = new $T($L)", List.class, Object.class, stageListVariableName, ArrayList.class,
+					stageCount);
 			int stageCounter = 0;
 			for (String stage : stages) {
 				String stageName = "stage_%s".formatted(stageCounter++);
@@ -524,27 +604,24 @@ public class MongoBlocks {
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 
-		private StringAotQuery source;
+		private QueryInteraction source;
 		private List<String> arguments;
 		private String queryVariableName;
 
-		public QueryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		QueryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
 			this.context = context;
-			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
-					.collect(Collectors.toList());
-
-			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
-			// this.argumentSource = new MongoParameters(parametersSource, false);
-
+			this.arguments = context.getBindableParameterNames();
 			this.queryMethod = queryMethod;
 		}
 
-		public QueryBlockBuilder filter(StringAotQuery query) {
+		QueryBlockBuilder filter(QueryInteraction query) {
+
 			this.source = query;
 			return this;
 		}
 
-		public QueryBlockBuilder usingQueryVariableName(String queryVariableName) {
+		QueryBlockBuilder usingQueryVariableName(String queryVariableName) {
 			this.queryVariableName = queryVariableName;
 			return this;
 		}
@@ -554,27 +631,28 @@ public class MongoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 
 			builder.add("\n");
-			builder.add(renderExpressionToQuery(source.query.getQueryString(), queryVariableName));
+			builder.add(renderExpressionToQuery(source.getQuery().getQueryString(), queryVariableName));
 
-			if (StringUtils.hasText(source.query.getFieldsString())) {
-				builder.add(renderExpressionToDocument(source.query.getFieldsString(), "fields", arguments));
+			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
+
+				builder.add(renderExpressionToDocument(source.getQuery().getFieldsString(), "fields", arguments));
 				builder.addStatement("$L.setFieldsObject(fields)", queryVariableName);
 			}
 
 			String sortParameter = context.getSortParameterName();
 			if (StringUtils.hasText(sortParameter)) {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
-			} else if (StringUtils.hasText(source.query.getSortString())) {
+			} else if (StringUtils.hasText(source.getQuery().getSortString())) {
 
-				builder.add(renderExpressionToDocument(source.query.getSortString(), "sort", arguments));
+				builder.add(renderExpressionToDocument(source.getQuery().getSortString(), "sort", arguments));
 				builder.addStatement("$L.setSortObject(sort)", queryVariableName);
 			}
 
 			String limitParameter = context.getLimitParameterName();
 			if (StringUtils.hasText(limitParameter)) {
 				builder.addStatement("$L.limit($L)", queryVariableName, limitParameter);
-			} else if (context.getPageableParameterName() == null && source.query.isLimited()) {
-				builder.addStatement("$L.limit($L)", queryVariableName, source.query.getLimit());
+			} else if (context.getPageableParameterName() == null && source.getQuery().isLimited()) {
+				builder.addStatement("$L.limit($L)", queryVariableName, source.getQuery().getLimit());
 			}
 
 			String pageableParameter = context.getPageableParameterName();
@@ -597,7 +675,7 @@ public class MongoBlocks {
 						com.mongodb.ReadPreference.class, readPreference);
 			}
 
-			// TODO: all the meta stuff
+			// TODO: Meta annotation
 
 			return builder.build();
 		}
@@ -606,6 +684,7 @@ public class MongoBlocks {
 
 			Builder builder = CodeBlock.builder();
 			if (!StringUtils.hasText(source)) {
+
 				builder.addStatement("$T $L = new $T(new $T())", BasicQuery.class, variableName, BasicQuery.class,
 						Document.class);
 			} else if (!containsPlaceholder(source)) {
@@ -629,25 +708,15 @@ public class MongoBlocks {
 
 	static class UpdateBlockBuilder {
 
-		private final AotQueryMethodGenerationContext context;
-		private final MongoQueryMethod queryMethod;
-
-		private StringAotUpdate source;
+		private UpdateInteraction source;
 		private List<String> arguments;
 		private String updateVariableName;
 
 		public UpdateBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-			this.context = context;
-			this.arguments = Arrays.stream(context.getMethod().getParameters()).map(Parameter::getName)
-					.collect(Collectors.toList());
-
-			// ParametersSource parametersSource = ParametersSource.of(repositoryInformation, metadata.getRepositoryMethod());
-			// this.argumentSource = new MongoParameters(parametersSource, false);
-
-			this.queryMethod = queryMethod;
+			this.arguments = context.getBindableParameterNames();
 		}
 
-		public UpdateBlockBuilder update(StringAotUpdate update) {
+		public UpdateBlockBuilder update(UpdateInteraction update) {
 			this.source = update;
 			return this;
 		}
@@ -663,7 +732,7 @@ public class MongoBlocks {
 
 			builder.add("\n");
 			String tmpVariableName = updateVariableName + "Document";
-			builder.add(renderExpressionToDocument(source.update.getUpdateString(), tmpVariableName, arguments));
+			builder.add(renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName, arguments));
 			builder.addStatement("$T $L = new $T($L)", BasicUpdate.class, updateVariableName, BasicUpdate.class,
 					tmpVariableName);
 
@@ -673,6 +742,7 @@ public class MongoBlocks {
 
 	private static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
 			List<String> arguments) {
+
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
 			builder.addStatement("$T $L = new $T()", Document.class, variableName, Document.class);

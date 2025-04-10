@@ -48,6 +48,8 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 
 /**
+ * Helper to capture setting for AOT queries.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */

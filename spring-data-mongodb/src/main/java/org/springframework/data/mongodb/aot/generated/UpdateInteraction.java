@@ -17,33 +17,42 @@ package org.springframework.data.mongodb.aot.generated;
 
 import java.util.Map;
 
+import org.springframework.data.repository.aot.generate.QueryMetadata;
+
 /**
+ * An {@link MongoInteraction} to execute an update.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
-class StringAotAggregationUpdate extends StringAotAggregation {
+class UpdateInteraction extends MongoInteraction implements QueryMetadata {
 
-	private final StringAotQuery filter;
+	private final QueryInteraction filter;
+	private final StringUpdate update;
 
-	public StringAotAggregationUpdate(StringAotQuery filter, String[] raw) {
-		super(raw);
+	UpdateInteraction(QueryInteraction filter, StringUpdate update) {
 		this.filter = filter;
+		this.update = update;
 	}
 
-	public StringAotQuery getFilter() {
+	QueryInteraction getFilter() {
 		return filter;
+	}
+
+	StringUpdate getUpdate() {
+		return update;
 	}
 
 	@Override
 	public Map<String, Object> serialize() {
 
 		Map<String, Object> serialized = filter.serialize();
-		serialized.putAll(super.serialize());
+		serialized.put("update", update.getUpdateString());
 		return serialized;
 	}
 
 	@Override
-	protected String pipelineSerializationKey() {
-		return "update-" + super.pipelineSerializationKey();
+	InteractionType getExecutionType() {
+		return InteractionType.UPDATE;
 	}
 }

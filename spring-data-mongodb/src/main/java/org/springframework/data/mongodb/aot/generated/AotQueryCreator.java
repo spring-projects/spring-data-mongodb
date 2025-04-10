@@ -70,7 +70,7 @@ class AotQueryCreator {
 				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(parameterCount)), mappingContext)
 				.createQuery();
 
-		if(partTree.isLimiting()) {
+		if (partTree.isLimiting()) {
 			query.limit(partTree.getMaxResults());
 		}
 		return new StringQuery(query);
@@ -117,8 +117,7 @@ class AotQueryCreator {
 			if (parameterCount == 0) {
 				placeholders = List.of();
 			} else {
-				placeholders = IntStream.range(0, parameterCount).mapToObj(it -> new Placeholder("?" + it))
-						.collect(Collectors.toList());
+				placeholders = IntStream.range(0, parameterCount).mapToObj(Placeholder::indexed).collect(Collectors.toList());
 			}
 		}
 

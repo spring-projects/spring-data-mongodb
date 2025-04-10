@@ -16,51 +16,53 @@
 package org.springframework.data.mongodb.aot.generated;
 
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.data.repository.aot.generate.QueryMetadata;
 import org.springframework.util.StringUtils;
 
 /**
+ * An {@link MongoInteraction} to execute a query.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
-class StringAotQuery extends AotQuery implements QueryMetadata {
+class QueryInteraction extends MongoInteraction implements QueryMetadata {
 
-	StringQuery query;
-	ExecutionType executionType;
+	private final StringQuery query;
+	private final InteractionType interactionType;
 
-	public StringAotQuery(StringQuery query, boolean count, boolean delete, boolean exists) {
+	QueryInteraction(StringQuery query, boolean count, boolean delete, boolean exists) {
+
 		this.query = query;
-		if(count) {
-			executionType = ExecutionType.COUNT;
+		if (count) {
+			interactionType = InteractionType.COUNT;
 		} else if (exists) {
-			executionType = ExecutionType.EXISTS;
+			interactionType = InteractionType.EXISTS;
 		} else if (delete) {
-			executionType = ExecutionType.DELETE;
+			interactionType = InteractionType.DELETE;
 		} else {
-			executionType = ExecutionType.QUERY;
+			interactionType = InteractionType.QUERY;
 		}
 	}
 
-	public StringAotQuery(StringQuery query, ExecutionType executionType) {
-		this.query = query;
-		this.executionType = executionType;
+	StringQuery getQuery() {
+		return query;
 	}
 
-	StringAotQuery withSort(String sort) {
+	QueryInteraction withSort(String sort) {
 		query.sort(sort);
-		return new StringAotQuery(query, executionType);
+		return this;
 	}
 
-	StringAotQuery withFields(String fields) {
-		return new StringAotQuery(query.fields(fields), executionType);
+	QueryInteraction withFields(String fields) {
+		query.fields(fields);
+		return this;
 	}
 
 	@Override
-	ExecutionType getExecutionType() {
-		return executionType;
+	InteractionType getExecutionType() {
+		return interactionType;
 	}
 
 	@Override
@@ -69,14 +71,13 @@ class StringAotQuery extends AotQuery implements QueryMetadata {
 		Map<String, Object> serialized = new LinkedHashMap<>();
 
 		serialized.put("filter", query.getQueryString());
-		if(query.isSorted()) {
+		if (query.isSorted()) {
 			serialized.put("sort", query.getSortString());
 		}
-		if(StringUtils.hasText(query.getFieldsString())) {
+		if (StringUtils.hasText(query.getFieldsString())) {
 			serialized.put("fields", query.getFieldsString());
 		}
 
 		return serialized;
-
 	}
 }

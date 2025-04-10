@@ -19,15 +19,9 @@ package org.springframework.data.mongodb.aot.generated;
  * @author Christoph Strobl
  * @since 5.0
  */
-class StringUpdate {
+record StringUpdate(String raw) {
 
-	String raw;
-
-	public StringUpdate(String raw) {
-		this.raw = raw;
-	}
-
-	public String getUpdateString() {
+	String getUpdateString() {
 		return raw;
 	}
 }

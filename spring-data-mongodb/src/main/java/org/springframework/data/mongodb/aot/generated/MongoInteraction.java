@@ -16,37 +16,47 @@
 package org.springframework.data.mongodb.aot.generated;
 
 /**
+ * Base abstraction for interactions with MongoDB.
+ *
  * @author Christoph Strobl
- * @since 2025/04
+ * @since 5.0
  */
-abstract class AotQuery {
+abstract class MongoInteraction {
 
-	boolean isCountQuery() {
-		return ExecutionType.COUNT.equals(getExecutionType());
+	abstract InteractionType getExecutionType();
+
+	boolean isAggregation() {
+		return InteractionType.AGGREGATION.equals(getExecutionType());
 	}
 
-	boolean isDeleteQuery() {
-		return ExecutionType.DELETE.equals(getExecutionType());
+	boolean isCount() {
+		return InteractionType.COUNT.equals(getExecutionType());
+	}
+
+	boolean isDelete() {
+		return InteractionType.DELETE.equals(getExecutionType());
 	}
 
 	boolean isExists() {
-		return ExecutionType.EXISTS.equals(getExecutionType());
+		return InteractionType.EXISTS.equals(getExecutionType());
 	}
 
-	abstract ExecutionType getExecutionType();
+	boolean isUpdate() {
+		return InteractionType.UPDATE.equals(getExecutionType());
+	}
 
 	String name() {
 
-		if (isDeleteQuery()) {
+		if (isDelete()) {
 			return "deleteQuery";
 		}
-		if (isCountQuery()) {
+		if (isCount()) {
 			return "countQuery";
 		}
 		return "filterQuery";
 	}
 
-	enum ExecutionType {
+	enum InteractionType {
 		QUERY, COUNT, DELETE, EXISTS, UPDATE, AGGREGATION
 	}
 }

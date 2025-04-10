@@ -32,16 +32,11 @@
 package org.springframework.data.mongodb.aot.generated;
 
 /**
+ * Value object holding the raw representation of an Aggregation Pipeline.
+ * 
  * @author Christoph Strobl
  * @since 5.0
  */
-class StringAggregation {
-
-    String[] pipeline;
-
-    public StringAggregation(String[] pipeline) {
-        this.pipeline = pipeline;
-    }
-
+record StringAggregation(String[] pipeline) {
 
 }

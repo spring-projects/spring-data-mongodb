@@ -15,33 +15,42 @@
  */
 package org.springframework.data.mongodb.aot.generated;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.repository.aot.generate.QueryMetadata;
 
 /**
+ * An {@link MongoInteraction aggregation interaction}.
+ * 
  * @author Christoph Strobl
  * @since 5.0
  */
-class StringAotUpdate extends AotQuery implements QueryMetadata {
+class AggregationInteraction extends MongoInteraction implements QueryMetadata {
 
-	StringAotQuery filter;
-	StringUpdate update;
+	private final StringAggregation aggregation;
 
-	public StringAotUpdate(StringAotQuery filter, StringUpdate update) {
-		this.filter = filter;
-		this.update = update;
+	AggregationInteraction(String[] raw) {
+		this.aggregation = new StringAggregation(raw);
+	}
+
+	List<String> stages() {
+		return Arrays.asList(aggregation.pipeline());
+	}
+
+	@Override
+	InteractionType getExecutionType() {
+		return InteractionType.AGGREGATION;
 	}
 
 	@Override
 	public Map<String, Object> serialize() {
-		Map<String, Object> serialized = filter.serialize();
-		serialized.put("update", update.raw);
-		return serialized;
+		// TODO: serialize stages
+		return Map.of(pipelineSerializationKey(), Arrays.asList(aggregation.pipeline()));
 	}
 
-	@Override
-	ExecutionType getExecutionType() {
-		return ExecutionType.UPDATE;
+	protected String pipelineSerializationKey() {
+		return "pipeline";
 	}
 }
