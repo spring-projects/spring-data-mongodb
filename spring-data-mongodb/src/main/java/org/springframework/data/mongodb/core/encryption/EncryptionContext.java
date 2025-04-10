@@ -25,6 +25,7 @@ import org.springframework.lang.Nullable;
  * Context to encapsulate encryption for a specific {@link MongoPersistentProperty}.
  *
  * @author Christoph Strobl
+ * @author Ross Lawley
  * @since 4.1
  */
 public interface EncryptionContext {
@@ -128,4 +129,13 @@ public interface EncryptionContext {
 
 	EvaluationContext getEvaluationContext(Object source);
 
+	/**
+	 * The field name and field query operator
+	 *
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	default String getFieldNameAndQueryOperator() {
+		return null;
+	}
 }
