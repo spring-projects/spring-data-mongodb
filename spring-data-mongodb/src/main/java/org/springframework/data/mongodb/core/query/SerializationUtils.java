@@ -110,6 +110,7 @@ public abstract class SerializationUtils {
 	 * @param value
 	 * @return the serialized value or {@literal null}.
 	 */
+	// TBD: add serializeToJsonSafely(@Nullable Document document, JsonWriterSettings settings) {}
 	@Nullable
 	public static String serializeToJsonSafely(@Nullable Object value) {
 
