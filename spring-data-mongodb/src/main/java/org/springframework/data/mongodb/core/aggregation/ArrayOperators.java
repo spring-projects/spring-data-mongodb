@@ -338,19 +338,19 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given {@link Sort
-		 * order}.
+		 * Creates new {@link AggregationExpression} that takes the associated array and sorts it by the given
+		 * {@link Direction order}.
 		 *
 		 * @return new instance of {@link SortArray}.
-		 * @since 4.0
+		 * @since 4.5
 		 */
 		public SortArray sort(Direction direction) {
 
 			if (usesFieldRef()) {
-				return SortArray.sortArrayOf(fieldReference).by(direction);
+				return SortArray.sortArrayOf(fieldReference).direction(direction);
 			}
 
-			return (usesExpression() ? SortArray.sortArrayOf(expression) : SortArray.sortArray(values)).by(direction);
+			return (usesExpression() ? SortArray.sortArrayOf(expression) : SortArray.sortArray(values)).direction(direction);
 		}
 
 		/**
@@ -1960,10 +1960,6 @@ public class ArrayOperators {
 			return new First(expression);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		 */
 		@Override
 		protected String getMongoMethod() {
 			return "$first";
@@ -2014,10 +2010,6 @@ public class ArrayOperators {
 			return new Last(expression);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		 */
 		@Override
 		protected String getMongoMethod() {
 			return "$last";
@@ -2077,14 +2069,25 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Order the values for the array in the given direction.
+		 *
+		 * @param direction must not be {@literal null}.
+		 * @return new instance of {@link SortArray}.
+		 * @since 4.5
+		 */
+		public SortArray direction(Direction direction) {
+			return new SortArray(append("sortBy", direction.isAscending() ? 1 : -1));
+		}
+
+		/**
 		 * Sort the array elements by their values in ascending order. Suitable for arrays of simple types (e.g., integers,
 		 * strings).
 		 *
 		 * @return new instance of {@link SortArray}.
-		 * @since 4.x (TBD)
+		 * @since 4.5
 		 */
 		public SortArray byValueAscending() {
-			return new SortArray(append("sortBy", 1));
+			return direction(Direction.ASC);
 		}
 
 		/**
@@ -2092,26 +2095,12 @@ public class ArrayOperators {
 		 * strings).
 		 *
 		 * @return new instance of {@link SortArray}.
-		 * @since 4.x (TBD)
+		 * @since 4.5
 		 */
 		public SortArray byValueDescending() {
-			return new SortArray(append("sortBy", -1));
+			return direction(Direction.DESC);
 		}
 
-		/**
-		 * Set the order to put elements in.
-		 *
-		 * @param direction must not be {@literal null}.
-		 * @return new instance of {@link SortArray}.
-		 */
-		public SortArray by(Direction direction) {
-			return new SortArray(append("sortBy", direction.isAscending() ? 1 : -1));
-		}
-
-		/*
-		* (non-Javadoc)
-		* @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		*/
 		@Override
 		protected String getMongoMethod() {
 			return "$sortArray";

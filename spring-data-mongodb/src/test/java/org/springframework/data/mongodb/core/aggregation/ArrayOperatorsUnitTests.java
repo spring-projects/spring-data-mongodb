@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToObject;
-import org.springframework.data.mongodb.core.aggregation.ArrayOperators.SortArray;
 
 /**
  * Unit tests for {@link ArrayOperators}
@@ -184,25 +183,16 @@ public class ArrayOperatorsUnitTests {
 
 	@Test // GH-4929
 	public void sortArrayByValueAscending() {
-		Document result = SortArray.sortArrayOf("numbers").byValueAscending().toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document expected = new Document("$sortArray", new Document("input", "$numbers").append("sortBy", 1));
-		assertThat(result).isEqualTo(expected);
+
+		Document result = ArrayOperators.arrayOf("numbers").sort(Direction.ASC).toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(result).isEqualTo("{ $sortArray: { input: '$numbers', sortBy: 1 } }");
 	}
 
 	@Test // GH-4929
 	public void sortArrayByValueDescending() {
-		Document result = SortArray.sortArrayOf("numbers").byValueDescending().toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document expected = new Document("$sortArray", new Document("input", "$numbers").append("sortBy", -1));
-		assertThat(result).isEqualTo(expected);
-	}
 
-	@Test // GH-4929
-	public void sortArrayByPropertyUnchanged() {
-		Document result = SortArray.sortArrayOf("items").by(Sort.by(Sort.Direction.ASC, "price"))
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document expected = new Document("$sortArray",
-				new Document("input", "$items").append("sortBy", new Document("price", 1)));
-		assertThat(result).isEqualTo(expected);
+		Document result = ArrayOperators.arrayOf("numbers").sort(Direction.DESC).toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(result).isEqualTo("{ $sortArray: { input: '$numbers', sortBy: -1 } }");
 	}
 
 	@Test // GH-4929
