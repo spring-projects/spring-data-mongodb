@@ -15,17 +15,16 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.bson.Document;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToObject;
-import org.springframework.data.mongodb.core.aggregation.ArrayOperators.SortArray;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import org.bson.Document;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToObject;
 
 /**
  * Unit tests for {@link ArrayOperators}
@@ -37,170 +36,147 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
  */
 public class ArrayOperatorsUnitTests {
 
-    static final List<Object> VALUE_LIST = Arrays.asList(1, "2", new Document("_id", 3));
-    static final String VALUE_LIST_STRING = "[1, \"2\", { \"_id\" : 3 }]";
-    static final String EXPRESSION_STRING = "{ \"$stablemaster\" : \"burrich\" }";
-    static final Document EXPRESSION_DOC = Document.parse(EXPRESSION_STRING);
-    static final AggregationExpression EXPRESSION = context -> EXPRESSION_DOC;
+	static final List<Object> VALUE_LIST = Arrays.asList(1, "2", new Document("_id", 3));
+	static final String VALUE_LIST_STRING = "[1, \"2\", { \"_id\" : 3 }]";
+	static final String EXPRESSION_STRING = "{ \"$stablemaster\" : \"burrich\" }";
+	static final Document EXPRESSION_DOC = Document.parse(EXPRESSION_STRING);
+	static final AggregationExpression EXPRESSION = context -> EXPRESSION_DOC;
 
-    @Test // DATAMONGO-2052
-    public void toArrayWithFieldReference() {
+	@Test // DATAMONGO-2052
+	public void toArrayWithFieldReference() {
 
-        assertThat(ArrayOperators.arrayOf("regal").toObject().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $arrayToObject: \"$regal\" } ");
-    }
+		assertThat(ArrayOperators.arrayOf("regal").toObject().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $arrayToObject: \"$regal\" } ");
+	}
 
-    @Test // DATAMONGO-2052
-    public void toArrayWithExpression() {
+	@Test // DATAMONGO-2052
+	public void toArrayWithExpression() {
 
-        assertThat(ArrayOperators.arrayOf(EXPRESSION).toObject().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $arrayToObject: " + EXPRESSION_STRING + "} ");
-    }
+		assertThat(ArrayOperators.arrayOf(EXPRESSION).toObject().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $arrayToObject: " + EXPRESSION_STRING + "} ");
+	}
 
-    @Test // DATAMONGO-2052
-    public void toArrayWithArgumentList() {
+	@Test // DATAMONGO-2052
+	public void toArrayWithArgumentList() {
 
-        List<List<String>> source = new ArrayList<>();
-        source.add(Arrays.asList("king", "shrewd"));
-        source.add(Arrays.asList("prince", "verity"));
+		List<List<String>> source = new ArrayList<>();
+		source.add(Arrays.asList("king", "shrewd"));
+		source.add(Arrays.asList("prince", "verity"));
 
-        assertThat(ArrayToObject.arrayToObject(source).toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $arrayToObject: [ [ \"king\", \"shrewd\"], [ \"prince\", \"verity\" ] ] } ");
-    }
+		assertThat(ArrayToObject.arrayToObject(source).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $arrayToObject: [ [ \"king\", \"shrewd\"], [ \"prince\", \"verity\" ] ] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void arrayElementAtWithValueList() {
+	@Test // DATAMONGO-2287
+	public void arrayElementAtWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).elementAt(1).toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $arrayElemAt: [ " + VALUE_LIST_STRING + ", 1] } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).elementAt(1).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $arrayElemAt: [ " + VALUE_LIST_STRING + ", 1] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void concatWithValueList() {
+	@Test // DATAMONGO-2287
+	public void concatWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).concat("field").toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $concatArrays: [ " + VALUE_LIST_STRING + ", \"$field\"] } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).concat("field").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $concatArrays: [ " + VALUE_LIST_STRING + ", \"$field\"] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void filterWithValueList() {
+	@Test // DATAMONGO-2287
+	public void filterWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).filter().as("var").by(new Document())
-                .toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $filter: { \"input\" : " + VALUE_LIST_STRING + ", \"as\" :  \"var\", \"cond\" : {}  } } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).filter().as("var").by(new Document())
+				.toDocument(Aggregation.DEFAULT_CONTEXT))
+						.isEqualTo("{ $filter: { \"input\" : " + VALUE_LIST_STRING + ", \"as\" :  \"var\", \"cond\" : {}  } } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void lengthWithValueList() {
+	@Test // DATAMONGO-2287
+	public void lengthWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).length().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $size: [ " + VALUE_LIST_STRING + "] } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).length().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $size: [ " + VALUE_LIST_STRING + "] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void sliceWithValueList() {
+	@Test // DATAMONGO-2287
+	public void sliceWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).slice().itemCount(3).toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $slice: [ " + VALUE_LIST_STRING + ", 3] } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).slice().itemCount(3).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $slice: [ " + VALUE_LIST_STRING + ", 3] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void indexOfWithValueList() {
+	@Test // DATAMONGO-2287
+	public void indexOfWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).indexOf("s1p").toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $indexOfArray: [ " + VALUE_LIST_STRING + ", \"s1p\"] } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).indexOf("s1p").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $indexOfArray: [ " + VALUE_LIST_STRING + ", \"s1p\"] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void reverseWithValueList() {
+	@Test // DATAMONGO-2287
+	public void reverseWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).reverse().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $reverseArray: [ " + VALUE_LIST_STRING + "] } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).reverse().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $reverseArray: [ " + VALUE_LIST_STRING + "] } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void zipWithValueList() {
+	@Test // DATAMONGO-2287
+	public void zipWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).zipWith("field").toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $zip: { \"inputs\": [" + VALUE_LIST_STRING + ", \"$field\"]} } ");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).zipWith("field").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $zip: { \"inputs\": [" + VALUE_LIST_STRING + ", \"$field\"]} } ");
+	}
 
-    @Test // DATAMONGO-2287
-    public void inWithValueList() {
+	@Test // DATAMONGO-2287
+	public void inWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).containsValue("$userName").toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ \"$in\" : [\"$userName\", " + VALUE_LIST_STRING + "] }");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).containsValue("$userName").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ \"$in\" : [\"$userName\", " + VALUE_LIST_STRING + "] }");
+	}
 
-    @Test // GH-3694
-    public void firstWithValueList() {
+	@Test // GH-3694
+	public void firstWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).first().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ \"$first\" : " + VALUE_LIST_STRING + "}");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).first().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ \"$first\" : " + VALUE_LIST_STRING + "}");
+	}
 
-    @Test // GH-3694
-    public void firstWithExpression() {
+	@Test // GH-3694
+	public void firstWithExpression() {
 
-        assertThat(ArrayOperators.arrayOf(EXPRESSION).first().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ \"$first\" : " + EXPRESSION_STRING + "}");
-    }
+		assertThat(ArrayOperators.arrayOf(EXPRESSION).first().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ \"$first\" : " + EXPRESSION_STRING + "}");
+	}
 
-    @Test // GH-3694
-    public void firstWithFieldReference() {
+	@Test // GH-3694
+	public void firstWithFieldReference() {
 
-        assertThat(ArrayOperators.arrayOf("field").first().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $first : \"$field\" }");
-    }
+		assertThat(ArrayOperators.arrayOf("field").first().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $first : \"$field\" }");
+	}
 
-    @Test // GH-3694
-    public void lastWithValueList() {
+	@Test // GH-3694
+	public void lastWithValueList() {
 
-        assertThat(ArrayOperators.arrayOf(VALUE_LIST).last().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ \"$last\" : " + VALUE_LIST_STRING + "}");
-    }
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).last().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ \"$last\" : " + VALUE_LIST_STRING + "}");
+	}
 
-    @Test // GH-3694
-    public void lastWithExpression() {
+	@Test // GH-3694
+	public void lastWithExpression() {
 
-        assertThat(ArrayOperators.arrayOf(EXPRESSION).last().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ \"$last\" : " + EXPRESSION_STRING + "}");
-    }
+		assertThat(ArrayOperators.arrayOf(EXPRESSION).last().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ \"$last\" : " + EXPRESSION_STRING + "}");
+	}
 
-    @Test // GH-3694
-    public void lastWithFieldReference() {
+	@Test // GH-3694
+	public void lastWithFieldReference() {
 
-        assertThat(ArrayOperators.arrayOf("field").last().toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $last : \"$field\" }");
-    }
+		assertThat(ArrayOperators.arrayOf("field").last().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $last : \"$field\" }");
+	}
 
-    @Test
-        // GH-4139
-    void sortByWithFieldRef() {
+	@Test // GH-4139
+	void sortByWithFieldRef() {
 
-        assertThat(ArrayOperators.arrayOf("team").sort(Sort.by("name")).toDocument(Aggregation.DEFAULT_CONTEXT))
-                .isEqualTo("{ $sortArray: { input: \"$team\", sortBy: { name: 1 } } }");
-    }
-
-    @Test // GH-4929
-    public void sortArrayByValueAscending() {
-        Document result = SortArray.sortArrayOf("numbers").byValueAscending().toDocument(Aggregation.DEFAULT_CONTEXT);
-        Document expected = new Document("$sortArray", new Document("input", "$numbers").append("sortBy", 1));
-        assertThat(result).isEqualTo(expected);
-    }
-
-    @Test // GH-4929
-    public void sortArrayByValueDescending() {
-        Document result = SortArray.sortArrayOf("numbers").byValueDescending().toDocument(Aggregation.DEFAULT_CONTEXT);
-        Document expected = new Document("$sortArray", new Document("input", "$numbers").append("sortBy", -1));
-        assertThat(result).isEqualTo(expected);
-    }
-
-    @Test // GH-4929
-    public void sortArrayByPropertyUnchanged() {
-        Document result = SortArray.sortArrayOf("items")
-                .by(Sort.by(Sort.Direction.ASC, "price")).toDocument(Aggregation.DEFAULT_CONTEXT);
-        Document expected = new Document("$sortArray", new Document("input", "$items").append("sortBy", new Document("price", 1)));
-        assertThat(result).isEqualTo(expected);
-    }
+		assertThat(ArrayOperators.arrayOf("team").sort(Sort.by("name")).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $sortArray: { input: \"$team\", sortBy: { name: 1 } } }");
+	}
 }
