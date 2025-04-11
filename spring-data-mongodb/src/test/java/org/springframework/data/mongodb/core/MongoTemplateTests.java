@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -3108,6 +3109,18 @@ public class MongoTemplateTests {
 		assertThat(result).hasSize(2);
 		assertThat(walter.getId()).isNotNull();
 		assertThat(jesse.getId()).isNotNull();
+	}
+
+	@Test // GH-4944
+	public void insertAllShouldConvertIdToTargetTypeBeforeSave() {
+
+		RawStringId walter = new RawStringId();
+		walter.value = "walter";
+
+		RawStringId returned = template.insertAll(List.of(walter)).iterator().next();
+		org.bson.Document document = template.execute(RawStringId.class, collection -> collection.find().first());
+
+		assertThat(returned.id).isEqualTo(document.get("_id"));
 	}
 
 	@Test // DATAMONGO-1208

@@ -1433,7 +1433,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			maybeEmitEvent(new BeforeSaveEvent<>(initialized, document, collectionName));
 			initialized = maybeCallBeforeSave(initialized, document, collectionName);
 
-			documentList.add(document);
+			MappedDocument mappedDocument = queryOperations.createInsertContext(MappedDocument.of(document))
+				.prepareId(uninitialized.getClass());
+
+			documentList.add(mappedDocument.getDocument());
 			initializedBatchToSave.add(initialized);
 		}
 
