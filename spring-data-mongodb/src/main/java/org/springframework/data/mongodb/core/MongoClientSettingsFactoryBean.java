@@ -25,9 +25,7 @@ import javax.net.ssl.SSLContext;
 
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
-
 import org.springframework.beans.factory.config.AbstractFactoryBean;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -57,8 +55,6 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	private CodecRegistry codecRegistry = DEFAULT_MONGO_SETTINGS.getCodecRegistry();
 
-	@Nullable private Object streamFactoryFactory = MongoCompatibilityAdapter
-			.clientSettingsAdapter(DEFAULT_MONGO_SETTINGS).getStreamFactoryFactory();
 	@Nullable private TransportSettings transportSettings;
 
 	private ReadPreference readPreference = DEFAULT_MONGO_SETTINGS.getReadPreference();
@@ -371,16 +367,6 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 		this.readPreference = readPreference;
 	}
 
-	/**
-	 * @param streamFactoryFactory
-	 * @deprecated since 4.3, will be removed in the MongoDB 5.0 driver in favor of
-	 *             {@code com.mongodb.connection.TransportSettings}.
-	 */
-	@Deprecated(since = "4.3")
-	public void setStreamFactoryFactory(Object streamFactoryFactory) {
-		this.streamFactoryFactory = streamFactoryFactory;
-	}
-
 	public void setTransportSettings(@Nullable TransportSettings transportSettings) {
 		this.transportSettings = transportSettings;
 	}
@@ -490,10 +476,6 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 		if (transportSettings != null) {
 			builder.transportSettings(transportSettings);
-		}
-
-		if (streamFactoryFactory != null) {
-			MongoCompatibilityAdapter.clientSettingsBuilderAdapter(builder).setStreamFactoryFactory(streamFactoryFactory);
 		}
 
 		if (retryReads != null) {

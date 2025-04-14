@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Proxy;
 
+import com.mongodb.reactivestreams.client.ListCollectionNamesPublisher;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -58,7 +59,6 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * Unit tests for {@link ReactiveSessionBoundMongoTemplate}.
@@ -94,7 +94,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	@Before
 	public void setUp() {
 
-		mock(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(database).collectionNamePublisherType());
+		mock(ListCollectionNamesPublisher.class);
 		when(client.getDatabase(anyString())).thenReturn(database);
 		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
 		when(database.getCodecRegistry()).thenReturn(codecRegistry);

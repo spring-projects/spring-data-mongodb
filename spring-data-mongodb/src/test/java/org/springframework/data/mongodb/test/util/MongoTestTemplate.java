@@ -28,7 +28,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.mongodb.MongoWriteException;
@@ -96,7 +95,7 @@ public class MongoTestTemplate extends MongoTemplate {
 	}
 
 	public void flushDatabase() {
-		flush(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(getDb()).listCollectionNames());
+		flush(getDb().listCollectionNames());
 	}
 
 	public void flush(Iterable<String> collections) {

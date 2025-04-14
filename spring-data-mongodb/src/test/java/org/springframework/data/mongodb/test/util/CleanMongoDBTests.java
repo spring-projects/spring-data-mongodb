@@ -32,8 +32,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.mongodb.test.util.CleanMongoDB.Struct;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
+import com.mongodb.client.ListCollectionNamesIterable;
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -74,11 +74,11 @@ class CleanMongoDBTests {
 		when(mongoClientMock.getDatabase(eq("db2"))).thenReturn(db2mock);
 
 		// collections have to exist
-		MongoIterable<String> collectionIterable = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db1mock).collectionNameIterableType());
+		MongoIterable<String> collectionIterable = mock(ListCollectionNamesIterable.class);
 		when(collectionIterable.into(any(Collection.class))).thenReturn(Arrays.asList("db1collection1", "db1collection2"));
 		doReturn(collectionIterable).when(db1mock).listCollectionNames();
 
-		MongoIterable<String> collectionIterable2 = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db2mock).collectionNameIterableType());
+		MongoIterable<String> collectionIterable2 = mock(ListCollectionNamesIterable.class);
 		when(collectionIterable2.into(any(Collection.class))).thenReturn(Collections.singletonList("db2collection1"));
 		doReturn(collectionIterable2).when(db2mock).listCollectionNames();
 

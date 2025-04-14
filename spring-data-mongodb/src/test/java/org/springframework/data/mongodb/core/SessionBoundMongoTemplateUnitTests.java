@@ -49,7 +49,6 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 
 /**
  * Unit test for {@link SessionBoundMongoTemplate} making sure a proxied {@link MongoCollection} and
@@ -90,7 +89,7 @@ public class SessionBoundMongoTemplateUnitTests {
 	@Before
 	public void setUp() {
 
-		collectionNamesIterable = mock(MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(database).collectionNameIterableType());
+		collectionNamesIterable = mock(ListCollectionNamesIterable.class);
 		when(client.getDatabase(anyString())).thenReturn(database);
 		when(codecRegistry.get(any(Class.class))).thenReturn(new BsonValueCodec());
 		when(database.getCodecRegistry()).thenReturn(codecRegistry);

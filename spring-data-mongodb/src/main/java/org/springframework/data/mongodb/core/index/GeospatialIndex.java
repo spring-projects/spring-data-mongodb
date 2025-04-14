@@ -19,7 +19,6 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -41,7 +40,6 @@ public class GeospatialIndex implements IndexDefinition {
 	private @Nullable Integer max;
 	private @Nullable Integer bits;
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
-	private Double bucketSize = MongoClientVersion.isVersion5orNewer() ? null : 1.0;
 	private @Nullable String additionalField;
 	private Optional<IndexFilter> filter = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
@@ -104,17 +102,6 @@ public class GeospatialIndex implements IndexDefinition {
 		Assert.notNull(type, "Type must not be null");
 
 		this.type = type;
-		return this;
-	}
-
-	/**
-	 * @param bucketSize
-	 * @return this.
-	 * @deprecated since MongoDB server version 4.4
-	 */
-	@Deprecated
-	public GeospatialIndex withBucketSize(double bucketSize) {
-		this.bucketSize = bucketSize;
 		return this;
 	}
 
@@ -203,14 +190,9 @@ public class GeospatialIndex implements IndexDefinition {
 				break;
 
 			case GEO_2DSPHERE:
-
 				break;
 
 			case GEO_HAYSTACK:
-
-				if (bucketSize != null) {
-					document.put("bucketSize", bucketSize);
-				}
 				break;
 		}
 

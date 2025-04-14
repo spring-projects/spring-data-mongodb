@@ -80,9 +80,9 @@ public class IndexUnitTests {
 	public void testGeospatialIndexGeoHaystack() {
 
 		GeospatialIndex i = new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_HAYSTACK)
-				.withAdditionalField("name").withBucketSize(40);
+				.withAdditionalField("name");
 		assertThat(i.getIndexKeys()).isEqualTo(Document.parse("{ \"location\" : \"geoHaystack\" , \"name\" : 1}"));
-		assertThat(i.getIndexOptions()).isEqualTo(Document.parse("{ \"bucketSize\" : 40.0}"));
+		assertThat(i.getIndexOptions()).isEqualTo(Document.parse("{ }"));
 	}
 
 	@Test

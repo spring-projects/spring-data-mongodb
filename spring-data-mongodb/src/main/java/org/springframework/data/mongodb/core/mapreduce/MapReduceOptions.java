@@ -45,7 +45,6 @@ public class MapReduceOptions {
 	private Boolean verbose = Boolean.TRUE;
 	private @Nullable Integer limit;
 
-	private Optional<Boolean> outputSharded = Optional.empty();
 	private Optional<String> finalizeFunction = Optional.empty();
 	private Optional<Collation> collation = Optional.empty();
 
@@ -153,19 +152,6 @@ public class MapReduceOptions {
 	}
 
 	/**
-	 * If true and combined with an output mode that writes to a collection, the output collection will be sharded using
-	 * the _id field. For MongoDB 1.9+
-	 *
-	 * @param outputShared if true, output will be sharded based on _id key.
-	 * @return MapReduceOptions so that methods can be chained in a fluent API style
-	 */
-	public MapReduceOptions outputSharded(boolean outputShared) {
-
-		this.outputSharded = Optional.of(outputShared);
-		return this;
-	}
-
-	/**
 	 * Sets the finalize function
 	 *
 	 * @param finalizeFunction The finalize function. Can be a JSON string or a Spring Resource URL
@@ -243,10 +229,6 @@ public class MapReduceOptions {
 
 	public Optional<String> getOutputDatabase() {
 		return this.outputDatabase;
-	}
-
-	public Optional<Boolean> getOutputSharded() {
-		return this.outputSharded;
 	}
 
 	public Map<String, Object> getScopeVariables() {
@@ -336,7 +318,6 @@ public class MapReduceOptions {
 		}
 
 		outputDatabase.ifPresent(val -> out.append("db", val));
-		outputSharded.ifPresent(val -> out.append("sharded", val));
 
 		return out;
 	}
