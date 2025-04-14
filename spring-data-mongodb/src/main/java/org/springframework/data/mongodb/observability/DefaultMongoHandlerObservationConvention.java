@@ -17,10 +17,7 @@ package org.springframework.data.mongodb.observability;
 
 import io.micrometer.common.KeyValues;
 
-import java.net.InetSocketAddress;
-
 import org.springframework.data.mongodb.observability.MongoObservation.LowCardinalityCommandKeyNames;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
@@ -78,16 +75,6 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 				keyValues = keyValues.and(LowCardinalityCommandKeyNames.NET_TRANSPORT.withValue("IP.TCP"),
 						LowCardinalityCommandKeyNames.NET_PEER_NAME.withValue(serverAddress.getHost()),
 						LowCardinalityCommandKeyNames.NET_PEER_PORT.withValue("" + serverAddress.getPort()));
-
-				InetSocketAddress socketAddress = MongoCompatibilityAdapter.serverAddressAdapter(serverAddress)
-						.getSocketAddress();
-
-				if (socketAddress != null) {
-
-					keyValues = keyValues.and(
-							LowCardinalityCommandKeyNames.NET_SOCK_PEER_ADDR.withValue(socketAddress.getHostName()),
-							LowCardinalityCommandKeyNames.NET_SOCK_PEER_PORT.withValue("" + socketAddress.getPort()));
-				}
 			}
 
 			ConnectionId connectionId = connectionDescription.getConnectionId();

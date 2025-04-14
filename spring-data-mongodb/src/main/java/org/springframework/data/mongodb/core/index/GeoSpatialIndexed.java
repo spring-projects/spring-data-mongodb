@@ -115,16 +115,6 @@ public @interface GeoSpatialIndexed {
 	GeoSpatialIndexType type() default GeoSpatialIndexType.GEO_2D;
 
 	/**
-	 * The bucket size for {@link GeoSpatialIndexType#GEO_HAYSTACK} indexes, in coordinate units.
-	 *
-	 * @since 1.4
-	 * @return {@literal 1.0} by default.
-	 * @deprecated since MongoDB server version 4.4
-	 */
-	@Deprecated
-	double bucketSize() default 1.0;
-
-	/**
 	 * The name of the additional field to use for {@link GeoSpatialIndexType#GEO_HAYSTACK} indexes
 	 *
 	 * @since 1.4

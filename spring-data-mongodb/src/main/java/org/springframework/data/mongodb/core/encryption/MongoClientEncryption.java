@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.springframework.data.mongodb.util.MongoCompatibilityAdapter.rangeOptionsAdapter;
-
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -124,7 +122,7 @@ public class MongoClientEncryption implements Encryption<BsonValue, BsonBinary> 
 			Assert.isInstanceOf(Integer.class, trimFactor, () -> String
 					.format("Expected to find a %s but it turned out to be %s.", Integer.class, trimFactor.getClass()));
 
-			rangeOptionsAdapter(encryptionRangeOptions).trimFactor((Integer) trimFactor);
+			encryptionRangeOptions.trimFactor((Integer) trimFactor);
 		}
 
 		if (attributes.containsKey("sparsity")) {

@@ -118,7 +118,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -739,7 +738,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Mono<Boolean> collectionExists(String collectionName) {
-		return createMono(db -> Flux.from(MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames()) //
+		return createMono(db -> Flux.from(db.listCollectionNames()) //
 				.filter(s -> s.equals(collectionName)) //
 				.map(s -> true) //
 				.single(false));
@@ -787,7 +786,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Flux<String> getCollectionNames() {
-		return createFlux(db -> MongoCompatibilityAdapter.reactiveMongoDatabaseAdapter().forDb(db).listCollectionNames());
+		return createFlux(db -> db.listCollectionNames());
 	}
 
 	public Mono<MongoDatabase> getMongoDatabase() {
@@ -2169,10 +2168,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			if (options.getJavaScriptMode() != null) {
 				publisher = publisher.jsMode(options.getJavaScriptMode());
-			}
-
-			if (options.getOutputSharded().isPresent()) {
-				MongoCompatibilityAdapter.mapReducePublisherAdapter(publisher).sharded(options.getOutputSharded().get());
 			}
 
 			if (StringUtils.hasText(options.getOutputCollection()) && !options.usesInlineOutput()) {
