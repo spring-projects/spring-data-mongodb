@@ -28,8 +28,6 @@
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>3.5.0-SNAPSHOT</springdata.commons>
 		<mongo>5.4.0</mongo>
-		<mongodb-crypt>${mongo}</mongodb-crypt>
-		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
 
@@ -144,14 +142,19 @@
 
 	</profiles>
 
-	<dependencies>
-		<!-- MongoDB -->
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-core</artifactId>
-			<version>${mongo}</version>
-		</dependency>
-	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<!-- MongoDB -->
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver-bom</artifactId>
+				<version>${mongo}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 
 	<repositories>
 		<repository>

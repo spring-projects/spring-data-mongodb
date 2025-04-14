@@ -27,6 +27,30 @@
 
 	<dependencies>
 
+		<!-- MongoDB Driver -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-sync</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-reactivestreams</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-crypt</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 		<!-- Spring -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -96,29 +120,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- reactive -->
-
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-sync</artifactId>
-			<version>${mongo}</version>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-reactivestreams</artifactId>
-			<version>${mongo.reactivestreams}</version>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-crypt</artifactId>
-			<version>${mongodb-crypt}</version>
-			<optional>true</optional>
-		</dependency>
-
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
@@ -147,7 +148,6 @@
 
 		<!-- CDI -->
 		<!-- Dependency order required to build against CDI 1.0 and test with CDI 2.0 -->
-
 		<dependency>
 			<groupId>javax.interceptor</groupId>
 			<artifactId>javax.interceptor-api</artifactId>
@@ -350,7 +350,6 @@
 		</dependency>
 
 		<!-- jMolecules -->
-
 		<dependency>
 			<groupId>org.jmolecules</groupId>
 			<artifactId>jmolecules-ddd</artifactId>
@@ -375,7 +374,6 @@
 							<version>${jmh}</version>
 						</path>
 					</annotationProcessorPaths>
-
 				</configuration>
 			</plugin>
 
