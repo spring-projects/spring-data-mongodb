@@ -1433,11 +1433,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						entity.assertUpdateableIdIfNotSet();
 
 						T initialized = entity.initializeVersionProperty();
-						Document dbDoc = entity.toMappedDocument(writer).getDocument();
+						MappedDocument mapped = entity.toMappedDocument(writer);
 
-						maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
+						maybeEmitEvent(new BeforeSaveEvent<>(initialized, mapped.getDocument(), collectionName));
+						return maybeCallBeforeSave(initialized, mapped.getDocument(), collectionName).map(toSave -> {
 
-						return maybeCallBeforeSave(initialized, dbDoc, collectionName).thenReturn(Tuples.of(entity, dbDoc));
+							MappedDocument mappedDocument = queryOperations.createInsertContext(mapped)
+									.prepareId(uninitialized.getClass());
+
+							return Tuples.of(entity, mappedDocument.getDocument());
+						});
 					});
 				}).collectList();
 
