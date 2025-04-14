@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.core.schema;
 import org.bson.Document;
 
 /**
+ * Defines the specific character of a query that can be executed. Mainly used to define the characteristic of queryable
+ * encrypted fields.
+ * 
  * @author Christoph Strobl
  * @since 4.5
  */
@@ -28,6 +31,9 @@ public interface QueryCharacteristic {
 	 */
 	String queryType();
 
+	/**
+	 * @return the raw {@link Document} representation of the instance.
+	 */
 	default Document toDocument() {
 		return new Document("queryType", queryType());
 	}

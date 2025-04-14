@@ -61,7 +61,7 @@ public class MongoCompatibilityAdapter {
 
 	static {
 
-		// method name changed in between 
+		// method name changed in between
 		Method trimFactor = ReflectionUtils.findMethod(RangeOptions.class, "setTrimFactor", Integer.class);
 		if (trimFactor != null) {
 			setTrimFactor = trimFactor;
