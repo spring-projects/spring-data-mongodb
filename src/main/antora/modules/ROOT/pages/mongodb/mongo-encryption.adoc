@@ -254,7 +254,7 @@ Explicit encryption uses the MongoDB driver's encryption library (`org.mongodb:m
 [NOTE]
 ====
 There is no official support for using Explicit Queryable Encryption.
-The audacious user may combine `@Encyrpted` and `@Queryable` with `@ValueConverter(MongoEncryptionConverter.class)` at their own risk.
+The audacious user may combine `@Encrypted` and `@Queryable` with `@ValueConverter(MongoEncryptionConverter.class)` at their own risk.
 ====
 
 [[mongo.encryption.explicit-setup]]
