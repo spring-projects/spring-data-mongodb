@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonNull;
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
@@ -778,7 +778,8 @@ public class CollectionOptions {
 					}
 				}
 
-				field.append("queries", property.getCharacteristics().map(QueryCharacteristic::toDocument).toList());
+				field.append("queries", StreamSupport.stream(property.getCharacteristics().spliterator(), false)
+						.map(QueryCharacteristic::toDocument).toList());
 
 				if (!field.containsKey("keyId")) {
 					field.append("keyId", BsonNull.VALUE);
