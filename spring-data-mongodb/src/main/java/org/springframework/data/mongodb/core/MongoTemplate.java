@@ -107,7 +107,6 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
-import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -728,7 +727,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return execute(db -> {
 
-			for (String name : MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db).listCollectionNames()) {
+			for (String name : db.listCollectionNames()) {
 				if (name.equals(collectionName)) {
 					return true;
 				}
@@ -1980,11 +1979,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				mapReduce = mapReduce.jsMode(mapReduceOptions.getJavaScriptMode());
 			}
 
-			if (mapReduceOptions.getOutputSharded().isPresent()) {
-				MongoCompatibilityAdapter.mapReduceIterableAdapter(mapReduce)
-						.sharded(mapReduceOptions.getOutputSharded().get());
-			}
-
 			if (StringUtils.hasText(mapReduceOptions.getOutputCollection()) && !mapReduceOptions.usesInlineOutput()) {
 
 				mapReduce = mapReduce.collectionName(mapReduceOptions.getOutputCollection())
@@ -2367,7 +2361,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public Set<String> getCollectionNames() {
 		return execute(db -> {
 			Set<String> result = new LinkedHashSet<>();
-			for (String name : MongoCompatibilityAdapter.mongoDatabaseAdapter().forDb(db).listCollectionNames()) {
+			for (String name : db.listCollectionNames()) {
 				result.add(name);
 			}
 			return result;

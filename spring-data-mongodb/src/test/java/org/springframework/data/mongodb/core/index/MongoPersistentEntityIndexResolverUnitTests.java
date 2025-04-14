@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
@@ -506,7 +505,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinition.getIndexKeys()).containsEntry("location", "geoHaystack").containsEntry("What light?",
 					1);
 			assertThat(indexDefinition.getIndexOptions()).containsEntry("name", "my_geo_index_name")
-					.containsEntry("bucketSize", 2.0);
+					.doesNotContainKey("bucketSize");
 		}
 
 		@Test // DATAMONGO-2112
@@ -557,9 +556,6 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "additionalField")
 			String theAdditionalFieldINeedToDefine() default "What light?";
-
-			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "bucketSize")
-			double size() default 2;
 
 			@AliasFor(annotation = GeoSpatialIndexed.class, attribute = "type")
 			GeoSpatialIndexType indexType() default GeoSpatialIndexType.GEO_HAYSTACK;
