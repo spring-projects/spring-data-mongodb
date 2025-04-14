@@ -1205,8 +1205,8 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 	}
 
 	/**
-	 * {@link JsonSchemaProperty} implementation typically wrapping {@link EncryptedJsonSchemaProperty encrypted
-	 * properties} to mark them as queryable.
+	 * {@link JsonSchemaProperty} implementation typically wrapping an {@link EncryptedJsonSchemaProperty encrypted
+	 * property} to mark it as queryable.
 	 *
 	 * @author Christoph Strobl
 	 * @since 4.5
