@@ -26,12 +26,16 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import org.assertj.core.api.Assumptions;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.bson.Document;
+import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -58,6 +62,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.data.util.Lazy;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -96,6 +101,11 @@ class RangeEncryptionTests {
 	@Autowired MongoTemplate template;
 	@Autowired MongoClientEncryption clientEncryption;
 	@Autowired EncryptionKeyHolder keyHolder;
+
+	@BeforeEach
+	void clientVersionCheck() {
+		Assumptions.assumeThat(MongoClientVersion.isVersion5orNewer()).isTrue();
+	}
 
 	@AfterEach
 	void tearDown() {
