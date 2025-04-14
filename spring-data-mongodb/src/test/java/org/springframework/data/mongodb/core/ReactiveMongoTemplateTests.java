@@ -48,6 +48,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -84,6 +85,7 @@ import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -163,6 +165,19 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 
 		assertThat(person.getId()).isNotNull();
+	}
+
+	@Test // GH-4944
+	void insertAllShouldConvertIdToTargetTypeBeforeSave() {
+
+		RawStringId walter = new RawStringId();
+		walter.value = "walter";
+
+		RawStringId returned = template.insertAll(List.of(walter)).blockLast();
+		template.execute(RawStringId.class, MongoCollection::find) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> assertThat(returned.id).isEqualTo(actual.get("_id"))) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
