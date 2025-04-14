@@ -15,12 +15,9 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.encrypted;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int32;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int64;
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.queryable;
-import static org.springframework.data.mongodb.core.schema.QueryCharacteristics.range;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
+import static org.springframework.data.mongodb.core.schema.QueryCharacteristics.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -42,6 +40,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -49,9 +48,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.mongodb.client.MongoClient;
 
 /**
+ * Integration tests for creating collections with encrypted fields.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
 @ContextConfiguration
 public class MongoQueryableEncryptionCollectionCreationTests {
 
