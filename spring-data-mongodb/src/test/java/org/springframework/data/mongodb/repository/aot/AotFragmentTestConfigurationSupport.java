@@ -27,8 +27,6 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.test.tools.TestCompiler;
-import org.springframework.data.mongodb.aot.generated.MongoRepositoryContributor;
-import org.springframework.data.mongodb.aot.generated.TestMongoAotRepositoryContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;

@@ -13,44 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot.generated;
+package org.springframework.data.mongodb.repository.aot;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.repository.aot.generate.QueryMetadata;
 
 /**
- * An {@link MongoInteraction aggregation interaction}.
- * 
+ * An {@link MongoInteraction} to execute an update.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
-class AggregationInteraction extends MongoInteraction implements QueryMetadata {
+class UpdateInteraction extends MongoInteraction implements QueryMetadata {
 
-	private final StringAggregation aggregation;
+	private final QueryInteraction filter;
+	private final StringUpdate update;
 
-	AggregationInteraction(String[] raw) {
-		this.aggregation = new StringAggregation(raw);
+	UpdateInteraction(QueryInteraction filter, StringUpdate update) {
+		this.filter = filter;
+		this.update = update;
 	}
 
-	List<String> stages() {
-		return Arrays.asList(aggregation.pipeline());
+	QueryInteraction getFilter() {
+		return filter;
 	}
 
-	@Override
-	InteractionType getExecutionType() {
-		return InteractionType.AGGREGATION;
+	StringUpdate getUpdate() {
+		return update;
 	}
 
 	@Override
 	public Map<String, Object> serialize() {
-		// TODO: serialize stages
-		return Map.of(pipelineSerializationKey(), Arrays.asList(aggregation.pipeline()));
+
+		Map<String, Object> serialized = filter.serialize();
+		serialized.put("update", update.getUpdateString());
+		return serialized;
 	}
 
-	protected String pipelineSerializationKey() {
-		return "pipeline";
+	@Override
+	InteractionType getExecutionType() {
+		return InteractionType.UPDATE;
 	}
 }

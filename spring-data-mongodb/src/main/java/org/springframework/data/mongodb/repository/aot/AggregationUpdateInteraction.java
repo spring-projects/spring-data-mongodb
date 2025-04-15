@@ -13,46 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot.generated;
+package org.springframework.data.mongodb.repository.aot;
 
 import java.util.Map;
 
-import org.springframework.data.repository.aot.generate.QueryMetadata;
-
 /**
- * An {@link MongoInteraction} to execute an update.
+ * An {@link MongoInteraction} to execute an aggregation update.
  *
  * @author Christoph Strobl
  * @since 5.0
  */
-class UpdateInteraction extends MongoInteraction implements QueryMetadata {
+class AggregationUpdateInteraction extends AggregationInteraction {
 
 	private final QueryInteraction filter;
-	private final StringUpdate update;
 
-	UpdateInteraction(QueryInteraction filter, StringUpdate update) {
+	AggregationUpdateInteraction(QueryInteraction filter, String[] raw) {
+
+		super(raw);
 		this.filter = filter;
-		this.update = update;
 	}
 
 	QueryInteraction getFilter() {
 		return filter;
 	}
 
-	StringUpdate getUpdate() {
-		return update;
-	}
-
 	@Override
 	public Map<String, Object> serialize() {
 
 		Map<String, Object> serialized = filter.serialize();
-		serialized.put("update", update.getUpdateString());
+		serialized.putAll(super.serialize());
 		return serialized;
 	}
 
 	@Override
-	InteractionType getExecutionType() {
-		return InteractionType.UPDATE;
+	protected String pipelineSerializationKey() {
+		return "update-" + super.pipelineSerializationKey();
 	}
 }

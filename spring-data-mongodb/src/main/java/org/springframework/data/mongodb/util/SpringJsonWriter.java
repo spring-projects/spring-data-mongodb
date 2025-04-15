@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.util.json;
+package org.springframework.data.mongodb.util;
 
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
@@ -33,10 +33,13 @@ import org.bson.types.ObjectId;
 import org.springframework.util.StringUtils;
 
 /**
+ * Internal {@link BsonWriter} implementation that allows to render {@link #writePlaceholder(String) placeholders} as
+ * {@code ?0}.
+ *
  * @author Christoph Strobl
- * @since 2025/01
+ * @since 5.0
  */
-public class SpringJsonWriter implements BsonWriter {
+class SpringJsonWriter implements BsonWriter {
 
 	private final StringBuffer buffer;
 
@@ -49,6 +52,7 @@ public class SpringJsonWriter implements BsonWriter {
 	}
 
 	private static class JsonContext {
+
 		private final JsonContext parentContext;
 		private final JsonContextType contextType;
 		private boolean hasElements;
@@ -450,6 +454,9 @@ public class SpringJsonWriter implements BsonWriter {
 
 	}
 
+	/**
+	 * @param placeholder
+	 */
 	public void writePlaceholder(String placeholder) {
 		write(placeholder);
 	}

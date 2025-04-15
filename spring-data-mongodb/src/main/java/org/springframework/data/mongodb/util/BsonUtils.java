@@ -72,7 +72,6 @@ import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
-import org.springframework.data.mongodb.util.json.SpringJsonWriter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -336,7 +335,7 @@ public class BsonUtils {
 			case BINARY -> {
 
 				BsonBinary binary = value.asBinary();
-				if(binary.getType() != BsonBinarySubType.VECTOR.getValue()) {
+				if (binary.getType() != BsonBinarySubType.VECTOR.getValue()) {
 					yield binary.getData();
 				}
 				yield value.asBinary().asVector();
@@ -777,15 +776,39 @@ public class BsonUtils {
 		return new Document(target);
 	}
 
+	/**
+	 * Obtain a preconfigured {@link JsonWriter} allowing to render the given {@link Document} using a
+	 * {@link CodecRegistry} containing a {@link PlaceholderCodec}.
+	 *
+	 * @param document the source document. Must not be {@literal null}.
+	 * @return new instance of {@link JsonWriter}.
+	 * @since 5.0
+	 */
 	public static JsonWriter writeJson(Document document) {
-		return sink -> {
-			SpringJsonWriter writer = new SpringJsonWriter(sink);
-			JSON_CODEC_REGISTRY.get(Document.class).encode(writer, document, EncoderContext.builder().build());
-		};
+		return sink -> JSON_CODEC_REGISTRY.get(Document.class).encode(new SpringJsonWriter(sink), document,
+				EncoderContext.builder().build());
 	}
 
+	/**
+	 * Interface to pipe json rendering to a given sink.
+	 *
+	 * @since 5.0
+	 */
 	public interface JsonWriter {
+
+		/**
+		 * Write the json output to the given sink.
+		 *
+		 * @param sink the output target
+		 */
 		void to(StringBuffer sink);
+
+		default String toJsonString() {
+
+			StringBuffer buffer = new StringBuffer();
+			to(buffer);
+			return buffer.toString();
+		}
 	}
 
 	@Nullable
@@ -1001,6 +1024,13 @@ public class BsonUtils {
 		}
 	}
 
+	/**
+	 * Internal {@link Codec} implementation to write
+	 * {@link org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder placeholders}.
+	 * 
+	 * @since 5.0
+	 * @author Christoph Strobl
+	 */
 	static class PlaceholderCodec implements Codec<Placeholder> {
 
 		@Override

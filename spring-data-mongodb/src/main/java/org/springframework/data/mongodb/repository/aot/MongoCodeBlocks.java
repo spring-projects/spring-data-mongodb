@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot.generated;
+package org.springframework.data.mongodb.repository.aot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +62,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 5.0
  */
-class MongoBlocks {
+class MongoCodeBlocks {
 
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
@@ -71,10 +71,11 @@ class MongoBlocks {
 	 *
 	 * @param context
 	 * @param queryMethod
-	 * @return new instance of {@link QueryBlockBuilder}.
+	 * @return new instance of {@link QueryCodeBlockBuilder}.
 	 */
-	static QueryBlockBuilder queryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-		return new QueryBlockBuilder(context, queryMethod);
+	static QueryCodeBlockBuilder queryBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new QueryCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -84,10 +85,10 @@ class MongoBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static QueryExecutionBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+	static QueryExecutionCodeBlockBuilder queryExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 
-		return new QueryExecutionBlockBuilder(context, queryMethod);
+		return new QueryExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -97,10 +98,10 @@ class MongoBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static DeleteExecutionBuilder deleteExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+	static DeleteExecutionCodeBlockBuilder deleteExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 
-		return new DeleteExecutionBuilder(context, queryMethod);
+		return new DeleteExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -110,8 +111,9 @@ class MongoBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static UpdateBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-		return new UpdateBlockBuilder(context, queryMethod);
+	static UpdateCodeBlockBuilder updateBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+		return new UpdateCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -121,10 +123,10 @@ class MongoBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static UpdateExecutionBuilder updateExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+	static UpdateExecutionCodeBlockBuilder updateExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 
-		return new UpdateExecutionBuilder(context, queryMethod);
+		return new UpdateExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -134,10 +136,10 @@ class MongoBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static AggregationBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
+	static AggregationCodeBlockBuilder aggregationBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 
-		return new AggregationBlockBuilder(context, queryMethod);
+		return new AggregationCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -147,25 +149,25 @@ class MongoBlocks {
 	 * @param queryMethod
 	 * @return
 	 */
-	static AggregationExecutionBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
+	static AggregationExecutionCodeBlockBuilder aggregationExecutionBlockBuilder(AotQueryMethodGenerationContext context,
 			MongoQueryMethod queryMethod) {
 
-		return new AggregationExecutionBuilder(context, queryMethod);
+		return new AggregationExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
-	static class DeleteExecutionBuilder {
+	static class DeleteExecutionCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 		private String queryVariableName;
 
-		DeleteExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		DeleteExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		DeleteExecutionBuilder referencing(String queryVariableName) {
+		DeleteExecutionCodeBlockBuilder referencing(String queryVariableName) {
 
 			this.queryVariableName = queryVariableName;
 			return this;
@@ -208,26 +210,26 @@ class MongoBlocks {
 		}
 	}
 
-	static class UpdateExecutionBuilder {
+	static class UpdateExecutionCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 		private String queryVariableName;
 		private String updateVariableName;
 
-		UpdateExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		UpdateExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		UpdateExecutionBuilder withFilter(String queryVariableName) {
+		UpdateExecutionCodeBlockBuilder withFilter(String queryVariableName) {
 
 			this.queryVariableName = queryVariableName;
 			return this;
 		}
 
-		UpdateExecutionBuilder referencingUpdate(String updateVariableName) {
+		UpdateExecutionCodeBlockBuilder referencingUpdate(String updateVariableName) {
 
 			this.updateVariableName = updateVariableName;
 			return this;
@@ -262,19 +264,19 @@ class MongoBlocks {
 		}
 	}
 
-	static class AggregationExecutionBuilder {
+	static class AggregationExecutionCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 		private String aggregationVariableName;
 
-		AggregationExecutionBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		AggregationExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		AggregationExecutionBuilder referencing(String aggregationVariableName) {
+		AggregationExecutionCodeBlockBuilder referencing(String aggregationVariableName) {
 
 			this.aggregationVariableName = aggregationVariableName;
 			return this;
@@ -336,19 +338,19 @@ class MongoBlocks {
 		}
 	}
 
-	static class QueryExecutionBlockBuilder {
+	static class QueryExecutionCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
 		private QueryInteraction query;
 
-		QueryExecutionBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		QueryExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
 		}
 
-		QueryExecutionBlockBuilder forQuery(QueryInteraction query) {
+		QueryExecutionCodeBlockBuilder forQuery(QueryInteraction query) {
 
 			this.query = query;
 			return this;
@@ -401,7 +403,7 @@ class MongoBlocks {
 		}
 	}
 
-	static class AggregationBlockBuilder {
+	static class AggregationCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
@@ -411,26 +413,26 @@ class MongoBlocks {
 		private String aggregationVariableName;
 		private boolean pipelineOnly;
 
-		AggregationBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 			this.arguments = context.getBindableParameterNames();
 			this.queryMethod = queryMethod;
 		}
 
-		AggregationBlockBuilder stages(AggregationInteraction aggregation) {
+		AggregationCodeBlockBuilder stages(AggregationInteraction aggregation) {
 
 			this.source = aggregation;
 			return this;
 		}
 
-		AggregationBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
+		AggregationCodeBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
 
 			this.aggregationVariableName = aggregationVariableName;
 			return this;
 		}
 
-		AggregationBlockBuilder pipelineOnly(boolean pipelineOnly) {
+		AggregationCodeBlockBuilder pipelineOnly(boolean pipelineOnly) {
 
 			this.pipelineOnly = pipelineOnly;
 			return this;
@@ -599,7 +601,7 @@ class MongoBlocks {
 		}
 	}
 
-	static class QueryBlockBuilder {
+	static class QueryCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
@@ -608,20 +610,20 @@ class MongoBlocks {
 		private List<String> arguments;
 		private String queryVariableName;
 
-		QueryBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		QueryCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 			this.arguments = context.getBindableParameterNames();
 			this.queryMethod = queryMethod;
 		}
 
-		QueryBlockBuilder filter(QueryInteraction query) {
+		QueryCodeBlockBuilder filter(QueryInteraction query) {
 
 			this.source = query;
 			return this;
 		}
 
-		QueryBlockBuilder usingQueryVariableName(String queryVariableName) {
+		QueryCodeBlockBuilder usingQueryVariableName(String queryVariableName) {
 			this.queryVariableName = queryVariableName;
 			return this;
 		}
@@ -706,22 +708,22 @@ class MongoBlocks {
 		}
 	}
 
-	static class UpdateBlockBuilder {
+	static class UpdateCodeBlockBuilder {
 
 		private UpdateInteraction source;
 		private List<String> arguments;
 		private String updateVariableName;
 
-		public UpdateBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 			this.arguments = context.getBindableParameterNames();
 		}
 
-		public UpdateBlockBuilder update(UpdateInteraction update) {
+		public UpdateCodeBlockBuilder update(UpdateInteraction update) {
 			this.source = update;
 			return this;
 		}
 
-		public UpdateBlockBuilder usingUpdateVariableName(String updateVariableName) {
+		public UpdateCodeBlockBuilder usingUpdateVariableName(String updateVariableName) {
 			this.updateVariableName = updateVariableName;
 			return this;
 		}

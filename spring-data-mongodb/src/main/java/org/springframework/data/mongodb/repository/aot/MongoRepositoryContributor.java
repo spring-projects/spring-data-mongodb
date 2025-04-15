@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.aot.generated;
+package org.springframework.data.mongodb.repository.aot;
 
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.aggregationBlockBuilder;
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.aggregationExecutionBlockBuilder;
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.deleteExecutionBlockBuilder;
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.queryBlockBuilder;
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.queryExecutionBlockBuilder;
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.updateBlockBuilder;
-import static org.springframework.data.mongodb.aot.generated.MongoBlocks.updateExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.deleteExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateExecutionBlockBuilder;
 
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
@@ -30,13 +30,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.data.mongodb.aot.generated.MongoBlocks.QueryBlockBuilder;
+import org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.QueryCodeBlockBuilder;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
-import org.springframework.data.mongodb.repository.aot.MongoAotRepositoryFragmentSupport;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMetadata;
@@ -236,8 +235,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			// update filter
 			String filterVariableName = update.name();
-			QueryBlockBuilder queryBlockBuilder = queryBlockBuilder(context, queryMethod).filter(update.getFilter());
-			builder.add(queryBlockBuilder.usingQueryVariableName(filterVariableName).build());
+			QueryCodeBlockBuilder queryCodeBlockBuilder = queryBlockBuilder(context, queryMethod).filter(update.getFilter());
+			builder.add(queryCodeBlockBuilder.usingQueryVariableName(filterVariableName).build());
 
 			// update definition
 			String updateVariableName = "updateDefinition";
@@ -260,9 +259,9 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-			QueryBlockBuilder queryBlockBuilder = queryBlockBuilder(context, queryMethod).filter(query);
+			QueryCodeBlockBuilder queryCodeBlockBuilder = queryBlockBuilder(context, queryMethod).filter(query);
 
-			builder.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
+			builder.add(queryCodeBlockBuilder.usingQueryVariableName(query.name()).build());
 			builder.add(deleteExecutionBlockBuilder(context, queryMethod).referencing(query.name()).build());
 			return builder.build();
 		});
@@ -275,9 +274,9 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
-			QueryBlockBuilder queryBlockBuilder = queryBlockBuilder(context, queryMethod).filter(query);
+			QueryCodeBlockBuilder queryCodeBlockBuilder = queryBlockBuilder(context, queryMethod).filter(query);
 
-			builder.add(queryBlockBuilder.usingQueryVariableName(query.name()).build());
+			builder.add(queryCodeBlockBuilder.usingQueryVariableName(query.name()).build());
 			builder.add(queryExecutionBlockBuilder(context, queryMethod).forQuery(query).build());
 			return builder.build();
 		});
