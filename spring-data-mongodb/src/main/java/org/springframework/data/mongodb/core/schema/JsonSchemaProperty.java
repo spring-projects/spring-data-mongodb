@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.schema;
 import java.util.Collection;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.BooleanJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.DateJsonSchemaProperty;
@@ -32,7 +33,6 @@ import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProper
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
-import org.springframework.lang.Nullable;
 
 /**
  * A {@literal property} or {@literal patternProperty} within a {@link JsonSchemaObject} of {@code type : 'object'}.

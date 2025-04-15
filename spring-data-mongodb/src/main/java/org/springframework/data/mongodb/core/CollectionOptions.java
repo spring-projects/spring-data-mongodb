@@ -30,6 +30,7 @@ import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonNull;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
@@ -43,7 +44,6 @@ import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.CheckReturnValue;
 import org.springframework.lang.Contract;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 

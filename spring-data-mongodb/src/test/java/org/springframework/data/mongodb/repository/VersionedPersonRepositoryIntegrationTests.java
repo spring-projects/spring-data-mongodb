@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,6 @@ import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 

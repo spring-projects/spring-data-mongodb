@@ -22,9 +22,9 @@ import java.util.List;
 
 import org.bson.BsonNull;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
-import org.springframework.lang.Nullable;
 
 /**
  * Encapsulation of individual {@link QueryCharacteristic query characteristics} used to define queries that can be
