@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import org.bson.Document;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@link CursorPreparer} that exposes its {@link Document sort document}.

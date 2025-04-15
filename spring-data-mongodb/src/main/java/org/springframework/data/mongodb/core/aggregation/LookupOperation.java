@@ -18,12 +18,12 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.function.Supplier;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.lang.Contract;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,17 +42,13 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 	private final String from;
 
-	@Nullable //
-	private final Field localField;
+	private final @Nullable Field localField;
 
-	@Nullable //
-	private final Field foreignField;
+	private final @Nullable Field foreignField;
 
-	@Nullable //
-	private final Let let;
+	private final @Nullable Let let;
 
-	@Nullable //
-	private final AggregationPipeline pipeline;
+	private final @Nullable AggregationPipeline pipeline;
 
 	private final ExposedField as;
 

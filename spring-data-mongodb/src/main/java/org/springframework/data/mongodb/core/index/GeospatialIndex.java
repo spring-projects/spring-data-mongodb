@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core.index;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.lang.Nullable;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
