@@ -18,10 +18,10 @@ package org.springframework.data.mongodb.core;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.Collation;
@@ -124,8 +124,7 @@ abstract class IndexConverters {
 		};
 	}
 
-	@Nullable
-	public static Collation fromDocument(@Nullable Document source) {
+	public static @Nullable Collation fromDocument(@Nullable Document source) {
 
 		if (source == null) {
 			return null;

@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.AtlasContainer;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.lang.Nullable;
 
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -200,8 +200,7 @@ class VectorIndexIntegrationTests {
 		});
 	}
 
-	@Nullable
-	private Document readRawIndexInfo(String name) {
+	private @Nullable Document readRawIndexInfo(String name) {
 
 		AggregateIterable<Document> indexes = template.execute(Movie.class, collection -> {
 			return collection.aggregate(List.of(new Document("$listSearchIndexes", new Document("name", name))));
