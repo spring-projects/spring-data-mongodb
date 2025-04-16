@@ -179,4 +179,26 @@ public class ArrayOperatorsUnitTests {
 		assertThat(ArrayOperators.arrayOf("team").sort(Sort.by("name")).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $sortArray: { input: \"$team\", sortBy: { name: 1 } } }");
 	}
+
+	@Test // GH-4929
+	public void sortArrayByValueAscending() {
+		Document result = ArrayOperators.SortArray.sortArrayOf("numbers").byValueAscending().toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document expected = new Document("$sortArray", new Document("input", "$numbers").append("sortBy", 1));
+		assertThat(result).isEqualTo(expected);
+	}
+
+	@Test // GH-4929
+	public void sortArrayByValueDescending() {
+		Document result = ArrayOperators.SortArray.sortArrayOf("numbers").byValueDescending().toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document expected = new Document("$sortArray", new Document("input", "$numbers").append("sortBy", -1));
+		assertThat(result).isEqualTo(expected);
+	}
+
+	@Test // GH-4929
+	public void sortArrayByPropertyUnchanged() {
+		Document result = ArrayOperators.SortArray.sortArrayOf("items")
+				.by(Sort.by(Sort.Direction.ASC, "price")).toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document expected = new Document("$sortArray", new Document("input", "$items").append("sortBy", new Document("price", 1)));
+		assertThat(result).isEqualTo(expected);
+	}
 }
