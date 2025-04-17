@@ -26,6 +26,7 @@ import reactor.test.StepVerifier;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -167,6 +168,17 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 				.verifyComplete();
 	}
 
+	@Test // GH-…
+	void findAllWithConverter() {
+
+		template.query(Person.class).as(Jedi.class).map((document, reader) -> Optional.of(reader.get())).all()
+				.map(Optional::get) //
+				.map(it -> it.getClass().getName()) //
+				.as(StepVerifier::create) //
+				.expectNext(Jedi.class.getName(), Jedi.class.getName()) //
+				.verifyComplete();
+	}
+
 	@Test // DATAMONGO-1719
 	void findAllBy() {
 
@@ -294,6 +306,32 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 					assertThat(actual.getDistance()).isNotNull();
 					assertThat(actual.getContent()).isInstanceOf(Human.class);
 					assertThat(actual.getContent().getId()).isEqualTo("alderan");
+				}) //
+				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
+	@Test // GH-…
+	@DirtiesState
+	void findAllNearByWithConverter() {
+
+		blocking.indexOps(Planet.class).ensureIndex(
+				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
+
+		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
+		Planet dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
+
+		blocking.save(alderan);
+		blocking.save(dantooine);
+
+		template.query(Object.class).inCollection(STAR_WARS).as(Human.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).map((document, reader) -> Optional.of(reader.get())) //
+				.all() //
+				.as(StepVerifier::create).consumeNextWith(actual -> {
+					assertThat(actual.getDistance()).isNotNull();
+					assertThat(actual.getContent()).isInstanceOf(Optional.class);
+					assertThat(actual.getContent().get()).isInstanceOf(Human.class);
+					assertThat(actual.getContent().get().getId()).isEqualTo("alderan");
 				}) //
 				.expectNextCount(1) //
 				.verifyComplete();

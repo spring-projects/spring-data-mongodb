@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -287,6 +288,60 @@ public class AggregationTests {
 		}
 	}
 
+	@Test // GH-
+	void shouldAggregateAsStreamWithConverter() {
+
+		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
+
+		coll.insertOne(createDocument("Doc1", "spring", "mongodb", "nosql"));
+		coll.insertOne(createDocument("Doc2"));
+
+		Aggregation aggregation = newAggregation(//
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		);
+
+		try (Stream<Optional<TagCount>> stream = mongoTemplate.aggregateAndReturn(TagCount.class)
+				.inCollection(INPUT_COLLECTION).by(aggregation).map((document, reader) -> Optional.of(reader.get())).stream()) {
+
+			List<TagCount> tagCount = stream.flatMap(Optional::stream).toList();
+
+			assertThat(tagCount).hasSize(3);
+		}
+	}
+
+	@Test // GH-
+	void shouldAggregateWithConverter() {
+
+		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
+
+		coll.insertOne(createDocument("Doc1", "spring", "mongodb", "nosql"));
+		coll.insertOne(createDocument("Doc2"));
+
+		Aggregation aggregation = newAggregation(//
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		);
+
+		AggregationResults<Optional<TagCount>> results = mongoTemplate.aggregateAndReturn(TagCount.class)
+				.inCollection(INPUT_COLLECTION) //
+				.by(aggregation) //
+				.map((document, reader) -> Optional.of(reader.get())) //
+				.all();
+
+		assertThat(results.getMappedResults()).extracting(Optional::get).hasOnlyElementsOfType(TagCount.class).hasSize(3);
+	}
+
 	@Test // DATAMONGO-1391
 	void shouldUnwindWithIndex() {
 
@@ -501,7 +556,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		
+
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {

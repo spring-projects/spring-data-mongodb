@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.lang.Contract;
 
 /**
  * {@link ReactiveAggregationOperation} allows creation and execution of reactive MongoDB aggregation operations in a
@@ -44,7 +45,7 @@ public interface ReactiveAggregationOperation {
 	/**
 	 * Start creating an aggregation operation that returns results mapped to the given domain type. <br />
 	 * Use {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} to specify a potentially different
-	 * input type for he aggregation.
+	 * input type for the aggregation.
 	 *
 	 * @param domainType must not be {@literal null}.
 	 * @return new instance of {@link ReactiveAggregation}. Never {@literal null}.
@@ -72,6 +73,18 @@ public interface ReactiveAggregationOperation {
 	 * Trigger execution by calling one of the terminating methods.
 	 */
 	interface TerminatingAggregationOperation<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link ExecutableFindOperation.TerminatingFindNear}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingAggregationOperation<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Apply pipeline operations as specified and stream all matching elements. <br />
