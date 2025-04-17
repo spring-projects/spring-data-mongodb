@@ -25,6 +25,7 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Contract;
 
 /**
  * {@link ReactiveFindOperation} allows creation and execution of reactive MongoDB find operations in a fluent API
@@ -66,7 +67,28 @@ public interface ReactiveFindOperation {
 	/**
 	 * Compose find execution by calling one of the terminating methods.
 	 */
-	interface TerminatingFind<T> {
+	interface TerminatingFind<T> extends TerminatingResults<T>, TerminatingProjection {
+
+	}
+
+	/**
+	 * Compose find execution by calling one of the terminating methods.
+	 *
+	 * @since x.y
+	 */
+	interface TerminatingResults<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingResults}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Get exactly zero or one result.
@@ -120,6 +142,15 @@ public interface ReactiveFindOperation {
 		 */
 		Flux<T> tail();
 
+	}
+
+	/**
+	 * Compose find execution by calling one of the terminating methods.
+	 *
+	 * @since x.y
+	 */
+	interface TerminatingProjection {
+
 		/**
 		 * Get the number of matching elements. <br />
 		 * This method uses an
@@ -144,6 +175,18 @@ public interface ReactiveFindOperation {
 	 * Compose geonear execution by calling one of the terminating methods.
 	 */
 	interface TerminatingFindNear<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link ExecutableFindOperation.TerminatingFindNear}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingFindNear<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Find all matching elements and return them as {@link org.springframework.data.geo.GeoResult}.

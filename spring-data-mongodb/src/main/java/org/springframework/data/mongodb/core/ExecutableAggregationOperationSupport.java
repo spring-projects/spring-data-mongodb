@@ -43,25 +43,28 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ExecutableAggregationSupport<>(template, domainType, null, null);
+		return new ExecutableAggregationSupport<>(template, domainType, QueryResultConverter.entity(), null, null);
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class ExecutableAggregationSupport<T>
+	static class ExecutableAggregationSupport<S, T>
 			implements AggregationWithAggregation<T>, ExecutableAggregation<T>, TerminatingAggregation<T> {
 
 		private final MongoTemplate template;
-		private final Class<T> domainType;
+		private final Class<S> domainType;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
 		private final Aggregation aggregation;
 		private final String collection;
 
-		public ExecutableAggregationSupport(MongoTemplate template, Class<T> domainType, Aggregation aggregation,
+		public ExecutableAggregationSupport(MongoTemplate template, Class<S> domainType,
+				QueryResultConverter<? super S, ? extends T> resultConverter, Aggregation aggregation,
 				String collection) {
 			this.template = template;
 			this.domainType = domainType;
+			this.resultConverter = resultConverter;
 			this.aggregation = aggregation;
 			this.collection = collection;
 		}
@@ -71,7 +74,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
 
-			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
+			return new ExecutableAggregationSupport<>(template, domainType, resultConverter, aggregation, collection);
 		}
 
 		@Override
@@ -79,17 +82,26 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 
 			Assert.notNull(aggregation, "Aggregation must not be null");
 
-			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
+			return new ExecutableAggregationSupport<>(template, domainType, resultConverter, aggregation, collection);
+		}
+
+		@Override
+		public <R> TerminatingAggregation<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+
+			Assert.notNull(converter, "QueryResultConverter must not be null");
+
+			return new ExecutableAggregationSupport<>(template, domainType, this.resultConverter.andThen(converter),
+					aggregation, collection);
 		}
 
 		@Override
 		public AggregationResults<T> all() {
-			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);
+			return template.doAggregate(aggregation, getCollectionName(aggregation), domainType, resultConverter);
 		}
 
 		@Override
 		public Stream<T> stream() {
-			return template.aggregateStream(aggregation, getCollectionName(aggregation), domainType);
+			return template.doAggregateStream(aggregation, getCollectionName(aggregation), domainType, resultConverter, null);
 		}
 
 		private String getCollectionName(Aggregation aggregation) {

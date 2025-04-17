@@ -1156,7 +1156,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
-				PersonProjection.class, CursorPreparer.NO_OP_PREPARER);
+				PersonProjection.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
@@ -1165,7 +1165,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
-				PersonProjection.class, CursorPreparer.NO_OP_PREPARER);
+				PersonProjection.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
 	}
@@ -1174,7 +1174,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
-				PersonSpELProjection.class, CursorPreparer.NO_OP_PREPARER);
+				PersonSpELProjection.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
@@ -1183,7 +1183,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void appliesFieldsToDtoProjection() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
-				Jedi.class, CursorPreparer.NO_OP_PREPARER);
+				Jedi.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
@@ -1192,7 +1192,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document("bar", 1), Person.class,
-				Jedi.class, CursorPreparer.NO_OP_PREPARER);
+				Jedi.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
 	}
@@ -1201,7 +1201,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
-				Person.class, CursorPreparer.NO_OP_PREPARER);
+				Person.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
@@ -1210,7 +1210,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
 		template.doFind(CollectionPreparer.identity(), "star-wars", new Document(), new Document(), Person.class,
-				PersonExtended.class, CursorPreparer.NO_OP_PREPARER);
+				PersonExtended.class, QueryResultConverter.entity(), CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}

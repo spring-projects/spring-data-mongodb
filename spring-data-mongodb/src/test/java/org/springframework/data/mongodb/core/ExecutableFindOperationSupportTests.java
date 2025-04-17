@@ -21,7 +21,9 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.BsonString;
@@ -170,6 +172,16 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 				.hasOnlyElementsOfType(Jedi.class).hasSize(1);
 	}
 
+	@Test // GH-
+	void findAllByWithConverter() {
+
+		List<Optional<Jedi>> result = template.query(Person.class).as(Jedi.class)
+				.matching(query(where("firstname").is("luke"))).map((document, reader) -> Optional.of(reader.get())).all();
+
+		assertThat(result).hasOnlyElementsOfType(Optional.class).hasSize(1);
+		assertThat(result).extracting(Optional::get).hasOnlyElementsOfType(Jedi.class).hasSize(1);
+	}
+
 	@Test // DATAMONGO-1563
 	void findBy() {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).one()).contains(luke);
@@ -260,6 +272,15 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 		}
 	}
 
+	@Test // GH-
+	void streamAllWithConverter() {
+
+		try (Stream<Optional<Jedi>> stream = template.query(Person.class).as(Jedi.class)
+				.map((document, reader) -> Optional.of(reader.get())).stream()) {
+			assertThat(stream).extracting(Optional::get).hasOnlyElementsOfType(Jedi.class).hasSize(2);
+		}
+	}
+
 	@Test // DATAMONGO-1733
 	void streamAllReturningResultsAsClosedInterfaceProjection() {
 
@@ -313,6 +334,20 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 		assertThat(results.getContent().get(0).getDistance()).isNotNull();
 		assertThat(results.getContent().get(0).getContent()).isInstanceOf(Human.class);
 		assertThat(results.getContent().get(0).getContent().getId()).isEqualTo("alderan");
+	}
+
+	@Test // GH-
+	void findAllNearByWithConverter() {
+
+		GeoResults<Optional<Human>> results = template.query(Object.class).inCollection(STAR_WARS_PLANETS).as(Human.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).map((document, reader) -> Optional.of(reader.get()))
+				.all();
+
+		assertThat(results.getContent()).hasSize(2);
+		assertThat(results.getContent().get(0).getDistance()).isNotNull();
+		assertThat(results.getContent().get(0).getContent()).isInstanceOf(Optional.class);
+		assertThat(results.getContent().get(0).getContent().get()).isInstanceOf(Human.class);
+		assertThat(results.getContent().get(0).getContent().get().getId()).isEqualTo("alderan");
 	}
 
 	@Test // DATAMONGO-1733
