@@ -28,6 +28,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Contract;
 
 import com.mongodb.client.MongoCollection;
 
@@ -71,9 +72,33 @@ public interface ExecutableFindOperation {
 	 * Trigger find execution by calling one of the terminating methods.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 * @since 2.0
 	 */
-	interface TerminatingFind<T> {
+	interface TerminatingFind<T> extends TerminatingResults<T>, TerminatingProjection {
+
+	}
+
+	/**
+	 * Trigger find execution by calling one of the terminating methods.
+	 *
+	 * @author Christoph Strobl
+	 * @author Mark Paluch
+	 * @since x.y
+	 */
+	interface TerminatingResults<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingResults}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Get exactly zero or one result.
@@ -142,6 +167,16 @@ public interface ExecutableFindOperation {
 		 */
 		Window<T> scroll(ScrollPosition scrollPosition);
 
+	}
+
+	/**
+	 * Trigger find execution by calling one of the terminating methods.
+	 *
+	 * @author Christoph Strobl
+	 * @since x.y
+	 */
+	interface TerminatingProjection {
+
 		/**
 		 * Get the number of matching elements. <br />
 		 * This method uses an
@@ -160,15 +195,29 @@ public interface ExecutableFindOperation {
 		 * @return {@literal true} if at least one matching element exists.
 		 */
 		boolean exists();
+
 	}
 
 	/**
-	 * Trigger geonear execution by calling one of the terminating methods.
+	 * Trigger {@code geoNear} execution by calling one of the terminating methods.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 * @since 2.0
 	 */
 	interface TerminatingFindNear<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFindNear}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingFindNear<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Find all matching elements and return them as {@link org.springframework.data.geo.GeoResult}.

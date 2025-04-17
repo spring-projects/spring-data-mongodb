@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.bson.Document;
 import org.junit.After;
@@ -112,6 +113,29 @@ public class ReactiveAggregationTests {
 		reactiveMongoTemplate.aggregate(agg, "city", City.class).collectList().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual).hasSize(3).contains(dresden, linz, braunschweig);
+				}).verifyComplete();
+	}
+
+	@Test // GH-…
+	public void shouldProjectAndConvertMultipleDocuments() {
+
+		City dresden = new City("Dresden", 100);
+		City linz = new City("Linz", 101);
+		City braunschweig = new City("Braunschweig", 102);
+		City weinheim = new City("Weinheim", 103);
+
+		reactiveMongoTemplate.insertAll(Arrays.asList(dresden, linz, braunschweig, weinheim)).as(StepVerifier::create)
+				.expectNextCount(4).verifyComplete();
+
+		Aggregation agg = newAggregation( //
+				match(where("population").lt(103)));
+
+		reactiveMongoTemplate.aggregateAndReturn(City.class).inCollection("city").by(agg)
+				.map((document, reader) -> Optional.of(reader.get())) //
+				.all() //
+				.collectList() //
+				.as(StepVerifier::create).consumeNextWith(actual -> {
+					assertThat(actual).hasSize(3).extracting(Optional::get).contains(dresden, linz, braunschweig);
 				}).verifyComplete();
 	}
 
