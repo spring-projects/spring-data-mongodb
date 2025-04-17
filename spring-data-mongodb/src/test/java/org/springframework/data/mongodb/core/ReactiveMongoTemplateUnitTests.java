@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import reactor.core.publisher.Flux;
@@ -53,6 +54,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -437,7 +439,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
-				PersonProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				PersonProjection.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
 	}
@@ -446,7 +448,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document("bar", 1), Person.class,
-				PersonProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				PersonProjection.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("bar", 1)));
 	}
@@ -455,7 +457,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
-				PersonSpELProjection.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				PersonSpELProjection.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}
@@ -464,7 +466,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void appliesFieldsToDtoProjection() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
-				Jedi.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				Jedi.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
 	}
@@ -473,7 +475,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document("bar", 1), Person.class,
-				Jedi.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				Jedi.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("bar", 1)));
 	}
@@ -482,7 +484,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
-				Person.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				Person.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}
@@ -491,7 +493,7 @@ public class ReactiveMongoTemplateUnitTests {
 	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
 		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
-				PersonExtended.class, FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+				PersonExtended.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}

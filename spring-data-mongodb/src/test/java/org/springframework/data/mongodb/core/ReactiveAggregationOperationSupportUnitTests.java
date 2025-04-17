@@ -72,7 +72,8 @@ public class ReactiveAggregationOperationSupportUnitTests {
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
-		verify(template).aggregate(any(Aggregation.class), eq("star-wars"), captor.capture());
+		verify(template).doAggregate(any(Aggregation.class), eq("star-wars"), captor.capture(), any(Class.class),
+				eq(QueryResultConverter.entity()));
 		assertThat(captor.getValue()).isEqualTo(Person.class);
 	}
 
@@ -86,7 +87,8 @@ public class ReactiveAggregationOperationSupportUnitTests {
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
 		verify(template).getCollectionName(captor.capture());
-		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
+		verify(template).doAggregate(any(Aggregation.class), eq("person"), captor.capture(), any(Class.class),
+				eq(QueryResultConverter.entity()));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Person.class);
 	}
@@ -101,7 +103,8 @@ public class ReactiveAggregationOperationSupportUnitTests {
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
 		verify(template).getCollectionName(captor.capture());
-		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
+		verify(template).doAggregate(any(Aggregation.class), eq("person"), captor.capture(), any(Class.class),
+				eq(QueryResultConverter.entity()));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);
 	}

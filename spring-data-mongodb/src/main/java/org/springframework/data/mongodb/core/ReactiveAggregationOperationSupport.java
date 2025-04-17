@@ -51,22 +51,25 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ReactiveAggregationSupport<>(template, domainType, null, null);
+		return new ReactiveAggregationSupport<>(template, domainType, QueryResultConverter.entity(), null, null);
 	}
 
-	static class ReactiveAggregationSupport<T>
+	static class ReactiveAggregationSupport<S, T>
 			implements AggregationOperationWithAggregation<T>, ReactiveAggregation<T>, TerminatingAggregationOperation<T> {
 
 		private final ReactiveMongoTemplate template;
-		private final Class<T> domainType;
+		private final Class<S> domainType;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
 		private final Aggregation aggregation;
 		private final String collection;
 
-		ReactiveAggregationSupport(ReactiveMongoTemplate template, Class<T> domainType, Aggregation aggregation,
+		ReactiveAggregationSupport(ReactiveMongoTemplate template, Class<S> domainType,
+				QueryResultConverter<? super S, ? extends T> resultConverter, Aggregation aggregation,
 				String collection) {
 
 			this.template = template;
 			this.domainType = domainType;
+			this.resultConverter = resultConverter;
 			this.aggregation = aggregation;
 			this.collection = collection;
 		}
@@ -76,7 +79,7 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
 
-			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
+			return new ReactiveAggregationSupport<>(template, domainType, resultConverter, aggregation, collection);
 		}
 
 		@Override
@@ -84,12 +87,21 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 
 			Assert.notNull(aggregation, "Aggregation must not be null");
 
-			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
+			return new ReactiveAggregationSupport<>(template, domainType, resultConverter, aggregation, collection);
+		}
+
+		@Override
+		public <R> TerminatingAggregationOperation<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+
+			Assert.notNull(converter, "QueryResultConverter must not be null");
+
+			return new ReactiveAggregationSupport<>(template, domainType, resultConverter.andThen(converter), aggregation,
+					collection);
 		}
 
 		@Override
 		public Flux<T> all() {
-			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);
+			return template.doAggregate(aggregation, getCollectionName(aggregation), domainType, domainType, resultConverter);
 		}
 
 		private String getCollectionName(Aggregation aggregation) {

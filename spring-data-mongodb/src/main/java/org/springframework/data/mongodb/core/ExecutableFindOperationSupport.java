@@ -24,6 +24,7 @@ import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
@@ -57,7 +58,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ExecutableFindSupport<>(template, domainType, domainType, null, ALL_QUERY);
+		return new ExecutableFindSupport<>(template, domainType, domainType, QueryResultConverter.entity(), null,
+				ALL_QUERY);
 	}
 
 	/**
@@ -65,19 +67,22 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class ExecutableFindSupport<T>
+	static class ExecutableFindSupport<S, T>
 			implements ExecutableFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
 		private final MongoTemplate template;
 		private final Class<?> domainType;
-		private final Class<T> returnType;
+		private final Class<S> returnType;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
 		private final @Nullable String collection;
 		private final Query query;
 
-		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType, @Nullable String collection,
+		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<S> returnType,
+				QueryResultConverter<? super S, ? extends T> resultConverter, @Nullable String collection,
 				Query query) {
 			this.template = template;
 			this.domainType = domainType;
+			this.resultConverter = resultConverter;
 			this.returnType = returnType;
 			this.collection = collection;
 			this.query = query;
@@ -88,7 +93,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty");
 
-			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
+			return new ExecutableFindSupport<>(template, domainType, returnType, resultConverter, collection, query);
 		}
 
 		@Override
@@ -96,7 +101,8 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			Assert.notNull(returnType, "ReturnType must not be null");
 
-			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
+			return new ExecutableFindSupport<>(template, domainType, returnType, QueryResultConverter.entity(), collection,
+					query);
 		}
 
 		@Override
@@ -104,7 +110,16 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			Assert.notNull(query, "Query must not be null");
 
-			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
+			return new ExecutableFindSupport<>(template, domainType, returnType, resultConverter, collection, query);
+		}
+
+		@Override
+		public <R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+
+			Assert.notNull(converter, "QueryResultConverter must not be null");
+
+			return new ExecutableFindSupport<>(template, domainType, returnType, this.resultConverter.andThen(converter),
+					collection, query);
 		}
 
 		@Override
@@ -143,12 +158,13 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		public Window<T> scroll(ScrollPosition scrollPosition) {
-			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
+			return template.doScroll(query.with(scrollPosition), domainType, returnType, resultConverter,
+					getCollectionName());
 		}
 
 		@Override
 		public TerminatingFindNear<T> near(NearQuery nearQuery) {
-			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
+			return new TerminatingFindNearSupport<>(nearQuery, this.resultConverter);
 		}
 
 		@Override
@@ -176,17 +192,17 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			Document fieldsObject = query.getFieldsObject();
 
 			return template.doFind(template.createDelegate(query), getCollectionName(), queryObject, fieldsObject, domainType,
-					returnType, getCursorPreparer(query, preparer));
+					returnType, resultConverter, getCursorPreparer(query, preparer));
 		}
 
 		private List<T> doFindDistinct(String field) {
 
 			return template.findDistinct(query, field, getCollectionName(), domainType,
-					returnType == domainType ? (Class<T>) Object.class : returnType);
+					returnType == domainType ? (Class) Object.class : returnType);
 		}
 
 		private Stream<T> doStream() {
-			return template.doStream(query, domainType, getCollectionName(), returnType);
+			return template.doStream(query, domainType, getCollectionName(), returnType, resultConverter);
 		}
 
 		private CursorPreparer getCursorPreparer(Query query, @Nullable CursorPreparer preparer) {
@@ -199,6 +215,31 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		private String asString() {
 			return SerializationUtils.serializeToJsonSafely(query);
+		}
+
+		class TerminatingFindNearSupport<G> implements TerminatingFindNear<G> {
+
+			private final NearQuery nearQuery;
+			private final QueryResultConverter<? super S, ? extends G> resultConverter;
+
+			public TerminatingFindNearSupport(NearQuery nearQuery,
+					QueryResultConverter<? super S, ? extends G> resultConverter) {
+				this.nearQuery = nearQuery;
+				this.resultConverter = resultConverter;
+			}
+
+			@Override
+			public <R> TerminatingFindNear<R> map(QueryResultConverter<? super G, ? extends R> converter) {
+
+				Assert.notNull(converter, "QueryResultConverter must not be null");
+
+				return new TerminatingFindNearSupport<>(nearQuery, this.resultConverter.andThen(converter));
+			}
+
+			@Override
+			public GeoResults<G> all() {
+				return template.doGeoNear(nearQuery, domainType, getCollectionName(), returnType, resultConverter);
+			}
 		}
 	}
 
@@ -245,19 +286,19 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	static class DistinctOperationSupport<T> implements TerminatingDistinct<T> {
+	static class DistinctOperationSupport<S, T> implements TerminatingDistinct<T> {
 
 		private final String field;
-		private final ExecutableFindSupport<T> delegate;
+		private final ExecutableFindSupport<S, T> delegate;
 
-		public DistinctOperationSupport(ExecutableFindSupport<T> delegate, String field) {
+		public DistinctOperationSupport(ExecutableFindSupport<S, T> delegate, String field) {
 
 			this.delegate = delegate;
 			this.field = field;
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
 
 			Assert.notNull(resultType, "ResultType must not be null");
@@ -270,12 +311,13 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			Assert.notNull(query, "Query must not be null");
 
-			return new DistinctOperationSupport<>((ExecutableFindSupport<T>) delegate.matching(query), field);
+			return new DistinctOperationSupport<>((ExecutableFindSupport<S, T>) delegate.matching(query), field);
 		}
 
 		@Override
 		public List<T> all() {
 			return delegate.doFindDistinct(field);
 		}
+
 	}
 }

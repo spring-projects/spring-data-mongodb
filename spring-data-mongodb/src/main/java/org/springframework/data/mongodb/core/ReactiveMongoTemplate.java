@@ -877,10 +877,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public <T> Mono<Window<T>> scroll(Query query, Class<T> entityType, String collectionName) {
-		return doScroll(query, entityType, entityType, collectionName);
+		return doScroll(query, entityType, entityType, QueryResultConverter.entity(), collectionName);
 	}
 
-	<T> Mono<Window<T>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
+	<T, R> Mono<Window<R>> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass,
+			QueryResultConverter<? super T, ? extends R> resultConverter, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
@@ -888,7 +889,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(targetClass, "Target type must not be null");
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
-		ProjectingReadCallback<?, T> callback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
+		DocumentCallback<R> callback = getResultReader(projection, collectionName, resultConverter);
 		int limit = query.isLimited() ? query.getLimit() + 1 : Integer.MAX_VALUE;
 
 		if (query.hasKeyset()) {
@@ -896,7 +897,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
 					operations.getIdPropertyName(sourceClass));
 
-			Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
+			Mono<List<R>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query),
 					keysetPaginationQuery.query(), keysetPaginationQuery.fields(), sourceClass,
 					new QueryFindPublisherPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback)
 							.collectList();
@@ -904,7 +905,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return result.map(it -> ScrollUtils.createWindow(query, it, sourceClass, operations));
 		}
 
-		Mono<List<T>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
+		Mono<List<R>> result = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
 				query.getFieldsObject(), sourceClass,
 				new QueryFindPublisherPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass), callback)
 						.collectList();
@@ -1003,6 +1004,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, @Nullable Class<?> inputType,
 			Class<O> outputType) {
+		return doAggregate(aggregation, collectionName, inputType, outputType, QueryResultConverter.entity());
+	}
+
+	<T, O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, @Nullable Class<?> inputType,
+			Class<T> outputType, QueryResultConverter<? super T, ? extends O> resultConverter) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
 		Assert.hasText(collectionName, "Collection name must not be null or empty");
@@ -1018,13 +1024,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					serializeToJsonSafely(ctx.getAggregationPipeline()), collectionName));
 		}
 
-		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
+		DocumentCallback<O> readCallback = new QueryResultConverterCallback<>(resultConverter,
+				new ReadDocumentCallback<>(mongoConverter, outputType, collectionName));
 		return execute(collectionName, collection -> aggregateAndMap(collection, ctx.getAggregationPipeline(),
 				ctx.isOutOrMerge(), options, readCallback, ctx.getInputType()));
 	}
 
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
-			boolean isOutOrMerge, AggregationOptions options, ReadDocumentCallback<O> readCallback,
+			boolean isOutOrMerge, AggregationOptions options, DocumentCallback<O> readCallback,
 			@Nullable Class<?> inputType) {
 
 		ReactiveCollectionPreparerDelegate collectionPreparer = ReactiveCollectionPreparerDelegate.of(options);
@@ -1070,9 +1077,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return geoNear(near, entityClass, collectionName, entityClass);
 	}
 
-	@SuppressWarnings("unchecked")
 	protected <T> Flux<GeoResult<T>> geoNear(NearQuery near, Class<?> entityClass, String collectionName,
 			Class<T> returnType) {
+		return doGeoNear(near, entityClass, collectionName, returnType, QueryResultConverter.entity());
+	}
+
+	@SuppressWarnings("unchecked")
+	<T, R> Flux<GeoResult<R>> doGeoNear(NearQuery near, Class<?> entityClass, String collectionName, Class<T> returnType,
+			QueryResultConverter<? super T, ? extends R> resultConverter) {
 
 		if (near == null) {
 			throw new InvalidDataAccessApiUsageException("NearQuery must not be null");
@@ -1086,8 +1098,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		String distanceField = operations.nearQueryDistanceFieldName(entityClass);
 		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, entityClass);
 
-		GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(distanceField,
-				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
+		GeoNearResultDocumentCallback<R> callback = new GeoNearResultDocumentCallback<>(distanceField,
+				getResultReader(projection, collectionName, resultConverter), near.getMetric());
 
 		Builder optionsBuilder = AggregationOptions.builder();
 		if (near.hasReadPreference()) {
@@ -2412,11 +2424,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @since 2.0
 	 */
-	<S, T> Flux<T> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
-			Document query, Document fields, Class<S> sourceClass, Class<T> targetClass, FindPublisherPreparer preparer) {
+	<T, R> Flux<R> doFind(String collectionName, CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			Document query, Document fields, Class<?> sourceClass, Class<T> targetClass,
+			QueryResultConverter<? super T, ? extends R> resultConverter, FindPublisherPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
+		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2428,7 +2441,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields), preparer,
-				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
+				getResultReader(projection, collectionName, resultConverter), collectionName);
 	}
 
 	protected CreateCollectionOptions convertToCreateCollectionOptions(@Nullable CollectionOptions collectionOptions) {
@@ -2736,6 +2749,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			return Flux.from(preparer.initiateFind(collection, collectionCallback::doInCollection))
 					.flatMapSequential(objectCallback::doWith);
 		});
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T, R> DocumentCallback<R> getResultReader(EntityProjection<T, ?> projection, String collectionName,
+			QueryResultConverter<? super T, ? extends R> resultConverter) {
+
+		DocumentCallback<T> readCallback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
+
+		return resultConverter == QueryResultConverter.entity() ? (DocumentCallback<R>) readCallback
+				: new QueryResultConverterCallback<T, R>(resultConverter, readCallback);
 	}
 
 	/**
@@ -3093,6 +3116,22 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		@Override
 		FindPublisher<T> doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;
+	}
+
+	static final class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
+
+		private final QueryResultConverter<? super T, ? extends R> converter;
+		private final DocumentCallback<T> delegate;
+
+		QueryResultConverterCallback(QueryResultConverter<? super T, ? extends R> converter, DocumentCallback<T> delegate) {
+			this.converter = converter;
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Mono<R> doWith(Document object) {
+			return delegate.doWith(object).map(it -> converter.mapDocument(object, () -> it));
+		}
 	}
 
 	/**

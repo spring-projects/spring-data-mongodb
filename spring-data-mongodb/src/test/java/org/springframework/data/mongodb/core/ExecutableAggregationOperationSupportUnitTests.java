@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
  * Unit tests for {@link ExecutableAggregationOperationSupport}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class ExecutableAggregationOperationSupportUnitTests {
@@ -72,7 +73,8 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
-		verify(template).aggregate(any(Aggregation.class), eq("star-wars"), captor.capture());
+		verify(template).doAggregate(any(Aggregation.class), eq("star-wars"), captor.capture(),
+				eq(QueryResultConverter.entity()));
 		assertThat(captor.getValue()).isEqualTo(Person.class);
 	}
 
@@ -86,7 +88,8 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
 		verify(template).getCollectionName(captor.capture());
-		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
+		verify(template).doAggregate(any(Aggregation.class), eq("person"), captor.capture(),
+				eq(QueryResultConverter.entity()));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Person.class);
 	}
@@ -101,7 +104,8 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
 		verify(template).getCollectionName(captor.capture());
-		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
+		verify(template).doAggregate(any(Aggregation.class), eq("person"), captor.capture(),
+				eq(QueryResultConverter.entity()));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);
 	}
@@ -112,7 +116,8 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).stream();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
-		verify(template).aggregateStream(any(Aggregation.class), eq("star-wars"), captor.capture());
+		verify(template).doAggregateStream(any(Aggregation.class), eq("star-wars"), captor.capture(),
+				eq(QueryResultConverter.entity()), any());
 		assertThat(captor.getValue()).isEqualTo(Person.class);
 	}
 
@@ -126,7 +131,8 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
 		verify(template).getCollectionName(captor.capture());
-		verify(template).aggregateStream(any(Aggregation.class), eq("person"), captor.capture());
+		verify(template).doAggregateStream(any(Aggregation.class), eq("person"), captor.capture(),
+				eq(QueryResultConverter.entity()), any());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Person.class);
 	}
@@ -141,7 +147,8 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
 		verify(template).getCollectionName(captor.capture());
-		verify(template).aggregateStream(any(Aggregation.class), eq("person"), captor.capture());
+		verify(template).doAggregateStream(any(Aggregation.class), eq("person"), captor.capture(),
+				eq(QueryResultConverter.entity()), any());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);
 	}

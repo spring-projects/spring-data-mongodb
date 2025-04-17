@@ -110,6 +110,7 @@ import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.MongoCompatibilityAdapter;
 import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -479,15 +480,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doStream(query, entityType, collectionName, entityType);
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	protected <T> Stream<T> doStream(Query query, Class<?> entityType, String collectionName, Class<T> returnType) {
+		return doStream(query, entityType, collectionName, returnType, QueryResultConverter.entity());
+	}
+
+	@SuppressWarnings("ConstantConditions")
+	<T, R> Stream<R> doStream(Query query, Class<?> entityType, String collectionName, Class<T> returnType,
+			QueryResultConverter<? super T, ? extends R> resultConverter) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(entityType, "Entity type must not be null");
 		Assert.hasText(collectionName, "Collection name must not be null or empty");
 		Assert.notNull(returnType, "ReturnType must not be null");
 
-		return execute(collectionName, (CollectionCallback<Stream<T>>) collection -> {
+		return execute(collectionName, (CollectionCallback<Stream<R>>) collection -> {
 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
@@ -501,8 +507,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
 					col -> readPreference.prepare(col).find(mappedQuery, Document.class).projection(mappedFields));
 
+			DocumentCallback<R> resultReader = getResultReader(projection, collectionName, resultConverter);
+
 			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator,
-					new ProjectingReadCallback<>(mongoConverter, projection, collectionName)).stream();
+					resultReader).stream();
 		});
 	}
 
@@ -898,10 +906,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public <T> Window<T> scroll(Query query, Class<T> entityType, String collectionName) {
-		return doScroll(query, entityType, entityType, collectionName);
+		return doScroll(query, entityType, entityType, QueryResultConverter.entity(), collectionName);
 	}
 
-	<T> Window<T> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass, String collectionName) {
+	<T, R> Window<R> doScroll(Query query, Class<?> sourceClass, Class<T> targetClass,
+			QueryResultConverter<? super T, ? extends R> resultConverter, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
@@ -909,7 +918,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(targetClass, "Target type must not be null");
 
 		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
-		ProjectingReadCallback<?, T> callback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
+		DocumentCallback<R> callback = getResultReader(projection, collectionName, resultConverter);
 		int limit = query.isLimited() ? query.getLimit() + 1 : Integer.MAX_VALUE;
 
 		if (query.hasKeyset()) {
@@ -917,14 +926,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			KeysetScrollQuery keysetPaginationQuery = ScrollUtils.createKeysetPaginationQuery(query,
 					operations.getIdPropertyName(sourceClass));
 
-			List<T> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
+			List<R> result = doFind(collectionName, createDelegate(query), keysetPaginationQuery.query(),
 					keysetPaginationQuery.fields(), sourceClass,
 					new QueryCursorPreparer(query, keysetPaginationQuery.sort(), limit, 0, sourceClass), callback);
 
 			return ScrollUtils.createWindow(query, result, sourceClass, operations);
 		}
 
-		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
+		List<R> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(),
 				sourceClass, new QueryCursorPreparer(query, query.getSortObject(), limit, query.getSkip(), sourceClass),
 				callback);
 
@@ -1016,6 +1025,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<?> domainType, String collectionName, Class<T> returnType) {
+		return doGeoNear(near, domainType, collectionName, returnType, QueryResultConverter.entity());
+	}
+
+	<T, R> GeoResults<R> doGeoNear(NearQuery near, Class<?> domainType, String collectionName, Class<T> returnType,
+			QueryResultConverter<? super T, ? extends R> resultConverter) {
 
 		if (near == null) {
 			throw new InvalidDataAccessApiUsageException("NearQuery must not be null");
@@ -1047,15 +1061,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
 		EntityProjection<T, ?> projection = operations.introspectProjection(returnType, domainType);
 
-		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
-				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
+		DocumentCallback<GeoResult<R>> callback = new GeoNearResultDocumentCallback<>(distanceField,
+				getResultReader(projection, collectionName, resultConverter), near.getMetric());
 
-		List<GeoResult<T>> result = new ArrayList<>(results.getMappedResults().size());
+		List<GeoResult<R>> result = new ArrayList<>(results.getMappedResults().size());
 
 		BigDecimal aggregate = BigDecimal.ZERO;
 		for (Document element : results) {
 
-			GeoResult<T> geoResult = callback.doWith(element);
+			GeoResult<R> geoResult = callback.doWith(element);
 			aggregate = aggregate.add(BigDecimal.valueOf(geoResult.getDistance().getValue()));
 			result.add(geoResult);
 		}
@@ -2022,7 +2036,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
-		return aggregate(aggregation, inputCollectionName, outputType, null);
+		return aggregate(aggregation, inputCollectionName, outputType, (AggregationOperationContext) null);
 	}
 
 	@Override
@@ -2035,7 +2049,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
-		return aggregate(aggregation, collectionName, outputType, null);
+		return doAggregate(aggregation, collectionName, outputType, QueryResultConverter.entity());
 	}
 
 	@Override
@@ -2165,11 +2179,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doAggregate(aggregation, collectionName, outputType, context.getAggregationOperationContext());
 	}
 
+	<T, O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<T> outputType,
+			QueryResultConverter<? super T, ? extends O> resultConverter) {
+
+		return doAggregate(aggregation, collectionName, outputType, resultConverter, queryOperations
+				.createAggregation(aggregation, (AggregationOperationContext) null).getAggregationOperationContext());
+	}
+
 	@SuppressWarnings("ConstantConditions")
 	protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
 			AggregationOperationContext context) {
+		return doAggregate(aggregation, collectionName, outputType, QueryResultConverter.entity(), context);
+	}
 
-		ReadDocumentCallback<O> callback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
+	@SuppressWarnings("ConstantConditions")
+	<T, O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<T> outputType,
+			QueryResultConverter<? super T, ? extends O> resultConverter, AggregationOperationContext context) {
+
+		DocumentCallback<O> callback = new QueryResultConverterCallback<>(resultConverter,
+				new ReadDocumentCallback<>(mongoConverter, outputType, collectionName));
 
 		AggregationOptions options = aggregation.getOptions();
 		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
@@ -2248,8 +2276,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	protected <O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType,
+			@Nullable AggregationOperationContext context) {
+		return doAggregateStream(aggregation, collectionName, outputType, QueryResultConverter.entity(), context);
+	}
+
+	@SuppressWarnings("ConstantConditions")
+	protected <T, O> Stream<O> doAggregateStream(Aggregation aggregation, String collectionName, Class<T> outputType,
+			QueryResultConverter<? super T, ? extends O> resultConverter,
 			@Nullable AggregationOperationContext context) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null");
@@ -2267,7 +2301,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					String.format("Streaming aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
 		}
 
-		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
+		DocumentCallback<O> readCallback = new QueryResultConverterCallback<>(resultConverter,
+				new ReadDocumentCallback<>(mongoConverter, outputType, collectionName));
 
 		return execute(collectionName, (CollectionCallback<Stream<O>>) collection -> {
 
@@ -2629,11 +2664,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @since 2.0
 	 */
-	<S, T> List<T> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
-			Document query, Document fields, Class<S> sourceClass, Class<T> targetClass, CursorPreparer preparer) {
+	<T, R> List<R> doFind(CollectionPreparer<MongoCollection<Document>> collectionPreparer, String collectionName,
+			Document query, Document fields, Class<?> sourceClass, Class<T> targetClass,
+			QueryResultConverter<? super T, ? extends R> resultConverter, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjection<T, S> projection = operations.introspectProjection(targetClass, sourceClass);
+		EntityProjection<T, ?> projection = operations.introspectProjection(targetClass, sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2649,8 +2685,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					collectionName));
 		}
 
+		DocumentCallback<R> callback = getResultReader(projection, collectionName, resultConverter);
 		return executeFindMultiInternal(new FindCallback(collectionPreparer, mappedQuery, mappedFields, null), preparer,
-				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
+				callback, collectionName);
 	}
 
 	/**
@@ -2967,6 +3004,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T, R> DocumentCallback<R> getResultReader(EntityProjection<T, ?> projection, String collectionName,
+			QueryResultConverter<? super T, ? extends R> resultConverter) {
+
+		DocumentCallback<T> readCallback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
+
+		return resultConverter == QueryResultConverter.entity() ? (DocumentCallback<R>) readCallback
+				: new QueryResultConverterCallback<T, R>(resultConverter, readCallback);
 	}
 
 	public PersistenceExceptionTranslator getExceptionTranslator() {
@@ -3325,6 +3372,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			entity = maybeCallAfterConvert(entity, document, collectionName);
 
 			return entity;
+		}
+	}
+
+	static final class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
+
+		private final QueryResultConverter<? super T, ? extends R> converter;
+		private final DocumentCallback<T> delegate;
+
+		QueryResultConverterCallback(QueryResultConverter<? super T, ? extends R> converter, DocumentCallback<T> delegate) {
+			this.converter = converter;
+			this.delegate = delegate;
+		}
+
+		@Override
+		public R doWith(Document object) {
+
+			Lazy<T> lazy = Lazy.of(() -> delegate.doWith(object));
+			return converter.mapDocument(object, lazy::get);
 		}
 	}
 

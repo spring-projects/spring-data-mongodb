@@ -19,9 +19,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.Window;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Window;
+import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.core.CollectionPreparerSupport.ReactiveCollectionPreparerDelegate;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -52,7 +54,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ReactiveFindSupport<>(template, domainType, domainType, null, ALL_QUERY);
+		return new ReactiveFindSupport<>(template, domainType, domainType, QueryResultConverter.entity(), null, ALL_QUERY);
 	}
 
 	/**
@@ -61,21 +63,24 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class ReactiveFindSupport<T>
+	static class ReactiveFindSupport<S, T>
 			implements ReactiveFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
 		private final ReactiveMongoTemplate template;
 		private final Class<?> domainType;
-		private final Class<T> returnType;
-		private final String collection;
+		private final Class<S> returnType;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
+		private final @Nullable String collection;
 		private final Query query;
 
-		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType, String collection,
+		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<S> returnType,
+				QueryResultConverter<? super S, ? extends T> resultConverter, @Nullable String collection,
 				Query query) {
 
 			this.template = template;
 			this.domainType = domainType;
 			this.returnType = returnType;
+			this.resultConverter = resultConverter;
 			this.collection = collection;
 			this.query = query;
 		}
@@ -85,7 +90,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty");
 
-			return new ReactiveFindSupport<>(template, domainType, returnType, collection, query);
+			return new ReactiveFindSupport<>(template, domainType, returnType, resultConverter, collection, query);
 		}
 
 		@Override
@@ -93,7 +98,8 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 			Assert.notNull(returnType, "ReturnType must not be null");
 
-			return new ReactiveFindSupport<>(template, domainType, returnType, collection, query);
+			return new ReactiveFindSupport<>(template, domainType, returnType, QueryResultConverter.entity(), collection,
+					query);
 		}
 
 		@Override
@@ -101,7 +107,16 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 			Assert.notNull(query, "Query must not be null");
 
-			return new ReactiveFindSupport<>(template, domainType, returnType, collection, query);
+			return new ReactiveFindSupport<>(template, domainType, returnType, resultConverter, collection, query);
+		}
+
+		@Override
+		public <R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+
+			Assert.notNull(converter, "QueryResultConverter must not be null");
+
+			return new ReactiveFindSupport<>(template, domainType, returnType, this.resultConverter.andThen(converter),
+					collection, query);
 		}
 
 		@Override
@@ -141,7 +156,8 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		@Override
 		public Mono<Window<T>> scroll(ScrollPosition scrollPosition) {
-			return template.doScroll(query.with(scrollPosition), domainType, returnType, getCollectionName());
+			return template.doScroll(query.with(scrollPosition), domainType, returnType, resultConverter,
+					getCollectionName());
 		}
 
 		@Override
@@ -151,7 +167,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 		@Override
 		public TerminatingFindNear<T> near(NearQuery nearQuery) {
-			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
+			return new TerminatingFindNearSupport<>(nearQuery, resultConverter);
 		}
 
 		@Override
@@ -178,14 +194,15 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			Document fieldsObject = query.getFieldsObject();
 
 			return template.doFind(getCollectionName(), ReactiveCollectionPreparerDelegate.of(query), queryObject,
-					fieldsObject, domainType, returnType, preparer != null ? preparer : getCursorPreparer(query));
+					fieldsObject, domainType, returnType, resultConverter,
+					preparer != null ? preparer : getCursorPreparer(query));
 		}
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		private Flux<T> doFindDistinct(String field) {
 
 			return template.findDistinct(query, field, getCollectionName(), domainType,
-					returnType == domainType ? (Class<T>) Object.class : returnType);
+					returnType == domainType ? (Class) Object.class : returnType);
 		}
 
 		private FindPublisherPreparer getCursorPreparer(Query query) {
@@ -200,10 +217,36 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return SerializationUtils.serializeToJsonSafely(query);
 		}
 
+		class TerminatingFindNearSupport<G> implements TerminatingFindNear<G> {
+
+			private final NearQuery nearQuery;
+			private final QueryResultConverter<? super S, ? extends G> resultConverter;
+
+			public TerminatingFindNearSupport(NearQuery nearQuery,
+					QueryResultConverter<? super S, ? extends G> resultConverter) {
+				this.nearQuery = nearQuery;
+				this.resultConverter = resultConverter;
+			}
+
+			@Override
+			public <R> TerminatingFindNear<R> map(QueryResultConverter<? super G, ? extends R> converter) {
+
+				Assert.notNull(converter, "QueryResultConverter must not be null");
+
+				return new TerminatingFindNearSupport<>(nearQuery, this.resultConverter.andThen(converter));
+			}
+
+			@Override
+			public Flux<GeoResult<G>> all() {
+				return template.doGeoNear(nearQuery, domainType, getCollectionName(), returnType, resultConverter);
+			}
+		}
+
 		/**
 		 * @author Christoph Strobl
 		 * @since 2.1
 		 */
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		static class DistinctOperationSupport<T> implements TerminatingDistinct<T> {
 
 			private final String field;
@@ -224,12 +267,11 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			}
 
 			@Override
-			@SuppressWarnings("unchecked")
 			public TerminatingDistinct<T> matching(Query query) {
 
 				Assert.notNull(query, "Query must not be null");
 
-				return new DistinctOperationSupport<>((ReactiveFindSupport<T>) delegate.matching(query), field);
+				return new DistinctOperationSupport<>((ReactiveFindSupport) delegate.matching(query), field);
 			}
 
 			@Override
