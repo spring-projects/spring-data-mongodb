@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.lang.Contract;
 
 /**
  * {@link ExecutableAggregationOperation} allows creation and execution of MongoDB aggregation operations in a fluent
@@ -45,7 +46,7 @@ public interface ExecutableAggregationOperation {
 	/**
 	 * Start creating an aggregation operation that returns results mapped to the given domain type. <br />
 	 * Use {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} to specify a potentially different
-	 * input type for he aggregation.
+	 * input type for the aggregation.
 	 *
 	 * @param domainType must not be {@literal null}.
 	 * @return new instance of {@link ExecutableAggregation}.
@@ -76,9 +77,22 @@ public interface ExecutableAggregationOperation {
 	 * Trigger execution by calling one of the terminating methods.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 * @since 2.0
 	 */
 	interface TerminatingAggregation<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingAggregation}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingAggregation<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Apply pipeline operations as specified and get all matching elements.
