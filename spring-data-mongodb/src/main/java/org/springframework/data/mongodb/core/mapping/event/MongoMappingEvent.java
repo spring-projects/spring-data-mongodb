@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import java.io.Serial;
 import java.util.function.Function;
 
 import org.bson.Document;
@@ -30,6 +31,7 @@ import org.springframework.lang.Nullable;
  */
 public class MongoMappingEvent<T> extends ApplicationEvent {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private final @Nullable Document document;
 	private final @Nullable String collectionName;
