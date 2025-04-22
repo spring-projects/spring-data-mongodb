@@ -159,7 +159,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Set.of(LocalDate.class, LocalTime.class, LocalDateTime.class);
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.STRING;
+		private BigDecimalRepresentation bigDecimals = BigDecimalRepresentation.DECIMAL128;
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private final PropertyValueConversions internalValueConversion = PropertyValueConversions.simple(it -> {});
@@ -457,9 +457,10 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	public enum BigDecimalRepresentation {
 
 		/**
-		 * Store values as {@link Number#toString() String}. Using strings retains precision but does not support range
-		 * queries.
+		 * @deprecated since 5.0.0 — storing values as {@link Number#toString() String} retains precision,
+		 * but prevents efficient range queries. Prefer {@link #DECIMAL128} for better query support.
 		 */
+		@Deprecated(since = "5.0.0")
 		STRING,
 
 		/**
