@@ -169,7 +169,6 @@ Maven::
         <groupId>com.querydsl</groupId>
         <artifactId>querydsl-mongodb</artifactId>
         <version>${querydslVersion}</version>
-        <classifier>jakarta</classifier>
 
         <!-- Recommended: Exclude the mongo-java-driver to avoid version conflicts -->
         <exclusions>
@@ -216,7 +215,7 @@ Gradle::
 [source,groovy,indent=0,subs="verbatim,quotes",role="secondary"]
 ----
 dependencies {
-    implementation 'com.querydsl:querydsl-mongodb:${querydslVersion}:jakarta'
+    implementation 'com.querydsl:querydsl-mongodb:${querydslVersion}'
 
     annotationProcessor 'com.querydsl:querydsl-apt:${querydslVersion}:jakarta'
     annotationProcessor 'org.springframework.data:spring-data-mongodb'
@@ -235,6 +234,8 @@ tasks.withType(JavaCompile).configureEach {
 ======
 
 Note that the setup above shows the simplest usage omitting any other options or dependencies that your project might require.
+This way of configuring annotation processing disables Java's annotation processor scanning because MongoDB requires specifying `-processor` by class name.
+If you're using other annotation processors, you need to add them to the list of `-processor`/`annotationProcessors` as well.
 
 include::{commons}@data-commons::page$repositories/core-extensions-web.adoc[leveloffset=1]
 
