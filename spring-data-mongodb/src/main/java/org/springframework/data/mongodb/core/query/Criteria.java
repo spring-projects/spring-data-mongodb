@@ -315,9 +315,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/in/">MongoDB Query operator: $in</a>
 	 */
 	public Criteria in(Object... values) {
-		if (values.length > 1 && values[1] instanceof Collection) {
+		if (values.length > 0 && values[0] instanceof Collection) {
 			throw new InvalidMongoDbApiUsageException(
-					"You can only pass in one argument of type " + values[1].getClass().getName());
+					"You can only pass in one argument of type " + values[0].getClass().getName());
 		}
 		criteria.put("$in", Arrays.asList(values));
 		return this;
