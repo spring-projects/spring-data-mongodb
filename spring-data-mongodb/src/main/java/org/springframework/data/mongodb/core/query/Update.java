@@ -119,6 +119,17 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
+
+	/**
+	 * KeysToUpdate getter
+	 *
+	 * @return keys to update.
+	 */
+	public Set<String> getKeysToUpdate() {
+        	return keysToUpdate;
+    	}
+	
+
 	/**
 	 * Update using the {@literal $setOnInsert} update modifier
 	 *
