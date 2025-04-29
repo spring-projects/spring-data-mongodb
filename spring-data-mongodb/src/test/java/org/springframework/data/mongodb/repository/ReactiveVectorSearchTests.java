@@ -17,26 +17,31 @@ package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import reactor.core.publisher.Flux;
+import reactor.test.StepVerifier;
+
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Score;
 import org.springframework.data.domain.SearchResult;
-import org.springframework.data.domain.SearchResults;
 import org.springframework.data.domain.Similarity;
 import org.springframework.data.domain.Vector;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.TestMongoConfiguration;
 import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.VectorIndex;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.mongodb.test.util.AtlasContainer;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.repository.CrudRepository;
@@ -49,14 +54,13 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 
 /**
- * Integration tests using Vector Search and Vector Indexes through local MongoDB Atlas.
+ * Integration tests using reactive Vector Search and Vector Indexes through local MongoDB Atlas.
  *
- * @author Christoph Strobl
  * @author Mark Paluch
  */
 @Testcontainers(disabledWithoutDocker = true)
-@SpringJUnitConfig(classes = { VectorSearchTests.Config.class })
-public class VectorSearchTests {
+@SpringJUnitConfig(classes = { ReactiveVectorSearchTests.Config.class })
+public class ReactiveVectorSearchTests {
 
 	Vector VECTOR = Vector.of(0.2001f, 0.32345f, 0.43456f, 0.54567f, 0.65678f);
 
@@ -66,11 +70,11 @@ public class VectorSearchTests {
 	static MongoClient client;
 	static MongoTestTemplate template;
 
-	@Autowired VectorSearchRepository repository;
+	@Autowired ReactiveVectorSearchRepository repository;
 
-	@EnableMongoRepositories(
+	@EnableReactiveMongoRepositories(
 			includeFilters = {
-					@ComponentScan.Filter(value = VectorSearchRepository.class, type = FilterType.ASSIGNABLE_TYPE) },
+					@ComponentScan.Filter(value = ReactiveVectorSearchRepository.class, type = FilterType.ASSIGNABLE_TYPE) },
 			considerNestedRepositories = true)
 	static class Config extends TestMongoConfiguration {
 
@@ -83,6 +87,18 @@ public class VectorSearchTests {
 		public MongoClient mongoClient() {
 			atlasLocal.start();
 			return MongoClients.create(atlasLocal.getConnectionString());
+		}
+
+		@Bean
+		public com.mongodb.reactivestreams.client.MongoClient reactiveMongoClient() {
+			atlasLocal.start();
+			return com.mongodb.reactivestreams.client.MongoClients.create(atlasLocal.getConnectionString());
+		}
+
+		@Bean
+		ReactiveMongoTemplate reactiveMongoTemplate(MappingMongoConverter mongoConverter) {
+			return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(reactiveMongoClient(), getDatabaseName()),
+					mongoConverter);
 		}
 	}
 
@@ -104,84 +120,23 @@ public class VectorSearchTests {
 	@Test
 	void shouldSearchEnnWithAnnotatedFilter() {
 
-		SearchResults<WithVectorFields> results = repository.searchAnnotated("de", VECTOR,
-				Score.of(0.4), Limit.of(10));
+		Flux<SearchResult<WithVectorFields>> results = repository.searchAnnotated("de", VECTOR, Score.of(0.4),
+				Limit.of(10));
 
-		assertThat(results).extracting(SearchResult::getScore).hasOnlyElementsOfType(Similarity.class);
-		assertThat(results).hasSize(3);
+		results.as(StepVerifier::create).consumeNextWith(actual -> {
+			assertThat(actual.getScore().getValue()).isGreaterThan(0.4);
+			assertThat(actual.getScore()).isInstanceOf(Similarity.class);
+
+		}).expectNextCount(2).verifyComplete();
 	}
 
 	@Test
 	void shouldSearchEnnWithDerivedFilter() {
 
-		SearchResults<WithVectorFields> results = repository.searchCosineByCountryAndEmbeddingNear("de", VECTOR,
-				Similarity.of(0.98),
-				Limit.of(10));
+		Flux<WithVectorFields> results = repository.searchByCountryAndEmbeddingNear("de", VECTOR, Limit.of(10));
 
-		assertThat(results).extracting(SearchResult::getScore).hasOnlyElementsOfType(Similarity.class);
-		assertThat(results).hasSize(2).extracting(SearchResult::getContent).extracting(WithVectorFields::getCountry)
-				.containsOnly("de", "de");
-
-		assertThat(results).extracting(SearchResult::getContent).extracting(WithVectorFields::getDescription)
-				.containsExactlyInAnyOrder("two", "one");
-	}
-
-	@Test
-	void shouldSearchEnnWithDerivedFilterWithoutScore() {
-
-		SearchResults<WithVectorFields> de = repository.searchCosineByCountryAndEmbeddingNear("de", VECTOR,
-				Similarity.of(0.4), Limit.of(10));
-
-		assertThat(de).hasSizeGreaterThanOrEqualTo(2);
-
-		assertThat(repository.searchCosineByCountryAndEmbeddingNear("de", VECTOR, Similarity.of(0.999), Limit.of(10)))
-				.hasSize(1);
-	}
-
-	@Test
-	void shouldSearchAsListEnnWithDerivedFilterWithoutScore() {
-
-		List<WithVectorFields> de = repository.searchAsListByCountryAndEmbeddingNear("de", VECTOR, Limit.of(10));
-
-		assertThat(de).hasOnlyElementsOfType(WithVectorFields.class);
-	}
-
-	@Test
-	void shouldSearchEuclideanWithDerivedFilter() {
-
-		SearchResults<WithVectorFields> results = repository.searchEuclideanByCountryAndEmbeddingNear("de", VECTOR,
-				Limit.of(2));
-
-		assertThat(results).hasSize(2).extracting(SearchResult::getContent).extracting(WithVectorFields::getCountry)
-				.containsOnly("de", "de");
-
-		assertThat(results).extracting(SearchResult::getContent).extracting(WithVectorFields::getDescription)
-				.containsExactlyInAnyOrder("two", "one");
-	}
-
-	@Test
-	void shouldSearchEnnWithDerivedFilterWithin() {
-
-		SearchResults<WithVectorFields> results = repository.searchByCountryAndEmbeddingWithin("de", VECTOR,
-				Similarity.between(0.93, 0.98));
-
-		assertThat(results).hasSize(1);
-		for (SearchResult<WithVectorFields> result : results) {
-			assertThat(result.getScore().getValue()).isBetween(0.93, 0.98);
-		}
-	}
-
-	@Test
-	void shouldSearchEnnWithDerivedAndLimitedFilterWithin() {
-
-		SearchResults<WithVectorFields> results = repository.searchTop1ByCountryAndEmbeddingWithin("de", VECTOR,
-				Similarity.between(0.8, 1));
-
-		assertThat(results).hasSize(1);
-
-		for (SearchResult<WithVectorFields> result : results) {
-			assertThat(result.getScore().getValue()).isBetween(0.8, 1.0);
-		}
+		results.as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual).isInstanceOf(WithVectorFields.class))
+				.expectNextCount(2).verifyComplete();
 	}
 
 	static void initDocuments() {
@@ -217,31 +172,14 @@ public class VectorSearchTests {
 		template.awaitIndexCreation(WithVectorFields.class, inner.getName());
 	}
 
-	interface VectorSearchRepository extends CrudRepository<WithVectorFields, String> {
+	interface ReactiveVectorSearchRepository extends CrudRepository<WithVectorFields, String> {
 
 		@VectorSearch(indexName = "cos-index", filter = "{country: ?0}", numCandidates = "#{10+10}",
 				searchType = VectorSearchOperation.SearchType.ANN)
-		SearchResults<WithVectorFields> searchAnnotated(String country, Vector vector,
-				Score distance, Limit limit);
+		Flux<SearchResult<WithVectorFields>> searchAnnotated(String country, Vector vector, Score distance, Limit limit);
 
 		@VectorSearch(indexName = "cos-index")
-		SearchResults<WithVectorFields> searchCosineByCountryAndEmbeddingNear(String country, Vector vector,
-				Score similarity, Limit limit);
-
-		@VectorSearch(indexName = "cos-index")
-		List<WithVectorFields> searchAsListByCountryAndEmbeddingNear(String country, Vector vector, Limit limit);
-
-		@VectorSearch(indexName = "euc-index")
-		SearchResults<WithVectorFields> searchEuclideanByCountryAndEmbeddingNear(String country, Vector vector,
-				Limit limit);
-
-		@VectorSearch(indexName = "cos-index", limit = "10")
-		SearchResults<WithVectorFields> searchByCountryAndEmbeddingWithin(String country, Vector vector,
-				Range<Similarity> distance);
-
-		@VectorSearch(indexName = "cos-index")
-		SearchResults<WithVectorFields> searchTop1ByCountryAndEmbeddingWithin(String country, Vector vector,
-				Range<Similarity> distance);
+		Flux<WithVectorFields> searchByCountryAndEmbeddingNear(String country, Vector vector, Limit limit);
 
 	}
 

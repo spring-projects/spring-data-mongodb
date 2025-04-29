@@ -15,42 +15,50 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.springframework.data.mapping.model.ValueExpressionEvaluator;
+import reactor.core.publisher.Mono;
+
+import org.bson.Document;
+import org.reactivestreams.Publisher;
+
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.lang.Nullable;
+import org.springframework.data.spel.ExpressionDependencies;
 
 /**
- * {@link AbstractMongoQuery} implementation to run a {@link VectorSearchAggregation}. The pre-filter is either derived
- * from the method name or provided through {@link VectorSearch#filter()}.
+ * {@link AbstractReactiveMongoQuery} implementation to run a {@link VectorSearchAggregation}. The pre-filter is either
+ * derived from the method name or provided through {@link VectorSearch#filter()}.
  *
  * @author Mark Paluch
  * @since 5.0
  */
-public class VectorSearchAggregation extends AbstractMongoQuery {
+public class ReactiveVectorSearchAggregation extends AbstractReactiveMongoQuery {
 
-	private final MongoOperations mongoOperations;
+	private final ReactiveMongoOperations mongoOperations;
 	private final MongoPersistentEntity<?> collectionEntity;
+	private final ValueExpressionDelegate valueExpressionDelegate;
 	private final VectorSearchDelegate delegate;
 
 	/**
-	 * Creates a new {@link VectorSearchAggregation} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
+	 * Creates a new {@link ReactiveVectorSearchAggregation} from the given {@link MongoQueryMethod} and
+	 * {@link MongoOperations}.
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param delegate must not be {@literal null}.
 	 */
-	public VectorSearchAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
+	public ReactiveVectorSearchAggregation(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
 			ValueExpressionDelegate delegate) {
 
 		super(method, mongoOperations, delegate);
 
+		this.valueExpressionDelegate = delegate;
 		if (!method.isSearchQuery() && !method.isCollectionQuery()) {
 			throw new InvalidMongoDbApiUsageException(String.format(
 					"Repository Vector Search method '%s' must return either return SearchResults<T> or List<T> but was %s",
@@ -62,30 +70,33 @@ public class VectorSearchAggregation extends AbstractMongoQuery {
 		this.delegate = new VectorSearchDelegate(method, mongoOperations.getConverter(), delegate);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
-			@Nullable Class<?> typeToRead) {
+	protected Publisher<Object> doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
+			ConvertingParameterAccessor accessor, @org.jspecify.annotations.Nullable Class<?> typeToRead) {
 
-		VectorSearchDelegate.QueryMetadata query = createVectorSearchQuery(processor, accessor, typeToRead);
+		return getParameterBindingCodec().flatMapMany(codec -> {
 
-		MongoQueryExecution.VectorSearchExecution execution = new MongoQueryExecution.VectorSearchExecution(mongoOperations,
-				method, collectionEntity.getCollection(), query, accessor);
+			String json = delegate.getQueryString();
+			ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
+					valueExpressionDelegate);
 
-		return execution.execute(query.query());
+			return getValueExpressionEvaluatorLater(dependencies, accessor).flatMapMany(expressionEvaluator -> {
+
+				ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue,
+						expressionEvaluator);
+				VectorSearchDelegate.QueryMetadata query = delegate.createQuery(expressionEvaluator, processor, accessor,
+						typeToRead, codec, bindingContext);
+
+				ReactiveMongoQueryExecution.VectorSearchExecution execution = new ReactiveMongoQueryExecution.VectorSearchExecution(
+						mongoOperations, method, query, accessor);
+
+				return execution.execute(query.query(), Document.class, collectionEntity.getCollection());
+			});
+		});
 	}
 
-	VectorSearchDelegate.QueryMetadata createVectorSearchQuery(ResultProcessor processor, MongoParameterAccessor accessor,
-			@Nullable Class<?> typeToRead) {
-
-		ValueExpressionEvaluator evaluator = getExpressionEvaluatorFor(accessor);
-		ParameterBindingContext bindingContext = prepareBindingContext(delegate.getQueryString(), accessor);
-
-		return delegate.createQuery(evaluator, processor, accessor, typeToRead, getParameterBindingCodec(), bindingContext);
-	}
-
 	@Override
-	protected Query createQuery(ConvertingParameterAccessor accessor) {
+	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -15,27 +15,20 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationBlockBuilder;
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationExecutionBlockBuilder;
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.deleteExecutionBlockBuilder;
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryBlockBuilder;
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryExecutionBlockBuilder;
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateBlockBuilder;
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateExecutionBlockBuilder;
-
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
-import org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.QueryCodeBlockBuilder;
+import org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.*;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMetadata;
@@ -178,10 +171,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	private static boolean backoff(MongoQueryMethod method) {
 
-		boolean skip = method.isGeoNearQuery() || method.isScrollQuery() || method.isStreamQuery();
+		boolean skip = method.isGeoNearQuery() || method.isScrollQuery() || method.isStreamQuery()
+				|| method.isSearchQuery();
 
 		if (skip && logger.isDebugEnabled()) {
-			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming or scrolling query"
+			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming, search or scrolling query"
 					.formatted(method.getName()));
 		}
 		return skip;
@@ -193,7 +187,6 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(aggregation).contribute(context -> {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
-			builder.add(context.codeBlocks().logDebug("invoking [%s]".formatted(context.getMethod().getName())));
 
 			builder.add(aggregationBlockBuilder(context, queryMethod).stages(aggregation)
 					.usingAggregationVariableName("aggregation").build());

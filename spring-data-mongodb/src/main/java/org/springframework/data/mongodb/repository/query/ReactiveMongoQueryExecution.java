@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.repository.query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
+import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 
@@ -25,12 +28,16 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.DtoInstantiatingConverter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.SearchResult;
+import org.springframework.data.domain.Similarity;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpdate;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -116,6 +123,57 @@ interface ReactiveMongoQueryExecution {
 			TypeInformation<?> componentType = returnType.getComponentType();
 			return (componentType != null) && GeoResult.class.equals(componentType.getType());
 		}
+	}
+
+	/**
+	 * {@link ReactiveMongoQueryExecution} to execute vector search.
+	 *
+	 * @author Mark Paluch
+	 * @since 5.0
+	 */
+	class VectorSearchExecution implements ReactiveMongoQueryExecution {
+
+		private final ReactiveMongoOperations operations;
+		private final VectorSearchDelegate.QueryMetadata queryMetadata;
+		private final List<AggregationOperation> pipeline;
+		private final boolean returnSearchResult;
+
+		public VectorSearchExecution(ReactiveMongoOperations operations, MongoQueryMethod method,
+				VectorSearchDelegate.QueryMetadata queryMetadata, MongoParameterAccessor accessor) {
+
+			this.operations = operations;
+			this.queryMetadata = queryMetadata;
+			this.pipeline = queryMetadata.getAggregationPipeline(method, accessor);
+			this.returnSearchResult = isSearchResult(method.getReturnType());
+		}
+
+		@Override
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
+
+			Flux<Document> aggregate = operations
+					.aggregate(TypedAggregation.newAggregation(queryMetadata.outputType(), pipeline), collection, Document.class);
+
+			return aggregate.map(document -> {
+
+				Object mappedResult = operations.getConverter().read(queryMetadata.outputType(), document);
+
+				return returnSearchResult
+						? new SearchResult<>(mappedResult,
+								Similarity.raw(document.getDouble(queryMetadata.scoreField()), queryMetadata.scoringFunction()))
+						: mappedResult;
+			});
+		}
+
+		private static boolean isSearchResult(TypeInformation<?> returnType) {
+
+			if (!Publisher.class.isAssignableFrom(returnType.getType())) {
+				return false;
+			}
+
+			TypeInformation<?> componentType = returnType.getComponentType();
+			return componentType != null && SearchResult.class.equals(componentType.getType());
+		}
+
 	}
 
 	/**

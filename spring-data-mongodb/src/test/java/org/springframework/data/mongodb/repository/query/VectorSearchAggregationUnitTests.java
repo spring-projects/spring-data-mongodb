@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -52,10 +53,13 @@ class VectorSearchAggregationUnitTests {
 
 	@BeforeEach
 	public void setUp() {
+
 		context = new MongoMappingContext();
 		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		operationsMock = Mockito.mock(MongoOperations.class);
+
 		when(operationsMock.getConverter()).thenReturn(converter);
+		when(operationsMock.execute(any())).thenReturn(Bson.DEFAULT_CODEC_REGISTRY);
 	}
 
 	@Test
@@ -64,9 +68,11 @@ class VectorSearchAggregationUnitTests {
 		VectorSearchAggregation aggregation = aggregation(SampleRepository.class, "searchByCountryAndEmbeddingNear",
 				String.class, Vector.class, Score.class, Limit.class);
 
-		VectorSearchAggregation.VectorSearchQuery query = aggregation
-				.createVectorSearchQuery(new MongoParametersParameterAccessor(aggregation.getQueryMethod(),
-						new Object[] { "de", Vector.of(1f), Score.of(1), Limit.unlimited() }));
+		VectorSearchDelegate.QueryMetadata query = aggregation.createVectorSearchQuery(
+				aggregation.getQueryMethod().getResultProcessor(),
+				new MongoParametersParameterAccessor(aggregation.getQueryMethod(),
+						new Object[] { "de", Vector.of(1f), Score.of(1), Limit.unlimited() }),
+				Object.class);
 
 		assertThat(query.query().getQueryObject()).containsEntry("country", "de");
 	}
