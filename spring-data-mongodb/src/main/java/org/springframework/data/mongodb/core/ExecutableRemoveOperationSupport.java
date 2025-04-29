@@ -48,26 +48,28 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ExecutableRemoveSupport<>(tempate, domainType, ALL_QUERY, null);
+		return new ExecutableRemoveSupport<>(tempate, domainType, ALL_QUERY, null, QueryResultConverter.entity());
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	static class ExecutableRemoveSupport<T> implements ExecutableRemove<T>, RemoveWithCollection<T> {
+	static class ExecutableRemoveSupport<S, T> implements ExecutableRemove<T>, RemoveWithCollection<T> {
 
 		private final MongoTemplate template;
-		private final Class<T> domainType;
+		private final Class<S> domainType;
 		private final Query query;
 		@Nullable private final String collection;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
 
-		public ExecutableRemoveSupport(MongoTemplate template, Class<T> domainType, Query query,
-				@Nullable String collection) {
+		public ExecutableRemoveSupport(MongoTemplate template, Class<S> domainType, Query query,
+				@Nullable String collection, QueryResultConverter<? super S, ? extends T> resultConverter) {
 			this.template = template;
 			this.domainType = domainType;
 			this.query = query;
 			this.collection = collection;
+			this.resultConverter = resultConverter;
 		}
 
 		@Override
@@ -76,7 +78,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
 
-			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
+			return new ExecutableRemoveSupport<>(template, domainType, query, collection, resultConverter);
 		}
 
 		@Override
@@ -85,7 +87,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 			Assert.notNull(query, "Query must not be null");
 
-			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
+			return new ExecutableRemoveSupport<>(template, domainType, query, collection, resultConverter);
 		}
 
 		@Override
@@ -103,7 +105,12 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 			String collectionName = getCollectionName();
 
-			return template.doFindAndDelete(collectionName, query, domainType);
+			return template.doFindAndDelete(collectionName, query, domainType, resultConverter);
+		}
+
+		@Override
+		public <R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+			return new ExecutableRemoveSupport<>(template, (Class) domainType, query, collection, converter);
 		}
 
 		private String getCollectionName() {

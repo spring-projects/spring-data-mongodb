@@ -185,6 +185,17 @@ class ExecutableUpdateOperationSupportTests {
 		assertThat(result.get()).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
 	}
 
+	@Test // GH-
+	void findAndModifyWithResultConverter() {
+
+		Optional<Person> result = template.update(Person.class).matching(queryHan())
+			.apply(new Update().set("firstname", "Han")).withOptions(FindAndModifyOptions.options().returnNew(true))
+			.map((raw, converted) -> Optional.of(converted.get()))
+			.findAndModifyValue();
+
+		assertThat(result.get()).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
+	}
+
 	@Test // DATAMONGO-1563
 	void upsert() {
 
@@ -280,6 +291,19 @@ class ExecutableUpdateOperationSupportTests {
 				.findAndReplaceValue();
 
 		assertThat(result.getName()).isEqualTo(han.firstname);
+	}
+
+	@Test // GH-
+	void findAndReplaceWithResultConverter() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		Optional<Jedi> result = template.update(Person.class).matching(queryHan()).replaceWith(luke).as(Jedi.class) //
+			.mapResult((raw, converted) -> Optional.of(converted.get()))
+			.findAndReplaceValue();
+
+		assertThat(result.get()).isInstanceOf(Jedi.class).extracting(Jedi::getName).isEqualTo(han.firstname);
 	}
 
 	private Query queryHan() {

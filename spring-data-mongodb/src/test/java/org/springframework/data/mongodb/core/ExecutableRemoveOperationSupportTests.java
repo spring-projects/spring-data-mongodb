@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -106,6 +107,14 @@ class ExecutableRemoveOperationSupportTests {
 		List<Person> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove();
 
 		assertThat(result).containsExactly(han);
+	}
+
+	@Test // GH-0
+	void removeAndReturnAllMatchingWithResultConverter() {
+
+		List<Optional<Person>> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).map((raw, converted) -> Optional.of(converted.get())).findAndRemove();
+
+		assertThat(result).containsExactly(Optional.of(han));
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
