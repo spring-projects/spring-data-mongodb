@@ -1,0 +1,21 @@
+MongoDB Search methods must use the `@VectorSearch` annotation to define the index name for the https://www.mongodb.com/docs/upcoming/reference/operator/aggregation/vectorSearch/[`$vectorSearch`] aggregation stage.
+
+.Using `Near` and `Within` Keywords in Repository Search Methods
+====
+[source,java]
+----
+interface CommentRepository extends Repository<Comment, String> {
+
+  @VectorSearch(indexName = "my-index")
+  SearchResults<Comment> searchByEmbeddingNear(Vector vector, Score score);
+
+  @VectorSearch(indexName = "my-index")
+  SearchResults<Comment> searchByEmbeddingWithin(Vector vector, Range<Similarity> range);
+
+  @VectorSearch(indexName = "my-index")
+  SearchResults<Comment> searchByCountryAndEmbeddingWithin(String country, Vector vector, Range<Similarity> range);
+}
+----
+====
+
+Derived Search Methods can define domain model attributes to create the pre-filter for indexed fields.

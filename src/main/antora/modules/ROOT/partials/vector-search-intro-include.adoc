@@ -1,0 +1,1 @@
+To use Vector Search with MongoDB, you need a MongoDB Atlas instance that is either running in the cloud or by using https://www.mongodb.com/docs/atlas/cli/current/atlas-cli-deploy-docker/[Docker].

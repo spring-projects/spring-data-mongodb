@@ -45,6 +45,7 @@
 ** xref:repositories/create-instances.adoc[]
 ** xref:repositories/query-methods-details.adoc[]
 ** xref:mongodb/repositories/query-methods.adoc[]
+** xref:mongodb/repositories/vector-search.adoc[]
 ** xref:mongodb/repositories/modifying-methods.adoc[]
 ** xref:repositories/projections.adoc[]
 ** xref:repositories/custom-implementations.adoc[]

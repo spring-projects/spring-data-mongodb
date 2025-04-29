@@ -76,8 +76,8 @@ public @interface VectorSearch {
 	String path() default "";
 
 	/**
-	 * Takes a MongoDB JSON (MQL) string defining the pre-filter against indexed fields. Alias for
-	 * {@link VectorSearch#filter}.
+	 * Takes a MongoDB JSON (MQL) string defining the pre-filter against indexed fields. Supports Value Expressions. Alias
+	 * for {@link VectorSearch#filter}.
 	 *
 	 * @return an empty String by default.
 	 */
@@ -85,8 +85,8 @@ public @interface VectorSearch {
 	String value() default "";
 
 	/**
-	 * Takes a MongoDB JSON (MQL) string defining the pre-filter against indexed fields. Alias for
-	 * {@link VectorSearch#value}.
+	 * Takes a MongoDB JSON (MQL) string defining the pre-filter against indexed fields. Supports Value Expressions. Alias
+	 * for {@link VectorSearch#value}.
 	 *
 	 * @return an empty String by default.
 	 */
@@ -96,7 +96,7 @@ public @interface VectorSearch {
 	/**
 	 * Number of documents to return in the results. This value can't exceed the value of {@link #numCandidates} if you
 	 * specify {@link #numCandidates}. Limit accepts Value Expressions. A Vector Search method cannot define both,
-	 * {@code limit()} and a {@link org.springframework.data.domain.Limit} parameter.
+	 * {@code limit()} and a {@link org.springframework.data.domain.Limit} parameter. Supports Value Expressions.
 	 *
 	 * @return number of documents to return in the results
 	 */
@@ -109,7 +109,8 @@ public @interface VectorSearch {
 	 * to return} to increase accuracy. This over-request pattern is the recommended way to trade off latency and recall
 	 * in your ANN searches, and we recommend tuning this parameter based on your specific dataset size and query
 	 * requirements. Required if the query uses
-	 * {@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#ANN}.
+	 * {@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#ANN}. Supports Value
+	 * Expressions.
 	 *
 	 * @return number of documents to return in the results
 	 */
