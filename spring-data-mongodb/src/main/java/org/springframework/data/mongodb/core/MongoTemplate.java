@@ -122,6 +122,7 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1143,7 +1144,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	@Override
 	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
-			Class<T> entityClass, String collectionName) {
+		Class<T> entityClass, String collectionName) {
+		return findAndModify(query, update, options, entityClass, collectionName, QueryResultConverter.entity());
+	}
+
+
+	<S, T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<S> entityClass, String collectionName, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(update, "Update must not be null");
@@ -1163,12 +1170,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return doFindAndModify(createDelegate(query), collectionName, query.getQueryObject(), query.getFieldsObject(),
-				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
+				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse, resultConverter);
 	}
 
 	@Override
 	public <S, T> @Nullable T findAndReplace(Query query, S replacement, FindAndReplaceOptions options,
-			Class<S> entityType, String collectionName, Class<T> resultType) {
+		Class<S> entityType, String collectionName, Class<T> resultType) {
+		return findAndReplace(query, replacement, options, entityType, collectionName, resultType, QueryResultConverter.entity());
+	}
+
+	public <S, T, R> @Nullable R findAndReplace(Query query, S replacement, FindAndReplaceOptions options,
+			Class<S> entityType, String collectionName, Class<T> resultType, QueryResultConverter<? super T, ? extends R> resultConverter) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(replacement, "Replacement must not be null");
@@ -1195,8 +1207,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
-		T saved = doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort,
-				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, projection);
+
+		R saved = doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort,
+				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, projection, resultConverter);
 
 		if (saved != null) {
 			maybeEmitEvent(new AfterSaveEvent<>(saved, mappedReplacement, collectionName));
@@ -2187,17 +2200,48 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@SuppressWarnings("NullAway")
 	protected <T> List<T> doFindAndDelete(String collectionName, Query query, Class<T> entityClass) {
+		return doFindAndDelete(collectionName, query, entityClass, QueryResultConverter.entity());
+	}
 
-		List<T> result = find(query, entityClass, collectionName);
+	protected <S,T> List<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass, QueryResultConverter<? super S, ? extends T> resultConverter) {
+
+		List<Object> ids = new ArrayList<>();
+
+
+
+//		QueryResultConverter<S,T> tmpConverter = new QueryResultConverter<S, S>() {
+//			@Override
+//			public S mapDocument(Document document, ConversionResultSupplier<S> reader) {
+//				ids.add(document.get("_id"));
+//				return reader.get();
+//			}
+//		}.andThen(resultConverter);
+
+//		DocumentCallback<T> callback = getResultReader(EntityProjection.nonProjecting(entityClass), collectionName, tmpConverter);
+
+		QueryResultConverterCallback callback = new QueryResultConverterCallback(resultConverter, new ProjectingReadCallback<S,S>(getConverter(), EntityProjection.nonProjecting(entityClass), collectionName)) {
+			@Override
+			public Object doWith(Document object) {
+				ids.add(object.get("_id"));
+				return super.doWith(object);
+			}
+		};
+
+		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(), entityClass,
+			new QueryCursorPreparer(query, entityClass), callback);
 
 		if (!CollectionUtils.isEmpty(result)) {
 
-			Query byIdInQuery = operations.getByIdInQuery(result);
+			Criteria[] criterias = ids.stream() //
+				.map(it -> Criteria.where("_id").is(it)) //
+				.toArray(Criteria[]::new);
+
+			Query removeQuery = new Query(criterias.length == 1 ? criterias[0] : new Criteria().orOperator(criterias));
 			if (query.hasReadPreference()) {
-				byIdInQuery.withReadPreference(query.getReadPreference());
+				removeQuery.withReadPreference(query.getReadPreference());
 			}
 
-			remove(byIdInQuery, entityClass, collectionName);
+			remove(removeQuery, entityClass, collectionName);
 		}
 
 		return result;
@@ -2819,9 +2863,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <T> @Nullable T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName,
-			Document query, @Nullable Document fields, @Nullable Document sort, Class<T> entityClass, UpdateDefinition update,
-			@Nullable FindAndModifyOptions options) {
+	protected <S, T> @Nullable T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName,
+			Document query, @Nullable Document fields, @Nullable Document sort, Class<S> entityClass, UpdateDefinition update,
+			@Nullable FindAndModifyOptions options, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		if (options == null) {
 			options = new FindAndModifyOptions();
@@ -2843,10 +2887,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedUpdate), collectionName));
 		}
 
+		DocumentCallback<T> callback = getResultReader(EntityProjection.nonProjecting(entityClass), collectionName, resultConverter);
+
 		return executeFindOneInternal(
 				new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
 						update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
-				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
+				callback, collectionName);
 	}
 
 	/**
@@ -2865,15 +2911,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 */
 	@Nullable
-	protected <T>  T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName,
+	protected <S, T>  T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName,
 			Document mappedQuery, Document mappedFields, Document mappedSort,
-			com.mongodb.client.model.@Nullable Collation collation, Class<?> entityType, Document replacement,
+			com.mongodb.client.model.@Nullable Collation collation, Class<S> entityType, Document replacement,
 			FindAndReplaceOptions options, Class<T> resultType) {
 
-		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort, collation,
-				entityType, replacement, options, projection);
+				entityType, replacement, options, projection, QueryResultConverter.entity());
 	}
 
 	CollectionPreparerDelegate createDelegate(Query query) {
@@ -2908,10 +2954,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @since 3.4
 	 */
 	@Nullable
-	private <T>  T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName,
+	private <S, T, R> R doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName,
 			Document mappedQuery, Document mappedFields, Document mappedSort,
-			com.mongodb.client.model.@Nullable Collation collation, Class<?> entityType, Document replacement,
-			FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
+			com.mongodb.client.model.@Nullable Collation collation, Class<T> entityType, Document replacement,
+			FindAndReplaceOptions options, EntityProjection<S, T> projection, QueryResultConverter<? super S, ? extends R> resultConverter) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER
@@ -2922,8 +2968,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
 		}
 
+		DocumentCallback<R> callback = getResultReader(projection, collectionName, resultConverter);
 		return executeFindOneInternal(new FindAndReplaceCallback(collectionPreparer, mappedQuery, mappedFields, mappedSort,
-				replacement, collation, options), new ProjectingReadCallback<>(mongoConverter, projection, collectionName),
+				replacement, collation, options),callback,
 				collectionName);
 	}
 
@@ -3421,7 +3468,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	static final class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
+	static class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
 
 		private final QueryResultConverter<? super T, ? extends R> converter;
 		private final DocumentCallback<T> delegate;
