@@ -15,6 +15,14 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.deleteExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateExecutionBlockBuilder;
+
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
@@ -28,7 +36,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
-import org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.*;
+import org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.QueryCodeBlockBuilder;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMetadata;
