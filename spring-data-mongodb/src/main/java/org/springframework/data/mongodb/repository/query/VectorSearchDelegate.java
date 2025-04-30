@@ -126,15 +126,9 @@ class VectorSearchDelegate {
 		Integer numCandidates = null;
 		Limit limit;
 		Class<?> outputType = typeToRead != null ? typeToRead : processor.getReturnedType().getReturnedType();
-
-		if (this.numCandidatesExpression != null) {
-			numCandidates = ((Number) evaluator.evaluate(this.numCandidatesExpression)).intValue();
-		} else if (this.numCandidates != null) {
-			numCandidates = this.numCandidates;
-		}
+		VectorSearchInput query = queryFactory.createQuery(accessor, codec, context);
 
 		if (this.limitExpression != null) {
-
 			Object value = evaluator.evaluate(this.limitExpression);
 			limit = value instanceof Limit l ? l : Limit.of(((Number) value).intValue());
 		} else if (this.limit.isLimited()) {
@@ -143,10 +137,20 @@ class VectorSearchDelegate {
 			limit = accessor.getLimit();
 		}
 
-		VectorSearchInput query = queryFactory.createQuery(accessor, codec, context);
-
 		if (limit.isLimited()) {
 			query.query().limit(limit);
+		}
+
+		if (this.numCandidatesExpression != null) {
+			numCandidates = ((Number) evaluator.evaluate(this.numCandidatesExpression)).intValue();
+		} else if (this.numCandidates != null) {
+			numCandidates = this.numCandidates;
+		} else if (query.query().isLimited() && searchType == VectorSearchOperation.SearchType.ANN) {
+
+			/*
+			MongoDB: We recommend that you specify a number at least 20 times higher than the number of documents to return (limit) to increase accuracy.
+			 */
+			numCandidates = query.query().getLimit() * 20;
 		}
 
 		return new QueryMetadata(query.path, "__score__", query.query, searchType, outputType, numCandidates,
@@ -335,13 +339,13 @@ class VectorSearchDelegate {
 	private class PartTreeQueryFactory implements VectorSearchQueryFactory {
 
 		private final String path;
-		private final PartTree partTree;
+		private final PartTree tree;
 
 		@SuppressWarnings("NullableProblems")
-		PartTreeQueryFactory(PartTree partTree, MappingContext<?, MongoPersistentProperty> context) {
+		PartTreeQueryFactory(PartTree tree, MappingContext<?, MongoPersistentProperty> context) {
 
 			String path = null;
-			for (PartTree.OrPart part : partTree) {
+			for (PartTree.OrPart part : tree) {
 				for (Part p : part) {
 					if (p.getType() == Part.Type.SIMPLE_PROPERTY || p.getType() == Part.Type.NEAR
 							|| p.getType() == Part.Type.WITHIN || p.getType() == Part.Type.BETWEEN) {
@@ -362,16 +366,20 @@ class VectorSearchDelegate {
 			}
 
 			this.path = path;
-			this.partTree = partTree;
+			this.tree = tree;
 		}
 
 		public VectorSearchInput createQuery(MongoParameterAccessor parameterAccessor, ParameterBindingDocumentCodec codec,
 				ParameterBindingContext context) {
 
-			MongoQueryCreator creator = new MongoQueryCreator(partTree, parameterAccessor, converter.getMappingContext(),
+			MongoQueryCreator creator = new MongoQueryCreator(tree, parameterAccessor, converter.getMappingContext(),
 					false, true);
 
 			Query query = creator.createQuery(parameterAccessor.getSort());
+
+			if (tree.isLimiting()) {
+				query.limit(tree.getMaxResults());
+			}
 
 			return new VectorSearchInput(path, query);
 		}
