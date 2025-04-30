@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Contract;
 
 import com.mongodb.client.result.DeleteResult;
 
@@ -54,11 +55,36 @@ public interface ExecutableRemoveOperation {
 	 */
 	<T> ExecutableRemove<T> remove(Class<T> domainType);
 
+	interface TerminatingResults<T> {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link ExecutableFindOperation.TerminatingResults}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter);
+
+		/**
+		 * Remove and return all matching documents. <br/>
+		 * <strong>NOTE:</strong> The entire list of documents will be fetched before sending the actual delete commands.
+		 * Also, {@link org.springframework.context.ApplicationEvent}s will be published for each and every delete
+		 * operation.
+		 *
+		 * @return empty {@link List} if no match found. Never {@literal null}.
+		 */
+		List<T> findAndRemove();
+	}
+
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	interface TerminatingRemove<T> {
+	interface TerminatingRemove<T> extends TerminatingResults<T> {
 
 		/**
 		 * Remove all documents matching.
@@ -73,16 +99,6 @@ public interface ExecutableRemoveOperation {
 		 * @return the {@link DeleteResult}. Never {@literal null}.
 		 */
 		DeleteResult one();
-
-		/**
-		 * Remove and return all matching documents. <br/>
-		 * <strong>NOTE:</strong> The entire list of documents will be fetched before sending the actual delete commands.
-		 * Also, {@link org.springframework.context.ApplicationEvent}s will be published for each and every delete
-		 * operation.
-		 *
-		 * @return empty {@link List} if no match found. Never {@literal null}.
-		 */
-		List<T> findAndRemove();
 	}
 
 	/**
@@ -104,7 +120,6 @@ public interface ExecutableRemoveOperation {
 		 */
 		RemoveWithQuery<T> inCollection(String collection);
 	}
-
 
 	/**
 	 * @author Christoph Strobl

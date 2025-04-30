@@ -108,6 +108,15 @@ class ExecutableRemoveOperationSupportTests {
 		assertThat(result).containsExactly(han);
 	}
 
+	@Test // GH-0
+	void removeAndReturnAllMatchingWithResultConverter() {
+
+		// broken generics / darn
+//		List<Person> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).map((raw, )).findAndRemove();
+
+//		assertThat(result).containsExactly(han);
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
 

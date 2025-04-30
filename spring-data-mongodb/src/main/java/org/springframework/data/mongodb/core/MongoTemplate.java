@@ -2199,8 +2199,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@SuppressWarnings("NullAway")
 	protected <T> List<T> doFindAndDelete(String collectionName, Query query, Class<T> entityClass) {
+		return doFindAndDelete(collectionName, query, entityClass, QueryResultConverter.entity());
+	}
 
-		List<T> result = find(query, entityClass, collectionName);
+	protected <S,T> List<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass, QueryResultConverter<? super S, ? extends T> resultConverter) {
+
+		DocumentCallback<T> callback = getResultReader(EntityProjection.nonProjecting(entityClass), collectionName, resultConverter);
+		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(), entityClass,
+			new QueryCursorPreparer(query, entityClass), callback);
 
 		if (!CollectionUtils.isEmpty(result)) {
 
@@ -2211,7 +2217,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			remove(byIdInQuery, entityClass, collectionName);
 		}
-
 		return result;
 	}
 
