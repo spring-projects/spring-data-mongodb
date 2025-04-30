@@ -47,7 +47,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ExecutableUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType);
+		return new ExecutableUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType, QueryResultConverter.entity());
 	}
 
 	/**
@@ -55,23 +55,25 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 * @since 2.0
 	 */
 	@SuppressWarnings("rawtypes")
-	static class ExecutableUpdateSupport<T>
+	static class ExecutableUpdateSupport<S, T>
 			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
 			FindAndReplaceWithOptions<T>, TerminatingFindAndReplace<T>, FindAndReplaceWithProjection<T> {
 
 		private final MongoTemplate template;
-		private final Class domainType;
+		private final Class<?> domainType;
 		private final Query query;
 		@Nullable private final UpdateDefinition update;
 		@Nullable private final String collection;
 		@Nullable private final FindAndModifyOptions findAndModifyOptions;
 		@Nullable private final FindAndReplaceOptions findAndReplaceOptions;
 		@Nullable private final Object replacement;
-		private final Class<T> targetType;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
+		private final Class<S> targetType;
 
-		ExecutableUpdateSupport(MongoTemplate template, Class domainType, Query query, @Nullable UpdateDefinition update,
+		ExecutableUpdateSupport(MongoTemplate template, Class<?> domainType, Query query, @Nullable UpdateDefinition update,
 				@Nullable String collection, @Nullable FindAndModifyOptions findAndModifyOptions,
-				@Nullable FindAndReplaceOptions findAndReplaceOptions, @Nullable Object replacement, Class<T> targetType) {
+				@Nullable FindAndReplaceOptions findAndReplaceOptions, @Nullable Object replacement, Class<S> targetType,
+			QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -82,6 +84,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			this.findAndReplaceOptions = findAndReplaceOptions;
 			this.replacement = replacement;
 			this.targetType = targetType;
+			this.resultConverter = resultConverter;
 		}
 
 		@Override
@@ -91,7 +94,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.notNull(update, "Update must not be null");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -101,7 +104,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -111,7 +114,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.notNull(options, "Options must not be null");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, options,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -121,7 +124,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.notNull(replacement, "Replacement must not be null");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -131,7 +134,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.notNull(options, "Options must not be null");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					options, replacement, targetType);
+					options, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -143,7 +146,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 				target.upsert();
 			}
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					target, replacement, targetType);
+					target, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -153,7 +156,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.notNull(query, "Query must not be null");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -163,7 +166,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, resultType);
+					findAndReplaceOptions, replacement, resultType, QueryResultConverter.entity());
 		}
 
 		@Override
@@ -182,12 +185,25 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
+		public <R> TerminatingFindAndModify<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+				findAndReplaceOptions, replacement, targetType, this.resultConverter.andThen(converter));
+		}
+
+		@Override
+		public <R> TerminatingFindAndReplace<R> mapResult(QueryResultConverter<? super T, ? extends R> converter) {
+			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+				findAndReplaceOptions, replacement, targetType, this.resultConverter.andThen(converter));
+		}
+
+		@Override
 		@SuppressWarnings("NullAway")
 		public @Nullable T findAndModifyValue() {
 
 			return template.findAndModify(query, update,
 					findAndModifyOptions != null ? findAndModifyOptions : new FindAndModifyOptions(), targetType,
-					getCollectionName());
+					getCollectionName(), resultConverter);
 		}
 
 		@Override
@@ -195,8 +211,8 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		public @Nullable T findAndReplaceValue() {
 
 			return (T) template.findAndReplace(query, replacement,
-					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.empty(), domainType,
-					getCollectionName(), targetType);
+					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.empty(), (Class) domainType,
+					getCollectionName(), targetType, (QueryResultConverter) resultConverter);
 		}
 
 		@Override

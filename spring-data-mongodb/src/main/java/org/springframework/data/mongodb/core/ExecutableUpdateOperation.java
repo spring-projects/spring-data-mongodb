@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingResults;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
@@ -25,6 +26,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 import com.mongodb.client.result.UpdateResult;
+import org.springframework.lang.Contract;
 
 /**
  * {@link ExecutableUpdateOperation} allows creation and execution of MongoDB update / findAndModify / findAndReplace
@@ -68,6 +70,19 @@ public interface ExecutableUpdateOperation {
 	 * @since 2.0
 	 */
 	interface TerminatingFindAndModify<T> {
+
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFindAndModify}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingFindAndModify<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Find, modify and return the first matching document.
@@ -130,6 +145,18 @@ public interface ExecutableUpdateOperation {
 		 */
 		@Nullable
 		T findAndReplaceValue();
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFindAndModify}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since x.y
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingFindAndReplace<R> mapResult(QueryResultConverter<? super T, ? extends R> converter);
 	}
 
 	/**
