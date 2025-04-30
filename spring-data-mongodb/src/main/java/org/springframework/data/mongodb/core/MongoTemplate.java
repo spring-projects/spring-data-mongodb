@@ -122,6 +122,7 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -2204,19 +2205,39 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <S,T> List<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
-		DocumentCallback<T> callback = getResultReader(EntityProjection.nonProjecting(entityClass), collectionName, resultConverter);
+		List<Object> ids = new ArrayList<>();
+
+
+
+//		QueryResultConverter<S,T> tmpConverter = new QueryResultConverter<S, S>() {
+//			@Override
+//			public S mapDocument(Document document, ConversionResultSupplier<S> reader) {
+//				ids.add(document.get("_id"));
+//				return reader.get();
+//			}
+//		}.andThen(resultConverter);
+
+//		DocumentCallback<T> callback = getResultReader(EntityProjection.nonProjecting(entityClass), collectionName, tmpConverter);
+
+		QueryResultConverterCallback callback = new QueryResultConverterCallback(resultConverter, new ProjectingReadCallback<S,S>(getConverter(), EntityProjection.nonProjecting(entityClass), collectionName)) {
+			@Override
+			public Object doWith(Document object) {
+				ids.add(object.get("_id"));
+				return super.doWith(object);
+			}
+		};
+
 		List<T> result = doFind(collectionName, createDelegate(query), query.getQueryObject(), query.getFieldsObject(), entityClass,
 			new QueryCursorPreparer(query, entityClass), callback);
 
 		if (!CollectionUtils.isEmpty(result)) {
 
-			Query byIdInQuery = operations.getByIdInQuery(result);
-			if (query.hasReadPreference()) {
-				byIdInQuery.withReadPreference(query.getReadPreference());
-			}
-
-			remove(byIdInQuery, entityClass, collectionName);
+			Criteria[] criterias = ids.stream() //
+				.map(it -> Criteria.where("_id").in(it)) //
+				.toArray(Criteria[]::new);
+			remove(new Query(criterias.length == 1 ? criterias[0] : new Criteria().orOperator(criterias)), entityClass, collectionName);
 		}
+
 		return result;
 	}
 
@@ -3441,7 +3462,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	static final class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
+	static class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
 
 		private final QueryResultConverter<? super T, ? extends R> converter;
 		private final DocumentCallback<T> delegate;
