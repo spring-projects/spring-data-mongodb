@@ -33,6 +33,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Kim Sumin
  */
 class AddFieldsOperationUnitTests {
 
@@ -126,6 +127,22 @@ class AddFieldsOperationUnitTests {
 		assertThat(fields.getField("computed")).isNotNull();
 		assertThat(fields.getField("does-not-exist")).isNull();
 	}
+
+	@Test // DATAMONGO-4933
+	void rendersStringValueAsFieldReferenceCorrectly() {
+
+		AddFieldsOperation operation = AddFieldsOperation.builder().addField("name").withValueOf("value").build();
+
+		assertThat(operation.toPipelineStages(contextFor(Scores.class)))
+				.containsExactly(Document.parse("{\"$addFields\" : {\"name\":\"$value\"}}"));
+
+		AddFieldsOperation mappedOperation = AddFieldsOperation.builder().addField("totalHomework").withValueOf("homework")
+				.build();
+
+		assertThat(mappedOperation.toPipelineStages(contextFor(ScoresWithMappedField.class)))
+				.containsExactly(Document.parse("{\"$addFields\" : {\"totalHomework\":\"$home_work\"}}"));
+	}
+
 
 	private static AggregationOperationContext contextFor(@Nullable Class<?> type) {
 

@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Kim Sumin
  * @since 3.0
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/addFields/">MongoDB Aggregation
  *      Framework: $addFields</a>
@@ -148,7 +149,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 				@Override
 				public AddFieldsOperationBuilder withValueOf(Object value) {
 
-					valueMap.put(field, value instanceof String stringValue ? Fields.fields(stringValue) : value);
+					valueMap.put(field, value instanceof String stringValue ? Fields.field(stringValue) : value);
 					return AddFieldsOperationBuilder.this;
 				}
 
