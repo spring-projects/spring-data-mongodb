@@ -128,7 +128,7 @@ class AddFieldsOperationUnitTests {
 		assertThat(fields.getField("does-not-exist")).isNull();
 	}
 
-	@Test // DATAMONGO-4933
+	@Test // GH-4933
 	void rendersStringValueAsFieldReferenceCorrectly() {
 
 		AddFieldsOperation operation = AddFieldsOperation.builder().addField("name").withValueOf("value").build();
@@ -142,7 +142,6 @@ class AddFieldsOperationUnitTests {
 		assertThat(mappedOperation.toPipelineStages(contextFor(ScoresWithMappedField.class)))
 				.containsExactly(Document.parse("{\"$addFields\" : {\"totalHomework\":\"$home_work\"}}"));
 	}
-
 
 	private static AggregationOperationContext contextFor(@Nullable Class<?> type) {
 
