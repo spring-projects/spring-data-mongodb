@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.domain.Limit;
@@ -107,7 +106,6 @@ class VectorSearchDelegateUnitTests {
 		return new MongoQueryMethod(method, metadata, new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
 	}
 
-	@NotNull
 	private static MongoParametersParameterAccessor getAccessor(MongoQueryMethod queryMethod, Object... values) {
 		return new MongoParametersParameterAccessor(queryMethod, values);
 	}

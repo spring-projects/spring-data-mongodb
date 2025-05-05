@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Range;
@@ -46,7 +47,6 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -145,7 +145,8 @@ class VectorSearchDelegate {
 			numCandidates = ((Number) evaluator.evaluate(this.numCandidatesExpression)).intValue();
 		} else if (this.numCandidates != null) {
 			numCandidates = this.numCandidates;
-		} else if (query.query().isLimited() && searchType == VectorSearchOperation.SearchType.ANN) {
+		} else if (query.query().isLimited() && (searchType == VectorSearchOperation.SearchType.ANN
+				|| searchType == VectorSearchOperation.SearchType.DEFAULT)) {
 
 			/*
 			MongoDB: We recommend that you specify a number at least 20 times higher than the number of documents to return (limit) to increase accuracy.
@@ -195,7 +196,7 @@ class VectorSearchDelegate {
 	 * @param scoringFunction
 	 */
 	public record QueryMetadata(String path, String scoreField, Query query, VectorSearchOperation.SearchType searchType,
-			Class<?> outputType, @org.jspecify.annotations.Nullable Integer numCandidates, ScoringFunction scoringFunction) {
+			Class<?> outputType, @Nullable Integer numCandidates, ScoringFunction scoringFunction) {
 
 		/**
 		 * Create the Aggregation Pipeline.
@@ -210,12 +211,10 @@ class VectorSearchDelegate {
 			Vector vector = accessor.getVector();
 			Score score = accessor.getScore();
 			Range<Score> distance = accessor.getScoreRange();
-			int limit;
+			Limit limit = Limit.unlimited();
 
 			if (query.isLimited()) {
-				limit = query.getLimit();
-			} else {
-				limit = Math.max(1, numCandidates() != null ? numCandidates() / 20 : 1);
+				limit = Limit.of(query.getLimit());
 			}
 
 			List<AggregationOperation> stages = new ArrayList<>();

@@ -53,11 +53,13 @@ import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation;
 public @interface VectorSearch {
 
 	/**
-	 * Configuration whether to use ANN or ENN for the search. ANN is the default.
+	 * Configuration whether to use
+	 * {@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#ANN} or
+	 * {@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#ENN} for the search.
 	 *
 	 * @return the search type to use.
 	 */
-	VectorSearchOperation.SearchType searchType() default VectorSearchOperation.SearchType.ENN;
+	VectorSearchOperation.SearchType searchType() default VectorSearchOperation.SearchType.DEFAULT;
 
 	/**
 	 * Name of the Atlas Vector Search index to use. Atlas Vector Search doesn't return results if you misspell the index
@@ -98,7 +100,7 @@ public @interface VectorSearch {
 	 * specify {@link #numCandidates}. Limit accepts Value Expressions. A Vector Search method cannot define both,
 	 * {@code limit()} and a {@link org.springframework.data.domain.Limit} parameter. Supports Value Expressions.
 	 *
-	 * @return number of documents to return in the results
+	 * @return number of documents to return in the results.
 	 */
 	String limit() default "";
 
@@ -106,13 +108,15 @@ public @interface VectorSearch {
 	 * Number of nearest neighbors to use during the search. Value must be less than or equal to ({@code <=})
 	 * {@code 10000}. You can't specify a number less than the {@link #limit() number of documents to return}. We
 	 * recommend that you specify a number at least {@code 20} times higher than the {@link #limit() number of documents
-	 * to return} to increase accuracy. This over-request pattern is the recommended way to trade off latency and recall
-	 * in your ANN searches, and we recommend tuning this parameter based on your specific dataset size and query
-	 * requirements. Required if the query uses
-	 * {@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#ANN}. Supports Value
-	 * Expressions.
+	 * to return} to increase accuracy.
+	 * <p>
+	 * This over-request pattern is the recommended way to trade off latency and recall in your ANN searches, and we
+	 * recommend tuning this parameter based on your specific dataset size and query requirements. Required if the query
+	 * uses
+	 * {@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#ANN}/{@link org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType#DEFAULT}.
+	 * Supports Value Expressions.
 	 *
-	 * @return number of documents to return in the results
+	 * @return number of nearest neighbors to use during the search.
 	 */
 	String numCandidates() default "";
 
