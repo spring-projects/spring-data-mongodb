@@ -172,5 +172,18 @@
 			<url>https://repo.spring.io/milestone</url>
 		</repository>
 	</repositories>
-
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-maven-plugin</artifactId>
+				<configuration>
+					<args>
+						<!-- Free compiler argument that allows @OnlyInputTypes usage -->
+						<arg>-Xallow-kotlin-package</arg>
+					</args>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
