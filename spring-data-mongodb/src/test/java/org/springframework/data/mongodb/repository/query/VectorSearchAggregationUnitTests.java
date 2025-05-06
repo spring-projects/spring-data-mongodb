@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.VectorSearch;
+import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.QueryContainer;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.CrudRepository;
@@ -68,7 +69,7 @@ class VectorSearchAggregationUnitTests {
 		VectorSearchAggregation aggregation = aggregation(SampleRepository.class, "searchByCountryAndEmbeddingNear",
 				String.class, Vector.class, Score.class, Limit.class);
 
-		VectorSearchDelegate.QueryMetadata query = aggregation.createVectorSearchQuery(
+		QueryContainer query = aggregation.createVectorSearchQuery(
 				aggregation.getQueryMethod().getResultProcessor(),
 				new MongoParametersParameterAccessor(aggregation.getQueryMethod(),
 						new Object[] { "de", Vector.of(1f), Score.of(1), Limit.unlimited() }),

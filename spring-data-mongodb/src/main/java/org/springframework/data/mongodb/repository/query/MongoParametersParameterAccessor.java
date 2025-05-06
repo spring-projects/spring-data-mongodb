@@ -61,14 +61,13 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	public Range<Score> getScoreRange() {
 
 		MongoParameters mongoParameters = method.getParameters();
-		int rangeIndex = mongoParameters.getScoreRangeIndex();
 
-		if (rangeIndex != -1) {
-			return getValue(rangeIndex);
+		if (mongoParameters.hasScoreRangeParameter()) {
+			return getValue(mongoParameters.getScoreRangeIndex());
 		}
 
-		int scoreIndex = mongoParameters.getScoreIndex();
-		Bound<Score> maxDistance = scoreIndex == -1 ? Bound.unbounded() : Bound.inclusive((Score) getScore());
+		Score score = getScore();
+		Bound<Score> maxDistance = score != null ? Bound.inclusive(score) : Bound.unbounded();
 
 		return Range.of(Bound.unbounded(), maxDistance);
 	}

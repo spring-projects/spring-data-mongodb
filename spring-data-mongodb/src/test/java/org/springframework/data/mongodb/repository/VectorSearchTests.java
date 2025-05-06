@@ -81,16 +81,15 @@ public class VectorSearchTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			atlasLocal.start();
 			return MongoClients.create(atlasLocal.getConnectionString());
 		}
 	}
 
 	@BeforeAll
 	static void beforeAll() throws InterruptedException {
+
 		atlasLocal.start();
 
-		System.out.println(atlasLocal.getConnectionString());
 		client = MongoClients.create(atlasLocal.getConnectionString());
 		template = new MongoTestTemplate(client, "vector-search-tests");
 

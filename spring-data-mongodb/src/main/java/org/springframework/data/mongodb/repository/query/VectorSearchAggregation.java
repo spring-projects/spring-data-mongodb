@@ -15,16 +15,17 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.VectorSearch;
+import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.QueryContainer;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link AbstractMongoQuery} implementation to run a {@link VectorSearchAggregation}. The pre-filter is either derived
@@ -67,15 +68,15 @@ public class VectorSearchAggregation extends AbstractMongoQuery {
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {
 
-		VectorSearchDelegate.QueryMetadata query = createVectorSearchQuery(processor, accessor, typeToRead);
+		QueryContainer query = createVectorSearchQuery(processor, accessor, typeToRead);
 
 		MongoQueryExecution.VectorSearchExecution execution = new MongoQueryExecution.VectorSearchExecution(mongoOperations,
-				method, collectionEntity.getCollection(), query, accessor);
+				method, collectionEntity.getCollection(), query);
 
 		return execution.execute(query.query());
 	}
 
-	VectorSearchDelegate.QueryMetadata createVectorSearchQuery(ResultProcessor processor, MongoParameterAccessor accessor,
+	QueryContainer createVectorSearchQuery(ResultProcessor processor, MongoParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {
 
 		ValueExpressionEvaluator evaluator = getExpressionEvaluatorFor(accessor);
