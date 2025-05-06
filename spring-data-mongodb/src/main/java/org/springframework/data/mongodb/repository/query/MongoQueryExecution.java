@@ -15,18 +15,16 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.ScoringFunction;
 import org.springframework.data.domain.SearchResult;
 import org.springframework.data.domain.SearchResults;
 import org.springframework.data.domain.Similarity;
@@ -37,6 +35,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ExecutableAggregationOperation.TerminatingAggregation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -45,12 +44,13 @@ import org.springframework.data.mongodb.core.ExecutableRemoveOperation.Executabl
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.QueryContainer;
 import org.springframework.data.mongodb.repository.util.SliceUtils;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -186,7 +186,7 @@ public interface MongoQueryExecution {
 			return isListOfGeoResult(method.getReturnType()) ? results.getContent() : results;
 		}
 
-		@SuppressWarnings({"unchecked","NullAway"})
+		@SuppressWarnings({ "unchecked", "NullAway" })
 		GeoResults<Object> doExecuteQuery(Query query) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
@@ -225,52 +225,53 @@ public interface MongoQueryExecution {
 	 * {@link MongoQueryExecution} to execute vector search.
 	 *
 	 * @author Mark Paluch
+	 * @author Chistoph Strobl
 	 * @since 5.0
 	 */
 	class VectorSearchExecution implements MongoQueryExecution {
 
 		private final MongoOperations operations;
-		private final MongoQueryMethod method;
+		private final TypeInformation<?> returnType;
 		private final String collectionName;
-		private final VectorSearchDelegate.QueryMetadata queryMetadata;
-		private final List<AggregationOperation> pipeline;
+		private final Class<?> targetType;
+		private final ScoringFunction scoringFunction;
+		private final AggregationPipeline pipeline;
 
-		public VectorSearchExecution(MongoOperations operations, MongoQueryMethod method, String collectionName,
-				VectorSearchDelegate.QueryMetadata queryMetadata, MongoParameterAccessor accessor) {
+		VectorSearchExecution(MongoOperations operations, MongoQueryMethod method, String collectionName,
+				QueryContainer queryContainer) {
+			this(operations, queryContainer.outputType(), collectionName, method.getReturnType(), queryContainer.pipeline(),
+					queryContainer.scoringFunction());
+		}
+
+		public VectorSearchExecution(MongoOperations operations, Class<?> targetType, String collectionName,
+				TypeInformation<?> returnType, AggregationPipeline pipeline, ScoringFunction scoringFunction) {
 
 			this.operations = operations;
+			this.returnType = returnType;
 			this.collectionName = collectionName;
-			this.queryMetadata = queryMetadata;
-			this.method = method;
-			this.pipeline = queryMetadata.getAggregationPipeline(method, accessor);
+			this.targetType = targetType;
+			this.scoringFunction = scoringFunction;
+			this.pipeline = pipeline;
 		}
 
 		@Override
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Object execute(Query query) {
 
-			AggregationResults<?> aggregated = operations.aggregate(
-					TypedAggregation.newAggregation(queryMetadata.outputType(), pipeline), collectionName,
-					queryMetadata.outputType());
+			TerminatingAggregation<?> executableAggregation = operations.aggregateAndReturn(targetType)
+					.inCollection(collectionName).by(TypedAggregation.newAggregation(targetType, pipeline.getOperations()));
 
-			List<?> mappedResults = aggregated.getMappedResults();
-
-			if (isSearchResult(method.getReturnType())) {
-
-				List<org.bson.Document> rawResults = aggregated.getRawResults().getList("results", org.bson.Document.class);
-				List<SearchResult<Object>> result = new ArrayList<>(mappedResults.size());
-
-				for (int i = 0; i < mappedResults.size(); i++) {
-					Document document = rawResults.get(i);
-					SearchResult<Object> searchResult = new SearchResult<>(mappedResults.get(i),
-							Similarity.raw(document.getDouble("__score__"), queryMetadata.scoringFunction()));
-
-					result.add(searchResult);
-				}
-
-				return isListOfSearchResult(method.getReturnType()) ? result : new SearchResults<>(result);
+			if (!isSearchResult(returnType)) {
+				return executableAggregation.all().getMappedResults();
 			}
 
-			return mappedResults;
+			AggregationResults<? extends SearchResult<?>> result = executableAggregation
+					.map((raw, container) -> new SearchResult<>(container.get(),
+							Similarity.raw(raw.getDouble("__score__"), scoringFunction)))
+					.all();
+
+			return isListOfSearchResult(returnType) ? result.getMappedResults()
+					: new SearchResults(result.getMappedResults());
 		}
 
 		private static boolean isListOfSearchResult(TypeInformation<?> returnType) {

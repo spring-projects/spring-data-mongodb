@@ -77,7 +77,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public Vector getVector() {
+	public @Nullable Vector getVector() {
 		return delegate.getVector();
 	}
 
@@ -104,12 +104,12 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public @org.jspecify.annotations.Nullable Score getScore() {
+	public @Nullable Score getScore() {
 		return delegate.getScore();
 	}
 
 	@Override
-	public @org.jspecify.annotations.Nullable Range<Score> getScoreRange() {
+	public @Nullable Range<Score> getScoreRange() {
 		return delegate.getScoreRange();
 	}
 

@@ -19,13 +19,13 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
-
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.VectorSearch;
+import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.QueryContainer;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
@@ -84,11 +84,11 @@ public class ReactiveVectorSearchAggregation extends AbstractReactiveMongoQuery 
 
 				ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue,
 						expressionEvaluator);
-				VectorSearchDelegate.QueryMetadata query = delegate.createQuery(expressionEvaluator, processor, accessor,
-						typeToRead, codec, bindingContext);
+				QueryContainer query = delegate.createQuery(expressionEvaluator, processor, accessor, typeToRead, codec,
+						bindingContext);
 
 				ReactiveMongoQueryExecution.VectorSearchExecution execution = new ReactiveMongoQueryExecution.VectorSearchExecution(
-						mongoOperations, method, query, accessor);
+						mongoOperations, method, query);
 
 				return execution.execute(query.query(), Document.class, collectionEntity.getCollection());
 			});

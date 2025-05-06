@@ -18,12 +18,9 @@ package org.springframework.data.mongodb.repository.query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.DtoInstantiatingConverter;
 import org.springframework.data.domain.Pageable;
@@ -36,11 +33,12 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpdate;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.query.VectorSearchDelegate.QueryContainer;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.util.ReactiveWrappers;
@@ -134,24 +132,24 @@ interface ReactiveMongoQueryExecution {
 	class VectorSearchExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveMongoOperations operations;
-		private final VectorSearchDelegate.QueryMetadata queryMetadata;
-		private final List<AggregationOperation> pipeline;
+		private final QueryContainer queryMetadata;
+		private final AggregationPipeline pipeline;
 		private final boolean returnSearchResult;
 
-		public VectorSearchExecution(ReactiveMongoOperations operations, MongoQueryMethod method,
-				VectorSearchDelegate.QueryMetadata queryMetadata, MongoParameterAccessor accessor) {
+		VectorSearchExecution(ReactiveMongoOperations operations, MongoQueryMethod method, QueryContainer queryMetadata) {
 
 			this.operations = operations;
 			this.queryMetadata = queryMetadata;
-			this.pipeline = queryMetadata.getAggregationPipeline(method, accessor);
+			this.pipeline = queryMetadata.pipeline();
 			this.returnSearchResult = isSearchResult(method.getReturnType());
 		}
 
 		@Override
 		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
-			Flux<Document> aggregate = operations
-					.aggregate(TypedAggregation.newAggregation(queryMetadata.outputType(), pipeline), collection, Document.class);
+			Flux<Document> aggregate = operations.aggregate(
+					TypedAggregation.newAggregation(queryMetadata.outputType(), pipeline.getOperations()), collection,
+					Document.class);
 
 			return aggregate.map(document -> {
 

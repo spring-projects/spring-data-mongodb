@@ -6,13 +6,13 @@ Annotated search methods use the `@VectorSearch` annotation to define parameters
 ----
 interface CommentRepository extends Repository<Comment, String> {
 
-  @VectorSearch(indexName = "cos-index", filter = "{country: ?0}")
-  SearchResults<WithVector> searchAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding,
+  @VectorSearch(indexName = "cos-index", filter = "{country: ?0}", limit="100", numCandidates="2000")
+  SearchResults<Comment> searchAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding,
       Score distance);
 
-  @VectorSearch(indexName = "my-index", filter = "{country: ?0}", numCandidates = "#{#limit * 20}",
+  @VectorSearch(indexName = "my-index", filter = "{country: ?0}", limit="?3", numCandidates = "#{#limit * 20}",
 				searchType = VectorSearchOperation.SearchType.ANN)
-  List<WithVector> findAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding, Score distance, int limit);
+  List<Comment> findAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding, Score distance, int limit);
 }
 ----
 ====

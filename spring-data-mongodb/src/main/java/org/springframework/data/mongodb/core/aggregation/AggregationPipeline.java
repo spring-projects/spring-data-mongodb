@@ -22,8 +22,10 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 /**
  * The {@link AggregationPipeline} holds the collection of {@link AggregationOperation aggregation stages}.
@@ -82,6 +84,14 @@ public class AggregationPipeline {
 		return Collections.unmodifiableList(pipeline);
 	}
 
+	public @Nullable AggregationOperation firstOperation() {
+		return CollectionUtils.firstElement(pipeline);
+	}
+
+	public @Nullable AggregationOperation lastOperation() {
+		return CollectionUtils.lastElement(pipeline);
+	}
+
 	List<Document> toDocuments(AggregationOperationContext context) {
 
 		verify();
@@ -97,8 +107,8 @@ public class AggregationPipeline {
 			return false;
 		}
 
-		AggregationOperation operation = pipeline.get(pipeline.size() - 1);
-		return isOut(operation) || isMerge(operation);
+		AggregationOperation operation = lastOperation();
+		return operation != null && (isOut(operation) || isMerge(operation));
 	}
 
 	void verify() {

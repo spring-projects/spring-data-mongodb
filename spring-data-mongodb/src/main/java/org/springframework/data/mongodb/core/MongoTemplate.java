@@ -486,7 +486,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doStream(query, entityType, collectionName, returnType, QueryResultConverter.entity());
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions", "NullAway"})
 	<T, R> Stream<R> doStream(Query query, Class<?> entityType, String collectionName, Class<T> returnType,
 			QueryResultConverter<? super T, ? extends R> resultConverter) {
 
@@ -1086,34 +1086,29 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return new GeoResults<>(result, avgDistance);
 	}
 
-	@Nullable
-	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass,
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass,
 			String collectionName) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, collectionName);
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 			Class<T> entityClass) {
 		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+	public <T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 		Class<T> entityClass, String collectionName) {
 		return findAndModify(query, update, options, entityClass, collectionName, QueryResultConverter.entity());
 	}
 
-	<S, T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+	<S, T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 			Class<S> entityClass, String collectionName, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -1185,15 +1180,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
 	// collection in the database.
 
-	@Nullable
 	@Override
-	public <T> T findAndRemove(Query query, Class<T> entityClass) {
+	public <T> @Nullable T findAndRemove(Query query, Class<T> entityClass) {
 		return findAndRemove(query, entityClass, getCollectionName(entityClass));
 	}
 
-	@Nullable
 	@Override
-	public <T> T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
+	public <T> @Nullable T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(entityClass, "EntityClass must not be null");
@@ -2161,11 +2154,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param entityClass
 	 * @return
 	 */
-	@SuppressWarnings("NullAway")
 	protected <T> List<T> doFindAndDelete(String collectionName, Query query, Class<T> entityClass) {
 		return doFindAndDelete(collectionName, query, entityClass, QueryResultConverter.entity());
 	}
 
+	@SuppressWarnings("NullAway")
 	<S, T> List<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass,
 			QueryResultConverter<? super S, ? extends T> resultConverter) {
 
@@ -2229,7 +2222,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doAggregate(aggregation, collectionName, outputType, QueryResultConverter.entity(), context);
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	@SuppressWarnings({"ConstantConditions", "NullAway"})
 	<T, O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<T> outputType,
 			QueryResultConverter<? super T, ? extends O> resultConverter, AggregationOperationContext context) {
 
