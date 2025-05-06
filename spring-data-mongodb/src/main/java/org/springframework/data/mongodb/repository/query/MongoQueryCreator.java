@@ -15,7 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Criteria.Placeholder;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -118,8 +118,9 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			return new Criteria();
 		}
 
-		if (isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN))) {
-			return null;
+		if (isPartOfSearchQuery(part)) {
+			skip(part, iterator);
+			return new Criteria();
 		}
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
@@ -135,7 +136,8 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			return create(part, iterator);
 		}
 
-		if (isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN))) {
+		if (isPartOfSearchQuery(part)) {
+			skip(part, iterator);
 			return base;
 		}
 
@@ -176,15 +178,6 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	@SuppressWarnings("NullAway")
 	private Criteria from(Part part, MongoPersistentProperty property, Criteria criteria, Iterator<Object> parameters) {
 
-		if (isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN))) {
-
-			int numberOfArguments = part.getType().getNumberOfArguments();
-			for (int i = 0; i < numberOfArguments; i++) {
-				parameters.next();
-			}
-			return null;
-		}
-
 		Type type = part.getType();
 
 		switch (type) {
@@ -206,13 +199,13 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.is(null);
 			case NOT_IN:
 				Object ninValue = parameters.next();
-				if(ninValue instanceof Placeholder) {
+				if (ninValue instanceof Placeholder) {
 					return criteria.raw("$nin", ninValue);
 				}
 				return criteria.nin(valueAsList(ninValue, part));
 			case IN:
 				Object inValue = parameters.next();
-				if(inValue instanceof Placeholder) {
+				if (inValue instanceof Placeholder) {
 					return criteria.raw("$in", inValue);
 				}
 				return criteria.in(valueAsList(inValue, part));
@@ -231,7 +224,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 			case EXISTS:
 				Object next = parameters.next();
-				if(next instanceof Placeholder placeholder) {
+				if (next instanceof Placeholder placeholder) {
 					return criteria.raw("$exists", placeholder);
 				} else {
 					return criteria.exists((Boolean) next);
@@ -355,7 +348,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		if (property.isCollectionLike()) {
 			Object next = parameters.next();
-			if(next instanceof Placeholder) {
+			if (next instanceof Placeholder) {
 				return criteria.raw("$in", next);
 			}
 			return criteria.in(valueAsList(next, part));
@@ -433,8 +426,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			streamable = streamable.map(it -> {
 				if (it instanceof String sv) {
 
-					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, matchMode),
-						regexOptions);
+					return new BsonRegularExpression(MongoRegexCreator.INSTANCE.toRegularExpression(sv, matchMode), regexOptions);
 				}
 				return it;
 			});
@@ -468,10 +460,23 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return false;
 	}
 
+	private boolean isPartOfSearchQuery(Part part) {
+		return isSearchQuery && (part.getType().equals(Type.NEAR) || part.getType().equals(Type.WITHIN));
+	}
+
+	private static void skip(Part part, Iterator<?> parameters) {
+
+		int total = part.getNumberOfArguments();
+		int i = 0;
+		while (parameters.hasNext() && i < total) {
+			parameters.next();
+			i++;
+		}
+	}
+
 	/**
 	 * Compute a {@link Type#BETWEEN} typed {@link Part} using {@link Criteria#gt(Object) $gt},
-	 * {@link Criteria#gte(Object) $gte}, {@link Criteria#lt(Object) $lt} and {@link Criteria#lte(Object) $lte}.
-	 * <br />
+	 * {@link Criteria#gte(Object) $gte}, {@link Criteria#lt(Object) $lt} and {@link Criteria#lte(Object) $lte}. <br />
 	 * In case the first {@literal value} is actually a {@link Range} the lower and upper bounds of the {@link Range} are
 	 * used according to their {@link Bound#isInclusive() inclusion} definition. Otherwise the {@literal value} is used
 	 * for {@literal $gt} and {@link Iterator#next() parameters.next()} as {@literal $lt}.

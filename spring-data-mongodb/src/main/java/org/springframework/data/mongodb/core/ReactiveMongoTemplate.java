@@ -2293,6 +2293,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						.flatMapSequential(deleteResult -> Flux.fromIterable(list)));
 	}
 
+	@SuppressWarnings({"rawtypes", "unchecked", "NullAway"})
 	<S, T> Flux<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass,
 			QueryResultConverter<? super S, ? extends T> resultConverter) {
 

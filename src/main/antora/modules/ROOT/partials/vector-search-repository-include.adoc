@@ -4,16 +4,22 @@
 ----
 interface CommentRepository extends Repository<Comment, String> {
 
-  @VectorSearch(indexName = "my-index")
+  @VectorSearch(indexName = "my-index", numCandidates="#{#limit.max() * 20}")
   SearchResults<Comment> searchByCountryAndEmbeddingNear(String country, Vector vector, Score score,
     Limit limit);
 
-  @VectorSearch(indexName = "my-index")
-  SearchResults<WithVector> searchAnnotatedByCountryAndEmbeddingWithin(String country, Vector embedding,
+  @VectorSearch(indexName = "my-index", limit="10", numCandidates="200")
+  SearchResults<Comment> searchByCountryAndEmbeddingWithin(String country, Vector embedding,
       Score score);
 
 }
 
 SearchResults<Comment> results = repository.searchByCountryAndEmbeddingNear("en", Vector.of(…), Score.of(0.9), Limit.of(10));
 ----
+====
+
+[TIP]
+====
+The MongoDB https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-stage/[vector search aggregation] stage defines a set of required arguments and restrictions.
+Please make sure to follow the guidelines and make sure to provide required arguments like `limit`.
 ====
