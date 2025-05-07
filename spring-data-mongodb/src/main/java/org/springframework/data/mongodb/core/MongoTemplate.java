@@ -2233,9 +2233,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (!CollectionUtils.isEmpty(result)) {
 
 			Criteria[] criterias = ids.stream() //
-				.map(it -> Criteria.where("_id").in(it)) //
+				.map(it -> Criteria.where("_id").is(it)) //
 				.toArray(Criteria[]::new);
-			remove(new Query(criterias.length == 1 ? criterias[0] : new Criteria().orOperator(criterias)), entityClass, collectionName);
+
+			Query removeQuery = new Query(criterias.length == 1 ? criterias[0] : new Criteria().orOperator(criterias));
+			if (query.hasReadPreference()) {
+				removeQuery.withReadPreference(query.getReadPreference());
+			}
+
+			remove(removeQuery, entityClass, collectionName);
 		}
 
 		return result;

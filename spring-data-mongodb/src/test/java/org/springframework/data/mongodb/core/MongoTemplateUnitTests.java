@@ -437,8 +437,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection, times(1)).deleteMany(queryCaptor.capture(), any());
 
-		Document idField = DocumentTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
-		assertThat((List<Object>) idField.get("$in")).containsExactly(Integer.valueOf(0), Integer.valueOf(1));
+		List<Document> ors = DocumentTestUtils.getAsDBList(queryCaptor.getValue(), "$or");
+		assertThat(ors).containsExactlyInAnyOrder(new Document("_id", 0), new Document("_id", 1));
 	}
 
 	@Test // DATAMONGO-566
