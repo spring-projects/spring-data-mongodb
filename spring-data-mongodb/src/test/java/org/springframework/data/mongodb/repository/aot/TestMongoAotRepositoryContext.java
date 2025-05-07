@@ -21,12 +21,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.core.test.tools.ClassFile;
+
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.MergedAnnotation;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.test.tools.ClassFile;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -63,6 +64,11 @@ class TestMongoAotRepositoryContext implements AotRepositoryContext {
     public String getBeanName() {
         return "dummyRepository";
     }
+
+		@Override
+		public String getModuleName() {
+			return "MongoDB";
+		}
 
     @Override
     public Set<String> getBasePackages() {
