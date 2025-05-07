@@ -236,7 +236,10 @@ public class VectorSearchOperation implements AggregationOperation {
 		}
 
 		$vectorSearch.append("index", indexName);
-		$vectorSearch.append("limit", limit.max());
+
+		if(limit.isLimited()) {
+			$vectorSearch.append("limit", limit.max());
+		}
 
 		if (numCandidates != null) {
 			$vectorSearch.append("numCandidates", numCandidates);
