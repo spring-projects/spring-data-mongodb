@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 
 import example.aot.User;
 import example.aot.UserProjection;
@@ -32,6 +30,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +54,7 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  */
 @ExtendWith(MongoClientExtension.class)
-@SpringJUnitConfig(classes = MongoRepositoryContributorTests.JpaRepositoryContributorConfiguration.class)
+@SpringJUnitConfig(classes = MongoRepositoryContributorTests.MongoRepositoryContributorConfiguration.class)
 public class MongoRepositoryContributorTests {
 
 	private static final String DB_NAME = "aot-repo-tests";
@@ -64,9 +63,9 @@ public class MongoRepositoryContributorTests {
 	@Autowired UserRepository fragment;
 
 	@Configuration
-	static class JpaRepositoryContributorConfiguration extends AotFragmentTestConfigurationSupport {
+	static class MongoRepositoryContributorConfiguration extends AotFragmentTestConfigurationSupport {
 
-		public JpaRepositoryContributorConfiguration() {
+		public MongoRepositoryContributorConfiguration() {
 			super(UserRepository.class);
 		}
 

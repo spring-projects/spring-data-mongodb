@@ -140,6 +140,13 @@
 			<optional>true</optional>
 		</dependency>
 
+		<dependency>
+			<groupId>net.javacrumbs.json-unit</groupId>
+			<artifactId>json-unit-assertj</artifactId>
+			<version>4.1.0</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- CDI -->
 		<!-- Dependency order required to build against CDI 1.0 and test with CDI 2.0 -->
 		<dependency>

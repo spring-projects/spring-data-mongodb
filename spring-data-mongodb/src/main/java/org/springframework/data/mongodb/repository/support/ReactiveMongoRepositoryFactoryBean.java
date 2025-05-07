@@ -40,6 +40,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private @Nullable ReactiveMongoOperations operations;
+	private ReactiveMongoRepositoryFragmentsContributor repositoryFragmentsContributor = ReactiveMongoRepositoryFragmentsContributor.DEFAULT;
 	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
 
@@ -59,6 +60,23 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 */
 	public void setReactiveMongoOperations(@Nullable ReactiveMongoOperations operations) {
 		this.operations = operations;
+	}
+
+	@Override
+	public ReactiveMongoRepositoryFragmentsContributor getRepositoryFragmentsContributor() {
+		return repositoryFragmentsContributor;
+	}
+
+	/**
+	 * Configures the {@link MongoRepositoryFragmentsContributor} to contribute built-in fragment functionality to the
+	 * repository.
+	 *
+	 * @param repositoryFragmentsContributor must not be {@literal null}.
+	 * @since 5.0
+	 */
+	public void setRepositoryFragmentsContributor(
+			ReactiveMongoRepositoryFragmentsContributor repositoryFragmentsContributor) {
+		this.repositoryFragmentsContributor = repositoryFragmentsContributor;
 	}
 
 	/**
@@ -81,7 +99,8 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	@SuppressWarnings("NullAway")
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
-		RepositoryFactorySupport factory = getFactoryInstance(operations);
+		ReactiveMongoRepositoryFactory factory = getFactoryInstance(operations);
+		factory.setFragmentsContributor(repositoryFragmentsContributor);
 
 		if (createIndexesForQueryMethods) {
 			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(
@@ -97,7 +116,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 * @param operations
 	 * @return
 	 */
-	protected RepositoryFactorySupport getFactoryInstance(ReactiveMongoOperations operations) {
+	protected ReactiveMongoRepositoryFactory getFactoryInstance(ReactiveMongoOperations operations) {
 		return new ReactiveMongoRepositoryFactory(operations);
 	}
 

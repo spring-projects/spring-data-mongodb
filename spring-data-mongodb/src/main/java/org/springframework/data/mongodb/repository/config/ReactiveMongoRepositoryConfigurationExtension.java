@@ -23,10 +23,12 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactoryBean;
+import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
 import org.springframework.data.repository.core.RepositoryMetadata;
+
 import org.w3c.dom.Element;
 
 /**
@@ -47,7 +49,13 @@ public class ReactiveMongoRepositoryConfigurationExtension extends MongoReposito
 		return "Reactive MongoDB";
 	}
 
-	public String getRepositoryFactoryClassName() {
+	@Override
+	public String getRepositoryBaseClassName() {
+		return SimpleReactiveMongoRepository.class.getName();
+	}
+
+	@Override
+	public String getRepositoryFactoryBeanClassName() {
 		return ReactiveMongoRepositoryFactoryBean.class.getName();
 	}
 
