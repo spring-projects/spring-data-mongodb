@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QuerydslUtils.*;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -34,13 +33,11 @@ import org.springframework.data.mongodb.repository.query.ReactivePartTreeMongoQu
 import org.springframework.data.mongodb.repository.query.ReactiveStringBasedAggregation;
 import org.springframework.data.mongodb.repository.query.ReactiveStringBasedMongoQuery;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
 import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
-import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodValueEvaluationContextAccessor;
@@ -61,6 +58,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final ReactiveMongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private ReactiveMongoRepositoryFragmentsContributor fragmentsContributor = ReactiveMongoRepositoryFragmentsContributor.DEFAULT;
 	@Nullable private QueryMethodValueEvaluationContextAccessor accessor;
 
 	/**
@@ -76,6 +74,17 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 
 		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
+	}
+
+	/**
+	 * Configures the {@link ReactiveMongoRepositoryFragmentsContributor} to be used. Defaults to
+	 * {@link ReactiveMongoRepositoryFragmentsContributor#DEFAULT}.
+	 *
+	 * @param fragmentsContributor
+	 * @since 5.0
+	 */
+	public void setFragmentsContributor(ReactiveMongoRepositoryFragmentsContributor fragmentsContributor) {
+		this.fragmentsContributor = fragmentsContributor;
 	}
 
 	@Override
@@ -96,24 +105,20 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		return SimpleReactiveMongoRepository.class;
 	}
 
+	/**
+	 * Creates {@link RepositoryFragments} based on {@link RepositoryMetadata} to add Mongo-specific extensions.
+	 * Typically, adds a {@link ReactiveQuerydslContributor} if the repository interface uses Querydsl.
+	 * <p>
+	 * Built-in fragment contribution can be customized by configuring
+	 * {@link ReactiveMongoRepositoryFragmentsContributor}.
+	 *
+	 * @param metadata repository metadata.
+	 * @return {@link RepositoryFragments} to be added to the repository.
+	 */
 	@Override
 	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
-
-		RepositoryFragments fragments = RepositoryFragments.empty();
-
-		boolean isQueryDslRepository = QUERY_DSL_PRESENT
-				&& ReactiveQuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
-
-		if (isQueryDslRepository) {
-
-			MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainType(),
-					metadata);
-
-			fragments = fragments.append(RepositoryFragment
-					.implemented(instantiateClass(ReactiveQuerydslMongoPredicateExecutor.class, entityInformation, operations)));
-		}
-
-		return fragments;
+		return fragmentsContributor.contribute(metadata, getEntityInformation(metadata.getDomainType(), metadata),
+				operations);
 	}
 
 	@Override

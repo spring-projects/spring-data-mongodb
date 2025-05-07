@@ -15,15 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QuerydslUtils.*;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -35,7 +33,6 @@ import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.StringBasedAggregation;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -60,6 +57,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 	private final MongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private MongoRepositoryFragmentsContributor fragmentsContributor = MongoRepositoryFragmentsContributor.DEFAULT;
 
 	/**
 	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
@@ -74,6 +72,17 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 
 		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
+	}
+
+	/**
+	 * Configures the {@link MongoRepositoryFragmentsContributor} to be used. Defaults to
+	 * {@link MongoRepositoryFragmentsContributor#DEFAULT}.
+	 *
+	 * @param fragmentsContributor
+	 * @since 5.0
+	 */
+	public void setFragmentsContributor(MongoRepositoryFragmentsContributor fragmentsContributor) {
+		this.fragmentsContributor = fragmentsContributor;
 	}
 
 	@Override
@@ -99,33 +108,18 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	/**
-	 * Creates {@link RepositoryFragments} based on {@link RepositoryMetadata} to add Mongo-specific extensions. Typically
-	 * adds a {@link QuerydslMongoPredicateExecutor} if the repository interface uses Querydsl.
+	 * Creates {@link RepositoryFragments} based on {@link RepositoryMetadata} to add Mongo-specific extensions.
+	 * Typically, adds a {@link QuerydslMongoPredicateExecutor} if the repository interface uses Querydsl.
 	 * <p>
-	 * Can be overridden by subclasses to customize {@link RepositoryFragments}.
+	 * Built-in fragment contribution can be customized by configuring {@link MongoRepositoryFragmentsContributor}.
 	 *
 	 * @param metadata repository metadata.
 	 * @param operations the MongoDB operations manager.
-	 * @return
+	 * @return {@link RepositoryFragments} to be added to the repository.
 	 * @since 3.2.1
 	 */
 	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata, MongoOperations operations) {
-
-		boolean isQueryDslRepository = QUERY_DSL_PRESENT
-				&& QuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
-
-		if (isQueryDslRepository) {
-
-			if (metadata.isReactiveRepository()) {
-				throw new InvalidDataAccessApiUsageException(
-						"Cannot combine Querydsl and reactive repository support in a single interface");
-			}
-
-			return RepositoryFragments
-					.just(new QuerydslMongoPredicateExecutor<>(getEntityInformation(metadata.getDomainType()), operations));
-		}
-
-		return RepositoryFragments.empty();
+		return fragmentsContributor.contribute(metadata, getEntityInformation(metadata.getDomainType()), operations);
 	}
 
 	@Override

@@ -23,10 +23,11 @@ import org.springframework.beans.factory.aot.BeanRegistrationAotProcessor;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mongodb.repository.aot.AotMongoRepositoryPostProcessor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.aot.AotMongoRepositoryPostProcessor;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
+import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
@@ -55,6 +56,12 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		return "mongo";
 	}
 
+	@Override
+	public String getRepositoryBaseClassName() {
+		return SimpleMongoRepository.class.getName();
+	}
+
+	@Override
 	public String getRepositoryFactoryBeanClassName() {
 		return MongoRepositoryFactoryBean.class.getName();
 	}

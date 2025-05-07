@@ -30,12 +30,14 @@ import org.springframework.util.Assert;
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 @SuppressWarnings("NullAway")
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private @Nullable MongoOperations operations;
+	private MongoRepositoryFragmentsContributor repositoryFragmentsContributor = MongoRepositoryFragmentsContributor.DEFAULT;
 	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
 
@@ -57,6 +59,22 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		this.operations = operations;
 	}
 
+	@Override
+	public MongoRepositoryFragmentsContributor getRepositoryFragmentsContributor() {
+		return repositoryFragmentsContributor;
+	}
+
+	/**
+	 * Configures the {@link MongoRepositoryFragmentsContributor} to contribute built-in fragment functionality to the
+	 * repository.
+	 *
+	 * @param repositoryFragmentsContributor must not be {@literal null}.
+	 * @since 5.0
+	 */
+	public void setRepositoryFragmentsContributor(MongoRepositoryFragmentsContributor repositoryFragmentsContributor) {
+		this.repositoryFragmentsContributor = repositoryFragmentsContributor;
+	}
+
 	/**
 	 * Configures whether to automatically create indexes for the properties referenced in a query method.
 	 *
@@ -76,7 +94,8 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
-		RepositoryFactorySupport factory = getFactoryInstance(operations);
+		MongoRepositoryFactory factory = getFactoryInstance(operations);
+		factory.setFragmentsContributor(repositoryFragmentsContributor);
 
 		if (createIndexesForQueryMethods) {
 			factory.addQueryCreationListener(
@@ -92,7 +111,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * @param operations
 	 * @return
 	 */
-	protected RepositoryFactorySupport getFactoryInstance(MongoOperations operations) {
+	protected MongoRepositoryFactory getFactoryInstance(MongoOperations operations) {
 		return new MongoRepositoryFactory(operations);
 	}
 
