@@ -25,7 +25,7 @@ Java::
 [source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
 VectorIndex index = new VectorIndex("vector_index")
-  .addVector("plotEmbedding"), vector -> vector.dimensions(1536).similarity(COSINE)) <1>
+  .addVector("plotEmbedding", vector -> vector.dimensions(1536).similarity(COSINE)) <1>
   .addFilter("year"); <2>
 
 mongoTemplate.searchIndexOps(Movie.class) <3>

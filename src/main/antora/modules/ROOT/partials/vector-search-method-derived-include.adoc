@@ -6,14 +6,14 @@ MongoDB Search methods must use the `@VectorSearch` annotation to define the ind
 ----
 interface CommentRepository extends Repository<Comment, String> {
 
-  @VectorSearch(indexName = "my-index")
-  SearchResults<Comment> searchByEmbeddingNear(Vector vector, Score score);
+  @VectorSearch(indexName = "my-index", numCandidates="200")
+  SearchResults<Comment> searchTop10ByEmbeddingNear(Vector vector, Score score);
 
-  @VectorSearch(indexName = "my-index")
-  SearchResults<Comment> searchByEmbeddingWithin(Vector vector, Range<Similarity> range);
+  @VectorSearch(indexName = "my-index", numCandidates="200")
+  SearchResults<Comment> searchTop10ByEmbeddingWithin(Vector vector, Range<Similarity> range);
 
-  @VectorSearch(indexName = "my-index")
-  SearchResults<Comment> searchByCountryAndEmbeddingWithin(String country, Vector vector, Range<Similarity> range);
+  @VectorSearch(indexName = "my-index", numCandidates="200")
+  SearchResults<Comment> searchTop10ByCountryAndEmbeddingWithin(String country, Vector vector, Range<Similarity> range);
 }
 ----
 ====

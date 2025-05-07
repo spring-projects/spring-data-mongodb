@@ -9,13 +9,13 @@ The scoring function defaults to `ScoringFunction.unspecified()` as there is no 
 interface CommentRepository extends Repository<Comment, String> {
 
   @VectorSearch(…)
-  SearchResults<Comment> searchByEmbeddingNear(Vector vector, Score similarity);
+  SearchResults<Comment> searchTop10ByEmbeddingNear(Vector vector, Score similarity);
 
   @VectorSearch(…)
-  SearchResults<Comment> searchByEmbeddingNear(Vector vector, Similarity similarity);
+  SearchResults<Comment> searchTop10ByEmbeddingNear(Vector vector, Similarity similarity);
 
   @VectorSearch(…)
-  SearchResults<Comment> searchByEmbeddingNear(Vector vector, Range<Similarity> range);
+  SearchResults<Comment> searchTop10ByEmbeddingNear(Vector vector, Range<Similarity> range);
 }
 
 repository.searchByEmbeddingNear(Vector.of(…), Score.of(0.9));                <1>
