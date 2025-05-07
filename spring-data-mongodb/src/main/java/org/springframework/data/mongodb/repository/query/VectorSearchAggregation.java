@@ -63,7 +63,6 @@ public class VectorSearchAggregation extends AbstractMongoQuery {
 		this.delegate = new VectorSearchDelegate(method, mongoOperations.getConverter(), delegate);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
 			@Nullable Class<?> typeToRead) {

@@ -47,6 +47,7 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -136,17 +137,14 @@ class VectorSearchDelegate {
 				outputType, getSimilarityFunction(accessor), indexName);
 	}
 
-	public AggregationPipeline createVectorSearchPipeline(VectorSearchInput input, String scoreField, Class<?> outputType,
+	@SuppressWarnings("NullAway")
+	AggregationPipeline createVectorSearchPipeline(VectorSearchInput input, String scoreField, Class<?> outputType,
 			MongoParameterAccessor accessor, ValueExpressionEvaluator evaluator) {
 
 		Vector vector = accessor.getVector();
 		Score score = accessor.getScore();
 		Range<Score> distance = accessor.getScoreRange();
-		Limit limit = Limit.unlimited();
-
-		if (input.query().isLimited()) {
-			limit = Limit.of(input.query().getLimit());
-		}
+		Limit limit = Limit.of(input.query().getLimit());
 
 		List<AggregationOperation> stages = new ArrayList<>();
 		VectorSearchOperation $vectorSearch = Aggregation.vectorSearch(indexName).path(input.path()).vector(vector)
@@ -223,21 +221,38 @@ class VectorSearchDelegate {
 	private VectorSearchInput createSearchInput(ValueExpressionEvaluator evaluator, MongoParameterAccessor accessor,
 			ParameterBindingDocumentCodec codec, ParameterBindingContext context) {
 
-		VectorSearchInput query = queryFactory.createQuery(accessor, codec, context);
-		Limit limit;
+		VectorSearchInput input = queryFactory.createQuery(accessor, codec, context);
+		Limit limit = getLimit(evaluator, accessor);
+		if(!input.query.isLimited() || (input.query.isLimited() && !limit.isUnlimited())) {
+			input.query().limit(limit);
+		}
+		return input;
+	}
+
+	private Limit getLimit(ValueExpressionEvaluator evaluator, MongoParameterAccessor accessor) {
+
 		if (this.limitExpression != null) {
+
 			Object value = evaluator.evaluate(this.limitExpression);
-			limit = value instanceof Limit l ? l : Limit.of(((Number) value).intValue());
-		} else if (this.limit.isLimited()) {
-			limit = this.limit;
-		} else {
-			limit = accessor.getLimit();
+			if (value != null) {
+				if (value instanceof Limit l) {
+					return l;
+				}
+				if (value instanceof Number n) {
+					return Limit.of(n.intValue());
+				}
+				if (value instanceof String s) {
+					return Limit.of(NumberUtils.parseNumber(s, Integer.class));
+				}
+				throw new IllegalArgumentException("Invalid type for Limit. Found [%s], expected Limit or Number");
+			}
 		}
 
-		if (limit.isLimited()) {
-			query.query().limit(limit);
+		if (this.limit.isLimited()) {
+			return this.limit;
 		}
-		return query;
+
+		return accessor.getLimit();
 	}
 
 	public String getQueryString() {
@@ -378,6 +393,7 @@ class VectorSearchDelegate {
 			this.tree = tree;
 		}
 
+		@SuppressWarnings("NullAway")
 		public VectorSearchInput createQuery(MongoParameterAccessor parameterAccessor, ParameterBindingDocumentCodec codec,
 				ParameterBindingContext context) {
 

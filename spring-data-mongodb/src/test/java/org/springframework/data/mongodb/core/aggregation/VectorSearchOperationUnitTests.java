@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation.SearchType;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -101,6 +101,16 @@ class VectorSearchOperationUnitTests {
 				List.of(new Document("year", new Document("$gt", 1955)), new Document("year", new Document("$lt", 1975))));
 		assertThat(stages)
 				.containsExactly(new Document("$vectorSearch", new Document($VECTOR_SEARCH).append("filter", filter)));
+	}
+
+	@Test
+	void withInvalidLimit() {
+
+		VectorSearchOperation $search = VectorSearchOperation.search("vector_index").path("plot_embedding")
+				.vector(-0.0016261312, -0.028070757, -0.011342932).limit(Limit.unlimited());
+
+		List<Document> stages = $search.toPipelineStages(TestAggregationContext.contextFor(Movie.class));
+		assertThat(stages.get(0)).doesNotContainKey("$vectorSearch.limit");
 	}
 
 	static class Movie {

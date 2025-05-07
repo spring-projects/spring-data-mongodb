@@ -356,6 +356,7 @@ public class ArrayOperators {
 		 * @return new instance of {@link SortArray}.
 		 * @since 4.5
 		 */
+		@SuppressWarnings("NullAway")
 		public SortArray sort(Direction direction) {
 
 			if (usesFieldRef()) {

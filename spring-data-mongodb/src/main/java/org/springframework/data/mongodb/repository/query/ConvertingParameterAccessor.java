@@ -77,7 +77,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	}
 
 	@Override
-	public Vector getVector() {
+	public @Nullable Vector getVector() {
 		return delegate.getVector();
 	}
 
