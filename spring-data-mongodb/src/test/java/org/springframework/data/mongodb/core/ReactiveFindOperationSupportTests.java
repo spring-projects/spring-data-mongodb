@@ -168,7 +168,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 				.verifyComplete();
 	}
 
-	@Test // GH-…
+	@Test // GH-4949
 	void findAllWithConverter() {
 
 		template.query(Person.class).as(Jedi.class).map((document, reader) -> Optional.of(reader.get())).all()

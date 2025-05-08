@@ -109,7 +109,7 @@ class ExecutableRemoveOperationSupportTests {
 		assertThat(result).containsExactly(han);
 	}
 
-	@Test // GH-0
+	@Test // GH-4949
 	void removeAndReturnAllMatchingWithResultConverter() {
 
 		List<Optional<Person>> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).map((raw, converted) -> Optional.of(converted.get())).findAndRemove();

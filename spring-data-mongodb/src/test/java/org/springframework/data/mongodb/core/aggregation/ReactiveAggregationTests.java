@@ -116,7 +116,7 @@ public class ReactiveAggregationTests {
 				}).verifyComplete();
 	}
 
-	@Test // GH-…
+	@Test // GH-4949
 	public void shouldProjectAndConvertMultipleDocuments() {
 
 		City dresden = new City("Dresden", 100);

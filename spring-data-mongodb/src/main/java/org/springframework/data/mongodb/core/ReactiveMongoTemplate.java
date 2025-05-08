@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,6 +47,7 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -109,18 +110,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -2772,7 +2762,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		DocumentCallback<T> readCallback = new ProjectingReadCallback<>(mongoConverter, projection, collectionName);
 
 		return resultConverter == QueryResultConverter.entity() ? (DocumentCallback<R>) readCallback
-				: new QueryResultConverterCallback<T, R>(resultConverter, readCallback);
+				: new QueryResultConverterCallback<>(resultConverter, readCallback);
 	}
 
 	/**
