@@ -26,7 +26,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>4.0.0-SNAPSHOT</springdata.commons>
+		<springdata.commons>4.0.x-GH-3270-SNAPSHOT</springdata.commons>
 		<mongo>5.4.0</mongo>
 		<jmh.version>1.19</jmh.version>
 	</properties>
