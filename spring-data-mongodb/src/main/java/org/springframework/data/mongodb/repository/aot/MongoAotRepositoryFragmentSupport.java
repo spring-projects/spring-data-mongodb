@@ -35,7 +35,10 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * Support class for MongoDB AOT repository fragments.
+ *
  * @author Christoph Strobl
+ * @since 5.0
  */
 public class MongoAotRepositoryFragmentSupport {
 
