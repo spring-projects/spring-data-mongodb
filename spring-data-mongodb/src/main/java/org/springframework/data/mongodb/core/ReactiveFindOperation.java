@@ -74,7 +74,7 @@ public interface ReactiveFindOperation {
 	/**
 	 * Compose find execution by calling one of the terminating methods.
 	 *
-	 * @since x.y
+	 * @since 5.0
 	 */
 	interface TerminatingResults<T> {
 
@@ -85,7 +85,7 @@ public interface ReactiveFindOperation {
 		 * @param converter the converter, must not be {@literal null}.
 		 * @return new instance of {@link TerminatingResults}.
 		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
-		 * @since x.y
+		 * @since 5.0
 		 */
 		@Contract("_ -> new")
 		<R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter);
@@ -117,7 +117,7 @@ public interface ReactiveFindOperation {
 		 * <p>
 		 * When using {@link KeysetScrollPosition}, make sure to use non-nullable
 		 * {@link org.springframework.data.domain.Sort sort properties} as MongoDB does not support criteria to reconstruct
-		 * a query result from absent document fields or {@code null} values through {@code $gt/$lt} operators.
+		 * a query result from absent document fields or {@literal null} values through {@code $gt/$lt} operators.
 		 *
 		 * @param scrollPosition the scroll position.
 		 * @return a scroll of the resulting elements.
@@ -147,7 +147,7 @@ public interface ReactiveFindOperation {
 	/**
 	 * Compose find execution by calling one of the terminating methods.
 	 *
-	 * @since x.y
+	 * @since 5.0
 	 */
 	interface TerminatingProjection {
 
@@ -183,7 +183,7 @@ public interface ReactiveFindOperation {
 		 * @param converter the converter, must not be {@literal null}.
 		 * @return new instance of {@link ExecutableFindOperation.TerminatingFindNear}.
 		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
-		 * @since x.y
+		 * @since 5.0
 		 */
 		@Contract("_ -> new")
 		<R> TerminatingFindNear<R> map(QueryResultConverter<? super T, ? extends R> converter);

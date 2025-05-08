@@ -18,15 +18,15 @@ package org.springframework.data.mongodb.core;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingResults;
+
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.lang.Contract;
 
 import com.mongodb.client.result.UpdateResult;
-import org.springframework.lang.Contract;
 
 /**
  * {@link ExecutableUpdateOperation} allows creation and execution of MongoDB update / findAndModify / findAndReplace
@@ -71,7 +71,6 @@ public interface ExecutableUpdateOperation {
 	 */
 	interface TerminatingFindAndModify<T> {
 
-
 		/**
 		 * Map the query result to a different type using {@link QueryResultConverter}.
 		 *
@@ -79,7 +78,7 @@ public interface ExecutableUpdateOperation {
 		 * @param converter the converter, must not be {@literal null}.
 		 * @return new instance of {@link TerminatingFindAndModify}.
 		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
-		 * @since x.y
+		 * @since 5.0
 		 */
 		@Contract("_ -> new")
 		<R> TerminatingFindAndModify<R> map(QueryResultConverter<? super T, ? extends R> converter);
@@ -153,10 +152,11 @@ public interface ExecutableUpdateOperation {
 		 * @param converter the converter, must not be {@literal null}.
 		 * @return new instance of {@link TerminatingFindAndModify}.
 		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
-		 * @since x.y
+		 * @since 5.0
 		 */
 		@Contract("_ -> new")
-		<R> TerminatingFindAndReplace<R> mapResult(QueryResultConverter<? super T, ? extends R> converter);
+		<R> TerminatingFindAndReplace<R> map(QueryResultConverter<? super T, ? extends R> converter);
+
 	}
 
 	/**

@@ -15,13 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.QueryResultConverter.ConversionResultSupplier;
 
 /**
+ * Unit tests for {@link QueryResultConverter}.
+ *
  * @author Christoph Strobl
  */
 class QueryResultConverterUnitTests {
@@ -30,7 +33,7 @@ class QueryResultConverterUnitTests {
 		throw new IllegalStateException("must not read conversion result");
 	};
 
-	@Test // GH-
+	@Test // GH-4949
 	void converterDoesNotEagerlyRetrieveConversionResultFromSupplier() {
 
 		QueryResultConverter<Document, String> converter = new QueryResultConverter<Document, String>() {
@@ -44,7 +47,7 @@ class QueryResultConverterUnitTests {
 		assertThat(converter.mapDocument(new Document(), ERROR_SUPPLIER)).isEqualTo("done");
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void converterPassesOnConversionResultToNextStage() {
 
 		Document source = new Document("value", "10");
@@ -68,7 +71,7 @@ class QueryResultConverterUnitTests {
 		assertThat(stagedConverter.mapDocument(source, ERROR_SUPPLIER)).isEqualTo(10);
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void entityConverterDelaysConversion() {
 
 		Document source = new Document("value", "10");

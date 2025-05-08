@@ -81,7 +81,7 @@ public interface ReactiveAggregationOperation {
 		 * @param converter the converter, must not be {@literal null}.
 		 * @return new instance of {@link ExecutableFindOperation.TerminatingFindNear}.
 		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
-		 * @since x.y
+		 * @since 5.0
 		 */
 		@Contract("_ -> new")
 		<R> TerminatingAggregationOperation<R> map(QueryResultConverter<? super T, ? extends R> converter);

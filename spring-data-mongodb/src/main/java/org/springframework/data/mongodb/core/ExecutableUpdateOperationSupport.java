@@ -185,16 +185,9 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		}
 
 		@Override
-		public <R> TerminatingFindAndModify<R> map(QueryResultConverter<? super T, ? extends R> converter) {
-
+		public <R> ExecutableUpdateSupport<S, R> map(QueryResultConverter<? super T, ? extends R> converter) {
 			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-				findAndReplaceOptions, replacement, targetType, this.resultConverter.andThen(converter));
-		}
-
-		@Override
-		public <R> TerminatingFindAndReplace<R> mapResult(QueryResultConverter<? super T, ? extends R> converter) {
-			return new ExecutableUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-				findAndReplaceOptions, replacement, targetType, this.resultConverter.andThen(converter));
+					findAndReplaceOptions, replacement, targetType, this.resultConverter.andThen(converter));
 		}
 
 		@Override
