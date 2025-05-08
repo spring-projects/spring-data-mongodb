@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
+import org.springframework.data.repository.aot.generate.AotRepositoryClassBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
 import org.springframework.data.repository.aot.generate.MethodContributor;
 import org.springframework.data.repository.aot.generate.RepositoryContributor;
@@ -41,7 +42,6 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.TypeName;
-import org.springframework.javapoet.TypeSpec.Builder;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -66,9 +66,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	}
 
 	@Override
-	protected void customizeClass(RepositoryInformation information,
-			Builder builder) {
-		builder.superclass(TypeName.get(MongoAotRepositoryFragmentSupport.class));
+	protected void customizeClass(AotRepositoryClassBuilder classBuilder) {
+		classBuilder.customize(builder -> builder.superclass(TypeName.get(MongoAotRepositoryFragmentSupport.class)));
 	}
 
 	@Override
@@ -78,17 +77,16 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		constructorBuilder.addParameter("context", TypeName.get(RepositoryFactoryBeanSupport.FragmentCreationContext.class),
 				false);
 
-		constructorBuilder.customize((repositoryInformation, builder) -> {
+		constructorBuilder.customize((builder) -> {
 			builder.addStatement("super(operations, context)");
 		});
 	}
 
 	@Override
 	@SuppressWarnings("NullAway")
-	protected @Nullable MethodContributor<? extends QueryMethod> contributeQueryMethod(Method method,
-			RepositoryInformation repositoryInformation) {
+	protected @Nullable MethodContributor<? extends QueryMethod> contributeQueryMethod(Method method) {
 
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, repositoryInformation, getProjectionFactory(),
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, getRepositoryInformation(), getProjectionFactory(),
 				mappingContext);
 
 		if (queryMethod.hasAnnotatedAggregation()) {
@@ -96,7 +94,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return aggregationMethodContributor(queryMethod, aggregation);
 		}
 
-		QueryInteraction query = createStringQuery(repositoryInformation, queryMethod,
+		QueryInteraction query = createStringQuery(getRepositoryInformation(), queryMethod,
 				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method.getParameterCount());
 
 		if (queryMethod.hasAnnotatedQuery()) {
