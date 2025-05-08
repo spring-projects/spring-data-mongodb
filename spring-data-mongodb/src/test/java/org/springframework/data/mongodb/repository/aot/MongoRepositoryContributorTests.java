@@ -51,11 +51,14 @@ import org.springframework.util.StringUtils;
 import com.mongodb.client.MongoClient;
 
 /**
+ * Integration tests for the {@link UserRepository} AOT fragment.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MongoClientExtension.class)
 @SpringJUnitConfig(classes = MongoRepositoryContributorTests.MongoRepositoryContributorConfiguration.class)
-public class MongoRepositoryContributorTests {
+class MongoRepositoryContributorTests {
 
 	private static final String DB_NAME = "aot-repo-tests";
 

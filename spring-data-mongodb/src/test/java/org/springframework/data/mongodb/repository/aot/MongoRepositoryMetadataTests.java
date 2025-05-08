@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import example.aot.UserRepository;
 
@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -176,7 +177,7 @@ class MongoRepositoryMetadataTests {
 		assertThat(resource.exists()).isTrue();
 
 		String json = resource.getContentAsString(StandardCharsets.UTF_8);
-		System.out.println(json);
+
 		assertThatJson(json).inPath("$.methods[?(@.name == 'existsById')].fragment").isArray().first().isObject()
 				.containsEntry("fragment", "org.springframework.data.mongodb.repository.support.SimpleMongoRepository");
 	}
