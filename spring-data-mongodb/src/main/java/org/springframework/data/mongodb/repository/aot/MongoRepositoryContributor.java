@@ -53,7 +53,7 @@ import org.springframework.util.StringUtils;
  */
 public class MongoRepositoryContributor extends RepositoryContributor {
 
-	private static final Log logger = LogFactory.getLog(RepositoryContributor.class);
+	private static final Log logger = LogFactory.getLog(MongoRepositoryContributor.class);
 
 	private final AotQueryCreator queryCreator;
 	private final MongoMappingContext mappingContext;
@@ -262,4 +262,5 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return builder.build();
 		});
 	}
+
 }
