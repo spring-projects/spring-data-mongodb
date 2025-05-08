@@ -288,7 +288,7 @@ public class AggregationTests {
 		}
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void shouldAggregateAsStreamWithConverter() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
@@ -315,7 +315,7 @@ public class AggregationTests {
 		}
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void shouldAggregateWithConverter() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);

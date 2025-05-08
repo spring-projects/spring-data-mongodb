@@ -172,7 +172,7 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 				.hasOnlyElementsOfType(Jedi.class).hasSize(1);
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void findAllByWithConverter() {
 
 		List<Optional<Jedi>> result = template.query(Person.class).as(Jedi.class)
@@ -272,7 +272,7 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 		}
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void streamAllWithConverter() {
 
 		try (Stream<Optional<Jedi>> stream = template.query(Person.class).as(Jedi.class)
@@ -336,7 +336,7 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 		assertThat(results.getContent().get(0).getContent().getId()).isEqualTo("alderan");
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void findAllNearByWithConverter() {
 
 		GeoResults<Optional<Human>> results = template.query(Object.class).inCollection(STAR_WARS_PLANETS).as(Human.class)

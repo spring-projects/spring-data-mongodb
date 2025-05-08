@@ -28,7 +28,7 @@ import org.bson.Document;
  * @param <T> object type accepted by this converter.
  * @param <R> the returned result type.
  * @author Mark Paluch
- * @since x.x
+ * @since 5.0
  */
 @FunctionalInterface
 public interface QueryResultConverter<T, R> {

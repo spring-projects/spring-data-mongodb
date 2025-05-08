@@ -15,22 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
@@ -40,8 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -106,18 +96,7 @@ import org.springframework.data.mongodb.core.index.SearchIndexOperationsProvider
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -157,21 +136,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.CreateViewOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.EstimatedDocumentCountOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.TimeSeriesGranularity;
-import com.mongodb.client.model.TimeSeriesOptions;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
-import com.mongodb.client.model.ValidationOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -1148,7 +1113,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return findAndModify(query, update, options, entityClass, collectionName, QueryResultConverter.entity());
 	}
 
-
 	<S, T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
 			Class<S> entityClass, String collectionName, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
@@ -1179,7 +1143,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return findAndReplace(query, replacement, options, entityType, collectionName, resultType, QueryResultConverter.entity());
 	}
 
-	public <S, T, R> @Nullable R findAndReplace(Query query, S replacement, FindAndReplaceOptions options,
+	<S, T, R> @Nullable R findAndReplace(Query query, S replacement, FindAndReplaceOptions options,
 			Class<S> entityType, String collectionName, Class<T> resultType, QueryResultConverter<? super T, ? extends R> resultConverter) {
 
 		Assert.notNull(query, "Query must not be null");
@@ -1206,7 +1170,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
-
 
 		R saved = doFindAndReplace(collectionPreparer, collectionName, mappedQuery, mappedFields, mappedSort,
 				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, projection, resultConverter);
@@ -2203,25 +2166,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doFindAndDelete(collectionName, query, entityClass, QueryResultConverter.entity());
 	}
 
-	protected <S,T> List<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass, QueryResultConverter<? super S, ? extends T> resultConverter) {
+	<S, T> List<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass,
+			QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		List<Object> ids = new ArrayList<>();
 
-
-
-//		QueryResultConverter<S,T> tmpConverter = new QueryResultConverter<S, S>() {
-//			@Override
-//			public S mapDocument(Document document, ConversionResultSupplier<S> reader) {
-//				ids.add(document.get("_id"));
-//				return reader.get();
-//			}
-//		}.andThen(resultConverter);
-
-//		DocumentCallback<T> callback = getResultReader(EntityProjection.nonProjecting(entityClass), collectionName, tmpConverter);
-
-		QueryResultConverterCallback callback = new QueryResultConverterCallback(resultConverter, new ProjectingReadCallback<S,S>(getConverter(), EntityProjection.nonProjecting(entityClass), collectionName)) {
+		QueryResultConverterCallback<S, T> callback = new QueryResultConverterCallback<>(resultConverter,
+				new ProjectingReadCallback<>(getConverter(), EntityProjection.nonProjecting(entityClass), collectionName)) {
 			@Override
-			public Object doWith(Document object) {
+			public T doWith(Document object) {
 				ids.add(object.get("_id"));
 				return super.doWith(object);
 			}
@@ -2366,7 +2319,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@SuppressWarnings({ "ConstantConditions", "NullAway" })
-	protected <T, O> Stream<O> doAggregateStream(Aggregation aggregation, String collectionName, Class<T> outputType,
+	<T, O> Stream<O> doAggregateStream(Aggregation aggregation, String collectionName, Class<T> outputType,
 			QueryResultConverter<? super T, ? extends O> resultConverter,
 			@Nullable AggregationOperationContext context) {
 
@@ -2412,7 +2365,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				cursor = cursor.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
 			}
 
-			Class<?> domainType = aggregation instanceof TypedAggregation typedAggregation ? typedAggregation.getInputType()
+			Class<?> domainType = aggregation instanceof TypedAggregation<?> typedAggregation
+					? typedAggregation.getInputType()
 					: null;
 
 			Optionals.firstNonEmpty(options::getCollation, //
@@ -2863,7 +2817,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <S, T> @Nullable T doFindAndModify(CollectionPreparer collectionPreparer, String collectionName,
+	<S, T> @Nullable T doFindAndModify(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			String collectionName,
 			Document query, @Nullable Document fields, @Nullable Document sort, Class<S> entityClass, UpdateDefinition update,
 			@Nullable FindAndModifyOptions options, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
@@ -2911,7 +2866,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 */
 	@Nullable
-	protected <S, T>  T doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName,
+	protected <S, T> T doFindAndReplace(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			String collectionName,
 			Document mappedQuery, Document mappedFields, Document mappedSort,
 			com.mongodb.client.model.@Nullable Collation collation, Class<S> entityType, Document replacement,
 			FindAndReplaceOptions options, Class<T> resultType) {
@@ -2954,7 +2910,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @since 3.4
 	 */
 	@Nullable
-	private <S, T, R> R doFindAndReplace(CollectionPreparer collectionPreparer, String collectionName,
+	private <S, T, R> R doFindAndReplace(CollectionPreparer<MongoCollection<Document>> collectionPreparer,
+			String collectionName,
 			Document mappedQuery, Document mappedFields, Document mappedSort,
 			com.mongodb.client.model.@Nullable Collation collation, Class<T> entityType, Document replacement,
 			FindAndReplaceOptions options, EntityProjection<S, T> projection, QueryResultConverter<? super S, ? extends R> resultConverter) {

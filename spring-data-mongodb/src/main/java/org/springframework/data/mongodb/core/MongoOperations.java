@@ -822,7 +822,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p>
 	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
 	 * sort properties} as MongoDB does not support criteria to reconstruct a query result from absent document fields or
-	 * {@code null} values through {@code $gt/$lt} operators.
+	 * {@literal null} values through {@code $gt/$lt} operators.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -847,7 +847,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p>
 	 * When using {@link KeysetScrollPosition}, make sure to use non-nullable {@link org.springframework.data.domain.Sort
 	 * sort properties} as MongoDB does not support criteria to reconstruct a query result from absent document fields or
-	 * {@code null} values through {@code $gt/$lt} operators.
+	 * {@literal null} values through {@code $gt/$lt} operators.
 	 *
 	 * @param query the query class that specifies the criteria used to find a document and also an optional fields
 	 *          specification. Must not be {@literal null}.

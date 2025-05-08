@@ -191,7 +191,7 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
+	 * Returns the {@link Query} annotation that is applied to the method or {@literal null} if none available.
 	 *
 	 * @return
 	 */
@@ -217,7 +217,7 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the {@link Meta} annotation that is applied to the method or {@code null} if not available.
+	 * Returns the {@link Meta} annotation that is applied to the method or {@literal null} if not available.
 	 *
 	 * @return
 	 * @since 1.6
@@ -228,7 +228,7 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the {@link Tailable} annotation that is applied to the method or {@code null} if not available.
+	 * Returns the {@link Tailable} annotation that is applied to the method or {@literal null} if not available.
 	 *
 	 * @return
 	 * @since 2.0

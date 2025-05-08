@@ -293,14 +293,14 @@ class ExecutableUpdateOperationSupportTests {
 		assertThat(result.getName()).isEqualTo(han.firstname);
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void findAndReplaceWithResultConverter() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
 
 		Optional<Jedi> result = template.update(Person.class).matching(queryHan()).replaceWith(luke).as(Jedi.class) //
-			.mapResult((raw, converted) -> Optional.of(converted.get()))
+				.map((raw, converted) -> Optional.of(converted.get()))
 			.findAndReplaceValue();
 
 		assertThat(result.get()).isInstanceOf(Jedi.class).extracting(Jedi::getName).isEqualTo(han.firstname);
