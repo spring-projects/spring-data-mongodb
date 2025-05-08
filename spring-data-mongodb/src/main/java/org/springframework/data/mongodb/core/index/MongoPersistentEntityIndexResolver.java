@@ -110,7 +110,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * {@link GeospatialIndex}. The given {@literal root} has therefore to be annotated with {@link Document}.
 	 *
 	 * @param root must not be null.
-	 * @return List of {@link IndexDefinitionHolder}. Will never be {@code null}.
+	 * @return List of {@link IndexDefinitionHolder}. Will never be {@literal null}.
 	 * @throws IllegalArgumentException in case of missing {@link Document} annotation marking root entities.
 	 */
 	public List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> root) {
@@ -189,7 +189,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param collection
 	 * @param guard
 	 * @return List of {@link IndexDefinitionHolder} representing indexes for given type and its referenced property
-	 *         types. Will never be {@code null}.
+	 *         types. Will never be {@literal null}.
 	 */
 	private List<IndexDefinitionHolder> resolveIndexForClass(TypeInformation<?> type, String dotPath, Path path,
 			String collection, CycleGuard guard) {

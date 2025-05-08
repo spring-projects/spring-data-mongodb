@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.geo.Point;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -163,7 +165,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * {@literal x - coordinate} and {@code node.[1]} is {@literal y}.
 		 *
 		 * @param node can be {@literal null}.
-		 * @return {@literal null} when given a {@code null} value.
+		 * @return {@literal null} when given a {@literal null} value.
 		 */
 		protected @Nullable GeoJsonPoint toGeoJsonPoint(@Nullable ArrayNode node) {
 
@@ -179,7 +181,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * {@literal x - coordinate} and {@code node.[1]} is {@literal y}.
 		 *
 		 * @param node can be {@literal null}.
-		 * @return {@literal null} when given a {@code null} value.
+		 * @return {@literal null} when given a {@literal null} value.
 		 */
 		protected @Nullable Point toPoint(@Nullable ArrayNode node) {
 
@@ -194,7 +196,7 @@ public class GeoJsonModule extends SimpleModule {
 		 * Get the points nested within given {@link ArrayNode}.
 		 *
 		 * @param node can be {@literal null}.
-		 * @return {@literal empty list} when given a {@code null} value.
+		 * @return {@literal empty list} when given a {@literal null} value.
 		 */
 		protected List<Point> toPoints(@Nullable ArrayNode node) {
 
