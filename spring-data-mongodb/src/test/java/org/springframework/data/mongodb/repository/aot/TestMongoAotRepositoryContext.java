@@ -38,81 +38,81 @@ import org.springframework.data.repository.core.support.RepositoryComposition;
  */
 class TestMongoAotRepositoryContext implements AotRepositoryContext {
 
-    private final StubRepositoryInformation repositoryInformation;
-    private final Environment environment = new StandardEnvironment();
+	private final StubRepositoryInformation repositoryInformation;
+	private final Environment environment = new StandardEnvironment();
 
-    TestMongoAotRepositoryContext(Class<?> repositoryInterface, @Nullable RepositoryComposition composition) {
-        this.repositoryInformation = new StubRepositoryInformation(repositoryInterface, composition);
-    }
+	TestMongoAotRepositoryContext(Class<?> repositoryInterface, @Nullable RepositoryComposition composition) {
+		this.repositoryInformation = new StubRepositoryInformation(repositoryInterface, composition);
+	}
 
-    @Override
-    public ConfigurableListableBeanFactory getBeanFactory() {
-        return null;
-    }
+	@Override
+	public ConfigurableListableBeanFactory getBeanFactory() {
+		return null;
+	}
 
-    @Override
-    public TypeIntrospector introspectType(String typeName) {
-        return null;
-    }
+	@Override
+	public TypeIntrospector introspectType(String typeName) {
+		return null;
+	}
 
-    @Override
-    public IntrospectedBeanDefinition introspectBeanDefinition(String beanName) {
-        return null;
-    }
+	@Override
+	public IntrospectedBeanDefinition introspectBeanDefinition(String beanName) {
+		return null;
+	}
 
-    @Override
-    public String getBeanName() {
-        return "dummyRepository";
-    }
+	@Override
+	public String getBeanName() {
+		return "dummyRepository";
+	}
 
-		@Override
-		public String getModuleName() {
-			return "MongoDB";
+	@Override
+	public String getModuleName() {
+		return "MongoDB";
+	}
+
+	@Override
+	public Set<String> getBasePackages() {
+		return Set.of("org.springframework.data.dummy.repository.aot");
+	}
+
+	@Override
+	public Set<Class<? extends Annotation>> getIdentifyingAnnotations() {
+		return Set.of(Document.class);
+	}
+
+	@Override
+	public RepositoryInformation getRepositoryInformation() {
+		return repositoryInformation;
+	}
+
+	@Override
+	public Set<MergedAnnotation<Annotation>> getResolvedAnnotations() {
+		return Set.of();
+	}
+
+	@Override
+	public Set<Class<?>> getResolvedTypes() {
+		return Set.of();
+	}
+
+	public List<ClassFile> getRequiredContextFiles() {
+		return List.of(classFileForType(repositoryInformation.getRepositoryBaseClass()));
+	}
+
+	static ClassFile classFileForType(Class<?> type) {
+
+		String name = type.getName();
+		ClassPathResource cpr = new ClassPathResource(name.replaceAll("\\.", "/") + ".class");
+
+		try {
+			return ClassFile.of(name, cpr.getContentAsByteArray());
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Cannot open [%s].".formatted(cpr.getPath()));
 		}
+	}
 
-    @Override
-    public Set<String> getBasePackages() {
-        return Set.of("org.springframework.data.dummy.repository.aot");
-    }
-
-    @Override
-    public Set<Class<? extends Annotation>> getIdentifyingAnnotations() {
-        return Set.of(Document.class);
-    }
-
-    @Override
-    public RepositoryInformation getRepositoryInformation() {
-        return repositoryInformation;
-    }
-
-    @Override
-    public Set<MergedAnnotation<Annotation>> getResolvedAnnotations() {
-        return Set.of();
-    }
-
-    @Override
-    public Set<Class<?>> getResolvedTypes() {
-        return Set.of();
-    }
-
-    public List<ClassFile> getRequiredContextFiles() {
-        return List.of(classFileForType(repositoryInformation.getRepositoryBaseClass()));
-    }
-
-    static ClassFile classFileForType(Class<?> type) {
-
-        String name = type.getName();
-        ClassPathResource cpr = new ClassPathResource(name.replaceAll("\\.", "/") + ".class");
-
-        try {
-            return ClassFile.of(name, cpr.getContentAsByteArray());
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Cannot open [%s].".formatted(cpr.getPath()));
-        }
-    }
-
-    @Override
-    public Environment getEnvironment() {
-        return environment;
-    }
+	@Override
+	public Environment getEnvironment() {
+		return environment;
+	}
 }
