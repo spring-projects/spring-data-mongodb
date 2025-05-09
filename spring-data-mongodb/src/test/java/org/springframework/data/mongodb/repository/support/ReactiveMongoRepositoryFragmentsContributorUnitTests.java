@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Iterator;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -42,7 +42,7 @@ import org.springframework.data.repository.core.support.RepositoryFragment;
  */
 class ReactiveMongoRepositoryFragmentsContributorUnitTests {
 
-	@Test // GH-3279
+	@Test // GH-4964
 	void composedContributorShouldCreateFragments() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();

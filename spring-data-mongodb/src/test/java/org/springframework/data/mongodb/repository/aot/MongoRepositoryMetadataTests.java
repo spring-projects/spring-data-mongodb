@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import example.aot.UserRepository;
 
@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,7 +62,7 @@ class MongoRepositoryMetadataTests {
 
 	@Autowired AbstractApplicationContext context;
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentBase() throws IOException {
 
 		Resource resource = getResource();
@@ -79,7 +78,7 @@ class MongoRepositoryMetadataTests {
 				.containsEntry("type", "IMPERATIVE");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentDerivedQuery() throws IOException {
 
 		Resource resource = getResource();
@@ -93,7 +92,7 @@ class MongoRepositoryMetadataTests {
 				.containsEntry("filter", "{'lastname':?0}");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentSortedQuery() throws IOException {
 
 		Resource resource = getResource();
@@ -109,7 +108,7 @@ class MongoRepositoryMetadataTests {
 				.containsEntry("sort", "{'username':{'$numberInt':'1'}}");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentPagedQuery() throws IOException {
 
 		Resource resource = getResource();
@@ -123,7 +122,7 @@ class MongoRepositoryMetadataTests {
 				.element(0).isObject().containsEntry("filter", "{'lastname':{'$regex':/^\\Q?0\\E/}}");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	@Disabled("No support for expressions yet")
 	void shouldDocumentQueryWithExpression() throws IOException {
 
@@ -138,7 +137,7 @@ class MongoRepositoryMetadataTests {
 				.first().isObject().containsEntry("query", "select u from User u where u.emailAddress = :__$synthetic$__1");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentAggregation() throws IOException {
 
 		Resource resource = getResource();
@@ -153,7 +152,7 @@ class MongoRepositoryMetadataTests {
 						"[{ '$match' : { 'last_name' : { '$ne' : null } } }, { '$project': { '_id' : '$last_name' } }]");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentPipelineUpdate() throws IOException {
 
 		Resource resource = getResource();
@@ -168,7 +167,7 @@ class MongoRepositoryMetadataTests {
 						"[{ '$set' : { 'visits' : { '$ifNull' : [ {'$add' : [ '$visits', ?1 ] }, ?1 ] } } }]");
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldDocumentBaseFragment() throws IOException {
 
 		Resource resource = getResource();
