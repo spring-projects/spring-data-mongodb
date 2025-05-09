@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.*;
-import static org.mockito.Mockito.*;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.mockito.Mockito.mock;
 
 import example.aot.User;
 import reactor.core.publisher.Flux;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.aot.generate.GeneratedFiles;
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -75,7 +74,7 @@ class ReactiveAotContributionIntegrationTests {
 
 	}
 
-	@Test // GH-3830
+	@Test // GH-4964
 	void shouldGenerateMetadataForBaseRepositoryAndQuerydslFragment() throws IOException {
 
 		TestGenerationContext generationContext = generate(AotConfiguration.class);
