@@ -15,13 +15,15 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import reactor.test.StepVerifier;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
@@ -175,6 +177,18 @@ class ReactiveUpdateOperationSupportTests {
 				"Han");
 	}
 
+	@Test // GH-4949
+	void findAndModifyWithWithResultConversion() {
+
+		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
+				.apply(new Update().set("name", "Han")).map((raw, it) -> Optional.of(it.get())).findAndModify()
+				.as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual.get().getName()).isEqualTo("han"))
+				.verifyComplete();
+
+		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
+				"Han");
+	}
+
 	@Test // DATAMONGO-1719
 	void findAndModifyWithOptions() {
 
@@ -223,6 +237,18 @@ class ReactiveUpdateOperationSupportTests {
 				.as(StepVerifier::create).consumeNextWith(it -> {
 					assertThat(it.getName()).isEqualTo(han.firstname);
 				}).verifyComplete();
+	}
+
+	@Test // GH-4949
+	void findAndReplaceWithResultConversion() {
+
+		Person luke = new Person();
+		luke.firstname = "Luke";
+
+		template.update(Person.class).matching(queryHan()).replaceWith(luke).map((raw, it) -> Optional.of(it.get())).findAndReplace() //
+			.as(StepVerifier::create).consumeNextWith(it -> {
+				assertThat(it.get().getFirstname()).isEqualTo(han.firstname);
+			}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1827

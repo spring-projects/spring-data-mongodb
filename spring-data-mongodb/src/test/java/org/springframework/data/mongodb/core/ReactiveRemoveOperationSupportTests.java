@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import reactor.test.StepVerifier;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -106,6 +107,15 @@ class ReactiveRemoveOperationSupportTests {
 
 		template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove().as(StepVerifier::create)
 				.expectNext(han).verifyComplete();
+	}
+
+	@Test // GH-4949
+	void removeConvertAndReturnAllMatching() {
+
+		template.remove(Person.class).matching(query(where("firstname").is("han"))).map((raw, it) -> Optional.of(it.get()))
+				.findAndRemove().as(StepVerifier::create).expectNext(Optional.of(han)).verifyComplete();
+
+		template.findById(han.id, Person.class).as(StepVerifier::create).verifyComplete();
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)

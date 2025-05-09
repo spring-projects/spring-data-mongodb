@@ -116,6 +116,19 @@ WARNING: Projections must not be applied to xref:mongodb/mapping/document-refere
 
 You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
 
+Results can be contextually post-processed by using a `QueryResultConverter` that has access to both the raw result `Document` and the already mapped object by calling `map(...)` as outlined below.
+
+[source,java]
+====
+----
+List<Optional<Jedi>> result = template.query(Person.class)
+    .as(Jedi.class)
+    .matching(query(where("firstname").is("luke")))
+    .map((document, reader) -> Optional.of(reader.get()))
+    .all();
+----
+====
+
 When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for running a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:
 
 [tabs]
