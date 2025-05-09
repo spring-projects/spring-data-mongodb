@@ -185,7 +185,7 @@ class ExecutableUpdateOperationSupportTests {
 		assertThat(result.get()).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
 	}
 
-	@Test // GH-
+	@Test // GH-4949
 	void findAndModifyWithResultConverter() {
 
 		Optional<Person> result = template.update(Person.class).matching(queryHan())
