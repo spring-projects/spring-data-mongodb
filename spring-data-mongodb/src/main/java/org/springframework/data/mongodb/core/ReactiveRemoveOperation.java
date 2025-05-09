@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.Contract;
 
 import com.mongodb.client.result.DeleteResult;
 
@@ -56,16 +57,22 @@ public interface ReactiveRemoveOperation {
 	<T> ReactiveRemove<T> remove(Class<T> domainType);
 
 	/**
-	 * Compose remove execution by calling one of the terminating methods.
+	 * @author Christoph Strobl
+	 * @since 5.0
 	 */
-	interface TerminatingRemove<T> {
+	interface TerminatingResults<T> {
 
 		/**
-		 * Remove all documents matching.
+		 * Map the query result to a different type using {@link QueryResultConverter}.
 		 *
-		 * @return {@link Mono} emitting the {@link DeleteResult}. Never {@literal null}.
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link ExecutableFindOperation.TerminatingResults}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since 5.0
 		 */
-		Mono<DeleteResult> all();
+		@Contract("_ -> new")
+		<R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Remove and return all matching documents. <br/>
@@ -76,6 +83,20 @@ public interface ReactiveRemoveOperation {
 		 * @return empty {@link Flux} if no match found. Never {@literal null}.
 		 */
 		Flux<T> findAndRemove();
+	}
+
+	/**
+	 * Compose remove execution by calling one of the terminating methods.
+	 */
+	interface TerminatingRemove<T> extends TerminatingResults<T> {
+
+		/**
+		 * Remove all documents matching.
+		 *
+		 * @return {@link Mono} emitting the {@link DeleteResult}. Never {@literal null}.
+		 */
+		Mono<DeleteResult> all();
+
 	}
 
 	/**

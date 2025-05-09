@@ -55,6 +55,10 @@ public interface ExecutableRemoveOperation {
 	 */
 	<T> ExecutableRemove<T> remove(Class<T> domainType);
 
+	/**
+	 * @author Christoph Strobl
+	 * @since 5.0
+	 */
 	interface TerminatingResults<T> {
 
 		/**

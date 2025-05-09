@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -47,22 +47,25 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ReactiveRemoveSupport<>(template, domainType, ALL_QUERY, null);
+		return new ReactiveRemoveSupport<>(template, domainType, ALL_QUERY, null, QueryResultConverter.entity());
 	}
 
-	static class ReactiveRemoveSupport<T> implements ReactiveRemove<T>, RemoveWithCollection<T> {
+	static class ReactiveRemoveSupport<S, T> implements ReactiveRemove<T>, RemoveWithCollection<T> {
 
 		private final ReactiveMongoTemplate template;
-		private final Class<T> domainType;
+		private final Class<S> domainType;
 		private final Query query;
 		private final @Nullable String collection;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
 
-		ReactiveRemoveSupport(ReactiveMongoTemplate template, Class<T> domainType, Query query, @Nullable String collection) {
+		ReactiveRemoveSupport(ReactiveMongoTemplate template, Class<S> domainType, Query query, @Nullable String collection,
+				QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 			this.template = template;
 			this.domainType = domainType;
 			this.query = query;
 			this.collection = collection;
+			this.resultConverter = resultConverter;
 		}
 
 		@Override
@@ -70,7 +73,7 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 			Assert.hasText(collection, "Collection must not be null nor empty");
 
-			return new ReactiveRemoveSupport<>(template, domainType, query, collection);
+			return new ReactiveRemoveSupport<>(template, domainType, query, collection, resultConverter);
 		}
 
 		@Override
@@ -78,7 +81,7 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 			Assert.notNull(query, "Query must not be null");
 
-			return new ReactiveRemoveSupport<>(template, domainType, query, collection);
+			return new ReactiveRemoveSupport<>(template, domainType, query, collection, resultConverter);
 		}
 
 		@Override
@@ -94,7 +97,13 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 			String collectionName = getCollectionName();
 
-			return template.doFindAndDelete(collectionName, query, domainType);
+			return template.doFindAndDelete(collectionName, query, domainType, resultConverter);
+		}
+
+		@Override
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public <R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter) {
+			return new ReactiveRemoveSupport<>(template, (Class) domainType, query, collection, converter);
 		}
 
 		private String getCollectionName() {

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.jetbrains.annotations.Contract;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -65,6 +66,18 @@ public interface ReactiveUpdateOperation {
 	interface TerminatingFindAndModify<T> {
 
 		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFindAndModify}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since 5.0
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingFindAndModify<R> map(QueryResultConverter<? super T, ? extends R> converter);
+
+		/**
 		 * Find, modify and return the first matching document.
 		 *
 		 * @return {@link Mono#empty()} if nothing found. Never {@literal null}.
@@ -96,6 +109,18 @@ public interface ReactiveUpdateOperation {
 	 * @since 2.1
 	 */
 	interface TerminatingFindAndReplace<T> extends TerminatingReplace {
+
+		/**
+		 * Map the query result to a different type using {@link QueryResultConverter}.
+		 *
+		 * @param <R> {@link Class type} of the result.
+		 * @param converter the converter, must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFindAndModify}.
+		 * @throws IllegalArgumentException if {@link QueryResultConverter converter} is {@literal null}.
+		 * @since 5.0
+		 */
+		@Contract("_ -> new")
+		<R> TerminatingFindAndReplace<R> map(QueryResultConverter<? super T, ? extends R> converter);
 
 		/**
 		 * Find, replace and return the first matching document.

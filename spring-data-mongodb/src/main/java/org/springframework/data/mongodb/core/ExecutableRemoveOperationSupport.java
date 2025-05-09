@@ -109,6 +109,7 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		}
 
 		@Override
+		@SuppressWarnings({"unchecked", "rawtypes"})
 		public <R> TerminatingResults<R> map(QueryResultConverter<? super T, ? extends R> converter) {
 			return new ExecutableRemoveSupport<>(template, (Class) domainType, query, collection, converter);
 		}

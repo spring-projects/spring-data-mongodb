@@ -47,7 +47,6 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -114,6 +113,7 @@ import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1137,9 +1137,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
-	@Override
-	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
-			Class<T> entityClass, String collectionName) {
+	public <S, T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<S> entityClass, String collectionName, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		Assert.notNull(options, "Options must not be null ");
 		Assert.notNull(entityClass, "Entity class must not be null");
@@ -1156,13 +1155,27 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		return doFindAndModify(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
-				query.getFieldsObject(), getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
+				query.getFieldsObject(), getMappedSortObject(query, entityClass), entityClass, update, optionsToUse,
+				resultConverter);
 	}
 
 	@Override
-	@SuppressWarnings("NullAway")
+	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<T> entityClass, String collectionName) {
+		return findAndModify(query, update, options, entityClass, collectionName, QueryResultConverter.entity());
+	}
+
+	@Override
 	public <S, T> Mono<T> findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
 			String collectionName, Class<T> resultType) {
+		return findAndReplace(query, replacement, options, entityType, collectionName, resultType,
+				QueryResultConverter.entity());
+	}
+
+	@SuppressWarnings("NullAway")
+	public <S, T, R> Mono<R> findAndReplace(Query query, S replacement, FindAndReplaceOptions options,
+			Class<S> entityType, String collectionName, Class<T> resultType,
+			QueryResultConverter<? super T, ? extends R> resultConverter) {
 
 		Assert.notNull(query, "Query must not be null");
 		Assert.notNull(replacement, "Replacement must not be null");
@@ -1199,9 +1212,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 								mapped.getCollection()));
 			}).flatMap(it -> {
 
-				Mono<T> afterFindAndReplace = doFindAndReplace(it.getCollection(), collectionPreparer, mappedQuery,
+				Mono<R> afterFindAndReplace = doFindAndReplace(it.getCollection(), collectionPreparer, mappedQuery,
 						mappedFields, mappedSort, queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(),
-						options, projection);
+						options, projection, resultConverter);
 				return afterFindAndReplace.flatMap(saved -> {
 					maybeEmitEvent(new AfterSaveEvent<>(saved, it.getTarget(), it.getCollection()));
 					return maybeCallAfterSave(saved, it.getTarget(), it.getCollection());
@@ -2280,6 +2293,43 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						.flatMapSequential(deleteResult -> Flux.fromIterable(list)));
 	}
 
+	<S, T> Flux<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass,
+			QueryResultConverter<? super S, ? extends T> resultConverter) {
+
+		List<Object> ids = new ArrayList<>();
+		ProjectingReadCallback readCallback = new ProjectingReadCallback(getConverter(),
+				EntityProjection.nonProjecting(entityClass), collectionName);
+
+		QueryResultConverterCallback<S, T> callback = new QueryResultConverterCallback<>(resultConverter, readCallback) {
+
+			@Override
+			public Mono<T> doWith(Document object) {
+				ids.add(object.get("_id"));
+				return super.doWith(object);
+			}
+		};
+
+		Flux<T> flux = doFind(collectionName, ReactiveCollectionPreparerDelegate.of(query), query.getQueryObject(),
+				query.getFieldsObject(), entityClass,
+				new QueryFindPublisherPreparer(query, query.getSortObject(), query.getLimit(), query.getSkip(), entityClass),
+				callback);
+
+		return Flux.from(flux).collectList().filter(it -> !it.isEmpty()).flatMapMany(list -> {
+
+			Criteria[] criterias = ids.stream() //
+					.map(it -> Criteria.where("_id").is(it)) //
+					.toArray(Criteria[]::new);
+
+			Query removeQuery = new Query(criterias.length == 1 ? criterias[0] : new Criteria().orOperator(criterias));
+			if (query.hasReadPreference()) {
+				removeQuery.withReadPreference(query.getReadPreference());
+			}
+
+			return Flux.from(remove(removeQuery, entityClass, collectionName))
+					.flatMapSequential(deleteResult -> Flux.fromIterable(list));
+		});
+	}
+
 	/**
 	 * Create the specified collection using the provided options
 	 *
@@ -2487,9 +2537,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
-	protected <T> Mono<T> doFindAndModify(String collectionName,
+	<S, T> Mono<T> doFindAndModify(String collectionName,
 			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document query, Document fields,
-			@Nullable Document sort, Class<T> entityClass, UpdateDefinition update, FindAndModifyOptions options) {
+			@Nullable Document sort, Class<S> entityClass, UpdateDefinition update, FindAndModifyOptions options,
+			QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		UpdateContext updateContext = queryOperations.updateSingleContext(update, query, false);
@@ -2508,10 +2559,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						serializeToJsonSafely(mappedUpdate), collectionName));
 			}
 
+			EntityProjection<S, ?> projection = EntityProjection.nonProjecting(entityClass);
+			DocumentCallback<T> callback = getResultReader(projection, collectionName, resultConverter);
+
 			return executeFindOneInternal(
 					new FindAndModifyCallback(collectionPreparer, mappedQuery, fields, sort, mappedUpdate,
 							update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()), options),
-					new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
+					callback, collectionName);
 		});
 	}
 
@@ -2540,7 +2594,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		EntityProjection<T, ?> projection = operations.introspectProjection(resultType, entityType);
 
 		return doFindAndReplace(collectionName, collectionPreparer, mappedQuery, mappedFields, mappedSort, collation,
-				entityType, replacement, options, projection);
+				entityType, replacement, options, projection, QueryResultConverter.entity());
 	}
 
 	/**
@@ -2560,10 +2614,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
 	 * @since 3.4
 	 */
-	private <T> Mono<T> doFindAndReplace(String collectionName,
+	private <S, T> Mono<T> doFindAndReplace(String collectionName,
 			CollectionPreparer<MongoCollection<Document>> collectionPreparer, Document mappedQuery, Document mappedFields,
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
-			FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
+			FindAndReplaceOptions options, EntityProjection<S, ?> projection,
+			QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 		return Mono.defer(() -> {
 
@@ -2575,9 +2630,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						serializeToJsonSafely(replacement), collectionName));
 			}
 
+			DocumentCallback<T> resultReader = getResultReader(projection, collectionName, resultConverter);
+
 			return executeFindOneInternal(new FindAndReplaceCallback(collectionPreparer, mappedQuery, mappedFields,
-					mappedSort, replacement, collation, options),
-					new ProjectingReadCallback<>(this.mongoConverter, projection, collectionName), collectionName);
+					mappedSort, replacement, collation, options), resultReader, collectionName);
 
 		});
 	}
@@ -3124,7 +3180,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		FindPublisher<T> doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException;
 	}
 
-	static final class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
+	static class QueryResultConverterCallback<T, R> implements DocumentCallback<R> {
 
 		private final QueryResultConverter<? super T, ? extends R> converter;
 		private final DocumentCallback<T> delegate;

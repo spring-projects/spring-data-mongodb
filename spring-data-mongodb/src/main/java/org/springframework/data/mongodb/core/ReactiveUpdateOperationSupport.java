@@ -47,10 +47,10 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 		Assert.notNull(domainType, "DomainType must not be null");
 
-		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType);
+		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType, QueryResultConverter.entity());
 	}
 
-	static class ReactiveUpdateSupport<T>
+	static class ReactiveUpdateSupport<S, T>
 			implements ReactiveUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
 			FindAndReplaceWithOptions<T>, FindAndReplaceWithProjection<T>, TerminatingFindAndReplace<T> {
 
@@ -62,11 +62,12 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		private final @Nullable FindAndModifyOptions findAndModifyOptions;
 		private final @Nullable FindAndReplaceOptions findAndReplaceOptions;
 		private final @Nullable Object replacement;
-		private final Class<T> targetType;
+		private final Class<S> targetType;
+		private final QueryResultConverter<? super S, ? extends T> resultConverter;
 
 		ReactiveUpdateSupport(ReactiveMongoTemplate template, Class<?> domainType, Query query, @Nullable UpdateDefinition update,
 			@Nullable String collection, @Nullable FindAndModifyOptions findAndModifyOptions, @Nullable FindAndReplaceOptions findAndReplaceOptions,
-			@Nullable Object replacement, Class<T> targetType) {
+			@Nullable Object replacement, Class<S> targetType, QueryResultConverter<? super S, ? extends T> resultConverter) {
 
 			this.template = template;
 			this.domainType = domainType;
@@ -77,6 +78,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			this.findAndReplaceOptions = findAndReplaceOptions;
 			this.replacement = replacement;
 			this.targetType = targetType;
+			this.resultConverter = resultConverter;
 		}
 
 		@Override
@@ -85,7 +87,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(update, "Update must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -94,7 +96,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.hasText(collection, "Collection must not be null nor empty");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -108,14 +110,14 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		@Override
-		@SuppressWarnings("NullAway")
+		@SuppressWarnings({"unchecked", "rawtypes", "NullAway"})
 		public Mono<T> findAndModify() {
 
 			String collectionName = getCollectionName();
 
 			return template.findAndModify(query, update,
-					findAndModifyOptions != null ? findAndModifyOptions : FindAndModifyOptions.none(), targetType,
-					collectionName);
+					findAndModifyOptions != null ? findAndModifyOptions : FindAndModifyOptions.none(), (Class) targetType,
+					collectionName, resultConverter);
 		}
 
 		@Override
@@ -126,7 +128,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 			return template.findAndReplace(query, replacement,
 					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.none(), (Class) domainType,
-					getCollectionName(), targetType);
+					getCollectionName(), targetType, resultConverter);
 		}
 
 		@Override
@@ -135,7 +137,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(query, "Query must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -149,7 +151,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(options, "Options must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, options,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -158,7 +160,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(replacement, "Replacement must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, targetType);
+					findAndReplaceOptions, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -167,7 +169,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(options, "Options must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions, options,
-					replacement, targetType);
+					replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -178,7 +180,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 				target.upsert();
 			}
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					target, replacement, targetType);
+					target, replacement, targetType, resultConverter);
 		}
 
 		@Override
@@ -187,7 +189,13 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			Assert.notNull(resultType, "ResultType must not be null");
 
 			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
-					findAndReplaceOptions, replacement, resultType);
+					findAndReplaceOptions, replacement, resultType, QueryResultConverter.entity());
+		}
+
+		@Override
+		public <R> ReactiveUpdateSupport<S, R> map(QueryResultConverter<? super T, ? extends R> converter) {
+			return new ReactiveUpdateSupport<>(template, domainType, query, update, collection, findAndModifyOptions,
+				findAndReplaceOptions, replacement, targetType, this.resultConverter.andThen(converter));
 		}
 
 		@Override
