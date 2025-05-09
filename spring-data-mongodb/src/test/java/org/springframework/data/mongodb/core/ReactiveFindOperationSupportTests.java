@@ -311,7 +311,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 				.verifyComplete();
 	}
 
-	@Test // GH-…
+	@Test // GH-4949
 	@DirtiesState
 	void findAllNearByWithConverter() {
 

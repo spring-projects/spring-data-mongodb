@@ -20,7 +20,7 @@
 	<logger name="org.springframework.data.mongodb.test.util" level="info"/>
 
 	<!-- AOT Code Generation -->
-	<logger name="org.springframework.data.repository.aot.generate.RepositoryContributor" level="info" />
+	<logger name="org.springframework.data.repository.aot.generate.RepositoryContributor" level="warn" />
 
 	<root level="error">
 		<appender-ref ref="console" />
