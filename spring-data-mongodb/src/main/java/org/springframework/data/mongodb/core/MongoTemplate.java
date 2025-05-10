@@ -569,6 +569,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Executing query: %s fields: %s sort: %s in collection: %s",
+					// TBD: move serializeToJsonSafely() to "XXXDelegate" class and make this class a spring managed bean for user customization
 					serializeToJsonSafely(queryObject), fieldsObject, serializeToJsonSafely(sortObject), collectionName));
 		}
 
