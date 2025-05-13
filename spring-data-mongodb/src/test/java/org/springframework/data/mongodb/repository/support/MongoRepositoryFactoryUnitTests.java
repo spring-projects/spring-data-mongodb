@@ -51,19 +51,19 @@ import org.springframework.data.repository.core.EntityInformation;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class MongoRepositoryFactoryUnitTests {
+class MongoRepositoryFactoryUnitTests {
 
 	@Mock MongoOperations template;
 
-	MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
+	private MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		when(template.getConverter()).thenReturn(converter);
 	}
 
 	@Test
-	public void usesMappingMongoEntityInformationIfMappingContextSet() {
+	void usesMappingMongoEntityInformationIfMappingContextSet() {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		EntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
@@ -71,7 +71,7 @@ public class MongoRepositoryFactoryUnitTests {
 	}
 
 	@Test // DATAMONGO-385
-	public void createsRepositoryWithIdTypeLong() {
+	void createsRepositoryWithIdTypeLong() {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
