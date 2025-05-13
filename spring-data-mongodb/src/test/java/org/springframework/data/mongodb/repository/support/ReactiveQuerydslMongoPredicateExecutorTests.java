@@ -111,7 +111,8 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 	public void setup() {
 
 		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(operations);
-		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
+		MongoEntityInformation<Person, String> entityInformation = factory
+				.getEntityInformation(Person.class);
 		repository = new ReactiveQuerydslMongoPredicateExecutor<>(entityInformation, operations);
 
 		dave = new Person("Dave", "Matthews", 42);
@@ -326,7 +327,8 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		};
 
 		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(ops);
-		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
+		MongoEntityInformation<Person, String> entityInformation = factory
+				.getEntityInformation(Person.class);
 		repository = new ReactiveQuerydslMongoPredicateExecutor<>(entityInformation, ops);
 
 		repository.findOne(person.firstname.contains("batman")) //

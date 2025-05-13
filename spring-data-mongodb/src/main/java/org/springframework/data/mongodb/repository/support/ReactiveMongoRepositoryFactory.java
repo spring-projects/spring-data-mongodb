@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -118,14 +117,14 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 */
 	@Override
 	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
-		return fragmentsContributor.contribute(metadata, getEntityInformation(metadata.getDomainType(), metadata),
+		return fragmentsContributor.contribute(metadata, getEntityInformation(metadata),
 				operations);
 	}
 
 	@Override
 	protected Object getTargetRepository(RepositoryInformation information) {
 
-		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType(),
+		MongoEntityInformation<?, ?> entityInformation = getEntityInformation(
 				information);
 		Object targetRepository = getTargetRepositoryViaReflection(information, entityInformation, operations);
 
@@ -143,19 +142,18 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		return Optional.of(new MongoQueryLookupStrategy(operations, mappingContext, valueExpressionDelegate));
 	}
 
+	@Deprecated
 	@Override
 	public <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		return getEntityInformation(domainClass, null);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
+		return MongoEntityInformationSupport.entityInformationFor(entity, null);
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T, ID> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
-			@Nullable RepositoryMetadata metadata) {
+	@Override
+	public MongoEntityInformation<?, ?> getEntityInformation(RepositoryMetadata metadata) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(domainClass);
-
-		return new MappingMongoEntityInformation<>((MongoPersistentEntity<T>) entity,
-				metadata != null ? (Class<ID>) metadata.getIdType() : null);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(metadata.getDomainType());
+		return MongoEntityInformationSupport.entityInformationFor(entity, metadata.getIdType());
 	}
 
 	/**

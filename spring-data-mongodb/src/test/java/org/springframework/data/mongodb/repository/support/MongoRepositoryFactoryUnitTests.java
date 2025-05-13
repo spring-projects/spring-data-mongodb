@@ -31,9 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -41,9 +39,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.ReadPreference;
-import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.EntityInformation;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
@@ -69,7 +66,7 @@ public class MongoRepositoryFactoryUnitTests {
 	public void usesMappingMongoEntityInformationIfMappingContextSet() {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
-		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
+		EntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
 		assertThat(entityInformation instanceof MappingMongoEntityInformation).isTrue();
 	}
 
