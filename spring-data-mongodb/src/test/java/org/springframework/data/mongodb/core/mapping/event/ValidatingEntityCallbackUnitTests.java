@@ -26,12 +26,14 @@ import jakarta.validation.constraints.NotNull;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.Ordered;
 
 /**
  * Unit tests for {@link ValidatingEntityCallback}.
  *
  * @author Rene Felgenträger
  * @author Mark Paluch
+ * @author yangchef1
  */
 class ValidatingEntityCallbackUnitTests {
 
@@ -61,6 +63,16 @@ class ValidatingEntityCallbackUnitTests {
 		Object entity = callback.onBeforeSave(coordinates, coordinates.toDocument(), "coordinates");
 
 		assertThat(entity).isEqualTo(coordinates);
+	}
+
+	@Test // GH-4914
+	void allowsChangingOrderDynamically() {
+
+		assertThat(callback).isInstanceOf(Ordered.class);
+		assertThat(callback.getOrder()).isEqualTo(100);
+
+		callback.setOrder(50);
+		assertThat(callback.getOrder()).isEqualTo(50);
 	}
 
 	record Coordinates(@NotNull @Min(0) Integer x, @NotNull @Min(0) Integer y) {
