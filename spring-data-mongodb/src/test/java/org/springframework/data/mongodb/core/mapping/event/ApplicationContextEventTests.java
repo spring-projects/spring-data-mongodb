@@ -408,7 +408,8 @@ public class ApplicationContextEventTests {
 		template.save(new Person("Boba", "Fett", 40));
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
-		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
+		MongoEntityInformation<Person, String> entityInformation = factory
+				.getEntityInformation(Person.class);
 		QuerydslMongoPredicateExecutor executor = new QuerydslMongoPredicateExecutor<>(entityInformation, template);
 
 		executor.findOne(QPerson.person.lastname.startsWith("Fe"));

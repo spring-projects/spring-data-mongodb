@@ -75,7 +75,8 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 	public void setup() {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(operations);
-		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
+		MongoEntityInformation<Person, String> entityInformation = factory
+				.getEntityInformation(Person.class);
 		repository = new QuerydslMongoPredicateExecutor<>(entityInformation, operations);
 
 		operations.dropCollection(Person.class);
@@ -246,7 +247,8 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		};
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(ops);
-		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
+		MongoEntityInformation<Person, String> entityInformation = factory
+				.getEntityInformation(Person.class);
 		repository = new QuerydslMongoPredicateExecutor<>(entityInformation, ops);
 
 		repository.findOne(person.firstname.contains("batman"));
