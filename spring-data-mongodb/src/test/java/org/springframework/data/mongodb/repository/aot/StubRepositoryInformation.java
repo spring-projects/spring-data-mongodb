@@ -70,6 +70,11 @@ class StubRepositoryInformation implements RepositoryInformation {
 	}
 
 	@Override
+	public TypeInformation<?> getReturnedDomainTypeInformation(Method method) {
+		return metadata.getReturnedDomainTypeInformation(method);
+	}
+
+	@Override
 	public CrudMethods getCrudMethods() {
 		return metadata.getCrudMethods();
 	}

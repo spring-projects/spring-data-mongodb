@@ -48,6 +48,7 @@ import org.springframework.util.StringUtils;
  * MongoDB specific {@link RepositoryContributor}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 5.0
  */
 public class MongoRepositoryContributor extends RepositoryContributor {
@@ -159,8 +160,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	private static boolean backoff(MongoQueryMethod method) {
 
-		boolean skip = method.isGeoNearQuery() || method.isScrollQuery() || method.isStreamQuery()
-				|| method.isSearchQuery();
+		boolean skip = method.isGeoNearQuery() || method.isSearchQuery();
 
 		if (skip && logger.isDebugEnabled()) {
 			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming, search or scrolling query"
@@ -225,8 +225,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 					.usingAggregationVariableName(updateVariableName).pipelineOnly(true).build());
 
 			builder.addStatement("$T $L = $T.from($L.getOperations())", AggregationUpdate.class,
-					context.localVariable("aggregationUpdate"),
-					AggregationUpdate.class, updateVariableName);
+					context.localVariable("aggregationUpdate"), AggregationUpdate.class, updateVariableName);
 
 			builder.add(updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
 					.referencingUpdate(context.localVariable("aggregationUpdate")).build());

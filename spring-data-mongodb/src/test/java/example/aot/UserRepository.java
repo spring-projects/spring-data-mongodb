@@ -22,13 +22,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
@@ -94,8 +97,10 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	Slice<User> findSliceOfUserByLastnameStartingWith(String lastname, Pageable page);
 
-	// TODO: Streaming
-	// TODO: Scrolling
+	Stream<User> streamByLastnameStartingWith(String lastname, Sort sort, Limit limit);
+
+	Window<User> findTop2WindowByLastnameStartingWithOrderByUsername(String lastname, ScrollPosition scrollPosition);
+
 	// TODO: GeoQueries
 	// TODO: TextSearch
 
@@ -176,13 +181,13 @@ public interface UserRepository extends CrudRepository<User, String> {
 	@ReadPreference("no-such-read-preference")
 	User findWithReadPreferenceByUsername(String username);
 
-	// TODO: hints
-
 	/* Projecting Queries */
 
 	List<UserProjection> findUserProjectionByLastnameStartingWith(String lastname);
 
 	Page<UserProjection> findUserProjectionByLastnameStartingWith(String lastname, Pageable page);
+
+	<T> Page<T> findUserProjectionByLastnameStartingWith(String lastname, Pageable page, Class<T> projectionType);
 
 	/* Aggregations */
 

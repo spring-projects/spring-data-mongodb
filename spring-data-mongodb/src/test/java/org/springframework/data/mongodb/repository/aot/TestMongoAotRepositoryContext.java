@@ -30,6 +30,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.test.tools.ClassFile;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.repository.config.AotRepositoryContext;
+import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryComposition;
 
@@ -68,6 +69,11 @@ class TestMongoAotRepositoryContext implements AotRepositoryContext {
 	@Override
 	public String getModuleName() {
 		return "MongoDB";
+	}
+
+	@Override
+	public RepositoryConfigurationSource getConfigurationSource() {
+		return null;
 	}
 
 	@Override

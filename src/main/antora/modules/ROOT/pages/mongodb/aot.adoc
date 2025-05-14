@@ -66,16 +66,15 @@ These are typically all query methods that are not backed by an xref:repositorie
 * Query methods annotated with `@Query` (excluding those containing SpEL)
 * Methods annotated with `@Aggregation`
 * Methods using `@Update`
-* `@Hint` & `@ReadPreference` support
+* `@Hint`, `@Meta`, and `@ReadPreference` support
 * `Page`, `Slice`, and `Optional` return types
 * DTO Projections
 
 **Limitations**
 
-* `@Meta` annotations are not evaluated.
+* `@Meta.allowDiskUse` and `flags` are not evaluated.
 * Queries / Aggregations / Updates containing `SpEL` cannot be generated.
 * Limited `Collation` detection.
-* Reserved parameter names (must not be used in method signature) `finder`,  `filterQuery`, `countQuery`, `deleteQuery`, `remover` `updateDefinition`, `aggregation`, `aggregationPipeline`, `aggregationUpdate`, `aggregationOptions`, `updater`, `results`, `fields`.
 
 **Excluded methods**
 
@@ -83,6 +82,4 @@ These are typically all query methods that are not backed by an xref:repositorie
 * Querydsl and Query by Example methods
 * Methods whose implementation would be overly complex
 * Query Methods obtaining MQL from a file
-** Methods accepting `ScrollPosition` (e.g. `Keyset` pagination)
-** Dynamic projections
 ** Geospatial Queries
