@@ -45,7 +45,7 @@ public class LoggingEventListenerTests {
 		appender = new ListAppender<>();
 
 		// set log level for LoggingEventListener to "info" and set up an appender capturing events.
-		logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LoggingEventListener.class);
+		logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LoggingEventListenerTests.class);
 
 		logger.setAdditive(false);
 		logger.setLevel(Level.INFO);
