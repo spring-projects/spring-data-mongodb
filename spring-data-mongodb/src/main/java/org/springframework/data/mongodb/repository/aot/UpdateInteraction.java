@@ -17,37 +17,60 @@ package org.springframework.data.mongodb.repository.aot;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.repository.aot.generate.QueryMetadata;
+import org.springframework.util.Assert;
 
 /**
  * An {@link MongoInteraction} to execute an update.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 5.0
  */
 class UpdateInteraction extends MongoInteraction implements QueryMetadata {
 
 	private final QueryInteraction filter;
-	private final StringUpdate update;
+	private final @Nullable StringUpdate update;
+	private final @Nullable Integer updateDefinitionParameter;
 
-	UpdateInteraction(QueryInteraction filter, StringUpdate update) {
+	UpdateInteraction(QueryInteraction filter, @Nullable StringUpdate update,
+			@Nullable Integer updateDefinitionParameter) {
 		this.filter = filter;
 		this.update = update;
+		this.updateDefinitionParameter = updateDefinitionParameter;
 	}
 
-	QueryInteraction getFilter() {
+	public QueryInteraction getFilter() {
 		return filter;
 	}
 
-	StringUpdate getUpdate() {
+	public @Nullable StringUpdate getUpdate() {
 		return update;
+	}
+
+	public int getRequiredUpdateDefinitionParameter() {
+
+		Assert.notNull(updateDefinitionParameter, "UpdateDefinitionParameter must not be null!");
+
+		return updateDefinitionParameter;
+	}
+
+	public boolean hasUpdateDefinitionParameter() {
+		return updateDefinitionParameter != null;
 	}
 
 	@Override
 	public Map<String, Object> serialize() {
 
 		Map<String, Object> serialized = filter.serialize();
-		serialized.put("update", update.getUpdateString());
+
+		if (update != null) {
+			serialized.put("filter", filter.getQuery().getQueryString());
+			serialized.put("update", update.getUpdateString());
+		}
+
 		return serialized;
 	}
 
@@ -55,4 +78,5 @@ class UpdateInteraction extends MongoInteraction implements QueryMetadata {
 	InteractionType getExecutionType() {
 		return InteractionType.UPDATE;
 	}
+
 }

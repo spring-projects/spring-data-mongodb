@@ -55,6 +55,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	Long countUsersByLastname(String lastname);
 
+	int countUsersAsIntByLastname(String lastname);
+
 	Boolean existsUserByLastname(String lastname);
 
 	List<User> findByLastnameStartingWith(String lastname);
@@ -215,6 +217,11 @@ public interface UserRepository extends CrudRepository<User, String> {
 			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
 			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
 	AggregationResults<UserAggregate> groupByLastnameAndAsAggregationResults(String property);
+
+	@Aggregation(pipeline = { //
+			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
+			"{ '$group': { '_id' : '$last_name', names : { $addToSet : '$?0' } } }" })
+	Stream<UserAggregate> streamGroupByLastnameAndAsAggregationResults(String property);
 
 	@Aggregation(pipeline = { //
 			"{ '$match' : { 'posts' : { '$ne' : null } } }", //

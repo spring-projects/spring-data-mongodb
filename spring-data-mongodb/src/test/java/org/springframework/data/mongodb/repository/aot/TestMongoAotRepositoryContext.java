@@ -37,12 +37,12 @@ import org.springframework.data.repository.core.support.RepositoryComposition;
 /**
  * @author Christoph Strobl
  */
-class TestMongoAotRepositoryContext implements AotRepositoryContext {
+public class TestMongoAotRepositoryContext implements AotRepositoryContext {
 
 	private final StubRepositoryInformation repositoryInformation;
 	private final Environment environment = new StandardEnvironment();
 
-	TestMongoAotRepositoryContext(Class<?> repositoryInterface, @Nullable RepositoryComposition composition) {
+	public TestMongoAotRepositoryContext(Class<?> repositoryInterface, @Nullable RepositoryComposition composition) {
 		this.repositoryInformation = new StubRepositoryInformation(repositoryInterface, composition);
 	}
 

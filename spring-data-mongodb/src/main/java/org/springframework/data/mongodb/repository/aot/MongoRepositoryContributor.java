@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.aot;
 import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.*;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
@@ -119,14 +120,23 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 		if (queryMethod.isModifyingQuery()) {
 
-			Update updateSource = queryMethod.getUpdateSource();
-			if (StringUtils.hasText(updateSource.value())) {
-				UpdateInteraction update = new UpdateInteraction(query, new StringUpdate(updateSource.value()));
+			int updateIndex = queryMethod.getParameters().getUpdateIndex();
+			if (updateIndex != -1) {
+
+				UpdateInteraction update = new UpdateInteraction(query, null, updateIndex);
 				return updateMethodContributor(queryMethod, update);
-			}
-			if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
-				AggregationUpdateInteraction update = new AggregationUpdateInteraction(query, updateSource.pipeline());
-				return aggregationUpdateMethodContributor(queryMethod, update);
+
+			} else {
+				Update updateSource = queryMethod.getUpdateSource();
+				if (StringUtils.hasText(updateSource.value())) {
+					UpdateInteraction update = new UpdateInteraction(query, new StringUpdate(updateSource.value()), null);
+					return updateMethodContributor(queryMethod, update);
+				}
+
+				if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
+					AggregationUpdateInteraction update = new AggregationUpdateInteraction(query, updateSource.pipeline());
+					return aggregationUpdateMethodContributor(queryMethod, update);
+				}
 			}
 		}
 
@@ -160,10 +170,12 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	private static boolean backoff(MongoQueryMethod method) {
 
-		boolean skip = method.isGeoNearQuery() || method.isSearchQuery();
+		// TODO: namedQuery, Regex queries, queries accepting Shapes (e.g. within) or returning arrays.
+		boolean skip = method.isGeoNearQuery() || method.isSearchQuery()
+				|| method.getName().toLowerCase(Locale.ROOT).contains("regex") || method.getReturnType().getType().isArray();
 
 		if (skip && logger.isDebugEnabled()) {
-			logger.debug("Skipping AOT generation for [%s]. Method is either geo-near, streaming, search or scrolling query"
+			logger.debug("Skipping AOT generation for [%s]. Method is either returning an array or a geo-near, regex query"
 					.formatted(method.getName()));
 		}
 		return skip;
@@ -197,9 +209,15 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 					.usingQueryVariableName(filterVariableName).build());
 
 			// update definition
-			String updateVariableName = context.localVariable("updateDefinition");
-			builder.add(
-					updateBlockBuilder(context, queryMethod).update(update).usingUpdateVariableName(updateVariableName).build());
+			String updateVariableName;
+
+			if (update.hasUpdateDefinitionParameter()) {
+				updateVariableName = context.getParameterName(update.getRequiredUpdateDefinitionParameter());
+			} else {
+				updateVariableName = context.localVariable("updateDefinition");
+				builder.add(updateBlockBuilder(context, queryMethod).update(update).usingUpdateVariableName(updateVariableName)
+						.build());
+			}
 
 			builder.add(updateExecutionBlockBuilder(context, queryMethod).withFilter(filterVariableName)
 					.referencingUpdate(updateVariableName).build());

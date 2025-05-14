@@ -107,8 +107,8 @@ class MongoRepositoryContributorTests {
 	@Test
 	void testDerivedCount() {
 
-		Long value = fragment.countUsersByLastname("Skywalker");
-		assertThat(value).isEqualTo(2L);
+		assertThat(fragment.countUsersByLastname("Skywalker")).isEqualTo(2L);
+		assertThat(fragment.countUsersAsIntByLastname("Skywalker")).isEqualTo(2);
 	}
 
 	@Test
@@ -554,6 +554,16 @@ class MongoRepositoryContributorTests {
 
 		AggregationResults<UserAggregate> allLastnames = fragment.groupByLastnameAndAsAggregationResults("first_name");
 		assertThat(allLastnames.getMappedResults()).containsExactlyInAnyOrder(//
+				new UserAggregate("Skywalker", List.of("Anakin", "Luke")), //
+				new UserAggregate("Organa", List.of("Leia")), //
+				new UserAggregate("Solo", List.of("Han", "Ben")));
+	}
+
+	@Test
+	void testAggregationStreamWithProjectedResultsWrappedInAggregationResults() {
+
+		List<UserAggregate> allLastnames = fragment.streamGroupByLastnameAndAsAggregationResults("first_name").toList();
+		assertThat(allLastnames).containsExactlyInAnyOrder(//
 				new UserAggregate("Skywalker", List.of("Anakin", "Luke")), //
 				new UserAggregate("Organa", List.of("Leia")), //
 				new UserAggregate("Solo", List.of("Han", "Ben")));
