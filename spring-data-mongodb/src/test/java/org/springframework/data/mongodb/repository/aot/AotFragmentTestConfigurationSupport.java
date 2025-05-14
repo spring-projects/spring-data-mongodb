@@ -40,7 +40,7 @@ import org.springframework.util.ReflectionUtils;
  * This configuration generates the AOT repository, compiles sources and configures a BeanFactory to contain the AOT
  * fragment. Additionally, the fragment is exposed through a {@code repositoryInterface} JDK proxy forwarding method
  * invocations to the backing AOT fragment. Note that {@code repositoryInterface} is not a repository proxy.
- * 
+ *
  * @author Christoph Strobl
  */
 public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProcessor {
@@ -62,7 +62,8 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 		new MongoRepositoryContributor(repositoryContext).contribute(generationContext);
 
 		AbstractBeanDefinition aotGeneratedRepository = BeanDefinitionBuilder
-				.genericBeanDefinition(repositoryInterface.getName() + "Impl__Aot") //
+				.genericBeanDefinition(
+						repositoryInterface.getPackageName() + "." + repositoryInterface.getSimpleName() + "Impl__Aot") //
 				.addConstructorArgReference("mongoOperations") //
 				.addConstructorArgValue(getCreationContext(repositoryContext)).getBeanDefinition();
 
@@ -80,6 +81,8 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 		}).getBeanDefinition();
 
 		((BeanDefinitionRegistry) beanFactory).registerBeanDefinition("fragmentFacade", fragmentFacade);
+
+		beanFactory.registerSingleton("generationContext", generationContext);
 	}
 
 	private Object getFragmentFacadeProxy(Object fragment) {

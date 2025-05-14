@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
@@ -40,6 +41,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Hint;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
@@ -256,15 +258,13 @@ class MongoCodeBlocks {
 						updateReference);
 			} else if (ClassUtils.isAssignable(Long.class, returnType)) {
 				builder.addStatement("return $L.matching($L).apply($L).all().getModifiedCount()",
-						context.localVariable("updater"), queryVariableName,
-						updateReference);
+						context.localVariable("updater"), queryVariableName, updateReference);
 			} else {
 				builder.addStatement("$T $L = $L.matching($L).apply($L).all().getModifiedCount()", Long.class,
-						context.localVariable("modifiedCount"), context.localVariable("updater"),
-						queryVariableName, updateReference);
+						context.localVariable("modifiedCount"), context.localVariable("updater"), queryVariableName,
+						updateReference);
 				builder.addStatement("return $T.convertNumberToTargetClass($L, $T.class)", NumberUtils.class,
-						context.localVariable("modifiedCount"),
-						returnType);
+						context.localVariable("modifiedCount"), returnType);
 			}
 
 			return builder.build();
@@ -319,11 +319,9 @@ class MongoCodeBlocks {
 				Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
 
 				builder.addStatement("$T $L = $L.aggregate($L, $T.class)", AggregationResults.class,
-						context.localVariable("results"), mongoOpsRef,
-						aggregationVariableName, outputType);
+						context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
 				if (!queryMethod.isCollectionQuery()) {
-					builder.addStatement(
-							"return $T.<$T>firstElement(convertSimpleRawResults($T.class, $L.getMappedResults()))",
+					builder.addStatement("return $T.<$T>firstElement(convertSimpleRawResults($T.class, $L.getMappedResults()))",
 							CollectionUtils.class, returnType, returnType, context.localVariable("results"));
 				} else {
 					builder.addStatement("return convertSimpleRawResults($T.class, $L.getMappedResults())", returnType,
@@ -332,8 +330,7 @@ class MongoCodeBlocks {
 			} else {
 				if (queryMethod.isSliceQuery()) {
 					builder.addStatement("$T $L = $L.aggregate($L, $T.class)", AggregationResults.class,
-							context.localVariable("results"), mongoOpsRef,
-							aggregationVariableName, outputType);
+							context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
 					builder.addStatement("boolean $L = $L.getMappedResults().size() > $L.getPageSize()",
 							context.localVariable("hasNext"), context.localVariable("results"), context.getPageableParameterName());
 					builder.addStatement(
@@ -378,12 +375,16 @@ class MongoCodeBlocks {
 
 			boolean isProjecting = context.getReturnedType().isProjecting();
 			Class<?> domainType = context.getRepositoryInformation().getDomainType();
-			Object actualReturnType = isProjecting ? context.getActualReturnType().getType()
+			Object actualReturnType = queryMethod.getParameters().hasDynamicProjection() || isProjecting
+					? TypeName.get(context.getActualReturnType().getType())
 					: domainType;
 
 			builder.add("\n");
 
-			if (isProjecting) {
+			if (queryMethod.getParameters().hasDynamicProjection()) {
+				builder.addStatement("$T<$T> $L = $L.query($T.class).as($L)", FindWithQuery.class, actualReturnType,
+						context.localVariable("finder"), mongoOpsRef, domainType, context.getDynamicProjectionParameterName());
+			} else if (isProjecting) {
 				builder.addStatement("$T<$T> $L = $L.query($T.class).as($T.class)", FindWithQuery.class, actualReturnType,
 						context.localVariable("finder"), mongoOpsRef, domainType, actualReturnType);
 			} else {
@@ -400,6 +401,8 @@ class MongoCodeBlocks {
 				terminatingMethod = "count()";
 			} else if (query.isExists()) {
 				terminatingMethod = "exists()";
+			} else if (queryMethod.isStreamQuery()) {
+				terminatingMethod = "stream()";
 			} else {
 				terminatingMethod = Optional.class.isAssignableFrom(context.getReturnType().toClass()) ? "one()" : "oneValue()";
 			}
@@ -410,6 +413,12 @@ class MongoCodeBlocks {
 			} else if (queryMethod.isSliceQuery()) {
 				builder.addStatement("return new $T($L, $L).execute($L)", SlicedExecution.class,
 						context.localVariable("finder"), context.getPageableParameterName(), query.name());
+			} else if (queryMethod.isScrollQuery()) {
+
+				String scrollPositionParameterName = context.getScrollPositionParameterName();
+
+				builder.addStatement("return $L.matching($L).scroll($L)", context.localVariable("finder"), query.name(),
+						scrollPositionParameterName);
 			} else {
 				builder.addStatement("return $L.matching($L).$L", context.localVariable("finder"), query.name(),
 						terminatingMethod);
@@ -544,8 +553,7 @@ class MongoCodeBlocks {
 
 				Builder optionsBuilder = CodeBlock.builder();
 				optionsBuilder.add("$T $L = $T.builder()\n", AggregationOptions.class,
-						context.localVariable("aggregationOptions"),
-						AggregationOptions.class);
+						context.localVariable("aggregationOptions"), AggregationOptions.class);
 				optionsBuilder.indent();
 				for (CodeBlock optionBlock : options) {
 					optionsBuilder.add(optionBlock);
@@ -709,7 +717,27 @@ class MongoCodeBlocks {
 						com.mongodb.ReadPreference.class, readPreference);
 			}
 
-			// TODO: Meta annotation
+			MergedAnnotation<Meta> metaAnnotation = context.getAnnotation(Meta.class);
+
+			if (metaAnnotation.isPresent()) {
+
+				long maxExecutionTimeMs = metaAnnotation.getLong("maxExecutionTimeMs");
+				if (maxExecutionTimeMs != -1) {
+					builder.addStatement("$L.maxTimeMsec($L)", queryVariableName, maxExecutionTimeMs);
+				}
+
+				int cursorBatchSize = metaAnnotation.getInt("cursorBatchSize");
+				if (cursorBatchSize != 0) {
+					builder.addStatement("$L.cursorBatchSize($L)", queryVariableName, cursorBatchSize);
+				}
+
+				String comment = metaAnnotation.getString("comment");
+				if (StringUtils.hasText("comment")) {
+					builder.addStatement("$L.comment($S)", queryVariableName, comment);
+				}
+			}
+
+			// TODO: Meta annotation: Disk usage
 
 			return builder.build();
 		}

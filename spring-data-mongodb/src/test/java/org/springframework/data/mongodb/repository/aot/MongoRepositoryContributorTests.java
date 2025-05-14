@@ -34,11 +34,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -272,6 +276,37 @@ class MongoRepositoryContributorTests {
 	}
 
 	@Test
+	void testDerivedQueryReturningStream() {
+
+		List<User> results = fragment.streamByLastnameStartingWith("S", Sort.by("username"), Limit.of(2)).toList();
+
+		assertThat(results).hasSize(2);
+		assertThat(results).extracting(User::getUsername).containsExactly("han", "kylo");
+	}
+
+	@Test
+	void testDerivedQueryReturningWindowByOffset() {
+
+		Window<User> window1 = fragment.findTop2WindowByLastnameStartingWithOrderByUsername("S", ScrollPosition.offset());
+		assertThat(window1).extracting(User::getUsername).containsExactly("han", "kylo");
+		assertThat(window1.positionAt(1)).isInstanceOf(OffsetScrollPosition.class);
+
+		Window<User> window2 = fragment.findTop2WindowByLastnameStartingWithOrderByUsername("S", window1.positionAt(1));
+		assertThat(window2).extracting(User::getUsername).containsExactly("luke", "vader");
+	}
+
+	@Test
+	void testDerivedQueryReturningWindowByKeyset() {
+
+		Window<User> window1 = fragment.findTop2WindowByLastnameStartingWithOrderByUsername("S", ScrollPosition.keyset());
+		assertThat(window1).extracting(User::getUsername).containsExactly("han", "kylo");
+		assertThat(window1.positionAt(1)).isInstanceOf(KeysetScrollPosition.class);
+
+		Window<User> window2 = fragment.findTop2WindowByLastnameStartingWithOrderByUsername("S", window1.positionAt(1));
+		assertThat(window2).extracting(User::getUsername).containsExactly("luke", "vader");
+	}
+
+	@Test
 	void testAnnotatedFinderReturningSingleValueWithQuery() {
 
 		User user = fragment.findAnnotatedQueryByUsername("yoda");
@@ -436,6 +471,14 @@ class MongoRepositoryContributorTests {
 
 		Page<UserProjection> users = fragment.findUserProjectionByLastnameStartingWith("S",
 				PageRequest.of(0, 2, Sort.by("username")));
+		assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
+	}
+
+	@Test
+	void testDerivedFinderReturningPageOfDynamicProjections() {
+
+		Page<UserProjection> users = fragment.findUserProjectionByLastnameStartingWith("S",
+				PageRequest.of(0, 2, Sort.by("username")), UserProjection.class);
 		assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
 	}
 
