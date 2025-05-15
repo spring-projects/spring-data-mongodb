@@ -65,7 +65,7 @@ class MongoRepositoryContributorUnitTests {
 
 	@Autowired TestGenerationContext generationContext;
 
-	@Test
+	@Test // GH-4970
 	void shouldConsiderMetaAnnotation() throws IOException {
 
 		InputStreamSource aotFragment = generationContext.getGeneratedFiles().getGeneratedFile(GeneratedFiles.Kind.SOURCE,

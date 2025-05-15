@@ -275,7 +275,7 @@ class MongoRepositoryContributorTests {
 		assertThat(slice.getContent()).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
-	@Test
+	@Test // GH-4970
 	void testDerivedQueryReturningStream() {
 
 		List<User> results = fragment.streamByLastnameStartingWith("S", Sort.by("username"), Limit.of(2)).toList();
@@ -284,7 +284,7 @@ class MongoRepositoryContributorTests {
 		assertThat(results).extracting(User::getUsername).containsExactly("han", "kylo");
 	}
 
-	@Test
+	@Test // GH-4970
 	void testDerivedQueryReturningWindowByOffset() {
 
 		Window<User> window1 = fragment.findTop2WindowByLastnameStartingWithOrderByUsername("S", ScrollPosition.offset());
@@ -295,7 +295,7 @@ class MongoRepositoryContributorTests {
 		assertThat(window2).extracting(User::getUsername).containsExactly("luke", "vader");
 	}
 
-	@Test
+	@Test // GH-4970
 	void testDerivedQueryReturningWindowByKeyset() {
 
 		Window<User> window1 = fragment.findTop2WindowByLastnameStartingWithOrderByUsername("S", ScrollPosition.keyset());
@@ -474,7 +474,7 @@ class MongoRepositoryContributorTests {
 		assertThat(users).extracting(UserProjection::getUsername).containsExactly("han", "kylo");
 	}
 
-	@Test
+	@Test // GH-4970
 	void testDerivedFinderReturningPageOfDynamicProjections() {
 
 		Page<UserProjection> users = fragment.findUserProjectionByLastnameStartingWith("S",
@@ -559,7 +559,7 @@ class MongoRepositoryContributorTests {
 				new UserAggregate("Solo", List.of("Han", "Ben")));
 	}
 
-	@Test
+	@Test // GH-4970
 	void testAggregationStreamWithProjectedResultsWrappedInAggregationResults() {
 
 		List<UserAggregate> allLastnames = fragment.streamGroupByLastnameAndAsAggregationResults("first_name").toList();

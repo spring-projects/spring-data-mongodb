@@ -103,7 +103,7 @@ public class MongoAotRepositoryFragmentSupport {
 		return list;
 	}
 
-	protected Object convertSimpleRawResult(Class<?> targetType, Document rawResult) {
+	protected @Nullable Object convertSimpleRawResult(Class<?> targetType, Document rawResult) {
 		return extractSimpleTypeResult(rawResult, targetType, mongoConverter);
 	}
 
