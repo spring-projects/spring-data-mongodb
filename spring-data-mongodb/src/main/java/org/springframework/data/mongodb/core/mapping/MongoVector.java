@@ -24,9 +24,9 @@ import org.springframework.data.domain.Vector;
 import org.springframework.util.ObjectUtils;
 
 /**
- * MongoDB-specific extension to {@link Vector} based on Mongo's {@link BinaryVector}. Note that only float32 and int8
- * variants can be represented as floating-point numbers. int1 returns an all-zero array for {@link #toFloatArray()} and
- * {@link #toDoubleArray()}.
+ * MongoDB-specific extension to {@link Vector} based on Mongo's {@link BinaryVector}. Note that only {@code float32}
+ * and {@code int8} variants can be represented as floating-point numbers. {@code int1} throws
+ * {@link UnsupportedOperationException} when calling {@link #toFloatArray()} and {@link #toDoubleArray()}.
  *
  * @author Mark Paluch
  * @since 4.5
@@ -40,13 +40,63 @@ public class MongoVector implements Vector {
 	}
 
 	/**
-	 * Creates a new {@link MongoVector} from the given {@link BinaryVector}.
+	 * Creates a new binary {@link MongoVector} using the given {@link BinaryVector}.
 	 *
 	 * @param v binary vector representation.
-	 * @return the {@link MongoVector} for the given vector values.
+	 * @return the {@link MongoVector} wrapping {@link BinaryVector}.
 	 */
 	public static MongoVector of(BinaryVector v) {
 		return new MongoVector(v);
+	}
+
+	/**
+	 * Creates a new binary {@link MongoVector} using the given {@code data}.
+	 * <p>
+	 * A {@link BinaryVector.DataType#INT8} vector is a vector of 8-bit signed integers where each byte in the vector
+	 * represents an element of a vector, with values in the range {@code [-128, 127]}.
+	 * <p>
+	 * NOTE: The byte array is not copied; changes to the provided array will be referenced in the created
+	 * {@code MongoVector} instance.
+	 *
+	 * @param data the byte array representing the {@link BinaryVector.DataType#INT8} vector data.
+	 * @return the {@link MongoVector} containing the given vector values to be represented as binary {@code int8}.
+	 */
+	public static MongoVector ofInt8(byte[] data) {
+		return of(BinaryVector.int8Vector(data));
+	}
+
+	/**
+	 * Creates a new binary {@link MongoVector} using the given {@code data}.
+	 * <p>
+	 * A {@link BinaryVector.DataType#FLOAT32} vector is a vector of floating-point numbers, where each element in the
+	 * vector is a {@code float}.
+	 * <p>
+	 * NOTE: The float array is not copied; changes to the provided array will be referenced in the created
+	 * {@code MongoVector} instance.
+	 *
+	 * @param data the float array representing the {@link BinaryVector.DataType#FLOAT32} vector data.
+	 * @return the {@link MongoVector} containing the given vector values to be represented as binary {@code float32}.
+	 */
+	public static MongoVector ofFloat(float... data) {
+		return of(BinaryVector.floatVector(data));
+	}
+
+	/**
+	 * Creates a new binary {@link MongoVector} from the given {@link Vector}.
+	 * <p>
+	 * A {@link BinaryVector.DataType#FLOAT32} vector is a vector of floating-point numbers, where each element in the
+	 * vector is a {@code float}. The given {@link Vector} must be able to return a {@link Vector#toFloatArray() float}
+	 * array.
+	 * <p>
+	 * NOTE: The float array is not copied; changes to the provided array will be referenced in the created
+	 * {@code MongoVector} instance.
+	 *
+	 * @param v the
+	 * @return the {@link MongoVector} using vector values from the given {@link Vector} to be represented as binary
+	 *         float32.
+	 */
+	public static MongoVector fromFloat(Vector v) {
+		return of(BinaryVector.floatVector(v.toFloatArray()));
 	}
 
 	@Override
@@ -90,6 +140,11 @@ public class MongoVector implements Vector {
 		return 0;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws UnsupportedOperationException if the underlying data type is {@code int1} {@link PackedBitBinaryVector}.
+	 */
 	@Override
 	public float[] toFloatArray() {
 
@@ -102,14 +157,22 @@ public class MongoVector implements Vector {
 
 		if (v instanceof Int8BinaryVector i) {
 
-			float[] result = new float[i.getData().length];
-			System.arraycopy(i.getData(), 0, result, 0, result.length);
+			byte[] data = i.getData();
+			float[] result = new float[data.length];
+			for (int j = 0; j < data.length; j++) {
+				result[j] = data[j];
+			}
 			return result;
 		}
 
-		return new float[size()];
+		throw new UnsupportedOperationException("Cannot return float array for " + v.getClass());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws UnsupportedOperationException if the underlying data type is {@code int1} {@link PackedBitBinaryVector}.
+	 */
 	@Override
 	public double[] toDoubleArray() {
 
@@ -126,12 +189,15 @@ public class MongoVector implements Vector {
 
 		if (v instanceof Int8BinaryVector i) {
 
-			double[] result = new double[i.getData().length];
-			System.arraycopy(i.getData(), 0, result, 0, result.length);
+			byte[] data = i.getData();
+			double[] result = new double[data.length];
+			for (int j = 0; j < data.length; j++) {
+				result[j] = data[j];
+			}
 			return result;
 		}
 
-		return new double[size()];
+		throw new UnsupportedOperationException("Cannot return double array for " + v.getClass());
 	}
 
 	@Override

@@ -138,7 +138,7 @@ public class MongoConvertersIntegrationTests {
 
 		WithVectors source = new WithVectors();
 		source.binVector = BinaryVector.floatVector(new float[] { 1.1f, 2.2f, 3.3f });
-		source.vector = MongoVector.of(source.binVector);
+		source.vector = MongoVector.ofFloat(new float[] { 1.1f, 2.2f, 3.3f });
 
 		template.save(source);
 
@@ -146,6 +146,7 @@ public class MongoConvertersIntegrationTests {
 
 		assertThat(loaded.vector).isEqualTo(source.vector);
 		assertThat(loaded.binVector).isEqualTo(source.binVector);
+		assertThat(loaded.binVector).isEqualTo(source.vector.getSource());
 	}
 
 	@Test // GH-4706
@@ -153,7 +154,7 @@ public class MongoConvertersIntegrationTests {
 
 		WithVectors source = new WithVectors();
 		source.binVector = BinaryVector.int8Vector(new byte[] { 1, 2, 3 });
-		source.vector = MongoVector.of(source.binVector);
+		source.vector = MongoVector.ofInt8(new byte[] { 1, 2, 3 });
 
 		template.save(source);
 
@@ -161,6 +162,7 @@ public class MongoConvertersIntegrationTests {
 
 		assertThat(loaded.vector).isEqualTo(source.vector);
 		assertThat(loaded.binVector).isEqualTo(source.binVector);
+		assertThat(loaded.binVector).isEqualTo(source.vector.getSource());
 	}
 
 	@Test // GH-4706
