@@ -36,6 +36,7 @@ import org.springframework.util.ErrorHandler;
  * Unit tests for {@link DefaultMessageListenerContainer}.
  *
  * @author Christoph Strobl
+ * @author Junhyeok Lee
  */
 @ExtendWith(MockitoExtension.class)
 class DefaultMessageListenerContainerUnitTests {
@@ -78,6 +79,17 @@ class DefaultMessageListenerContainerUnitTests {
 	@Test // DATAMONGO-1803
 	void removeSubscriptionWhileRunning() throws Throwable {
 		runOnce(new RemoveSubscriptionWhileRunning(container));
+	}
+
+	@Test // GH-4403
+	void shouldHaveAutoStartupEnabledByDefault() {
+		assertThat(container.isAutoStartup()).isTrue();
+	}
+
+	@Test // GH-4403
+	void shouldAllowDisablingAutoStartup() {
+		container.setAutoStartup(false);
+		assertThat(container.isAutoStartup()).isFalse();
 	}
 
 	private static class RemoveSubscriptionWhileRunning extends MultithreadedTestCase {
