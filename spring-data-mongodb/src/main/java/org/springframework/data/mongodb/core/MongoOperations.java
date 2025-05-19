@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -269,14 +270,38 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <li>TimeSeries time and meta fields, granularity and {@code expireAfter}</li>
 	 * </ul>
 	 * Any other options such as change stream options, schema-based details (validation, encryption) are not considered
-	 * and must be provided through {@link #createCollection(Class, CollectionOptions)} or
-	 * {@link #createCollection(String, CollectionOptions)}.
+	 * and must be provided through {@link #createCollection(Class, Function)} or
+	 * {@link #createCollection(Class, CollectionOptions)}.
 	 *
 	 * @param entityClass class that determines the collection to create.
 	 * @return the created collection.
+	 * @see #createCollection(Class, Function)
 	 * @see #createCollection(Class, CollectionOptions)
 	 */
 	<T> MongoCollection<Document> createCollection(Class<T> entityClass);
+
+	/**
+	 * Create an uncapped collection with a name based on the provided entity class allowing to customize derived
+	 * {@link CollectionOptions}.
+	 * <p>
+	 * This method derives {@link CollectionOptions} from the given {@code entityClass} using
+	 * {@link org.springframework.data.mongodb.core.mapping.Document} and
+	 * {@link org.springframework.data.mongodb.core.mapping.TimeSeries} annotations to determine:
+	 * <ul>
+	 * <li>Collation</li>
+	 * <li>TimeSeries time and meta fields, granularity and {@code expireAfter}</li>
+	 * </ul>
+	 * Any other options such as change stream options, schema-based details (validation, encryption) are not considered
+	 * and must be provided through {@link CollectionOptions}.
+	 *
+	 * @param entityClass class that determines the collection to create.
+	 * @param collectionOptionsCustomizer customizer function to customize the derived {@link CollectionOptions}.
+	 * @return the created collection.
+	 * @see #createCollection(Class, CollectionOptions)
+	 * @since 5.0
+	 */
+	<T> MongoCollection<Document> createCollection(Class<T> entityClass,
+			Function<? super CollectionOptions, ? extends CollectionOptions> collectionOptionsCustomizer);
 
 	/**
 	 * Create a collection with a name based on the provided entity class using the options.
