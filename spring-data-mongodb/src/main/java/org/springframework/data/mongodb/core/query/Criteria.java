@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.util.ObjectUtils.nullSafeHashCode;
+import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +34,7 @@ import org.bson.BsonType;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -76,8 +77,8 @@ public class Criteria implements CriteriaDefinition {
 	private static final Object NOT_SET = new Object();
 
 	private @Nullable String key;
-	private List<Criteria> criteriaChain;
-	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+	private final List<Criteria> criteriaChain;
+	private final LinkedHashMap<String, @Nullable Object> criteria = new LinkedHashMap<String, Object>();
 	private @Nullable Object isValue = NOT_SET;
 
 	public Criteria() {
@@ -120,7 +121,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a {@link Criteria} matching an example object. <br />
-	 * By default the {@link Example} uses typed matching restricting it to probe assignable types. For example, when
+	 * By default, the {@link Example} uses typed matching restricting it to probe assignable types. For example, when
 	 * sticking with the default type key ({@code _class}), the query has restrictions such as
 	 * <code>_class : &#123; $in : [com.acme.Person] &#125; </code>. <br />
 	 * To avoid the above-mentioned type restriction use an {@link UntypedExampleMatcher} with
@@ -224,7 +225,7 @@ public class Criteria implements CriteriaDefinition {
 	 *      Missing Fields: Equality Filter</a>
 	 * @since 3.3
 	 */
-	@Contract("_ -> this")
+	@Contract("-> this")
 	public Criteria isNull() {
 		return is(null);
 	}
@@ -241,7 +242,7 @@ public class Criteria implements CriteriaDefinition {
 	 *      Fields: Type Check</a>
 	 * @since 3.3
 	 */
-	@Contract("_ -> this")
+	@Contract("-> this")
 	public Criteria isNullValue() {
 
 		criteria.put("$type", BsonType.NULL.getValue());
@@ -391,7 +392,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/mod/">MongoDB Query operator: $mod</a>
 	 */
-	@Contract("_ -> this")
+	@Contract("_, _ -> this")
 	public Criteria mod(Number value, Number remainder) {
 		List<Object> l = new ArrayList<>(2);
 		l.add(value);
@@ -818,7 +819,7 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criteria using the {@code $or} operator for all of the provided criteria.
+	 * Creates a criteria using the {@code $or} operator for all provided criteria.
 	 * <p>
 	 * Note that MongoDB doesn't support an {@code $nor} operator to be wrapped in a {@code $not} operator.
 	 *
@@ -933,6 +934,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this
 	 * @since 5.0
 	 */
+	@Contract("_, _ -> this")
 	public Criteria raw(String operator, Object value) {
 		criteria.put(operator, value);
 		return this;
@@ -957,6 +959,7 @@ public class Criteria implements CriteriaDefinition {
 		return this.key;
 	}
 
+	@Override
 	public Document getCriteriaObject() {
 
 		if (this.criteriaChain.size() == 1) {

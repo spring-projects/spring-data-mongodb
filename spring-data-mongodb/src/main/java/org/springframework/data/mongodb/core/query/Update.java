@@ -443,14 +443,17 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
+	@Override
 	public Boolean isIsolated() {
 		return isolated;
 	}
 
+	@Override
 	public Document getUpdateObject() {
 		return new Document(modifierOps);
 	}
 
+	@Override
 	public List<ArrayFilter> getArrayFilters() {
 		return Collections.unmodifiableList(this.arrayFilters);
 	}
@@ -486,6 +489,7 @@ public class Update implements UpdateDefinition {
 	 * @param key the field name.
 	 * @return {@literal true} if given field is updated.
 	 */
+	@Override
 	public boolean modifies(String key) {
 		return this.keysToUpdate.contains(key);
 	}
@@ -544,7 +548,7 @@ public class Update implements UpdateDefinition {
 	 */
 	public static class Modifiers {
 
-		private Map<String, Modifier> modifiers;
+		private final Map<String, Modifier> modifiers;
 
 		public Modifiers() {
 			this.modifiers = new LinkedHashMap<>(1);
@@ -727,7 +731,7 @@ public class Update implements UpdateDefinition {
 	 */
 	private static class Slice extends AbstractModifier {
 
-		private int count;
+		private final int count;
 
 		Slice(int count) {
 			this.count = count;
