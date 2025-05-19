@@ -41,7 +41,7 @@ public @interface TimeSeries {
 	/**
 	 * The collection the document representing the entity is supposed to be stored in. If not configured, a default
 	 * collection name will be derived from the type's name. The attribute supports SpEL expressions to dynamically
-	 * calculate the collection based on a per operation basis.
+	 * calculate the collection based on a per-operation basis.
 	 *
 	 * @return the name of the collection to be used.
 	 * @see Document#collection()

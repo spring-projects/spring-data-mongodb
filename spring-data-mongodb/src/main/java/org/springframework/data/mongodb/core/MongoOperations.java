@@ -260,9 +260,21 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
+	 * <p>
+	 * This method derives {@link CollectionOptions} from the given {@code entityClass} using
+	 * {@link org.springframework.data.mongodb.core.mapping.Document} and
+	 * {@link org.springframework.data.mongodb.core.mapping.TimeSeries} annotations to determine:
+	 * <ul>
+	 * <li>Collation</li>
+	 * <li>TimeSeries time and meta fields, granularity and {@code expireAfter}</li>
+	 * </ul>
+	 * Any other options such as change stream options, schema-based details (validation, encryption) are not considered
+	 * and must be provided through {@link #createCollection(Class, CollectionOptions)} or
+	 * {@link #createCollection(String, CollectionOptions)}.
 	 *
 	 * @param entityClass class that determines the collection to create.
 	 * @return the created collection.
+	 * @see #createCollection(Class, CollectionOptions)
 	 */
 	<T> MongoCollection<Document> createCollection(Class<T> entityClass);
 
@@ -998,7 +1010,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
-	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
+	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
@@ -1021,8 +1034,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
-	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
-			String collectionName);
+	<T> @Nullable T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<T> entityClass, String collectionName);
 
 	/**
 	 * Triggers
@@ -1102,7 +1115,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *         as it is after the update.
 	 * @since 2.1
 	 */
-	default <T> @Nullable T findAndReplace(Query query, T replacement, FindAndReplaceOptions options, String collectionName) {
+	default <T> @Nullable T findAndReplace(Query query, T replacement, FindAndReplaceOptions options,
+			String collectionName) {
 
 		Assert.notNull(replacement, "Replacement must not be null");
 		return findAndReplace(query, replacement, options, (Class<T>) ClassUtils.getUserClass(replacement), collectionName);
@@ -1154,8 +1168,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *           {@link #getCollectionName(Class) derived} from the given replacement value.
 	 * @since 2.1
 	 */
-	default <S, T> @Nullable T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
-			Class<T> resultType) {
+	default <S, T> @Nullable T findAndReplace(Query query, S replacement, FindAndReplaceOptions options,
+			Class<S> entityType, Class<T> resultType) {
 
 		return findAndReplace(query, replacement, options, entityType,
 				getCollectionName(ClassUtils.getUserClass(entityType)), resultType);

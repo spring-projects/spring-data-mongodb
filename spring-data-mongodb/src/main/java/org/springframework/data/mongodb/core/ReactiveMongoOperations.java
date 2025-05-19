@@ -214,9 +214,21 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
+	 * <p>
+	 * This method derives {@link CollectionOptions} from the given {@code entityClass} using
+	 * {@link org.springframework.data.mongodb.core.mapping.Document} and
+	 * {@link org.springframework.data.mongodb.core.mapping.TimeSeries} annotations to determine:
+	 * <ul>
+	 * <li>Collation</li>
+	 * <li>TimeSeries time and meta fields, granularity and {@code expireAfter}</li>
+	 * </ul>
+	 * Any other options such as change stream options, schema-based details (validation, encryption) are not considered
+	 * and must be provided through {@link #createCollection(Class, CollectionOptions)} or
+	 * {@link #createCollection(String, CollectionOptions)}.
 	 *
 	 * @param entityClass class that determines the collection to create.
 	 * @return the created collection.
+	 * @see #createCollection(Class, CollectionOptions)
 	 */
 	<T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass);
 
