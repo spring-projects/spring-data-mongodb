@@ -456,8 +456,10 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719
 	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
-		template.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
-				PersonSpELProjection.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER).subscribe();
+		template
+				.doFind("star-wars", CollectionPreparer.identity(), new Document(), new Document(), Person.class,
+						PersonSpELProjection.class, QueryResultConverter.entity(), FindPublisherPreparer.NO_OP_PREPARER)
+				.subscribe();
 
 		verify(findPublisher, never()).projection(any());
 	}
@@ -638,10 +640,14 @@ public class ReactiveMongoTemplateUnitTests {
 		Assertions.assertThat(options.getValue().getCollation()).isNull();
 	}
 
-	@Test // DATAMONGO-1854
+	@Test // DATAMONGO-1854, GH-4978
 	void createCollectionShouldApplyDefaultCollation() {
 
-		template.createCollection(Sith.class).subscribe();
+		template.createCollection(Sith.class, options -> {
+
+			assertThat(options.getCollation()).contains(Collation.of("de_AT"));
+			return options;
+		}).subscribe();
 
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
@@ -665,7 +671,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1854
 	void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
 
-		template.createCollection(Sith.class, null).subscribe();
+		template.createCollection(Sith.class, (CollectionOptions) null).subscribe();
 
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
@@ -1751,8 +1757,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES))
-				.isEqualTo(10);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES)).isEqualTo(10);
 	}
 
 	@Test // GH-4099
@@ -1763,8 +1768,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.DAYS))
-				.isEqualTo(1);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.DAYS)).isEqualTo(1);
 	}
 
 	@Test // GH-4099
@@ -1775,8 +1779,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
-				.isEqualTo(11);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(11);
 	}
 
 	@Test // GH-4099
@@ -1787,16 +1790,14 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
-				.isEqualTo(100);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(100);
 	}
 
 	@Test // GH-4099
 	void createCollectionShouldSetUpTimeSeriesWithInvalidTimeoutExpiration() {
 
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
-			template.createCollection(TimeSeriesTypeWithInvalidExpireAfter.class).subscribe()
-		);
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.createCollection(TimeSeriesTypeWithInvalidExpireAfter.class).subscribe());
 	}
 
 	private void stubFindSubscribe(Document document) {

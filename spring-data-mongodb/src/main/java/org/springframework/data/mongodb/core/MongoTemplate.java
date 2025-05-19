@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -650,7 +651,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass) {
-		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
+		return createCollection(entityClass, Function.identity());
+	}
+
+	@Override
+	public <T> MongoCollection<Document> createCollection(Class<T> entityClass,
+			Function<? super CollectionOptions, ? extends CollectionOptions> collectionOptionsCustomizer) {
+
+		Assert.notNull(collectionOptionsCustomizer, "CollectionOptions customizer function must not be null");
+
+		return createCollection(entityClass,
+				collectionOptionsCustomizer.apply(operations.forType(entityClass).getCollectionOptions()));
 	}
 
 	@Override
