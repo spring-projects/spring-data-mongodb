@@ -188,7 +188,7 @@ It is possible to create custom annotations out of the provided ones.
 MongoDB Collection Info::
 +
 ====
-[source,java,indent=0,subs="verbatim,quotes",role="thrid"]
+[source,jsonc,indent=0,subs="verbatim,quotes",role="thrid"]
 ----
 {
     name: 'patient',

@@ -186,11 +186,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadConcern(any())).thenReturn(collection);
 		when(collection.withReadPreference(any())).thenReturn(collection);
-		when(collection.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class))).thenReturn(updateResult);
+		when(collection.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class)))
+				.thenReturn(updateResult);
 		when(collection.withWriteConcern(any())).thenReturn(collectionWithWriteConcern);
 		when(collection.distinct(anyString(), any(Document.class), any())).thenReturn(distinctIterable);
 		when(collectionWithWriteConcern.deleteOne(any(Bson.class), any())).thenReturn(deleteResult);
-		when(collectionWithWriteConcern.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class))).thenReturn(updateResult);
+		when(collectionWithWriteConcern.replaceOne(any(), any(), any(com.mongodb.client.model.ReplaceOptions.class)))
+				.thenReturn(updateResult);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 		when(findIterable.sort(any(org.bson.Document.class))).thenReturn(findIterable);
 		when(findIterable.collation(any())).thenReturn(findIterable);
@@ -1263,7 +1265,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.save(entity);
 
-		verify(collection, times(1)).replaceOne(queryCaptor.capture(), updateCaptor.capture(), any(com.mongodb.client.model.ReplaceOptions.class));
+		verify(collection, times(1)).replaceOne(queryCaptor.capture(), updateCaptor.capture(),
+				any(com.mongodb.client.model.ReplaceOptions.class));
 
 		assertThat(queryCaptor.getValue()).isEqualTo(new Document("_id", 1).append("version", 10));
 		assertThat(updateCaptor.getValue())
@@ -1399,10 +1402,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Assertions.assertThat(options.getValue().getCollation()).isNull();
 	}
 
-	@Test // DATAMONGO-1854
+	@Test // DATAMONGO-1854, GH-4978
 	void createCollectionShouldApplyDefaultCollation() {
 
-		template.createCollection(Sith.class);
+		template.createCollection(Sith.class, options -> {
+
+			assertThat(options.getCollation()).contains(Collation.of("de_AT"));
+			return options;
+		});
 
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
@@ -1426,7 +1433,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1854
 	void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
 
-		template.createCollection(Sith.class, null);
+		template.createCollection(Sith.class, (CollectionOptions) null);
 
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
@@ -2399,8 +2406,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES))
-				.isEqualTo(10);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES)).isEqualTo(10);
 	}
 
 	@Test // GH-4099
@@ -2413,8 +2419,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES))
-			.isEqualTo(12);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.MINUTES)).isEqualTo(12);
 	}
 
 	@Test // GH-4099
@@ -2425,8 +2430,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.DAYS))
-				.isEqualTo(1);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.DAYS)).isEqualTo(1);
 	}
 
 	@Test // GH-4099
@@ -2437,8 +2441,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
-				.isEqualTo(11);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(11);
 	}
 
 	@Test // GH-4099
@@ -2449,16 +2452,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS))
-				.isEqualTo(100);
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(100);
 	}
 
 	@Test // GH-4099
 	void createCollectionShouldSetUpTimeSeriesWithInvalidTimeoutExpiration() {
 
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
-				template.createCollection(TimeSeriesTypeWithInvalidExpireAfter.class)
-		);
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.createCollection(TimeSeriesTypeWithInvalidExpireAfter.class));
 	}
 
 	@Test // GH-3522
@@ -2611,32 +2612,31 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).withWriteConcern(eq(WriteConcern.UNACKNOWLEDGED));
 	}
 
-    @Test // GH-4099
-    void passOnTimeSeriesExpireOption() {
+	@Test // GH-4099
+	void passOnTimeSeriesExpireOption() {
 
-        template.createCollection("time-series-collection",
-            CollectionOptions.timeSeries("time_stamp", options -> options.expireAfter(Duration.ofSeconds(10))));
+		template.createCollection("time-series-collection",
+				CollectionOptions.timeSeries("time_stamp", options -> options.expireAfter(Duration.ofSeconds(10))));
 
-        ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
-        verify(db).createCollection(any(), options.capture());
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
 
-        assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(10);
-    }
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(10);
+	}
 
-    @Test // GH-4099
-    void doNotSetTimeSeriesExpireOptionForNegativeValue() {
+	@Test // GH-4099
+	void doNotSetTimeSeriesExpireOptionForNegativeValue() {
 
-        template.createCollection("time-series-collection",
-            CollectionOptions.timeSeries("time_stamp", options -> options.expireAfter(Duration.ofSeconds(-10))));
+		template.createCollection("time-series-collection",
+				CollectionOptions.timeSeries("time_stamp", options -> options.expireAfter(Duration.ofSeconds(-10))));
 
-        ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
-        verify(db).createCollection(any(), options.capture());
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
 
-        assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(0L);
-    }
+		assertThat(options.getValue().getExpireAfter(TimeUnit.SECONDS)).isEqualTo(0L);
+	}
 
-
-    class AutogenerateableId {
+	class AutogenerateableId {
 
 		@Id BigInteger id;
 	}

@@ -659,7 +659,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass) {
-		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
+		return createCollection(entityClass, Function.identity());
+	}
+
+	@Override
+	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass,
+			Function<? super CollectionOptions, ? extends CollectionOptions> collectionOptionsCustomizer) {
+
+		Assert.notNull(collectionOptionsCustomizer, "CollectionOptions customizer function must not be null");
+
+		return createCollection(entityClass,
+				collectionOptionsCustomizer.apply(operations.forType(entityClass).getCollectionOptions()));
 	}
 
 	@Override
@@ -740,11 +750,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	@Override
 	public Mono<Boolean> collectionExists(String collectionName) {
-		return createMono(
-				db -> Flux.from(db.listCollectionNames()) //
-						.filter(s -> s.equals(collectionName)) //
-						.map(s -> true) //
-						.single(false));
+		return createMono(db -> Flux.from(db.listCollectionNames()) //
+				.filter(s -> s.equals(collectionName)) //
+				.map(s -> true) //
+				.single(false));
 	}
 
 	@Override
@@ -2293,7 +2302,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						.flatMapSequential(deleteResult -> Flux.fromIterable(list)));
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked", "NullAway"})
+	@SuppressWarnings({ "rawtypes", "unchecked", "NullAway" })
 	<S, T> Flux<T> doFindAndDelete(String collectionName, Query query, Class<S> entityClass,
 			QueryResultConverter<? super S, ? extends T> resultConverter) {
 
