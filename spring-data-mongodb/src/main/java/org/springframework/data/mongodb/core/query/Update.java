@@ -444,7 +444,7 @@ public class Update implements UpdateDefinition {
 	}
 
 	@Override
-	public Boolean isIsolated() {
+	public boolean isIsolated() {
 		return isolated;
 	}
 
