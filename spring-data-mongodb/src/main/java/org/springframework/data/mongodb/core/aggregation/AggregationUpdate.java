@@ -248,7 +248,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	}
 
 	@Override
-	public Boolean isIsolated() {
+	public boolean isIsolated() {
 		return isolated;
 	}
 

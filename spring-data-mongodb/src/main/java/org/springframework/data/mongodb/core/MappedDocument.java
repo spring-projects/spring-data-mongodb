@@ -140,7 +140,7 @@ public class MappedDocument {
 		}
 
 		@Override
-		public Boolean isIsolated() {
+		public boolean isIsolated() {
 			return delegate.isIsolated();
 		}
 

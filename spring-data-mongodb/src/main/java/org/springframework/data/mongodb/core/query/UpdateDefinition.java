@@ -24,6 +24,7 @@ import org.bson.Document;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Hyunsang Han
  * @since 2.2
  */
 public interface UpdateDefinition {
@@ -34,7 +35,7 @@ public interface UpdateDefinition {
 	 *
 	 * @return {@literal true} if update isolated is set.
 	 */
-	Boolean isIsolated();
+	boolean isIsolated();
 
 	/**
 	 * @return the actual update in its native {@link Document} format. Never {@literal null}.
