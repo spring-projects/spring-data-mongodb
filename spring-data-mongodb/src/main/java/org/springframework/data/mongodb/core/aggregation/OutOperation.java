@@ -96,11 +96,12 @@ public class OutOperation implements AggregationOperation {
 	 * .uniqueKey("{ 'field-1' : 1, 'field-2' : 1}")
 	 * </pre>
 	 *
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
+	 * <strong>NOTE:</strong> Only suitable for 4.2+ to (not including) 5.0.
 	 *
 	 * @param key can be {@literal null}. Server uses {@literal _id} when {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
 	public OutOperation uniqueKey(@Nullable String key) {
 
@@ -120,11 +121,12 @@ public class OutOperation implements AggregationOperation {
 	 * .uniqueKeyOf(Arrays.asList("field-1", "field-2"))
 	 * </pre>
 	 *
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
+	 * <strong>NOTE:</strong> Only suitable for 4.2+ to (not including) 5.0.
 	 *
 	 * @param fields must not be {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
 	public OutOperation uniqueKeyOf(Iterable<String> fields) {
 
@@ -138,11 +140,12 @@ public class OutOperation implements AggregationOperation {
 
 	/**
 	 * Specify how to merge the aggregation output with the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
+	 * <strong>NOTE:</strong> Only suitable for 4.2+ to (not including) 5.0.
 	 *
 	 * @param mode must not be {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
 	public OutOperation mode(OutMode mode) {
 
@@ -152,11 +155,12 @@ public class OutOperation implements AggregationOperation {
 
 	/**
 	 * Replace the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
+	 * <strong>NOTE:</strong> Only suitable for 4.2+ to (not including) 5.0.
 	 *
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#REPLACE_COLLECTION
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
 	public OutOperation replaceCollection() {
 		return mode(OutMode.REPLACE_COLLECTION);
@@ -164,11 +168,12 @@ public class OutOperation implements AggregationOperation {
 
 	/**
 	 * Replace/Upsert documents in the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
+	 * <strong>NOTE:</strong> Only suitable for 4.2+ to (not including) 5.0.
 	 *
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#REPLACE
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
 	public OutOperation replaceDocuments() {
 		return mode(OutMode.REPLACE);
@@ -176,11 +181,12 @@ public class OutOperation implements AggregationOperation {
 
 	/**
 	 * Insert documents to the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
+	 * <strong>NOTE:</strong> Only suitable for 4.2+ to (not including) 5.0.
 	 *
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#INSERT
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
 	public OutOperation insertDocuments() {
 		return mode(OutMode.INSERT);
@@ -190,7 +196,10 @@ public class OutOperation implements AggregationOperation {
 	public Document toDocument(AggregationOperationContext context) {
 
 		if (!requiresMongoDb42Format()) {
-			return new Document("$out", collectionName);
+			if (!StringUtils.hasText(databaseName)) {
+				return new Document(getOperator(), collectionName);
+			}
+			return new Document(getOperator(), new Document("db", databaseName).append("coll", collectionName));
 		}
 
 		Assert.state(mode != null, "Mode must not be null");
@@ -215,7 +224,7 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	private boolean requiresMongoDb42Format() {
-		return StringUtils.hasText(databaseName) || mode != null || uniqueKey != null;
+		return mode != null || uniqueKey != null;
 	}
 
 	/**
@@ -223,7 +232,9 @@ public class OutOperation implements AggregationOperation {
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.2
+	 * @deprecated no longer applicable for MongoDB 5+
 	 */
+	@Deprecated
 	public enum OutMode {
 
 		/**
