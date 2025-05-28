@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.mongodb.util.BsonUtils;
+
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -37,33 +37,25 @@ public class OutOperation implements AggregationOperation {
 
 	private final @Nullable String databaseName;
 	private final String collectionName;
-	private final @Nullable Document uniqueKey;
-	private final @Nullable OutMode mode;
 
 	/**
 	 * @param outCollectionName Collection name to export the results. Must not be {@literal null}.
 	 */
 	public OutOperation(String outCollectionName) {
-		this(null, outCollectionName, null, null);
+		this(null, outCollectionName);
 	}
 
 	/**
 	 * @param databaseName Optional database name the target collection is located in. Can be {@literal null}.
 	 * @param collectionName Collection name to export the results. Must not be {@literal null}. Can be {@literal null}.
-	 * @param uniqueKey Optional unique key spec identify a document in the to collection for replacement or merge.
-	 * @param mode The mode for merging the aggregation pipeline output with the target collection. Can be
-	 *          {@literal null}. {@literal null}.
 	 * @since 2.2
 	 */
-	private OutOperation(@Nullable String databaseName, String collectionName, @Nullable Document uniqueKey,
-			@Nullable OutMode mode) {
+	private OutOperation(@Nullable String databaseName, String collectionName) {
 
 		Assert.notNull(collectionName, "Collection name must not be null");
 
 		this.databaseName = databaseName;
 		this.collectionName = collectionName;
-		this.uniqueKey = uniqueKey;
-		this.mode = mode;
 	}
 
 	/**
@@ -76,187 +68,21 @@ public class OutOperation implements AggregationOperation {
 	 */
 	@Contract("_ -> new")
 	public OutOperation in(@Nullable String database) {
-		return new OutOperation(database, collectionName, uniqueKey, mode);
-	}
-
-	/**
-	 * Optionally specify the field that uniquely identifies a document in the target collection. <br />
-	 * For convenience the given {@literal key} can either be a single field name or the Json representation of a key
-	 * {@link Document}.
-	 *
-	 * <pre class="code">
-	 *
-	 * // {
-	 * //    "field-1" : 1
-	 * // }
-	 * .uniqueKey("field-1")
-	 *
-	 * // {
-	 * //    "field-1" : 1,
-	 * //    "field-2" : 1
-	 * // }
-	 * .uniqueKey("{ 'field-1' : 1, 'field-2' : 1}")
-	 * </pre>
-	 *
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
-	 *
-	 * @param key can be {@literal null}. Server uses {@literal _id} when {@literal null}.
-	 * @return new instance of {@link OutOperation}.
-	 * @since 2.2
-	 */
-	@Contract("_ -> new")
-	public OutOperation uniqueKey(@Nullable String key) {
-
-		Document uniqueKey = key == null ? null : BsonUtils.toDocumentOrElse(key, it -> new Document(it, 1));
-		return new OutOperation(databaseName, collectionName, uniqueKey, mode);
-	}
-
-	/**
-	 * Optionally specify the fields that uniquely identifies a document in the target collection. <br />
-	 *
-	 * <pre class="code">
-	 *
-	 * // {
-	 * //    "field-1" : 1
-	 * //    "field-2" : 1
-	 * // }
-	 * .uniqueKeyOf(Arrays.asList("field-1", "field-2"))
-	 * </pre>
-	 *
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
-	 *
-	 * @param fields must not be {@literal null}.
-	 * @return new instance of {@link OutOperation}.
-	 * @since 2.2
-	 */
-	@Contract("_ -> new")
-	public OutOperation uniqueKeyOf(Iterable<String> fields) {
-
-		Assert.notNull(fields, "Fields must not be null");
-
-		Document uniqueKey = new Document();
-		fields.forEach(it -> uniqueKey.append(it, 1));
-
-		return new OutOperation(databaseName, collectionName, uniqueKey, mode);
-	}
-
-	/**
-	 * Specify how to merge the aggregation output with the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
-	 *
-	 * @param mode must not be {@literal null}.
-	 * @return new instance of {@link OutOperation}.
-	 * @since 2.2
-	 */
-	@Contract("_ -> new")
-	public OutOperation mode(OutMode mode) {
-
-		Assert.notNull(mode, "Mode must not be null");
-		return new OutOperation(databaseName, collectionName, uniqueKey, mode);
-	}
-
-	/**
-	 * Replace the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
-	 *
-	 * @return new instance of {@link OutOperation}.
-	 * @see OutMode#REPLACE_COLLECTION
-	 * @since 2.2
-	 */
-	@Contract("-> new")
-	public OutOperation replaceCollection() {
-		return mode(OutMode.REPLACE_COLLECTION);
-	}
-
-	/**
-	 * Replace/Upsert documents in the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
-	 *
-	 * @return new instance of {@link OutOperation}.
-	 * @see OutMode#REPLACE
-	 * @since 2.2
-	 */
-	@Contract("-> new")
-	public OutOperation replaceDocuments() {
-		return mode(OutMode.REPLACE);
-	}
-
-	/**
-	 * Insert documents to the target collection. <br />
-	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
-	 *
-	 * @return new instance of {@link OutOperation}.
-	 * @see OutMode#INSERT
-	 * @since 2.2
-	 */
-	@Contract("-> new")
-	public OutOperation insertDocuments() {
-		return mode(OutMode.INSERT);
+		return new OutOperation(database, collectionName);
 	}
 
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
-		if (!requiresMongoDb42Format()) {
-			return new Document("$out", collectionName);
+		if (!StringUtils.hasText(databaseName)) {
+			return new Document(getOperator(), collectionName);
 		}
 
-		Assert.state(mode != null, "Mode must not be null");
-
-		Document $out = new Document("to", collectionName) //
-				.append("mode", mode.getMongoMode());
-
-		if (StringUtils.hasText(databaseName)) {
-			$out.append("db", databaseName);
-		}
-
-		if (uniqueKey != null) {
-			$out.append("uniqueKey", uniqueKey);
-		}
-
-		return new Document(getOperator(), $out);
+		return new Document(getOperator(), new Document("db", databaseName).append("coll", collectionName));
 	}
 
 	@Override
 	public String getOperator() {
 		return "$out";
-	}
-
-	private boolean requiresMongoDb42Format() {
-		return StringUtils.hasText(databaseName) || mode != null || uniqueKey != null;
-	}
-
-	/**
-	 * The mode for merging the aggregation pipeline output.
-	 *
-	 * @author Christoph Strobl
-	 * @since 2.2
-	 */
-	public enum OutMode {
-
-		/**
-		 * Write documents to the target collection. Errors if a document same uniqueKey already exists.
-		 */
-		INSERT("insertDocuments"),
-
-		/**
-		 * Update on any document in the target collection with the same uniqueKey.
-		 */
-		REPLACE("replaceDocuments"),
-
-		/**
-		 * Replaces the to collection with the output from the aggregation pipeline. Cannot be in a different database.
-		 */
-		REPLACE_COLLECTION("replaceCollection");
-
-		private final String mode;
-
-		OutMode(String mode) {
-			this.mode = mode;
-		}
-
-		public String getMongoMode() {
-			return mode;
-		}
 	}
 }
