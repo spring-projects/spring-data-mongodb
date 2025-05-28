@@ -35,7 +35,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 
 	private static final String TYPE = "MultiLineString";
 
-	private List<GeoJsonLineString> coordinates = new ArrayList<GeoJsonLineString>();
+	private final List<GeoJsonLineString> coordinates;
 
 	/**
 	 * Creates new {@link GeoJsonMultiLineString} for the given {@link Point}s.
@@ -46,6 +46,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 
 		Assert.notEmpty(lines, "Points for MultiLineString must not be null");
 
+		this.coordinates = new ArrayList<>(lines.length);
 		for (List<Point> line : lines) {
 			this.coordinates.add(new GeoJsonLineString(line));
 		}
@@ -60,7 +61,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 
 		Assert.notNull(lines, "Lines for MultiLineString must not be null");
 
-		this.coordinates.addAll(lines);
+		this.coordinates = new ArrayList<>(lines);
 	}
 
 	@Override

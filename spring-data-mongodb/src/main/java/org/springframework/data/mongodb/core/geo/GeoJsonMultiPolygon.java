@@ -33,7 +33,7 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 
 	private static final String TYPE = "MultiPolygon";
 
-	private List<GeoJsonPolygon> coordinates = new ArrayList<GeoJsonPolygon>();
+	private final List<GeoJsonPolygon> coordinates;
 
 	/**
 	 * Creates a new {@link GeoJsonMultiPolygon} for the given {@link GeoJsonPolygon}s.
@@ -44,7 +44,7 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 
 		Assert.notNull(polygons, "Polygons for MultiPolygon must not be null");
 
-		this.coordinates.addAll(polygons);
+		this.coordinates = new ArrayList<>(polygons);
 	}
 
 	@Override

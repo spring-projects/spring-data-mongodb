@@ -49,8 +49,7 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 
 		Assert.notNull(point, "Point must not be null");
 
-		this.points = new ArrayList<>();
-		this.points.add(point);
+		this.points = List.of(point);
 	}
 
 	/**

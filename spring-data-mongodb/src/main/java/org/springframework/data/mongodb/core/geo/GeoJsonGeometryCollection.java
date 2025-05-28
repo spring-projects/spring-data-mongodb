@@ -34,7 +34,7 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 
 	private static final String TYPE = "GeometryCollection";
 
-	private final List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
+	private final List<GeoJson<?>> geometries;
 
 	/**
 	 * Creates a new {@link GeoJsonGeometryCollection} for the given {@link GeoJson} instances.
@@ -45,7 +45,7 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 
 		Assert.notNull(geometries, "Geometries must not be null");
 
-		this.geometries.addAll(geometries);
+		this.geometries = new ArrayList<>(geometries);
 	}
 
 	@Override
