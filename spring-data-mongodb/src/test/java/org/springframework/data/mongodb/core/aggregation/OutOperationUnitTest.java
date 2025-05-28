@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.out;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
 
 import java.util.Arrays;
 
@@ -84,11 +85,12 @@ public class OutOperationUnitTest {
 						.containsEntry("$out.uniqueKey", new Document("field-1", 1).append("field-2", 1));
 	}
 
-	@Test // DATAMONGO-2259
-	public void shouldErrorOnExtendedFormatWithoutMode() {
+	@Test // DATAMONGO-2259, GH-4969
+	public void shouldRenderNewExtendedFormatWithoutMode() {
 
-		assertThatThrownBy(() -> out("out-col").in("database-2").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isInstanceOf(IllegalStateException.class);
+		assertThat(out("out-col").in("database-2").toDocument(Aggregation.DEFAULT_CONTEXT))
+			.containsEntry("$out.coll", "out-col") //
+			.containsEntry("$out.db", "database-2");
 	}
 
 }
