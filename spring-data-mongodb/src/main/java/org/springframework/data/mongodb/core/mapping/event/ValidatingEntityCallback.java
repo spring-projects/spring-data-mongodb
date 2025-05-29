@@ -33,11 +33,13 @@ import org.springframework.core.Ordered;
  *
  * @author Rene Felgenträger
  * @author Mark Paluch
+ * @author yangchef1
  * @since 4.5
  */
 public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ordered {
 
 	private final BeanValidationDelegate delegate;
+	private int order = 100;
 
 	/**
 	 * Creates a new {@link ValidatingEntityCallback} using the given {@link Validator}.
@@ -62,7 +64,10 @@ public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ord
 
 	@Override
 	public int getOrder() {
-		return 100;
+		return this.order;
 	}
 
+	public void setOrder(int order) {
+		this.order = order;
+	}
 }

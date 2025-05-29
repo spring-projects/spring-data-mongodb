@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Unwrapped;
  * Unit tests for {@link AuditingEntityCallback}.
  *
  * @author Mark Paluch
+ * @author yangchef1
  */
 @ExtendWith(MockitoExtension.class)
 public class AuditingEntityCallbackUnitTests {
@@ -90,6 +91,16 @@ public class AuditingEntityCallbackUnitTests {
 
 		assertThat(callback).isInstanceOf(Ordered.class);
 		assertThat(callback.getOrder()).isEqualTo(100);
+	}
+
+	@Test // GH-4914
+	void allowsChangingOrderDynamically() {
+
+		assertThat(callback).isInstanceOf(Ordered.class);
+		assertThat(callback.getOrder()).isEqualTo(100);
+
+		callback.setOrder(50);
+		assertThat(callback.getOrder()).isEqualTo(50);
 	}
 
 	@Test // DATAMONGO-2261
