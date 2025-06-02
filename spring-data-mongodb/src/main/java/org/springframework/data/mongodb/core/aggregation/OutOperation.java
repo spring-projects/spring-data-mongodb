@@ -49,7 +49,8 @@ public class OutOperation implements AggregationOperation {
 	/**
 	 * @param databaseName Optional database name the target collection is located in. Can be {@literal null}.
 	 * @param collectionName Collection name to export the results. Must not be {@literal null}. Can be {@literal null}.
-	 * @param uniqueKey Optional unique key spec identify a document in the to collection for replacement or merge.
+	 * @param uniqueKey Optional unique key spec identify a document in the {@code to} collection for replacement or
+	 *          merge.
 	 * @param mode The mode for merging the aggregation pipeline output with the target collection. Can be
 	 *          {@literal null}. {@literal null}.
 	 * @since 2.2
@@ -101,9 +102,10 @@ public class OutOperation implements AggregationOperation {
 	 * @param key can be {@literal null}. Server uses {@literal _id} when {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public OutOperation uniqueKey(@Nullable String key) {
 
 		Document uniqueKey = key == null ? null : BsonUtils.toDocumentOrElse(key, it -> new Document(it, 1));
@@ -127,9 +129,10 @@ public class OutOperation implements AggregationOperation {
 	 * @param fields must not be {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public OutOperation uniqueKeyOf(Iterable<String> fields) {
 
 		Assert.notNull(fields, "Fields must not be null");
@@ -147,9 +150,10 @@ public class OutOperation implements AggregationOperation {
 	 * @param mode must not be {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public OutOperation mode(OutMode mode) {
 
 		Assert.notNull(mode, "Mode must not be null");
@@ -163,9 +167,10 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#REPLACE_COLLECTION
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public OutOperation replaceCollection() {
 		return mode(OutMode.REPLACE_COLLECTION);
 	}
@@ -177,9 +182,10 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#REPLACE
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public OutOperation replaceDocuments() {
 		return mode(OutMode.REPLACE);
 	}
@@ -191,9 +197,10 @@ public class OutOperation implements AggregationOperation {
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#INSERT
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public OutOperation insertDocuments() {
 		return mode(OutMode.INSERT);
 	}
@@ -201,7 +208,7 @@ public class OutOperation implements AggregationOperation {
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
-		if (!requiresMongoDb42Format()) {
+		if (!requiresExtendedFormat()) {
 			if (!StringUtils.hasText(databaseName)) {
 				return new Document(getOperator(), collectionName);
 			}
@@ -229,7 +236,7 @@ public class OutOperation implements AggregationOperation {
 		return "$out";
 	}
 
-	private boolean requiresMongoDb42Format() {
+	private boolean requiresExtendedFormat() {
 		return mode != null || uniqueKey != null;
 	}
 
@@ -238,9 +245,10 @@ public class OutOperation implements AggregationOperation {
 	 *
 	 * @author Christoph Strobl
 	 * @since 2.2
-	 * @deprecated no longer applicable for MongoDB 5+
+	 * @deprecated extended {@code $out} syntax was superseded by {@code $merge}. Support for the extended syntax has been
+	 *             removed with MongoDB 5, use {@link MergeOperation} instead.
 	 */
-	@Deprecated
+	@Deprecated(since = "4.4.7")
 	public enum OutMode {
 
 		/**
@@ -254,7 +262,8 @@ public class OutOperation implements AggregationOperation {
 		REPLACE("replaceDocuments"),
 
 		/**
-		 * Replaces the to collection with the output from the aggregation pipeline. Cannot be in a different database.
+		 * Replaces the {@code to} collection with the output from the aggregation pipeline. Cannot be in a different
+		 * database.
 		 */
 		REPLACE_COLLECTION("replaceCollection");
 
