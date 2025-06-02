@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -54,6 +55,7 @@ import com.mongodb.client.MongoClient;
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @EnableIfMongoServerVersion(isGreaterThanEqual = "8.0")
+@EnableIfReplicaSetAvailable
 @ContextConfiguration
 public class MongoQueryableEncryptionCollectionCreationTests {
 
