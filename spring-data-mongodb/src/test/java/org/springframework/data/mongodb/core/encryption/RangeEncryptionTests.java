@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.security.SecureRandom;
 import java.util.LinkedHashMap;
@@ -32,13 +33,10 @@ import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -125,11 +123,11 @@ class RangeEncryptionTests {
 
 		EncryptOptions equalityEncOptions = new EncryptOptions("Indexed").contentionFactor(0L)
 				.keyId(keyHolder.getEncryptionKey("age"));
-		;
 
 		EncryptOptions equalityEncOptionsString = new EncryptOptions("Indexed").contentionFactor(0L)
 				.keyId(keyHolder.getEncryptionKey("name"));
-		;
+
+		EncryptOptions justEncryptOptions = new EncryptOptions("Unindexed").keyId(keyHolder.getEncryptionKey("ssn"));
 
 		Document source = new Document("_id", "id-1");
 
@@ -137,6 +135,7 @@ class RangeEncryptionTests {
 				clientEncryption.getClientEncryption().encrypt(new BsonString("It's a Me, Mario!"), equalityEncOptionsString));
 		source.put("age", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), equalityEncOptions));
 		source.put("encryptedInt", clientEncryption.getClientEncryption().encrypt(new BsonInt32(101), encryptOptions));
+		source.put("ssn", clientEncryption.getClientEncryption().encrypt(new BsonString("6-4-20"), justEncryptOptions));
 		source.put("_class", Person.class.getName());
 
 		template.execute(Person.class, col -> col.insertOne(source));
@@ -151,6 +150,8 @@ class RangeEncryptionTests {
 		});
 
 		assertThat(result).containsEntry("encryptedInt", 101);
+		assertThat(result).containsEntry("age", 101);
+		assertThat(result).containsEntry("ssn", "6-4-20");
 	}
 
 	@Test // GH-4185
@@ -283,6 +284,7 @@ class RangeEncryptionTests {
 		source.encryptedLong = 1001L;
 		source.nested = new NestedWithQEFields();
 		source.nested.value = "Luigi time!";
+		source.ssn = "6-4-20";
 		return source;
 	}
 
@@ -480,6 +482,10 @@ class RangeEncryptionTests {
 				rangeOptions = "{\"min\": {\"$numberLong\": \"1000\"}, \"max\": {\"$numberLong\": \"9999\"}, \"trimFactor\": 1, \"sparsity\": 1}") //
 		Long encryptedLong;
 
+		@ValueConverter(MongoEncryptionConverter.class)
+		@Encrypted(algorithm = "Unindexed") // encrypted, nothing else!
+		String ssn;
+
 		NestedWithQEFields nested;
 
 		public String getId() {
@@ -514,6 +520,14 @@ class RangeEncryptionTests {
 			this.encryptedLong = encryptedLong;
 		}
 
+		public String getSsn() {
+			return ssn;
+		}
+
+		public void setSsn(String ssn) {
+			this.ssn = ssn;
+		}
+
 		@Override
 		public boolean equals(Object o) {
 			if (o == this) {
@@ -525,18 +539,20 @@ class RangeEncryptionTests {
 			Person person = (Person) o;
 			return Objects.equals(id, person.id) && Objects.equals(unencryptedValue, person.unencryptedValue)
 					&& Objects.equals(name, person.name) && Objects.equals(age, person.age)
-					&& Objects.equals(encryptedInt, person.encryptedInt) && Objects.equals(encryptedLong, person.encryptedLong);
+					&& Objects.equals(encryptedInt, person.encryptedInt) && Objects.equals(encryptedLong, person.encryptedLong)
+					&& Objects.equals(ssn, person.ssn);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(id, unencryptedValue, name, age, encryptedInt, encryptedLong);
+			return Objects.hash(id, unencryptedValue, name, age, encryptedInt, encryptedLong, ssn);
 		}
 
 		@Override
 		public String toString() {
 			return "Person{" + "id='" + id + '\'' + ", unencryptedValue='" + unencryptedValue + '\'' + ", name='" + name
-					+ '\'' + ", age=" + age + ", encryptedInt=" + encryptedInt + ", encryptedLong=" + encryptedLong + '}';
+					+ '\'' + ", age=" + age + ", encryptedInt=" + encryptedInt + ", encryptedLong=" + encryptedLong + ", ssn="
+					+ ssn + '}';
 		}
 	}
 
