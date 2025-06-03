@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core.encryption;
 
-import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
-import static org.springframework.data.mongodb.core.schema.QueryCharacteristics.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.encrypted;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int32;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int64;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.queryable;
+import static org.springframework.data.mongodb.core.schema.QueryCharacteristics.range;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +34,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -94,12 +96,16 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 		assertThat(encryptedFields).containsKey("fields");
 
 		List<Document> fields = encryptedFields.get("fields", List.of());
-		assertThat(fields.get(0)).containsEntry("path", "encryptedInt") //
+		assertThat(fields.get(0)).containsEntry("path", "encrypted-but-not-queryable") //
+				.containsEntry("bsonType", "int") //
+				.doesNotContainKey("queries");
+
+		assertThat(fields.get(1)).containsEntry("path", "encryptedInt") //
 				.containsEntry("bsonType", "int") //
 				.containsEntry("queries", List
 						.of(Document.parse("{'queryType': 'range', 'contention': { '$numberLong' : '1' }, 'min': 5, 'max': 100}")));
 
-		assertThat(fields.get(1)).containsEntry("path", "nested.encryptedLong") //
+		assertThat(fields.get(2)).containsEntry("path", "nested.encryptedLong") //
 				.containsEntry("bsonType", "long") //
 				.containsEntry("queries", List.of(Document.parse(
 						"{'queryType': 'range', 'contention': { '$numberLong' : '0' }, 'min': { '$numberLong' : '-1' }, 'max': { '$numberLong' : '1' }}")));
@@ -109,16 +115,19 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 
 		BsonBinary key1 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 		BsonBinary key2 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
+		BsonBinary key3 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 
 		CollectionOptions manualOptions = CollectionOptions.encryptedCollection(options -> options //
-				.queryable(encrypted(int32("encryptedInt")).keys(key1), range().min(5).max(100).contention(1)) //
-				.queryable(encrypted(JsonSchemaProperty.int64("nested.encryptedLong")).keys(key2),
+				.encrypted(int32("encrypted-but-not-queryable"), key1) //
+				.queryable(encrypted(int32("encryptedInt")).keyId(key2), range().min(5).max(100).contention(1)) //
+				.queryable(encrypted(JsonSchemaProperty.int64("nested.encryptedLong")).keyId(key3),
 						range().min(-1L).max(1L).contention(0)));
 
-		CollectionOptions schemaOptions = CollectionOptions.encryptedCollection(MongoJsonSchema.builder()
+		CollectionOptions schemaOptions = CollectionOptions.encryptedCollection(MongoJsonSchema.builder() //
+				.property(encrypted(int32("encrypted-but-not-queryable")).keyId(key1)) //
 				.property(
-						queryable(encrypted(int32("encryptedInt")).keyId(key1), List.of(range().min(5).max(100).contention(1))))
-				.property(queryable(encrypted(int64("nested.encryptedLong")).keyId(key2),
+						queryable(encrypted(int32("encryptedInt")).keyId(key2), List.of(range().min(5).max(100).contention(1))))
+				.property(queryable(encrypted(int64("nested.encryptedLong")).keyId(key3),
 						List.of(range().min(-1L).max(1L).contention(0))))
 				.build());
 

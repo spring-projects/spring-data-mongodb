@@ -34,6 +34,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.QueryableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -681,17 +682,17 @@ public class CollectionOptions {
 		private static final EncryptedFieldsOptions NONE = new EncryptedFieldsOptions();
 
 		private final @Nullable MongoJsonSchema schema;
-		private final List<QueryableJsonSchemaProperty> queryableProperties;
+		private final List<JsonSchemaProperty> properties;
 
 		EncryptedFieldsOptions() {
 			this(null, List.of());
 		}
 
 		private EncryptedFieldsOptions(@Nullable MongoJsonSchema schema,
-				List<QueryableJsonSchemaProperty> queryableProperties) {
+				List<JsonSchemaProperty> queryableProperties) {
 
 			this.schema = schema;
-			this.queryableProperties = queryableProperties;
+			this.properties = queryableProperties;
 		}
 
 		/**
@@ -731,9 +732,29 @@ public class CollectionOptions {
 		@CheckReturnValue
 		public EncryptedFieldsOptions queryable(JsonSchemaProperty property, QueryCharacteristic... characteristics) {
 
-			List<QueryableJsonSchemaProperty> targetPropertyList = new ArrayList<>(queryableProperties.size() + 1);
-			targetPropertyList.addAll(queryableProperties);
+			List<JsonSchemaProperty> targetPropertyList = new ArrayList<>(properties.size() + 1);
+			targetPropertyList.addAll(properties);
 			targetPropertyList.add(JsonSchemaProperty.queryable(property, List.of(characteristics)));
+
+			return new EncryptedFieldsOptions(schema, targetPropertyList);
+		}
+
+		public EncryptedFieldsOptions with(EncryptedJsonSchemaProperty property) {
+			return encrypted(property, null);
+		}
+
+		public EncryptedFieldsOptions encrypted(JsonSchemaProperty property, @Nullable Object key) {
+
+			List<JsonSchemaProperty> targetPropertyList = new ArrayList<>(properties.size() + 1);
+			targetPropertyList.addAll(properties);
+			if(property instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty) {
+				targetPropertyList.add(property);
+			} else {
+				EncryptedJsonSchemaProperty encryptedJsonSchemaProperty = new EncryptedJsonSchemaProperty(property);
+				if(key != null) {
+					targetPropertyList.add(encryptedJsonSchemaProperty.keyId(key));
+				}
+			}
 
 			return new EncryptedFieldsOptions(schema, targetPropertyList);
 		}
@@ -756,12 +777,12 @@ public class CollectionOptions {
 
 		private List<Document> fromProperties() {
 
-			if (queryableProperties.isEmpty()) {
+			if (properties.isEmpty()) {
 				return List.of();
 			}
 
-			List<Document> converted = new ArrayList<>(queryableProperties.size());
-			for (QueryableJsonSchemaProperty property : queryableProperties) {
+			List<Document> converted = new ArrayList<>(properties.size());
+			for (JsonSchemaProperty property : properties) {
 
 				Document field = new Document("path", property.getIdentifier());
 
@@ -769,7 +790,7 @@ public class CollectionOptions {
 					field.append("bsonType", property.getTypes().iterator().next().toBsonType().value());
 				}
 
-				if (property
+				if (property instanceof QueryableJsonSchemaProperty qproperty && qproperty
 						.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
 					if (encrypted.getKeyId() != null) {
 						if (encrypted.getKeyId() instanceof String stringKey) {
@@ -780,10 +801,21 @@ public class CollectionOptions {
 						}
 					}
 				}
+				else if (property instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
+					if (encrypted.getKeyId() != null) {
+						if (encrypted.getKeyId() instanceof String stringKey) {
+							field.append("keyId",
+								new BsonBinary(BsonBinarySubType.UUID_STANDARD, stringKey.getBytes(StandardCharsets.UTF_8)));
+						} else {
+							field.append("keyId", encrypted.getKeyId());
+						}
+					}
+				}
 
-				field.append("queries", StreamSupport.stream(property.getCharacteristics().spliterator(), false)
+				if (property instanceof QueryableJsonSchemaProperty qproperty) {
+					field.append("queries", StreamSupport.stream(qproperty.getCharacteristics().spliterator(), false)
 						.map(QueryCharacteristic::toDocument).toList());
-
+				}
 				if (!field.containsKey("keyId")) {
 					field.append("keyId", BsonNull.VALUE);
 				}
@@ -812,7 +844,9 @@ public class CollectionOptions {
 					if (entry.getValue().containsKey("bsonType")) {
 						field.append("bsonType", entry.getValue().get("bsonType"));
 					}
-					field.put("queries", entry.getValue().get("queries"));
+					if(entry.getValue().containsKey("queries")) {
+						field.put("queries", entry.getValue().get("queries"));
+					}
 					fields.add(field);
 				}
 			}
