@@ -97,11 +97,9 @@ class MongoRuntimeHints implements RuntimeHintsRegistrar {
 				.registerType(IndexOptions.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 				.registerType(ServerAddress.class, MemberCategory.INVOKE_PUBLIC_METHODS)
 				.registerType(UnixServerAddress.class, MemberCategory.INVOKE_PUBLIC_METHODS) //
-				.registerType(TypeReference.of("com.mongodb.connection.StreamFactoryFactory"),
-						MemberCategory.INTROSPECT_PUBLIC_METHODS)
-				.registerType(TypeReference.of("com.mongodb.internal.connection.StreamFactoryFactory"),
-						MemberCategory.INTROSPECT_PUBLIC_METHODS)
-				.registerType(TypeReference.of("com.mongodb.internal.build.MongoDriverVersion"), MemberCategory.PUBLIC_FIELDS);
+				.registerType(TypeReference.of("com.mongodb.connection.StreamFactoryFactory"))
+				.registerType(TypeReference.of("com.mongodb.internal.connection.StreamFactoryFactory"))
+				.registerType(TypeReference.of("com.mongodb.internal.build.MongoDriverVersion"), MemberCategory.ACCESS_PUBLIC_FIELDS);
 
 		if (MongoAotPredicates.isSyncClientPresent(classLoader)) {
 

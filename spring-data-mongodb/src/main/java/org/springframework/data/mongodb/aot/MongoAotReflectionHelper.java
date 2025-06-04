@@ -26,6 +26,6 @@ public final class MongoAotReflectionHelper {
 	public static void cglibProxyReflectionMemberAccess(Builder builder) {
 
 		builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS,
-				MemberCategory.DECLARED_FIELDS);
+				MemberCategory.ACCESS_DECLARED_FIELDS);
 	}
 }

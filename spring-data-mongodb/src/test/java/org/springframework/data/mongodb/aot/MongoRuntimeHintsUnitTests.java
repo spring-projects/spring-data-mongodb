@@ -55,8 +55,7 @@ class MongoRuntimeHintsUnitTests {
 				.and(reflection().onType(IndexOptions.class).withMemberCategory(INVOKE_PUBLIC_METHODS))
 				.and(reflection().onType(ServerAddress.class).withMemberCategory(INVOKE_PUBLIC_METHODS))
 				.and(reflection().onType(UnixServerAddress.class).withMemberCategory(INVOKE_PUBLIC_METHODS))
-				.and(reflection().onType(TypeReference.of("com.mongodb.connection.StreamFactoryFactory"))
-						.withMemberCategory(INTROSPECT_PUBLIC_METHODS));
+				.and(reflection().onType(TypeReference.of("com.mongodb.connection.StreamFactoryFactory")));
 
 		assertThat(runtimeHints).matches(expected);
 	}
