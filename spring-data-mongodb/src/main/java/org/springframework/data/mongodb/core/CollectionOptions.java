@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonNull;
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
@@ -391,6 +391,7 @@ public class CollectionOptions {
 	 *
 	 * @param encryptedFieldsOptions must not be {@literal null}.
 	 * @return new instance of {@link CollectionOptions}.
+	 * @since 4.5
 	 */
 	@Contract("_ -> new")
 	@CheckReturnValue
@@ -708,7 +709,7 @@ public class CollectionOptions {
 		/**
 		 * @return new instance of {@link EncryptedFieldsOptions}.
 		 */
-		public static EncryptedFieldsOptions fromProperties(List<JsonSchemaProperty> properties) {
+		public static EncryptedFieldsOptions fromProperties(List<? extends JsonSchemaProperty> properties) {
 			return new EncryptedFieldsOptions(null, List.copyOf(properties));
 		}
 
@@ -740,6 +741,7 @@ public class CollectionOptions {
 		 *
 		 * @param property must not be {@literal null}.
 		 * @return new instance of {@link EncryptedFieldsOptions}.
+		 * @since 4.5.1
 		 */
 		@Contract("_ -> new")
 		@CheckReturnValue
@@ -748,24 +750,26 @@ public class CollectionOptions {
 		}
 
 		/**
-		 * Add a {@link JsonSchemaProperty property} that should not be encrypted but not queryable.
+		 * Add a {@link JsonSchemaProperty property} that should be encrypted but not queryable.
 		 *
 		 * @param property must not be {@literal null}.
-		 * @param key can be {@literal null}.
+		 * @param keyId the key identifier to be used, can be {@literal null}.
 		 * @return new instance of {@link EncryptedFieldsOptions}.
+		 * @since 4.5.1
 		 */
 		@Contract("_, _ -> new")
 		@CheckReturnValue
-		public EncryptedFieldsOptions encrypted(JsonSchemaProperty property, @Nullable Object key) {
+		public EncryptedFieldsOptions encrypted(JsonSchemaProperty property, @Nullable Object keyId) {
 
 			List<JsonSchemaProperty> targetPropertyList = new ArrayList<>(properties.size() + 1);
 			targetPropertyList.addAll(properties);
+
 			if (property instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty) {
 				targetPropertyList.add(property);
 			} else {
 				EncryptedJsonSchemaProperty encryptedJsonSchemaProperty = new EncryptedJsonSchemaProperty(property);
-				if (key != null) {
-					targetPropertyList.add(encryptedJsonSchemaProperty.keyId(key));
+				if (keyId != null) {
+					targetPropertyList.add(encryptedJsonSchemaProperty.keyId(keyId));
 				}
 			}
 
@@ -796,45 +800,48 @@ public class CollectionOptions {
 
 			List<Document> converted = new ArrayList<>(properties.size());
 			for (JsonSchemaProperty property : properties) {
-
-				Document field = new Document("path", property.getIdentifier());
-
-				if (!property.getTypes().isEmpty()) {
-					field.append("bsonType", property.getTypes().iterator().next().toBsonType().value());
-				}
-
-				if (property instanceof QueryableJsonSchemaProperty qproperty && qproperty
-						.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
-					if (encrypted.getKeyId() != null) {
-						if (encrypted.getKeyId() instanceof String stringKey) {
-							field.append("keyId",
-									new BsonBinary(BsonBinarySubType.UUID_STANDARD, stringKey.getBytes(StandardCharsets.UTF_8)));
-						} else {
-							field.append("keyId", encrypted.getKeyId());
-						}
-					}
-				} else if (property instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted) {
-					if (encrypted.getKeyId() != null) {
-						if (encrypted.getKeyId() instanceof String stringKey) {
-							field.append("keyId",
-									new BsonBinary(BsonBinarySubType.UUID_STANDARD, stringKey.getBytes(StandardCharsets.UTF_8)));
-						} else {
-							field.append("keyId", encrypted.getKeyId());
-						}
-					}
-				}
-
-				if (property instanceof QueryableJsonSchemaProperty qproperty) {
-					field.append("queries", StreamSupport.stream(qproperty.getCharacteristics().spliterator(), false)
-							.map(QueryCharacteristic::toDocument).toList());
-				}
-				if (!field.containsKey("keyId")) {
-					field.append("keyId", BsonNull.VALUE);
-				}
-
-				converted.add(field);
+				converted.add(getEncryptedField(property));
 			}
 			return converted;
+		}
+
+		private Document getEncryptedField(JsonSchemaProperty property) {
+
+			Document field = new Document("path", property.getIdentifier());
+
+			if (!property.getTypes().isEmpty()) {
+				field.append("bsonType", property.getTypes().iterator().next().toBsonType().value());
+			}
+
+			if (property instanceof QueryableJsonSchemaProperty qp
+					&& qp.getTargetProperty() instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted
+					&& encrypted.getKeyId() != null) {
+
+				if (encrypted.getKeyId() instanceof String stringKey) {
+					field.append("keyId",
+							new BsonBinary(BsonBinarySubType.UUID_STANDARD, stringKey.getBytes(StandardCharsets.UTF_8)));
+				} else {
+					field.append("keyId", encrypted.getKeyId());
+				}
+			} else if (property instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty encrypted
+					&& encrypted.getKeyId() != null) {
+				if (encrypted.getKeyId() instanceof String stringKey) {
+					field.append("keyId",
+							new BsonBinary(BsonBinarySubType.UUID_STANDARD, stringKey.getBytes(StandardCharsets.UTF_8)));
+				} else {
+					field.append("keyId", encrypted.getKeyId());
+				}
+			}
+
+			if (property instanceof QueryableJsonSchemaProperty qp) {
+				field.append("queries", qp.getCharacteristics().map(QueryCharacteristic::toDocument).toList());
+			}
+
+			if (!field.containsKey("keyId")) {
+				field.append("keyId", BsonNull.VALUE);
+			}
+
+			return field;
 		}
 
 		private List<Document> fromSchema() {
@@ -848,19 +855,25 @@ public class CollectionOptions {
 			collectPaths(root, null, paths);
 
 			List<Document> fields = new ArrayList<>();
-			if (!paths.isEmpty()) {
+			if (paths.isEmpty()) {
+				return fields;
+			}
 
-				for (Entry<String, Document> entry : paths.entrySet()) {
-					Document field = new Document("path", entry.getKey());
-					field.append("keyId", entry.getValue().getOrDefault("keyId", BsonNull.VALUE));
-					if (entry.getValue().containsKey("bsonType")) {
-						field.append("bsonType", entry.getValue().get("bsonType"));
-					}
-					if (entry.getValue().containsKey("queries")) {
-						field.put("queries", entry.getValue().get("queries"));
-					}
-					fields.add(field);
+			for (Entry<String, Document> entry : paths.entrySet()) {
+
+				Document field = new Document("path", entry.getKey());
+
+				field.append("keyId", entry.getValue().getOrDefault("keyId", BsonNull.VALUE));
+
+				if (entry.getValue().containsKey("bsonType")) {
+					field.append("bsonType", entry.getValue().get("bsonType"));
 				}
+
+				if (entry.getValue().containsKey("queries")) {
+					field.put("queries", entry.getValue().get("queries"));
+				}
+
+				fields.add(field);
 			}
 
 			return fields;
@@ -870,28 +883,29 @@ public class CollectionOptions {
 	private static void collectPaths(Document document, @Nullable String currentPath, Map<String, Document> paths) {
 
 		if (document.containsKey("type") && document.get("type").equals("object")) {
+
 			Object o = document.get("properties");
-			if (o == null) {
+
+			if (!(o instanceof Document properties)) {
 				return;
 			}
 
-			if (o instanceof Document properties) {
-				for (Entry<String, Object> entry : properties.entrySet()) {
-					if (entry.getValue() instanceof Document nested) {
+			for (Entry<String, Object> entry : properties.entrySet()) {
 
-						String path = currentPath == null ? entry.getKey() : (currentPath + "." + entry.getKey());
-						if (nested.containsKey("encrypt")) {
-							Document target = new Document(nested.get("encrypt", Document.class));
-							if (nested.containsKey("queries")) {
-								List<?> queries = nested.get("queries", List.class);
-								if (!queries.isEmpty() && queries.iterator().next() instanceof Document qd) {
-									target.putAll(qd);
-								}
+				if (entry.getValue() instanceof Document nested) {
+
+					String path = currentPath == null ? entry.getKey() : (currentPath + "." + entry.getKey());
+					if (nested.containsKey("encrypt")) {
+						Document target = new Document(nested.get("encrypt", Document.class));
+						if (nested.containsKey("queries")) {
+							List<?> queries = nested.get("queries", List.class);
+							if (!queries.isEmpty() && queries.iterator().next() instanceof Document qd) {
+								target.putAll(qd);
 							}
-							paths.put(path, target);
-						} else {
-							collectPaths(nested, path, paths);
 						}
+						paths.put(path, target);
+					} else {
+						collectPaths(nested, path, paths);
 					}
 				}
 			}

@@ -24,6 +24,7 @@ import org.bson.BsonNull;
 import org.bson.Document;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
+import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 
 /**
@@ -33,7 +34,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @since 4.5
  */
-public class QueryCharacteristics implements Iterable<QueryCharacteristic> {
+public class QueryCharacteristics implements Streamable<QueryCharacteristic> {
 
 	/**
 	 * instance indicating none
