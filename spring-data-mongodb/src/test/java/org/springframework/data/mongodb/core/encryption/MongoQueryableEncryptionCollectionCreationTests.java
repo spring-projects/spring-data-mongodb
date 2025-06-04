@@ -31,7 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -84,7 +83,7 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 		template.dropCollection(COLLECTION_NAME);
 	}
 
-	@ParameterizedTest // GH-4185
+	@ParameterizedTest // GH-4185, GH-4989
 	@MethodSource("collectionOptions")
 	public void createsCollectionWithEncryptedFieldsCorrectly(CollectionOptions collectionOptions) {
 
@@ -103,23 +102,33 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 				.containsEntry("bsonType", "long") //
 				.containsEntry("queries", List.of(Document.parse(
 						"{'queryType': 'range', 'contention': { '$numberLong' : '0' }, 'min': { '$numberLong' : '-1' }, 'max': { '$numberLong' : '1' }}")));
+
+		assertThat(fields.get(2)).containsEntry("path", "encryptedDouble") //
+				.containsEntry("bsonType", "double") //
+				.containsEntry("queries", List.of(Document.parse(
+						"{'queryType': 'range', 'contention': { '$numberLong' : '1' }, 'min': { '$numberDouble' : '-1.123' }, 'max': { '$numberDouble' : '1.123' }, 'precision': { '$numberInt' : '5'}}")));
 	}
 
 	private static Stream<Arguments> collectionOptions() {
 
 		BsonBinary key1 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 		BsonBinary key2 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
+		BsonBinary key3 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 
 		CollectionOptions manualOptions = CollectionOptions.encryptedCollection(options -> options //
 				.queryable(encrypted(int32("encryptedInt")).keys(key1), range().min(5).max(100).contention(1)) //
 				.queryable(encrypted(JsonSchemaProperty.int64("nested.encryptedLong")).keys(key2),
-						range().min(-1L).max(1L).contention(0)));
+						range().min(-1L).max(1L).contention(0)) //
+				.queryable(encrypted(JsonSchemaProperty.float64("encryptedDouble")).keys(key3),
+						range().min(-1.123D).max(1.123D).precision(5).contention(1)));
 
 		CollectionOptions schemaOptions = CollectionOptions.encryptedCollection(MongoJsonSchema.builder()
 				.property(
 						queryable(encrypted(int32("encryptedInt")).keyId(key1), List.of(range().min(5).max(100).contention(1))))
 				.property(queryable(encrypted(int64("nested.encryptedLong")).keyId(key2),
 						List.of(range().min(-1L).max(1L).contention(0))))
+				.property(queryable(encrypted(float64("encryptedDouble")).keyId(key3),
+						List.of(range().min(-1.123D).max(1.123D).precision(5).contention(1))))
 				.build());
 
 		return Stream.of(Arguments.of(manualOptions), Arguments.of(schemaOptions));
