@@ -253,10 +253,12 @@ public class QueryCharacteristics implements Iterable<QueryCharacteristic> {
 				target.append("min", valueRange.getLowerBound().getValue().orElse((T) BsonNull.VALUE)).append("max",
 						valueRange.getUpperBound().getValue().orElse((T) BsonNull.VALUE));
 			}
+			if (precision != null) {
+				target.append("precision", precision);
+			}
 			if (sparsity != null) {
 				target.append("sparsity", sparsity);
 			}
-
 			return target;
 		}
 	}
