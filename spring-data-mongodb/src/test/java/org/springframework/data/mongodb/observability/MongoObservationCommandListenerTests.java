@@ -99,6 +99,16 @@ class MongoObservationCommandListenerTests {
 	}
 
 	@Test
+	void commandStartedShouldNotInstrumentWhenHello() {
+
+		// when
+		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "hello", null));
+
+		// then
+		assertThat(meterRegistry).hasNoMetrics();
+	}
+
+	@Test
 	void successfullyCompletedCommandShouldCreateTimerWhenParentSampleInRequestContext() {
 
 		// given
