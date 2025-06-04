@@ -37,7 +37,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
@@ -57,7 +56,8 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.OperatorContext;
 import org.springframework.data.mongodb.core.convert.MongoConversionContext.QueryOperatorContext;
@@ -419,7 +419,8 @@ public class QueryMapper {
 		if (keyword.isSample()) {
 
 			Example<?> example = keyword.getValue();
-			return exampleMapper.getMappedExample(example, entity != null ? entity : mappingContext.getRequiredPersistentEntity(example.getProbeType()));
+			return exampleMapper.getMappedExample(example,
+					entity != null ? entity : mappingContext.getRequiredPersistentEntity(example.getProbeType()));
 		}
 
 		if (keyword.isJsonSchema()) {
@@ -558,7 +559,8 @@ public class QueryMapper {
 
 		if (source instanceof AggregationExpression age) {
 			return entity == null ? age.toDocument() : //
-					age.toDocument(new RelaxedTypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this));
+					age.toDocument(new TypeBasedAggregationOperationContext(entity.getType(), this.mappingContext, this,
+							FieldLookupPolicy.relaxed()));
 		}
 
 		if (source instanceof MongoExpression exr) {
@@ -680,7 +682,8 @@ public class QueryMapper {
 		MongoPersistentProperty property = documentField.getProperty();
 
 		OperatorContext criteriaContext = new QueryOperatorContext(
-				isKeyword(documentField.name) ? documentField.name : "$eq", property != null ? property.getFieldName() : documentField.name);
+				isKeyword(documentField.name) ? documentField.name : "$eq",
+				property != null ? property.getFieldName() : documentField.name);
 
 		MongoConversionContext conversionContext;
 		if (valueConverter instanceof MongoConversionContext mcc) {
@@ -694,7 +697,8 @@ public class QueryMapper {
 	}
 
 	@SuppressWarnings("NullAway")
-	protected @Nullable Object convertValueWithConversionContext(Field documentField, @Nullable Object sourceValue, @Nullable Object value,
+	protected @Nullable Object convertValueWithConversionContext(Field documentField, @Nullable Object sourceValue,
+			@Nullable Object value,
 			PropertyValueConverter<Object, Object, ValueConversionContext<MongoPersistentProperty>> valueConverter,
 			MongoConversionContext conversionContext) {
 
@@ -729,7 +733,7 @@ public class QueryMapper {
 	}
 
 	@Nullable
-	@SuppressWarnings({"unchecked", "NullAway"})
+	@SuppressWarnings({ "unchecked", "NullAway" })
 	private Object convertIdField(Field documentField, Object source) {
 
 		Object value = source;

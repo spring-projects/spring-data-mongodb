@@ -44,7 +44,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOperationCon
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -407,7 +407,8 @@ class QueryOperations {
 				if (entry.getValue() instanceof MongoExpression mongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
-							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
+							: new TypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper,
+									FieldLookupPolicy.relaxed());
 
 					evaluated.put(entry.getKey(), AggregationExpression.from(mongoExpression).toDocument(ctx));
 				} else {
@@ -895,8 +896,8 @@ class QueryOperations {
 
 			Class<?> type = domainType != null ? domainType : Object.class;
 
-			AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type, mappingContext,
-					queryMapper);
+			AggregationOperationContext context = new TypeBasedAggregationOperationContext(type, mappingContext, queryMapper,
+					FieldLookupPolicy.relaxed());
 			return aggregationUtil.createPipeline((AggregationUpdate) update, context);
 		}
 

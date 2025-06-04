@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -133,9 +133,9 @@ class SelectionOperatorUnitTests {
 	void firstNMapsFieldNamesCorrectly() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		RelaxedTypeBasedAggregationOperationContext aggregationContext = new RelaxedTypeBasedAggregationOperationContext(
-				Player.class, mappingContext,
-				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+		AggregationOperationContext aggregationContext = new TypeBasedAggregationOperationContext(Player.class,
+				mappingContext, new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)),
+				FieldLookupPolicy.relaxed());
 
 		Document document = SelectionOperators.First.first(3).of("score").toDocument(aggregationContext);
 
@@ -154,9 +154,9 @@ class SelectionOperatorUnitTests {
 	void lastNMapsFieldNamesCorrectly() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		RelaxedTypeBasedAggregationOperationContext aggregationContext = new RelaxedTypeBasedAggregationOperationContext(
-				Player.class, mappingContext,
-				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+		AggregationOperationContext aggregationContext = new TypeBasedAggregationOperationContext(Player.class,
+				mappingContext, new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)),
+				FieldLookupPolicy.relaxed());
 
 		Document document = SelectionOperators.Last.last(3).of("score").toDocument(aggregationContext);
 

@@ -15,9 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.data.domain.Sort.Direction.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -30,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.CustomConversions;
@@ -74,8 +77,8 @@ public class AggregationOperationRendererUnitTests {
 				project().and("layerOne.layerTwo.layerThree").as("layerOne.layerThree"),
 				sort(DESC, "layerOne.layerThree.fieldA"));
 
-		AggregationOperationRenderer.toDocument(agg.getPipeline().getOperations(),
-				new RelaxedTypeBasedAggregationOperationContext(TestRecord.class, ctx, new QueryMapper(mongoConverter)));
+		AggregationOperationRenderer.toDocument(agg.getPipeline().getOperations(), new TypeBasedAggregationOperationContext(
+				TestRecord.class, ctx, new QueryMapper(mongoConverter), FieldLookupPolicy.relaxed()));
 	}
 
 	@Test // GH-4722
@@ -97,7 +100,8 @@ public class AggregationOperationRendererUnitTests {
 		);
 
 		List<Document> document = AggregationOperationRenderer.toDocument(agg.getPipeline().getOperations(),
-				new RelaxedTypeBasedAggregationOperationContext(TestRecord.class, ctx, new QueryMapper(mongoConverter)));
+				new TypeBasedAggregationOperationContext(TestRecord.class, ctx, new QueryMapper(mongoConverter),
+						FieldLookupPolicy.relaxed()));
 		Assertions.assertThat(document).last()
 				.extracting(it -> it.getEmbedded(List.of("$match", "createdDate", "$lt"), Object.class))
 				.isInstanceOf(String.class);

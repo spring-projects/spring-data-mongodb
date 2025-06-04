@@ -15,10 +15,21 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.DEFAULT_CONTEXT;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregationOptions;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.replaceRoot;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.stage;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatIllegalArgumentException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,7 +157,7 @@ public class AggregationUnitTests {
 
 		Document agg = newAggregation( //
 				replaceRoot().withDocument().andValue("value").as("field")) //
-						.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
 		@SuppressWarnings("unchecked")
 		Document unwind = ((List<Document>) agg.get("pipeline")).get(0);
@@ -599,8 +610,9 @@ public class AggregationUnitTests {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		Document target = new Aggregation(bucket("start"), project("_id")).toDocument("collection-1",
-				new RelaxedTypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
-						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
+				new TypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
+						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)),
+						FieldLookupPolicy.relaxed()));
 
 		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : 1 }"));
 	}
@@ -609,11 +621,12 @@ public class AggregationUnitTests {
 	void shouldNotConvertIncludeExcludeValuesForProjectOperation() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
-				WithRetypedIdField.class, mappingContext,
-				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(WithRetypedIdField.class,
+				mappingContext, new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)),
+				FieldLookupPolicy.relaxed());
 		Document document = project(WithRetypedIdField.class).toDocument(context);
-		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1).append("entries", 1)));
+		assertThat(document)
+				.isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1).append("entries", 1)));
 	}
 
 	@Test // GH-4038
@@ -650,7 +663,8 @@ public class AggregationUnitTests {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		QueryMapper queryMapper = new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
 
-		List<Document> documents = newAggregation(City.class, aggregationOperations).toPipeline(new RelaxedTypeBasedAggregationOperationContext(City.class, mappingContext, queryMapper));
+		List<Document> documents = newAggregation(City.class, aggregationOperations)
+				.toPipeline(new RelaxedTypeBasedAggregationOperationContext(City.class, mappingContext, queryMapper));
 		assertThat(documents.get(2)).isEqualTo("{ $sort : { 'serial_number' : -1, 'label_name' : -1 } }");
 	}
 
@@ -658,12 +672,12 @@ public class AggregationUnitTests {
 	void fieldsExposingContextShouldUseCustomFieldNameFromRelaxedRootContext() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(
-				WithRetypedIdField.class, mappingContext,
-				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(WithRetypedIdField.class,
+				mappingContext, new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)),
+				FieldLookupPolicy.relaxed());
 
-		TypedAggregation<WithRetypedIdField> agg = newAggregation(WithRetypedIdField.class,
-				unwind("entries"), match(where("foo").is("value 2")));
+		TypedAggregation<WithRetypedIdField> agg = newAggregation(WithRetypedIdField.class, unwind("entries"),
+				match(where("foo").is("value 2")));
 		List<Document> pipeline = agg.toPipeline(context);
 
 		Document fields = getAsDocument(pipeline.get(1), "$match");
@@ -685,7 +699,8 @@ public class AggregationUnitTests {
 
 	public class WithRetypedIdField {
 
-		@Id @org.springframework.data.mongodb.core.mapping.Field private String id;
+		@Id
+		@org.springframework.data.mongodb.core.mapping.Field private String id;
 
 		@org.springframework.data.mongodb.core.mapping.Field("renamed-field") private String foo;
 

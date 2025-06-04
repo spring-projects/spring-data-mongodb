@@ -126,7 +126,7 @@ public class ObjectOperatorsUnitTests {
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
 		converter.afterPropertiesSet();
 
-		assertThat(ObjectOperators.getValueOf("population").toDocument(new RelaxedTypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter))))
+		assertThat(ObjectOperators.getValueOf("population").toDocument(new TypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter), FieldLookupPolicy.relaxed())))
 				.isEqualTo(Document.parse("{ $getField : { field :  \"pop\", input : \"$$CURRENT\" } }"));
 	}
 
@@ -143,7 +143,7 @@ public class ObjectOperatorsUnitTests {
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext());
 		converter.afterPropertiesSet();
 
-		assertThat(ObjectOperators.setValueTo("population", "robin").toDocument(new RelaxedTypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter))))
+		assertThat(ObjectOperators.setValueTo("population", "robin").toDocument(new TypeBasedAggregationOperationContext(ZipInfo.class, converter.getMappingContext(), new QueryMapper(converter), FieldLookupPolicy.relaxed())))
 				.isEqualTo(Document.parse("{ $setField : { field : \"pop\", value : \"robin\", input : \"$$CURRENT\" }}"));
 	}
 

@@ -26,7 +26,8 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.FieldLookupPolicy;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -158,8 +159,9 @@ abstract class BulkOperationsSupport {
 	private List<Document> mapUpdatePipeline(AggregationUpdate source) {
 
 		Class<?> type = entity().isPresent() ? entity().map(PersistentEntity::getType).get() : Object.class;
-		AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type,
-				updateMapper().getMappingContext(), queryMapper());
+
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(type,
+				updateMapper().getMappingContext(), queryMapper(), FieldLookupPolicy.relaxed());
 
 		return new AggregationUtil(queryMapper(), queryMapper().getMappingContext()).createPipeline(source, context);
 	}

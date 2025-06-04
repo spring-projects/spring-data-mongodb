@@ -15,7 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ class SetOperationUnitTests {
 
 		assertThat(
 				new SetOperation("scoresWithMappedField.student", "value").toPipelineStages(contextFor(ScoresWrapper.class)))
-						.containsExactly(Document.parse("{\"$set\" : {\"scoresWithMappedField.student_name\":\"value\"}}"));
+				.containsExactly(Document.parse("{\"$set\" : {\"scoresWithMappedField.student_name\":\"value\"}}"));
 	}
 
 	@Test // DATAMONGO-2331
@@ -75,7 +76,7 @@ class SetOperationUnitTests {
 
 		assertThat(
 				new SetOperation("student", Fields.field("homework")).toPipelineStages(contextFor(ScoresWithMappedField.class)))
-						.containsExactly(Document.parse("{\"$set\" : {\"student_name\":\"$home_work\"}}"));
+				.containsExactly(Document.parse("{\"$set\" : {\"student_name\":\"$home_work\"}}"));
 	}
 
 	@Test // DATAMONGO-2331
@@ -83,8 +84,8 @@ class SetOperationUnitTests {
 
 		assertThat(new SetOperation("scoresWithMappedField.student", Fields.field("scoresWithMappedField.homework"))
 				.toPipelineStages(contextFor(ScoresWrapper.class)))
-						.containsExactly(Document
-								.parse("{\"$set\" : {\"scoresWithMappedField.student_name\":\"$scoresWithMappedField.home_work\"}}"));
+				.containsExactly(Document
+						.parse("{\"$set\" : {\"scoresWithMappedField.student_name\":\"$scoresWithMappedField.home_work\"}}"));
 	}
 
 	@Test // DATAMONGO-2363
@@ -102,7 +103,7 @@ class SetOperationUnitTests {
 
 		assertThat(SetOperation.builder().set("totalHomework").toValueOf(ArithmeticOperators.valueOf("homework").sum())
 				.toPipelineStages(contextFor(Scores.class)))
-						.containsExactly(Document.parse("{\"$set\" : {\"totalHomework\": { \"$sum\" : \"$homework\" }}}"));
+				.containsExactly(Document.parse("{\"$set\" : {\"totalHomework\": { \"$sum\" : \"$homework\" }}}"));
 	}
 
 	@Test // GH-4933
@@ -144,8 +145,8 @@ class SetOperationUnitTests {
 				new MongoMappingContext());
 		mongoConverter.afterPropertiesSet();
 
-		return new RelaxedTypeBasedAggregationOperationContext(type, mongoConverter.getMappingContext(),
-				new QueryMapper(mongoConverter));
+		return new TypeBasedAggregationOperationContext(type, mongoConverter.getMappingContext(),
+				new QueryMapper(mongoConverter), FieldLookupPolicy.relaxed());
 	}
 
 	static class Scores {

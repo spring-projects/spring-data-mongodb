@@ -145,7 +145,6 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 * @param type The domain type to map fields to.
 	 * @return a more relaxed {@link AggregationOperationContext}.
 	 * @since 3.1
-	 * @see RelaxedTypeBasedAggregationOperationContext
 	 */
 	public AggregationOperationContext continueOnMissingFieldReference(Class<?> type) {
 		return new TypeBasedAggregationOperationContext(type, mappingContext, mapper, FieldLookupPolicy.relaxed());
