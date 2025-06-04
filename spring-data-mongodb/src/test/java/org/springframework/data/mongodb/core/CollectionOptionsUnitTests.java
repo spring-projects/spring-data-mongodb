@@ -89,22 +89,25 @@ class CollectionOptionsUnitTests {
 				.isNotEqualTo(empty().validator(Validator.document(new Document("one", "two"))).moderateValidation());
 	}
 
-	@Test // GH-4185
+	@Test // GH-4185, GH-4988
 	@SuppressWarnings("unchecked")
 	void queryableEncryptionOptionsFromSchemaRenderCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder()
 				.property(JsonSchemaProperty.object("spring")
 						.properties(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int32("data")), List.of())))
-				.property(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("mongodb")), List.of())).build();
+				.property(queryable(JsonSchemaProperty.encrypted(JsonSchemaProperty.int64("mongodb")), List.of()))
+				.property(JsonSchemaProperty.encrypted(JsonSchemaProperty.string("rocks"))).build();
 
 		EncryptedFieldsOptions encryptionOptions = EncryptedFieldsOptions.fromSchema(schema);
 
-		assertThat(encryptionOptions.toDocument().get("fields", List.class)).hasSize(2)
+		assertThat(encryptionOptions.toDocument().get("fields", List.class)).hasSize(3)
 				.contains(new Document("path", "mongodb").append("bsonType", "long").append("queries", List.of())
 						.append("keyId", BsonNull.VALUE))
 				.contains(new Document("path", "spring.data").append("bsonType", "int").append("queries", List.of())
-						.append("keyId", BsonNull.VALUE));
+						.append("keyId", BsonNull.VALUE))
+				.contains(new Document("path", "rocks").append("bsonType", "string").append("keyId", BsonNull.VALUE));
+
 	}
 
 	@Test // GH-4185
