@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.observability;
 
+import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 
 import java.net.InetSocketAddress;
@@ -65,6 +66,8 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 		if (!ObjectUtils.isEmpty(context.getCollectionName())) {
 			keyValues = keyValues
 					.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(context.getCollectionName()));
+		} else {
+			keyValues = keyValues.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(KeyValue.NONE_VALUE));
 		}
 
 		ConnectionDescription connectionDescription = context.getCommandStartedEvent().getConnectionDescription();
