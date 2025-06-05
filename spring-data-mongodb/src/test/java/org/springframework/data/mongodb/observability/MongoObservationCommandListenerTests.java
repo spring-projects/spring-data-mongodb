@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import io.micrometer.common.KeyValues;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.Observation;
@@ -99,13 +100,17 @@ class MongoObservationCommandListenerTests {
 	}
 
 	@Test
-	void commandStartedShouldNotInstrumentWhenHello() {
+	void commandStartedShouldIncludeCollectionIfMissing() {
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "hello", null));
 
 		// then
-		assertThat(meterRegistry).hasNoMetrics();
+		// although command 'hello' is collection-less, metric must have tag "db.mongodb.collection"
+		assertThat(meterRegistry).hasMeterWithNameAndTags(
+				"spring.data.mongodb.command.active",
+				Tags.of("db.mongodb.collection", "none"));
+
 	}
 
 	@Test

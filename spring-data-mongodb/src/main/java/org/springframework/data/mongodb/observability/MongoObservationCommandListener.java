@@ -105,10 +105,6 @@ public class MongoObservationCommandListener implements CommandListener {
 			return; // don't instrument commands like "endSessions"
 		}
 
-		if ("hello".equals(event.getCommandName())) {
-			return; // don't instrument healthcheck
-		}
-
 		RequestContext requestContext = event.getRequestContext();
 
 		if (requestContext == null) {
