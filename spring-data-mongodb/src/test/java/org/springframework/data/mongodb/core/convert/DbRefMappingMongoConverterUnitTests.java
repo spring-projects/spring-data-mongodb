@@ -89,7 +89,9 @@ class DbRefMappingMongoConverterUnitTests {
 		this.dbRefResolver = spy(new DefaultDbRefResolver(dbFactory));
 		this.mappingContext = new MongoMappingContext();
 		this.mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
+		this.mappingContext.afterPropertiesSet();
 		this.converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+		this.converter.afterPropertiesSet();
 	}
 
 	@Test // DATAMONGO-347
@@ -103,7 +105,7 @@ class DbRefMappingMongoConverterUnitTests {
 		assertThat(dbRef.getCollectionName()).isEqualTo("person");
 	}
 
-	@Test // DATAMONGO-657
+	@Test // DATAMONGO-657, GH-4920
 	void convertDocumentWithMapDBRef() {
 
 		Document mapValDocument = new Document();
@@ -610,7 +612,7 @@ class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).bulkReadRefs(anyList());
 	}
 
-	@Test // DATAMONGO-1194
+	@Test // DATAMONGO-1194, GH-4920
 	void shouldBulkFetchMapOfReferences() {
 
 		MapDBRefVal val1 = new MapDBRefVal();
@@ -642,7 +644,7 @@ class DbRefMappingMongoConverterUnitTests {
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
 
-	@Test // DATAMONGO-1194
+	@Test // DATAMONGO-1194, GH-4920
 	void shouldBulkFetchLazyMapOfReferences() {
 
 		MapDBRefVal val1 = new MapDBRefVal();

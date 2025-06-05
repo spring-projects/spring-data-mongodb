@@ -314,7 +314,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		/**
 		 * Configures the representation to for {@link java.math.BigDecimal} and {@link java.math.BigInteger} values in
-		 * MongoDB. Defaults to {@link BigDecimalRepresentation#STRING}.
+		 * MongoDB. Defaults to {@link BigDecimalRepresentation#DECIMAL128}.
 		 *
 		 * @param representation the representation to use.
 		 * @return this.

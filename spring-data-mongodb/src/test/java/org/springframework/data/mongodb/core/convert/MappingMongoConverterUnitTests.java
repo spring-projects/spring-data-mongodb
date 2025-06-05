@@ -384,7 +384,7 @@ class MappingMongoConverterUnitTests {
 		assertThat(nestedMap.get("afield")).isEqualTo(firstLevel);
 	}
 
-	@Test // DATACMNS-42, DATAMONGO-171
+	@Test // DATACMNS-42, DATAMONGO-171, GH-4920
 	void writesClassWithBigDecimal() {
 
 		BigDecimalContainer container = new BigDecimalContainer();
@@ -394,9 +394,8 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(container, document);
 
-		assertThat(document.get("value")).isInstanceOf(String.class);
-		assertThat((String) document.get("value")).isEqualTo("2.5");
-		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(String.class);
+		assertThat(document.get("value")).isEqualTo(Decimal128.parse("2.5"));
+		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(Decimal128.class);
 	}
 
 	@Test // DATACMNS-42, DATAMONGO-171
@@ -513,7 +512,7 @@ class MappingMongoConverterUnitTests {
 		assertThat(((org.bson.Document) map).keySet()).contains("en_US");
 	}
 
-	@Test
+	@Test // GH-4920
 	void writesBigIntegerIdCorrectly() {
 
 		ClassWithBigIntegerId foo = new ClassWithBigIntegerId();
@@ -522,7 +521,7 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(foo, result);
 
-		assertThat(result.get("_id")).isInstanceOf(String.class);
+		assertThat(result.get("_id")).isInstanceOf(Decimal128.class);
 	}
 
 	@Test

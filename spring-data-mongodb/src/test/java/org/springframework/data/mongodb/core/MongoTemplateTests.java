@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -874,7 +875,7 @@ public class MongoTemplateTests {
 		assertThat(results3.size()).isEqualTo(2);
 	}
 
-	@Test // DATAMONGO-602
+	@Test // DATAMONGO-602, GH-4920
 	public void testUsingAnInQueryWithBigIntegerId() throws Exception {
 
 		template.remove(new Query(), PersonWithIdPropertyOfTypeBigInteger.class);
@@ -883,33 +884,7 @@ public class MongoTemplateTests {
 		p1.setFirstName("Sven");
 		p1.setAge(11);
 		p1.setId(new BigInteger("2666666666666666665069473312490162649510603601"));
-		template.insert(p1);
-		PersonWithIdPropertyOfTypeBigInteger p2 = new PersonWithIdPropertyOfTypeBigInteger();
-		p2.setFirstName("Mary");
-		p2.setAge(21);
-		p2.setId(new BigInteger("2666666666666666665069473312490162649510603602"));
-		template.insert(p2);
-		PersonWithIdPropertyOfTypeBigInteger p3 = new PersonWithIdPropertyOfTypeBigInteger();
-		p3.setFirstName("Ann");
-		p3.setAge(31);
-		p3.setId(new BigInteger("2666666666666666665069473312490162649510603603"));
-		template.insert(p3);
-		PersonWithIdPropertyOfTypeBigInteger p4 = new PersonWithIdPropertyOfTypeBigInteger();
-		p4.setFirstName("John");
-		p4.setAge(41);
-		p4.setId(new BigInteger("2666666666666666665069473312490162649510603604"));
-		template.insert(p4);
-
-		Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
-		List<PersonWithIdPropertyOfTypeBigInteger> results1 = template.find(q1, PersonWithIdPropertyOfTypeBigInteger.class);
-		Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
-		List<PersonWithIdPropertyOfTypeBigInteger> results2 = template.find(q2, PersonWithIdPropertyOfTypeBigInteger.class);
-		Query q3 = new Query(Criteria.where("id").in(new BigInteger("2666666666666666665069473312490162649510603601"),
-				new BigInteger("2666666666666666665069473312490162649510603604")));
-		List<PersonWithIdPropertyOfTypeBigInteger> results3 = template.find(q3, PersonWithIdPropertyOfTypeBigInteger.class);
-		assertThat(results1.size()).isEqualTo(3);
-		assertThat(results2.size()).isEqualTo(2);
-		assertThat(results3.size()).isEqualTo(2);
+		assertThatExceptionOfType(ConversionFailedException.class).isThrownBy(() -> template.insert(p1));
 	}
 
 	@Test
@@ -3274,7 +3249,6 @@ public class MongoTemplateTests {
 		twn.intVal = 400;
 		twn.longVal = 500L;
 
-		// Note that $min operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
 		twn.bigIntegerVal = new BigInteger("600");
 		twn.bigDeciamVal = new BigDecimal("700.0");
 
@@ -3330,7 +3304,6 @@ public class MongoTemplateTests {
 		twn.intVal = 400;
 		twn.longVal = 500L;
 
-		// Note that $max operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
 		twn.bigIntegerVal = new BigInteger("600");
 		twn.bigDeciamVal = new BigDecimal("700.0");
 
@@ -3359,13 +3332,11 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("790"));
 	}
 
-	@Test // DATAMONGO-1404
-	public void updatesBigNumberValueUsingStringComparisonWhenUsingMaxOperator() {
+	@Test // DATAMONGO-1404, GH-4920
+	public void updatesBigNumberValueUsingUsingMaxOperator() {
 
 		TypeWithNumbers twn = new TypeWithNumbers();
 
-		// Note that $max operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
-		// Therefore "80" is considered greater than "700"
 		twn.bigIntegerVal = new BigInteger("600");
 		twn.bigDeciamVal = new BigDecimal("700.0");
 
@@ -3379,17 +3350,15 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
 		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
-		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("70"));
-		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("80"));
+		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("600"));
+		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("700.0"));
 	}
 
-	@Test // DATAMONGO-1404
-	public void updatesBigNumberValueUsingStringComparisonWhenUsingMinOperator() {
+	@Test // DATAMONGO-1404, GH-4920
+	public void updatesBigNumberValueWhenUsingMinOperator() {
 
 		TypeWithNumbers twn = new TypeWithNumbers();
 
-		// Note that $max operator uses String comparison for BigDecimal/BigInteger comparison according to BSON sort rules.
-		// Therefore "80" is considered greater than "700"
 		twn.bigIntegerVal = new BigInteger("80");
 		twn.bigDeciamVal = new BigDecimal("90.0");
 
@@ -3403,8 +3372,8 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
 		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
-		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("700"));
-		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("800"));
+		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("80"));
+		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("90.0"));
 	}
 
 	@Test // DATAMONGO-1431, DATAMONGO-2323

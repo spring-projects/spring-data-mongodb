@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import org.bson.BsonRegularExpression;
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,7 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
 import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.Expr;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.BigDecimalRepresentation;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -126,11 +128,28 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	void handlesBigIntegerIdsCorrectly() {
+	@SuppressWarnings("deprecation")
+	void handlesBigIntegerIdsCorrectly/*in legacy string format*/() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
+		converter.setCustomConversions(MongoCustomConversions.create(adapter -> adapter.bigDecimal(BigDecimalRepresentation.STRING)));
+		converter.afterPropertiesSet();
+
+		QueryMapper mapper = new QueryMapper(converter);
 
 		org.bson.Document document = new org.bson.Document("id", new BigInteger("1"));
+
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result).containsEntry("_id", "1");
+	}
+
+	@Test // GH-4920
+	void handlesBigIntegerIdAsDecimal128Correctly() {
+
+		org.bson.Document document = new org.bson.Document("id", new BigInteger("1"));
+
+		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
+		assertThat(result).containsEntry("_id", Decimal128.parse("1"));
 	}
 
 	@Test
