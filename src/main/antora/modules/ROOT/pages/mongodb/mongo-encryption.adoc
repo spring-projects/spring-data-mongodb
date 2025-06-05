@@ -149,8 +149,8 @@ BsonBinary signDK = clientEncryption.createDataKey("local", new com.mongodb.clie
 CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(options -> options
     .encrypted(int32("pin"), pinDK)
     .queryable(encrypted(string("ssn")).algorithm("Indexed").keyId(ssnDK.asUuid()), equality().contention(0))
-	.queryable(encrypted(int32("age")).algorithm("Range").keyId(ageDK.asUuid()), range().contention(8).min(0).max(150))
-	.queryable(encrypted(int64("address.sign")).algorithm("Range").keyId(signDK.asUuid()), range().contention(2).min(-10L).max(10L))
+    .queryable(encrypted(int32("age")).algorithm("Range").keyId(ageDK.asUuid()), range().contention(8).min(0).max(150))
+    .queryable(encrypted(int64("address.sign")).algorithm("Range").keyId(signDK.asUuid()), range().contention(2).min(-10L).max(10L))
 );
 
 mongoTemplate.createCollection(Patient.class, collectionOptions); <1>
