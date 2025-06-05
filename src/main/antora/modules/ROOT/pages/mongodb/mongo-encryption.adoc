@@ -140,11 +140,17 @@ Manual Collection Setup::
 ====
 [source,java,indent=0,subs="verbatim,quotes",role="primary"]
 ----
+
+BsonBinary pinDK = clientEncryption.createDataKey("local", new com.mongodb.client.model.vault.DataKeyOptions());
+BsonBinary ssnDK = clientEncryption.createDataKey("local", new com.mongodb.client.model.vault.DataKeyOptions());
+BsonBinary ageDK = clientEncryption.createDataKey("local", new com.mongodb.client.model.vault.DataKeyOptions());
+BsonBinary signDK = clientEncryption.createDataKey("local", new com.mongodb.client.model.vault.DataKeyOptions());
+
 CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(options -> options
-    .queryable(encrypted(string("ssn")).algorithm("Indexed"), equality().contention(0))
-    .queryable(encrypted(int32("age")).algorithm("Range"), range().contention(8).min(0).max(150))
-    .encrypted(string("pin"))
-    .queryable(encrypted(int64("address.sign")).algorithm("Range"), range().contention(2).min(-10L).max(10L))
+    .encrypted(string("pin"), pinDK)
+    .queryable(encrypted(string("ssn")).algorithm("Indexed").keyId(ssnDK.asUuid()), equality().contention(0))
+    .queryable(encrypted(int32("age")).algorithm("Range").keyId(ageDK.asUuid()), range().contention(8).min(0).max(150))
+    .queryable(encrypted(int64("address.sign")).algorithm("Range").keyId(signDK.asUuid()), range().contention(2).min(-10L).max(10L))
 );
 
 mongoTemplate.createCollection(Patient.class, collectionOptions); <1>
