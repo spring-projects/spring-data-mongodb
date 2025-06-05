@@ -108,7 +108,7 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 				.containsEntry("queries", List.of(Document.parse(
 						"{'queryType': 'range', 'contention': { '$numberLong' : '0' }, 'min': { '$numberLong' : '-1' }, 'max': { '$numberLong' : '1' }}")));
 
-		assertThat(fields.get(2)).containsEntry("path", "encryptedDouble") //
+		assertThat(fields.get(3)).containsEntry("path", "encryptedDouble") //
 				.containsEntry("bsonType", "double") //
 				.containsEntry("queries", List.of(Document.parse(
 						"{'queryType': 'range', 'contention': { '$numberLong' : '1' }, 'min': { '$numberDouble' : '-1.123' }, 'max': { '$numberDouble' : '1.123' }, 'precision': { '$numberInt' : '5'}}")));
@@ -119,13 +119,14 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 		BsonBinary key1 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 		BsonBinary key2 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 		BsonBinary key3 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
+		BsonBinary key4 = new BsonBinary(UUID.randomUUID(), UuidRepresentation.STANDARD);
 
 		CollectionOptions manualOptions = CollectionOptions.encryptedCollection(options -> options //
 				.encrypted(int32("encrypted-but-not-queryable"), key1) //
 				.queryable(encrypted(int32("encryptedInt")).keyId(key2), range().min(5).max(100).contention(1)) //
 				.queryable(encrypted(JsonSchemaProperty.int64("nested.encryptedLong")).keyId(key3),
 						range().min(-1L).max(1L).contention(0)) //
-				.queryable(encrypted(JsonSchemaProperty.float64("encryptedDouble")).keys(key3),
+				.queryable(encrypted(JsonSchemaProperty.float64("encryptedDouble")).keys(key4),
 						range().min(-1.123D).max(1.123D).precision(5).contention(1)));
 
 		CollectionOptions schemaOptions = CollectionOptions.encryptedCollection(MongoJsonSchema.builder() //
@@ -134,7 +135,7 @@ public class MongoQueryableEncryptionCollectionCreationTests {
 						queryable(encrypted(int32("encryptedInt")).keyId(key2), List.of(range().min(5).max(100).contention(1))))
 				.property(queryable(encrypted(int64("nested.encryptedLong")).keyId(key3),
 						List.of(range().min(-1L).max(1L).contention(0))))
-				.property(queryable(encrypted(float64("encryptedDouble")).keyId(key3),
+				.property(queryable(encrypted(float64("encryptedDouble")).keyId(key4),
 						List.of(range().min(-1.123D).max(1.123D).precision(5).contention(1))))
 				.build());
 
