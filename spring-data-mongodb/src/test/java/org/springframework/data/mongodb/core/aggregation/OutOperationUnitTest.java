@@ -20,6 +20,8 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 
 /**
  * Unit tests for {@link OutOperation}.
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.Test;
  * @author Nikolay Bogdanov
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Hyunsang Han
  */
 class OutOperationUnitTest {
 
@@ -46,6 +49,101 @@ class OutOperationUnitTest {
 		assertThat(out("out-col").in("database-2").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.containsEntry("$out.coll", "out-col") //
 				.containsEntry("$out.db", "database-2");
+	}
+
+	@Test // GH-4985
+	void shouldRenderTimeSeriesCollectionWithTimeFieldOnly() {
+
+		Document result = out("timeseries-col").timeSeries("timestamp").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).doesNotContainKey("$out.timeseries.metaField");
+		assertThat(result).doesNotContainKey("$out.timeseries.granularity");
+	}
+
+	@Test // GH-4985
+	void shouldRenderTimeSeriesCollectionWithAllOptions() {
+
+		Document result = out("timeseries-col").timeSeries("timestamp", "metadata", Granularity.SECONDS)
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).containsEntry("$out.timeseries.granularity", "seconds");
+	}
+
+	@Test // GH-4985
+	void shouldRenderTimeSeriesCollectionWithDatabaseAndAllOptions() {
+
+		Document result = out("timeseries-col").in("test-db").timeSeries("timestamp", "metadata", Granularity.MINUTES)
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.db", "test-db");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).containsEntry("$out.timeseries.granularity", "minutes");
+	}
+
+	@Test // GH-4985
+	void shouldRenderTimeSeriesCollectionWithTimeSeriesOptions() {
+
+		TimeSeriesOptions options = TimeSeriesOptions.timeSeries("timestamp").metaField("metadata").granularity(Granularity.HOURS);
+		Document result = out("timeseries-col").timeSeries(options).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).containsEntry("$out.timeseries.granularity", "hours");
+	}
+
+	@Test // GH-4985
+	void shouldRenderTimeSeriesCollectionWithPartialOptions() {
+
+		Document result = out("timeseries-col").timeSeries("timestamp", "metadata", null)
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).doesNotContainKey("$out.timeseries.granularity");
+	}
+
+	@Test // GH-4985
+	void outWithTimeSeriesOptionsShouldRenderCorrectly() {
+
+		TimeSeriesOptions options = TimeSeriesOptions.timeSeries("timestamp").metaField("metadata").granularity(Granularity.SECONDS);
+		Document result = Aggregation.out("timeseries-col", options).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).containsEntry("$out.timeseries.granularity", "seconds");
+	}
+
+	@Test // GH-4985
+	void outWithTimeFieldOnlyShouldRenderCorrectly() {
+
+		Document result = Aggregation.out("timeseries-col", "timestamp").toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).doesNotContainKey("$out.timeseries.metaField");
+		assertThat(result).doesNotContainKey("$out.timeseries.granularity");
+	}
+
+	@Test // GH-4985
+	void outWithAllOptionsShouldRenderCorrectly() {
+
+		Document result = Aggregation.out("timeseries-col", "timestamp", "metadata", Granularity.MINUTES)
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).containsEntry("$out.timeseries.granularity", "minutes");
 	}
 
 }
