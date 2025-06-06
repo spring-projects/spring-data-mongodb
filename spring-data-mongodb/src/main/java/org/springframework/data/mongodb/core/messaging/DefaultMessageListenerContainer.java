@@ -43,6 +43,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Junhyeok Lee
  * @since 2.1
  */
 public class DefaultMessageListenerContainer implements MessageListenerContainer {
@@ -62,6 +63,7 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	private final Lock subscriptionWrite = Lock.of(subscriptionMonitor.writeLock());
 
 	private boolean running = false;
+	private boolean autoStartup = true;
 
 	/**
 	 * Create a new {@link DefaultMessageListenerContainer}.
@@ -105,7 +107,16 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	@Override
 	public boolean isAutoStartup() {
-		return false;
+		return this.autoStartup;
+	}
+
+	/**
+	 * Set whether to auto-start this container.
+	 * <p>Default is {@code true}.
+	 * @param autoStartup {@code true} to auto-start.
+	 */
+	public void setAutoStartup(boolean autoStartup) {
+		this.autoStartup = autoStartup;
 	}
 
 	@Override
