@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -30,6 +32,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Nikolay Bogdanov
  * @author Christoph Strobl
+ * @author Hyunsang Han
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/out/">MongoDB Aggregation Framework:
  *      $out</a>
  */
@@ -37,25 +40,28 @@ public class OutOperation implements AggregationOperation {
 
 	private final @Nullable String databaseName;
 	private final String collectionName;
+	private final @Nullable TimeSeriesOptions timeSeriesOptions;
 
 	/**
 	 * @param outCollectionName Collection name to export the results. Must not be {@literal null}.
 	 */
 	public OutOperation(String outCollectionName) {
-		this(null, outCollectionName);
+		this(null, outCollectionName, null);
 	}
 
 	/**
 	 * @param databaseName Optional database name the target collection is located in. Can be {@literal null}.
 	 * @param collectionName Collection name to export the results. Must not be {@literal null}. Can be {@literal null}.
-	 * @since 2.2
+	 * @param timeSeriesOptions Optional time series options for creating a time series collection. Can be {@literal null}.
+	 * @since 5.0
 	 */
-	private OutOperation(@Nullable String databaseName, String collectionName) {
+	private OutOperation(@Nullable String databaseName, String collectionName, @Nullable TimeSeriesOptions timeSeriesOptions) {
 
 		Assert.notNull(collectionName, "Collection name must not be null");
 
 		this.databaseName = databaseName;
 		this.collectionName = collectionName;
+		this.timeSeriesOptions = timeSeriesOptions;
 	}
 
 	/**
@@ -68,17 +74,81 @@ public class OutOperation implements AggregationOperation {
 	 */
 	@Contract("_ -> new")
 	public OutOperation in(@Nullable String database) {
-		return new OutOperation(database, collectionName);
+		return new OutOperation(database, collectionName, timeSeriesOptions);
+	}
+
+	/**
+	 * Set the time series options for creating a time series collection.
+	 *
+	 * @param timeSeriesOptions must not be {@literal null}.
+	 * @return new instance of {@link OutOperation}.
+	 * @since 5.0
+	 */
+	@Contract("_ -> new")
+	public OutOperation timeSeries(TimeSeriesOptions timeSeriesOptions) {
+
+		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null");
+		return new OutOperation(databaseName, collectionName, timeSeriesOptions);
+	}
+
+	/**
+	 * Set the time series options for creating a time series collection with only the time field.
+	 *
+	 * @param timeField must not be {@literal null} or empty.
+	 * @return new instance of {@link OutOperation}.
+	 * @since 5.0
+	 */
+	@Contract("_ -> new")
+	public OutOperation timeSeries(String timeField) {
+
+		Assert.hasText(timeField, "TimeField must not be null or empty");
+		return timeSeries(TimeSeriesOptions.timeSeries(timeField));
+	}
+
+	/**
+	 * Set the time series options for creating a time series collection with time field, meta field, and granularity.
+	 *
+	 * @param timeField must not be {@literal null} or empty.
+	 * @param metaField can be {@literal null}.
+	 * @param granularity can be {@literal null}.
+	 * @return new instance of {@link OutOperation}.
+	 * @since 5.0
+	 */
+	@Contract("_, _, _ -> new")
+	public OutOperation timeSeries(String timeField, @Nullable String metaField, @Nullable Granularity granularity) {
+
+		Assert.hasText(timeField, "TimeField must not be null or empty");
+		return timeSeries(TimeSeriesOptions.timeSeries(timeField).metaField(metaField).granularity(granularity));
 	}
 
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
-		if (!StringUtils.hasText(databaseName)) {
+		if (!StringUtils.hasText(databaseName) && timeSeriesOptions == null) {
 			return new Document(getOperator(), collectionName);
 		}
 
-		return new Document(getOperator(), new Document("db", databaseName).append("coll", collectionName));
+		Document outDocument = new Document("coll", collectionName);
+
+		if (StringUtils.hasText(databaseName)) {
+			outDocument.put("db", databaseName);
+		}
+
+		if (timeSeriesOptions != null) {
+			Document timeSeriesDoc = new Document("timeField", timeSeriesOptions.getTimeField());
+
+			if (StringUtils.hasText(timeSeriesOptions.getMetaField())) {
+				timeSeriesDoc.put("metaField", timeSeriesOptions.getMetaField());
+			}
+
+			if (timeSeriesOptions.getGranularity() != null && timeSeriesOptions.getGranularity() != Granularity.DEFAULT) {
+				timeSeriesDoc.put("granularity", timeSeriesOptions.getGranularity().name().toLowerCase());
+			}
+
+			outDocument.put("timeseries", timeSeriesDoc);
+		}
+
+		return new Document(getOperator(), outDocument);
 	}
 
 	@Override
