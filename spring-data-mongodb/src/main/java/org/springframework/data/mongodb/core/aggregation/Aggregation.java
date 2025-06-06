@@ -22,8 +22,10 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
 import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
@@ -37,6 +39,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.util.Assert;
 
 /**
@@ -53,6 +56,7 @@ import org.springframework.util.Assert;
  * @author Gustavo de Geus
  * @author Jérôme Guyon
  * @author Sangyong Choi
+ * @author Hyunsang Han
  * @since 1.3
  */
 public class Aggregation {
@@ -584,6 +588,46 @@ public class Aggregation {
 	 */
 	public static OutOperation out(String outCollectionName) {
 		return new OutOperation(outCollectionName);
+	}
+
+	/**
+	 * Creates a new {@link OutOperation} for time series collections using the given collection name and time series
+	 * options.
+	 *
+	 * @param outCollectionName collection name to export aggregation results. Must not be {@literal null}.
+	 * @param timeSeriesOptions must not be {@literal null}.
+	 * @return new instance of {@link OutOperation}.
+	 * @since 5.0
+	 */
+	public static OutOperation out(String outCollectionName, TimeSeriesOptions timeSeriesOptions) {
+		return new OutOperation(outCollectionName).timeSeries(timeSeriesOptions);
+	}
+
+	/**
+	 * Creates a new {@link OutOperation} for time series collections using the given collection name and time field.
+	 *
+	 * @param outCollectionName collection name to export aggregation results. Must not be {@literal null}.
+	 * @param timeField must not be {@literal null} or empty.
+	 * @return new instance of {@link OutOperation}.
+	 * @since 5.0
+	 */
+	public static OutOperation out(String outCollectionName, String timeField) {
+		return new OutOperation(outCollectionName).timeSeries(timeField);
+	}
+
+	/**
+	 * Creates a new {@link OutOperation} for time series collections using the given collection name, time field, meta
+	 * field, and granularity.
+	 *
+	 * @param outCollectionName collection name to export aggregation results. Must not be {@literal null}.
+	 * @param timeField must not be {@literal null} or empty.
+	 * @param metaField can be {@literal null}.
+	 * @param granularity can be {@literal null}.
+	 * @return new instance of {@link OutOperation}.
+	 * @since 5.0
+	 */
+	public static OutOperation out(String outCollectionName, String timeField, @Nullable String metaField, @Nullable Granularity granularity) {
+		return new OutOperation(outCollectionName).timeSeries(timeField, metaField, granularity);
 	}
 
 	/**
