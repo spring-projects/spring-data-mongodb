@@ -51,6 +51,7 @@ import com.mongodb.event.CommandSucceededEvent;
  * @author Greg Turnquist
  * @author Mark Paluch
  * @author François Kha
+ * @author Michal Domagala
  */
 class MongoObservationCommandListenerTests {
 
@@ -99,8 +100,8 @@ class MongoObservationCommandListenerTests {
 		assertThat(meterRegistry).hasMeterWithName("spring.data.mongodb.command.active");
 	}
 
-	@Test
-	void commandStartedShouldIncludeCollectionIfMissing() {
+	@Test // GH-4994
+	void commandStartedShouldAlwaysIncludeCollection() {
 
 		// when
 		listener.commandStarted(new CommandStartedEvent(new MapRequestContext(), 0, 0, null, "some name", "hello", null));
@@ -110,7 +111,6 @@ class MongoObservationCommandListenerTests {
 		assertThat(meterRegistry).hasMeterWithNameAndTags(
 				"spring.data.mongodb.command.active",
 				Tags.of("db.mongodb.collection", "none"));
-
 	}
 
 	@Test
