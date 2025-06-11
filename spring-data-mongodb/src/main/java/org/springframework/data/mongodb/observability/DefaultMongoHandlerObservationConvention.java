@@ -33,6 +33,7 @@ import com.mongodb.event.CommandStartedEvent;
  *
  * @author Greg Turnquist
  * @author Mark Paluch
+ * @author Michal Domagala
  * @since 4.0
  */
 class DefaultMongoHandlerObservationConvention implements MongoHandlerObservationConvention {
@@ -54,21 +55,16 @@ class DefaultMongoHandlerObservationConvention implements MongoHandlerObservatio
 			if (!ObjectUtils.isEmpty(user)) {
 				keyValues = keyValues.and(LowCardinalityCommandKeyNames.DB_USER.withValue(user));
 			}
-
 		}
 
 		if (!ObjectUtils.isEmpty(context.getDatabaseName())) {
 			keyValues = keyValues.and(LowCardinalityCommandKeyNames.DB_NAME.withValue(context.getDatabaseName()));
 		}
 
-		if (!ObjectUtils.isEmpty(context.getCollectionName())) {
-			keyValues = keyValues
-					.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(context.getCollectionName()));
-		} else {
-			keyValues = keyValues.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(KeyValue.NONE_VALUE));
-		}
+		keyValues = keyValues.and(LowCardinalityCommandKeyNames.MONGODB_COLLECTION.withValue(
+				ObjectUtils.isEmpty(context.getCollectionName()) ? KeyValue.NONE_VALUE : context.getCollectionName()));
 
-		if(context.getCommandStartedEvent() == null) {
+		if (context.getCommandStartedEvent() == null) {
 			throw new IllegalStateException("not command started event present");
 		}
 
