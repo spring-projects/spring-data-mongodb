@@ -671,7 +671,7 @@ public final class NearQuery implements ReadConcernAware, ReadPreferenceAware {
 			document.put("distanceMultiplier", getDistanceMultiplier());
 		}
 
-		if (limit != null) {
+		if (limit != null && limit > 0) {
 			document.put("num", limit);
 		}
 

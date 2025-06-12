@@ -54,6 +54,7 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -235,35 +236,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.is(false);
 			case NEAR:
 
-				Range<Distance> range = accessor.getDistanceRange();
-				Optional<Distance> distance = range.getUpperBound().getValue();
-				Optional<Distance> minDistance = range.getLowerBound().getValue();
-
-				Point point = accessor.getGeoNearLocation();
-				Point pointToUse = point == null ? nextAs(parameters, Point.class) : point;
-
-				boolean isSpherical = isSpherical(property);
-
-				return distance.map(it -> {
-
-					if (isSpherical || !Metrics.NEUTRAL.equals(it.getMetric())) {
-						criteria.nearSphere(pointToUse);
-					} else {
-						criteria.near(pointToUse);
-					}
-
-					if (pointToUse instanceof GeoJson) { // using GeoJson distance is in meters.
-
-						criteria.maxDistance(MetricConversion.getDistanceInMeters(it));
-						minDistance.map(MetricConversion::getDistanceInMeters).ifPresent(criteria::minDistance);
-					} else {
-						criteria.maxDistance(it.getNormalizedValue());
-						minDistance.map(Distance::getNormalizedValue).ifPresent(criteria::minDistance);
-					}
-
-					return criteria;
-
-				}).orElseGet(() -> isSpherical ? criteria.nearSphere(pointToUse) : criteria.near(pointToUse));
+				return createNearCriteria(property, criteria, parameters);
 
 			case WITHIN:
 
@@ -281,6 +254,40 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			default:
 				throw new IllegalArgumentException("Unsupported keyword");
 		}
+	}
+
+	@NonNull
+	private Criteria createNearCriteria(MongoPersistentProperty property, Criteria criteria, Iterator<Object> parameters) {
+
+
+		Range<Distance> range = accessor.getDistanceRange();
+		Optional<Distance> distance = range.getUpperBound().getValue();
+		Optional<Distance> minDistance = range.getLowerBound().getValue();
+
+		Point point = accessor.getGeoNearLocation();
+		Point pointToUse = point == null ? nextAs(parameters, Point.class) : point;
+
+		boolean isSpherical = isSpherical(property);
+
+		return distance.map(it -> {
+
+			if (isSpherical || !Metrics.NEUTRAL.equals(it.getMetric())) {
+				criteria.nearSphere(pointToUse);
+			} else {
+				criteria.near(pointToUse);
+			}
+
+			if (pointToUse instanceof GeoJson) { // using GeoJson distance is in meters.
+
+				criteria.maxDistance(MetricConversion.getDistanceInMeters(it));
+				minDistance.map(MetricConversion::getDistanceInMeters).ifPresent(criteria::minDistance);
+			} else {
+				criteria.maxDistance(it.getNormalizedValue());
+				minDistance.map(Distance::getNormalizedValue).ifPresent(criteria::minDistance);
+			}
+
+			return criteria;
+		}).orElseGet(() -> isSpherical ? criteria.nearSphere(pointToUse) : criteria.near(pointToUse));
 	}
 
 	private boolean isSimpleComparisonPossible(Part part) {

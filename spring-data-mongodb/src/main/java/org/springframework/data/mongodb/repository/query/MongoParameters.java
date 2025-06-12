@@ -292,7 +292,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 *
 	 * @author Oliver Gierke
 	 */
-	static class MongoParameter extends Parameter {
+	public static class MongoParameter extends Parameter {
 
 		private final MethodParameter parameter;
 		private final @Nullable Integer nearIndex;

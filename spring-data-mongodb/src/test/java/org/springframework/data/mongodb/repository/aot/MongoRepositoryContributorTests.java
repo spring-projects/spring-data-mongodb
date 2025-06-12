@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import example.aot.User;
 import example.aot.UserProjection;
@@ -27,9 +29,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,19 +40,32 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * Integration tests for the {@link UserRepository} AOT fragment.
@@ -78,6 +93,12 @@ class MongoRepositoryContributorTests {
 		MongoOperations mongoOperations() {
 			return new MongoTemplate(client, DB_NAME);
 		}
+	}
+
+	@BeforeAll
+	static void beforeAll() {
+		client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2d"),
+				new IndexOptions());
 	}
 
 	@BeforeEach
@@ -590,6 +611,123 @@ class MongoRepositoryContributorTests {
 				.withMessageContaining("'locale' is invalid");
 	}
 
+	@Test // GH-5004
+	void testNear() {
+
+		List<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99171, 40.738868));
+		assertThat(users).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void testNearWithGeoJson() {
+
+		List<User> users = fragment.findByLocationCoordinatesNear(new GeoJsonPoint(-73.99171, 40.738868));
+		assertThat(users).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void testGeoWithinCircle() {
+
+		List<User> users = fragment.findByLocationCoordinatesWithin(new Circle(-78.99171, 45.738868, 170));
+		assertThat(users).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void testWithinBox() {
+
+		Box box = new Box(new Point(-78.99171, 35.738868), new Point(-68.99171, 45.738868));
+
+		List<User> result = fragment.findByLocationCoordinatesWithin(box);
+		assertThat(result).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void findsPeopleByLocationWithinPolygon() {
+
+		Point first = new Point(-78.99171, 35.738868);
+		Point second = new Point(-78.99171, 45.738868);
+		Point third = new Point(-68.99171, 45.738868);
+		Point fourth = new Point(-68.99171, 35.738868);
+
+		List<User> result = fragment.findByLocationCoordinatesWithin(new Polygon(first, second, third, fourth));
+		assertThat(result).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void findsPeopleByLocationWithinGeoJsonPolygon() {
+
+		Point first = new Point(-78.99171, 35.738868);
+		Point second = new Point(-78.99171, 45.738868);
+		Point third = new Point(-68.99171, 45.738868);
+		Point fourth = new Point(-68.99171, 35.738868);
+
+		List<User> result = fragment
+				.findByLocationCoordinatesWithin(new GeoJsonPolygon(first, second, third, fourth, first));
+		assertThat(result).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void findsPeopleByLocationWithinSomeGenericGeoJsonObject() {
+
+		Point first = new Point(-78.99171, 35.738868);
+		Point second = new Point(-78.99171, 45.738868);
+		Point third = new Point(-68.99171, 45.738868);
+		Point fourth = new Point(-68.99171, 35.738868);
+
+		List<User> result = fragment
+				.findUserByLocationCoordinatesWithin(new GeoJsonPolygon(first, second, third, fourth, first));
+		assertThat(result).extracting(User::getUsername).containsExactly("leia", "vader");
+	}
+
+	@Test // GH-5004
+	void testNearWithGeoResult() {
+
+		GeoResults<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(5, Metrics.KILOMETERS));
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	@Test // GH-5004
+	void testNearWithAdditionalFilterQueryAsGeoResult() {
+
+		GeoResults<User> users = fragment.findByLocationCoordinatesNearAndLastname(new Point(-73.99, 40.73),
+				Distance.of(50, Metrics.KILOMETERS), "Organa");
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	@Test // GH-5004
+	void testNearReturningListOfGeoResult() {
+
+		List<GeoResult<User>> users = fragment.findUserAsListByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(5, Metrics.KILOMETERS));
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	@Test // GH-5004
+	void testNearWithRange() {
+
+		Range<Distance> range = Distance.between(Distance.of(5, Metrics.KILOMETERS), Distance.of(2000, Metrics.KILOMETERS));
+		GeoResults<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73), range);
+
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("vader");
+	}
+
+	@Test // GH-5004
+	void testNearReturningGeoPage() {
+
+		GeoPage<User> page1 = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(2000, Metrics.KILOMETERS), PageRequest.of(0, 1));
+
+		assertThat(page1.hasNext()).isTrue();
+
+		GeoPage<User> page2 = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(2000, Metrics.KILOMETERS), page1.nextPageable());
+		assertThat(page2.hasNext()).isFalse();
+	}
+
+	/**
+	 * GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), range);
+	 */
 	private static void initUsers() {
 
 		Document luke = Document.parse("""
@@ -619,6 +757,12 @@ class MongoRepositoryContributorTests {
 				  "username": "leia",
 				  "first_name": "Leia",
 				  "last_name": "Organa",
+				  "location" : {
+				    "planet" : "Coruscant",
+				    "coordinates" : {
+				      "x" : -73.99171, "y" : 40.738868
+				    }
+				  },
 				  "_class": "example.springdata.aot.User"
 				}""");
 
@@ -677,6 +821,12 @@ class MongoRepositoryContributorTests {
 				  "username": "vader",
 				  "first_name": "Anakin",
 				  "last_name": "Skywalker",
+				  "location" : {
+				    "planet" : "Death Star",
+				    "coordinates" : {
+				      "x" : -73.9, "y" : 40.7
+				    }
+				  },
 				  "visits" : 50,
 				  "posts": [
 				    {

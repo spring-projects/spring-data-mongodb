@@ -93,7 +93,7 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 					Method target = ReflectionUtils.findMethod(fragment.getClass(), method.getName(), method.getParameterTypes());
 
 					if (target == null) {
-						throw new NoSuchMethodException("Method [%s] is not implemented by [%s]".formatted(method, target));
+						throw new MethodNotImplementedException("Method [%s] is not implemented by [%s]".formatted(method, target));
 					}
 
 					try {
@@ -126,5 +126,12 @@ public class AotFragmentTestConfigurationSupport implements BeanFactoryPostProce
 				return new SpelAwareProxyProjectionFactory();
 			}
 		};
+	}
+
+	public static class MethodNotImplementedException extends RuntimeException {
+
+		public MethodNotImplementedException(String message) {
+			super(message);
+		}
 	}
 }

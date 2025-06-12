@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -171,7 +170,6 @@ class MongoQueryExecutionUnitTests {
 		when(mongoOperationsMock.query(any(Class.class))).thenReturn(findOperationMock);
 		when(findOperationMock.near(any(NearQuery.class))).thenReturn(terminatingGeoMock);
 		doReturn(new GeoResults<>(Collections.emptyList())).when(terminatingGeoMock).all();
-		doReturn(terminatingMock).when(findOperationMock).matching(any(Query.class));
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(converter,
 				new MongoParametersParameterAccessor(queryMethod, new Object[] { POINT, DISTANCE, PageRequest.of(2, 10) }));
@@ -183,7 +181,7 @@ class MongoQueryExecutionUnitTests {
 		execution.execute(new Query());
 
 		verify(terminatingGeoMock).all();
-		verify(terminatingMock).count();
+		verify(terminatingGeoMock).count();
 	}
 
 	@Test // DATAMONGO-2351

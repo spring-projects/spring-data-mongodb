@@ -48,6 +48,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.domain.OffsetScrollPosition;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -1042,6 +1043,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<?> domainType, String collectionName, Class<T> returnType) {
 		return doGeoNear(near, domainType, collectionName, returnType, QueryResultConverter.entity());
+	}
+
+	long doGeoNearCount(NearQuery near, Class<?> domainType, String collectionName) {
+
+		Builder optionsBuilder = AggregationOptions.builder().collation(near.getCollation());
+
+		if (near.hasReadPreference()) {
+			optionsBuilder.readPreference(near.getReadPreference());
+		}
+
+		if (near.hasReadConcern()) {
+			optionsBuilder.readConcern(near.getReadConcern());
+		}
+
+		String distanceField = operations.nearQueryDistanceFieldName(domainType);
+		Aggregation $geoNear = TypedAggregation.newAggregation(domainType,
+				Aggregation.geoNear(near, distanceField).skip(-1).limit(-1), Aggregation.count().as("_totalCount"))
+				.withOptions(optionsBuilder.build());
+
+		AggregationResults<Document> results = doAggregate($geoNear, collectionName, Document.class,
+				queryOperations.createAggregation($geoNear, (AggregationOperationContext) null));
+		Iterator<Document> iterator = results.iterator();
+		return iterator.hasNext()
+				? NumberUtils.convertNumberToTargetClass(iterator.next().get("_totalCount", Integer.class), Long.class)
+				: 0L;
 	}
 
 	<T, R> GeoResults<R> doGeoNear(NearQuery near, Class<?> domainType, String collectionName, Class<T> returnType,

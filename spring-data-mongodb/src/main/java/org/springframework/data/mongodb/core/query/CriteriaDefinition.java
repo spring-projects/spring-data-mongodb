@@ -46,9 +46,7 @@ public interface CriteriaDefinition {
 	 * @since 5.0
 	 * @author Christoph Strobl
 	 */
-	class Placeholder {
-
-		private final Object expression;
+	interface Placeholder {
 
 		/**
 		 * Create a new placeholder for index bindable parameter.
@@ -56,23 +54,29 @@ public interface CriteriaDefinition {
 		 * @param position the index of the parameter to bind.
 		 * @return new instance of {@link Placeholder}.
 		 */
-		public static Placeholder indexed(int position) {
-			return new Placeholder("?%s".formatted(position));
+		static Placeholder indexed(int position) {
+			return new PlaceholderImpl("?%s".formatted(position));
 		}
 
-		public static Placeholder placeholder(String expression) {
-			return new Placeholder(expression);
+		static Placeholder placeholder(String expression) {
+			return new PlaceholderImpl(expression);
 		}
 
-		Placeholder(Object value) {
-			this.expression = value;
+		Object getValue();
+	}
+
+	static class PlaceholderImpl implements Placeholder {
+		private final Object expression;
+
+		public PlaceholderImpl(Object expression) {
+			this.expression = expression;
 		}
 
+		@Override
 		public Object getValue() {
 			return expression;
 		}
 
-		@Override
 		public String toString() {
 			return getValue().toString();
 		}
