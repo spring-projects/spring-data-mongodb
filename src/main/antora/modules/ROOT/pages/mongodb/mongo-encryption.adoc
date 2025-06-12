@@ -147,7 +147,7 @@ BsonBinary ageDK = clientEncryption.createDataKey("local", new com.mongodb.clien
 BsonBinary signDK = clientEncryption.createDataKey("local", new com.mongodb.client.model.vault.DataKeyOptions());
 
 CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(options -> options
-    .encrypted(int32("pin"), pinDK)
+    .encrypted(string("pin"), pinDK)
     .queryable(encrypted(string("ssn")).algorithm("Indexed").keyId(ssnDK.asUuid()), equality().contention(0))
     .queryable(encrypted(int32("age")).algorithm("Range").keyId(ageDK.asUuid()), range().contention(8).min(0).max(150))
     .queryable(encrypted(int64("address.sign")).algorithm("Range").keyId(signDK.asUuid()), range().contention(2).min(-10L).max(10L))
@@ -167,12 +167,15 @@ class Patient {
 
     @Id String id;
 
-    @Encrypted(algorithm = "Indexed") //
+    @Encrypted(algorithm = "Indexed")
     @Queryable(queryType = "equality", contentionFactor = 0)
     String ssn;
 
     @RangeEncrypted(contentionFactor = 8, rangeOptions = "{ 'min' : 0, 'max' : 150 }")
     Integer age;
+
+	@Encrypted(algorithm = "Unindexed")
+    String pin;
 
     Address address;
 }
@@ -216,6 +219,11 @@ MongoDB Collection Info::
             path: 'age',
             bsonType: 'int',
             queries: [ { queryType: 'range', contention: Long('8'), min: 0, max: 150 } ]
+          },
+          {
+            keyId: ...,
+            path: 'pin',
+            bsonType: 'string'
           },
           {
             keyId: ...,
