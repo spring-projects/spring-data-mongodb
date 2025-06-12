@@ -154,8 +154,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
-			query = new QueryInteraction(queryCreator.createQuery(partTree, parameterCount), partTree.isCountProjection(),
-					partTree.isDelete(), partTree.isExistsProjection());
+			query = new QueryInteraction(queryCreator.createQuery(partTree, queryMethod),
+					partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
 		}
 
 		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {
@@ -171,8 +171,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private static boolean backoff(MongoQueryMethod method) {
 
 		// TODO: namedQuery, Regex queries, queries accepting Shapes (e.g. within) or returning arrays.
-		boolean skip = method.isGeoNearQuery() || method.isSearchQuery()
-				|| method.getName().toLowerCase(Locale.ROOT).contains("regex") || method.getReturnType().getType().isArray();
+		boolean skip = method.isSearchQuery() || method.getName().toLowerCase(Locale.ROOT).contains("regex")
+				|| method.getReturnType().getType().isArray();
 
 		if (skip && logger.isDebugEnabled()) {
 			logger.debug("Skipping AOT generation for [%s]. Method is either returning an array or a geo-near, regex query"

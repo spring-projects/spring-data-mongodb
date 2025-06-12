@@ -32,6 +32,7 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
@@ -102,6 +103,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 	Stream<User> streamByLastnameStartingWith(String lastname, Sort sort, Limit limit);
 
 	Window<User> findTop2WindowByLastnameStartingWithOrderByUsername(String lastname, ScrollPosition scrollPosition);
+
+	List<User> findByLocationCoordinatesNear(Point location);
 
 	// TODO: GeoQueries
 	// TODO: TextSearch

@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import example.aot.User;
 import example.aot.UserProjection;
@@ -27,10 +29,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +45,7 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -53,6 +56,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * Integration tests for the {@link UserRepository} AOT fragment.
@@ -80,6 +84,14 @@ class MongoRepositoryContributorTests {
 		MongoOperations mongoOperations() {
 			return new MongoTemplate(client, DB_NAME);
 		}
+	}
+
+	@BeforeAll
+	static void beforeAll() {
+		String idx = client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2d"),
+//		String idx = client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2dsphere"),
+			new IndexOptions());
+		System.out.println("idx: " + idx);
 	}
 
 	@BeforeEach
@@ -592,6 +604,12 @@ class MongoRepositoryContributorTests {
 				.withMessageContaining("'locale' is invalid");
 	}
 
+	@Test
+	void testGeoNear() {
+		List<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99171, 40.738868));
+		assertThat(users).extracting(User::getUsername).containsExactly("leia");
+	}
+
 	private static void initUsers() {
 
 		Document luke = Document.parse("""
@@ -621,6 +639,12 @@ class MongoRepositoryContributorTests {
 				  "username": "leia",
 				  "first_name": "Leia",
 				  "last_name": "Organa",
+				  "location" : {
+				    "planet" : "Coruscant",
+				    "coordinates" : {
+				      "x" : -73.99171, "y" : 40.738868
+				    }
+				  },
 				  "_class": "example.springdata.aot.User"
 				}""");
 

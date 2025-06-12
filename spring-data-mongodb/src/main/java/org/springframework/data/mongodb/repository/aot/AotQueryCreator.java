@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,11 +43,16 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
+import org.springframework.data.mongodb.repository.query.MongoParameters;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
+import org.springframework.data.repository.query.Parameter;
+import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.DBRef;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Christoph Strobl
@@ -68,10 +74,10 @@ class AotQueryCreator {
 	}
 
 	@SuppressWarnings("NullAway")
-	StringQuery createQuery(PartTree partTree, int parameterCount) {
+	StringQuery createQuery(PartTree partTree, QueryMethod queryMethod) {
 
 		Query query = new MongoQueryCreator(partTree,
-				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(parameterCount)), mappingContext)
+				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(queryMethod)), mappingContext)
 				.createQuery();
 
 		if (partTree.isLimiting()) {
@@ -118,17 +124,25 @@ class AotQueryCreator {
 
 		private final List<Placeholder> placeholders;
 
-		public PlaceholderParameterAccessor(int parameterCount) {
-			if (parameterCount == 0) {
+		public PlaceholderParameterAccessor(QueryMethod queryMethod) {
+			if (queryMethod.getParameters().getNumberOfParameters() == 0) {
 				placeholders = List.of();
 			} else {
-				placeholders = IntStream.range(0, parameterCount).mapToObj(Placeholder::indexed).collect(Collectors.toList());
+				placeholders = new ArrayList<>();
+				Parameters<?, ?> parameters = queryMethod.getParameters();
+				for(Parameter parameter : parameters.toList()) {
+					if(ClassUtils.isAssignable(Point.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new GeoPlaceholder(parameter.getIndex()));
+					} else {
+						placeholders.add(parameter.getIndex(), Placeholder.indexed(parameter.getIndex()));
+					}
+				}
 			}
 		}
 
 		@Override
 		public Range<Distance> getDistanceRange() {
-			return null;
+			return Range.unbounded();
 		}
 
 		@Override
@@ -205,6 +219,26 @@ class AotQueryCreator {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Iterator<Object> iterator() {
 			return ((List) placeholders).iterator();
+		}
+	}
+
+	static class GeoPlaceholder extends Point implements Placeholder {
+
+		int index;
+
+		public GeoPlaceholder(int index) {
+			super(Double.NaN, Double.NaN);
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?" + index;
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
 		}
 	}
 }

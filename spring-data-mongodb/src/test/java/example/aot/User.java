@@ -32,6 +32,8 @@ public class User {
 
 	@Field("last_name") String lastname;
 
+	Location location;
+
 	Instant registrationDate;
 	Instant lastSeen;
 	Long visits;
@@ -90,5 +92,13 @@ public class User {
 
 	public void setVisits(Long visits) {
 		this.visits = visits;
+	}
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 }
