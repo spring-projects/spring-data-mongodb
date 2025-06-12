@@ -463,7 +463,7 @@ class SpringJsonWriter implements BsonWriter {
 		write(placeholder);
 	}
 
-	private void write(String str) {
+	public void write(String str) {
 		buffer.append(str);
 	}
 

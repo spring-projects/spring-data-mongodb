@@ -209,9 +209,9 @@ NOTE: If the property criterion compares a document, the order of the fields and
 == Geo-spatial Queries
 
 As you saw in the preceding table of keywords, a few keywords trigger geo-spatial operations within a MongoDB query.
-The `Near` keyword allows some further modification, as the next few examples show.
+The `Near` and `Within` keywords allows some further modification, as the next few examples show.
 
-The following example shows how to define a `near` query that finds all persons with a given distance of a given point:
+The following example shows how to define a `near` / `within` query that finds all persons using different shapes:
 
 .Advanced `Near` queries
 [tabs]
@@ -222,8 +222,20 @@ Imperative::
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-    // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+    // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance } }
     List<Person> findByLocationNear(Point location, Distance distance);
+
+    // { 'location' : { $geoWithin: { $center: [ [ circle.center.x, circle.center.y ], circle.radius ] } } }
+    List<Person> findByLocationWithin(Circle circle);
+
+    // { 'location' : { $geoWithin: { $box: [ [ box.first.x, box.first.y ], [ box.second.x, box.second.y ] ] } } }
+    List<Person> findByLocationWithin(Box box);
+
+    // { 'location' : { $geoWithin: { $polygon: [ [ polygon.x1, polygon.y1 ], [ polygon.x2, polygon.y2 ], ... ] } } }
+    List<Person> findByLocationWithin(Polygon polygon);
+
+    // { 'location' : { $geoWithin: { $geometry: { $type : 'polygon', coordinates: [[ polygon.x1, polygon.y1 ], [ polygon.x2, polygon.y2 ], ... ] } } } }
+    List<Person> findByLocationWithin(GeoJsonPolygon polygon);
 }
 ----
 
@@ -233,8 +245,20 @@ Reactive::
 ----
 interface PersonRepository extends ReactiveMongoRepository<Person, String> {
 
-    // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+    // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance } }
     Flux<Person> findByLocationNear(Point location, Distance distance);
+
+    // { 'location' : { $geoWithin: { $center: [ [ circle.center.x, circle.center.y ], circle.radius ] } } }
+    Flux<Person> findByLocationWithin(Circle circle);
+
+    // { 'location' : { $geoWithin: { $box: [ [ box.first.x, box.first.y ], [ box.second.x, box.second.y ] ] } } }
+    Flux<Person> findByLocationWithin(Box box);
+
+    // { 'location' : { $geoWithin: { $polygon: [ [ polygon.x1, polygon.y1 ], [ polygon.x2, polygon.y2 ], ... ] } } }
+    Flux<Person> findByLocationWithin(Polygon polygon);
+
+    // { 'location' : { $geoWithin: { $geometry: { $type : 'polygon', coordinates: [[ polygon.x1, polygon.y1 ], [ polygon.x2, polygon.y2 ], ... ] } } } }
+    Flux<Person> findByLocationWithin(GeoJsonPolygon polygon);
 }
 ----
 ======

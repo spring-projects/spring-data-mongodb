@@ -28,13 +28,26 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
+import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Update;
@@ -103,7 +116,30 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	Window<User> findTop2WindowByLastnameStartingWithOrderByUsername(String lastname, ScrollPosition scrollPosition);
 
-	// TODO: GeoQueries
+	List<User> findByLocationCoordinatesNear(Point location);
+
+	List<User> findByLocationCoordinatesWithin(Circle circle);
+
+	List<User> findByLocationCoordinatesWithin(Sphere circle);
+
+	List<User> findByLocationCoordinatesWithin(Box box);
+
+	List<User> findByLocationCoordinatesWithin(Polygon polygon);
+
+	List<User> findByLocationCoordinatesWithin(GeoJsonPolygon polygon);
+
+	List<User> findUserByLocationCoordinatesWithin(GeoJson<?> geoJson);
+
+	GeoResults<User> findByLocationCoordinatesNear(Point point, Distance maxDistance);
+
+	GeoResults<User> findByLocationCoordinatesNearAndLastname(Point point, Distance maxDistance, String lastname);
+
+	List<GeoResult<User>> findUserAsListByLocationCoordinatesNear(Point point, Distance maxDistance);
+
+	GeoResults<User> findByLocationCoordinatesNear(Point point, Range<Distance> distance);
+
+	GeoPage<User> findByLocationCoordinatesNear(Point point, Distance maxDistance, Pageable pageable);
+
 	// TODO: TextSearch
 
 	/* Annotated Queries */

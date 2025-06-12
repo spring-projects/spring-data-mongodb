@@ -243,6 +243,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			public GeoResults<G> all() {
 				return template.doGeoNear(nearQuery, domainType, getCollectionName(), returnType, resultConverter);
 			}
+
+			@Override
+			public long count() {
+				return template.doGeoNearCount(nearQuery, domainType, getCollectionName());
+			}
 		}
 	}
 

@@ -22,6 +22,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
+import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
 
@@ -75,6 +76,9 @@ public final class GeoCommand {
 
 		Assert.notNull(shape, "Shape must not be null");
 
+		if(shape instanceof GeoJson<?>) {
+			return "$geometry";
+		}
 		if (shape instanceof Box) {
 			return "$box";
 		} else if (shape instanceof Circle) {

@@ -15,10 +15,12 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static java.util.Arrays.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assumptions.*;
-import static org.springframework.data.geo.Metrics.*;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.springframework.data.geo.Metrics.KILOMETERS;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,13 +40,22 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatcher;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -216,8 +227,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	@Test // GH-4397
 	void appliesLimitToScrollingCorrectly() {
 
-		Window<Person> page = repository.findByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*",
-				ScrollPosition.keyset(), Limit.of(2));
+		Window<Person> page = repository.findByLastnameLikeOrderByLastnameAscFirstnameAsc("*a*", ScrollPosition.keyset(),
+				Limit.of(2));
 
 		assertThat(page.isLast()).isFalse();
 		assertThat(page.size()).isEqualTo(2);
@@ -250,7 +261,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	@Test // GH-4397
 	void executesFinderCorrectlyWithSortAndLimit() {
 
-		List<Person> page = repository.findByLastnameLike("*a*", Sort.by(Direction.ASC, "lastname", "firstname"), Limit.of(2));
+		List<Person> page = repository.findByLastnameLike("*a*", Sort.by(Direction.ASC, "lastname", "firstname"),
+				Limit.of(2));
 
 		assertThat(page).containsExactly(carter, stefan);
 	}
@@ -463,6 +475,22 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 	}
 
 	@Test
+	void executesGeoNearQueryWithAdditionalFilterCorrectly() {
+
+		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+
+		Person p2 = new Person("fn", "ln", 42, Sex.MALE);
+		p2.setLocation(point);
+		repository.save(p2);
+
+		GeoResults<Person> results = repository.findByLocationNearAndLastname(new Point(-73.99, 40.73),
+				Distance.of(2000, Metrics.KILOMETERS), "ln");
+		assertThat(results.getContent()).hasSize(1);
+	}
+
+	@Test
 	void executesGeoPageQueryForResultsCorrectly() {
 
 		Point point = new Point(-73.99171, 40.738868);
@@ -638,6 +666,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 
 		assertThat(results.getContent()).isNotEmpty();
 		assertThat(results.getNumberOfElements()).isEqualTo(2);
+		assertThat(results.getTotalElements()).isEqualTo(5);
 		assertThat(results.isFirst()).isFalse();
 		assertThat(results.isLast()).isFalse();
 		assertThat(results.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
@@ -695,6 +724,30 @@ public abstract class AbstractPersonRepositoryIntegrationTests implements Dirtie
 		assertThat(results.isFirst()).isFalse();
 		assertThat(results.isLast()).isTrue();
 		assertThat(results.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+	}
+
+	@Test
+	void executesGeoPageCountCorrectly() {
+
+		Point farAway = new Point(-73.9, 40.7);
+		Point here = new Point(-73.99, 40.73);
+
+		dave.setLocation(farAway);
+		oliver.setLocation(here);
+		carter.setLocation(here);
+		boyd.setLocation(here);
+		leroi.setLocation(here);
+
+		repository.saveAll(Arrays.asList(dave, oliver, carter, boyd, leroi));
+
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				Distance.of(5, Metrics.KILOMETERS), PageRequest.of(1, 2));
+
+		assertThat(results.getContent()).isNotEmpty();
+		assertThat(results.getNumberOfElements()).isEqualTo(2);
+		assertThat(results.getTotalElements()).isEqualTo(4);
+		assertThat(results.isFirst()).isFalse();
+		assertThat(results.isLast()).isTrue();
 	}
 
 	@Test // DATAMONGO-1608

@@ -225,6 +225,14 @@ public interface ExecutableFindOperation {
 		 * @return never {@literal null}.
 		 */
 		GeoResults<T> all();
+
+		/**
+		 * Count matching elements.
+		 *
+		 * @return number of elements matching the query.
+		 * @since 5.0
+		 */
+		long count();
 	}
 
 	/**

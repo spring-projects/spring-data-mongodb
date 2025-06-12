@@ -60,6 +60,7 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecConfigurationException;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
@@ -74,6 +75,7 @@ import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
+import org.springframework.data.mongodb.core.query.GeoCommand;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -103,7 +105,7 @@ public class BsonUtils {
 	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
 
 	private static final CodecRegistry JSON_CODEC_REGISTRY = CodecRegistries.fromRegistries(
-			MongoClientSettings.getDefaultCodecRegistry(), CodecRegistries.fromCodecs(new PlaceholderCodec()));
+			MongoClientSettings.getDefaultCodecRegistry(), CodecRegistries.fromProviders(new PlaceholderCodecProvider()));
 
 	@SuppressWarnings("unchecked")
 	@Contract("null, _ -> null")
@@ -377,7 +379,7 @@ public class BsonUtils {
 	@Contract("null, _ -> !null")
 	public static BsonValue simpleToBsonValue(@Nullable Object source, CodecRegistry codecRegistry) {
 
-		if(source == null) {
+		if (source == null) {
 			return BsonNull.VALUE;
 		}
 
@@ -1031,6 +1033,25 @@ public class BsonUtils {
 		}
 	}
 
+	@NullUnmarked
+	public static class PlaceholderCodecProvider implements CodecProvider {
+
+		PlaceholderCodec placeholderCodec = new PlaceholderCodec();
+		GeoCommandCodec geoCommandCodec = new GeoCommandCodec();
+
+		@Override
+		public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
+			if (ClassUtils.isAssignable(Placeholder.class, clazz)) {
+				return (Codec<T>) placeholderCodec;
+			}
+			if (ClassUtils.isAssignable(GeoCommand.class, clazz)) {
+				return (Codec<T>) geoCommandCodec;
+			}
+			return null;
+
+		}
+	}
+
 	/**
 	 * Internal {@link Codec} implementation to write
 	 * {@link org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder placeholders}.
@@ -1058,6 +1079,40 @@ public class BsonUtils {
 		@Override
 		public Class<Placeholder> getEncoderClass() {
 			return Placeholder.class;
+		}
+	}
+
+	static class GeoCommandCodec implements Codec<GeoCommand> {
+
+		@Override
+		public GeoCommand decode(BsonReader reader, DecoderContext decoderContext) {
+			return null;
+		}
+
+		@Override
+		public void encode(BsonWriter writer, GeoCommand value, EncoderContext encoderContext) {
+
+			if (writer instanceof SpringJsonWriter sjw) {
+				if (!value.getCommand().equals("$geometry")) {
+					writer.writeStartDocument();
+					writer.writeName(value.getCommand());
+					if (value.getShape() instanceof Placeholder p) { // maybe we should wrap input to use geo command object
+						sjw.writePlaceholder(p.toString());
+					}
+					writer.writeEndDocument();
+				} else {
+					if (value.getShape() instanceof Placeholder p) { // maybe we should wrap input to use geo command object
+						sjw.writePlaceholder(p.toString());
+					}
+				}
+			} else {
+				writer.writeString(value.getCommand(), value.getShape().toString());
+			}
+		}
+
+		@Override
+		public Class<GeoCommand> getEncoderClass() {
+			return null;
 		}
 	}
 }

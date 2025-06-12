@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
@@ -29,10 +28,17 @@ import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Vector;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -43,8 +49,13 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
+import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
+import org.springframework.data.repository.query.Parameter;
+import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.DBRef;
 
@@ -68,10 +79,13 @@ class AotQueryCreator {
 	}
 
 	@SuppressWarnings("NullAway")
-	StringQuery createQuery(PartTree partTree, int parameterCount) {
+	StringQuery createQuery(PartTree partTree, QueryMethod queryMethod) {
+
+
+		boolean geoNear = queryMethod instanceof MongoQueryMethod mqm ? mqm.isGeoNearQuery() : false;
 
 		Query query = new MongoQueryCreator(partTree,
-				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(parameterCount)), mappingContext)
+				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(queryMethod)), mappingContext, geoNear, queryMethod.isSearchQuery())
 				.createQuery();
 
 		if (partTree.isLimiting()) {
@@ -118,17 +132,37 @@ class AotQueryCreator {
 
 		private final List<Placeholder> placeholders;
 
-		public PlaceholderParameterAccessor(int parameterCount) {
-			if (parameterCount == 0) {
+		public PlaceholderParameterAccessor(QueryMethod queryMethod) {
+			if (queryMethod.getParameters().getNumberOfParameters() == 0) {
 				placeholders = List.of();
 			} else {
-				placeholders = IntStream.range(0, parameterCount).mapToObj(Placeholder::indexed).collect(Collectors.toList());
+				placeholders = new ArrayList<>();
+				Parameters<?, ?> parameters = queryMethod.getParameters();
+				for (Parameter parameter : parameters.toList()) {
+					if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new GeoJsonPlaceholder(parameter.getIndex(), ""));
+					}
+					else if (ClassUtils.isAssignable(Point.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new PointPlaceholder(parameter.getIndex()));
+					} else if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new CirclePlaceholder(parameter.getIndex()));
+					} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new BoxPlaceholder(parameter.getIndex()));
+					} else if (ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new SpherePlaceholder(parameter.getIndex()));
+					} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new PolygonPlaceholder(parameter.getIndex()));
+					}
+					else {
+						placeholders.add(parameter.getIndex(), Placeholder.indexed(parameter.getIndex()));
+					}
+				}
 			}
 		}
 
 		@Override
 		public Range<Distance> getDistanceRange() {
-			return null;
+			return Range.unbounded();
 		}
 
 		@Override
@@ -205,6 +239,136 @@ class AotQueryCreator {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Iterator<Object> iterator() {
 			return ((List) placeholders).iterator();
+		}
+	}
+
+	static class CirclePlaceholder extends Circle implements Placeholder {
+
+		int index;
+
+		public CirclePlaceholder(int index) {
+			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class SpherePlaceholder extends Sphere implements Placeholder {
+
+		int index;
+
+		public SpherePlaceholder(int index) {
+			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class GeoJsonPlaceholder implements Placeholder, GeoJson<List<Placeholder>>, Shape {
+
+		int index;
+		String type;
+
+		public GeoJsonPlaceholder(int index, String type) {
+			this.index = index;
+			this.type = type;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+
+		@Override
+		public String getType() {
+			return type;
+		}
+
+		@Override
+		public List<Placeholder> getCoordinates() {
+			return List.of();
+		}
+	}
+
+	static class BoxPlaceholder extends Box implements Placeholder {
+		int index;
+
+		public BoxPlaceholder(int index) {
+			super(new PointPlaceholder(index), new PointPlaceholder(index));
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class PolygonPlaceholder extends Polygon implements Placeholder {
+		int index;
+
+		public PolygonPlaceholder(int index) {
+			super(new PointPlaceholder(index), new PointPlaceholder(index), new PointPlaceholder(index),
+					new PointPlaceholder(index));
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class PointPlaceholder extends Point implements Placeholder {
+
+		int index;
+
+		public PointPlaceholder(int index) {
+			super(Double.NaN, Double.NaN);
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?" + index;
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
 		}
 	}
 }
