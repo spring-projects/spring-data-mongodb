@@ -28,13 +28,16 @@ import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Vector;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -135,6 +138,12 @@ class AotQueryCreator {
 						placeholders.add(parameter.getIndex(), new PointPlaceholder(parameter.getIndex()));
 					} else if(ClassUtils.isAssignable(Circle.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), new CirclePlaceholder(parameter.getIndex()));
+					} else if(ClassUtils.isAssignable(Box.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new BoxPlaceholder(parameter.getIndex()));
+					} else if(ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new SpherePlaceholder(parameter.getIndex()));
+					} else if(ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new PolygonPlaceholder(parameter.getIndex()));
 					}
 
 					else {
@@ -231,6 +240,63 @@ class AotQueryCreator {
 		int index;
 		public CirclePlaceholder(int index) {
 			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class SpherePlaceholder extends Sphere implements Placeholder {
+
+		int index;
+		public SpherePlaceholder(int index) {
+			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class BoxPlaceholder extends Box implements Placeholder {
+		int index;
+
+		public BoxPlaceholder(int index) {
+			super(new PointPlaceholder(index), new PointPlaceholder(index));
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class PolygonPlaceholder extends Polygon implements Placeholder {
+		int index;
+
+		public PolygonPlaceholder(int index) {
+			super(new PointPlaceholder(index), new PointPlaceholder(index), new PointPlaceholder(index), new PointPlaceholder(index));
 			this.index = index;
 		}
 

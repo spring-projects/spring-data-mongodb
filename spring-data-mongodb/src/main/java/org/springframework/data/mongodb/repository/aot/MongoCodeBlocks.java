@@ -29,7 +29,9 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
@@ -39,6 +41,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.BasicUpdate;
@@ -694,9 +697,31 @@ class MongoCodeBlocks {
 			for (MongoParameter parameter : queryMethod.getParameters().getBindableParameters()) {
 				String parameterName = context.getParameterName(parameter.getIndex());
 				if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
-					arguments.add(CodeBlock.builder().add("$T.of($L.getCenter(), $L.getRadius().getNormalizedValue())",
-							List.class, parameterName, parameterName).build());
-				} else {
+					arguments.add(CodeBlock.builder()
+							.add("$T.of($T.of($L.getCenter().getX(), $L.getCenter().getY()), $L.getRadius().getNormalizedValue())",
+									List.class, List.class, parameterName, parameterName, parameterName)
+							.build());
+				} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
+
+					// { $geoWithin: { $box: [ [ <x1>, <y1> ], [ <x2>, <y2> ] ] }
+					arguments.add(CodeBlock.builder().add(
+							"$T.of($T.of($L.getFirst().getX(), $L.getFirst().getY()), $T.of($L.getSecond().getX(), $L.getSecond().getY()))",
+							List.class, List.class, parameterName, parameterName, List.class, parameterName, parameterName).build());
+				} else if (ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
+					// { $centerSphere: [ [ <x>, <y> ], <radius> ] }
+					arguments.add(CodeBlock.builder()
+							.add("$T.of($T.of($L.getCenter().getX(), $L.getCenter().getY()), $L.getRadius().getNormalizedValue())",
+									List.class, List.class, parameterName, parameterName, parameterName)
+							.build());
+				} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
+					// $polygon: [ [ <x1> , <y1> ], [ <x2> , <y2> ], [ <x3> , <y3> ], ... ]
+					String localVar = context.localVariable("_p");
+					arguments
+							.add(CodeBlock.builder().add("$L.getPoints().stream().map($L -> $T.of($L.getX(), $L.getY())).toList()",
+									parameterName, localVar, List.class, localVar, localVar).build());
+				}
+
+				else {
 					arguments.add(CodeBlock.of(parameterName));
 				}
 			}

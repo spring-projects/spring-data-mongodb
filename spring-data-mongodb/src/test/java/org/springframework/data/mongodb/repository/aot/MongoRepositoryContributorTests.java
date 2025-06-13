@@ -45,8 +45,10 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -619,13 +621,34 @@ class MongoRepositoryContributorTests {
 	}
 
 	@Test
-	void testGeoWithin() {
+	void testGeoWithinCircle() {
 
 		List<User> users = fragment.findByLocationCoordinatesWithin(new Circle(-78.99171, 45.738868, 170));
 		assertThat(users).extracting(User::getUsername).containsExactly("leia");
 	}
 
-	//List<Person> result = repository.findByLocationWithin();
+	@Test
+	void testWithinBox() {
+
+		Box box = new Box(new Point(-78.99171, 35.738868), new Point(-68.99171, 45.738868));
+
+		List<User> result = fragment.findByLocationCoordinatesWithin(box);
+		assertThat(result).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	@Test
+	void findsPeopleByLocationWithinPolygon() {
+
+		Point first = new Point(-78.99171, 35.738868);
+		Point second = new Point(-78.99171, 45.738868);
+		Point third = new Point(-68.99171, 45.738868);
+		Point fourth = new Point(-68.99171, 35.738868);
+
+		List<User> result = fragment.findByLocationCoordinatesWithin(new Polygon(first, second, third, fourth));
+		assertThat(result).extracting(User::getUsername).containsExactly("leia");
+	}
+
+
 
 	private static void initUsers() {
 
