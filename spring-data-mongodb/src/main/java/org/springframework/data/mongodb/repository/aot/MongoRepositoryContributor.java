@@ -95,6 +95,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return aggregationMethodContributor(queryMethod, aggregation);
 		}
 
+		if(queryMethod.isGeoNearQuery()) {
+			NearQueryInteraction near = new NearQueryInteraction();
+			return nearQueryMethodContributor(queryMethod, near);
+		}
+
 		QueryInteraction query = createStringQuery(getRepositoryInformation(), queryMethod,
 				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method.getParameterCount());
 
@@ -179,6 +184,20 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 					.formatted(method.getName()));
 		}
 		return skip;
+	}
+
+	private static MethodContributor<MongoQueryMethod> nearQueryMethodContributor(MongoQueryMethod queryMethod,
+		NearQueryInteraction interaction) {
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(interaction).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+
+			builder.add(geoNearBlockBuilder(context, queryMethod).usingQueryVariableName("nearQuery").build());
+//			builder.add(aggregationExecutionBlockBuilder(context, queryMethod).referencing("aggregation").build());
+
+			return builder.build();
+		});
 	}
 
 	private static MethodContributor<MongoQueryMethod> aggregationMethodContributor(MongoQueryMethod queryMethod,

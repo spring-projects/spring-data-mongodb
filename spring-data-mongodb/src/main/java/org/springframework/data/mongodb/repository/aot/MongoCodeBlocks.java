@@ -31,6 +31,7 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
@@ -46,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.ReadPreference;
@@ -149,6 +151,12 @@ class MongoCodeBlocks {
 			MongoQueryMethod queryMethod) {
 
 		return new AggregationCodeBlockBuilder(context, queryMethod);
+	}
+
+	static GeoNearCodeBlockBuilder geoNearBlockBuilder(AotQueryMethodGenerationContext context,
+			MongoQueryMethod queryMethod) {
+
+		return new GeoNearCodeBlockBuilder(context, queryMethod);
 	}
 
 	/**
@@ -467,14 +475,77 @@ class MongoCodeBlocks {
 		}
 	}
 
+	static class GeoNearCodeBlockBuilder {
+
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private final List<CodeBlock> arguments;
+
+		private String variableName;
+
+		GeoNearCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
+			this.context = context;
+			this.arguments = context.getBindableParameterNames().stream().map(CodeBlock::of).collect(Collectors.toList());
+			this.queryMethod = queryMethod;
+		}
+
+		CodeBlock build() {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+			builder.add("\n");
+
+			String locationParameterName = context.getParameterName(queryMethod.getParameters().getNearIndex());
+
+			builder.addStatement("$1T $2L = $1T.near($3L)", NearQuery.class, variableName, locationParameterName);
+
+			if (queryMethod.getParameters().getRangeIndex() != -1) {
+
+				String rangeParametername = context.getParameterName(queryMethod.getParameters().getRangeIndex());
+				String minVarName = context.localVariable("min");
+				String maxVarName = context.localVariable("max");
+
+				builder.beginControlFlow("if($L.getLowerBound().isPresent())", rangeParametername);
+				builder.addStatement("$1T $2L = $3L.getLowerBound().get()", Distance.class, minVarName, rangeParametername);
+				builder.addStatement("$1L.minDistance($2L.getValue()).in($2L.getMetric())", variableName, minVarName);
+				builder.endControlFlow();
+
+				builder.beginControlFlow("if($L.getUpperBound().isPresent())", rangeParametername);
+				builder.addStatement("$1T $2L = $3L.getUpperBound().get()", Distance.class, maxVarName, rangeParametername);
+				builder.addStatement("$1L.maxDistance($2L.getValue()).in($2L.getMetric())", variableName, maxVarName);
+				builder.endControlFlow();
+			} else {
+
+				String distanceParametername = context.getParameterName(queryMethod.getParameters().getMaxDistanceIndex());
+				builder.addStatement("$1L.maxDistance($2L.getValue()).in($2L.getMetric())", variableName,
+						distanceParametername);
+			}
+
+			if (context.getPageableParameterName() != null) {
+				builder.addStatement("$L.with($L)", variableName, context.getPageableParameterName());
+			}
+
+			builder.add("\n");
+			builder.addStatement("return $L.query($T.class).near($L).all()", context.fieldNameOf(MongoOperations.class),
+					context.getRepositoryInformation().getDomainType(), variableName);
+			return builder.build();
+		}
+
+		public GeoNearCodeBlockBuilder usingQueryVariableName(String variableName) {
+			this.variableName = variableName;
+			return this;
+		}
+	}
+
 	@NullUnmarked
 	static class AggregationCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
+		private final List<CodeBlock> arguments;
 
 		private AggregationInteraction source;
-		private final List<CodeBlock> arguments;
+
 		private String aggregationVariableName;
 		private boolean pipelineOnly;
 

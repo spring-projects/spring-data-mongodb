@@ -47,6 +47,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -649,6 +652,13 @@ class MongoRepositoryContributorTests {
 	}
 
 
+	@Test
+	void testNearWithGeoResult() {
+
+		GeoResults<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73), Distance.of(2000, Metrics.KILOMETERS));
+		System.out.println("users: " + users);
+		assertThat(users).isNotEmpty();
+	}
 
 	private static void initUsers() {
 
