@@ -28,6 +28,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
@@ -44,6 +45,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
@@ -686,7 +688,16 @@ class MongoCodeBlocks {
 		QueryCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
-			this.arguments = context.getBindableParameterNames();
+			this.arguments = new ArrayList<>();
+
+			for(MongoParameter parameter : queryMethod.getParameters().getBindableParameters()) {
+				String parameterName = context.getParameterName(parameter.getIndex());
+				if(ClassUtils.isAssignable(Circle.class, parameter.getType())) {
+					parameterName = "List.of(%s.getCenter(), %s.getRadius().getNormalizedValue())".formatted(parameterName, parameterName);
+				}
+				arguments.add(parameterName);
+			}
+
 			this.queryMethod = queryMethod;
 		}
 
