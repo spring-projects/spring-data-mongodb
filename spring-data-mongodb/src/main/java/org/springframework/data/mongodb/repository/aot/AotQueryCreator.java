@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.repository.aot;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
@@ -30,8 +28,11 @@ import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Vector;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -43,7 +44,6 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
-import org.springframework.data.mongodb.repository.query.MongoParameters;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
@@ -132,8 +132,12 @@ class AotQueryCreator {
 				Parameters<?, ?> parameters = queryMethod.getParameters();
 				for(Parameter parameter : parameters.toList()) {
 					if(ClassUtils.isAssignable(Point.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new GeoPlaceholder(parameter.getIndex()));
-					} else {
+						placeholders.add(parameter.getIndex(), new PointPlaceholder(parameter.getIndex()));
+					} else if(ClassUtils.isAssignable(Circle.class, parameter.getType())) {
+						placeholders.add(parameter.getIndex(), new CirclePlaceholder(parameter.getIndex()));
+					}
+
+					else {
 						placeholders.add(parameter.getIndex(), Placeholder.indexed(parameter.getIndex()));
 					}
 				}
@@ -222,11 +226,30 @@ class AotQueryCreator {
 		}
 	}
 
-	static class GeoPlaceholder extends Point implements Placeholder {
+	static class CirclePlaceholder extends Circle implements Placeholder {
+
+		int index;
+		public CirclePlaceholder(int index) {
+			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
+			this.index = index;
+		}
+
+		@Override
+		public Object getValue() {
+			return "?%s".formatted(index);
+		}
+
+		@Override
+		public String toString() {
+			return getValue().toString();
+		}
+	}
+
+	static class PointPlaceholder extends Point implements Placeholder {
 
 		int index;
 
-		public GeoPlaceholder(int index) {
+		public PointPlaceholder(int index) {
 			super(Double.NaN, Double.NaN);
 			this.index = index;
 		}

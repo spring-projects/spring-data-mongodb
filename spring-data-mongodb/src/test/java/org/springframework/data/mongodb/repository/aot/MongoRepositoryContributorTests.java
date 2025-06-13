@@ -45,10 +45,12 @@ import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -88,10 +90,8 @@ class MongoRepositoryContributorTests {
 
 	@BeforeAll
 	static void beforeAll() {
-		String idx = client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2d"),
-//		String idx = client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2dsphere"),
+		client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2d"),
 			new IndexOptions());
-		System.out.println("idx: " + idx);
 	}
 
 	@BeforeEach
@@ -605,10 +605,27 @@ class MongoRepositoryContributorTests {
 	}
 
 	@Test
-	void testGeoNear() {
+	void testNear() {
+
 		List<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99171, 40.738868));
 		assertThat(users).extracting(User::getUsername).containsExactly("leia");
 	}
+
+	@Test
+	void testNearWithGeoJson() {
+
+		List<User> users = fragment.findByLocationCoordinatesNear(new GeoJsonPoint(-73.99171, 40.738868));
+		assertThat(users).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	@Test
+	void testGeoWithin() {
+
+		List<User> users = fragment.findByLocationCoordinatesWithin(new Circle(-78.99171, 45.738868, 170));
+		assertThat(users).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	//List<Person> result = repository.findByLocationWithin();
 
 	private static void initUsers() {
 
