@@ -203,8 +203,8 @@ class MongoCodeBlocks {
 			Object actualReturnType = isProjecting ? context.getActualReturnType().getType() : domainType;
 
 			builder.add("\n");
-			builder.addStatement("$T<$T> $L = $L.remove($T.class)", ExecutableRemove.class, domainType,
-					context.localVariable("remover"), mongoOpsRef, domainType);
+			builder.addStatement("$1T<$2T> $3L = $4L.remove($2T.class)", ExecutableRemove.class, domainType,
+					context.localVariable("remover"), mongoOpsRef);
 
 			DeleteExecution.Type type = DeleteExecution.Type.FIND_AND_REMOVE_ALL;
 			if (!queryMethod.isCollectionQuery()) {
@@ -270,8 +270,8 @@ class MongoCodeBlocks {
 
 			String updateReference = updateVariableName;
 			Class<?> domainType = context.getRepositoryInformation().getDomainType();
-			builder.addStatement("$T<$T> $L = $L.update($T.class)", ExecutableUpdate.class, domainType,
-					context.localVariable("updater"), mongoOpsRef, domainType);
+			builder.addStatement("$1T<$2T> $3L = $4L.update($2T.class)", ExecutableUpdate.class, domainType,
+					context.localVariable("updater"), mongoOpsRef);
 
 			Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
 			if (ReflectionUtils.isVoid(returnType)) {
@@ -344,16 +344,17 @@ class MongoCodeBlocks {
 					builder.addStatement("$T<$T> $L = $L.aggregateStream($L, $T.class)", Stream.class, Document.class,
 							context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
 
-					builder.addStatement("return $L.map(it -> ($T) convertSimpleRawResult($T.class, it))",
-							context.localVariable("results"), returnType, returnType);
+					builder.addStatement("return $1L.map(it -> ($2T) convertSimpleRawResult($2T.class, it))",
+							context.localVariable("results"), returnType);
 				} else {
 
 					builder.addStatement("$T $L = $L.aggregate($L, $T.class)", AggregationResults.class,
 							context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
 
 					if (!queryMethod.isCollectionQuery()) {
-						builder.addStatement("return $T.<$T>firstElement(convertSimpleRawResults($T.class, $L.getMappedResults()))",
-								CollectionUtils.class, returnType, returnType, context.localVariable("results"));
+						builder.addStatement(
+								"return $1T.<$2T>firstElement(convertSimpleRawResults($2T.class, $3L.getMappedResults()))",
+								CollectionUtils.class, returnType, context.localVariable("results"));
 					} else {
 						builder.addStatement("return convertSimpleRawResults($T.class, $L.getMappedResults())", returnType,
 								context.localVariable("results"));
@@ -366,10 +367,9 @@ class MongoCodeBlocks {
 					builder.addStatement("boolean $L = $L.getMappedResults().size() > $L.getPageSize()",
 							context.localVariable("hasNext"), context.localVariable("results"), context.getPageableParameterName());
 					builder.addStatement(
-							"return new $T<>($L ? $L.getMappedResults().subList(0, $L.getPageSize()) : $L.getMappedResults(), $L, $L)",
+							"return new $1T<>($2L ? $3L.getMappedResults().subList(0, $4L.getPageSize()) : $3L.getMappedResults(), $4L, $2L)",
 							SliceImpl.class, context.localVariable("hasNext"), context.localVariable("results"),
-							context.getPageableParameterName(), context.localVariable("results"), context.getPageableParameterName(),
-							context.localVariable("hasNext"));
+							context.getPageableParameterName());
 				} else {
 
 					if (queryMethod.isStreamQuery()) {
@@ -584,9 +584,9 @@ class MongoCodeBlocks {
 
 			if (!pipelineOnly) {
 
-				builder.addStatement("$T<$T> $L = $T.newAggregation($T.class, $L.getOperations())", TypedAggregation.class,
-						context.getRepositoryInformation().getDomainType(), aggregationVariableName, Aggregation.class,
-						context.getRepositoryInformation().getDomainType(), pipelineName);
+				builder.addStatement("$1T<$2T> $3L = $4T.newAggregation($2T.class, $5L.getOperations())",
+						TypedAggregation.class, context.getRepositoryInformation().getDomainType(), aggregationVariableName,
+						Aggregation.class, pipelineName);
 
 				builder.add(aggregationOptions(aggregationVariableName));
 			}
@@ -662,8 +662,8 @@ class MongoCodeBlocks {
 			if (!options.isEmpty()) {
 
 				Builder optionsBuilder = CodeBlock.builder();
-				optionsBuilder.add("$T $L = $T.builder()\n", AggregationOptions.class,
-						context.localVariable("aggregationOptions"), AggregationOptions.class);
+				optionsBuilder.add("$1T $2L = $1T.builder()\n", AggregationOptions.class,
+						context.localVariable("aggregationOptions"));
 				optionsBuilder.indent();
 				for (CodeBlock optionBlock : options) {
 					optionsBuilder.add(optionBlock);
@@ -673,7 +673,7 @@ class MongoCodeBlocks {
 				optionsBuilder.unindent();
 				builder.add(optionsBuilder.build());
 
-				builder.addStatement("$L = $L.withOptions($L)", aggregationVariableName, aggregationVariableName,
+				builder.addStatement("$1L = $1L.withOptions($2L)", aggregationVariableName,
 						context.localVariable("aggregationOptions"));
 			}
 			return builder.build();
@@ -701,10 +701,10 @@ class MongoCodeBlocks {
 			Builder builder = CodeBlock.builder();
 
 			builder.beginControlFlow("if ($L.isSorted())", sortProvider);
-			builder.addStatement("$T $L = new $T()", Document.class, context.localVariable("sortDocument"), Document.class);
+			builder.addStatement("$1T $2L = new $1T()", Document.class, context.localVariable("sortDocument"));
 			builder.beginControlFlow("for ($T $L : $L)", Order.class, context.localVariable("order"), sortProvider);
-			builder.addStatement("$L.append($L.getProperty(), $L.isAscending() ? 1 : -1);",
-					context.localVariable("sortDocument"), context.localVariable("order"), context.localVariable("order"));
+			builder.addStatement("$1L.append($2L.getProperty(), $2L.isAscending() ? 1 : -1);",
+					context.localVariable("sortDocument"), context.localVariable("order"));
 			builder.endControlFlow();
 			builder.addStatement("stages.add(new $T($S, $L))", Document.class, "$sort",
 					context.localVariable("sortDocument"));
@@ -768,28 +768,26 @@ class MongoCodeBlocks {
 			for (MongoParameter parameter : queryMethod.getParameters().getBindableParameters()) {
 				String parameterName = context.getParameterName(parameter.getIndex());
 				if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
-					arguments.add(CodeBlock.builder()
-							.add("$T.of($T.of($L.getCenter().getX(), $L.getCenter().getY()), $L.getRadius().getNormalizedValue())",
-									List.class, List.class, parameterName, parameterName, parameterName)
-							.build());
+					arguments.add(CodeBlock.builder().add(
+							"$1T.of($1T.of($2L.getCenter().getX(), $2L.getCenter().getY()), $2L.getRadius().getNormalizedValue())",
+							List.class, parameterName).build());
 				} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
 
 					// { $geoWithin: { $box: [ [ <x1>, <y1> ], [ <x2>, <y2> ] ] }
 					arguments.add(CodeBlock.builder().add(
-							"$T.of($T.of($L.getFirst().getX(), $L.getFirst().getY()), $T.of($L.getSecond().getX(), $L.getSecond().getY()))",
-							List.class, List.class, parameterName, parameterName, List.class, parameterName, parameterName).build());
+							"$1T.of($1T.of($2L.getFirst().getX(), $2L.getFirst().getY()), $1T.of($2L.getSecond().getX(), $2L.getSecond().getY()))",
+							List.class, parameterName).build());
 				} else if (ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
 					// { $centerSphere: [ [ <x>, <y> ], <radius> ] }
-					arguments.add(CodeBlock.builder()
-							.add("$T.of($T.of($L.getCenter().getX(), $L.getCenter().getY()), $L.getRadius().getNormalizedValue())",
-									List.class, List.class, parameterName, parameterName, parameterName)
-							.build());
+					arguments.add(CodeBlock.builder().add(
+							"$1T.of($1T.of($2L.getCenter().getX(), $2L.getCenter().getY()), $2L.getRadius().getNormalizedValue())",
+							List.class, parameterName).build());
 				} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
 					// $polygon: [ [ <x1> , <y1> ], [ <x2> , <y2> ], [ <x3> , <y3> ], ... ]
 					String localVar = context.localVariable("_p");
-					arguments
-							.add(CodeBlock.builder().add("$L.getPoints().stream().map($L -> $T.of($L.getX(), $L.getY())).toList()",
-									parameterName, localVar, List.class, localVar, localVar).build());
+					arguments.add(
+							CodeBlock.builder().add("$1L.getPoints().stream().map($2L -> $3T.of($2L.getX(), $2L.getY())).toList()",
+									parameterName, localVar, List.class).build());
 				}
 
 				else {
@@ -890,11 +888,10 @@ class MongoCodeBlocks {
 			Builder builder = CodeBlock.builder();
 			if (!StringUtils.hasText(source)) {
 
-				builder.addStatement("$T $L = new $T(new $T())", BasicQuery.class, variableName, BasicQuery.class,
-						Document.class);
+				builder.addStatement("$1T $2L = new $1T(new $3T())", BasicQuery.class, variableName, Document.class);
 			} else if (!containsPlaceholder(source)) {
-				builder.addStatement("$T $L = new $T($T.parse($S))", BasicQuery.class, variableName, BasicQuery.class,
-						Document.class, source);
+				builder.addStatement("$1T $2L = new $1T($3T.parse($4S))", BasicQuery.class, variableName, Document.class,
+						source);
 			} else {
 				builder.add("$T $L = createQuery($S, new $T[]{ ", BasicQuery.class, variableName, source, Object.class);
 				Iterator<CodeBlock> iterator = arguments.iterator();
@@ -939,8 +936,7 @@ class MongoCodeBlocks {
 			builder.add("\n");
 			String tmpVariableName = updateVariableName + "Document";
 			builder.add(renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName, arguments));
-			builder.addStatement("$T $L = new $T($L)", BasicUpdate.class, updateVariableName, BasicUpdate.class,
-					tmpVariableName);
+			builder.addStatement("$1T $2L = new $1T($3L)", BasicUpdate.class, updateVariableName, tmpVariableName);
 
 			return builder.build();
 		}
@@ -951,9 +947,9 @@ class MongoCodeBlocks {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
-			builder.addStatement("$T $L = new $T()", Document.class, variableName, Document.class);
+			builder.addStatement("$1T $2L = new $1T()", Document.class, variableName);
 		} else if (!containsPlaceholder(source)) {
-			builder.addStatement("$T $L = $T.parse($S)", Document.class, variableName, Document.class, source);
+			builder.addStatement("$1T $2L = $1T.parse($3S)", Document.class, variableName, source);
 		} else {
 
 			builder.add("$T $L = bindParameters($S, new $T[]{ ", Document.class, variableName, source, Object.class);
@@ -965,8 +961,6 @@ class MongoCodeBlocks {
 				}
 			}
 			builder.add("});\n");
-			// builder.addStatement("$T $L = bindParameters($S, new $T[]{ $L })", Document.class, variableName, source,
-			// Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
 		}
 		return builder.build();
 	}
