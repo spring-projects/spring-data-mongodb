@@ -95,7 +95,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return aggregationMethodContributor(queryMethod, aggregation);
 		}
 
-		if(queryMethod.isGeoNearQuery()) {
+		if(queryMethod.isGeoNearQuery() || (queryMethod.getParameters().getMaxDistanceIndex() != -1 && queryMethod.getReturnType().isCollectionLike())) {
 			NearQueryInteraction near = new NearQueryInteraction();
 			return nearQueryMethodContributor(queryMethod, near);
 		}

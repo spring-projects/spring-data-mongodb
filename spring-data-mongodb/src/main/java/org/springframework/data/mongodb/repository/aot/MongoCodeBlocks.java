@@ -32,6 +32,8 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
@@ -505,20 +507,21 @@ class MongoCodeBlocks {
 				String minVarName = context.localVariable("min");
 				String maxVarName = context.localVariable("max");
 
-				builder.beginControlFlow("if($L.getLowerBound().isPresent())", rangeParametername);
-				builder.addStatement("$1T $2L = $3L.getLowerBound().get()", Distance.class, minVarName, rangeParametername);
-				builder.addStatement("$1L.minDistance($2L.getValue()).in($2L.getMetric())", variableName, minVarName);
+				builder.beginControlFlow("if($L.getLowerBound().isBounded())", rangeParametername);
+				builder.addStatement("$1T $2L = $3L.getLowerBound().getValue().get()", Distance.class, minVarName,
+						rangeParametername);
+				builder.addStatement("$1L.minDistance($2L).in($2L.getMetric())", variableName, minVarName);
 				builder.endControlFlow();
 
-				builder.beginControlFlow("if($L.getUpperBound().isPresent())", rangeParametername);
-				builder.addStatement("$1T $2L = $3L.getUpperBound().get()", Distance.class, maxVarName, rangeParametername);
-				builder.addStatement("$1L.maxDistance($2L.getValue()).in($2L.getMetric())", variableName, maxVarName);
+				builder.beginControlFlow("if($L.getUpperBound().isBounded())", rangeParametername);
+				builder.addStatement("$1T $2L = $3L.getUpperBound().getValue().get()", Distance.class, maxVarName,
+						rangeParametername);
+				builder.addStatement("$1L.maxDistance($2L).in($2L.getMetric())", variableName, maxVarName);
 				builder.endControlFlow();
 			} else {
 
 				String distanceParametername = context.getParameterName(queryMethod.getParameters().getMaxDistanceIndex());
-				builder.addStatement("$1L.maxDistance($2L.getValue()).in($2L.getMetric())", variableName,
-						distanceParametername);
+				builder.addStatement("$1L.maxDistance($2L).in($2L.getMetric())", variableName, distanceParametername);
 			}
 
 			if (context.getPageableParameterName() != null) {
@@ -526,8 +529,24 @@ class MongoCodeBlocks {
 			}
 
 			builder.add("\n");
-			builder.addStatement("return $L.query($T.class).near($L).all()", context.fieldNameOf(MongoOperations.class),
-					context.getRepositoryInformation().getDomainType(), variableName);
+
+			// TODO: move the section below into dedicated executor builder
+			if (ClassUtils.isAssignable(GeoPage.class, context.getReturnType().getRawClass())) {
+				builder.addStatement("return new $T<>($L.query($T.class).near($L).all())", GeoPage.class,
+						context.fieldNameOf(MongoOperations.class), context.getRepositoryInformation().getDomainType(),
+						variableName);
+			}
+
+			else if (ClassUtils.isAssignable(GeoResults.class, context.getReturnType().getRawClass())) {
+
+				builder.addStatement("return $L.query($T.class).near($L).all()", context.fieldNameOf(MongoOperations.class),
+						context.getRepositoryInformation().getDomainType(), variableName);
+			} else {
+				builder.addStatement("return $L.query($T.class).near($L).all().getContent()",
+						context.fieldNameOf(MongoOperations.class), context.getRepositoryInformation().getDomainType(),
+						variableName);
+			}
+
 			return builder.build();
 		}
 

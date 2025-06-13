@@ -41,6 +41,7 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -48,6 +49,8 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -96,7 +99,7 @@ class MongoRepositoryContributorTests {
 	@BeforeAll
 	static void beforeAll() {
 		client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2d"),
-			new IndexOptions());
+				new IndexOptions());
 	}
 
 	@BeforeEach
@@ -613,21 +616,21 @@ class MongoRepositoryContributorTests {
 	void testNear() {
 
 		List<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99171, 40.738868));
-		assertThat(users).extracting(User::getUsername).containsExactly("leia");
+		assertThat(users).extracting(User::getUsername).containsExactly("leia", "vader");
 	}
 
 	@Test
 	void testNearWithGeoJson() {
 
 		List<User> users = fragment.findByLocationCoordinatesNear(new GeoJsonPoint(-73.99171, 40.738868));
-		assertThat(users).extracting(User::getUsername).containsExactly("leia");
+		assertThat(users).extracting(User::getUsername).containsExactly("leia", "vader");
 	}
 
 	@Test
 	void testGeoWithinCircle() {
 
 		List<User> users = fragment.findByLocationCoordinatesWithin(new Circle(-78.99171, 45.738868, 170));
-		assertThat(users).extracting(User::getUsername).containsExactly("leia");
+		assertThat(users).extracting(User::getUsername).containsExactly("leia", "vader");
 	}
 
 	@Test
@@ -636,7 +639,7 @@ class MongoRepositoryContributorTests {
 		Box box = new Box(new Point(-78.99171, 35.738868), new Point(-68.99171, 45.738868));
 
 		List<User> result = fragment.findByLocationCoordinatesWithin(box);
-		assertThat(result).extracting(User::getUsername).containsExactly("leia");
+		assertThat(result).extracting(User::getUsername).containsExactly("leia", "vader");
 	}
 
 	@Test
@@ -648,18 +651,51 @@ class MongoRepositoryContributorTests {
 		Point fourth = new Point(-68.99171, 35.738868);
 
 		List<User> result = fragment.findByLocationCoordinatesWithin(new Polygon(first, second, third, fourth));
-		assertThat(result).extracting(User::getUsername).containsExactly("leia");
+		assertThat(result).extracting(User::getUsername).containsExactly("leia", "vader");
 	}
-
 
 	@Test
 	void testNearWithGeoResult() {
 
-		GeoResults<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73), Distance.of(2000, Metrics.KILOMETERS));
-		System.out.println("users: " + users);
-		assertThat(users).isNotEmpty();
+		GeoResults<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(5, Metrics.KILOMETERS));
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("leia");
 	}
 
+	@Test
+	void testNearReturningListOfGeoResult() {
+
+		List<GeoResult<User>> users = fragment.findUserAsListByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(5, Metrics.KILOMETERS));
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("leia");
+	}
+
+	@Test
+	void testNearWithRange() {
+
+		Range<Distance> range = Distance.between(Distance.of(5, Metrics.KILOMETERS), Distance.of(2000, Metrics.KILOMETERS));
+		GeoResults<User> users = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73), range);
+
+		assertThat(users).extracting(GeoResult::getContent).extracting(User::getUsername).containsExactly("vader");
+	}
+
+	@Test
+	void testNearReturningGeoPage() {
+
+		// TODO: still need to create the count and extract the total elements
+		GeoPage<User> page1 = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(2000, Metrics.KILOMETERS), PageRequest.of(0, 1));
+
+		assertThat(page1.hasNext()).isTrue();
+
+		GeoPage<User> page2 = fragment.findByLocationCoordinatesNear(new Point(-73.99, 40.73),
+				Distance.of(2000, Metrics.KILOMETERS), page1.nextPageable());
+		assertThat(page2.hasNext()).isFalse();
+	}
+
+	/**
+	 * GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), range);
+	 */
 	private static void initUsers() {
 
 		Document luke = Document.parse("""
@@ -753,6 +789,12 @@ class MongoRepositoryContributorTests {
 				  "username": "vader",
 				  "first_name": "Anakin",
 				  "last_name": "Skywalker",
+				  "location" : {
+				    "planet" : "Death Star",
+				    "coordinates" : {
+				      "x" : -73.9, "y" : 40.7
+				    }
+				  },
 				  "visits" : 50,
 				  "posts": [
 				    {

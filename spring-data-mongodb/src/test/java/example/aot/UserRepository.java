@@ -28,6 +28,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -35,6 +36,8 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
@@ -120,7 +123,12 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	GeoResults<User> findByLocationCoordinatesNear(Point point, Distance maxDistance);
 
-	// TODO: GeoQueries
+	List<GeoResult<User>> findUserAsListByLocationCoordinatesNear(Point point, Distance maxDistance);
+
+	GeoResults<User> findByLocationCoordinatesNear(Point point, Range<Distance> distance);
+
+	GeoPage<User> findByLocationCoordinatesNear(Point point, Distance maxDistance, Pageable pageable);
+	
 	// TODO: TextSearch
 
 	/* Annotated Queries */
