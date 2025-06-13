@@ -16,15 +16,16 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
@@ -470,14 +471,14 @@ class MongoCodeBlocks {
 		private final MongoQueryMethod queryMethod;
 
 		private AggregationInteraction source;
-		private final List<String> arguments;
+		private final List<CodeBlock> arguments;
 		private String aggregationVariableName;
 		private boolean pipelineOnly;
 
 		AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
-			this.arguments = context.getBindableParameterNames();
+			this.arguments = context.getBindableParameterNames().stream().map(CodeBlock::of).collect(Collectors.toList());
 			this.queryMethod = queryMethod;
 		}
 
@@ -605,7 +606,7 @@ class MongoCodeBlocks {
 		}
 
 		private CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages, int stageCount,
-				List<String> arguments) {
+				List<CodeBlock> arguments) {
 
 			Builder builder = CodeBlock.builder();
 			builder.addStatement("$T<$T> $L = new $T($L)", List.class, Object.class, stageListVariableName, ArrayList.class,
@@ -682,20 +683,22 @@ class MongoCodeBlocks {
 		private final MongoQueryMethod queryMethod;
 
 		private QueryInteraction source;
-		private final List<String> arguments;
+		private final List<CodeBlock> arguments;
 		private String queryVariableName;
 
 		QueryCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
-			this.arguments = new ArrayList<>();
 
-			for(MongoParameter parameter : queryMethod.getParameters().getBindableParameters()) {
+			this.arguments = new ArrayList<>();
+			for (MongoParameter parameter : queryMethod.getParameters().getBindableParameters()) {
 				String parameterName = context.getParameterName(parameter.getIndex());
-				if(ClassUtils.isAssignable(Circle.class, parameter.getType())) {
-					parameterName = "List.of(%s.getCenter(), %s.getRadius().getNormalizedValue())".formatted(parameterName, parameterName);
+				if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
+					arguments.add(CodeBlock.builder().add("$T.of($L.getCenter(), $L.getRadius().getNormalizedValue())",
+							List.class, parameterName, parameterName).build());
+				} else {
+					arguments.add(CodeBlock.of(parameterName));
 				}
-				arguments.add(parameterName);
 			}
 
 			this.queryMethod = queryMethod;
@@ -797,8 +800,15 @@ class MongoCodeBlocks {
 				builder.addStatement("$T $L = new $T($T.parse($S))", BasicQuery.class, variableName, BasicQuery.class,
 						Document.class, source);
 			} else {
-				builder.addStatement("$T $L = createQuery($S, new $T[]{ $L })", BasicQuery.class, variableName, source,
-						Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
+				builder.add("$T $L = createQuery($S, new $T[]{ ", BasicQuery.class, variableName, source, Object.class);
+				Iterator<CodeBlock> iterator = arguments.iterator();
+				while (iterator.hasNext()) {
+					builder.add(iterator.next());
+					if (iterator.hasNext()) {
+						builder.add(", ");
+					}
+				}
+				builder.add("});\n");
 			}
 
 			return builder.build();
@@ -809,11 +819,11 @@ class MongoCodeBlocks {
 	static class UpdateCodeBlockBuilder {
 
 		private UpdateInteraction source;
-		private List<String> arguments;
+		private List<CodeBlock> arguments;
 		private String updateVariableName;
 
 		public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-			this.arguments = context.getBindableParameterNames();
+			this.arguments = context.getBindableParameterNames().stream().map(CodeBlock::of).collect(Collectors.toList());
 		}
 
 		public UpdateCodeBlockBuilder update(UpdateInteraction update) {
@@ -841,7 +851,7 @@ class MongoCodeBlocks {
 	}
 
 	private static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
-			List<String> arguments) {
+			List<CodeBlock> arguments) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
@@ -849,8 +859,18 @@ class MongoCodeBlocks {
 		} else if (!containsPlaceholder(source)) {
 			builder.addStatement("$T $L = $T.parse($S)", Document.class, variableName, Document.class, source);
 		} else {
-			builder.addStatement("$T $L = bindParameters($S, new $T[]{ $L })", Document.class, variableName, source,
-					Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
+
+			builder.add("$T $L = bindParameters($S, new $T[]{ ", Document.class, variableName, source, Object.class);
+			Iterator<CodeBlock> iterator = arguments.iterator();
+			while (iterator.hasNext()) {
+				builder.add(iterator.next());
+				if (iterator.hasNext()) {
+					builder.add(", ");
+				}
+			}
+			builder.add("});\n");
+			// builder.addStatement("$T $L = bindParameters($S, new $T[]{ $L })", Document.class, variableName, source,
+			// Object.class, StringUtils.collectionToDelimitedString(arguments, ", "));
 		}
 		return builder.build();
 	}
