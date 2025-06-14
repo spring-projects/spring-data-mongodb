@@ -188,6 +188,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael Krog
  * @author Jakub Zurawa
  * @author Florian Lüdiger
+ * @author Seungho Kang
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider,
 		SearchIndexOperationsProvider, ReadPreferenceAware {
@@ -1159,7 +1160,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(resultType, "ResultType must not be null Use Object.class instead");
 
-		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 or none");
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
@@ -2129,7 +2130,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(entityType, "EntityType must not be null");
 		Assert.notNull(collectionName, "CollectionName must not be null");
 
-		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 or none");
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
 		UpdateContext updateContext = queryOperations.replaceSingleContext(query,
