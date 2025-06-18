@@ -16,7 +16,9 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -150,7 +152,7 @@ class AggregationBlocks {
 
         private final AotQueryMethodGenerationContext context;
         private final MongoQueryMethod queryMethod;
-        private final List<CodeBlock> arguments;
+        private final Map<String, CodeBlock> arguments;
 
         private AggregationInteraction source;
 
@@ -160,7 +162,8 @@ class AggregationBlocks {
         AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
             this.context = context;
-            this.arguments = context.getBindableParameterNames().stream().map(CodeBlock::of).collect(Collectors.toList());
+            this.arguments = new LinkedHashMap<>();
+            context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
             this.queryMethod = queryMethod;
         }
 
@@ -288,7 +291,7 @@ class AggregationBlocks {
         }
 
         private CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages, int stageCount,
-                List<CodeBlock> arguments) {
+                Map<String, CodeBlock> arguments) {
 
             Builder builder = CodeBlock.builder();
             builder.addStatement("$T<$T> $L = new $T($L)", List.class, Object.class, stageListVariableName, ArrayList.class,

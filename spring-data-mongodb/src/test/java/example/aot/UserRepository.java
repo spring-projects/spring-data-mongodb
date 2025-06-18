@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.data.annotation.Id;
@@ -47,11 +48,11 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
-import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 /**
  * @author Christoph Strobl
@@ -95,6 +96,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 	List<User> findByVisitsExists(boolean exists);
 
 	List<User> findByLastnameNot(String lastname);
+
+	List<User> findByFirstnameRegex(Pattern pattern);
 
 	List<User> findTop2ByLastnameStartingWith(String lastname);
 
@@ -178,6 +181,12 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
 	Slice<User> findAnnotatedQuerySliceOfUsersByLastname(String lastname, Pageable pageable);
+
+	@Query("{ firstname : ?#{[0]} }")
+	List<User> findWithExpressionUsingParameterIndex(String firstname);
+
+	@Query("{ firstname : :#{#firstname} }")
+	List<User> findWithExpressionUsingParameterName(@Param("firstname") String firstname);
 
 	/* deletes */
 

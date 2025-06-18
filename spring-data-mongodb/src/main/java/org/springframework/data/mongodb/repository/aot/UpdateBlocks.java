@@ -31,8 +31,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.jspecify.annotations.NullUnmarked;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
@@ -52,94 +52,96 @@ import org.springframework.util.NumberUtils;
  */
 class UpdateBlocks {
 
-    @NullUnmarked
-    static class UpdateExecutionCodeBlockBuilder {
+	@NullUnmarked
+	static class UpdateExecutionCodeBlockBuilder {
 
-        private final AotQueryMethodGenerationContext context;
-        private final MongoQueryMethod queryMethod;
-        private String queryVariableName;
-        private String updateVariableName;
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private String queryVariableName;
+		private String updateVariableName;
 
-        UpdateExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		UpdateExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
-            this.context = context;
-            this.queryMethod = queryMethod;
-        }
+			this.context = context;
+			this.queryMethod = queryMethod;
+		}
 
-        UpdateExecutionCodeBlockBuilder withFilter(String queryVariableName) {
+		UpdateExecutionCodeBlockBuilder withFilter(String queryVariableName) {
 
-            this.queryVariableName = queryVariableName;
-            return this;
-        }
+			this.queryVariableName = queryVariableName;
+			return this;
+		}
 
-        UpdateExecutionCodeBlockBuilder referencingUpdate(String updateVariableName) {
+		UpdateExecutionCodeBlockBuilder referencingUpdate(String updateVariableName) {
 
-            this.updateVariableName = updateVariableName;
-            return this;
-        }
+			this.updateVariableName = updateVariableName;
+			return this;
+		}
 
-        CodeBlock build() {
+		CodeBlock build() {
 
-            String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
-            Builder builder = CodeBlock.builder();
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+			Builder builder = CodeBlock.builder();
 
-            builder.add("\n");
+			builder.add("\n");
 
-            String updateReference = updateVariableName;
-            Class<?> domainType = context.getRepositoryInformation().getDomainType();
-            builder.addStatement("$1T<$2T> $3L = $4L.update($2T.class)", ExecutableUpdate.class, domainType,
-                    context.localVariable("updater"), mongoOpsRef);
+			String updateReference = updateVariableName;
+			Class<?> domainType = context.getRepositoryInformation().getDomainType();
+			builder.addStatement("$1T<$2T> $3L = $4L.update($2T.class)", ExecutableUpdate.class, domainType,
+					context.localVariable("updater"), mongoOpsRef);
 
-            Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
-            if (ReflectionUtils.isVoid(returnType)) {
-                builder.addStatement("$L.matching($L).apply($L).all()", context.localVariable("updater"), queryVariableName,
-                        updateReference);
-            } else if (ClassUtils.isAssignable(Long.class, returnType)) {
-                builder.addStatement("return $L.matching($L).apply($L).all().getModifiedCount()",
-                        context.localVariable("updater"), queryVariableName, updateReference);
-            } else {
-                builder.addStatement("$T $L = $L.matching($L).apply($L).all().getModifiedCount()", Long.class,
-                        context.localVariable("modifiedCount"), context.localVariable("updater"), queryVariableName,
-                        updateReference);
-                builder.addStatement("return $T.convertNumberToTargetClass($L, $T.class)", NumberUtils.class,
-                        context.localVariable("modifiedCount"), returnType);
-            }
+			Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
+			if (ReflectionUtils.isVoid(returnType)) {
+				builder.addStatement("$L.matching($L).apply($L).all()", context.localVariable("updater"), queryVariableName,
+						updateReference);
+			} else if (ClassUtils.isAssignable(Long.class, returnType)) {
+				builder.addStatement("return $L.matching($L).apply($L).all().getModifiedCount()",
+						context.localVariable("updater"), queryVariableName, updateReference);
+			} else {
+				builder.addStatement("$T $L = $L.matching($L).apply($L).all().getModifiedCount()", Long.class,
+						context.localVariable("modifiedCount"), context.localVariable("updater"), queryVariableName,
+						updateReference);
+				builder.addStatement("return $T.convertNumberToTargetClass($L, $T.class)", NumberUtils.class,
+						context.localVariable("modifiedCount"), returnType);
+			}
 
-            return builder.build();
-        }
-    }
+			return builder.build();
+		}
+	}
 
-    @NullUnmarked
-    static class UpdateCodeBlockBuilder {
+	@NullUnmarked
+	static class UpdateCodeBlockBuilder {
 
-        private UpdateInteraction source;
-        private List<CodeBlock> arguments;
-        private String updateVariableName;
+		private UpdateInteraction source;
+		private Map<String, CodeBlock> arguments;
+		private String updateVariableName;
 
-        public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-            this.arguments = context.getBindableParameterNames().stream().map(CodeBlock::of).collect(Collectors.toList());
-        }
+		public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+			this.arguments = new LinkedHashMap<>();
+			context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
+		}
 
-        public UpdateCodeBlockBuilder update(UpdateInteraction update) {
-            this.source = update;
-            return this;
-        }
+		public UpdateCodeBlockBuilder update(UpdateInteraction update) {
+			this.source = update;
+			return this;
+		}
 
-        public UpdateCodeBlockBuilder usingUpdateVariableName(String updateVariableName) {
-            this.updateVariableName = updateVariableName;
-            return this;
-        }
+		public UpdateCodeBlockBuilder usingUpdateVariableName(String updateVariableName) {
+			this.updateVariableName = updateVariableName;
+			return this;
+		}
 
-        CodeBlock build() {
+		CodeBlock build() {
 
-            Builder builder = CodeBlock.builder();
+			Builder builder = CodeBlock.builder();
 
-            builder.add("\n");
-            String tmpVariableName = updateVariableName + "Document";
-            builder.add(MongoCodeBlocks.renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName, arguments));
-            builder.addStatement("$1T $2L = new $1T($3L)", BasicUpdate.class, updateVariableName, tmpVariableName);
+			builder.add("\n");
+			String tmpVariableName = updateVariableName + "Document";
+			builder.add(
+					MongoCodeBlocks.renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName, arguments));
+			builder.addStatement("$1T $2L = new $1T($3L)", BasicUpdate.class, updateVariableName, tmpVariableName);
 
-            return builder.build();
-        }
-    }
+			return builder.build();
+		}
+	}
 }

@@ -27,6 +27,7 @@ import example.aot.UserRepository.UserAggregate;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
@@ -227,6 +228,13 @@ class MongoRepositoryContributorTests {
 		assertThat(users).extracting(User::getUsername).isNotEmpty().doesNotContain("luke", "vader");
 	}
 
+	@Test // GH-4939
+	void testRegex() {
+
+		List<User> lukes = fragment.findByFirstnameRegex(Pattern.compile(".*uk.*"));
+		assertThat(lukes).extracting(User::getUsername).containsExactly("luke");
+	}
+
 	@Test
 	void testExistsCriteria() {
 
@@ -330,6 +338,20 @@ class MongoRepositoryContributorTests {
 
 		User user = fragment.findAnnotatedQueryByUsername("yoda");
 		assertThat(user).isNotNull().extracting(User::getUsername).isEqualTo("yoda");
+	}
+
+	@Test // GH-5006
+	void testAnnotatedFinderWithExpressionUsingParameterIndex() {
+
+		List<User> users = fragment.findWithExpressionUsingParameterIndex("Luke");
+		assertThat(users).extracting(User::getUsername).containsExactly("luke");
+	}
+
+	@Test // GH-5006
+	void testAnnotatedFinderWithExpressionUsingParameterName() {
+
+		List<User> users = fragment.findWithExpressionUsingParameterName("Luke");
+		assertThat(users).extracting(User::getUsername).containsExactly("luke");
 	}
 
 	@Test

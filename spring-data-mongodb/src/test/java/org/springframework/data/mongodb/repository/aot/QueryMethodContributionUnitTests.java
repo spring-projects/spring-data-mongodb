@@ -22,6 +22,7 @@ import example.aot.UserRepository;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import javax.lang.model.element.Modifier;
 
@@ -182,6 +183,36 @@ public class QueryMethodContributionUnitTests {
 				.contains("nearQuery.query(filterQuery)") //
 				.contains(".near(nearQuery)") //
 				.contains("return nearFinder.all()");
+	}
+
+	@Test // GH-5006
+	void rendersExpressionUsingParameterIndex() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findWithExpressionUsingParameterIndex", String.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("createQuery(\"{ firstname : ?#{[0]} }\"") //
+				.contains("Map.of(\"firstname\", firstname)");
+	}
+
+	@Test // GH-5006
+	void rendersExpressionUsingParameterName() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findWithExpressionUsingParameterName", String.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("createQuery(\"{ firstname : :#{#firstname} }\"") //
+				.contains("Map.of(\"firstname\", firstname)");
+	}
+
+	@Test // GH-4939
+	void rendersRegexCriteria() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findByFirstnameRegex", Pattern.class);
+
+		assertThat(methodSpec.toString()) //
+			.contains("createQuery(\"{'firstname':{'$regex':?0}}\"") //
+			.contains("Object[]{ pattern }");
 	}
 
 	private static MethodSpec codeOf(Class<?> repository, String methodName, Class<?>... args)

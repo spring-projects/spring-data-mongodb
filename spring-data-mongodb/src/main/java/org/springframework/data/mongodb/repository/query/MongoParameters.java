@@ -122,6 +122,10 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.domainType = domainType;
 	}
 
+	protected MongoParameters() {
+		this(List.of(), -1, -1, -1, -1, -1, -1, TypeInformation.OBJECT);
+	}
+
 	static boolean isGeoNearQuery(Method method) {
 
 		Class<?> returnType = method.getReturnType();
