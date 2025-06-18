@@ -21,6 +21,9 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.expression.ValueEvaluationContext;
+import org.springframework.data.expression.ValueExpression;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -28,9 +31,15 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.repository.query.MongoParameters;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
+import org.springframework.data.mongodb.util.json.ValueProvider;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -46,26 +55,64 @@ public class MongoAotRepositoryFragmentSupport {
 	private final MongoOperations mongoOperations;
 	private final MongoConverter mongoConverter;
 	private final ProjectionFactory projectionFactory;
+	private final ValueExpressionDelegate valueExpressionDelegate;
 
 	protected MongoAotRepositoryFragmentSupport(MongoOperations mongoOperations,
 			RepositoryFactoryBeanSupport.FragmentCreationContext context) {
-		this(mongoOperations, context.getRepositoryMetadata(), context.getProjectionFactory());
+		this(mongoOperations, context.getRepositoryMetadata(), context.getProjectionFactory(),
+				context.getValueExpressionDelegate());
 	}
 
 	protected MongoAotRepositoryFragmentSupport(MongoOperations mongoOperations, RepositoryMetadata repositoryMetadata,
-			ProjectionFactory projectionFactory) {
+			ProjectionFactory projectionFactory, ValueExpressionDelegate valueExpressionDelegate) {
 
 		this.mongoOperations = mongoOperations;
 		this.mongoConverter = mongoOperations.getConverter();
 		this.repositoryMetadata = repositoryMetadata;
 		this.projectionFactory = projectionFactory;
+		this.valueExpressionDelegate = valueExpressionDelegate;
 	}
 
 	protected Document bindParameters(String source, Object[] parameters) {
 		return new BindableMongoExpression(source, this.mongoConverter, parameters).toDocument();
 	}
 
+	protected Document bindParameters(String source, Map<String, Object> parameters) {
+
+		ValueEvaluationContext valueEvaluationContext = this.valueExpressionDelegate.getEvaluationContextAccessor()
+				.create(new NoMongoParameters()).getEvaluationContext(parameters.values());
+
+		EvaluationContext evaluationContext = valueEvaluationContext.getEvaluationContext();
+		parameters.forEach(evaluationContext::setVariable);
+
+		ParameterBindingContext bindingContext = new ParameterBindingContext(new ValueProvider() {
+
+			private final List<Object> args = new ArrayList<>(parameters.values());
+
+			@Override
+			public @Nullable Object getBindableValue(int index) {
+				return args.get(index);
+			}
+		}, new ValueExpressionEvaluator() {
+
+			@Override
+			@SuppressWarnings("unchecked")
+			public <T> @Nullable T evaluate(String expression) {
+				ValueExpression parse = valueExpressionDelegate.getValueExpressionParser().parse(expression);
+				return (T) parse.evaluate(valueEvaluationContext);
+			}
+		});
+
+		return new ParameterBindingDocumentCodec().decode(source, bindingContext);
+	}
+
 	protected BasicQuery createQuery(String queryString, Object[] parameters) {
+
+		Document queryDocument = bindParameters(queryString, parameters);
+		return new BasicQuery(queryDocument);
+	}
+
+	protected BasicQuery createQuery(String queryString, Map<String, Object> parameters) {
 
 		Document queryDocument = bindParameters(queryString, parameters);
 		return new BasicQuery(queryDocument);
@@ -151,4 +198,10 @@ public class MongoAotRepositoryFragmentSupport {
 		return converter.getConversionService().convert(value, targetType);
 	}
 
+	static class NoMongoParameters extends MongoParameters {
+
+		NoMongoParameters() {
+			super();
+		}
+	}
 }

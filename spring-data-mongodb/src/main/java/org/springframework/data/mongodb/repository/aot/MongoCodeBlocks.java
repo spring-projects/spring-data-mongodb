@@ -16,7 +16,8 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
@@ -47,6 +48,7 @@ import org.springframework.util.StringUtils;
 class MongoCodeBlocks {
 
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
+	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:][#$]\\{.*\\}");
 
 	/**
 	 * Builder for generating query parsing {@link CodeBlock}.
@@ -166,7 +168,8 @@ class MongoCodeBlocks {
 		return new GeoNearExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
-	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName, List<CodeBlock> arguments) {
+	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
+			Map<String, CodeBlock> arguments) {
 
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
@@ -174,21 +177,60 @@ class MongoCodeBlocks {
 		} else if (!containsPlaceholder(source)) {
 			builder.addStatement("$1T $2L = $1T.parse($3S)", Document.class, variableName, source);
 		} else {
-
-			builder.add("$T $L = bindParameters($S, new $T[]{ ", Document.class, variableName, source, Object.class);
-			Iterator<CodeBlock> iterator = arguments.iterator();
-			while (iterator.hasNext()) {
-				builder.add(iterator.next());
-				if (iterator.hasNext()) {
-					builder.add(", ");
-				}
+			builder.add("$T $L = bindParameters($S, ", Document.class, variableName, source);
+			if (containsNamedPlaceholder(source)) {
+				renderArgumentMap(arguments);
+			} else {
+				builder.add(renderArgumentArray(arguments));
 			}
-			builder.add("});\n");
+			builder.add(");\n");
 		}
 		return builder.build();
 	}
 
+	static CodeBlock renderArgumentMap(Map<String, CodeBlock> arguments) {
+
+		Builder builder = CodeBlock.builder();
+		builder.add("$T.of(", Map.class);
+		Iterator<Entry<String, CodeBlock>> iterator = arguments.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Entry<String, CodeBlock> next = iterator.next();
+			builder.add("$S, ", next.getKey());
+			builder.add(next.getValue());
+			if (iterator.hasNext()) {
+				builder.add(", ");
+			}
+		}
+		builder.add(")");
+		return builder.build();
+	}
+
+	static CodeBlock renderArgumentArray(Map<String, CodeBlock> arguments) {
+
+		Builder builder = CodeBlock.builder();
+		builder.add("new $T[]{ ", Object.class);
+		Iterator<CodeBlock> iterator = arguments.values().iterator();
+		while (iterator.hasNext()) {
+			builder.add(iterator.next());
+			if (iterator.hasNext()) {
+				builder.add(", ");
+			} else {
+				builder.add(" ");
+			}
+		}
+		builder.add("}");
+		return builder.build();
+	}
+
 	static boolean containsPlaceholder(String source) {
+		return containsIndexedPlaceholder(source) || containsNamedPlaceholder(source);
+	}
+
+	static boolean containsNamedPlaceholder(String source) {
+		return EXPRESSION_BINDING_PATTERN.matcher(source).find();
+	}
+
+	static boolean containsIndexedPlaceholder(String source) {
 		return PARAMETER_BINDING_PATTERN.matcher(source).find();
 	}
 
@@ -198,8 +240,8 @@ class MongoCodeBlocks {
 		String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") : null;
 
 		if (StringUtils.hasText(readPreference)) {
-			builder.addStatement("$L.withReadPreference($T.valueOf($S))", queryVariableName,
-				com.mongodb.ReadPreference.class, readPreference);
+			builder.addStatement("$L.withReadPreference($T.valueOf($S))", queryVariableName, com.mongodb.ReadPreference.class,
+					readPreference);
 		}
 	}
 }

@@ -27,8 +27,6 @@ import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.up
 import static org.springframework.data.mongodb.repository.aot.QueryBlocks.QueryCodeBlockBuilder;
 
 import java.lang.reflect.Method;
-import java.util.Locale;
-import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -117,18 +115,6 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			return nearQueryMethodContributor(queryMethod, near);
 		}
 
-		if (queryMethod.hasAnnotatedQuery()) {
-			if (StringUtils.hasText(queryMethod.getAnnotatedQuery())
-					&& Pattern.compile("[\\?:][#$]\\{.*\\}").matcher(queryMethod.getAnnotatedQuery()).find()) {
-
-				if (logger.isDebugEnabled()) {
-					logger.debug(
-							"Skipping AOT generation for [%s]. SpEL expressions are not supported".formatted(method.getName()));
-				}
-				return MethodContributor.forQueryMethod(queryMethod).metadataOnly(query);
-			}
-		}
-
 		if (query.isDelete()) {
 			return deleteMethodContributor(queryMethod, query);
 		}
@@ -186,8 +172,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private static boolean backoff(MongoQueryMethod method) {
 
 		// TODO: namedQuery, Regex queries, queries accepting Shapes (e.g. within) or returning arrays.
-		boolean skip = method.isSearchQuery() || method.getName().toLowerCase(Locale.ROOT).contains("regex")
-				|| method.getReturnType().getType().isArray();
+		boolean skip = method.isSearchQuery() || method.getReturnType().getType().isArray();
 
 		if (skip && logger.isDebugEnabled()) {
 			logger.debug("Skipping AOT generation for [%s]. Method is either returning an array or a geo-near, regex query"

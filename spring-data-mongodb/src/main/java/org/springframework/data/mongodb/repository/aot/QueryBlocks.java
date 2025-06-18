@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
@@ -147,14 +147,14 @@ class QueryBlocks {
 		private final MongoQueryMethod queryMethod;
 
 		private QueryInteraction source;
-		private final List<CodeBlock> arguments;
+		private final Map<String, CodeBlock> arguments;
 		private String queryVariableName;
 
 		QueryCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
 
-			this.arguments = new ArrayList<>();
+			this.arguments = new LinkedHashMap<>();
 			this.queryMethod = queryMethod;
 			collectArguments(context);
 
@@ -167,29 +167,29 @@ class QueryBlocks {
 				if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
 
 					// renders as generic $geometry, thus can be handled by the converter when parsing
-					arguments.add(CodeBlock.of(parameterName));
+					arguments.put(parameterName, CodeBlock.of(parameterName));
 				} else if (ClassUtils.isAssignable(Circle.class, parameter.getType())
 						|| ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
 
 					// $center | $centerSphere : [ [ <x>, <y> ], <radius> ]
-					arguments.add(CodeBlock.builder().add(
+					arguments.put(parameterName, CodeBlock.builder().add(
 							"$1T.of($1T.of($2L.getCenter().getX(), $2L.getCenter().getY()), $2L.getRadius().getNormalizedValue())",
 							List.class, parameterName).build());
 				} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
 
 					// $box: [ [ <x1>, <y1> ], [ <x2>, <y2> ] ]
-					arguments.add(CodeBlock.builder().add(
+					arguments.put(parameterName, CodeBlock.builder().add(
 							"$1T.of($1T.of($2L.getFirst().getX(), $2L.getFirst().getY()), $1T.of($2L.getSecond().getX(), $2L.getSecond().getY()))",
 							List.class, parameterName).build());
 				} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
 
 					// $polygon: [ [ <x1> , <y1> ], [ <x2> , <y2> ], [ <x3> , <y3> ], ... ]
 					String localVar = context.localVariable("_p");
-					arguments.add(
+					arguments.put(parameterName,
 							CodeBlock.builder().add("$1L.getPoints().stream().map($2L -> $3T.of($2L.getX(), $2L.getY())).toList()",
 									parameterName, localVar, List.class).build());
 				} else {
-					arguments.add(CodeBlock.of(parameterName));
+					arguments.put(parameterName, CodeBlock.of(parameterName));
 				}
 			}
 		}
@@ -284,17 +284,13 @@ class QueryBlocks {
 				builder.addStatement("$1T $2L = new $1T($3T.parse($4S))", BasicQuery.class, variableName, Document.class,
 						source);
 			} else {
-				builder.add("$T $L = createQuery($S, new $T[]{ ", BasicQuery.class, variableName, source, Object.class);
-				Iterator<CodeBlock> iterator = arguments.iterator();
-				while (iterator.hasNext()) {
-					builder.add(iterator.next());
-					if (iterator.hasNext()) {
-						builder.add(", ");
-					} else {
-						builder.add(" ");
-					}
+				builder.add("$T $L = createQuery($S, ", BasicQuery.class, variableName, source);
+				if (MongoCodeBlocks.containsNamedPlaceholder(source)) {
+					builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
+				} else {
+					builder.add(MongoCodeBlocks.renderArgumentArray(arguments));
 				}
-				builder.add("});\n");
+				builder.add(");\n");
 			}
 
 			return builder.build();

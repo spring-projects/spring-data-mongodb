@@ -221,8 +221,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case REGEX:
 
-				Object param = parameters.next();
-				return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
+				return createPatternCriteria(criteria, parameters);
 			case EXISTS:
 				Object next = parameters.next();
 				if (next instanceof Placeholder placeholder) {
@@ -257,8 +256,17 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	@NonNull
-	private Criteria createNearCriteria(MongoPersistentProperty property, Criteria criteria, Iterator<Object> parameters) {
+	private static Criteria createPatternCriteria(Criteria criteria, Iterator<Object> parameters) {
+		Object param = parameters.next();
+		if (param instanceof Placeholder) {
+			return criteria.raw("$regex", param);
+		}
+		return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
+	}
 
+	@NonNull
+	private Criteria createNearCriteria(MongoPersistentProperty property, Criteria criteria,
+			Iterator<Object> parameters) {
 
 		Range<Distance> range = accessor.getDistanceRange();
 		Optional<Distance> distance = range.getUpperBound().getValue();
