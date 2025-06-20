@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.aot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.bson.Document;
@@ -31,6 +32,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoParameters;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
@@ -104,6 +106,39 @@ public class MongoAotRepositoryFragmentSupport {
 		});
 
 		return new ParameterBindingDocumentCodec().decode(source, bindingContext);
+	}
+
+	protected Object evaluate(String source, Map<String, Object> parameters) {
+
+		ValueEvaluationContext valueEvaluationContext = this.valueExpressionDelegate.getEvaluationContextAccessor()
+				.create(new NoMongoParameters()).getEvaluationContext(parameters.values());
+
+		EvaluationContext evaluationContext = valueEvaluationContext.getEvaluationContext();
+		parameters.forEach(evaluationContext::setVariable);
+
+		ValueExpression parse = valueExpressionDelegate.getValueExpressionParser().parse(source);
+		return parse.evaluate(valueEvaluationContext);
+	}
+
+	protected Collation collationOf(@Nullable Object source) {
+
+		if(source == null) {
+			return Collation.simple();
+		}
+		if (source instanceof String) {
+			return Collation.parse(source.toString());
+		}
+		if (source instanceof Locale locale) {
+			return Collation.of(locale);
+		}
+		if (source instanceof Document document) {
+			return Collation.from(document);
+		}
+		if (source instanceof Collation collation) {
+			return collation;
+		}
+		throw new IllegalArgumentException(
+				"Unsupported collation source [%s]".formatted(ObjectUtils.nullSafeClassName(source)));
 	}
 
 	protected BasicQuery createQuery(String queryString, Object[] parameters) {

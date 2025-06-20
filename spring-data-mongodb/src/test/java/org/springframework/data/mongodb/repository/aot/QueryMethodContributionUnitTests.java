@@ -22,6 +22,7 @@ import example.aot.UserRepository;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.lang.model.element.Modifier;
@@ -37,8 +38,10 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
@@ -211,8 +214,36 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByFirstnameRegex", Pattern.class);
 
 		assertThat(methodSpec.toString()) //
-			.contains("createQuery(\"{'firstname':{'$regex':?0}}\"") //
-			.contains("Object[]{ pattern }");
+				.contains("createQuery(\"{'firstname':{'$regex':?0}}\"") //
+				.contains("Object[]{ pattern }");
+	}
+
+	@Test // GH-4939
+	void rendersHint() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class, "findByFirstname", String.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains(".withHint(\"fn-idx\")");
+	}
+
+	@Test // GH-4939
+	void rendersCollation() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class, "findByFirstname", String.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsPattern(".*\\.collation\\(.*Collation\\.parse\\(\"en_US\"\\)\\)");
+	}
+
+	@Test // GH-4939
+	void rendersCollationFromExpression() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class, "findWithCollationByFirstname", String.class, String.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsIgnoringWhitespaces(
+						"collationOf(evaluate(\"?#{[1]}\", java.util.Map.of(\"firstname\", firstname, \"locale\", locale)))");
 	}
 
 	private static MethodSpec codeOf(Class<?> repository, String methodName, Class<?>... args)
@@ -228,7 +259,7 @@ public class QueryMethodContributionUnitTests {
 			Assertions.fail("No contribution for method %s.%s(%s)".formatted(repository.getSimpleName(), methodName,
 					Arrays.stream(args).map(Class::getSimpleName).toList()));
 		}
-		AotRepositoryFragmentMetadata metadata = new AotRepositoryFragmentMetadata(ClassName.get(UserRepository.class));
+		AotRepositoryFragmentMetadata metadata = new AotRepositoryFragmentMetadata(ClassName.get(repository));
 		metadata.addField(
 				FieldSpec.builder(MongoOperations.class, "mongoOperations", Modifier.PRIVATE, Modifier.FINAL).build());
 
@@ -246,6 +277,13 @@ public class QueryMethodContributionUnitTests {
 	}
 
 	interface UserRepoWithMeta extends Repository<User, String> {
+
+		@Hint("fn-idx")
+		@Collation("en_US")
+		List<User> findByFirstname(String firstname);
+
+		@Collation("?#{[1]}")
+		List<User> findWithCollationByFirstname(String firstname, String locale);
 
 		@ReadPreference("NEAREST")
 		GeoResults<User> findByLocationCoordinatesNear(Point point, Distance maxDistance);

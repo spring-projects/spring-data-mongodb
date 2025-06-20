@@ -29,6 +29,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -264,12 +265,26 @@ class QueryBlocks {
 				}
 
 				String comment = metaAnnotation.getString("comment");
-				if (StringUtils.hasText("comment")) {
+				if (StringUtils.hasText(comment)) {
 					builder.addStatement("$L.comment($S)", queryVariableName, comment);
 				}
 			}
 
-			// TODO: Meta annotation: Disk usage
+			MergedAnnotation<Collation> collationAnnotation = context.getAnnotation(Collation.class);
+			if (collationAnnotation.isPresent()) {
+
+				String collationString = collationAnnotation.getString("value");
+				if(StringUtils.hasText(collationString)) {
+					if (!MongoCodeBlocks.containsPlaceholder(collationString)) {
+						builder.addStatement("$L.collation($T.parse($S))", queryVariableName,
+							org.springframework.data.mongodb.core.query.Collation.class, collationString);
+					} else {
+						builder.add("$L.collation(collationOf(evaluate($S, ", queryVariableName, collationString);
+						builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
+						builder.add(")));\n");
+					}
+				}
+			}
 
 			return builder.build();
 		}
