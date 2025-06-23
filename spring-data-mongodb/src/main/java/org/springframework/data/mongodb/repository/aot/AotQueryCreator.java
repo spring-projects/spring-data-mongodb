@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -46,6 +47,7 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholde
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
@@ -79,14 +81,16 @@ class AotQueryCreator {
 	}
 
 	@SuppressWarnings("NullAway")
-	StringQuery createQuery(PartTree partTree, QueryMethod queryMethod) {
-
+	StringQuery createQuery(PartTree partTree, QueryMethod queryMethod, Method source) {
 
 		boolean geoNear = queryMethod instanceof MongoQueryMethod mqm ? mqm.isGeoNearQuery() : false;
+		boolean searchQuery = queryMethod instanceof MongoQueryMethod mqm
+				? mqm.isSearchQuery() || source.isAnnotationPresent(VectorSearch.class)
+				: source.isAnnotationPresent(VectorSearch.class);
 
 		Query query = new MongoQueryCreator(partTree,
-				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(queryMethod)), mappingContext, geoNear, queryMethod.isSearchQuery())
-				.createQuery();
+				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(queryMethod)), mappingContext,
+				geoNear, searchQuery).createQuery();
 
 		if (partTree.isLimiting()) {
 			query.limit(partTree.getMaxResults());
@@ -141,8 +145,7 @@ class AotQueryCreator {
 				for (Parameter parameter : parameters.toList()) {
 					if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), new GeoJsonPlaceholder(parameter.getIndex(), ""));
-					}
-					else if (ClassUtils.isAssignable(Point.class, parameter.getType())) {
+					} else if (ClassUtils.isAssignable(Point.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), new PointPlaceholder(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), new CirclePlaceholder(parameter.getIndex()));
@@ -152,8 +155,7 @@ class AotQueryCreator {
 						placeholders.add(parameter.getIndex(), new SpherePlaceholder(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
 						placeholders.add(parameter.getIndex(), new PolygonPlaceholder(parameter.getIndex()));
-					}
-					else {
+					} else {
 						placeholders.add(parameter.getIndex(), Placeholder.indexed(parameter.getIndex()));
 					}
 				}

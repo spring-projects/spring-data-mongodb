@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.test.util;
 
-import org.jspecify.annotations.Nullable;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.retry.Retry;
@@ -26,18 +24,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.util.Version;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.MongoClients;
 
@@ -292,15 +294,37 @@ public class MongoTestUtils {
 	}
 
 	public static boolean isSearchIndexReady(MongoClient client, @Nullable String database, String collectionName) {
+		return isSearchIndexReady(null, client, database, collectionName);
+	}
+
+	public static boolean isSearchIndexReady(@Nullable String indexName, MongoClient client, @Nullable String database,
+			String collectionName) {
 
 		try {
-			MongoCollection<Document> collection = client.getDatabase(StringUtils.hasText(database) ? database : "test").getCollection(collectionName);
-			collection.aggregate(List.of(new Document("$listSearchIndexes", new Document())));
+			MongoCollection<Document> collection = client.getDatabase(StringUtils.hasText(database) ? database : "test")
+					.getCollection(collectionName);
+
+			Document filter = StringUtils.hasText(indexName) ? new Document("name", indexName) : new Document();
+			AggregateIterable<Document> aggregate = collection.aggregate(List.of(new Document("$listSearchIndexes", filter)));
+
+			try (MongoCursor<Document> cursor = aggregate.cursor()) {
+
+				if (filter.isEmpty()) {
+					return true;
+				}
+
+				while (cursor.hasNext()) {
+					Document doc = cursor.next();
+					if (doc.getString("name").equals(indexName)) {
+						return doc.getString("status").equals("READY");
+					}
+				}
+			}
+
+			return false;
 		} catch (Exception e) {
 			return false;
 		}
-		return true;
-
 	}
 
 	public static Duration getTimeout() {

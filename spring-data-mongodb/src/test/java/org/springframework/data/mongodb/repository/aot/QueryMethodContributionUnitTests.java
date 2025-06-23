@@ -29,8 +29,13 @@ import javax.lang.model.element.Modifier;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
+import org.springframework.data.domain.SearchResults;
+import org.springframework.data.domain.Similarity;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -43,6 +48,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.ReadPreference;
+import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.data.repository.aot.generate.AotRepositoryFragmentMetadata;
@@ -65,7 +71,7 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.contains("{'location.coordinates':{'$near':?0}}") //
-				.contains("Object[]{ location }") //
+				.contains("arguments(location)") //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -124,7 +130,7 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.contains("{'location.coordinates':{'$geoWithin':{'$geometry':?0}}") //
-				.contains("Object[]{ polygon }") //
+				.contains("arguments(polygon)") //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -182,7 +188,7 @@ public class QueryMethodContributionUnitTests {
 		assertThat(methodSpec.toString()) //
 				.contains("NearQuery.near(point)") //
 				.contains("nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric())") //
-				.contains("filterQuery = createQuery(\"{'lastname':?0}\", new java.lang.Object[]{ lastname })") //
+				.contains("filterQuery = createQuery(\"{'lastname':?0}\", arguments(lastname))") //
 				.contains("nearQuery.query(filterQuery)") //
 				.contains(".near(nearQuery)") //
 				.contains("return nearFinder.all()");
@@ -194,8 +200,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findWithExpressionUsingParameterIndex", String.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("createQuery(\"{ firstname : ?#{[0]} }\"") //
-				.contains("Map.of(\"firstname\", firstname)");
+				.contains("createQuery(\"{ firstname : ?#{[0]} }\", argumentMap(\"firstname\", firstname))");
 	}
 
 	@Test // GH-5006
@@ -204,8 +209,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findWithExpressionUsingParameterName", String.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("createQuery(\"{ firstname : :#{#firstname} }\"") //
-				.contains("Map.of(\"firstname\", firstname)");
+				.contains("createQuery(\"{ firstname : :#{#firstname} }\", argumentMap(\"firstname\", firstname))");
 	}
 
 	@Test // GH-4939
@@ -214,8 +218,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByFirstnameRegex", Pattern.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("createQuery(\"{'firstname':{'$regex':?0}}\"") //
-				.contains("Object[]{ pattern }");
+				.contains("createQuery(\"{'firstname':{'$regex':?0}}\", arguments(pattern))");
 	}
 
 	@Test // GH-4939
@@ -233,7 +236,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class, "findByFirstname", String.class);
 
 		assertThat(methodSpec.toString()) //
-				.containsPattern(".*\\.collation\\(.*Collation\\.parse\\(\"en_US\"\\)\\)");
+				.containsSubsequence(".collation(", "Collation.parse(\"en_US\"))");
 	}
 
 	@Test // GH-4939
@@ -243,7 +246,122 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.containsIgnoringWhitespaces(
-						"collationOf(evaluate(\"?#{[1]}\", java.util.Map.of(\"firstname\", firstname, \"locale\", locale)))");
+						"collationOf(evaluate(\"?#{[1]}\", argumentMap(\"firstname\", firstname, \"locale\", locale)))");
+	}
+
+	@Test
+	void rendersVectorSearchFilterFromAnnotatedQuery() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "annotatedVectorSearch", String.class, Vector.class,
+				Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("$vectorSearch =",
+						"Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(limit);")
+				.contains("filter = createQuery(\"{lastname: ?0}\", arguments(lastname, distance))")
+				.contains("$vectorSearch.filter(filter.getQueryObject())");
+	}
+
+	@Test
+	void rendersVectorSearchNumCandidatesExpression() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "annotatedVectorSearch", String.class, Vector.class,
+				Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("$vectorSearch.numCandidates",
+						"evaluate(\"#{10+10}\", argumentMap(\"lastname\", lastname, \"distance\", distance)))");
+	}
+
+	@Test
+	void rendersVectorSearchScoringFunctionFromScore() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "annotatedVectorSearch", String.class, Vector.class,
+				Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("ScoringFunction scoringFunction = distance.getFunction()");
+	}
+
+	@Test
+	void rendersVectorSearchSearchTypeFromAnnotation() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "annotatedVectorSearch", String.class, Vector.class,
+				Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("$vectorSearch.searchType(", "VectorSearchOperation.SearchType.ANN)");
+	}
+
+	@Test
+	void rendersVectorSearchQueryFromMethodName() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "searchCosineByLastnameAndEmbeddingNear", String.class,
+				Vector.class, Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("filter = createQuery(\"{'lastname':?0}\", arguments(lastname, similarity))");
+	}
+
+	@Test
+	void rendersVectorSearchNumCandidatesFromLimitIfNotExplicitlyDefined() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "searchCosineByLastnameAndEmbeddingNear", String.class,
+				Vector.class, Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("$vectorSearch.numCandidates(limit.max() * 20)");
+	}
+
+	@Test
+	void rendersVectorSearchLimitFromAnnotation() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "searchByLastnameAndEmbeddingWithin", String.class,
+				Vector.class, Range.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(10)")
+				.contains("$vectorSearch.numCandidates(10 * 20)");
+	}
+
+	@Test
+	void rendersVectorSearchLimitFromExpression() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepoWithMeta.class,
+				"searchWithLimitAsExpressionByLastnameAndEmbeddingWithinOrderByFirstname", String.class, Vector.class,
+				Range.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence(
+						"Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(",
+						"evaluate(\"#{5+5}\", argumentMap(\"lastname\", lastname, \"distance\", distance)")
+				.containsSubsequence("$vectorSearch.numCandidates(",
+						"evaluate(\"#{5+5}\", argumentMap(\"lastname\", lastname, \"distance\", distance))) * 20)");
+	}
+
+	@Test
+	void rendersVectorSearchOrderByScoreAsDefault() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "searchCosineByLastnameAndEmbeddingNear", String.class,
+				Vector.class, Score.class, Limit.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains("$vectorSearch.withSearchScore(\"__score__\")")
+				.containsSubsequence("$sort = ", "Aggregation.sort(", "DESC, \"__score__\")")
+				.containsSubsequence("AggregationPipeline(", "List.of($vectorSearch, $sort))");
+	}
+
+	@Test
+	void rendersVectorSearchOrderByWithScoreLast() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "searchByLastnameAndEmbeddingWithinOrderByFirstname",
+				String.class, Vector.class, Range.class);
+
+		assertThat(methodSpec.toString()) //
+				.containsSubsequence("AggregationOperation $sort = (_ctx) -> {", //
+						"_mappedSort = _ctx.getMappedObject(", //
+						"Document.parse(\"{'firstname':{'$numberInt':'1'}}\")", //
+						"Document(\"$sort\", _mappedSort.append(\"__score__\", -1))");
 	}
 
 	private static MethodSpec codeOf(Class<?> repository, String methodName, Class<?>... args)
@@ -287,5 +405,9 @@ public class QueryMethodContributionUnitTests {
 
 		@ReadPreference("NEAREST")
 		GeoResults<User> findByLocationCoordinatesNear(Point point, Distance maxDistance);
+
+		@VectorSearch(indexName = "embedding.vector_cos", limit = "#{5+5}")
+		SearchResults<User> searchWithLimitAsExpressionByLastnameAndEmbeddingWithinOrderByFirstname(String lastname,
+				Vector vector, Range<Similarity> distance);
 	}
 }
