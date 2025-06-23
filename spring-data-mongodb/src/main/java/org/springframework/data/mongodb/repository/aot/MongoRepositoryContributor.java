@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryClassBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
@@ -107,7 +108,11 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		}
 
 		QueryInteraction query = createStringQuery(getRepositoryInformation(), queryMethod,
-				AnnotatedElementUtils.findMergedAnnotation(method, Query.class));
+				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method);
+
+		if (queryMethod.isSearchQuery() || method.isAnnotationPresent(VectorSearch.class)) {
+			return searchMethodContributor(queryMethod, new SearchInteraction(query.getQuery()));
+		}
 
 		if (queryMethod.isGeoNearQuery() || (queryMethod.getParameters().getMaxDistanceIndex() != -1
 				&& queryMethod.getReturnType().isCollectionLike())) {
@@ -126,8 +131,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 				UpdateInteraction update = new UpdateInteraction(query, null, updateIndex);
 				return updateMethodContributor(queryMethod, update);
-
 			} else {
+
 				Update updateSource = queryMethod.getUpdateSource();
 				if (StringUtils.hasText(updateSource.value())) {
 					UpdateInteraction update = new UpdateInteraction(query, new StringUpdate(updateSource.value()), null);
@@ -146,7 +151,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	@SuppressWarnings("NullAway")
 	private QueryInteraction createStringQuery(RepositoryInformation repositoryInformation, MongoQueryMethod queryMethod,
-			@Nullable Query queryAnnotation) {
+			@Nullable Query queryAnnotation, Method source) {
 
 		QueryInteraction query;
 		if (queryMethod.hasAnnotatedQuery() && queryAnnotation != null) {
@@ -155,8 +160,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
-			query = new QueryInteraction(queryCreator.createQuery(partTree, queryMethod), partTree.isCountProjection(),
-					partTree.isDelete(), partTree.isExistsProjection());
+			query = new QueryInteraction(queryCreator.createQuery(partTree, queryMethod, source),
+					partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
 		}
 
 		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {
@@ -172,7 +177,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private static boolean backoff(MongoQueryMethod method) {
 
 		// TODO: namedQuery, Regex queries, queries accepting Shapes (e.g. within) or returning arrays.
-		boolean skip = method.isSearchQuery() || method.getReturnType().getType().isArray();
+		boolean skip = method.getReturnType().getType().isArray();
 
 		if (skip && logger.isDebugEnabled()) {
 			logger.debug("Skipping AOT generation for [%s]. Method is either returning an array or a geo-near, regex query"
@@ -215,6 +220,21 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 			builder.add(aggregationBlockBuilder(context, queryMethod).stages(aggregation)
 					.usingAggregationVariableName(variableName).build());
 			builder.add(aggregationExecutionBlockBuilder(context, queryMethod).referencing(variableName).build());
+
+			return builder.build();
+		});
+	}
+
+	static MethodContributor<MongoQueryMethod> searchMethodContributor(MongoQueryMethod queryMethod,
+			SearchInteraction interaction) {
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(interaction).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+
+			String variableName = "search";
+
+			builder.add(new VectorSearchBocks.VectorSearchQueryCodeBlockBuilder(context, queryMethod)
+					.usingVariableName(variableName).withFilter(interaction.getFilter()).build());
 
 			return builder.build();
 		});

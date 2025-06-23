@@ -211,8 +211,7 @@ class QueryBlocks {
 
 			Builder builder = CodeBlock.builder();
 
-			builder.add("\n");
-			builder.add(renderExpressionToQuery(source.getQuery().getQueryString(), queryVariableName));
+			builder.add(buildJustTheQuery());
 
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
@@ -286,6 +285,14 @@ class QueryBlocks {
 				}
 			}
 
+			return builder.build();
+		}
+
+		CodeBlock buildJustTheQuery() {
+
+			Builder builder = CodeBlock.builder();
+			builder.add("\n");
+			builder.add(renderExpressionToQuery(source.getQuery().getQueryString(), queryVariableName));
 			return builder.build();
 		}
 

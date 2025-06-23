@@ -17,6 +17,7 @@ package example.aot;
 
 import java.time.Instant;
 
+import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
@@ -37,6 +38,8 @@ public class User {
 	Instant registrationDate;
 	Instant lastSeen;
 	Long visits;
+
+	Vector embedding;
 
 	public String getId() {
 		return id;

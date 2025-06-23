@@ -43,6 +43,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(MongoServerCondition.class)
 public @interface EnableIfVectorSearchAvailable {
 
+	String database() default "";
+
 	/**
 	 * @return the name of the collection used to run the {@literal $listSearchIndexes} aggregation.
 	 */

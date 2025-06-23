@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotQueryMethodGenerationContext;
 import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -49,6 +50,7 @@ class MongoCodeBlocks {
 
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:][#$]\\{.*\\}");
+	private static final Pattern VALUE_EXPRESSION_PATTERN = Pattern.compile("^#\\{.*}$");
 
 	/**
 	 * Builder for generating query parsing {@link CodeBlock}.
@@ -179,7 +181,7 @@ class MongoCodeBlocks {
 		} else {
 			builder.add("$T $L = bindParameters($S, ", Document.class, variableName, source);
 			if (containsNamedPlaceholder(source)) {
-				renderArgumentMap(arguments);
+				builder.add(renderArgumentMap(arguments));
 			} else {
 				builder.add(renderArgumentArray(arguments));
 			}
@@ -191,7 +193,7 @@ class MongoCodeBlocks {
 	static CodeBlock renderArgumentMap(Map<String, CodeBlock> arguments) {
 
 		Builder builder = CodeBlock.builder();
-		builder.add("$T.of(", Map.class);
+		builder.add("argumentMap(");
 		Iterator<Entry<String, CodeBlock>> iterator = arguments.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, CodeBlock> next = iterator.next();
@@ -208,22 +210,39 @@ class MongoCodeBlocks {
 	static CodeBlock renderArgumentArray(Map<String, CodeBlock> arguments) {
 
 		Builder builder = CodeBlock.builder();
-		builder.add("new $T[]{ ", Object.class);
+		builder.add("arguments(");
 		Iterator<CodeBlock> iterator = arguments.values().iterator();
 		while (iterator.hasNext()) {
 			builder.add(iterator.next());
 			if (iterator.hasNext()) {
 				builder.add(", ");
-			} else {
-				builder.add(" ");
 			}
 		}
-		builder.add("}");
+		builder.add(")");
 		return builder.build();
+	}
+
+	static CodeBlock evaluateNumberPotentially(String value, Class<? extends Number> targetType,
+			Map<String, CodeBlock> arguments) {
+		try {
+			Number number = NumberUtils.parseNumber(value, targetType);
+			return CodeBlock.of("$L", number);
+		} catch (IllegalArgumentException e) {
+
+			Builder builder = CodeBlock.builder();
+			builder.add("($T) evaluate($S, ", targetType, value);
+			builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
+			builder.add(")");
+			return builder.build();
+		}
 	}
 
 	static boolean containsPlaceholder(String source) {
 		return containsIndexedPlaceholder(source) || containsNamedPlaceholder(source);
+	}
+
+	static boolean containsExpression(String source) {
+		return VALUE_EXPRESSION_PATTERN.matcher(source).find();
 	}
 
 	static boolean containsNamedPlaceholder(String source) {

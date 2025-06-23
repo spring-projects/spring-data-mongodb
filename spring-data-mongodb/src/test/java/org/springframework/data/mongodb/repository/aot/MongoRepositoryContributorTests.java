@@ -24,12 +24,15 @@ import example.aot.UserProjection;
 import example.aot.UserRepository;
 import example.aot.UserRepository.UserAggregate;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.bson.BsonString;
 import org.bson.Document;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,9 +45,13 @@ import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.SearchResults;
+import org.springframework.data.domain.Similarity;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.domain.Window;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -60,13 +67,22 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
-import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.AtlasContainer;
+import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.StringUtils;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.SearchIndexModel;
+import com.mongodb.client.model.SearchIndexType;
 
 /**
  * Integration tests for the {@link UserRepository} AOT fragment.
@@ -74,13 +90,15 @@ import com.mongodb.client.model.IndexOptions;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-
+@Testcontainers(disabledWithoutDocker = true)
 @SpringJUnitConfig(classes = MongoRepositoryContributorTests.MongoRepositoryContributorConfiguration.class)
 class MongoRepositoryContributorTests {
 
+	private static final @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
 	private static final String DB_NAME = "aot-repo-tests";
+	private static final String COLLECTION_NAME = "user";
 
-	@Client static MongoClient client;
+	static MongoClient client;
 	@Autowired UserRepository fragment;
 
 	@Configuration
@@ -97,16 +115,63 @@ class MongoRepositoryContributorTests {
 	}
 
 	@BeforeAll
-	static void beforeAll() {
-		client.getDatabase(DB_NAME).getCollection("user").createIndex(new Document("location.coordinates", "2d"),
-				new IndexOptions());
+	static void beforeAll() throws InterruptedException {
+
+		client = MongoClients.create(atlasLocal.getConnectionString());
+		MongoCollection<Document> userCollection = client.getDatabase(DB_NAME).getCollection(COLLECTION_NAME);
+		userCollection.createIndex(new Document("location.coordinates", "2d"), new IndexOptions());
+		userCollection.createIndex(new Document("location.coordinates", "2dsphere"), new IndexOptions());
+
+		Thread.sleep(250); // just wait a little or the index will be broken
+	}
+
+	/**
+	 * Create the vector search index and wait till it is queryable and actually serving data. Since this may slow down
+	 * tests quite a bit, better call it only when needed to run certain tests.
+	 */
+	private static void initializeVectorIndex() {
+
+		String indexName = "embedding.vector_cos";
+
+		Document searchIndex = new Document("fields",
+				List.of(new Document("type", "vector").append("path", "embedding").append("numDimensions", 5)
+						.append("similarity", "cosine"), new Document("type", "filter").append("path", "last_name")));
+
+		MongoCollection<Document> userCollection = client.getDatabase(DB_NAME).getCollection(COLLECTION_NAME);
+		userCollection.createSearchIndexes(
+				List.of(new SearchIndexModel(indexName, searchIndex, SearchIndexType.of(new BsonString("vectorSearch")))));
+
+		// wait for search index to be queryable
+
+		Awaitility.await().atMost(Duration.ofSeconds(120)).pollInterval(Duration.ofMillis(200)).until(() -> {
+			return MongoTestUtils.isSearchIndexReady(indexName, client, DB_NAME, COLLECTION_NAME);
+		});
+
+		Document $vectorSearch = new Document("$vectorSearch",
+				new Document("index", indexName).append("limit", 1).append("numCandidates", 20).append("path", "embedding")
+						.append("queryVector", List.of(1.0, 1.12345, 2.23456, 3.34567, 4.45678)));
+
+		// wait for search index to serve data
+		Awaitility.await().atLeast(Duration.ofMillis(50)).atMost(Duration.ofSeconds(120)).ignoreExceptions()
+				.pollInterval(Duration.ofMillis(250)).until(() -> {
+					try (MongoCursor<Document> cursor = userCollection.aggregate(List.of($vectorSearch)).iterator()) {
+						if (cursor.hasNext()) {
+							Document next = cursor.next();
+							return true;
+						}
+						return false;
+					}
+				});
 	}
 
 	@BeforeEach
-	void beforeEach() {
-
-		MongoTestUtils.flushCollection(DB_NAME, "user", client);
+	void beforeEach() throws InterruptedException {
 		initUsers();
+	}
+
+	@AfterEach
+	void afterEach() {
+		MongoTestUtils.flushCollection(DB_NAME, "user", client);
 	}
 
 	@Test
@@ -747,10 +812,86 @@ class MongoRepositoryContributorTests {
 		assertThat(page2.hasNext()).isFalse();
 	}
 
+	@Test
+	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
+	void vectorSearchFromAnnotation() {
+
+		initializeVectorIndex();
+
+		Vector vector = Vector.of(1.00000d, 1.12345d, 2.23456d, 3.34567d, 4.45678d);
+		SearchResults<User> results = fragment.annotatedVectorSearch("Skywalker", vector, Score.of(0.99), Limit.of(10));
+
+		assertThat(results).hasSize(1);
+	}
+
+	@Test
+	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
+	void vectorSearchWithDerivedQuery() {
+
+		initializeVectorIndex();
+
+		Vector vector = Vector.of(1.00000d, 1.12345d, 2.23456d, 3.34567d, 4.45678d);
+		SearchResults<User> results = fragment.searchCosineByLastnameAndEmbeddingNear("Skywalker", vector, Score.of(0.98),
+				Limit.of(10));
+
+		assertThat(results).hasSize(1);
+	}
+
+	@Test
+	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
+	void vectorSearchReturningResultsAsList() {
+
+		initializeVectorIndex();
+
+		Vector vector = Vector.of(1.00000d, 1.12345d, 2.23456d, 3.34567d, 4.45678d);
+		List<User> results = fragment.searchAsListByLastnameAndEmbeddingNear("Skywalker", vector, Limit.of(10));
+
+		assertThat(results).hasSize(2);
+	}
+
+	@Test
+	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
+	void vectorSearchWithLimitFromAnnotation() {
+
+		initializeVectorIndex();
+
+		Vector vector = Vector.of(1.00000d, 1.12345d, 2.23456d, 3.34567d, 4.45678d);
+		SearchResults<User> results = fragment.searchByLastnameAndEmbeddingWithin("Skywalker", vector,
+				Similarity.between(0.4, 0.99));
+
+		assertThat(results).hasSize(1);
+	}
+
+	@Test
+	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
+	void vectorSearchWithSorting() {
+
+		initializeVectorIndex();
+
+		Vector vector = Vector.of(1.00000d, 1.12345d, 2.23456d, 3.34567d, 4.45678d);
+		SearchResults<User> results = fragment.searchByLastnameAndEmbeddingWithinOrderByFirstname("Skywalker", vector,
+				Similarity.between(0.4, 1.0));
+
+		assertThat(results).hasSize(2);
+	}
+
+	@Test
+	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
+	void vectorSearchWithLimitFromDerivedQuery() {
+
+		initializeVectorIndex();
+
+		Vector vector = Vector.of(1.00000d, 1.12345d, 2.23456d, 3.34567d, 4.45678d);
+		SearchResults<User> results = fragment.searchTop1ByLastnameAndEmbeddingWithin("Skywalker", vector,
+				Similarity.between(0.4, 1.0));
+
+		assertThat(results).hasSize(1);
+	}
+
 	/**
 	 * GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), range);
 	 */
-	private static void initUsers() {
+	private static void initUsers() throws InterruptedException {
 
 		Document luke = Document.parse("""
 				{
@@ -770,6 +911,7 @@ class MongoRepositoryContributorTests {
 				      }
 				    }
 				  ],
+				  "embedding" : [1.00000, 1.12345, 2.23456, 3.34567, 4.45678],
 				  "_class": "example.springdata.aot.User"
 				}""");
 
@@ -785,6 +927,7 @@ class MongoRepositoryContributorTests {
 				      "x" : -73.99171, "y" : 40.738868
 				    }
 				  },
+				  "embedding" : [1.0001, 2.12345, 3.23456, 4.34567, 5.45678],
 				  "_class": "example.springdata.aot.User"
 				}""");
 
@@ -802,6 +945,7 @@ class MongoRepositoryContributorTests {
 				      }
 				    }
 				  ],
+				  "embedding" : [2.0002, 3.12345, 4.23456, 5.34567, 6.45678],
 				  "_class": "example.springdata.aot.User"
 				}""");
 
@@ -812,6 +956,7 @@ class MongoRepositoryContributorTests {
 				  "lastSeen" : {
 				    "$date": "2025-01-01T00:00:00.000Z"
 				   },
+				   "embedding" : [3.0003, 4.12345, 5.23456, 6.34567, 7.45678],
 				  "_class": "example.springdata.aot.User"
 				}""");
 
@@ -834,7 +979,8 @@ class MongoRepositoryContributorTests {
 						        "$date": "2025-01-15T13:53:33.855Z"
 						      }
 						    }
-						  ]
+						  ],
+						  "embedding" : [4.0004, 5.12345, 6.23456, 7.34567, 8.45678]
 						}""");
 
 		Document vader = Document.parse("""
@@ -857,7 +1003,8 @@ class MongoRepositoryContributorTests {
 				        "$date": "2025-01-15T13:46:33.855Z"
 				      }
 				    }
-				  ]
+				  ],
+				  "embedding" : [5.0005, 6.12345, 7.23456, 8.34567, 9.45678]
 				}""");
 
 		Document kylo = Document.parse("""
@@ -865,7 +1012,8 @@ class MongoRepositoryContributorTests {
 				  "_id": "id-7",
 				  "username": "kylo",
 				  "first_name": "Ben",
-				  "last_name": "Solo"
+				  "last_name": "Solo",
+				  "embedding" : [6.0006, 7.12345, 8.23456, 9.34567, 10.45678]
 				}
 				""");
 
