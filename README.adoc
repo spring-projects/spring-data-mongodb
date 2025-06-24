@@ -1,17 +1,15 @@
-image:https://spring.io/badges/spring-data-mongodb/ga.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start] image:https://spring.io/badges/spring-data-mongodb/snapshot.svg[Spring Data MongoDB,link=https://spring.io/projects/spring-data-mongodb#quick-start]
-
 = Spring Data MongoDB image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-mongodb%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-mongodb/] image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Develocity", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data MongoDB"]
 
 The primary goal of the https://spring.io/projects/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
-The Spring Data MongoDB project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities.
+The Spring Data project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities.
 The Spring Data MongoDB project provides integration with the MongoDB document database.
 Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB `+Document+` and easily writing a repository style data access layer.
 
 [[code-of-conduct]]
 == Code of Conduct
 
-This project is governed by the https://github.com/spring-projects/.github/blob/e3cc2ff230d8f1dca06535aa6b5a4a23815861d4/CODE_OF_CONDUCT.md[Spring Code of Conduct]. By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to spring-code-of-conduct@pivotal.io.
+This project is governed by the https://github.com/spring-projects/.github/blob/main/CODE_OF_CONDUCT.md[Spring Code of Conduct]. By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to spring-code-of-conduct@spring.io.
 
 [[getting-started]]
 == Getting Started
@@ -42,10 +40,10 @@ public class MyService {
 
     Person person = new Person();
     person.setFirstname("Oliver");
-    person.setLastname("Gierke");
+    person.setLastname("Drotbohm");
     repository.save(person);
 
-    List<Person> lastNameResults = repository.findByLastname("Gierke");
+    List<Person> lastNameResults = repository.findByLastname("Drotbohm");
     List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
  }
 }
@@ -108,7 +106,6 @@ Having trouble with Spring Data? We’d love to help!
 https://docs.spring.io/spring-data/mongodb/reference/[reference documentation], and https://docs.spring.io/spring-data/mongodb/docs/current/api/[Javadocs]
 * Learn the Spring basics – Spring Data builds on Spring Framework, check the https://spring.io[spring.io] web-site for a wealth of reference documentation.
 If you are just starting out with Spring, try one of the https://spring.io/guides[guides].
-* If you are upgrading, check out the https://docs.spring.io/spring-data/mongodb/docs/current/changelog.txt[changelog] for "`new and noteworthy`" features.
 * Ask a question - we monitor https://stackoverflow.com[stackoverflow.com] for questions tagged with https://stackoverflow.com/tags/spring-data[`spring-data-mongodb`].
 * Report bugs with Spring Data MongoDB at https://github.com/spring-projects/spring-data-mongodb/issues[github.com/spring-projects/spring-data-mongodb/issues].
 
@@ -121,6 +118,7 @@ If you want to raise an issue, please follow the recommendations below:
 * Before you log a bug, please search the https://github.com/spring-projects/spring-data-mongodb/issues[issue tracker] to see if someone has already reported the problem.
 * If the issue does not already exist, https://github.com/spring-projects/spring-data-mongodb/issues/new[create a new issue].
 * Please provide as much information as possible with the issue report, we like to know the version of Spring Data that you are using, the JVM version, Stacktrace, etc.
+* Ideally provide a complete https://stackoverflow.com/help/minimal-reproducible-example[minimal sample] (something that we can unzip or git clone, build, and deploy) that reproduces the problem.
 * If you need to paste code, or include a stack trace use https://guides.github.com/features/mastering-markdown/[Markdown] code fences +++```+++.
 
 [[guides]]
@@ -153,7 +151,7 @@ However, if you want to try out the latest and greatest, Spring Data MongoDB can
 and minimally, JDK 17 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
 
 In order to build Spring Data MongoDB, you will need to https://www.mongodb.com/try/download/community[download]
-and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution].
+and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution] and https://www.docker.com/products/docker-desktop/[Docker].
 
 Once you have installed MongoDB, you need to start a MongoDB server. It is convenient to set an environment variable to
 your MongoDB installation directory (e.g. `MONGODB_HOME`).
@@ -181,7 +179,7 @@ To initialize the replica set, start a mongo client:
 [source,bash]
 ----
 $ $MONGODB_HOME/bin/mongo
-MongoDB server version: 6.0.0
+MongoDB server version: 8.0.0
 ...
 ----
 
@@ -211,8 +209,7 @@ Now you are ready to build Spring Data MongoDB. Simply enter the following `mvnw
 
 If you want to build with the regular `mvn` command, you will need https://maven.apache.org/run-maven/index.html[Maven v3.8.0 or above].
 
-_Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] if you wish to submit pull requests, and in particular, please sign
-the https://cla.pivotal.io/sign/spring[Contributor’s Agreement] before your first non-trivial change._
+Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] and add a _Signed-off-by_ trailer to your commits, if you wish to submit a pull request.
 
 === Building reference documentation
 
