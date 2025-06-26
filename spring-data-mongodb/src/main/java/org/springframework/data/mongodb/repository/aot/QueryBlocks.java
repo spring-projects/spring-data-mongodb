@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -215,9 +214,9 @@ class QueryBlocks {
 
 			if (StringUtils.hasText(source.getQuery().getFieldsString())) {
 
-				builder
-						.add(MongoCodeBlocks.renderExpressionToDocument(source.getQuery().getFieldsString(), "fields", arguments));
-				builder.addStatement("$L.setFieldsObject(fields)", queryVariableName);
+				VariableSnippet fields = Snippet.declare(builder).variable(Document.class, context.localVariable("fields"))
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getFieldsString(), arguments));
+				builder.addStatement("$L.setFieldsObject($L)", queryVariableName, fields.getVariableName());
 			}
 
 			String sortParameter = context.getSortParameterName();
@@ -225,8 +224,9 @@ class QueryBlocks {
 				builder.addStatement("$L.with($L)", queryVariableName, sortParameter);
 			} else if (StringUtils.hasText(source.getQuery().getSortString())) {
 
-				builder.add(MongoCodeBlocks.renderExpressionToDocument(source.getQuery().getSortString(), "sort", arguments));
-				builder.addStatement("$L.setSortObject(sort)", queryVariableName);
+				VariableSnippet sort = Snippet.declare(builder).variable(Document.class, context.localVariable("sort"))
+						.of(MongoCodeBlocks.asDocument(source.getQuery().getSortString(), arguments));
+				builder.addStatement("$L.setSortObject($L)", queryVariableName, sort.getVariableName());
 			}
 
 			String limitParameter = context.getLimitParameterName();
@@ -273,10 +273,10 @@ class QueryBlocks {
 			if (collationAnnotation.isPresent()) {
 
 				String collationString = collationAnnotation.getString("value");
-				if(StringUtils.hasText(collationString)) {
+				if (StringUtils.hasText(collationString)) {
 					if (!MongoCodeBlocks.containsPlaceholder(collationString)) {
 						builder.addStatement("$L.collation($T.parse($S))", queryVariableName,
-							org.springframework.data.mongodb.core.query.Collation.class, collationString);
+								org.springframework.data.mongodb.core.query.Collation.class, collationString);
 					} else {
 						builder.add("$L.collation(collationOf(evaluate($S, ", queryVariableName, collationString);
 						builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
@@ -292,29 +292,28 @@ class QueryBlocks {
 
 			Builder builder = CodeBlock.builder();
 			builder.add("\n");
-			builder.add(renderExpressionToQuery(source.getQuery().getQueryString(), queryVariableName));
+
+			Snippet.declare(builder).variable(BasicQuery.class, this.queryVariableName).of(renderExpressionToQuery());
 			return builder.build();
 		}
 
-		private CodeBlock renderExpressionToQuery(@Nullable String source, String variableName) {
+		private CodeBlock renderExpressionToQuery() {
 
-			Builder builder = CodeBlock.builder();
+			String source = this.source.getQuery().getQueryString();
 			if (!StringUtils.hasText(source)) {
-
-				builder.addStatement("$1T $2L = new $1T(new $3T())", BasicQuery.class, variableName, Document.class);
-			} else if (!MongoCodeBlocks.containsPlaceholder(source)) {
-				builder.addStatement("$1T $2L = new $1T($3T.parse($4S))", BasicQuery.class, variableName, Document.class,
-						source);
-			} else {
-				builder.add("$T $L = createQuery($S, ", BasicQuery.class, variableName, source);
-				if (MongoCodeBlocks.containsNamedPlaceholder(source)) {
-					builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
-				} else {
-					builder.add(MongoCodeBlocks.renderArgumentArray(arguments));
-				}
-				builder.add(");\n");
+				return CodeBlock.of("new $T(new $T())", BasicQuery.class, Document.class);
 			}
-
+			if (!MongoCodeBlocks.containsPlaceholder(source)) {
+				return CodeBlock.of("new $T($T.parse($S))", BasicQuery.class, Document.class, source);
+			}
+			Builder builder = CodeBlock.builder();
+			builder.add("createQuery($S, ", source);
+			if (MongoCodeBlocks.containsNamedPlaceholder(source)) {
+				builder.add(MongoCodeBlocks.renderArgumentMap(arguments));
+			} else {
+				builder.add(MongoCodeBlocks.renderArgumentArray(arguments));
+			}
+			builder.add(")");
 			return builder.build();
 		}
 	}
