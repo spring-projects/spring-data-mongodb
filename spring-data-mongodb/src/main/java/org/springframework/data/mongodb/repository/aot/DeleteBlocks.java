@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.aot;
 import java.util.Optional;
 
 import org.jspecify.annotations.NullUnmarked;
+import org.springframework.core.ResolvableType;
 import org.springframework.data.mongodb.core.ExecutableRemoveOperation.ExecutableRemove;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
@@ -35,66 +36,68 @@ import org.springframework.util.ObjectUtils;
  */
 class DeleteBlocks {
 
-    @NullUnmarked
-    static class DeleteExecutionCodeBlockBuilder {
+	@NullUnmarked
+	static class DeleteExecutionCodeBlockBuilder {
 
-        private final AotQueryMethodGenerationContext context;
-        private final MongoQueryMethod queryMethod;
-        private String queryVariableName;
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private String queryVariableName;
 
-        DeleteExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+		DeleteExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
-            this.context = context;
-            this.queryMethod = queryMethod;
-        }
+			this.context = context;
+			this.queryMethod = queryMethod;
+		}
 
-        DeleteExecutionCodeBlockBuilder referencing(String queryVariableName) {
+		DeleteExecutionCodeBlockBuilder referencing(String queryVariableName) {
 
-            this.queryVariableName = queryVariableName;
-            return this;
-        }
+			this.queryVariableName = queryVariableName;
+			return this;
+		}
 
-        CodeBlock build() {
+		CodeBlock build() {
 
-            String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
-            Builder builder = CodeBlock.builder();
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+			Builder builder = CodeBlock.builder();
 
-            Class<?> domainType = context.getRepositoryInformation().getDomainType();
-            boolean isProjecting = context.getActualReturnType() != null
-                    && !ObjectUtils.nullSafeEquals(TypeName.get(domainType), context.getActualReturnType());
+			Class<?> domainType = context.getRepositoryInformation().getDomainType();
+			boolean isProjecting = context.getActualReturnType() != null
+					&& !ObjectUtils.nullSafeEquals(TypeName.get(domainType), context.getActualReturnType());
 
-            Object actualReturnType = isProjecting ? context.getActualReturnType().getType() : domainType;
+			Object actualReturnType = isProjecting ? context.getActualReturnType().getType() : domainType;
 
-            builder.add("\n");
-            builder.addStatement("$1T<$2T> $3L = $4L.remove($2T.class)", ExecutableRemove.class, domainType,
-                    context.localVariable("remover"), mongoOpsRef);
+			builder.add("\n");
+			VariableSnippet remover = Snippet.declare(builder)
+					.variable(ResolvableType.forClassWithGenerics(ExecutableRemove.class, domainType),
+							context.localVariable("remover"))
+					.as("$L.remove($T.class)", mongoOpsRef, domainType);
 
-            DeleteExecution.Type type = DeleteExecution.Type.FIND_AND_REMOVE_ALL;
-            if (!queryMethod.isCollectionQuery()) {
-                if (!ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())) {
-                    type = DeleteExecution.Type.FIND_AND_REMOVE_ONE;
-                } else {
-                    type = DeleteExecution.Type.ALL;
-                }
-            }
+			DeleteExecution.Type type = DeleteExecution.Type.FIND_AND_REMOVE_ALL;
+			if (!queryMethod.isCollectionQuery()) {
+				if (!ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())) {
+					type = DeleteExecution.Type.FIND_AND_REMOVE_ONE;
+				} else {
+					type = DeleteExecution.Type.ALL;
+				}
+			}
 
-            actualReturnType = ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())
-                    ? TypeName.get(context.getMethod().getReturnType())
-                    : queryMethod.isCollectionQuery() ? context.getReturnTypeName() : actualReturnType;
+			actualReturnType = ClassUtils.isPrimitiveOrWrapper(context.getMethod().getReturnType())
+					? TypeName.get(context.getMethod().getReturnType())
+					: queryMethod.isCollectionQuery() ? context.getReturnTypeName() : actualReturnType;
 
-            if (ClassUtils.isVoidType(context.getMethod().getReturnType())) {
-                builder.addStatement("new $T($L, $T.$L).execute($L)", DeleteExecution.class, context.localVariable("remover"),
-                        DeleteExecution.Type.class, type.name(), queryVariableName);
-            } else if (context.getMethod().getReturnType() == Optional.class) {
-                builder.addStatement("return $T.ofNullable(($T) new $T($L, $T.$L).execute($L))", Optional.class,
-                        actualReturnType, DeleteExecution.class, context.localVariable("remover"), DeleteExecution.Type.class,
-                        type.name(), queryVariableName);
-            } else {
-                builder.addStatement("return ($T) new $T($L, $T.$L).execute($L)", actualReturnType, DeleteExecution.class,
-                        context.localVariable("remover"), DeleteExecution.Type.class, type.name(), queryVariableName);
-            }
+			if (ClassUtils.isVoidType(context.getMethod().getReturnType())) {
+				builder.addStatement("new $T($L, $T.$L).execute($L)", DeleteExecution.class, remover.getVariableName(),
+						DeleteExecution.Type.class, type.name(), queryVariableName);
+			} else if (context.getMethod().getReturnType() == Optional.class) {
+				builder.addStatement("return $T.ofNullable(($T) new $T($L, $T.$L).execute($L))", Optional.class,
+						actualReturnType, DeleteExecution.class, remover.getVariableName(), DeleteExecution.Type.class, type.name(),
+						queryVariableName);
+			} else {
+				builder.addStatement("return ($T) new $T($L, $T.$L).execute($L)", actualReturnType, DeleteExecution.class,
+						context.localVariable("remover"), DeleteExecution.Type.class, type.name(), queryVariableName);
+			}
 
-            return builder.build();
-        }
-    }
+			return builder.build();
+		}
+	}
 }

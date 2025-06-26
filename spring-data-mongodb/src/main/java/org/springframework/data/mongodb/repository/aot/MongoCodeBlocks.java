@@ -170,6 +170,25 @@ class MongoCodeBlocks {
 		return new GeoNearExecutionCodeBlockBuilder(context, queryMethod);
 	}
 
+	static CodeBlock asDocument(String source, Map<String, CodeBlock> arguments) {
+
+		Builder builder = CodeBlock.builder();
+		if (!StringUtils.hasText(source)) {
+			builder.add("new $T()", Document.class);
+		} else if (!containsPlaceholder(source)) {
+			builder.add("$T.parse($S)", Document.class, source);
+		} else {
+			builder.add("bindParameters($S, ", source);
+			if (containsNamedPlaceholder(source)) {
+				builder.add(renderArgumentMap(arguments));
+			} else {
+				builder.add(renderArgumentArray(arguments));
+			}
+			builder.add(");\n");
+		}
+		return builder.build();
+	}
+
 	static CodeBlock renderExpressionToDocument(@Nullable String source, String variableName,
 			Map<String, CodeBlock> arguments) {
 

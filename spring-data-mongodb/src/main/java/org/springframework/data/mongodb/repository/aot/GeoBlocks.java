@@ -50,38 +50,37 @@ class GeoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add("\n");
 
-			String locationParameterName = context.getParameterName(queryMethod.getParameters().getNearIndex());
-
-			builder.addStatement("$1T $2L = $1T.near($3L)", NearQuery.class, variableName, locationParameterName);
+			VariableSnippet query = Snippet.declare(builder).variable(NearQuery.class, variableName).as("$T.near($L)",
+					NearQuery.class, context.getParameterName(queryMethod.getParameters().getNearIndex()));
 
 			if (queryMethod.getParameters().getRangeIndex() != -1) {
 
-				String rangeParametername = context.getParameterName(queryMethod.getParameters().getRangeIndex());
-				String minVarName = context.localVariable("min");
-				String maxVarName = context.localVariable("max");
+				String rangeParameter = context.getParameterName(queryMethod.getParameters().getRangeIndex());
 
-				builder.beginControlFlow("if($L.getLowerBound().isBounded())", rangeParametername);
-				builder.addStatement("$1T $2L = $3L.getLowerBound().getValue().get()", Distance.class, minVarName,
-						rangeParametername);
-				builder.addStatement("$1L.minDistance($2L).in($2L.getMetric())", variableName, minVarName);
+				builder.beginControlFlow("if($L.getLowerBound().isBounded())", rangeParameter);
+				VariableSnippet min = Snippet.declare(builder).variable(Distance.class, context.localVariable("min"))
+						.as("$L.getLowerBound().getValue().get()", rangeParameter);
+				builder.addStatement("$1L.minDistance($2L).in($2L.getMetric())", query.getVariableName(),
+						min.getVariableName());
 				builder.endControlFlow();
 
-				builder.beginControlFlow("if($L.getUpperBound().isBounded())", rangeParametername);
-				builder.addStatement("$1T $2L = $3L.getUpperBound().getValue().get()", Distance.class, maxVarName,
-						rangeParametername);
-				builder.addStatement("$1L.maxDistance($2L).in($2L.getMetric())", variableName, maxVarName);
+				builder.beginControlFlow("if($L.getUpperBound().isBounded())", rangeParameter);
+				VariableSnippet max = Snippet.declare(builder).variable(Distance.class, context.localVariable("max"))
+						.as("$L.getUpperBound().getValue().get()", rangeParameter);
+				builder.addStatement("$1L.maxDistance($2L).in($2L.getMetric())", query.getVariableName(),
+						max.getVariableName());
 				builder.endControlFlow();
 			} else {
 
-				String distanceParametername = context.getParameterName(queryMethod.getParameters().getMaxDistanceIndex());
-				builder.addStatement("$1L.maxDistance($2L).in($2L.getMetric())", variableName, distanceParametername);
+				String distanceParameter = context.getParameterName(queryMethod.getParameters().getMaxDistanceIndex());
+				builder.addStatement("$1L.maxDistance($2L).in($2L.getMetric())", query.code(), distanceParameter);
 			}
 
 			if (context.getPageableParameterName() != null) {
-				builder.addStatement("$L.with($L)", variableName, context.getPageableParameterName());
+				builder.addStatement("$L.with($L)", query.code(), context.getPageableParameterName());
 			}
 
-			MongoCodeBlocks.appendReadPreference(context, builder, variableName);
+			MongoCodeBlocks.appendReadPreference(context, builder, query.getVariableName());
 
 			return builder.build();
 		}
@@ -115,29 +114,29 @@ class GeoBlocks {
 			CodeBlock.Builder builder = CodeBlock.builder();
 			builder.add("\n");
 
-			String executorVar = context.localVariable("nearFinder");
-			builder.addStatement("var $L = $L.query($T.class).near($L)", executorVar,
-					context.fieldNameOf(MongoOperations.class), context.getRepositoryInformation().getDomainType(),
-					queryVariableName);
+			VariableSnippet queryExecutor = Snippet.declare(builder).variable(context.localVariable("nearFinder")).as(
+					"$L.query($T.class).near($L)", context.fieldNameOf(MongoOperations.class),
+					context.getRepositoryInformation().getDomainType(), queryVariableName);
 
 			if (ClassUtils.isAssignable(GeoPage.class, context.getReturnType().getRawClass())) {
 
-				String geoResultVar = context.localVariable("geoResult");
-				builder.addStatement("var $L = $L.all()", geoResultVar, executorVar);
+				VariableSnippet geoResult = Snippet.declare(builder).variable(context.localVariable("geoResult")).as("$L.all()",
+						queryExecutor.getVariableName());
 
 				builder.beginControlFlow("if($L.isUnpaged())", context.getPageableParameterName());
-				builder.addStatement("return new $T<>($L)", GeoPage.class, geoResultVar);
+				builder.addStatement("return new $T<>($L)", GeoPage.class, geoResult.getVariableName());
 				builder.endControlFlow();
 
-				String pageVar = context.localVariable("resultPage");
-				builder.addStatement("var $L = $T.getPage($L.getContent(), $L, () -> $L.count())", pageVar,
-						PageableExecutionUtils.class, geoResultVar, context.getPageableParameterName(), executorVar);
-				builder.addStatement("return new $T<>($L, $L, $L.getTotalElements())", GeoPage.class, geoResultVar,
-						context.getPageableParameterName(), pageVar);
+				VariableSnippet resultPage = Snippet.declare(builder).variable(context.localVariable("resultPage")).as(
+						"$T.getPage($L.getContent(), $L, () -> $L.count())", PageableExecutionUtils.class,
+						geoResult.getVariableName(), context.getPageableParameterName(), queryExecutor.getVariableName());
+
+				builder.addStatement("return new $T<>($L, $L, $L.getTotalElements())", GeoPage.class,
+						geoResult.getVariableName(), context.getPageableParameterName(), resultPage.getVariableName());
 			} else if (ClassUtils.isAssignable(GeoResults.class, context.getReturnType().getRawClass())) {
-				builder.addStatement("return $L.all()", executorVar);
+				builder.addStatement("return $L.all()", queryExecutor.getVariableName());
 			} else {
-				builder.addStatement("return $L.all().getContent()", executorVar);
+				builder.addStatement("return $L.all().getContent()", queryExecutor.getVariableName());
 			}
 			return builder.build();
 		}

@@ -332,11 +332,11 @@ public class QueryMethodContributionUnitTests {
 				Range.class);
 
 		assertThat(methodSpec.toString()) //
-				.containsSubsequence(
-						"Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(",
+				.containsSubsequence("var limitToUse = ",
 						"evaluate(\"#{5+5}\", argumentMap(\"lastname\", lastname, \"distance\", distance)")
-				.containsSubsequence("$vectorSearch.numCandidates(",
-						"evaluate(\"#{5+5}\", argumentMap(\"lastname\", lastname, \"distance\", distance))) * 20)");
+				.contains(
+						"Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(limitToUse)")
+				.contains("$vectorSearch.numCandidates(limitToUse * 20)");
 	}
 
 	@Test
@@ -358,7 +358,8 @@ public class QueryMethodContributionUnitTests {
 				String.class, Vector.class, Range.class);
 
 		assertThat(methodSpec.toString()) //
-				.containsSubsequence("AggregationOperation $sort = (_ctx) -> {", //
+				.containsSubsequence("var $sort = ", //
+						"(_ctx) -> {", //
 						"_mappedSort = _ctx.getMappedObject(", //
 						"Document.parse(\"{'firstname':{'$numberInt':'1'}}\")", //
 						"Document(\"$sort\", _mappedSort.append(\"__score__\", -1))");

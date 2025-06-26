@@ -111,7 +111,10 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method);
 
 		if (queryMethod.isSearchQuery() || method.isAnnotationPresent(VectorSearch.class)) {
-			return searchMethodContributor(queryMethod, new SearchInteraction(query.getQuery()));
+
+			VectorSearch vectorSearch = AnnotatedElementUtils.findMergedAnnotation(method, VectorSearch.class);
+			return searchMethodContributor(queryMethod, new SearchInteraction(getRepositoryInformation().getDomainType(),
+					vectorSearch, query.getQuery(), queryMethod.getParameters()));
 		}
 
 		if (queryMethod.isGeoNearQuery() || (queryMethod.getParameters().getMaxDistanceIndex() != -1
@@ -233,8 +236,9 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 			String variableName = "search";
 
-			builder.add(new VectorSearchBocks.VectorSearchQueryCodeBlockBuilder(context, queryMethod)
-					.usingVariableName(variableName).withFilter(interaction.getFilter()).build());
+			builder.add(
+					new VectorSearchBocks.VectorSearchQueryCodeBlockBuilder(context, queryMethod, interaction.getSearchPath())
+							.usingVariableName(variableName).withFilter(interaction.getFilter()).build());
 
 			return builder.build();
 		});

@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Order;
@@ -52,312 +52,323 @@ import org.springframework.util.StringUtils;
  */
 class AggregationBlocks {
 
-    @NullUnmarked
-    static class AggregationExecutionCodeBlockBuilder {
-
-        private final AotQueryMethodGenerationContext context;
-        private final MongoQueryMethod queryMethod;
-        private String aggregationVariableName;
-
-        AggregationExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-
-            this.context = context;
-            this.queryMethod = queryMethod;
-        }
-
-        AggregationExecutionCodeBlockBuilder referencing(String aggregationVariableName) {
-
-            this.aggregationVariableName = aggregationVariableName;
-            return this;
-        }
-
-        CodeBlock build() {
-
-            String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
-            Builder builder = CodeBlock.builder();
+	@NullUnmarked
+	static class AggregationExecutionCodeBlockBuilder {
+
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private String aggregationVariableName;
+
+		AggregationExecutionCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+
+			this.context = context;
+			this.queryMethod = queryMethod;
+		}
 
-            builder.add("\n");
-
-            Class<?> outputType = queryMethod.getReturnedObjectType();
-            if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
-                outputType = Document.class;
-            } else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
-                outputType = queryMethod.getReturnType().getComponentType().getType();
-            }
+		AggregationExecutionCodeBlockBuilder referencing(String aggregationVariableName) {
+
+			this.aggregationVariableName = aggregationVariableName;
+			return this;
+		}
 
-            if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
-                builder.addStatement("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
-                return builder.build();
-            }
+		CodeBlock build() {
 
-            if (ClassUtils.isAssignable(AggregationResults.class, context.getMethod().getReturnType())) {
-                builder.addStatement("return $L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
-                return builder.build();
-            }
+			String mongoOpsRef = context.fieldNameOf(MongoOperations.class);
+			Builder builder = CodeBlock.builder();
 
-            if (outputType == Document.class) {
+			builder.add("\n");
 
-                Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
+			Class<?> outputType = queryMethod.getReturnedObjectType();
+			if (MongoSimpleTypes.HOLDER.isSimpleType(outputType)) {
+				outputType = Document.class;
+			} else if (ClassUtils.isAssignable(AggregationResults.class, outputType)) {
+				outputType = queryMethod.getReturnType().getComponentType().getType();
+			}
 
-                if (queryMethod.isStreamQuery()) {
+			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
+				builder.addStatement("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
+				return builder.build();
+			}
 
-                    builder.addStatement("$T<$T> $L = $L.aggregateStream($L, $T.class)", Stream.class, Document.class,
-                            context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
+			if (ClassUtils.isAssignable(AggregationResults.class, context.getMethod().getReturnType())) {
+				builder.addStatement("return $L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
+				return builder.build();
+			}
 
-                    builder.addStatement("return $1L.map(it -> ($2T) convertSimpleRawResult($2T.class, it))",
-                            context.localVariable("results"), returnType);
-                } else {
+			if (outputType == Document.class) {
 
-                    builder.addStatement("$T $L = $L.aggregate($L, $T.class)", AggregationResults.class,
-                            context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
+				Class<?> returnType = ClassUtils.resolvePrimitiveIfNecessary(queryMethod.getReturnedObjectType());
 
-                    if (!queryMethod.isCollectionQuery()) {
-                        builder.addStatement(
-                                "return $1T.<$2T>firstElement(convertSimpleRawResults($2T.class, $3L.getMappedResults()))",
-                                CollectionUtils.class, returnType, context.localVariable("results"));
-                    } else {
-                        builder.addStatement("return convertSimpleRawResults($T.class, $L.getMappedResults())", returnType,
-                                context.localVariable("results"));
-                    }
-                }
-            } else {
-                if (queryMethod.isSliceQuery()) {
-                    builder.addStatement("$T $L = $L.aggregate($L, $T.class)", AggregationResults.class,
-                            context.localVariable("results"), mongoOpsRef, aggregationVariableName, outputType);
-                    builder.addStatement("boolean $L = $L.getMappedResults().size() > $L.getPageSize()",
-                            context.localVariable("hasNext"), context.localVariable("results"), context.getPageableParameterName());
-                    builder.addStatement(
-                            "return new $1T<>($2L ? $3L.getMappedResults().subList(0, $4L.getPageSize()) : $3L.getMappedResults(), $4L, $2L)",
-                            SliceImpl.class, context.localVariable("hasNext"), context.localVariable("results"),
-                            context.getPageableParameterName());
-                } else {
+				if (queryMethod.isStreamQuery()) {
 
-                    if (queryMethod.isStreamQuery()) {
-                        builder.addStatement("return $L.aggregateStream($L, $T.class)", mongoOpsRef, aggregationVariableName,
-                                outputType);
-                    } else {
+					VariableSnippet results = Snippet.declare(builder)
+							.variable(ResolvableType.forClassWithGenerics(Stream.class, Document.class),
+									context.localVariable("results"))
+							.as("$L.aggregateStream($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
 
-                        builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
-                                aggregationVariableName, outputType);
-                    }
-                }
-            }
+					builder.addStatement("return $1L.map(it -> ($2T) convertSimpleRawResult($2T.class, it))",
+							results.getVariableName(), returnType);
+				} else {
 
-            return builder.build();
-        }
-    }
+					VariableSnippet results = Snippet.declare(builder)
+							.variable(AggregationResults.class, context.localVariable("results"))
+							.as("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
 
-    @NullUnmarked
-    static class AggregationCodeBlockBuilder {
+					if (!queryMethod.isCollectionQuery()) {
+						builder.addStatement(
+								"return $1T.<$2T>firstElement(convertSimpleRawResults($2T.class, $3L.getMappedResults()))",
+								CollectionUtils.class, returnType, results.getVariableName());
+					} else {
+						builder.addStatement("return convertSimpleRawResults($T.class, $L.getMappedResults())", returnType,
+								results.getVariableName());
+					}
+				}
+			} else {
+				if (queryMethod.isSliceQuery()) {
 
-        private final AotQueryMethodGenerationContext context;
-        private final MongoQueryMethod queryMethod;
-        private final Map<String, CodeBlock> arguments;
+					VariableSnippet results = Snippet.declare(builder)
+							.variable(AggregationResults.class, context.localVariable("results"))
+							.as("$L.aggregate($L, $T.class)", mongoOpsRef, aggregationVariableName, outputType);
 
-        private AggregationInteraction source;
+					VariableSnippet hasNext = Snippet.declare(builder).variable("hasNext").as(
+							"$L.getMappedResults().size() > $L.getPageSize()", results.getVariableName(),
+							context.getPageableParameterName());
 
-        private String aggregationVariableName;
-        private boolean pipelineOnly;
+					builder.addStatement(
+							"return new $1T<>($2L ? $3L.getMappedResults().subList(0, $4L.getPageSize()) : $3L.getMappedResults(), $4L, $2L)",
+							SliceImpl.class, hasNext.getVariableName(), results.getVariableName(),
+							context.getPageableParameterName());
+				} else {
 
-        AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
+					if (queryMethod.isStreamQuery()) {
+						builder.addStatement("return $L.aggregateStream($L, $T.class)", mongoOpsRef, aggregationVariableName,
+								outputType);
+					} else {
 
-            this.context = context;
-            this.arguments = new LinkedHashMap<>();
-            context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
-            this.queryMethod = queryMethod;
-        }
+						builder.addStatement("return $L.aggregate($L, $T.class).getMappedResults()", mongoOpsRef,
+								aggregationVariableName, outputType);
+					}
+				}
+			}
 
-        AggregationCodeBlockBuilder stages(AggregationInteraction aggregation) {
+			return builder.build();
+		}
+	}
 
-            this.source = aggregation;
-            return this;
-        }
+	@NullUnmarked
+	static class AggregationCodeBlockBuilder {
 
-        AggregationCodeBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
+		private final AotQueryMethodGenerationContext context;
+		private final MongoQueryMethod queryMethod;
+		private final Map<String, CodeBlock> arguments;
 
-            this.aggregationVariableName = aggregationVariableName;
-            return this;
-        }
+		private AggregationInteraction source;
 
-        AggregationCodeBlockBuilder pipelineOnly(boolean pipelineOnly) {
+		private String aggregationVariableName;
+		private boolean pipelineOnly;
 
-            this.pipelineOnly = pipelineOnly;
-            return this;
-        }
+		AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
-        CodeBlock build() {
+			this.context = context;
+			this.arguments = new LinkedHashMap<>();
+			context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
+			this.queryMethod = queryMethod;
+		}
 
-            Builder builder = CodeBlock.builder();
-            builder.add("\n");
-
-            String pipelineName = context.localVariable(aggregationVariableName + (pipelineOnly ? "" : "Pipeline"));
-            builder.add(pipeline(pipelineName));
+		AggregationCodeBlockBuilder stages(AggregationInteraction aggregation) {
 
-            if (!pipelineOnly) {
+			this.source = aggregation;
+			return this;
+		}
 
-                builder.addStatement("$1T<$2T> $3L = $4T.newAggregation($2T.class, $5L.getOperations())",
-                        TypedAggregation.class, context.getRepositoryInformation().getDomainType(), aggregationVariableName,
-                        Aggregation.class, pipelineName);
+		AggregationCodeBlockBuilder usingAggregationVariableName(String aggregationVariableName) {
 
-                builder.add(aggregationOptions(aggregationVariableName));
-            }
-
-            return builder.build();
-        }
+			this.aggregationVariableName = aggregationVariableName;
+			return this;
+		}
 
-        private CodeBlock pipeline(String pipelineVariableName) {
-
-            String sortParameter = context.getSortParameterName();
-            String limitParameter = context.getLimitParameterName();
-            String pageableParameter = context.getPageableParameterName();
+		AggregationCodeBlockBuilder pipelineOnly(boolean pipelineOnly) {
 
-            boolean mightBeSorted = StringUtils.hasText(sortParameter);
-            boolean mightBeLimited = StringUtils.hasText(limitParameter);
-            boolean mightBePaged = StringUtils.hasText(pageableParameter);
+			this.pipelineOnly = pipelineOnly;
+			return this;
+		}
 
-            int stageCount = source.stages().size();
-            if (mightBeSorted) {
-                stageCount++;
-            }
-            if (mightBeLimited) {
-                stageCount++;
-            }
-            if (mightBePaged) {
-                stageCount += 3;
-            }
-
-            Builder builder = CodeBlock.builder();
-            builder.add(aggregationStages(context.localVariable("stages"), source.stages(), stageCount, arguments));
+		CodeBlock build() {
 
-            if (mightBeSorted) {
-                builder.add(sortingStage(sortParameter));
-            }
+			Builder builder = CodeBlock.builder();
+			builder.add("\n");
+
+			String pipelineName = context.localVariable(aggregationVariableName + (pipelineOnly ? "" : "Pipeline"));
+			builder.add(pipeline(pipelineName));
 
-            if (mightBeLimited) {
-                builder.add(limitingStage(limitParameter));
-            }
+			if (!pipelineOnly) {
 
-            if (mightBePaged) {
-                builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
-            }
-
-            builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
-                    context.localVariable("stages"));
-            return builder.build();
-        }
-
-        private CodeBlock aggregationOptions(String aggregationVariableName) {
-
-            Builder builder = CodeBlock.builder();
-            List<CodeBlock> options = new ArrayList<>(5);
-            if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
-                options.add(CodeBlock.of(".skipOutput()"));
-            }
-
-            MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
-            String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
-            if (StringUtils.hasText(hint)) {
-                options.add(CodeBlock.of(".hint($S)", hint));
-            }
+				Class<?> domainType = context.getRepositoryInformation().getDomainType();
+				Snippet.declare(builder)
+						.variable(ResolvableType.forClassWithGenerics(TypedAggregation.class, domainType), aggregationVariableName)
+						.as("$T.newAggregation($T.class, $L.getOperations())", Aggregation.class, domainType, pipelineName);
 
-            MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
-            String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") : null;
-            if (StringUtils.hasText(readPreference)) {
-                options.add(CodeBlock.of(".readPreference($T.valueOf($S))", com.mongodb.ReadPreference.class, readPreference));
-            }
+				builder.add(aggregationOptions(aggregationVariableName));
+			}
 
-            if (queryMethod.hasAnnotatedCollation()) {
-                options.add(CodeBlock.of(".collation($T.parse($S))", Collation.class, queryMethod.getAnnotatedCollation()));
-            }
+			return builder.build();
+		}
+
+		private CodeBlock pipeline(String pipelineVariableName) {
 
-            if (!options.isEmpty()) {
+			String sortParameter = context.getSortParameterName();
+			String limitParameter = context.getLimitParameterName();
+			String pageableParameter = context.getPageableParameterName();
 
-                Builder optionsBuilder = CodeBlock.builder();
-                optionsBuilder.add("$1T $2L = $1T.builder()\n", AggregationOptions.class,
-                        context.localVariable("aggregationOptions"));
-                optionsBuilder.indent();
-                for (CodeBlock optionBlock : options) {
-                    optionsBuilder.add(optionBlock);
-                    optionsBuilder.add("\n");
-                }
-                optionsBuilder.add(".build();\n");
-                optionsBuilder.unindent();
-                builder.add(optionsBuilder.build());
+			boolean mightBeSorted = StringUtils.hasText(sortParameter);
+			boolean mightBeLimited = StringUtils.hasText(limitParameter);
+			boolean mightBePaged = StringUtils.hasText(pageableParameter);
 
-                builder.addStatement("$1L = $1L.withOptions($2L)", aggregationVariableName,
-                        context.localVariable("aggregationOptions"));
-            }
-            return builder.build();
-        }
+			int stageCount = source.stages().size();
+			if (mightBeSorted) {
+				stageCount++;
+			}
+			if (mightBeLimited) {
+				stageCount++;
+			}
+			if (mightBePaged) {
+				stageCount += 3;
+			}
+
+			Builder builder = CodeBlock.builder();
+			builder.add(aggregationStages(context.localVariable("stages"), source.stages(), stageCount, arguments));
 
-        private CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages, int stageCount,
-                Map<String, CodeBlock> arguments) {
+			if (mightBeSorted) {
+				builder.add(sortingStage(sortParameter));
+			}
 
-            Builder builder = CodeBlock.builder();
-            builder.addStatement("$T<$T> $L = new $T($L)", List.class, Object.class, stageListVariableName, ArrayList.class,
-                    stageCount);
-            int stageCounter = 0;
+			if (mightBeLimited) {
+				builder.add(limitingStage(limitParameter));
+			}
 
-            for (String stage : stages) {
-                String stageName = context.localVariable("stage_%s".formatted(stageCounter++));
-                builder.add(MongoCodeBlocks.renderExpressionToDocument(stage, stageName, arguments));
-                builder.addStatement("$L.add($L)", context.localVariable("stages"), stageName);
-            }
+			if (mightBePaged) {
+				builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
+			}
+
+			builder.addStatement("$T $L = createPipeline($L)", AggregationPipeline.class, pipelineVariableName,
+					context.localVariable("stages"));
+			return builder.build();
+		}
+
+		private CodeBlock aggregationOptions(String aggregationVariableName) {
+
+			Builder builder = CodeBlock.builder();
+			List<CodeBlock> options = new ArrayList<>(5);
+			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
+				options.add(CodeBlock.of(".skipOutput()"));
+			}
 
-            return builder.build();
-        }
+			MergedAnnotation<Hint> hintAnnotation = context.getAnnotation(Hint.class);
+			String hint = hintAnnotation.isPresent() ? hintAnnotation.getString("value") : null;
+			if (StringUtils.hasText(hint)) {
+				options.add(CodeBlock.of(".hint($S)", hint));
+			}
 
-        private CodeBlock sortingStage(String sortProvider) {
+			MergedAnnotation<ReadPreference> readPreferenceAnnotation = context.getAnnotation(ReadPreference.class);
+			String readPreference = readPreferenceAnnotation.isPresent() ? readPreferenceAnnotation.getString("value") : null;
+			if (StringUtils.hasText(readPreference)) {
+				options.add(CodeBlock.of(".readPreference($T.valueOf($S))", com.mongodb.ReadPreference.class, readPreference));
+			}
 
-            Builder builder = CodeBlock.builder();
+			if (queryMethod.hasAnnotatedCollation()) {
+				options.add(CodeBlock.of(".collation($T.parse($S))", Collation.class, queryMethod.getAnnotatedCollation()));
+			}
 
-            builder.beginControlFlow("if ($L.isSorted())", sortProvider);
-            builder.addStatement("$1T $2L = new $1T()", Document.class, context.localVariable("sortDocument"));
-            builder.beginControlFlow("for ($T $L : $L)", Order.class, context.localVariable("order"), sortProvider);
-            builder.addStatement("$1L.append($2L.getProperty(), $2L.isAscending() ? 1 : -1);",
-                    context.localVariable("sortDocument"), context.localVariable("order"));
-            builder.endControlFlow();
-            builder.addStatement("stages.add(new $T($S, $L))", Document.class, "$sort",
-                    context.localVariable("sortDocument"));
-            builder.endControlFlow();
+			if (!options.isEmpty()) {
 
-            return builder.build();
-        }
+				Builder optionsBuilder = CodeBlock.builder();
+				optionsBuilder.add("$1T $2L = $1T.builder()\n", AggregationOptions.class,
+						context.localVariable("aggregationOptions"));
+				optionsBuilder.indent();
+				for (CodeBlock optionBlock : options) {
+					optionsBuilder.add(optionBlock);
+					optionsBuilder.add("\n");
+				}
+				optionsBuilder.add(".build();\n");
+				optionsBuilder.unindent();
+				builder.add(optionsBuilder.build());
 
-        private CodeBlock pagingStage(String pageableProvider, boolean slice) {
+				builder.addStatement("$1L = $1L.withOptions($2L)", aggregationVariableName,
+						context.localVariable("aggregationOptions"));
+			}
+			return builder.build();
+		}
 
-            Builder builder = CodeBlock.builder();
+		private CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages, int stageCount,
+				Map<String, CodeBlock> arguments) {
 
-            builder.add(sortingStage(pageableProvider + ".getSort()"));
+			Builder builder = CodeBlock.builder();
+			builder.addStatement("$T<$T> $L = new $T($L)", List.class, Object.class, stageListVariableName, ArrayList.class,
+					stageCount);
+			int stageCounter = 0;
 
-            builder.beginControlFlow("if ($L.isPaged())", pageableProvider);
-            builder.beginControlFlow("if ($L.getOffset() > 0)", pageableProvider);
-            builder.addStatement("$L.add($T.skip($L.getOffset()))", context.localVariable("stages"), Aggregation.class,
-                    pageableProvider);
-            builder.endControlFlow();
-            if (slice) {
-                builder.addStatement("$L.add($T.limit($L.getPageSize() + 1))", context.localVariable("stages"),
-                        Aggregation.class, pageableProvider);
-            } else {
-                builder.addStatement("$L.add($T.limit($L.getPageSize()))", context.localVariable("stages"), Aggregation.class,
-                        pageableProvider);
-            }
-            builder.endControlFlow();
+			for (String stage : stages) {
 
-            return builder.build();
-        }
+				VariableSnippet stageSnippet = Snippet.declare(builder)
+						.variable(Document.class, context.localVariable("stage_%s".formatted(stageCounter++)))
+						.of(MongoCodeBlocks.asDocument(stage, arguments));
+				builder.addStatement("$L.add($L)", stageListVariableName, stageSnippet.getVariableName());
+			}
 
-        private CodeBlock limitingStage(String limitProvider) {
+			return builder.build();
+		}
 
-            Builder builder = CodeBlock.builder();
+		private CodeBlock sortingStage(String sortProvider) {
 
-            builder.beginControlFlow("if ($L.isLimited())", limitProvider);
-            builder.addStatement("$L.add($T.limit($L.max()))", context.localVariable("stages"), Aggregation.class,
-                    limitProvider);
-            builder.endControlFlow();
+			Builder builder = CodeBlock.builder();
 
-            return builder.build();
-        }
+			builder.beginControlFlow("if ($L.isSorted())", sortProvider);
+			builder.addStatement("$1T $2L = new $1T()", Document.class, context.localVariable("sortDocument"));
+			builder.beginControlFlow("for ($T $L : $L)", Order.class, context.localVariable("order"), sortProvider);
+			builder.addStatement("$1L.append($2L.getProperty(), $2L.isAscending() ? 1 : -1);",
+					context.localVariable("sortDocument"), context.localVariable("order"));
+			builder.endControlFlow();
+			builder.addStatement("stages.add(new $T($S, $L))", Document.class, "$sort",
+					context.localVariable("sortDocument"));
+			builder.endControlFlow();
 
-    }
+			return builder.build();
+		}
+
+		private CodeBlock pagingStage(String pageableProvider, boolean slice) {
+
+			Builder builder = CodeBlock.builder();
+
+			builder.add(sortingStage(pageableProvider + ".getSort()"));
+
+			builder.beginControlFlow("if ($L.isPaged())", pageableProvider);
+			builder.beginControlFlow("if ($L.getOffset() > 0)", pageableProvider);
+			builder.addStatement("$L.add($T.skip($L.getOffset()))", context.localVariable("stages"), Aggregation.class,
+					pageableProvider);
+			builder.endControlFlow();
+			if (slice) {
+				builder.addStatement("$L.add($T.limit($L.getPageSize() + 1))", context.localVariable("stages"),
+						Aggregation.class, pageableProvider);
+			} else {
+				builder.addStatement("$L.add($T.limit($L.getPageSize()))", context.localVariable("stages"), Aggregation.class,
+						pageableProvider);
+			}
+			builder.endControlFlow();
+
+			return builder.build();
+		}
+
+		private CodeBlock limitingStage(String limitProvider) {
+
+			Builder builder = CodeBlock.builder();
+
+			builder.beginControlFlow("if ($L.isLimited())", limitProvider);
+			builder.addStatement("$L.add($T.limit($L.max()))", context.localVariable("stages"), Aggregation.class,
+					limitProvider);
+			builder.endControlFlow();
+
+			return builder.build();
+		}
+
+	}
 }
