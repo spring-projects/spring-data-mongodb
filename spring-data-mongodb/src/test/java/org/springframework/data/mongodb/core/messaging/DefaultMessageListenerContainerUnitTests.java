@@ -82,13 +82,15 @@ class DefaultMessageListenerContainerUnitTests {
 	}
 
 	@Test // GH-4403
-	void shouldHaveAutoStartupEnabledByDefault() {
+	void shouldAutoStartup() {
 		assertThat(container.isAutoStartup()).isTrue();
 	}
 
 	@Test // GH-4403
-	void shouldAllowDisablingAutoStartup() {
+	void shouldDisableAutostartup() {
+
 		container.setAutoStartup(false);
+
 		assertThat(container.isAutoStartup()).isFalse();
 	}
 

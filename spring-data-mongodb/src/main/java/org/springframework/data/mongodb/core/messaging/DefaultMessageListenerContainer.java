@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -112,8 +113,12 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 
 	/**
 	 * Set whether to auto-start this container.
-	 * <p>Default is {@code true}.
+	 * <p>
+	 * Default is {@code true}.
+	 *
 	 * @param autoStartup {@code true} to auto-start.
+	 * @since 5.0
+	 * @see org.springframework.context.SmartLifecycle#isAutoStartup()
 	 */
 	public void setAutoStartup(boolean autoStartup) {
 		this.autoStartup = autoStartup;
