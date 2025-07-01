@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import static org.assertj.core.api.Assertions.*;
+
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -62,6 +64,13 @@ class ReactiveValidatingEntityCallbackUnitTests {
 				.as(StepVerifier::create) //
 				.expectNext(coordinates) //
 				.verifyComplete();
+	}
+
+	@Test // GH-4914
+	void allowsChangingOrderDynamically() {
+
+		callback.setOrder(50);
+		assertThat(callback.getOrder()).isEqualTo(50);
 	}
 
 	record Coordinates(@NotNull @Min(0) Integer x, @NotNull @Min(0) Integer y) {

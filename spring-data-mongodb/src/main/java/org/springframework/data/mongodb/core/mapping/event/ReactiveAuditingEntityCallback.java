@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
 public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCallback<Object>, Ordered {
 
 	private final ObjectFactory<ReactiveIsNewAwareAuditingHandler> auditingHandlerFactory;
+	private int order = 100;
 
 	/**
 	 * Creates a new {@link ReactiveAuditingEntityCallback} using the given {@link MappingContext} and
@@ -48,12 +49,24 @@ public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCall
 	}
 
 	@Override
-	public Publisher<Object> onBeforeConvert(Object entity, String collection) {
-		return auditingHandlerFactory.getObject().markAudited(entity);
+	public int getOrder() {
+		return this.order;
+	}
+
+	/**
+	 * Specify the order value for this {@link BeforeConvertCallback}.
+	 * <p>
+	 * The default value is {@code 100}.
+	 *
+	 * @see org.springframework.core.Ordered#getOrder()
+	 * @since 5.0
+	 */
+	public void setOrder(int order) {
+		this.order = order;
 	}
 
 	@Override
-	public int getOrder() {
-		return 100;
+	public Publisher<Object> onBeforeConvert(Object entity, String collection) {
+		return auditingHandlerFactory.getObject().markAudited(entity);
 	}
 }

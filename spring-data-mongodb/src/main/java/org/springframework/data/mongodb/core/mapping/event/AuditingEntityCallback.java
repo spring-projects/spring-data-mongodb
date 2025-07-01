@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
  * {@link EntityCallback} to populate auditing related fields on an entity about to be saved.
  *
  * @author Mark Paluch
- * @author yangchef1
+ * @author HeeChul Yang
  * @since 2.2
  */
 public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {
@@ -48,16 +48,25 @@ public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Or
 	}
 
 	@Override
-	public Object onBeforeConvert(Object entity, String collection) {
-		return auditingHandlerFactory.getObject().markAudited(entity);
-	}
-
-	@Override
 	public int getOrder() {
 		return this.order;
 	}
 
+	/**
+	 * Specify the order value for this {@link BeforeConvertCallback}.
+	 * <p>
+	 * The default value is {@code 100}.
+	 *
+	 * @see org.springframework.core.Ordered#getOrder()
+	 * @since 5.0
+	 */
 	public void setOrder(int order) {
 		this.order = order;
 	}
+
+	@Override
+	public Object onBeforeConvert(Object entity, String collection) {
+		return auditingHandlerFactory.getObject().markAudited(entity);
+	}
+
 }

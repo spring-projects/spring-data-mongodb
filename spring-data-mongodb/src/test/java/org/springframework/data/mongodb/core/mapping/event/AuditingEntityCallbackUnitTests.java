@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.Ordered;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -40,10 +40,10 @@ import org.springframework.data.mongodb.core.mapping.Unwrapped;
  * Unit tests for {@link AuditingEntityCallback}.
  *
  * @author Mark Paluch
- * @author yangchef1
+ * @author HeeChul Yang
  */
 @ExtendWith(MockitoExtension.class)
-public class AuditingEntityCallbackUnitTests {
+class AuditingEntityCallbackUnitTests {
 
 	private final MongoMappingContext mappingContext = new MongoMappingContext();
 
@@ -88,16 +88,11 @@ public class AuditingEntityCallbackUnitTests {
 
 	@Test // DATAMONGO-2261
 	void hasExplicitOrder() {
-
-		assertThat(callback).isInstanceOf(Ordered.class);
 		assertThat(callback.getOrder()).isEqualTo(100);
 	}
 
 	@Test // GH-4914
 	void allowsChangingOrderDynamically() {
-
-		assertThat(callback).isInstanceOf(Ordered.class);
-		assertThat(callback.getOrder()).isEqualTo(100);
 
 		callback.setOrder(50);
 		assertThat(callback.getOrder()).isEqualTo(50);

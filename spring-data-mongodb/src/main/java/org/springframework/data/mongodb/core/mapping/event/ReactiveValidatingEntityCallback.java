@@ -39,6 +39,7 @@ import org.springframework.core.Ordered;
 public class ReactiveValidatingEntityCallback implements ReactiveBeforeSaveCallback<Object>, Ordered {
 
 	private final BeanValidationDelegate delegate;
+	private int order = 100;
 
 	/**
 	 * Creates a new {@link ReactiveValidatingEntityCallback} using the given {@link Validator}.
@@ -47,6 +48,23 @@ public class ReactiveValidatingEntityCallback implements ReactiveBeforeSaveCallb
 	 */
 	public ReactiveValidatingEntityCallback(Validator validator) {
 		this.delegate = new BeanValidationDelegate(validator);
+	}
+
+	@Override
+	public int getOrder() {
+		return this.order;
+	}
+
+	/**
+	 * Specify the order value for this {@link ReactiveValidatingEntityCallback}.
+	 * <p>
+	 * The default value is {@code 100}.
+	 *
+	 * @see org.springframework.core.Ordered#getOrder()
+	 * @since 5.0
+	 */
+	public void setOrder(int order) {
+		this.order = order;
 	}
 
 	@Override
@@ -60,10 +78,4 @@ public class ReactiveValidatingEntityCallback implements ReactiveBeforeSaveCallb
 
 		return Mono.just(entity);
 	}
-
-	@Override
-	public int getOrder() {
-		return 100;
-	}
-
 }

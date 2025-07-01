@@ -33,7 +33,7 @@ import org.springframework.core.Ordered;
  *
  * @author Rene Felgenträger
  * @author Mark Paluch
- * @author yangchef1
+ * @author HeeChul Yang
  * @since 4.5
  */
 public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ordered {
@@ -51,6 +51,23 @@ public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ord
 	}
 
 	@Override
+	public int getOrder() {
+		return this.order;
+	}
+
+	/**
+	 * Specify the order value for this {@link BeforeConvertCallback}.
+	 * <p>
+	 * The default value is {@code 100}.
+	 *
+	 * @see org.springframework.core.Ordered#getOrder()
+	 * @since 5.0
+	 */
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	@Override
 	public Object onBeforeSave(Object entity, Document document, String collection) {
 
 		Set<ConstraintViolation<Object>> violations = delegate.validate(entity);
@@ -60,14 +77,5 @@ public class ValidatingEntityCallback implements BeforeSaveCallback<Object>, Ord
 		}
 
 		return entity;
-	}
-
-	@Override
-	public int getOrder() {
-		return this.order;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
 	}
 }
