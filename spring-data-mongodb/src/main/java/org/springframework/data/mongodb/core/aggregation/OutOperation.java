@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.lang.Contract;
@@ -52,10 +51,12 @@ public class OutOperation implements AggregationOperation {
 	/**
 	 * @param databaseName Optional database name the target collection is located in. Can be {@literal null}.
 	 * @param collectionName Collection name to export the results. Must not be {@literal null}. Can be {@literal null}.
-	 * @param timeSeriesOptions Optional time series options for creating a time series collection. Can be {@literal null}.
+	 * @param timeSeriesOptions Optional time series options for creating a time series collection. Can be
+	 *          {@literal null}.
 	 * @since 5.0
 	 */
-	private OutOperation(@Nullable String databaseName, String collectionName, @Nullable TimeSeriesOptions timeSeriesOptions) {
+	private OutOperation(@Nullable String databaseName, String collectionName,
+			@Nullable TimeSeriesOptions timeSeriesOptions) {
 
 		Assert.notNull(collectionName, "Collection name must not be null");
 
@@ -110,7 +111,7 @@ public class OutOperation implements AggregationOperation {
 	 *
 	 * @param timeField must not be {@literal null} or empty.
 	 * @param metaField can be {@literal null}.
-	 * @param granularity can be {@literal null}.
+	 * @param granularity defaults to {@link Granularity#DEFAULT} if {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 5.0
 	 */
@@ -118,7 +119,10 @@ public class OutOperation implements AggregationOperation {
 	public OutOperation timeSeries(String timeField, @Nullable String metaField, @Nullable Granularity granularity) {
 
 		Assert.hasText(timeField, "TimeField must not be null or empty");
-		return timeSeries(TimeSeriesOptions.timeSeries(timeField).metaField(metaField).granularity(granularity));
+
+		TimeSeriesOptions options = TimeSeriesOptions.timeSeries(timeField).metaField(metaField)
+				.granularity(granularity != null ? granularity : Granularity.DEFAULT);
+		return timeSeries(options);
 	}
 
 	@Override
@@ -135,6 +139,7 @@ public class OutOperation implements AggregationOperation {
 		}
 
 		if (timeSeriesOptions != null) {
+
 			Document timeSeriesDoc = new Document("timeField", timeSeriesOptions.getTimeField());
 
 			if (StringUtils.hasText(timeSeriesOptions.getMetaField())) {
@@ -143,6 +148,13 @@ public class OutOperation implements AggregationOperation {
 
 			if (timeSeriesOptions.getGranularity() != null && timeSeriesOptions.getGranularity() != Granularity.DEFAULT) {
 				timeSeriesDoc.put("granularity", timeSeriesOptions.getGranularity().name().toLowerCase());
+			}
+
+			if (timeSeriesOptions.getSpan() != null && timeSeriesOptions.getSpan().time() != null) {
+
+				long spanSeconds = timeSeriesOptions.getSpan().time().getSeconds();
+				timeSeriesDoc.put("bucketMaxSpanSeconds", spanSeconds);
+				timeSeriesDoc.put("bucketRoundingSeconds", spanSeconds);
 			}
 
 			outDocument.put("timeseries", timeSeriesDoc);

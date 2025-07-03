@@ -371,6 +371,13 @@ class EntityOperations {
 			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
 				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
 			}
+			if (it.getSpan() != null) {
+
+				long bucketMaxSpanInSeconds = it.getSpan().time().toSeconds();
+				// right now there's only one value since the two options must have the same value.
+				options.bucketMaxSpan(bucketMaxSpanInSeconds, TimeUnit.SECONDS);
+				options.bucketRounding(bucketMaxSpanInSeconds, TimeUnit.SECONDS);
+			}
 
 			if (!it.getExpireAfter().isNegative()) {
 				result.expireAfter(it.getExpireAfter().toSeconds(), TimeUnit.SECONDS);
@@ -1131,7 +1138,7 @@ class EntityOperations {
 			if (StringUtils.hasText(source.getMetaField())) {
 				target = target.metaField(mappedNameOrDefault(source.getMetaField()));
 			}
-			return target.granularity(source.getGranularity()).expireAfter(source.getExpireAfter());
+			return target.granularity(source.getGranularity()).expireAfter(source.getExpireAfter()).span(source.getSpan());
 		}
 
 		@Override
