@@ -30,7 +30,6 @@ import org.bson.BsonBinarySubType;
 import org.bson.BsonNull;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
@@ -41,6 +40,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristic;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
+import org.springframework.data.mongodb.core.timeseries.Span;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.CheckReturnValue;
@@ -982,16 +982,24 @@ public class CollectionOptions {
 		private @Nullable final String metaField;
 
 		private final GranularityDefinition granularity;
+		private final @Nullable Span span;
 
 		private final Duration expireAfter;
 
 		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity,
-				Duration expireAfter) {
+				@Nullable Span span, Duration expireAfter) {
+
 			Assert.hasText(timeField, "Time field must not be empty or null");
+
+			if (!Granularity.DEFAULT.equals(granularity) && span != null) {
+				throw new IllegalArgumentException(
+						"Cannot use granularity [%s] in conjunction with span".formatted(granularity.name()));
+			}
 
 			this.timeField = timeField;
 			this.metaField = metaField;
 			this.granularity = granularity;
+			this.span = span;
 			this.expireAfter = expireAfter;
 		}
 
@@ -1004,7 +1012,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
 		public static TimeSeriesOptions timeSeries(String timeField) {
-			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT, Duration.ofSeconds(-1));
+			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT, null, Duration.ofSeconds(-1));
 		}
 
 		/**
@@ -1018,7 +1026,7 @@ public class CollectionOptions {
 		 */
 		@Contract("_ -> new")
 		public TimeSeriesOptions metaField(String metaField) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
+			return new TimeSeriesOptions(timeField, metaField, granularity, span, expireAfter);
 		}
 
 		/**
@@ -1030,7 +1038,20 @@ public class CollectionOptions {
 		 */
 		@Contract("_ -> new")
 		public TimeSeriesOptions granularity(GranularityDefinition granularity) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, expireAfter);
+			return new TimeSeriesOptions(timeField, metaField, granularity, span, expireAfter);
+		}
+
+		/**
+		 * Select the time between timestamps in the same bucket to define how data in the time series collection is
+		 * organized. Cannot be used in conjunction with {@link #granularity(GranularityDefinition)}.
+		 *
+		 * @return new instance of {@link TimeSeriesOptions}.
+		 * @see Span
+		 * @since 5.0
+		 */
+		@Contract("_ -> new")
+		public TimeSeriesOptions span(Span span) {
+			return new TimeSeriesOptions(timeField, metaField, granularity, span, expireAfter);
 		}
 
 		/**
@@ -1043,7 +1064,7 @@ public class CollectionOptions {
 		 */
 		@Contract("_ -> new")
 		public TimeSeriesOptions expireAfter(Duration ttl) {
-			return new TimeSeriesOptions(timeField, metaField, granularity, ttl);
+			return new TimeSeriesOptions(timeField, metaField, granularity, span, ttl);
 		}
 
 		/**
@@ -1079,11 +1100,21 @@ public class CollectionOptions {
 			return expireAfter;
 		}
 
+		/**
+		 * Get the span that defines a bucket.
+		 *
+		 * @return {@literal null} if not specified.
+		 * @since 5.0
+		 */
+		public @Nullable Span getSpan() {
+			return span;
+		}
+
 		@Override
 		public String toString() {
 
 			return "TimeSeriesOptions{" + "timeField='" + timeField + '\'' + ", metaField='" + metaField + '\''
-					+ ", granularity=" + granularity + '}';
+					+ ", granularity=" + granularity + ", span=" + span + ", expireAfter=" + expireAfter + '}';
 		}
 
 		@Override
@@ -1103,6 +1134,13 @@ public class CollectionOptions {
 			if (!ObjectUtils.nullSafeEquals(metaField, that.metaField)) {
 				return false;
 			}
+			if (!ObjectUtils.nullSafeEquals(span, that.span)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(expireAfter, that.expireAfter)) {
+				return false;
+			}
+
 			return ObjectUtils.nullSafeEquals(granularity, that.granularity);
 		}
 
@@ -1111,6 +1149,8 @@ public class CollectionOptions {
 			int result = ObjectUtils.nullSafeHashCode(timeField);
 			result = 31 * result + ObjectUtils.nullSafeHashCode(metaField);
 			result = 31 * result + ObjectUtils.nullSafeHashCode(granularity);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(span);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(expireAfter);
 			return result;
 		}
 	}

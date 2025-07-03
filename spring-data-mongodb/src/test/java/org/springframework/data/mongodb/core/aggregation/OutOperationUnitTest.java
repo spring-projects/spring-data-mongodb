@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import java.time.Duration;
+
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
@@ -121,6 +123,20 @@ class OutOperationUnitTest {
 		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
 		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
 		assertThat(result).containsEntry("$out.timeseries.granularity", "seconds");
+	}
+
+	@Test // GH-4985
+	void outWithTimeSeriesOptionsUsingSpanShouldRenderCorrectly() {
+
+		TimeSeriesOptions options = TimeSeriesOptions.timeSeries("timestamp").metaField("metadata").span(() -> Duration.ofMinutes(2));
+		Document result = Aggregation.out("timeseries-col", options).toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(result).containsEntry("$out.coll", "timeseries-col");
+		assertThat(result).containsEntry("$out.timeseries.timeField", "timestamp");
+		assertThat(result).containsEntry("$out.timeseries.metaField", "metadata");
+		assertThat(result).containsEntry("$out.timeseries.bucketMaxSpanSeconds", 120L);
+		assertThat(result).containsEntry("$out.timeseries.bucketRoundingSeconds", 120L);
+		assertThat(result).doesNotContainKey("$out.timeseries.granularity");
 	}
 
 	@Test // GH-4985

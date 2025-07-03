@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.springframework.data.mongodb.core.CollectionOptions.EncryptedFieldsOptions;
 import static org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
 import static org.springframework.data.mongodb.core.CollectionOptions.emitChangedRevisions;
@@ -24,6 +26,7 @@ import static org.springframework.data.mongodb.core.CollectionOptions.encryptedC
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.int32;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.queryable;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.bson.BsonNull;
@@ -33,6 +36,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.QueryCharacteristics;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 
 /**
@@ -77,6 +81,14 @@ class CollectionOptionsUnitTests {
 				.isEqualTo(empty().timeSeries(TimeSeriesOptions.timeSeries("tf"))) //
 				.isNotEqualTo(empty()) //
 				.isNotEqualTo(empty().timeSeries(TimeSeriesOptions.timeSeries("other")));
+	}
+
+	@Test // GH-4985
+	void timeSeriesValidatesGranularityAndSpanSettings() {
+
+		assertThatNoException().isThrownBy(() -> empty().timeSeries(TimeSeriesOptions.timeSeries("tf").span(() -> Duration.ofSeconds(1)).granularity(Granularity.DEFAULT)));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> TimeSeriesOptions.timeSeries("tf").granularity(Granularity.HOURS).span(() -> Duration.ofSeconds(1)));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> TimeSeriesOptions.timeSeries("tf").span(() -> Duration.ofSeconds(1)).granularity(Granularity.HOURS));
 	}
 
 	@Test // GH-4210
