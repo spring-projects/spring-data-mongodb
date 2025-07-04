@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.awaitility.Awaitility.*;
+import static org.assertj.core.api.Assertions.assertThatRuntimeException;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
@@ -25,17 +25,18 @@ import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.AtlasContainer;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -48,6 +49,7 @@ import com.mongodb.client.AggregateIterable;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith(MongoServerCondition.class)
 @Testcontainers(disabledWithoutDocker = true)
 class VectorIndexIntegrationTests {
 
@@ -66,6 +68,7 @@ class VectorIndexIntegrationTests {
 
 	@BeforeEach
 	void init() {
+
 		template.createCollection(Movie.class);
 		indexOps = template.searchIndexOps(Movie.class);
 	}
@@ -77,6 +80,7 @@ class VectorIndexIntegrationTests {
 		template.dropCollection(Movie.class);
 	}
 
+	@Tag("vector-search")
 	@ParameterizedTest // GH-4706
 	@ValueSource(strings = { "euclidean", "cosine", "dotProduct" })
 	void createsSimpleVectorIndex(String similarityFunction) {
@@ -97,6 +101,7 @@ class VectorIndexIntegrationTests {
 		});
 	}
 
+	@Tag("vector-search")
 	@Test // GH-4706
 	void dropIndex() {
 
@@ -112,6 +117,7 @@ class VectorIndexIntegrationTests {
 		assertThat(readRawIndexInfo(idx.getName())).isNull();
 	}
 
+	@Tag("vector-search")
 	@Test // GH-4706
 	void statusChanges() throws InterruptedException {
 
@@ -130,6 +136,7 @@ class VectorIndexIntegrationTests {
 				SearchIndexStatus.READY);
 	}
 
+	@Tag("vector-search")
 	@Test // GH-4706
 	void exists() throws InterruptedException {
 
@@ -147,6 +154,7 @@ class VectorIndexIntegrationTests {
 		assertThat(indexOps.exists(indexName)).isTrue();
 	}
 
+	@Tag("vector-search")
 	@Test // GH-4706
 	void updatesVectorIndex() throws InterruptedException {
 
@@ -176,6 +184,7 @@ class VectorIndexIntegrationTests {
 		assertThatRuntimeException().isThrownBy(() -> indexOps.updateIndex(updatedIdx));
 	}
 
+	@Tag("vector-search")
 	@Test // GH-4706
 	void createsVectorIndexWithFilters() throws InterruptedException {
 

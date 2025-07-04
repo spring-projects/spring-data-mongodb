@@ -21,6 +21,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.util.Version;
+import org.springframework.util.NumberUtils;
+import org.springframework.util.StringUtils;
+
+import com.mongodb.client.MongoClient;
 
 /**
  * @author Christoph Strobl
@@ -42,8 +46,8 @@ public class MongoServerCondition implements ExecutionCondition {
 			}
 		}
 
-		if(context.getTags().contains("vector-search")) {
-			if(!atlasEnvironment(context)) {
+		if (context.getTags().contains("vector-search")) {
+			if (!atlasEnvironment(context)) {
 				return ConditionEvaluationResult.disabled("Disabled for servers not supporting Vector Search.");
 			}
 		}
@@ -91,7 +95,18 @@ public class MongoServerCondition implements ExecutionCondition {
 	}
 
 	private boolean atlasEnvironment(ExtensionContext context) {
-		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> MongoTestUtils.isVectorSearchEnabled(),
-			Boolean.class);
+
+		String host = System.getProperty("docker.mongodb.atlas.host");
+		String port = System.getProperty("docker.mongodb.atlas.port");
+
+		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> {
+
+			if (StringUtils.hasText(host) && StringUtils.hasText(port)) {
+				try (MongoClient client = MongoTestUtils.client(host, NumberUtils.parseNumber(port, Integer.class))) {
+					return MongoTestUtils.isVectorSearchEnabled(client);
+				}
+			}
+			return MongoTestUtils.isVectorSearchEnabled();
+		}, Boolean.class);
 	}
 }
