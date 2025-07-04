@@ -184,6 +184,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mathieu Ouellet
  * @author Yadhukrishna S Pai
  * @author Florian Lüdiger
+ * @author Seungho Kang
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -1193,7 +1194,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(collectionName, "CollectionName must not be null");
 		Assert.notNull(resultType, "ResultType must not be null Use Object.class instead");
 
-		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 ore none");
+		Assert.isTrue(query.getLimit() <= 1, "Query must not define a limit other than 1 or none");
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip");
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
