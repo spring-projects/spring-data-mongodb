@@ -16,11 +16,20 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
+import org.springframework.data.domain.ScoringFunction;
+import org.springframework.data.expression.ValueEvaluationContext;
+import org.springframework.data.expression.ValueExpression;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
 import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -28,10 +37,20 @@ import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.repository.query.MongoParameters;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
+import org.springframework.data.mongodb.util.json.ValueProvider;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -46,26 +65,171 @@ public class MongoAotRepositoryFragmentSupport {
 	private final MongoOperations mongoOperations;
 	private final MongoConverter mongoConverter;
 	private final ProjectionFactory projectionFactory;
+	private final ValueExpressionDelegate valueExpressionDelegate;
 
 	protected MongoAotRepositoryFragmentSupport(MongoOperations mongoOperations,
 			RepositoryFactoryBeanSupport.FragmentCreationContext context) {
-		this(mongoOperations, context.getRepositoryMetadata(), context.getProjectionFactory());
+		this(mongoOperations, context.getRepositoryMetadata(), context.getProjectionFactory(),
+				context.getValueExpressionDelegate());
 	}
 
 	protected MongoAotRepositoryFragmentSupport(MongoOperations mongoOperations, RepositoryMetadata repositoryMetadata,
-			ProjectionFactory projectionFactory) {
+			ProjectionFactory projectionFactory, ValueExpressionDelegate valueExpressionDelegate) {
 
 		this.mongoOperations = mongoOperations;
 		this.mongoConverter = mongoOperations.getConverter();
 		this.repositoryMetadata = repositoryMetadata;
 		this.projectionFactory = projectionFactory;
+		this.valueExpressionDelegate = valueExpressionDelegate;
 	}
 
 	protected Document bindParameters(String source, Object[] parameters) {
 		return new BindableMongoExpression(source, this.mongoConverter, parameters).toDocument();
 	}
 
+	protected Document bindParameters(String source, Map<String, Object> parameters) {
+
+		ValueEvaluationContext valueEvaluationContext = this.valueExpressionDelegate.getEvaluationContextAccessor()
+				.create(new NoMongoParameters()).getEvaluationContext(parameters.values());
+
+		EvaluationContext evaluationContext = valueEvaluationContext.getEvaluationContext();
+		parameters.forEach(evaluationContext::setVariable);
+
+		ParameterBindingContext bindingContext = new ParameterBindingContext(new ValueProvider() {
+
+			private final List<Object> args = new ArrayList<>(parameters.values());
+
+			@Override
+			public @Nullable Object getBindableValue(int index) {
+				return args.get(index);
+			}
+		}, new ValueExpressionEvaluator() {
+
+			@Override
+			@SuppressWarnings("unchecked")
+			public <T> @Nullable T evaluate(String expression) {
+				ValueExpression parse = valueExpressionDelegate.getValueExpressionParser().parse(expression);
+				return (T) parse.evaluate(valueEvaluationContext);
+			}
+		});
+
+		return new ParameterBindingDocumentCodec().decode(source, bindingContext);
+	}
+
+	protected Object[] arguments(Object... arguments) {
+		return arguments;
+	}
+
+	protected Map<String, Object> argumentMap(Object... parameters) {
+
+		Assert.state(parameters.length % 2 == 0, "even number of args required");
+
+		LinkedHashMap<String, Object> argumentMap = CollectionUtils.newLinkedHashMap(parameters.length / 2);
+		for (int i = 0; i < parameters.length; i += 2) {
+
+			if (!(parameters[i] instanceof String key)) {
+				throw new IllegalArgumentException("key must be a String");
+			}
+			argumentMap.put(key, parameters[i + 1]);
+		}
+
+		return argumentMap;
+	}
+
+	protected @Nullable Object evaluate(String source, Map<String, Object> parameters) {
+
+		ValueEvaluationContext valueEvaluationContext = this.valueExpressionDelegate.getEvaluationContextAccessor()
+				.create(new NoMongoParameters()).getEvaluationContext(parameters.values());
+
+		EvaluationContext evaluationContext = valueEvaluationContext.getEvaluationContext();
+		parameters.forEach(evaluationContext::setVariable);
+
+		ValueExpression parse = valueExpressionDelegate.getValueExpressionParser().parse(source);
+		return parse.evaluate(valueEvaluationContext);
+	}
+
+	protected Consumer<Criteria> scoreBetween(Range.Bound<? extends Score> lower, Range.Bound<? extends Score> upper) {
+
+		return criteria -> {
+			if (lower.isBounded()) {
+				double value = lower.getValue().get().getValue();
+				if (lower.isInclusive()) {
+					criteria.gte(value);
+				} else {
+					criteria.gt(value);
+				}
+			}
+
+			if (upper.isBounded()) {
+
+				double value = upper.getValue().get().getValue();
+				if (upper.isInclusive()) {
+					criteria.lte(value);
+				} else {
+					criteria.lt(value);
+				}
+			}
+
+		};
+	}
+
+	protected ScoringFunction scoringFunction(Range<? extends Score> scoreRange) {
+
+		if (scoreRange != null) {
+			if (scoreRange.getUpperBound().isBounded()) {
+				return scoreRange.getUpperBound().getValue().get().getFunction();
+			}
+
+			if (scoreRange.getLowerBound().isBounded()) {
+				return scoreRange.getLowerBound().getValue().get().getFunction();
+			}
+		}
+
+		return ScoringFunction.unspecified();
+	}
+
+	// Range<Score> scoreRange = accessor.getScoreRange();
+	//
+	// if (scoreRange != null) {
+	// if (scoreRange.getUpperBound().isBounded()) {
+	// return scoreRange.getUpperBound().getValue().get().getFunction();
+	// }
+	//
+	// if (scoreRange.getLowerBound().isBounded()) {
+	// return scoreRange.getLowerBound().getValue().get().getFunction();
+	// }
+	// }
+	//
+	// return ScoringFunction.unspecified();
+
+	protected Collation collationOf(@Nullable Object source) {
+
+		if (source == null) {
+			return Collation.simple();
+		}
+		if (source instanceof String) {
+			return Collation.parse(source.toString());
+		}
+		if (source instanceof Locale locale) {
+			return Collation.of(locale);
+		}
+		if (source instanceof Document document) {
+			return Collation.from(document);
+		}
+		if (source instanceof Collation collation) {
+			return collation;
+		}
+		throw new IllegalArgumentException(
+				"Unsupported collation source [%s]".formatted(ObjectUtils.nullSafeClassName(source)));
+	}
+
 	protected BasicQuery createQuery(String queryString, Object[] parameters) {
+
+		Document queryDocument = bindParameters(queryString, parameters);
+		return new BasicQuery(queryDocument);
+	}
+
+	protected BasicQuery createQuery(String queryString, Map<String, Object> parameters) {
 
 		Document queryDocument = bindParameters(queryString, parameters);
 		return new BasicQuery(queryDocument);
@@ -151,4 +315,10 @@ public class MongoAotRepositoryFragmentSupport {
 		return converter.getConversionService().convert(value, targetType);
 	}
 
+	static class NoMongoParameters extends MongoParameters {
+
+		NoMongoParameters() {
+			super();
+		}
+	}
 }

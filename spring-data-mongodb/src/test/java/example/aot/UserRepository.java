@@ -22,23 +22,43 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.SearchResults;
+import org.springframework.data.domain.Similarity;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Vector;
 import org.springframework.data.domain.Window;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.VectorSearchOperation;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Hint;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 /**
  * @author Christoph Strobl
@@ -83,6 +103,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	List<User> findByLastnameNot(String lastname);
 
+	List<User> findByFirstnameRegex(Pattern pattern);
+
 	List<User> findTop2ByLastnameStartingWith(String lastname);
 
 	List<User> findByLastnameStartingWithOrderByUsername(String lastname);
@@ -103,7 +125,30 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	Window<User> findTop2WindowByLastnameStartingWithOrderByUsername(String lastname, ScrollPosition scrollPosition);
 
-	// TODO: GeoQueries
+	List<User> findByLocationCoordinatesNear(Point location);
+
+	List<User> findByLocationCoordinatesWithin(Circle circle);
+
+	List<User> findByLocationCoordinatesWithin(Sphere circle);
+
+	List<User> findByLocationCoordinatesWithin(Box box);
+
+	List<User> findByLocationCoordinatesWithin(Polygon polygon);
+
+	List<User> findByLocationCoordinatesWithin(GeoJsonPolygon polygon);
+
+	List<User> findUserByLocationCoordinatesWithin(GeoJson<?> geoJson);
+
+	GeoResults<User> findByLocationCoordinatesNear(Point point, Distance maxDistance);
+
+	GeoResults<User> findByLocationCoordinatesNearAndLastname(Point point, Distance maxDistance, String lastname);
+
+	List<GeoResult<User>> findUserAsListByLocationCoordinatesNear(Point point, Distance maxDistance);
+
+	GeoResults<User> findByLocationCoordinatesNear(Point point, Range<Distance> distance);
+
+	GeoPage<User> findByLocationCoordinatesNear(Point point, Distance maxDistance, Pageable pageable);
+
 	// TODO: TextSearch
 
 	/* Annotated Queries */
@@ -142,6 +187,12 @@ public interface UserRepository extends CrudRepository<User, String> {
 
 	@Query("{ 'lastname' : { '$regex' : '^?0' } }")
 	Slice<User> findAnnotatedQuerySliceOfUsersByLastname(String lastname, Pageable pageable);
+
+	@Query("{ firstname : ?#{[0]} }")
+	List<User> findWithExpressionUsingParameterIndex(String firstname);
+
+	@Query("{ firstname : :#{#firstname} }")
+	List<User> findWithExpressionUsingParameterName(@Param("firstname") String firstname);
 
 	/* deletes */
 
@@ -245,6 +296,30 @@ public interface UserRepository extends CrudRepository<User, String> {
 			"{ '$match' : { 'last_name' : { '$ne' : null } } }", //
 			"{ '$project': { '_id' : '$last_name' } }" }, collation = "no_collation")
 	List<String> findAllLastnamesWithCollation();
+
+	// Vector Search
+
+	@VectorSearch(indexName = "embedding.vector_cos", filter = "{lastname: ?0}", numCandidates = "#{10+10}",
+			searchType = VectorSearchOperation.SearchType.ANN)
+	SearchResults<User> annotatedVectorSearch(String lastname, Vector vector, Score distance, Limit limit);
+
+	@VectorSearch(indexName = "embedding.vector_cos")
+	SearchResults<User> searchCosineByLastnameAndEmbeddingNear(String lastname, Vector vector, Score similarity,
+			Limit limit);
+
+	@VectorSearch(indexName = "embedding.vector_cos")
+	List<User> searchAsListByLastnameAndEmbeddingNear(String lastname, Vector vector, Limit limit);
+
+	@VectorSearch(indexName = "embedding.vector_cos", limit = "10")
+	SearchResults<User> searchByLastnameAndEmbeddingWithin(String lastname, Vector vector, Range<Similarity> distance);
+
+	@VectorSearch(indexName = "embedding.vector_cos", limit = "10")
+	SearchResults<User> searchByLastnameAndEmbeddingWithinOrderByFirstname(String lastname, Vector vector,
+			Range<Similarity> distance);
+
+	@VectorSearch(indexName = "embedding.vector_cos")
+	SearchResults<User> searchTop1ByLastnameAndEmbeddingWithin(String lastname, Vector vector,
+			Range<Similarity> distance);
 
 	class UserAggregate {
 

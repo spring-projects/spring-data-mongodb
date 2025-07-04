@@ -17,6 +17,7 @@ package example.aot;
 
 import java.time.Instant;
 
+import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
@@ -32,9 +33,13 @@ public class User {
 
 	@Field("last_name") String lastname;
 
+	Location location;
+
 	Instant registrationDate;
 	Instant lastSeen;
 	Long visits;
+
+	Vector embedding;
 
 	public String getId() {
 		return id;
@@ -90,5 +95,13 @@ public class User {
 
 	public void setVisits(Long visits) {
 		this.visits = visits;
+	}
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 }
