@@ -15,12 +15,21 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.Version;
+import org.springframework.util.NumberUtils;
+import org.springframework.util.StringUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
+
+import com.mongodb.Function;
+import com.mongodb.client.MongoClient;
 
 /**
  * @author Christoph Strobl
@@ -42,9 +51,12 @@ public class MongoServerCondition implements ExecutionCondition {
 			}
 		}
 
-		if(context.getTags().contains("vector-search")) {
-			if(!atlasEnvironment(context)) {
+		if (context.getTags().contains("vector-search")) {
+			if (!atlasEnvironment(context)) {
 				return ConditionEvaluationResult.disabled("Disabled for servers not supporting Vector Search.");
+			}
+			if (!isSearchIndexAvailable(context)) {
+				return ConditionEvaluationResult.disabled("Search index unavailable.");
 			}
 		}
 
@@ -90,8 +102,55 @@ public class MongoServerCondition implements ExecutionCondition {
 				Version.class);
 	}
 
+	private boolean isSearchIndexAvailable(ExtensionContext context) {
+
+		EnableIfVectorSearchAvailable vectorSearchAvailable = AnnotatedElementUtils
+				.findMergedAnnotation(context.getElement().get(), EnableIfVectorSearchAvailable.class);
+
+		if (vectorSearchAvailable == null) {
+			return true;
+		}
+
+		String collectionName = StringUtils.hasText(vectorSearchAvailable.collectionName())
+				? vectorSearchAvailable.collectionName()
+				: MongoCollectionUtils.getPreferredCollectionName(vectorSearchAvailable.collection());
+
+		return context.getStore(NAMESPACE).getOrComputeIfAbsent("search-index-%s-available".formatted(collectionName),
+				(key) -> {
+					try {
+						doWithClient(client -> {
+							Awaitility.await().atMost(Duration.ofSeconds(60)).pollInterval(Duration.ofMillis(200)).until(() -> {
+								return MongoTestUtils.isSearchIndexReady(client, null, collectionName);
+							});
+							return "done waiting for search index";
+						});
+					} catch (Exception e) {
+						return false;
+					}
+					return true;
+				}, Boolean.class);
+
+	}
+
 	private boolean atlasEnvironment(ExtensionContext context) {
-		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> MongoTestUtils.isVectorSearchEnabled(),
-			Boolean.class);
+
+		return context.getStore(NAMESPACE).getOrComputeIfAbsent("mongodb-atlas",
+				(key) -> doWithClient(MongoTestUtils::isVectorSearchEnabled), Boolean.class);
+	}
+
+	private <T> T doWithClient(Function<MongoClient, T> function) {
+
+		String host = System.getProperty(AtlasContainer.ATLAS_HOST);
+		String port = System.getProperty(AtlasContainer.ATLAS_PORT);
+
+		if (StringUtils.hasText(host) && StringUtils.hasText(port)) {
+			try (MongoClient client = MongoTestUtils.client(host, NumberUtils.parseNumber(port, Integer.class))) {
+				return function.apply(client);
+			}
+		}
+
+		try (MongoClient client = MongoTestUtils.client()) {
+			return function.apply(client);
+		}
 	}
 }

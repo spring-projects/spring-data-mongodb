@@ -25,13 +25,30 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
+ * {@link EnableIfVectorSearchAvailable} indicates a specific method can only be run in an environment that has a search
+ * server available. This means that not only the mongodb instance needs to have a
+ * {@literal searchIndexManagementHostAndPort} configured, but also that the search index sever is actually up and
+ * running, responding to a {@literal $listSearchIndexes} aggregation.
+ * 
  * @author Christoph Strobl
+ * @since 5.0
+ * @see Tag
  */
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Tag("vector-search")
 @ExtendWith(MongoServerCondition.class)
 public @interface EnableIfVectorSearchAvailable {
 
+	/**
+	 * @return the name of the collection used to run the {@literal $listSearchIndexes} aggregation.
+	 */
+	String collectionName() default "";
+
+	/**
+	 * @return the type for resolving the name of the collection used to run the {@literal $listSearchIndexes}
+	 *         aggregation. The {@link #collectionName()} has precedence over the type.
+	 */
+	Class<?> collection() default Object.class;
 }
