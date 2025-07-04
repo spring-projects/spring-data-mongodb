@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.retry.Retry;
@@ -287,6 +289,18 @@ public class MongoTestUtils {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	public static boolean isSearchIndexReady(MongoClient client, @Nullable String database, String collectionName) {
+
+		try {
+			MongoCollection<Document> collection = client.getDatabase(StringUtils.hasText(database) ? database : "test").getCollection(collectionName);
+			collection.aggregate(List.of(new Document("$listSearchIndexes", new Document())));
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+
 	}
 
 	public static Duration getTimeout() {

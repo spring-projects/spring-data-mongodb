@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import java.time.Duration;
+import java.util.Optional;
+
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -23,6 +26,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.util.Version;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.mongodb.client.MongoClient;
 
@@ -103,7 +107,24 @@ public class MongoServerCondition implements ExecutionCondition {
 
 			if (StringUtils.hasText(host) && StringUtils.hasText(port)) {
 				try (MongoClient client = MongoTestUtils.client(host, NumberUtils.parseNumber(port, Integer.class))) {
-					return MongoTestUtils.isVectorSearchEnabled(client);
+					if (!MongoTestUtils.isVectorSearchEnabled(client)) {
+						return false;
+					}
+
+					Optional<String> collectionTag = context.getTags().stream().filter(tag -> tag.startsWith("collection"))
+							.findFirst();
+					if (collectionTag.isPresent()) {
+
+						String collectionName = collectionTag.get().split(":")[1];
+						try {
+							Awaitility.await().atMost(Duration.ofSeconds(60)).pollInterval(Duration.ofMillis(200)).until(() -> {
+								return MongoTestUtils.isSearchIndexReady(client, null, collectionName);
+							});
+						} catch (Exception e) {
+							return false;
+						}
+					}
+					return true;
 				}
 			}
 			return MongoTestUtils.isVectorSearchEnabled();

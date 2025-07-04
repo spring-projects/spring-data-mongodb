@@ -51,6 +51,7 @@ import com.mongodb.client.AggregateIterable;
  */
 @ExtendWith(MongoServerCondition.class)
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("collection:movie")
 class VectorIndexIntegrationTests {
 
 	private static final @Container AtlasContainer atlasLocal = AtlasContainer.bestMatch();
