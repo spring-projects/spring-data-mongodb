@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.mongodb.client.MongoClients;
 import org.bson.Document;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -32,8 +31,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.mongodb.MongoWriteException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * A {@link MongoTemplate} with configuration hooks and extension suitable for tests.
@@ -141,6 +144,21 @@ public class MongoTestTemplate extends MongoTemplate {
 		}).collect(Collectors.toList()));
 	}
 
+	public void createCollectionIfNotExists(Class<?> type) {
+		createCollectionIfNotExists(getCollectionName(type));
+	}
+
+	public void createCollectionIfNotExists(String collectionName) {
+
+		MongoDatabase database = getDb().withWriteConcern(WriteConcern.MAJORITY)
+				.withReadPreference(ReadPreference.primary());
+
+		boolean collectionExists = database.listCollections().filter(new Document("name", collectionName)).first() != null;
+		if (!collectionExists) {
+			createCollection(collectionName);
+		}
+	}
+
 	public void dropDatabase() {
 		getDb().drop();
 	}
@@ -164,11 +182,11 @@ public class MongoTestTemplate extends MongoTemplate {
 		}));
 	}
 
-	public void awaitIndexCreation(Class<?> type, String indexName) {
-		awaitIndexCreation(getCollectionName(type), indexName, Duration.ofSeconds(10));
+	public void awaitSearchIndexCreation(Class<?> type, String indexName) {
+		awaitSearchIndexCreation(getCollectionName(type), indexName, Duration.ofSeconds(30));
 	}
 
-	public void awaitIndexCreation(String collectionName, String indexName, Duration timeout) {
+	public void awaitSearchIndexCreation(String collectionName, String indexName, Duration timeout) {
 
 		Awaitility.await().atMost(timeout).pollInterval(Duration.ofMillis(200)).until(() -> {
 
@@ -183,5 +201,36 @@ public class MongoTestTemplate extends MongoTemplate {
 			}
 			return false;
 		});
+	}
+
+	public void awaitIndexDeletion(String collectionName, String indexName, Duration timeout) {
+
+		Awaitility.await().atMost(timeout).pollInterval(Duration.ofMillis(200)).until(() -> {
+
+			List<Document> execute = this.execute(collectionName,
+					coll -> coll
+							.aggregate(List.of(Document.parse("{'$listSearchIndexes': { 'name' : '%s'}}".formatted(indexName))))
+							.into(new ArrayList<>()));
+			for (Document doc : execute) {
+				if (doc.getString("name").equals(indexName)) {
+					return false;
+				}
+			}
+			return true;
+		});
+	}
+
+	public void awaitNoSearchIndexAvailable(String collectionName, Duration timeout) {
+
+		Awaitility.await().atMost(timeout).pollInterval(Duration.ofMillis(200)).until(() -> {
+
+			return this.execute(collectionName, coll -> coll.aggregate(List.of(Document.parse("{'$listSearchIndexes': {}}")))
+					.into(new ArrayList<>()).isEmpty());
+
+		});
+	}
+
+	public void awaitNoSearchIndexAvailable(Class<?> type, Duration timeout) {
+		awaitNoSearchIndexAvailable(getCollectionName(type), timeout);
 	}
 }

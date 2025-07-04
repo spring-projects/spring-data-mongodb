@@ -16,12 +16,14 @@
 package org.springframework.data.mongodb.test.util;
 
 import org.springframework.core.env.StandardEnvironment;
-
 import org.testcontainers.mongodb.MongoDBAtlasLocalContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
+
 /**
- * Extension to MongoDBAtlasLocalContainer.
+ * Extension to {@link MongoDBAtlasLocalContainer}. Registers mapped host an port as system properties
+ * ({@link #ATLAS_HOST}, {@link #ATLAS_PORT}).
  *
  * @author Christoph Strobl
  */
@@ -30,6 +32,9 @@ public class AtlasContainer extends MongoDBAtlasLocalContainer {
 	private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("mongodb/mongodb-atlas-local");
 	private static final String DEFAULT_TAG = "8.0.0";
 	private static final String LATEST = "latest";
+
+	public static final String ATLAS_HOST = "docker.mongodb.atlas.host";
+	public static final String ATLAS_PORT = "docker.mongodb.atlas.port";
 
 	private AtlasContainer(String dockerImageName) {
 		super(DockerImageName.parse(dockerImageName));
@@ -55,4 +60,20 @@ public class AtlasContainer extends MongoDBAtlasLocalContainer {
 		return new AtlasContainer(DEFAULT_IMAGE_NAME.withTag(tag));
 	}
 
+	@Override
+	protected void containerIsStarted(InspectContainerResponse containerInfo) {
+
+		super.containerIsStarted(containerInfo);
+
+		System.setProperty(ATLAS_HOST, getHost());
+		System.setProperty(ATLAS_PORT, getMappedPort(27017).toString());
+	}
+
+	@Override
+	protected void containerIsStopping(InspectContainerResponse containerInfo) {
+
+		System.clearProperty(ATLAS_HOST);
+		System.clearProperty(ATLAS_PORT);
+		super.containerIsStopping(containerInfo);
+	}
 }

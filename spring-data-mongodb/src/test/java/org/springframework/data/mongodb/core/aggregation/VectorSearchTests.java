@@ -167,8 +167,8 @@ public class VectorSearchTests {
 		template.searchIndexOps(WithVectorFields.class).createIndex(rawIndex);
 		template.searchIndexOps(WithVectorFields.class).createIndex(wrapperIndex);
 
-		template.awaitIndexCreation(WithVectorFields.class, rawIndex.getName());
-		template.awaitIndexCreation(WithVectorFields.class, wrapperIndex.getName());
+		template.awaitSearchIndexCreation(WithVectorFields.class, rawIndex.getName());
+		template.awaitSearchIndexCreation(WithVectorFields.class, wrapperIndex.getName());
 	}
 
 	private static void assertScoreIsDecreasing(Iterable<Document> documents) {
