@@ -16,9 +16,10 @@
 package org.springframework.data.mongodb.test.util;
 
 import org.springframework.core.env.StandardEnvironment;
-
 import org.testcontainers.mongodb.MongoDBAtlasLocalContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import com.github.dockerjava.api.command.InspectContainerResponse;
 
 /**
  * Extension to MongoDBAtlasLocalContainer.
@@ -55,4 +56,12 @@ public class AtlasContainer extends MongoDBAtlasLocalContainer {
 		return new AtlasContainer(DEFAULT_IMAGE_NAME.withTag(tag));
 	}
 
+	@Override
+	protected void containerIsStarted(InspectContainerResponse containerInfo) {
+
+		super.containerIsStarted(containerInfo);
+
+		System.setProperty("docker.mongodb.atlas.host", getHost());
+		System.setProperty("docker.mongodb.atlas.port", getMappedPort(27017).toString());
+	}
 }

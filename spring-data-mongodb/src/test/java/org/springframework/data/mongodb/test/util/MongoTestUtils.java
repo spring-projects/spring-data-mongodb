@@ -15,12 +15,15 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.core.env.Environment;
@@ -30,6 +33,7 @@ import org.springframework.data.util.Version;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
@@ -68,6 +72,10 @@ public class MongoTestUtils {
 	}
 
 	public static MongoClient client(ConnectionString connectionString) {
+		MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connectionString)
+				.applyToSocketSettings(builder -> {
+					builder.connectTimeout(120, TimeUnit.SECONDS);
+				}).build();
 		return com.mongodb.client.MongoClients.create(connectionString, SpringDataMongoDB.driverInformation());
 	}
 
@@ -176,11 +184,10 @@ public class MongoTestUtils {
 	 * @param collectionName must not be {@literal null}.
 	 * @param client must not be {@literal null}.
 	 */
-	public static void dropCollectionNow(String dbName, String collectionName,
-			com.mongodb.client.MongoClient client) {
+	public static void dropCollectionNow(String dbName, String collectionName, com.mongodb.client.MongoClient client) {
 
-		com.mongodb.client.MongoDatabase database = client.getDatabase(dbName)
-				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+		com.mongodb.client.MongoDatabase database = client.getDatabase(dbName).withWriteConcern(WriteConcern.MAJORITY)
+				.withReadPreference(ReadPreference.primary());
 
 		database.getCollection(collectionName).drop();
 	}
@@ -205,11 +212,10 @@ public class MongoTestUtils {
 				.verifyComplete();
 	}
 
-	public static void flushCollection(String dbName, String collectionName,
-			com.mongodb.client.MongoClient client) {
+	public static void flushCollection(String dbName, String collectionName, com.mongodb.client.MongoClient client) {
 
-		com.mongodb.client.MongoDatabase database = client.getDatabase(dbName)
-				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+		com.mongodb.client.MongoDatabase database = client.getDatabase(dbName).withWriteConcern(WriteConcern.MAJORITY)
+				.withReadPreference(ReadPreference.primary());
 
 		database.getCollection(collectionName).deleteMany(new Document());
 	}
@@ -267,17 +273,34 @@ public class MongoTestUtils {
 	@SuppressWarnings("unchecked")
 	public static boolean isVectorSearchEnabled() {
 		try (MongoClient client = MongoTestUtils.client()) {
+			return isVectorSearchEnabled(client);
+		}
+	}
 
+	public static boolean isVectorSearchEnabled(MongoClient client) {
+		try {
 			return client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1")).get("argv", List.class)
-				.stream().anyMatch(it -> {
-					if(it instanceof String cfgString) {
-						return cfgString.startsWith("searchIndexManagementHostAndPort");
-					}
-					return false;
-				});
+					.stream().anyMatch(it -> {
+						if (it instanceof String cfgString) {
+							return cfgString.startsWith("searchIndexManagementHostAndPort");
+						}
+						return false;
+					});
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	public static boolean isSearchIndexReady(MongoClient client, @Nullable String database, String collectionName) {
+
+		try {
+			MongoCollection<Document> collection = client.getDatabase(StringUtils.hasText(database) ? database : "test").getCollection(collectionName);
+			collection.aggregate(List.of(new Document("$listSearchIndexes", new Document())));
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+
 	}
 
 	public static Duration getTimeout() {
@@ -297,10 +320,11 @@ public class MongoTestUtils {
 
 	public static CollectionInfo readCollectionInfo(MongoDatabase db, String collectionName) {
 
-		List<Document> list = db.runCommand(new Document().append("listCollections", 1).append("filter", new Document("name", collectionName)))
+		List<Document> list = db
+				.runCommand(new Document().append("listCollections", 1).append("filter", new Document("name", collectionName)))
 				.get("cursor", Document.class).get("firstBatch", List.class);
 
-		if(list.isEmpty()) {
+		if (list.isEmpty()) {
 			throw new IllegalStateException(String.format("Collection %s not found.", collectionName));
 		}
 		return CollectionInfo.from(list.get(0));

@@ -15,12 +15,20 @@
  */
 package org.springframework.data.mongodb.test.util;
 
+import java.time.Duration;
+import java.util.Optional;
+
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.util.Version;
+import org.springframework.util.NumberUtils;
+import org.springframework.util.StringUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
+
+import com.mongodb.client.MongoClient;
 
 /**
  * @author Christoph Strobl
@@ -42,8 +50,8 @@ public class MongoServerCondition implements ExecutionCondition {
 			}
 		}
 
-		if(context.getTags().contains("vector-search")) {
-			if(!atlasEnvironment(context)) {
+		if (context.getTags().contains("vector-search")) {
+			if (!atlasEnvironment(context)) {
 				return ConditionEvaluationResult.disabled("Disabled for servers not supporting Vector Search.");
 			}
 		}
@@ -91,7 +99,35 @@ public class MongoServerCondition implements ExecutionCondition {
 	}
 
 	private boolean atlasEnvironment(ExtensionContext context) {
-		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> MongoTestUtils.isVectorSearchEnabled(),
-			Boolean.class);
+
+		String host = System.getProperty("docker.mongodb.atlas.host");
+		String port = System.getProperty("docker.mongodb.atlas.port");
+
+		return context.getStore(NAMESPACE).getOrComputeIfAbsent(Version.class, (key) -> {
+
+			if (StringUtils.hasText(host) && StringUtils.hasText(port)) {
+				try (MongoClient client = MongoTestUtils.client(host, NumberUtils.parseNumber(port, Integer.class))) {
+					if (!MongoTestUtils.isVectorSearchEnabled(client)) {
+						return false;
+					}
+
+					Optional<String> collectionTag = context.getTags().stream().filter(tag -> tag.startsWith("collection"))
+							.findFirst();
+					if (collectionTag.isPresent()) {
+
+						String collectionName = collectionTag.get().split(":")[1];
+						try {
+							Awaitility.await().atMost(Duration.ofSeconds(60)).pollInterval(Duration.ofMillis(200)).until(() -> {
+								return MongoTestUtils.isSearchIndexReady(client, null, collectionName);
+							});
+						} catch (Exception e) {
+							return false;
+						}
+					}
+					return true;
+				}
+			}
+			return MongoTestUtils.isVectorSearchEnabled();
+		}, Boolean.class);
 	}
 }
