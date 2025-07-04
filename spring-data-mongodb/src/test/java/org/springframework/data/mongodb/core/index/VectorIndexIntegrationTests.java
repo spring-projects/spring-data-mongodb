@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.awaitility.Awaitility.*;
+import static org.assertj.core.api.Assertions.assertThatRuntimeException;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.util.List;
@@ -26,16 +26,17 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.AtlasContainer;
+import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -48,6 +49,7 @@ import com.mongodb.client.AggregateIterable;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith(MongoServerCondition.class)
 @Testcontainers(disabledWithoutDocker = true)
 class VectorIndexIntegrationTests {
 
@@ -66,6 +68,7 @@ class VectorIndexIntegrationTests {
 
 	@BeforeEach
 	void init() {
+
 		template.createCollection(Movie.class);
 		indexOps = template.searchIndexOps(Movie.class);
 	}
@@ -79,6 +82,7 @@ class VectorIndexIntegrationTests {
 
 	@ParameterizedTest // GH-4706
 	@ValueSource(strings = { "euclidean", "cosine", "dotProduct" })
+	@EnableIfVectorSearchAvailable(collection = Movie.class)
 	void createsSimpleVectorIndex(String similarityFunction) {
 
 		VectorIndex idx = new VectorIndex("vector_index").addVector("plotEmbedding",
@@ -98,6 +102,7 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
+	@EnableIfVectorSearchAvailable(collection = Movie.class)
 	void dropIndex() {
 
 		VectorIndex idx = new VectorIndex("vector_index").addVector("plotEmbedding",
@@ -113,6 +118,7 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
+	@EnableIfVectorSearchAvailable(collection = Movie.class)
 	void statusChanges() throws InterruptedException {
 
 		String indexName = "vector_index";
@@ -131,6 +137,7 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
+	@EnableIfVectorSearchAvailable(collection = Movie.class)
 	void exists() throws InterruptedException {
 
 		String indexName = "vector_index";
@@ -148,6 +155,7 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
+	@EnableIfVectorSearchAvailable(collection = Movie.class)
 	void updatesVectorIndex() throws InterruptedException {
 
 		String indexName = "vector_index";
@@ -177,6 +185,7 @@ class VectorIndexIntegrationTests {
 	}
 
 	@Test // GH-4706
+	@EnableIfVectorSearchAvailable(collection = Movie.class)
 	void createsVectorIndexWithFilters() throws InterruptedException {
 
 		VectorIndex idx = new VectorIndex("vector_index")
