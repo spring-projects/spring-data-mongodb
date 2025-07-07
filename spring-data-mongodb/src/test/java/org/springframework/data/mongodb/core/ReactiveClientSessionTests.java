@@ -28,12 +28,10 @@ import java.util.function.Supplier;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.ClientSessionOptions;
@@ -45,7 +43,6 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mark Paluch
  * @currentRead Beyond the Shadows - Brent Weeks
  */
-@ExtendWith(MongoClientExtension.class)
 @EnableIfReplicaSetAvailable
 public class ReactiveClientSessionTests {
 

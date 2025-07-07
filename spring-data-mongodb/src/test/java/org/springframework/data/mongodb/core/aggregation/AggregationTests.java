@@ -46,7 +46,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
@@ -71,7 +71,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.Template;
@@ -94,7 +93,6 @@ import com.mongodb.client.MongoCollection;
  * @author Sangyong Choi
  * @author Julia Lee
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";

@@ -38,6 +38,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -51,7 +52,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -62,7 +62,7 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Juergen Zimmermann
  */
-@ExtendWith({ MongoClientExtension.class, DirtiesStateExtension.class })
+@ExtendWith({ DirtiesStateExtension.class })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ReactiveFindOperationSupportTests implements StateFunctions {
 

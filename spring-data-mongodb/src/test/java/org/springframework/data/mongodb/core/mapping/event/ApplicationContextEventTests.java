@@ -28,7 +28,7 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -42,7 +42,6 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.annotation.DirtiesContext;
 
 import com.mongodb.WriteConcern;
@@ -57,7 +56,6 @@ import com.mongodb.client.MongoDatabase;
  * @author Jordi Llach
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class })
 public class ApplicationContextEventTests {
 
 	private static final String COLLECTION_NAME = "personPojoStringId";

@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -46,7 +45,7 @@ import com.mongodb.client.MongoClient;
  * @author Oliver Gierke
  * @since 1.7
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith({ SpringExtension.class })
 @EnableIfMongoServerVersion(isLessThan = "4.1.0")
 @ContextConfiguration
 public class DefaultScriptOperationsTests {

@@ -29,9 +29,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * server available. This means that not only the mongodb instance needs to have a
  * {@literal searchIndexManagementHostAndPort} configured, but also that the search index sever is actually up and
  * running, responding to a {@literal $listSearchIndexes} aggregation.
- * 
+ * <p>
+ * Using this annotation will wait up to {@code 60 seconds} for the search index to become available.
+ *
  * @author Christoph Strobl
- * @since 5.0
+ * @since 4.5.3
  * @see Tag
  */
 @Target({ ElementType.METHOD })

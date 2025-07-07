@@ -15,15 +15,15 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.index.PartialIndexFilter.of;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ObjectUtils;
@@ -47,7 +46,6 @@ import com.mongodb.client.model.IndexOptions;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class DefaultIndexOperationsIntegrationTests {
 
 	static final String COLLECTION_NAME = "default-index-operations-tests";

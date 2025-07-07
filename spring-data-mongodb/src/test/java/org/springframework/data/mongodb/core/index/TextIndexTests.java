@@ -21,13 +21,12 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -35,7 +34,6 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class TextIndexTests {
 
 	@Template(initialEntitySet = TextIndexedDocumentRoot.class)

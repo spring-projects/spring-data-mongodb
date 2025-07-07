@@ -24,11 +24,10 @@ import java.util.List;
 import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.Template;
 
 /**
@@ -36,7 +35,6 @@ import org.springframework.data.mongodb.test.util.Template;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoTemplateExtension.class)
 class MongoTemplateUnwrappedTests {
 
 	private static @Template MongoTemplate template;

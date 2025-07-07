@@ -45,7 +45,7 @@ import org.springframework.util.ClassUtils;
  * @see MongoTestTemplate
  * @see ReactiveMongoTestTemplate
  */
-public class MongoTemplateExtension extends MongoClientExtension implements TestInstancePostProcessor {
+class MongoTemplateExtension extends MongoClientExtension implements TestInstancePostProcessor {
 
 	private static final String DEFAULT_DATABASE = "database";
 

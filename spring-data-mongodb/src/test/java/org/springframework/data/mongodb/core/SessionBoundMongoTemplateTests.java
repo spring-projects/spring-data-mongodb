@@ -37,8 +37,8 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
 import org.springframework.dao.DataAccessException;
@@ -60,7 +60,6 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -76,7 +75,6 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoClientExtension.class)
 @EnableIfReplicaSetAvailable
 public class SessionBoundMongoTemplateTests {
 

@@ -16,11 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.domain.Sort.Direction.DESC;
+import static org.springframework.data.domain.Sort.Direction.*;
 
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -32,21 +29,23 @@ import java.util.stream.Stream;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultReactiveBulkOperations.ReactiveBulkOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -59,7 +58,6 @@ import com.mongodb.bulk.BulkWriteResult;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoTemplateExtension.class)
 class DefaultReactiveBulkOperationsTests {
 
 	static final String COLLECTION_NAME = "reactive-bulk-ops";

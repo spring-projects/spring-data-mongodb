@@ -30,10 +30,10 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Sort;
@@ -50,7 +50,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -59,7 +58,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 /**
  * @author Christoph Strobl
  */
-@ExtendWith(MongoClientExtension.class)
+
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
 public class ReactiveMongoTemplateUpdateTests {
 

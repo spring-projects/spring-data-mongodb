@@ -25,10 +25,9 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -40,7 +39,6 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 class ExecutableRemoveOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
