@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
@@ -40,8 +40,6 @@ import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.Reque
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoServerCondition;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ErrorHandler;
@@ -56,7 +54,6 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  *
  * @author Christoph Strobl
  */
-@ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
 public class DefaultMessageListenerContainerTests {
 
 	static final String DATABASE_NAME = "change-stream-events";

@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +36,6 @@ import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ObjectUtils;
@@ -48,7 +47,6 @@ import org.springframework.util.ObjectUtils;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 class MongoRepositoryTextSearchIntegrationTests {
 
 	private static final FullTextDocument PASSENGER_57 = new FullTextDocument("1", "Passenger 57",

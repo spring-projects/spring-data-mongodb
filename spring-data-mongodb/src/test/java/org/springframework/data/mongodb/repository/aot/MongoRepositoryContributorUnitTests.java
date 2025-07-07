@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.aot.generate.GeneratedFiles;
 import org.springframework.aot.test.generate.TestGenerationContext;
@@ -36,7 +35,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.Meta;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -45,7 +43,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
  *
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+
 @SpringJUnitConfig(classes = MongoRepositoryContributorUnitTests.MongoRepositoryContributorConfiguration.class)
 class MongoRepositoryContributorUnitTests {
 

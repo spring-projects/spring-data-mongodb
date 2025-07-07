@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationSpELExpression;
@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -44,7 +43,6 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Mark Paluch
  * @author Giacomo Baso
  */
-@ExtendWith(MongoTemplateExtension.class)
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.4")
 class MongoTemplateFieldProjectionTests {
 

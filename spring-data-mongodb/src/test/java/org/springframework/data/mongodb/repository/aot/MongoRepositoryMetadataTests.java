@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +35,6 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
@@ -44,7 +42,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
  *
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+
 @SpringJUnitConfig(classes = MongoRepositoryMetadataTests.MongoRepositoryContributorConfiguration.class)
 class MongoRepositoryMetadataTests {
 

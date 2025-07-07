@@ -27,13 +27,12 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.CollectionInfo;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
@@ -43,7 +42,7 @@ import com.mongodb.client.MongoClient;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoClientExtension.class)
+
 public class MongoTemplateViewTests {
 
 	static @Client MongoClient client;

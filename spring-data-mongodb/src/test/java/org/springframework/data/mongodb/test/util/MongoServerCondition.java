@@ -34,7 +34,7 @@ import com.mongodb.client.MongoClient;
 /**
  * @author Christoph Strobl
  */
-public class MongoServerCondition implements ExecutionCondition {
+class MongoServerCondition implements ExecutionCondition {
 
 	private static final Namespace NAMESPACE = Namespace.create("mongodb", "server");
 
@@ -52,9 +52,11 @@ public class MongoServerCondition implements ExecutionCondition {
 		}
 
 		if (context.getTags().contains("vector-search")) {
+
 			if (!atlasEnvironment(context)) {
 				return ConditionEvaluationResult.disabled("Disabled for servers not supporting Vector Search.");
 			}
+
 			if (!isSearchIndexAvailable(context)) {
 				return ConditionEvaluationResult.disabled("Search index unavailable.");
 			}

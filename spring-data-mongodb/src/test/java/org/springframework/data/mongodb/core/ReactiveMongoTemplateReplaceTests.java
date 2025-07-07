@@ -20,7 +20,6 @@ import static org.springframework.data.mongodb.core.ReplaceOptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -35,15 +34,15 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.UpdateResult;
@@ -53,7 +52,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 /**
  * @author Christoph Strobl
  */
-@ExtendWith(MongoClientExtension.class)
+
 public class ReactiveMongoTemplateReplaceTests {
 
 	static final String DB_NAME = "mongo-template-replace-tests";

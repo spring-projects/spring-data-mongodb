@@ -27,14 +27,13 @@ import java.util.Objects;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -42,20 +41,19 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class JsonSchemaQueryTests {
 
-	public static final String DATABASE_NAME = "json-schema-query-tests";
+	private static final String DATABASE_NAME = "json-schema-query-tests";
 
-	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
+	private static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
 	@Template(database = DATABASE_NAME, initialEntitySet = Person.class) //
-	static MongoTestTemplate template;
+	private static MongoTestTemplate template;
 
-	Person jellyBelly, roseSpringHeart, kazmardBoombub;
+	private Person jellyBelly, roseSpringHeart, kazmardBoombub;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		template.flush();
 
@@ -90,7 +88,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void createsWorkingSchema() {
+	void createsWorkingSchema() {
 
 		try {
 			template.dropCollection("person_schema");
@@ -102,7 +100,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void queriesBooleanType() {
+	void queriesBooleanType() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().properties(JsonSchemaProperty.bool("alive")).build();
 
@@ -111,7 +109,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void findsDocumentsWithRequiredFieldsCorrectly() {
+	void findsDocumentsWithRequiredFieldsCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
@@ -120,7 +118,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void findsDocumentsWithRequiredFieldsReactively() {
+	void findsDocumentsWithRequiredFieldsReactively() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
@@ -130,7 +128,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void findsDocumentsWithBsonFieldTypesCorrectly() {
+	void findsDocumentsWithBsonFieldTypesCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().property(int32("value")).build();
 
@@ -139,7 +137,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void findsDocumentsWithJsonFieldTypesCorrectly() {
+	void findsDocumentsWithJsonFieldTypesCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().property(number("value")).build();
 
@@ -148,7 +146,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void combineSchemaWithOtherCriteria() {
+	void combineSchemaWithOtherCriteria() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().property(number("value")).build();
 
@@ -158,7 +156,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void usesMappedFieldNameForRequiredProperties() {
+	void usesMappedFieldNameForRequiredProperties() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
 
@@ -167,7 +165,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void usesMappedFieldNameForProperties() {
+	void usesMappedFieldNameForProperties() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().property(string("name").matching("^R.*")).build();
 
@@ -176,7 +174,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void mapsNestedFieldName() {
+	void mapsNestedFieldName() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder() //
 				.required("address") //
@@ -187,7 +185,7 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void mapsEnumValuesCorrectly() {
+	void mapsEnumValuesCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder()
 				.property(untyped("gender").possibleValues(Gender.PIXY, Gender.GOBLIN)).build();
@@ -197,19 +195,19 @@ public class JsonSchemaQueryTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void useTypeOperatorOnFieldLevel() {
+	void useTypeOperatorOnFieldLevel() {
 		assertThat(template.find(query(where("value").type(Type.intType())), Person.class)).containsExactly(jellyBelly);
 	}
 
 	@Test // DATAMONGO-1835
-	public void useTypeOperatorWithMultipleTypesOnFieldLevel() {
+	void useTypeOperatorWithMultipleTypesOnFieldLevel() {
 
 		assertThat(template.find(query(where("value").type(Type.intType(), Type.stringType())), Person.class))
 				.containsExactlyInAnyOrder(jellyBelly, kazmardBoombub);
 	}
 
 	@Test // DATAMONGO-1835
-	public void findsWithSchemaReturningRawDocument() {
+	void findsWithSchemaReturningRawDocument() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
@@ -237,7 +235,7 @@ public class JsonSchemaQueryTests {
 			return this.name;
 		}
 
-		public Gender getGender() {
+		Gender getGender() {
 			return this.gender;
 		}
 
@@ -249,7 +247,7 @@ public class JsonSchemaQueryTests {
 			return this.value;
 		}
 
-		public boolean isAlive() {
+		boolean isAlive() {
 			return this.alive;
 		}
 

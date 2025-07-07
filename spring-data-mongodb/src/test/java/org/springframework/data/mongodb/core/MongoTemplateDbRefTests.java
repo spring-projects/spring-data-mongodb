@@ -27,7 +27,7 @@ import java.util.Objects;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
@@ -35,7 +35,6 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -47,7 +46,6 @@ import com.mongodb.client.model.Filters;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class MongoTemplateDbRefTests {
 
 	@Template(database = "mongo-template-dbref-tests",
