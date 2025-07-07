@@ -24,7 +24,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.core.aggregation.DateOperators.Year;
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.Windows;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -41,7 +40,6 @@ import org.springframework.data.mongodb.test.util.Template;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoTemplateExtension.class)
 @EnableIfMongoServerVersion(isGreaterThanEqual = "5.0")
 class SetWindowFieldsOperationTests {
 

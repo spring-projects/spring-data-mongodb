@@ -31,7 +31,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,7 +39,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -50,7 +49,6 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class })
 public class TailableCursorTests {
 
 	static final String COLLECTION_NAME = "user";

@@ -28,15 +28,14 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.ReactiveMongoTransactionManager;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.transaction.ReactiveTransaction;
 import org.springframework.transaction.reactive.TransactionCallback;
@@ -55,7 +54,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mathieu Ouellet
  * @currentRead The Core - Peter V. Brett
  */
-@ExtendWith(MongoClientExtension.class)
+
 @EnableIfReplicaSetAvailable
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 public class ReactiveMongoTemplateTransactionTests {

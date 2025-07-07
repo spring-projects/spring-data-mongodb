@@ -25,9 +25,8 @@ import java.util.Base64;
 import org.bson.types.Binary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -37,7 +36,6 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Christoph Strobl
  * @author Andreas Zink
  */
-@ExtendWith(MongoTemplateExtension.class)
 class CriteriaTests {
 
 	@Template(initialEntitySet = { DocumentWithBitmask.class }) //

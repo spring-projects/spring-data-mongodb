@@ -30,6 +30,7 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -44,7 +45,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.Rollback;
@@ -63,7 +63,7 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith({ SpringExtension.class })
 @EnableIfReplicaSetAvailable
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 @Transactional(transactionManager = "txManager")

@@ -46,7 +46,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -56,7 +55,7 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith({ MongoTemplateExtension.class, DirtiesStateExtension.class })
+@ExtendWith({ DirtiesStateExtension.class })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ExecutableFindOperationSupportTests implements StateFunctions {
 

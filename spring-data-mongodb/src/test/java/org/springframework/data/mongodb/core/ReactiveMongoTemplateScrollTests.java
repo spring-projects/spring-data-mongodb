@@ -28,10 +28,10 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.domain.ScrollPosition;
@@ -40,7 +40,6 @@ import org.springframework.data.domain.Window;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -51,7 +50,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@ExtendWith(MongoClientExtension.class)
+
 class ReactiveMongoTemplateScrollTests {
 
 	static @Client MongoClient client;

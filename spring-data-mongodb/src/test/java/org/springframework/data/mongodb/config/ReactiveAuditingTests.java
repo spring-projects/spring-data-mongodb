@@ -17,12 +17,6 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.core.ResolvableType;
-import org.springframework.data.mapping.callback.EntityCallback;
-import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
-import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
-import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -42,18 +36,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.ResolvableType;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.ReactiveAuditorAware;
+import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mongodb.core.AuditablePerson;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
@@ -62,7 +61,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  *
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith({ SpringExtension.class })
 @ContextConfiguration
 class ReactiveAuditingTests {
 

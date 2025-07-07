@@ -28,14 +28,13 @@ import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Vector;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoVector;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ObjectUtils;
@@ -47,7 +46,6 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class MongoConvertersIntegrationTests {
 
 	static final String COLLECTION = "converter-tests";

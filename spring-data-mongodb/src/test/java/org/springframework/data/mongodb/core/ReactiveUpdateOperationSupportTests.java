@@ -26,13 +26,12 @@ import java.util.Objects;
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -41,7 +40,7 @@ import com.mongodb.client.MongoClient;
  *
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+
 class ReactiveUpdateOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";

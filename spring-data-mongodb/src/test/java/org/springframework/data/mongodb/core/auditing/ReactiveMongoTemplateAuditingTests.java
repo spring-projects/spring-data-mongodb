@@ -44,7 +44,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -56,7 +55,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith(SpringExtension.class)
 class ReactiveMongoTemplateAuditingTests {
 
 	static final String DB_NAME = "mongo-template-audit-tests";

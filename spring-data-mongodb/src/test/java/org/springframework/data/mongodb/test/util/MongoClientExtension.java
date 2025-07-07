@@ -47,7 +47,7 @@ import com.mongodb.client.MongoClient;
  * @see Client
  * @see ReplSetClient
  */
-public class MongoClientExtension implements Extension, BeforeAllCallback, AfterAllCallback, ParameterResolver {
+class MongoClientExtension implements Extension, BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoClientExtension.class);
 
@@ -157,7 +157,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		return getMongoClient(parameterType, extensionContext, replSet);
 	}
 
-	static class SyncClientHolder implements Store.CloseableResource {
+	static class SyncClientHolder implements AutoCloseable {
 
 		final MongoClient client;
 
@@ -175,7 +175,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		}
 	}
 
-	static class ReactiveClientHolder implements Store.CloseableResource {
+	static class ReactiveClientHolder implements AutoCloseable {
 
 		final com.mongodb.reactivestreams.client.MongoClient client;
 

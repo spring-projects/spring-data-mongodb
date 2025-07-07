@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.data.Index.*;
 import static org.assertj.core.data.Index.atIndex;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
@@ -29,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junitpioneer.jupiter.RepeatFailedTest;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
@@ -42,7 +43,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.model.IndexOptions;
@@ -56,7 +56,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * @author Christoph Strobl
  * @author Mathieu Ouellet
  */
-@ExtendWith(MongoClientExtension.class)
+
 public class ReactiveMongoTemplateIndexTests {
 
 	private static @Client MongoClient client;

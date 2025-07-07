@@ -29,6 +29,7 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -48,7 +49,6 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntit
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.stereotype.Repository;
@@ -65,7 +65,7 @@ import com.mongodb.client.MongoClient;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith({ SpringExtension.class })
 @ContextConfiguration
 class AuditingViaJavaConfigRepositoriesTests {
 

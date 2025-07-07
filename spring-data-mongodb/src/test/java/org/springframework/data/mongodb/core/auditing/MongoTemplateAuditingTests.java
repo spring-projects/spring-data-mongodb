@@ -39,7 +39,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
@@ -47,7 +46,7 @@ import com.mongodb.client.MongoClient;
 /**
  * @author Christoph Strobl
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith({ SpringExtension.class })
 public class MongoTemplateAuditingTests {
 
 	static @Client MongoClient mongoClient;

@@ -23,7 +23,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextQueryTests.FullTextDoc.FullTextDocBuilder;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.lang.Nullable;
@@ -41,7 +40,6 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class TextQueryTests {
 
 	private static final FullTextDoc BAKE = new FullTextDocBuilder().headline("bake").build();

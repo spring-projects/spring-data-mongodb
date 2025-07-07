@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.assertj.core.api.Assertions.assertThatRuntimeException;
-import static org.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import java.time.Duration;
@@ -26,15 +27,14 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.VectorIndex.SimilarityFunction;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.AtlasContainer;
 import org.springframework.data.mongodb.test.util.EnableIfVectorSearchAvailable;
-import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.lang.Nullable;
@@ -51,7 +51,6 @@ import com.mongodb.client.AggregateIterable;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoServerCondition.class)
 @Testcontainers(disabledWithoutDocker = true)
 class VectorIndexIntegrationTests {
 

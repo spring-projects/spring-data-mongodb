@@ -32,7 +32,7 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
@@ -46,7 +46,6 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.lang.Nullable;
 
@@ -59,7 +58,7 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @author Julia Lee
  */
-@ExtendWith(MongoClientExtension.class)
+
 public class MongoTemplateDocumentReferenceTests {
 
 	public static final String DB_NAME = "document-reference-tests";

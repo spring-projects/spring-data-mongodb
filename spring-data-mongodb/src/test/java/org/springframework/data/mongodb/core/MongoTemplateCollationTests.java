@@ -26,6 +26,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -33,7 +34,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.Alternate;
 import org.springframework.data.mongodb.core.query.Collation.ComparisonLevel;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
@@ -42,7 +42,7 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@ExtendWith({ SpringExtension.class })
 public class MongoTemplateCollationTests {
 
 	public static final String COLLECTION_NAME = "collation-1";

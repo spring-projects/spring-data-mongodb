@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.Index;
@@ -35,7 +35,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
@@ -47,7 +46,6 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * @author Mark Paluch
  * @author Mathieu Ouellet
  */
-@ExtendWith(MongoTemplateExtension.class)
 public class DefaultReactiveIndexOperationsTests {
 
 	@Template(initialEntitySet = DefaultIndexOperationsIntegrationTestsSample.class) //

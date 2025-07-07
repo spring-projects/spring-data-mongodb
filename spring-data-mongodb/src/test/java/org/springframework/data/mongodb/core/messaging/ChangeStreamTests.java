@@ -38,8 +38,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junitpioneer.jupiter.RepeatFailedTest;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.CollectionOptions;
@@ -51,7 +51,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.Template;
@@ -68,7 +67,6 @@ import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
  * @author Mark Paluch
  * @author Myroslav Kosinskyi
  */
-@ExtendWith({ MongoTemplateExtension.class })
 @EnableIfReplicaSetAvailable
 class ChangeStreamTests {
 
