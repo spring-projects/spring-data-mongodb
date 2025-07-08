@@ -16,6 +16,9 @@
 package org.springframework.data.mongodb.test.util;
 
 import org.springframework.core.env.StandardEnvironment;
+
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.mongodb.MongoDBAtlasLocalContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -36,12 +39,18 @@ public class AtlasContainer extends MongoDBAtlasLocalContainer {
 	public static final String ATLAS_HOST = "docker.mongodb.atlas.host";
 	public static final String ATLAS_PORT = "docker.mongodb.atlas.port";
 
+	public static final WaitAllStrategy WAIT_STRATEGY = new WaitAllStrategy(
+			WaitAllStrategy.Mode.WITH_MAXIMUM_OUTER_TIMEOUT).withStrategy(Wait.forListeningPort())
+			.withStrategy(Wait.forSuccessfulCommand("runner healthcheck"));
+
 	private AtlasContainer(String dockerImageName) {
 		super(DockerImageName.parse(dockerImageName));
+		this.waitingFor(WAIT_STRATEGY);
 	}
 
 	private AtlasContainer(DockerImageName dockerImageName) {
 		super(dockerImageName);
+		this.waitingFor(WAIT_STRATEGY);
 	}
 
 	public static AtlasContainer bestMatch() {
