@@ -198,7 +198,7 @@ It is possible to create custom annotations out of the provided ones.
 MongoDB Collection Info::
 +
 ====
-[source,json,indent=0,subs="verbatim,quotes",role="thrid"]
+[source,json,indent=0,subs="verbatim,quotes",role="third"]
 ----
 {
     name: 'patient',
@@ -244,7 +244,7 @@ MongoDB Collection Info::
 - It is not possible to use both QE and CSFLE within the same collection.
 - It is not possible to query a `range` indexed field with an `equality` operator.
 - It is not possible to query an `equality` indexed field with a `range` operator.
-- It is not possible to set `bypassAutoEncrytion(true)`.
+- It is not possible to set `bypassAutoEncryption(true)`.
 - It is not possible to use self maintained encryption keys via `@Encrypted` in combination with Queryable Encryption.
 - Contention is only optional on the server side, the clients requires you to set the value (Default us `8`).
 - Additional options for eg. `min` and `max` need to match the actual field type. Make sure to use `$numberLong` etc. to ensure target types when parsing bson String.
