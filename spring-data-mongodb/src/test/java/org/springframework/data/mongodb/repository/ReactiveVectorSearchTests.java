@@ -167,9 +167,9 @@ public class ReactiveVectorSearchTests {
 		template.searchIndexOps(WithVectorFields.class).createIndex(cosIndex);
 		template.searchIndexOps(WithVectorFields.class).createIndex(euclideanIndex);
 		template.searchIndexOps(WithVectorFields.class).createIndex(inner);
-		template.awaitIndexCreation(WithVectorFields.class, cosIndex.getName());
-		template.awaitIndexCreation(WithVectorFields.class, euclideanIndex.getName());
-		template.awaitIndexCreation(WithVectorFields.class, inner.getName());
+		template.awaitSearchIndexCreation(WithVectorFields.class, cosIndex.getName());
+		template.awaitSearchIndexCreation(WithVectorFields.class, euclideanIndex.getName());
+		template.awaitSearchIndexCreation(WithVectorFields.class, inner.getName());
 	}
 
 	interface ReactiveVectorSearchRepository extends CrudRepository<WithVectorFields, String> {

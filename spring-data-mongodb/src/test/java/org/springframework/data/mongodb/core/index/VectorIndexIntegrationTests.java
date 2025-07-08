@@ -20,6 +20,7 @@ import static org.awaitility.Awaitility.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.bson.Document;
@@ -69,15 +70,16 @@ class VectorIndexIntegrationTests {
 	@BeforeEach
 	void init() {
 
-		template.createCollection(Movie.class);
+		template.createCollectionIfNotExists(Movie.class);
 		indexOps = template.searchIndexOps(Movie.class);
 	}
 
 	@AfterEach
 	void cleanup() {
 
+		template.flush(Movie.class);
 		template.searchIndexOps(Movie.class).dropAllIndexes();
-		template.dropCollection(Movie.class);
+		template.awaitNoSearchIndexAvailable(Movie.class, Duration.ofSeconds(30));
 	}
 
 	@ParameterizedTest // GH-4706
@@ -110,7 +112,7 @@ class VectorIndexIntegrationTests {
 
 		indexOps.createIndex(idx);
 
-		template.awaitIndexCreation(Movie.class, idx.getName());
+		template.awaitSearchIndexCreation(Movie.class, idx.getName());
 
 		indexOps.dropIndex(idx.getName());
 
