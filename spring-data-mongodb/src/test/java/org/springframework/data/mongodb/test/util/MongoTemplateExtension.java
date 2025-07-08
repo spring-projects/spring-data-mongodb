@@ -33,7 +33,7 @@ import org.junit.platform.commons.util.StringUtils;
 
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
-import org.springframework.data.mongodb.test.util.MongoExtensions.Termplate;
+import org.springframework.data.mongodb.test.util.MongoExtensions.Template;
 import org.springframework.data.util.ParsingUtils;
 import org.springframework.util.ClassUtils;
 
@@ -41,7 +41,7 @@ import org.springframework.util.ClassUtils;
  * JUnit {@link Extension} providing parameter resolution for synchronous and reactive MongoDB Template API objects.
  *
  * @author Christoph Strobl
- * @see Template
+ * @see org.springframework.data.mongodb.test.util.Template
  * @see MongoTestTemplate
  * @see ReactiveMongoTestTemplate
  */
@@ -65,32 +65,32 @@ class MongoTemplateExtension extends MongoClientExtension implements TestInstanc
 	@Override
 	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		return super.supportsParameter(parameterContext, extensionContext) || parameterContext.isAnnotated(Template.class);
+		return super.supportsParameter(parameterContext, extensionContext) || parameterContext.isAnnotated(org.springframework.data.mongodb.test.util.Template.class);
 	}
 
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
 
-		if (parameterContext.getParameter().getAnnotation(Template.class) == null) {
+		if (parameterContext.getParameter().getAnnotation(org.springframework.data.mongodb.test.util.Template.class) == null) {
 			return super.resolveParameter(parameterContext, extensionContext);
 		}
 
 		Class<?> parameterType = parameterContext.getParameter().getType();
-		return getMongoTemplate(parameterType, parameterContext.getParameter().getAnnotation(Template.class),
+		return getMongoTemplate(parameterType, parameterContext.getParameter().getAnnotation(org.springframework.data.mongodb.test.util.Template.class),
 				extensionContext);
 	}
 
 	private void injectFields(ExtensionContext context, Object testInstance, Predicate<Field> predicate) {
 
-		AnnotationUtils.findAnnotatedFields(context.getRequiredTestClass(), Template.class, predicate).forEach(field -> {
+		AnnotationUtils.findAnnotatedFields(context.getRequiredTestClass(), org.springframework.data.mongodb.test.util.Template.class, predicate).forEach(field -> {
 
 			assertValidFieldCandidate(field);
 
 			try {
 
 				ReflectionUtils.makeAccessible(field).set(testInstance,
-						getMongoTemplate(field.getType(), field.getAnnotation(Template.class), context));
+						getMongoTemplate(field.getType(), field.getAnnotation(org.springframework.data.mongodb.test.util.Template.class), context));
 			} catch (Throwable t) {
 				ExceptionUtils.throwAsUncheckedException(t);
 			}
@@ -107,14 +107,14 @@ class MongoTemplateExtension extends MongoClientExtension implements TestInstanc
 		if (!ClassUtils.isAssignable(MongoOperations.class, type)
 				&& !ClassUtils.isAssignable(ReactiveMongoOperations.class, type)) {
 			throw new ExtensionConfigurationException(
-					String.format("Can only resolve @%s %s of type %s or %s but was: %s", Template.class.getSimpleName(), target,
+					String.format("Can only resolve @%s %s of type %s or %s but was: %s", org.springframework.data.mongodb.test.util.Template.class.getSimpleName(), target,
 							MongoOperations.class.getName(), ReactiveMongoOperations.class.getName(), type.getName()));
 		}
 	}
 
-	private Object getMongoTemplate(Class<?> type, Template options, ExtensionContext extensionContext) {
+	private Object getMongoTemplate(Class<?> type, org.springframework.data.mongodb.test.util.Template options, ExtensionContext extensionContext) {
 
-		Store templateStore = extensionContext.getStore(MongoExtensions.Termplate.NAMESPACE);
+		Store templateStore = extensionContext.getStore(Template.NAMESPACE);
 
 		boolean replSetClient = holdsReplSetClient(extensionContext) || options.replicaSet();
 
@@ -126,7 +126,7 @@ class MongoTemplateExtension extends MongoClientExtension implements TestInstanc
 
 		if (ClassUtils.isAssignable(MongoOperations.class, type)) {
 
-			String key = Termplate.SYNC + "-" + dbName;
+			String key = Template.SYNC + "-" + dbName;
 			return templateStore.getOrComputeIfAbsent(key, it -> {
 
 				com.mongodb.client.MongoClient client = (com.mongodb.client.MongoClient) getMongoClient(
@@ -137,7 +137,7 @@ class MongoTemplateExtension extends MongoClientExtension implements TestInstanc
 
 		if (ClassUtils.isAssignable(ReactiveMongoOperations.class, type)) {
 
-			String key = Termplate.REACTIVE + "-" + dbName;
+			String key = Template.REACTIVE + "-" + dbName;
 			return templateStore.getOrComputeIfAbsent(key, it -> {
 
 				com.mongodb.reactivestreams.client.MongoClient client = (com.mongodb.reactivestreams.client.MongoClient) getMongoClient(

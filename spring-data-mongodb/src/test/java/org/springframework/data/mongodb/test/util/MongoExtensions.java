@@ -31,7 +31,7 @@ class MongoExtensions {
 		static final String REACTIVE_REPLSET_KEY = "mongo.client.replset.reactive";
 	}
 
-	static class Termplate {
+	static class Template {
 
 		static final Namespace NAMESPACE = Namespace.create(MongoTemplateExtension.class);
 		static final String SYNC = "mongo.template.sync";
