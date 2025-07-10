@@ -115,7 +115,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public String ensureIndex(IndexDefinition indexDefinition) {
+	public String createIndex(IndexDefinition indexDefinition) {
 
 		return execute(collection -> {
 
