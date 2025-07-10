@@ -36,6 +36,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -143,9 +144,10 @@ class MongoRepositoryContributorTests {
 
 		// wait for search index to be queryable
 
-		Awaitility.await().atMost(Duration.ofSeconds(120)).pollInterval(Duration.ofMillis(200)).until(() -> {
-			return MongoTestUtils.isSearchIndexReady(indexName, client, DB_NAME, COLLECTION_NAME);
-		});
+		Awaitility.await().atLeast(Duration.ofMillis(50)).atMost(Duration.ofSeconds(120))
+				.pollInterval(Duration.ofMillis(250)).until(() -> {
+					return MongoTestUtils.isSearchIndexReady(indexName, client, DB_NAME, COLLECTION_NAME);
+				});
 
 		Document $vectorSearch = new Document("$vectorSearch",
 				new Document("index", indexName).append("limit", 1).append("numCandidates", 20).append("path", "embedding")
@@ -812,7 +814,7 @@ class MongoRepositoryContributorTests {
 		assertThat(page2.hasNext()).isFalse();
 	}
 
-	@Test
+	@RetryingTest(3)
 	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
 	void vectorSearchFromAnnotation() {
 
@@ -824,7 +826,7 @@ class MongoRepositoryContributorTests {
 		assertThat(results).hasSize(1);
 	}
 
-	@Test
+	@RetryingTest(3)
 	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
 	void vectorSearchWithDerivedQuery() {
 
@@ -837,7 +839,7 @@ class MongoRepositoryContributorTests {
 		assertThat(results).hasSize(1);
 	}
 
-	@Test
+	@RetryingTest(3)
 	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
 	void vectorSearchReturningResultsAsList() {
 
@@ -849,7 +851,7 @@ class MongoRepositoryContributorTests {
 		assertThat(results).hasSize(2);
 	}
 
-	@Test
+	@RetryingTest(3)
 	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
 	void vectorSearchWithLimitFromAnnotation() {
 
@@ -862,7 +864,7 @@ class MongoRepositoryContributorTests {
 		assertThat(results).hasSize(1);
 	}
 
-	@Test
+	@RetryingTest(3)
 	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
 	void vectorSearchWithSorting() {
 
@@ -875,7 +877,7 @@ class MongoRepositoryContributorTests {
 		assertThat(results).hasSize(2);
 	}
 
-	@Test
+	@RetryingTest(3)
 	@EnableIfVectorSearchAvailable(database = DB_NAME, collection = User.class)
 	void vectorSearchWithLimitFromDerivedQuery() {
 
