@@ -133,6 +133,11 @@ The information covers the algorithm in use as well as allowed query types along
 `MongoOperations#createCollection(...)` can be used to do the initial setup for collections utilizing QE.
 The configuration for QE via Spring Data uses the same building blocks (a xref:mongodb/mapping/mapping-schema.adoc#mongo.jsonSchema.encrypted-fields[JSON Schema creation]) as CSFLE, converting the schema/properties into the configuration format required by MongoDB.
 
+You can configure Queryable Encryption either manually or in a derived way:
+
+- Manual setup gives you full control over how encrypted fields are declared and how collections are created. It's useful when you need to explicitly manage data keys, encryption algorithms, and field mappings.
+- Derived setup relies on annotations in your domain model and automatically generates the required encrypted field configuration from it. This is simpler and recommended for typical Spring applications where your data model is already annotated.
+
 [tabs]
 ======
 Manual Collection Setup::
@@ -165,30 +170,43 @@ Derived Collection Setup::
 ----
 class Patient {
 
-    @Id String id;
+    @Id String id; <1>
+
+    Address address; <1>
+
+    @Encrypted(algorithm = "Unindexed")
+    String pin; <2>
 
     @Encrypted(algorithm = "Indexed")
     @Queryable(queryType = "equality", contentionFactor = 0)
-    String ssn;
+    String ssn; <3>
 
     @RangeEncrypted(contentionFactor = 8, rangeOptions = "{ 'min' : 0, 'max' : 150 }")
-    Integer age;
+    Integer age; <4>
 
-    @Encrypted(algorithm = "Unindexed")
-    String pin;
-
-    Address address;
+    @RangeEncrypted(contentionFactor = 0L,
+        rangeOptions = "{\"min\": {\"$numberDouble\": \"0.3\"}, \"max\": {\"$numberDouble\": \"2.5\"}, \"precision\": 2 }")
+    double height; <5>
 }
 
 MongoJsonSchema patientSchema = MongoJsonSchemaCreator.create(mappingContext)
     .filter(MongoJsonSchemaCreator.encryptedOnly())
     .createSchemaFor(Patient.class);
 
-CollectionOptions collectionOptions = CollectionOptions.encryptedCollection(patientSchema);
+Document encryptedFields = CollectionOptions.encryptedCollection(patientSchema)
+        .getEncryptedFieldsOptions()
+        .map(CollectionOptions.EncryptedFieldsOptions::toDocument)
+        .orElseThrow();
 
-mongoTemplate.createCollection(Patient.class, collectionOptions); <1>
+template.execute(db -> clientEncryption.createEncryptedCollection(db, template.getCollectionName(Patient.class), new CreateCollectionOptions()
+        .encryptedFields(encryptedFields), new CreateEncryptedCollectionParams("local"))); <1>
+
 ----
-<1> Using the template to create the collection may prevent capturing generated keyIds. In this case render the `Document` from the options and use the `createEncryptedCollection(...)` method via the encryption library.
+<1> id and address are not encrypted and can be queried normally.
+<2> pin is encrypted but does not support queries.
+<3> ssn is encrypted and allows equality queries.
+<4> age is encrypted and allows range queries between 0 and 150.
+<5> height is encrypted and allows range queries between 0.3 and 2.5.
 
 The `Queryable` annotation allows to define allowed query types for encrypted fields.
 `@RangeEncrypted` is a combination of `@Encrypted` and `@Queryable` for fields allowing `range` queries.
@@ -250,6 +268,8 @@ MongoDB Collection Info::
 - Additional options for eg. `min` and `max` need to match the actual field type. Make sure to use `$numberLong` etc. to ensure target types when parsing bson String.
 - Queryable Encryption will an extra field `__safeContent__` to each of your documents.
 Unless explicitly excluded the field will be loaded into memory when retrieving results.
+- For a complete example, see Github project:
+https://github.com/mongodb-developer/spring-data-queryable-encryption[spring-data-queryable-encryption]
 ====
 
 [[mongo.encryption.queryable.automatic]]
