@@ -36,19 +36,20 @@ public interface IndexOperations {
 	 * @deprecated since 4.5, in favor of {@link #createIndex(IndexDefinition)}.
 	 */
 	@Deprecated(since = "4.5", forRemoval = true)
-	String ensureIndex(IndexDefinition indexDefinition);
+	default String ensureIndex(IndexDefinition indexDefinition) {
+		return createIndex(indexDefinition);
+	}
 
 	/**
-	 * Create the index for the provided {@link IndexDefinition} exists for the collection indicated by the entity class.
-	 * If not it will be created.
+	 * Create the index for the provided {@link IndexDefinition} for the collection indicated by the entity class. If the
+	 * index does not exist it will be created. Might error if the collection already defines an index with the same name
+	 * but different settings.
 	 *
 	 * @param indexDefinition must not be {@literal null}.
 	 * @return the index name.
 	 * @since 4.5
 	 */
-	default String createIndex(IndexDefinition indexDefinition) {
-		return ensureIndex(indexDefinition);
-	}
+	String createIndex(IndexDefinition indexDefinition);
 
 	/**
 	 * Alters the index with given {@literal name}.
