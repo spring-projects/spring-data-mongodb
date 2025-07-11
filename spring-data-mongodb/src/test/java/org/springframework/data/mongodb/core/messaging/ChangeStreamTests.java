@@ -38,8 +38,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.RepeatFailedTest;
 
+import org.junitpioneer.jupiter.RetryingTest;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.CollectionOptions;
@@ -195,7 +195,7 @@ class ChangeStreamTests {
 		assertThat(messageBodies).hasSize(2).doesNotContain(sugarSplashy);
 	}
 
-	@RepeatFailedTest(3) // DATAMONGO-1803
+	@RetryingTest(3) // DATAMONGO-1803
 	void mapsTypedAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();

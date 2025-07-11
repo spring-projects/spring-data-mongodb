@@ -15,10 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.DirtiesState;
+import static org.springframework.data.mongodb.test.util.DirtiesStateExtension.StateFunctions;
 
 import java.util.Date;
 import java.util.List;
@@ -47,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -80,7 +84,7 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 
 	@Override
 	public void setupState() {
-		template.indexOps(Planet.class).ensureIndex(
+		template.indexOps(Planet.class).createIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
 		initPersons();
@@ -161,7 +165,7 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 	void findAllAsDocument() {
 		assertThat(
 				template.query(Document.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all())
-						.hasSize(1);
+				.hasSize(1);
 	}
 
 	@Test // DATAMONGO-1563
@@ -321,6 +325,14 @@ class ExecutableFindOperationSupportTests implements StateFunctions {
 				.all();
 		assertThat(results.getContent()).hasSize(2);
 		assertThat(results.getContent().get(0).getDistance()).isNotNull();
+	}
+
+	@Test
+	void countResultsOfNearQuery() {
+
+		Long count = template.query(Planet.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true).query(new Query(where("name").is("alderan")))).count();
+		assertThat(count).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1563

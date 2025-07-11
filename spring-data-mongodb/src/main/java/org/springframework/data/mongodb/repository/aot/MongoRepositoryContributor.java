@@ -15,11 +15,18 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.*;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.aggregationExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.deleteExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.geoNearBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.geoNearExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.queryExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.MongoCodeBlocks.updateExecutionBlockBuilder;
+import static org.springframework.data.mongodb.repository.aot.QueryBlocks.QueryCodeBlockBuilder;
 
 import java.lang.reflect.Method;
-import java.util.Locale;
-import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +37,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.mongodb.repository.VectorSearch;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.aot.generate.AotRepositoryClassBuilder;
 import org.springframework.data.repository.aot.generate.AotRepositoryConstructorBuilder;
@@ -90,28 +98,29 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, getRepositoryInformation(), getProjectionFactory(),
 				mappingContext);
 
+		if (backoff(queryMethod)) {
+			return null;
+		}
+
 		if (queryMethod.hasAnnotatedAggregation()) {
 			AggregationInteraction aggregation = new AggregationInteraction(queryMethod.getAnnotatedAggregation());
 			return aggregationMethodContributor(queryMethod, aggregation);
 		}
 
 		QueryInteraction query = createStringQuery(getRepositoryInformation(), queryMethod,
-				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method.getParameterCount());
+				AnnotatedElementUtils.findMergedAnnotation(method, Query.class), method);
 
-		if (queryMethod.hasAnnotatedQuery()) {
-			if (StringUtils.hasText(queryMethod.getAnnotatedQuery())
-					&& Pattern.compile("[\\?:][#$]\\{.*\\}").matcher(queryMethod.getAnnotatedQuery()).find()) {
+		if (queryMethod.isSearchQuery() || method.isAnnotationPresent(VectorSearch.class)) {
 
-				if (logger.isDebugEnabled()) {
-					logger.debug(
-							"Skipping AOT generation for [%s]. SpEL expressions are not supported".formatted(method.getName()));
-				}
-				return MethodContributor.forQueryMethod(queryMethod).metadataOnly(query);
-			}
+			VectorSearch vectorSearch = AnnotatedElementUtils.findMergedAnnotation(method, VectorSearch.class);
+			return searchMethodContributor(queryMethod, new SearchInteraction(getRepositoryInformation().getDomainType(),
+					vectorSearch, query.getQuery(), queryMethod.getParameters()));
 		}
 
-		if (backoff(queryMethod)) {
-			return null;
+		if (queryMethod.isGeoNearQuery() || (queryMethod.getParameters().getMaxDistanceIndex() != -1
+				&& queryMethod.getReturnType().isCollectionLike())) {
+			NearQueryInteraction near = new NearQueryInteraction(query, queryMethod.getParameters());
+			return nearQueryMethodContributor(queryMethod, near);
 		}
 
 		if (query.isDelete()) {
@@ -125,8 +134,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 				UpdateInteraction update = new UpdateInteraction(query, null, updateIndex);
 				return updateMethodContributor(queryMethod, update);
-
 			} else {
+
 				Update updateSource = queryMethod.getUpdateSource();
 				if (StringUtils.hasText(updateSource.value())) {
 					UpdateInteraction update = new UpdateInteraction(query, new StringUpdate(updateSource.value()), null);
@@ -145,7 +154,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 
 	@SuppressWarnings("NullAway")
 	private QueryInteraction createStringQuery(RepositoryInformation repositoryInformation, MongoQueryMethod queryMethod,
-			@Nullable Query queryAnnotation, int parameterCount) {
+			@Nullable Query queryAnnotation, Method source) {
 
 		QueryInteraction query;
 		if (queryMethod.hasAnnotatedQuery() && queryAnnotation != null) {
@@ -154,8 +163,8 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		} else {
 
 			PartTree partTree = new PartTree(queryMethod.getName(), repositoryInformation.getDomainType());
-			query = new QueryInteraction(queryCreator.createQuery(partTree, parameterCount), partTree.isCountProjection(),
-					partTree.isDelete(), partTree.isExistsProjection());
+			query = new QueryInteraction(queryCreator.createQuery(partTree, queryMethod, source),
+					partTree.isCountProjection(), partTree.isDelete(), partTree.isExistsProjection());
 		}
 
 		if (queryAnnotation != null && StringUtils.hasText(queryAnnotation.sort())) {
@@ -171,8 +180,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 	private static boolean backoff(MongoQueryMethod method) {
 
 		// TODO: namedQuery, Regex queries, queries accepting Shapes (e.g. within) or returning arrays.
-		boolean skip = method.isGeoNearQuery() || method.isSearchQuery()
-				|| method.getName().toLowerCase(Locale.ROOT).contains("regex") || method.getReturnType().getType().isArray();
+		boolean skip = method.getReturnType().getType().isArray();
 
 		if (skip && logger.isDebugEnabled()) {
 			logger.debug("Skipping AOT generation for [%s]. Method is either returning an array or a geo-near, regex query"
@@ -181,22 +189,62 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		return skip;
 	}
 
-	private static MethodContributor<MongoQueryMethod> aggregationMethodContributor(MongoQueryMethod queryMethod,
+	private static MethodContributor<MongoQueryMethod> nearQueryMethodContributor(MongoQueryMethod queryMethod,
+			NearQueryInteraction interaction) {
+
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(interaction).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+
+			String variableName = context.localVariable("nearQuery");
+			builder.add(geoNearBlockBuilder(context, queryMethod).usingQueryVariableName(variableName).build());
+
+			if (!context.getBindableParameterNames().isEmpty()) {
+				String filterQueryVariableName = context.localVariable("filterQuery");
+				builder.add(queryBlockBuilder(context, queryMethod).usingQueryVariableName(filterQueryVariableName)
+						.filter(interaction.getQuery()).build());
+				builder.addStatement("$L.query($L)", variableName, filterQueryVariableName);
+			}
+
+			builder.add(geoNearExecutionBlockBuilder(context, queryMethod).referencing(variableName).build());
+
+			return builder.build();
+		});
+	}
+
+	static MethodContributor<MongoQueryMethod> aggregationMethodContributor(MongoQueryMethod queryMethod,
 			AggregationInteraction aggregation) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(aggregation).contribute(context -> {
 
 			CodeBlock.Builder builder = CodeBlock.builder();
 
+			String variableName = "aggregation";
 			builder.add(aggregationBlockBuilder(context, queryMethod).stages(aggregation)
-					.usingAggregationVariableName("aggregation").build());
-			builder.add(aggregationExecutionBlockBuilder(context, queryMethod).referencing("aggregation").build());
+					.usingAggregationVariableName(variableName).build());
+			builder.add(aggregationExecutionBlockBuilder(context, queryMethod).referencing(variableName).build());
 
 			return builder.build();
 		});
 	}
 
-	private static MethodContributor<MongoQueryMethod> updateMethodContributor(MongoQueryMethod queryMethod,
+	static MethodContributor<MongoQueryMethod> searchMethodContributor(MongoQueryMethod queryMethod,
+			SearchInteraction interaction) {
+		return MethodContributor.forQueryMethod(queryMethod).withMetadata(interaction).contribute(context -> {
+
+			CodeBlock.Builder builder = CodeBlock.builder();
+
+			String variableName = "search";
+
+			builder.add(
+					new VectorSearchBocks.VectorSearchQueryCodeBlockBuilder(context, queryMethod, interaction.getSearchPath())
+							.usingVariableName(variableName).withFilter(interaction.getFilter()).build());
+
+			return builder.build();
+		});
+	}
+
+	static MethodContributor<MongoQueryMethod> updateMethodContributor(MongoQueryMethod queryMethod,
 			UpdateInteraction update) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(update).contribute(context -> {
@@ -225,7 +273,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		});
 	}
 
-	private static MethodContributor<MongoQueryMethod> aggregationUpdateMethodContributor(MongoQueryMethod queryMethod,
+	static MethodContributor<MongoQueryMethod> aggregationUpdateMethodContributor(MongoQueryMethod queryMethod,
 			AggregationUpdateInteraction update) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(update).contribute(context -> {
@@ -251,7 +299,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		});
 	}
 
-	private static MethodContributor<MongoQueryMethod> deleteMethodContributor(MongoQueryMethod queryMethod,
+	static MethodContributor<MongoQueryMethod> deleteMethodContributor(MongoQueryMethod queryMethod,
 			QueryInteraction query) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(query).contribute(context -> {
@@ -266,7 +314,7 @@ public class MongoRepositoryContributor extends RepositoryContributor {
 		});
 	}
 
-	private static MethodContributor<MongoQueryMethod> queryMethodContributor(MongoQueryMethod queryMethod,
+	static MethodContributor<MongoQueryMethod> queryMethodContributor(MongoQueryMethod queryMethod,
 			QueryInteraction query) {
 
 		return MethodContributor.forQueryMethod(queryMethod).withMetadata(query).contribute(context -> {

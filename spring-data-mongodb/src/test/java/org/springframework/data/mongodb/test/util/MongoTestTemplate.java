@@ -233,4 +233,43 @@ public class MongoTestTemplate extends MongoTemplate {
 	public void awaitNoSearchIndexAvailable(Class<?> type, Duration timeout) {
 		awaitNoSearchIndexAvailable(getCollectionName(type), timeout);
 	}
+
+	public void tryToDropSearchIndexes(Class<?> type, Duration duration) {
+		tryToDropSearchIndexes(getCollectionName(type), duration);
+	}
+
+	public void tryToDropSearchIndexes(String collectionName, Duration timeout) {
+		
+		Awaitility.await().atMost(timeout).pollInterval(Duration.ofMillis(200)).until(() -> {
+
+			try {
+				this.execute(collectionName, coll -> {
+
+					ArrayList<Document> indexDocuments = coll.aggregate(List.of(Document.parse("{'$listSearchIndexes': { } }")))
+							.into(new ArrayList<>());
+
+					indexDocuments.forEach(indexDocument -> {
+						if (indexDocument.containsKey("name")) {
+							boolean toBeDeleted = true;
+							if (indexDocument.containsKey("status")) {
+								String status = indexDocument.getString("status");
+								if (status.equals("DELETING") || status.equals("DOES_NOT_EXIST")) {
+									toBeDeleted = false;
+								}
+							}
+							if (toBeDeleted) {
+								coll.dropSearchIndex(indexDocument.getString("name"));
+							}
+						}
+					});
+					return "done with that";
+				});
+			} catch (Exception e) {
+				return false;
+			}
+			return true;
+		});
+
+		awaitNoSearchIndexAvailable(collectionName, timeout);
+	}
 }

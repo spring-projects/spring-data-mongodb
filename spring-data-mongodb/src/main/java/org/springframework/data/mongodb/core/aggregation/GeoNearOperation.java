@@ -42,6 +42,8 @@ public class GeoNearOperation implements AggregationOperation {
 	private final NearQuery nearQuery;
 	private final String distanceField;
 	private final @Nullable String indexKey;
+	private final @Nullable Long skip;
+	private final @Nullable Integer limit;
 
 	/**
 	 * Creates a new {@link GeoNearOperation} from the given {@link NearQuery} and the given distance field. The
@@ -51,7 +53,7 @@ public class GeoNearOperation implements AggregationOperation {
 	 * @param distanceField must not be {@literal null}.
 	 */
 	public GeoNearOperation(NearQuery nearQuery, String distanceField) {
-		this(nearQuery, distanceField, null);
+		this(nearQuery, distanceField, null, nearQuery.getSkip(), null);
 	}
 
 	/**
@@ -63,7 +65,8 @@ public class GeoNearOperation implements AggregationOperation {
 	 * @param indexKey can be {@literal null};
 	 * @since 2.1
 	 */
-	private GeoNearOperation(NearQuery nearQuery, String distanceField, @Nullable String indexKey) {
+	private GeoNearOperation(NearQuery nearQuery, String distanceField, @Nullable String indexKey, @Nullable Long skip,
+			@Nullable Integer limit) {
 
 		Assert.notNull(nearQuery, "NearQuery must not be null");
 		Assert.hasLength(distanceField, "Distance field must not be null or empty");
@@ -71,6 +74,8 @@ public class GeoNearOperation implements AggregationOperation {
 		this.nearQuery = nearQuery;
 		this.distanceField = distanceField;
 		this.indexKey = indexKey;
+		this.skip = skip;
+		this.limit = limit;
 	}
 
 	/**
@@ -83,7 +88,30 @@ public class GeoNearOperation implements AggregationOperation {
 	 */
 	@Contract("_ -> new")
 	public GeoNearOperation useIndex(String key) {
-		return new GeoNearOperation(nearQuery, distanceField, key);
+		return new GeoNearOperation(nearQuery, distanceField, key, skip, limit);
+	}
+
+	/**
+	 * Override potential skip applied via {@link NearQuery#getSkip()}. Adds an additional {@link SkipOperation} if value
+	 * is non negative.
+	 * 
+	 * @param skip
+	 * @return new instance of {@link GeoNearOperation}.
+	 * @since 5.0
+	 */
+	public GeoNearOperation skip(long skip) {
+		return new GeoNearOperation(nearQuery, distanceField, indexKey, skip, limit);
+	}
+
+	/**
+	 * Override potential limit value. Adds an additional {@link LimitOperation} if value is non negative.
+	 *
+	 * @param limit
+	 * @return new instance of {@link GeoNearOperation}.
+	 * @since 5.0
+	 */
+	public GeoNearOperation limit(Integer limit) {
+		return new GeoNearOperation(nearQuery, distanceField, indexKey, skip, limit);
 	}
 
 	@Override
@@ -92,7 +120,13 @@ public class GeoNearOperation implements AggregationOperation {
 		Document command = context.getMappedObject(nearQuery.toDocument());
 
 		if (command.containsKey("query")) {
-			command.replace("query", context.getMappedObject(command.get("query", Document.class)));
+			Document query = command.get("query", Document.class);
+			if (query == null || query.isEmpty()) {
+				command.remove("query");
+			} else {
+				command.replace("query", context.getMappedObject(query));
+			}
+
 		}
 
 		command.remove("collation");
@@ -115,15 +149,18 @@ public class GeoNearOperation implements AggregationOperation {
 
 		Document command = toDocument(context);
 		Number limit = (Number) command.get("$geoNear", Document.class).remove("num");
+		if (limit != null && this.limit != null) {
+			limit = this.limit;
+		}
 
 		List<Document> stages = new ArrayList<>(3);
 		stages.add(command);
 
-		if (nearQuery.getSkip() != null && nearQuery.getSkip() > 0) {
-			stages.add(new Document("$skip", nearQuery.getSkip()));
+		if (this.skip != null && this.skip > 0) {
+			stages.add(new Document("$skip", this.skip));
 		}
 
-		if (limit != null) {
+		if (limit != null && limit.longValue() > 0) {
 			stages.add(new Document("$limit", limit.longValue()));
 		}
 

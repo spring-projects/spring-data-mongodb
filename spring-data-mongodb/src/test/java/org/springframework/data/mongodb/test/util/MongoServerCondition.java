@@ -117,12 +117,15 @@ class MongoServerCondition implements ExecutionCondition {
 				? vectorSearchAvailable.collectionName()
 				: MongoCollectionUtils.getPreferredCollectionName(vectorSearchAvailable.collection());
 
+		String databaseName = StringUtils.hasText(vectorSearchAvailable.database())
+			? vectorSearchAvailable.database() : null;
+
 		return context.getStore(NAMESPACE).getOrComputeIfAbsent("search-index-%s-available".formatted(collectionName),
 				(key) -> {
 					try {
 						doWithClient(client -> {
 							Awaitility.await().atMost(Duration.ofSeconds(60)).pollInterval(Duration.ofMillis(200)).until(() -> {
-								return MongoTestUtils.isSearchIndexReady(client, null, collectionName);
+								return MongoTestUtils.isSearchIndexReady(client, databaseName, collectionName);
 							});
 							return "done waiting for search index";
 						});

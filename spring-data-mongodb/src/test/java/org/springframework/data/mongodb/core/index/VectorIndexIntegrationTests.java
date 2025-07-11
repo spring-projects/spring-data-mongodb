@@ -77,9 +77,8 @@ class VectorIndexIntegrationTests {
 	@AfterEach
 	void cleanup() {
 
+		template.tryToDropSearchIndexes(Movie.class, Duration.ofSeconds(30));
 		template.flush(Movie.class);
-		template.searchIndexOps(Movie.class).dropAllIndexes();
-		template.awaitNoSearchIndexAvailable(Movie.class, Duration.ofSeconds(30));
 	}
 
 	@ParameterizedTest // GH-4706

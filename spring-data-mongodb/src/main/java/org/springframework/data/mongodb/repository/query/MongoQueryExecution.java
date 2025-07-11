@@ -186,8 +186,11 @@ public interface MongoQueryExecution {
 			return isListOfGeoResult(method.getReturnType()) ? results.getContent() : results;
 		}
 
-		@SuppressWarnings({ "unchecked", "NullAway" })
 		GeoResults<Object> doExecuteQuery(Query query) {
+			return doExecuteQuery(nearQuery(query));
+		}
+
+		NearQuery nearQuery(Query query) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
 			Assert.notNull(nearLocation, "[query.location] must not be null");
@@ -205,9 +208,12 @@ public interface MongoQueryExecution {
 			distances.getUpperBound().getValue().ifPresent(it -> nearQuery.maxDistance(it).in(it.getMetric()));
 
 			Pageable pageable = accessor.getPageable();
-			nearQuery.with(pageable);
+			return nearQuery.with(pageable);
+		}
 
-			return (GeoResults<Object>) operation.near(nearQuery).all();
+		@SuppressWarnings({ "unchecked", "NullAway" })
+		GeoResults<Object> doExecuteQuery(NearQuery query) {
+			return (GeoResults<Object>) operation.near(query).all();
 		}
 
 		private static boolean isListOfGeoResult(TypeInformation<?> returnType) {
@@ -324,16 +330,11 @@ public interface MongoQueryExecution {
 		@Override
 		public Object execute(Query query) {
 
-			GeoResults<Object> geoResults = doExecuteQuery(query);
+			NearQuery nearQuery = nearQuery(query);
+			GeoResults<Object> geoResults = doExecuteQuery(nearQuery);
 
 			Page<GeoResult<Object>> page = PageableExecutionUtils.getPage(geoResults.getContent(), accessor.getPageable(),
-					() -> {
-
-						Query countQuery = mongoQuery.createCountQuery(accessor);
-						countQuery = mongoQuery.applyQueryMetaAttributesWhenPresent(countQuery);
-
-						return operation.matching(countQuery).count();
-					});
+					() -> operation.near(nearQuery).count());
 
 			// transform to GeoPage after applying optimization
 			return new GeoPage<>(geoResults, accessor.getPageable(), page.getTotalElements());
