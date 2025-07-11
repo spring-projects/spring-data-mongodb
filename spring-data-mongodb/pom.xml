@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>5.0.0-SNAPSHOT</version>
+		<version>5.0.x-GH-4983-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -23,6 +23,7 @@
 		<java-module-name>spring.data.mongodb</java-module-name>
 		<project.root>${basedir}/..</project.root>
 		<multithreadedtc>1.01</multithreadedtc>
+		<springdata.commons>4.0.x-GH-3322-SNAPSHOT</springdata.commons>
 	</properties>
 
 	<dependencies>
