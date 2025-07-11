@@ -43,7 +43,12 @@ Do not use them directly in your code as generation and implementation details m
 === Running with AOT Repositories
 
 AOT is a mandatory step to transform a Spring application to a native executable, so it is automatically enabled when running in this mode.
-It is also possible to use those optimizations on the JVM by setting the `spring.aot.enabled` and `spring.aot.repositories.enabled` System properties to `true`.
+When AOT is enabled (either for native compilation or by setting `spring.aot.enabled=true`), AOT repositories are automatically enabled by default.
+
+You can disable AOT repository generation entirely or only disable MongoDB AOT repositories:
+
+* Set the `spring.aot.repositories.enabled=false` property to disable generated repositories for all Spring Data modules.
+* Set the `spring.aot.mongodb.repositories.enabled=false` property to disable only MongoDB AOT repositories.
 
 AOT repositories contribute configuration changes to the actual repository bean registration to register the generated repository fragment.
 

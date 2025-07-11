@@ -16,26 +16,31 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.aot.generate.GenerationContext;
-import org.springframework.data.aot.AotContext;
 import org.springframework.data.mongodb.aot.LazyLoadingProxyAotProcessor;
 import org.springframework.data.mongodb.aot.MongoAotPredicates;
-import org.springframework.data.repository.aot.generate.RepositoryContributor;
 import org.springframework.data.repository.config.AotRepositoryContext;
 import org.springframework.data.repository.config.RepositoryRegistrationAotProcessor;
 import org.springframework.data.util.TypeContributor;
 import org.springframework.data.util.TypeUtils;
 
 /**
+ * Mongodb-specific {@link RepositoryRegistrationAotProcessor} that contributes generated code for repositories.
+ *
  * @author Christoph Strobl
+ * @since 4.0
  */
 public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotProcessor {
+
+	private static final String MODULE_NAME = "mongodb";
 
 	private final LazyLoadingProxyAotProcessor lazyLoadingProxyAotProcessor = new LazyLoadingProxyAotProcessor();
 
 	@Override
-	protected @Nullable RepositoryContributor contribute(AotRepositoryContext repositoryContext,
+	protected @Nullable MongoRepositoryContributor contribute(AotRepositoryContext repositoryContext,
 			GenerationContext generationContext) {
+
 		// do some custom type registration here
 		super.contribute(repositoryContext, generationContext);
 
@@ -44,7 +49,7 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 			lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type, generationContext);
 		});
 
-		if (!repositoryContext.isGeneratedRepositoriesEnabled("mongodb")) {
+		if (!repositoryContext.isGeneratedRepositoriesEnabled(MODULE_NAME)) {
 			return null;
 		}
 
@@ -57,6 +62,8 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 		if (TypeUtils.type(type).isPartOf("org.springframework.data.mongodb", "com.mongodb")) {
 			return;
 		}
+
 		super.contributeType(type, generationContext);
 	}
+
 }
