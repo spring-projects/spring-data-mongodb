@@ -44,9 +44,7 @@ public class AotMongoRepositoryPostProcessor extends RepositoryRegistrationAotPr
 			lazyLoadingProxyAotProcessor.registerLazyLoadingProxyIfNeeded(type, generationContext);
 		});
 
-		boolean enabled = Boolean.parseBoolean(
-				repositoryContext.getEnvironment().getProperty(AotContext.GENERATED_REPOSITORIES_ENABLED, "false"));
-		if (!enabled) {
+		if (!repositoryContext.isGeneratedRepositoriesEnabled("mongodb")) {
 			return null;
 		}
 
