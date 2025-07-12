@@ -84,7 +84,7 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 	@Override
 	@SuppressWarnings("NullAway")
-	public Mono<String> ensureIndex(IndexDefinition indexDefinition) {
+	public Mono<String> createIndex(IndexDefinition indexDefinition) {
 
 		return mongoOperations.execute(collectionName, collection -> {
 

@@ -41,8 +41,8 @@ public interface IndexOperationsAdapter extends IndexOperations {
 		return new IndexOperationsAdapter() {
 
 			@Override
-			public String ensureIndex(IndexDefinition indexDefinition) {
-				return reactiveIndexOperations.ensureIndex(indexDefinition).block();
+			public String createIndex(IndexDefinition indexDefinition) {
+				return reactiveIndexOperations.createIndex(indexDefinition).block();
 			}
 
 			@Override
