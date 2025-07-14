@@ -135,8 +135,26 @@ The configuration for QE via Spring Data uses the same building blocks (a xref:m
 
 You can configure Queryable Encryption either manually or in a derived way:
 
-- Manual setup gives you full control over how encrypted fields are declared and how collections are created. It's useful when you need to explicitly manage data keys, encryption algorithms, and field mappings.
-- Derived setup relies on annotations in your domain model and automatically generates the required encrypted field configuration from it. This is simpler and recommended for typical Spring applications where your data model is already annotated.
+**Manual setup**
+
+Manual setup gives you full control over how encrypted fields are declared and how collections are created.
+It's useful when you need to explicitly manage data keys, encryption algorithms, and field mappings.
+
+** ✅ Full control over encryption configuration
+** ✅ Explicitly manage data keys and algorithms
+** ✅ Allows for complex encryption scenarios
+** ✅ Explicit configuration avoids the risk of surprises (e.g. missing configuration because of improper annotations or class-path scanning)
+** ⚠️ An Explicit Field Configuration can diverge from the domain model and you must keep it in sync with the domain model
+
+**Derived setup*
+
+Derived setup relies on annotations in your domain model and automatically generates the required encrypted field configuration from it.
+This is simpler and recommended for typical Spring applications where your data model is already annotated.
+
+** ✅ Domain model-driven configuration
+** ✅ Easy to set up and maintain
+** ⚠️ Might not cover all complex scenarios
+** ⚠️ Risk of surprises (e.g. missing configuration for documents based on subtypes because of improper annotations or class-path scanning)
 
 [tabs]
 ======
@@ -170,23 +188,23 @@ Derived Collection Setup::
 ----
 class Patient {
 
-    @Id String id; <1>
+    @Id String id;        <1>
 
-    Address address; <1>
+    Address address;      <1>
 
     @Encrypted(algorithm = "Unindexed")
-    String pin; <2>
+    String pin;           <2>
 
     @Encrypted(algorithm = "Indexed")
     @Queryable(queryType = "equality", contentionFactor = 0)
-    String ssn; <3>
+    String ssn;           <3>
 
     @RangeEncrypted(contentionFactor = 8, rangeOptions = "{ 'min' : 0, 'max' : 150 }")
-    Integer age; <4>
+    Integer age;          <4>
 
     @RangeEncrypted(contentionFactor = 0L,
         rangeOptions = "{\"min\": {\"$numberDouble\": \"0.3\"}, \"max\": {\"$numberDouble\": \"2.5\"}, \"precision\": 2 }")
-    double height; <5>
+    double height;        <5>
 }
 
 MongoJsonSchema patientSchema = MongoJsonSchemaCreator.create(mappingContext)
@@ -202,11 +220,13 @@ template.execute(db -> clientEncryption.createEncryptedCollection(db, template.g
         .encryptedFields(encryptedFields), new CreateEncryptedCollectionParams("local"))); <1>
 
 ----
-<1> id and address are not encrypted and can be queried normally.
-<2> pin is encrypted but does not support queries.
-<3> ssn is encrypted and allows equality queries.
-<4> age is encrypted and allows range queries between 0 and 150.
-<5> height is encrypted and allows range queries between 0.3 and 2.5.
+
+<1> `id` and `address` are not encrypted.
+Those fields can be queried normally.
+<2> `pin` is encrypted but does not support queries.
+<3> `ssn` is encrypted and allows equality queries.
+<4> `age` is encrypted and allows range queries between `0` and `150`.
+<5> `height` is encrypted and allows range queries between `0.3` and `2.5`.
 
 The `Queryable` annotation allows to define allowed query types for encrypted fields.
 `@RangeEncrypted` is a combination of `@Encrypted` and `@Queryable` for fields allowing `range` queries.
@@ -268,7 +288,7 @@ MongoDB Collection Info::
 - Additional options for eg. `min` and `max` need to match the actual field type. Make sure to use `$numberLong` etc. to ensure target types when parsing bson String.
 - Queryable Encryption will an extra field `__safeContent__` to each of your documents.
 Unless explicitly excluded the field will be loaded into memory when retrieving results.
-- For a complete example, see Github project:
+- For a complete example, see:
 https://github.com/mongodb-developer/spring-data-queryable-encryption[spring-data-queryable-encryption]
 ====
 
