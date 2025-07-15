@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.core.ResolvableType;
 import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -30,8 +28,11 @@ import org.springframework.javapoet.CodeBlock;
 import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
+import org.springframework.util.StringUtils;
 
 /**
+ * Code blocks for building update operations in AOT processing for MongoDB repositories.
+ *
  * @author Christoph Strobl
  */
 class UpdateBlocks {
@@ -100,13 +101,12 @@ class UpdateBlocks {
 	@NullUnmarked
 	static class UpdateCodeBlockBuilder {
 
+		private final AotQueryMethodGenerationContext context;
 		private UpdateInteraction source;
-		private Map<String, CodeBlock> arguments;
 		private String updateVariableName;
 
-		public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
-			this.arguments = new LinkedHashMap<>();
-			context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
+		public UpdateCodeBlockBuilder(AotQueryMethodGenerationContext context) {
+			this.context = context;
 		}
 
 		public UpdateCodeBlockBuilder update(UpdateInteraction update) {
@@ -126,7 +126,8 @@ class UpdateBlocks {
 			builder.add("\n");
 			String tmpVariableName = updateVariableName + "Document";
 			builder.add(
-					MongoCodeBlocks.renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName, arguments));
+					MongoCodeBlocks.renderExpressionToDocument(source.getUpdate().getUpdateString(), tmpVariableName,
+							StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ")));
 			builder.addStatement("$1T $2L = new $1T($3L)", BasicUpdate.class, updateVariableName, tmpVariableName);
 
 			return builder.build();

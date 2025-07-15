@@ -69,8 +69,7 @@ These are typically all query methods that are not backed by an xref:repositorie
 
 * Derived `find`, `count`, `exists` and `delete` methods
 * Query methods annotated with `@Query` (excluding those containing SpEL)
-* Methods annotated with `@Aggregation`
-* Methods using `@Update`
+* Methods annotated with `@Aggregation`, `@Update`, and `@VectorSearch`
 * `@Hint`, `@Meta`, and `@ReadPreference` support
 * `Page`, `Slice`, and `Optional` return types
 * DTO Projections
@@ -78,13 +77,10 @@ These are typically all query methods that are not backed by an xref:repositorie
 **Limitations**
 
 * `@Meta.allowDiskUse` and `flags` are not evaluated.
-* Queries / Aggregations / Updates containing `SpEL` cannot be generated.
 * Limited `Collation` detection.
 
 **Excluded methods**
 
 * `CrudRepository` and other base interface methods
 * Querydsl and Query by Example methods
-* Methods whose implementation would be overly complex
 * Query Methods obtaining MQL from a file
-** Geospatial Queries

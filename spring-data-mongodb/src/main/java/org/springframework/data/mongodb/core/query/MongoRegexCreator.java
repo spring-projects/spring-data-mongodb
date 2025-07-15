@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 import org.bson.BsonRegularExpression;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Contract;
+
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -80,6 +82,7 @@ public enum MongoRegexCreator {
 	 * @param matcherType the type of matching to perform
 	 * @return {@literal source} when {@literal source} or {@literal matcherType} is {@literal null}.
 	 */
+	@Contract("null, null -> null;null, _ -> null;_, null -> null;_ , _ -> !null")
 	public @Nullable String toRegularExpression(@Nullable String source, @Nullable MatchMode matcherType) {
 
 		if (matcherType == null || source == null) {

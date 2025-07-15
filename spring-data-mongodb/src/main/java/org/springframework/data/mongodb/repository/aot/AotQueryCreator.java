@@ -23,6 +23,7 @@ import java.util.List;
 import org.bson.conversions.Bson;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Score;
@@ -32,22 +33,20 @@ import org.springframework.data.domain.Vector;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.data.geo.Shape;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.VectorSearch;
+import org.springframework.data.mongodb.repository.aot.AotPlaceholders.Placeholder;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.mongodb.repository.query.MongoQueryCreator;
@@ -55,6 +54,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
@@ -67,35 +67,56 @@ import com.mongodb.DBRef;
  */
 class AotQueryCreator {
 
-	private MongoMappingContext mappingContext;
+	private final MappingContext<?, MongoPersistentProperty> mappingContext;
 
-	public AotQueryCreator() {
-
-		MongoMappingContext mongoMappingContext = new MongoMappingContext();
-		mongoMappingContext.setSimpleTypeHolder(
-				MongoCustomConversions.create((cfg) -> cfg.useNativeDriverJavaTimeCodecs()).getSimpleTypeHolder());
-		mongoMappingContext.setAutoIndexCreation(false);
-		mongoMappingContext.afterPropertiesSet();
-
-		this.mappingContext = mongoMappingContext;
+	public AotQueryCreator(MappingContext<?, MongoPersistentProperty> mappingContext) {
+		this.mappingContext = mappingContext;
 	}
 
 	@SuppressWarnings("NullAway")
-	StringQuery createQuery(PartTree partTree, QueryMethod queryMethod, Method source) {
+	AotStringQuery createQuery(PartTree partTree, QueryMethod queryMethod, Method source) {
 
-		boolean geoNear = queryMethod instanceof MongoQueryMethod mqm ? mqm.isGeoNearQuery() : false;
+		boolean geoNear = queryMethod instanceof MongoQueryMethod mqm && mqm.isGeoNearQuery();
 		boolean searchQuery = queryMethod instanceof MongoQueryMethod mqm
 				? mqm.isSearchQuery() || source.isAnnotationPresent(VectorSearch.class)
 				: source.isAnnotationPresent(VectorSearch.class);
 
-		Query query = new MongoQueryCreator(partTree,
+		Query query = new AotMongoQueryCreator(partTree,
 				new PlaceholderConvertingParameterAccessor(new PlaceholderParameterAccessor(queryMethod)), mappingContext,
 				geoNear, searchQuery).createQuery();
 
 		if (partTree.isLimiting()) {
 			query.limit(partTree.getMaxResults());
 		}
-		return new StringQuery(query);
+		return new AotStringQuery(query);
+	}
+
+	static class AotMongoQueryCreator extends MongoQueryCreator {
+
+		public AotMongoQueryCreator(PartTree tree, MongoParameterAccessor accessor,
+				MappingContext<?, MongoPersistentProperty> context, boolean isGeoNearQuery, boolean isSearchQuery) {
+			super(tree, accessor, context, isGeoNearQuery, isSearchQuery);
+		}
+
+		@Override
+		protected Criteria in(Criteria criteria, Part part, Object param) {
+			return param instanceof Placeholder p ? criteria.raw("$in", p) : super.in(criteria, part, param);
+		}
+
+		@Override
+		protected Criteria nin(Criteria criteria, Part part, Object param) {
+			return param instanceof Placeholder p ? criteria.raw("$nin", p) : super.nin(criteria, part, param);
+		}
+
+		@Override
+		protected Criteria regex(Criteria criteria, Object param) {
+			return param instanceof Placeholder p ? criteria.raw("$regex", p) : super.regex(criteria, param);
+		}
+
+		@Override
+		protected Criteria exists(Criteria criteria, Object param) {
+			return param instanceof Placeholder p ? criteria.raw("$exists", p) : super.exists(criteria, param);
+		}
 	}
 
 	static class PlaceholderConvertingParameterAccessor extends ConvertingParameterAccessor {
@@ -134,7 +155,7 @@ class AotQueryCreator {
 	@NullUnmarked
 	static class PlaceholderParameterAccessor implements MongoParameterAccessor {
 
-		private final List<Placeholder> placeholders;
+		private final List<Object> placeholders;
 
 		public PlaceholderParameterAccessor(QueryMethod queryMethod) {
 			if (queryMethod.getParameters().getNumberOfParameters() == 0) {
@@ -144,19 +165,19 @@ class AotQueryCreator {
 				Parameters<?, ?> parameters = queryMethod.getParameters();
 				for (Parameter parameter : parameters.toList()) {
 					if (ClassUtils.isAssignable(GeoJson.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new GeoJsonPlaceholder(parameter.getIndex(), ""));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.geoJson(parameter.getIndex(), ""));
 					} else if (ClassUtils.isAssignable(Point.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new PointPlaceholder(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.point(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Circle.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new CirclePlaceholder(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.circle(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Box.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new BoxPlaceholder(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.box(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Sphere.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new SpherePlaceholder(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.sphere(parameter.getIndex()));
 					} else if (ClassUtils.isAssignable(Polygon.class, parameter.getType())) {
-						placeholders.add(parameter.getIndex(), new PolygonPlaceholder(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.polygon(parameter.getIndex()));
 					} else {
-						placeholders.add(parameter.getIndex(), Placeholder.indexed(parameter.getIndex()));
+						placeholders.add(parameter.getIndex(), AotPlaceholders.indexed(parameter.getIndex()));
 					}
 				}
 			}
@@ -229,7 +250,8 @@ class AotQueryCreator {
 
 		@Override
 		public @Nullable Object getBindableValue(int index) {
-			return placeholders.get(index).getValue();
+			return placeholders.get(index) instanceof Placeholder placeholder ? placeholder.getValue()
+					: placeholders.get(index);
 		}
 
 		@Override
@@ -244,133 +266,4 @@ class AotQueryCreator {
 		}
 	}
 
-	static class CirclePlaceholder extends Circle implements Placeholder {
-
-		int index;
-
-		public CirclePlaceholder(int index) {
-			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
-			this.index = index;
-		}
-
-		@Override
-		public Object getValue() {
-			return "?%s".formatted(index);
-		}
-
-		@Override
-		public String toString() {
-			return getValue().toString();
-		}
-	}
-
-	static class SpherePlaceholder extends Sphere implements Placeholder {
-
-		int index;
-
-		public SpherePlaceholder(int index) {
-			super(new PointPlaceholder(index), Distance.of(1, Metrics.NEUTRAL)); //
-			this.index = index;
-		}
-
-		@Override
-		public Object getValue() {
-			return "?%s".formatted(index);
-		}
-
-		@Override
-		public String toString() {
-			return getValue().toString();
-		}
-	}
-
-	static class GeoJsonPlaceholder implements Placeholder, GeoJson<List<Placeholder>>, Shape {
-
-		int index;
-		String type;
-
-		public GeoJsonPlaceholder(int index, String type) {
-			this.index = index;
-			this.type = type;
-		}
-
-		@Override
-		public Object getValue() {
-			return "?%s".formatted(index);
-		}
-
-		@Override
-		public String toString() {
-			return getValue().toString();
-		}
-
-		@Override
-		public String getType() {
-			return type;
-		}
-
-		@Override
-		public List<Placeholder> getCoordinates() {
-			return List.of();
-		}
-	}
-
-	static class BoxPlaceholder extends Box implements Placeholder {
-		int index;
-
-		public BoxPlaceholder(int index) {
-			super(new PointPlaceholder(index), new PointPlaceholder(index));
-			this.index = index;
-		}
-
-		@Override
-		public Object getValue() {
-			return "?%s".formatted(index);
-		}
-
-		@Override
-		public String toString() {
-			return getValue().toString();
-		}
-	}
-
-	static class PolygonPlaceholder extends Polygon implements Placeholder {
-		int index;
-
-		public PolygonPlaceholder(int index) {
-			super(new PointPlaceholder(index), new PointPlaceholder(index), new PointPlaceholder(index),
-					new PointPlaceholder(index));
-			this.index = index;
-		}
-
-		@Override
-		public Object getValue() {
-			return "?%s".formatted(index);
-		}
-
-		@Override
-		public String toString() {
-			return getValue().toString();
-		}
-	}
-
-	static class PointPlaceholder extends Point implements Placeholder {
-
-		int index;
-
-		public PointPlaceholder(int index) {
-			super(Double.NaN, Double.NaN);
-			this.index = index;
-		}
-
-		@Override
-		public Object getValue() {
-			return "?" + index;
-		}
-
-		@Override
-		public String toString() {
-			return getValue().toString();
-		}
-	}
 }

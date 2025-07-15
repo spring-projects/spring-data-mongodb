@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,7 +24,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.ReactiveWrappers;
 
@@ -41,9 +42,9 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 
 	private final Object[] values;
 
-	public ReactiveMongoParameterAccessor(MongoQueryMethod method, Object[] values) {
+	public ReactiveMongoParameterAccessor(MongoParameters parameters, Object[] values) {
 
-		super(method, values);
+		super(parameters, values);
 		this.values = values;
 
 	}
@@ -123,7 +124,7 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 
 		return Flux.merge(publishers).then().thenReturn(resolved).map(values -> {
 			holder.forEach((index, v) -> values[index] = v.orElse(null));
-			return new ReactiveMongoParameterAccessor(method, values);
+			return new ReactiveMongoParameterAccessor(parameters, values);
 		});
 	}
 }

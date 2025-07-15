@@ -23,16 +23,16 @@ import org.springframework.data.repository.aot.generate.QueryMetadata;
 
 /**
  * An {@link MongoInteraction aggregation interaction}.
- * 
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
 class AggregationInteraction extends MongoInteraction implements QueryMetadata {
 
-	private final StringAggregation aggregation;
+	private final AotStringAggregation aggregation;
 
 	AggregationInteraction(String[] raw) {
-		this.aggregation = new StringAggregation(raw);
+		this.aggregation = new AotStringAggregation(raw);
 	}
 
 	List<String> stages() {
@@ -46,7 +46,6 @@ class AggregationInteraction extends MongoInteraction implements QueryMetadata {
 
 	@Override
 	public Map<String, Object> serialize() {
-
 		return Map.of(pipelineSerializationKey(), stages());
 	}
 

@@ -50,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.DirtiesStateExtension;
 
@@ -270,7 +271,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 	@DirtiesState
 	void findAllNearBy() {
 
-		blocking.indexOps(Planet.class).ensureIndex(
+		blocking.indexOps(Planet.class).createIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
 		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
@@ -291,7 +292,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 	@DirtiesState
 	void findAllNearByWithCollectionAndProjection() {
 
-		blocking.indexOps(Planet.class).ensureIndex(
+		blocking.indexOps(Planet.class).createIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
 		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
@@ -315,7 +316,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 	@DirtiesState
 	void findAllNearByWithConverter() {
 
-		blocking.indexOps(Planet.class).ensureIndex(
+		blocking.indexOps(Planet.class).createIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
 		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
@@ -341,7 +342,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 	@DirtiesState
 	void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
 
-		blocking.indexOps(Planet.class).ensureIndex(
+		blocking.indexOps(Planet.class).createIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
 		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
@@ -365,7 +366,7 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 	@DirtiesState
 	void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
 
-		blocking.indexOps(Planet.class).ensureIndex(
+		blocking.indexOps(Planet.class).createIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
 
 		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
@@ -383,6 +384,24 @@ class ReactiveFindOperationSupportTests implements StateFunctions {
 				}) //
 				.expectNextCount(1) //
 				.verifyComplete();
+	}
+
+	@Test // GH-5004
+	@DirtiesState
+	void countResultsOfNearQuery() {
+
+		blocking.indexOps(Planet.class).createIndex(
+				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
+
+		Planet alderan = new Planet("alderan", new Point(-73.9836, 40.7538));
+		Planet dantooine = new Planet("dantooine", new Point(-73.9928, 40.7193));
+
+		blocking.save(alderan);
+		blocking.save(dantooine);
+
+		template.query(Planet.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true).query(new Query(where("name").is("alderan")))).count()
+				.as(StepVerifier::create).expectNext(1L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2080

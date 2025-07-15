@@ -76,10 +76,9 @@ public final class GeoCommand {
 
 		Assert.notNull(shape, "Shape must not be null");
 
-		if(shape instanceof GeoJson<?>) {
+		if (shape instanceof GeoJson<?>) {
 			return "$geometry";
-		}
-		if (shape instanceof Box) {
+		} else if (shape instanceof Box) {
 			return "$box";
 		} else if (shape instanceof Circle) {
 			return "$center";

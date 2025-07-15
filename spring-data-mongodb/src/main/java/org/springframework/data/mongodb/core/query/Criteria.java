@@ -343,13 +343,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	@Contract("_ -> this")
 	public Criteria in(Collection<?> values) {
-
-		ArrayList<?> objects = new ArrayList<>(values);
-		if (objects.size() == 1 && CollectionUtils.firstElement(objects) instanceof Placeholder placeholder) {
-			criteria.put("$in", placeholder);
-		} else {
-			criteria.put("$in", objects);
-		}
+		criteria.put("$in", values);
 		return this;
 	}
 
@@ -374,13 +368,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	@Contract("_ -> this")
 	public Criteria nin(Collection<?> values) {
-
-		ArrayList<?> objects = new ArrayList<>(values);
-		if (objects.size() == 1 && CollectionUtils.firstElement(objects) instanceof Placeholder placeholder) {
-			criteria.put("$nin", placeholder);
-		} else {
-			criteria.put("$nin", objects);
-		}
+		criteria.put("$nin", values);
 		return this;
 	}
 
@@ -931,7 +919,7 @@ public class Criteria implements CriteriaDefinition {
 	 *
 	 * @param operator the native MongoDB operator.
 	 * @param value the operator value
-	 * @return this
+	 * @return this.
 	 * @since 5.0
 	 */
 	@Contract("_, _ -> this")

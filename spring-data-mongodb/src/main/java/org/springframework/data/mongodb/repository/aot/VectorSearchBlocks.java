@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.bson.Document;
-import org.springframework.core.annotation.MergedAnnotation;
+import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.ScoringFunction;
 import org.springframework.data.domain.Sort;
@@ -41,18 +40,21 @@ import org.springframework.javapoet.CodeBlock.Builder;
 import org.springframework.util.StringUtils;
 
 /**
+ * Code blocks for building vector search operations in AOT processing for MongoDB repositories.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
-class VectorSearchBocks {
+class VectorSearchBlocks {
 
+	@NullUnmarked
 	static class VectorSearchQueryCodeBlockBuilder {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
+		private final VectorSearch vectorSearchAnnotation;
 		private String searchQueryVariableName;
-		private StringQuery filter;
-		private final Map<String, CodeBlock> arguments;
+		private AotStringQuery filter;
 		private final String searchPath;
 
 		VectorSearchQueryCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod,
@@ -60,9 +62,13 @@ class VectorSearchBocks {
 
 			this.context = context;
 			this.queryMethod = queryMethod;
+			this.vectorSearchAnnotation = queryMethod.getRequiredVectorSearchAnnotation();
 			this.searchPath = searchPath;
-			this.arguments = new LinkedHashMap<>();
-			context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
+		}
+
+		VectorSearchQueryCodeBlockBuilder withFilter(AotStringQuery filter) {
+			this.filter = filter;
+			return this;
 		}
 
 		VectorSearchQueryCodeBlockBuilder usingVariableName(String searchQueryVariableName) {
@@ -77,13 +83,12 @@ class VectorSearchBocks {
 
 			String vectorParameterName = context.getVectorParameterName();
 
-			MergedAnnotation<VectorSearch> annotation = context.getAnnotation(VectorSearch.class);
-			String indexName = annotation.getString("indexName");
-			SearchType searchType = annotation.getEnum("searchType", SearchType.class);
+			String indexName = vectorSearchAnnotation.indexName();
+			SearchType searchType = vectorSearchAnnotation.searchType();
 
 			ExpressionSnippet limit = getLimitExpression();
 
-			if (limit.requiresEvaluation() && !StringUtils.hasText(annotation.getString("numCandidates"))
+			if (limit.requiresEvaluation() && !StringUtils.hasText(vectorSearchAnnotation.numCandidates())
 					&& (searchType == VectorSearchOperation.SearchType.ANN
 							|| searchType == VectorSearchOperation.SearchType.DEFAULT)) {
 
@@ -155,13 +160,14 @@ class VectorSearchBocks {
 			}
 
 			Builder builder = CodeBlock.builder();
-
-			builder.add("($T) (_ctx) -> {\n", AggregationOperation.class);
+			String ctx = context.localVariable("ctx");
+			String mappedSort = context.localVariable("mappedSort");
+			builder.add("($T) ($L) -> {\n", AggregationOperation.class, ctx);
 			builder.indent();
 
-			builder.add("$1T _mappedSort = _ctx.getMappedObject($1T.parse($2S), $3T.class);\n", Document.class,
-					filter.getSortString(), context.getActualReturnType().getType());
-			builder.add("return new $T($S, _mappedSort.append(\"__score__\", -1));\n", Document.class, "$sort");
+			builder.add("$1T $4L = $5L.getMappedObject($1T.parse($2S), $3T.class);\n", Document.class, filter.getSortString(),
+					context.getActualReturnType().getType(), mappedSort, ctx);
+			builder.add("return new $1T($2S, $3L.append(\"__score__\", -1));\n", Document.class, "$sort", mappedSort);
 			builder.unindent();
 			builder.add("};");
 
@@ -184,20 +190,14 @@ class VectorSearchBocks {
 			return new ExpressionSnippet(builder.build());
 		}
 
-		public VectorSearchQueryCodeBlockBuilder withFilter(StringQuery filter) {
-			this.filter = filter;
-			return this;
-		}
-
 		private ExpressionSnippet getNumCandidatesExpression(SearchType searchType, ExpressionSnippet limit) {
 
-			MergedAnnotation<VectorSearch> annotation = context.getAnnotation(VectorSearch.class);
-			String numCandidates = annotation.getString("numCandidates");
+			String numCandidates = vectorSearchAnnotation.numCandidates();
 
 			if (StringUtils.hasText(numCandidates)) {
 				if (MongoCodeBlocks.containsPlaceholder(numCandidates) || MongoCodeBlocks.containsExpression(numCandidates)) {
 					return new ExpressionSnippet(
-							MongoCodeBlocks.evaluateNumberPotentially(numCandidates, Integer.class, arguments), true);
+							MongoCodeBlocks.evaluateNumberPotentially(numCandidates, Integer.class, context), true);
 				} else {
 					return new ExpressionSnippet(CodeBlock.of("$L", numCandidates));
 				}
@@ -232,13 +232,12 @@ class VectorSearchBocks {
 				return new ExpressionSnippet(CodeBlock.of("$L", filter.getLimit()));
 			}
 
-			MergedAnnotation<VectorSearch> annotation = context.getAnnotation(VectorSearch.class);
-			String limit = annotation.getString("limit");
+			String limit = vectorSearchAnnotation.limit();
 
 			if (StringUtils.hasText(limit)) {
 
 				if (MongoCodeBlocks.containsPlaceholder(limit) || MongoCodeBlocks.containsExpression(limit)) {
-					return new ExpressionSnippet(MongoCodeBlocks.evaluateNumberPotentially(limit, Integer.class, arguments),
+					return new ExpressionSnippet(MongoCodeBlocks.evaluateNumberPotentially(limit, Integer.class, context),
 							true);
 				} else {
 					return new ExpressionSnippet(CodeBlock.of("$L", limit));

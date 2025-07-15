@@ -62,8 +62,8 @@ class VariableSnippet extends ExpressionSnippet {
 
 	static class VariableBuilderImp implements VariableBuilder {
 
-		private @Nullable TypeName typeName;
-		private String variableName;
+		private final @Nullable TypeName typeName;
+		private final String variableName;
 
 		private CodeBlock.@Nullable Builder target;
 
@@ -82,7 +82,7 @@ class VariableSnippet extends ExpressionSnippet {
 			return variableSnippet;
 		}
 
-		VariableBuilderImp targeting(@Nullable Builder target) {
+		VariableBuilderImp appendTo(@Nullable Builder target) {
 			this.target = target;
 			return this;
 		}

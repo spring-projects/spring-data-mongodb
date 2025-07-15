@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import example.aot.UserRepository;
 
@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -88,7 +88,7 @@ class MongoRepositoryMetadataTests {
 		String json = resource.getContentAsString(StandardCharsets.UTF_8);
 
 		assertThatJson(json).inPath("$.methods[?(@.name == 'countUsersByLastname')].query").isArray().element(0).isObject()
-				.containsEntry("filter", "{'lastname':?0}");
+				.containsEntry("filter", "{\"lastname\": ?0}");
 	}
 
 	@Test // GH-4964
@@ -103,8 +103,7 @@ class MongoRepositoryMetadataTests {
 
 		assertThatJson(json).inPath("$.methods[?(@.name == 'findByLastnameStartingWithOrderByUsername')].query") //
 				.isArray().element(0).isObject() //
-				.containsEntry("filter", "{'lastname':{'$regex':/^\\Q?0\\E/}}")
-				.containsEntry("sort", "{'username':{'$numberInt':'1'}}");
+				.containsEntry("filter", "{\"lastname\": /^\\Q?0\\E/}").containsEntry("sort", "{\"username\": 1}");
 	}
 
 	@Test // GH-4964
@@ -118,11 +117,10 @@ class MongoRepositoryMetadataTests {
 		String json = resource.getContentAsString(StandardCharsets.UTF_8);
 
 		assertThatJson(json).inPath("$.methods[?(@.name == 'findPageOfUsersByLastnameStartingWith')].query").isArray()
-				.element(0).isObject().containsEntry("filter", "{'lastname':{'$regex':/^\\Q?0\\E/}}");
+				.element(0).isObject().containsEntry("filter", "{\"lastname\": /^\\Q?0\\E/}");
 	}
 
-	@Test // GH-4964
-	@Disabled("No support for expressions yet")
+	@Test // GH-5006
 	void shouldDocumentQueryWithExpression() throws IOException {
 
 		Resource resource = getResource();
@@ -132,8 +130,8 @@ class MongoRepositoryMetadataTests {
 
 		String json = resource.getContentAsString(StandardCharsets.UTF_8);
 
-		assertThatJson(json).inPath("$.methods[?(@.name == 'findValueExpressionNamedByEmailAddress')].query").isArray()
-				.first().isObject().containsEntry("query", "select u from User u where u.emailAddress = :__$synthetic$__1");
+		assertThatJson(json).inPath("$.methods[?(@.name == 'findWithExpressionUsingParameterIndex')].query").isArray()
+				.first().isObject().containsEntry("filter", "{ firstname : ?#{[0]} }");
 	}
 
 	@Test // GH-4964
@@ -162,7 +160,7 @@ class MongoRepositoryMetadataTests {
 		String json = resource.getContentAsString(StandardCharsets.UTF_8);
 
 		assertThatJson(json).inPath("$.methods[?(@.name == 'findAndIncrementVisitsViaPipelineByLastname')].query").isArray()
-				.element(0).isObject().containsEntry("filter", "{'lastname':?0}").containsEntry("update-pipeline",
+				.element(0).isObject().containsEntry("filter", "{\"lastname\": ?0}").containsEntry("update-pipeline",
 						List.of("{ '$set' : { 'visits' : { '$ifNull' : [ {'$add' : [ '$visits', ?1 ] }, ?1 ] } } }"));
 	}
 
@@ -178,6 +176,35 @@ class MongoRepositoryMetadataTests {
 
 		assertThatJson(json).inPath("$.methods[?(@.name == 'existsById')].fragment").isArray().first().isObject()
 				.containsEntry("fragment", "org.springframework.data.mongodb.repository.support.SimpleMongoRepository");
+	}
+
+	@Test // GH-5004
+	void shouldDocumentGeoQuery() throws IOException {
+
+		Resource resource = getResource();
+
+		assertThat(resource).isNotNull();
+		assertThat(resource.exists()).isTrue();
+
+		String json = resource.getContentAsString(StandardCharsets.UTF_8);
+
+		assertThatJson(json).inPath("$.methods[?(@.name == 'findByLocationCoordinatesNear')].query").isArray().first()
+				.isObject().containsEntry("filter", "{\"location.coordinates\": {\"$near\": ?0}}");
+	}
+
+	@Test // GH-5006
+	void shouldDocumentVectorSearch() throws IOException {
+
+		Resource resource = getResource();
+
+		assertThat(resource).isNotNull();
+		assertThat(resource.exists()).isTrue();
+
+		String json = resource.getContentAsString(StandardCharsets.UTF_8);
+
+		assertThatJson(json).inPath("$.methods[?(@.name == 'searchCosineByLastnameAndEmbeddingNear')].query").isArray()
+				.first().isObject().containsEntry("pipeline", List.of(
+						"{\"$vectorSearch\": {\"index\": \"embedding.vector_cos\", \"path\": \"embedding\", \"filter\": \"{\\\"lastname\\\": ?0}\", \"limit\": \"?3\", \"numCandidates\": \"?3 * 20\", \"queryVector\": \"?1\"}}"));
 	}
 
 	private Resource getResource() {

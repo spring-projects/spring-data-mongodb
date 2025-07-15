@@ -16,13 +16,13 @@
 package org.springframework.data.mongodb.repository.aot;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.jspecify.annotations.NullUnmarked;
+
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.data.domain.SliceImpl;
@@ -47,6 +47,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * Code blocks for building aggregation pipelines and execution statements for MongoDB repositories.
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
@@ -160,7 +162,7 @@ class AggregationBlocks {
 
 		private final AotQueryMethodGenerationContext context;
 		private final MongoQueryMethod queryMethod;
-		private final Map<String, CodeBlock> arguments;
+		private final String parameterNames;
 
 		private AggregationInteraction source;
 
@@ -170,9 +172,8 @@ class AggregationBlocks {
 		AggregationCodeBlockBuilder(AotQueryMethodGenerationContext context, MongoQueryMethod queryMethod) {
 
 			this.context = context;
-			this.arguments = new LinkedHashMap<>();
-			context.getBindableParameterNames().forEach(it -> arguments.put(it, CodeBlock.of(it)));
 			this.queryMethod = queryMethod;
+			this.parameterNames = StringUtils.collectionToDelimitedString(context.getAllParameterNames(), ", ");
 		}
 
 		AggregationCodeBlockBuilder stages(AggregationInteraction aggregation) {
@@ -220,33 +221,18 @@ class AggregationBlocks {
 			String limitParameter = context.getLimitParameterName();
 			String pageableParameter = context.getPageableParameterName();
 
-			boolean mightBeSorted = StringUtils.hasText(sortParameter);
-			boolean mightBeLimited = StringUtils.hasText(limitParameter);
-			boolean mightBePaged = StringUtils.hasText(pageableParameter);
-
-			int stageCount = source.stages().size();
-			if (mightBeSorted) {
-				stageCount++;
-			}
-			if (mightBeLimited) {
-				stageCount++;
-			}
-			if (mightBePaged) {
-				stageCount += 3;
-			}
-
 			Builder builder = CodeBlock.builder();
-			builder.add(aggregationStages(context.localVariable("stages"), source.stages(), stageCount, arguments));
+			builder.add(aggregationStages(context.localVariable("stages"), source.stages()));
 
-			if (mightBeSorted) {
+			if (StringUtils.hasText(sortParameter)) {
 				builder.add(sortingStage(sortParameter));
 			}
 
-			if (mightBeLimited) {
+			if (StringUtils.hasText(limitParameter)) {
 				builder.add(limitingStage(limitParameter));
 			}
 
-			if (mightBePaged) {
+			if (StringUtils.hasText(pageableParameter)) {
 				builder.add(pagingStage(pageableParameter, queryMethod.isSliceQuery()));
 			}
 
@@ -259,6 +245,7 @@ class AggregationBlocks {
 
 			Builder builder = CodeBlock.builder();
 			List<CodeBlock> options = new ArrayList<>(5);
+
 			if (ReflectionUtils.isVoid(queryMethod.getReturnedObjectType())) {
 				options.add(CodeBlock.of(".skipOutput()"));
 			}
@@ -299,20 +286,21 @@ class AggregationBlocks {
 			return builder.build();
 		}
 
-		private CodeBlock aggregationStages(String stageListVariableName, Iterable<String> stages, int stageCount,
-				Map<String, CodeBlock> arguments) {
+		private CodeBlock aggregationStages(String stageListVariableName, Collection<String> stages) {
 
 			Builder builder = CodeBlock.builder();
 			builder.addStatement("$T<$T> $L = new $T($L)", List.class, Object.class, stageListVariableName, ArrayList.class,
-					stageCount);
+					stages.size());
 			int stageCounter = 0;
 
 			for (String stage : stages) {
 
 				VariableSnippet stageSnippet = Snippet.declare(builder)
-						.variable(Document.class, context.localVariable("stage_%s".formatted(stageCounter++)))
-						.of(MongoCodeBlocks.asDocument(stage, arguments));
+						.variable(Document.class, context.localVariable("stage_%s".formatted(stageCounter)))
+						.of(MongoCodeBlocks.asDocument(stage, parameterNames));
 				builder.addStatement("$L.add($L)", stageListVariableName, stageSnippet.getVariableName());
+
+				stageCounter++;
 			}
 
 			return builder.build();

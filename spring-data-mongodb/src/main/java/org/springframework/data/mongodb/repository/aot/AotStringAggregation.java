@@ -17,10 +17,10 @@ package org.springframework.data.mongodb.repository.aot;
 
 /**
  * Value object holding the raw representation of an Aggregation Pipeline.
- * 
+ *
  * @author Christoph Strobl
  * @since 5.0
  */
-record StringAggregation(String[] pipeline) {
+record AotStringAggregation(String[] pipeline) {
 
 }

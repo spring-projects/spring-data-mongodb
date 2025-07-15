@@ -20,12 +20,12 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.ReadConcern;
@@ -37,18 +37,18 @@ import com.mongodb.ReadPreference;
  * @author Christoph Strobl
  * @since 5.0
  */
-class StringQuery extends Query {
+class AotStringQuery extends Query {
 
-	private Query delegate;
+	private final Query delegate;
 	private @Nullable String raw;
 	private @Nullable String sort;
 	private @Nullable String fields;
 
-	public StringQuery(Query query) {
+	public AotStringQuery(Query query) {
 		this.delegate = query;
 	}
 
-	public StringQuery(String query) {
+	public AotStringQuery(String query) {
 		this.delegate = new Query();
 		this.raw = query;
 	}
@@ -187,12 +187,12 @@ class StringQuery extends Query {
 		return toJson(fields);
 	}
 
-	StringQuery fields(String fields) {
+	AotStringQuery fields(String fields) {
 		this.fields = fields;
 		return this;
 	}
 
 	String toJson(Document source) {
-		return BsonUtils.writeJson(source).toJsonString();
+		return DocumentSerializer.toJson(source);
 	}
 }

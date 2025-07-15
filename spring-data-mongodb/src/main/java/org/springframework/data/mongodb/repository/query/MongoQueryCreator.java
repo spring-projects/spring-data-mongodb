@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.mongodb.core.query.Criteria.Placeholder;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonRegularExpression;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -54,7 +54,6 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -199,17 +198,9 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case IS_NULL:
 				return criteria.is(null);
 			case NOT_IN:
-				Object ninValue = parameters.next();
-				if (ninValue instanceof Placeholder) {
-					return criteria.raw("$nin", ninValue);
-				}
-				return criteria.nin(valueAsList(ninValue, part));
+				return nin(criteria, part, parameters.next());
 			case IN:
-				Object inValue = parameters.next();
-				if (inValue instanceof Placeholder) {
-					return criteria.raw("$in", inValue);
-				}
-				return criteria.in(valueAsList(inValue, part));
+				return in(criteria, part, parameters.next());
 			case LIKE:
 			case STARTING_WITH:
 			case ENDING_WITH:
@@ -220,23 +211,15 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case NOT_CONTAINING:
 				return createContainingCriteria(part, property, criteria.not(), parameters);
 			case REGEX:
-
-				return createPatternCriteria(criteria, parameters);
+				return regex(criteria, parameters.next());
 			case EXISTS:
-				Object next = parameters.next();
-				if (next instanceof Placeholder placeholder) {
-					return criteria.raw("$exists", placeholder);
-				} else {
-					return criteria.exists((Boolean) next);
-				}
+				return exists(criteria, parameters.next());
 			case TRUE:
 				return criteria.is(true);
 			case FALSE:
 				return criteria.is(false);
 			case NEAR:
-
 				return createNearCriteria(property, criteria, parameters);
-
 			case WITHIN:
 
 				Object parameter = parameters.next();
@@ -255,16 +238,22 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 	}
 
-	@NonNull
-	private static Criteria createPatternCriteria(Criteria criteria, Iterator<Object> parameters) {
-		Object param = parameters.next();
-		if (param instanceof Placeholder) {
-			return criteria.raw("$regex", param);
-		}
+	protected Criteria in(Criteria criteria, Part part, Object param) {
+		return criteria.in(valueAsList(param, part));
+	}
+
+	protected Criteria nin(Criteria criteria, Part part, Object param) {
+		return criteria.nin(valueAsList(param, part));
+	}
+
+	protected Criteria regex(Criteria criteria, Object param) {
 		return param instanceof Pattern pattern ? criteria.regex(pattern) : criteria.regex(param.toString());
 	}
 
-	@NonNull
+	protected Criteria exists(Criteria criteria, Object param) {
+		return criteria.exists((Boolean) param);
+	}
+
 	private Criteria createNearCriteria(MongoPersistentProperty property, Criteria criteria,
 			Iterator<Object> parameters) {
 
@@ -363,10 +352,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		if (property.isCollectionLike()) {
 			Object next = parameters.next();
-			if (next instanceof Placeholder) {
-				return criteria.raw("$in", next);
-			}
-			return criteria.in(valueAsList(next, part));
+			return in(criteria, part, next);
 		}
 
 		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
@@ -381,7 +367,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @return the criteria extended with the regex.
 	 */
 	@SuppressWarnings("NullAway")
-	private Criteria addAppropriateLikeRegexTo(Criteria criteria, Part part, Object value) {
+	private Criteria addAppropriateLikeRegexTo(Criteria criteria, Part part, @Nullable Object value) {
 
 		if (value == null) {
 
@@ -460,7 +446,7 @@ public class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return Streamable.of(value);
 	}
 
-	private @Nullable String toLikeRegex(String source, Part part) {
+	private String toLikeRegex(String source, Part part) {
 		return MongoRegexCreator.INSTANCE.toRegularExpression(source, toMatchMode(part.getType()));
 	}
 

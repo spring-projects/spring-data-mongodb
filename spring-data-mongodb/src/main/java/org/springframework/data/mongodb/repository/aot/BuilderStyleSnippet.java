@@ -21,7 +21,7 @@ import org.springframework.javapoet.CodeBlock.Builder;
 /**
  * @author Christoph Strobl
  */
-public class BuilderStyleSnippet implements Snippet {
+class BuilderStyleSnippet implements Snippet {
 
 	private final String targetVariableName;
 	private final String methodName;

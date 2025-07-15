@@ -29,10 +29,10 @@ import org.springframework.util.StringUtils;
  */
 class QueryInteraction extends MongoInteraction implements QueryMetadata {
 
-	private final StringQuery query;
+	private final AotStringQuery query;
 	private final InteractionType interactionType;
 
-	QueryInteraction(StringQuery query, boolean count, boolean delete, boolean exists) {
+	QueryInteraction(AotStringQuery query, boolean count, boolean delete, boolean exists) {
 
 		this.query = query;
 		if (count) {
@@ -46,7 +46,7 @@ class QueryInteraction extends MongoInteraction implements QueryMetadata {
 		}
 	}
 
-	StringQuery getQuery() {
+	AotStringQuery getQuery() {
 		return query;
 	}
 

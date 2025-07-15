@@ -194,6 +194,14 @@ public interface ReactiveFindOperation {
 		 * @return never {@literal null}.
 		 */
 		Flux<GeoResult<T>> all();
+
+		/**
+		 * Count matching elements.
+		 *
+		 * @return number of elements matching the query.
+		 * @since 5.0
+		 */
+		Mono<Long> count();
 	}
 
 	/**

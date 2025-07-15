@@ -29,53 +29,23 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
-import org.bson.AbstractBsonWriter;
-import org.bson.BSONObject;
-import org.bson.BsonArray;
-import org.bson.BsonBinary;
-import org.bson.BsonBinarySubType;
-import org.bson.BsonBoolean;
-import org.bson.BsonContextType;
-import org.bson.BsonDateTime;
-import org.bson.BsonDbPointer;
-import org.bson.BsonDecimal128;
-import org.bson.BsonDouble;
-import org.bson.BsonInt32;
-import org.bson.BsonInt64;
-import org.bson.BsonJavaScript;
-import org.bson.BsonNull;
-import org.bson.BsonObjectId;
-import org.bson.BsonReader;
-import org.bson.BsonRegularExpression;
-import org.bson.BsonString;
-import org.bson.BsonSymbol;
-import org.bson.BsonTimestamp;
-import org.bson.BsonUndefined;
-import org.bson.BsonValue;
-import org.bson.BsonWriter;
-import org.bson.BsonWriterSettings;
-import org.bson.Document;
+import org.bson.*;
 import org.bson.codecs.Codec;
-import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecConfigurationException;
-import org.bson.codecs.configuration.CodecProvider;
-import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
 import org.bson.types.Binary;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
-import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.mapping.FieldName.Type;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder;
-import org.springframework.data.mongodb.core.query.GeoCommand;
 import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -104,8 +74,7 @@ public class BsonUtils {
 	 */
 	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
 
-	private static final CodecRegistry JSON_CODEC_REGISTRY = CodecRegistries.fromRegistries(
-			MongoClientSettings.getDefaultCodecRegistry(), CodecRegistries.fromProviders(new PlaceholderCodecProvider()));
+
 
 	@SuppressWarnings("unchecked")
 	@Contract("null, _ -> null")
@@ -443,7 +412,7 @@ public class BsonUtils {
 
 		} catch (CodecConfigurationException e) {
 			throw new IllegalArgumentException(
-					String.format("Unable to convert %s to BsonValue.", source != null ? source.getClass().getName() : "null"));
+					String.format("Unable to convert %s to BsonValue.", source.getClass().getName()));
 		}
 	}
 
@@ -785,41 +754,6 @@ public class BsonUtils {
 		return new Document(target);
 	}
 
-	/**
-	 * Obtain a preconfigured {@link JsonWriter} allowing to render the given {@link Document} using a
-	 * {@link CodecRegistry} containing a {@link PlaceholderCodec}.
-	 *
-	 * @param document the source document. Must not be {@literal null}.
-	 * @return new instance of {@link JsonWriter}.
-	 * @since 5.0
-	 */
-	public static JsonWriter writeJson(Document document) {
-		return sink -> JSON_CODEC_REGISTRY.get(Document.class).encode(new SpringJsonWriter(sink), document,
-				EncoderContext.builder().build());
-	}
-
-	/**
-	 * Interface to pipe json rendering to a given sink.
-	 *
-	 * @since 5.0
-	 */
-	public interface JsonWriter {
-
-		/**
-		 * Write the json output to the given sink.
-		 *
-		 * @param sink the output target
-		 */
-		void to(StringBuffer sink);
-
-		default String toJsonString() {
-
-			StringBuffer buffer = new StringBuffer();
-			to(buffer);
-			return buffer.toString();
-		}
-	}
-
 	@Contract("null -> null")
 	private static @Nullable String toJson(@Nullable Object value) {
 
@@ -1033,86 +967,4 @@ public class BsonUtils {
 		}
 	}
 
-	@NullUnmarked
-	public static class PlaceholderCodecProvider implements CodecProvider {
-
-		PlaceholderCodec placeholderCodec = new PlaceholderCodec();
-		GeoCommandCodec geoCommandCodec = new GeoCommandCodec();
-
-		@Override
-		public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
-			if (ClassUtils.isAssignable(Placeholder.class, clazz)) {
-				return (Codec<T>) placeholderCodec;
-			}
-			if (ClassUtils.isAssignable(GeoCommand.class, clazz)) {
-				return (Codec<T>) geoCommandCodec;
-			}
-			return null;
-
-		}
-	}
-
-	/**
-	 * Internal {@link Codec} implementation to write
-	 * {@link org.springframework.data.mongodb.core.query.CriteriaDefinition.Placeholder placeholders}.
-	 *
-	 * @since 5.0
-	 * @author Christoph Strobl
-	 */
-	@NullUnmarked
-	static class PlaceholderCodec implements Codec<Placeholder> {
-
-		@Override
-		public Placeholder decode(BsonReader reader, DecoderContext decoderContext) {
-			return null;
-		}
-
-		@Override
-		public void encode(BsonWriter writer, Placeholder value, EncoderContext encoderContext) {
-			if (writer instanceof SpringJsonWriter sjw) {
-				sjw.writePlaceholder(value.toString());
-			} else {
-				writer.writeString(value.toString());
-			}
-		}
-
-		@Override
-		public Class<Placeholder> getEncoderClass() {
-			return Placeholder.class;
-		}
-	}
-
-	static class GeoCommandCodec implements Codec<GeoCommand> {
-
-		@Override
-		public GeoCommand decode(BsonReader reader, DecoderContext decoderContext) {
-			return null;
-		}
-
-		@Override
-		public void encode(BsonWriter writer, GeoCommand value, EncoderContext encoderContext) {
-
-			if (writer instanceof SpringJsonWriter sjw) {
-				if (!value.getCommand().equals("$geometry")) {
-					writer.writeStartDocument();
-					writer.writeName(value.getCommand());
-					if (value.getShape() instanceof Placeholder p) { // maybe we should wrap input to use geo command object
-						sjw.writePlaceholder(p.toString());
-					}
-					writer.writeEndDocument();
-				} else {
-					if (value.getShape() instanceof Placeholder p) { // maybe we should wrap input to use geo command object
-						sjw.writePlaceholder(p.toString());
-					}
-				}
-			} else {
-				writer.writeString(value.getCommand(), value.getShape().toString());
-			}
-		}
-
-		@Override
-		public Class<GeoCommand> getEncoderClass() {
-			return null;
-		}
-	}
 }

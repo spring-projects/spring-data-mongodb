@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -24,33 +24,39 @@ import java.util.function.Consumer;
 
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Score;
 import org.springframework.data.domain.ScoringFunction;
-import org.springframework.data.expression.ValueEvaluationContext;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.expression.ValueExpression;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Polygon;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.model.ValueExpressionEvaluator;
-import org.springframework.data.mongodb.BindableMongoExpression;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.repository.query.MongoParameters;
+import org.springframework.data.mongodb.repository.query.MongoParametersParameterAccessor;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
-import org.springframework.data.mongodb.util.json.ValueProvider;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.util.Assert;
+import org.springframework.data.util.Lazy;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.ConcurrentLruCache;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -61,91 +67,96 @@ import org.springframework.util.ObjectUtils;
  */
 public class MongoAotRepositoryFragmentSupport {
 
+	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
+
 	private final RepositoryMetadata repositoryMetadata;
 	private final MongoOperations mongoOperations;
 	private final MongoConverter mongoConverter;
 	private final ProjectionFactory projectionFactory;
-	private final ValueExpressionDelegate valueExpressionDelegate;
+	private final ValueExpressionDelegate valueExpressions;
+
+	private final Lazy<ConcurrentLruCache<String, ValueExpression>> expressions;
+	private final Lazy<ConcurrentLruCache<Method, MongoParameters>> mongoParameters;
+	private final Lazy<ConcurrentLruCache<Method, ValueEvaluationContextProvider>> contextProviders;
 
 	protected MongoAotRepositoryFragmentSupport(MongoOperations mongoOperations,
 			RepositoryFactoryBeanSupport.FragmentCreationContext context) {
-		this(mongoOperations, context.getRepositoryMetadata(), context.getProjectionFactory(),
-				context.getValueExpressionDelegate());
+		this(mongoOperations, context.getRepositoryMetadata(), context.getValueExpressionDelegate(),
+				context.getProjectionFactory());
 	}
 
 	protected MongoAotRepositoryFragmentSupport(MongoOperations mongoOperations, RepositoryMetadata repositoryMetadata,
-			ProjectionFactory projectionFactory, ValueExpressionDelegate valueExpressionDelegate) {
+			ValueExpressionDelegate valueExpressions, ProjectionFactory projectionFactory) {
 
 		this.mongoOperations = mongoOperations;
 		this.mongoConverter = mongoOperations.getConverter();
 		this.repositoryMetadata = repositoryMetadata;
 		this.projectionFactory = projectionFactory;
-		this.valueExpressionDelegate = valueExpressionDelegate;
+		this.valueExpressions = valueExpressions;
+
+		this.expressions = Lazy.of(() -> new ConcurrentLruCache<>(32, valueExpressions::parse));
+		this.mongoParameters = Lazy
+				.of(() -> new ConcurrentLruCache<>(32, it -> new MongoParameters(ParametersSource.of(repositoryMetadata, it))));
+		this.contextProviders = Lazy.of(() -> new ConcurrentLruCache<>(32,
+				it -> valueExpressions.createValueContextProvider(mongoParameters.get().get(it))));
 	}
 
-	protected Document bindParameters(String source, Object[] parameters) {
-		return new BindableMongoExpression(source, this.mongoConverter, parameters).toDocument();
-	}
+	protected Document bindParameters(Method method, String source, Object... args) {
 
-	protected Document bindParameters(String source, Map<String, Object> parameters) {
+		expandGeoShapes(args);
 
-		ValueEvaluationContext valueEvaluationContext = this.valueExpressionDelegate.getEvaluationContextAccessor()
-				.create(new NoMongoParameters()).getEvaluationContext(parameters.values());
+		MongoParameters mongoParameters = this.mongoParameters.get().get(method);
+		MongoParametersParameterAccessor parametersParameterAccessor = new MongoParametersParameterAccessor(mongoParameters,
+				args);
 
-		EvaluationContext evaluationContext = valueEvaluationContext.getEvaluationContext();
-		parameters.forEach(evaluationContext::setVariable);
-
-		ParameterBindingContext bindingContext = new ParameterBindingContext(new ValueProvider() {
-
-			private final List<Object> args = new ArrayList<>(parameters.values());
-
-			@Override
-			public @Nullable Object getBindableValue(int index) {
-				return args.get(index);
-			}
-		}, new ValueExpressionEvaluator() {
+		ParameterBindingContext bindingContext = new ParameterBindingContext(parametersParameterAccessor::getBindableValue,
+				new ValueExpressionEvaluator() {
 
 			@Override
 			@SuppressWarnings("unchecked")
 			public <T> @Nullable T evaluate(String expression) {
-				ValueExpression parse = valueExpressionDelegate.getValueExpressionParser().parse(expression);
-				return (T) parse.evaluate(valueEvaluationContext);
+						return (T) MongoAotRepositoryFragmentSupport.this.evaluate(method, expression, args);
 			}
 		});
 
-		return new ParameterBindingDocumentCodec().decode(source, bindingContext);
+		return CODEC.decode(source, bindingContext);
 	}
 
-	protected Object[] arguments(Object... arguments) {
-		return arguments;
+	protected @Nullable Object evaluate(Method method, String source, Object... args) {
+
+		expandGeoShapes(args);
+		ValueExpression expression = this.expressions.get().get(source);
+		ValueEvaluationContextProvider contextProvider = this.contextProviders.get().get(method);
+
+		return expression.evaluate(contextProvider.getEvaluationContext(args, expression.getExpressionDependencies()));
 	}
 
-	protected Map<String, Object> argumentMap(Object... parameters) {
+	/**
+	 * Expand geo shapes in the given arguments to a format that can be handled by the MongoDB converter without us
+	 * passing in the actual {@link Shape} object (except for {@link GeoJson}).
+	 *
+	 * @param args
+	 */
+	private static void expandGeoShapes(Object[] args) {
 
-		Assert.state(parameters.length % 2 == 0, "even number of args required");
+		for (int i = 0; i < args.length; i++) {
 
-		LinkedHashMap<String, Object> argumentMap = CollectionUtils.newLinkedHashMap(parameters.length / 2);
-		for (int i = 0; i < parameters.length; i += 2) {
-
-			if (!(parameters[i] instanceof String key)) {
-				throw new IllegalArgumentException("key must be a String");
+			// renders as generic $geometry, thus can be handled by the converter when parsing
+			if (args[i] instanceof GeoJson) {
+				continue;
 			}
-			argumentMap.put(key, parameters[i + 1]);
+
+			if (args[i] instanceof Circle c) {
+				args[i] = List.of(List.of(c.getCenter().getX(), c.getCenter().getY()), c.getRadius().getNormalizedValue());
+			} else if (args[i] instanceof Sphere s) {
+				args[i] = List.of(List.of(s.getCenter().getX(), s.getCenter().getY()), s.getRadius().getNormalizedValue());
+			} else if (args[i] instanceof Box b) {
+				args[i] = List.of(List.of(b.getFirst().getX(), b.getFirst().getY()),
+						List.of(b.getSecond().getX(), b.getSecond().getY()));
+			} else if (args[i] instanceof Polygon p) {
+				args[i] = p.getPoints().stream().map(it -> List.of(it.getX(), it.getY())).toList();
+			}
 		}
-
-		return argumentMap;
-	}
-
-	protected @Nullable Object evaluate(String source, Map<String, Object> parameters) {
-
-		ValueEvaluationContext valueEvaluationContext = this.valueExpressionDelegate.getEvaluationContextAccessor()
-				.create(new NoMongoParameters()).getEvaluationContext(parameters.values());
-
-		EvaluationContext evaluationContext = valueEvaluationContext.getEvaluationContext();
-		parameters.forEach(evaluationContext::setVariable);
-
-		ValueExpression parse = valueExpressionDelegate.getValueExpressionParser().parse(source);
-		return parse.evaluate(valueEvaluationContext);
 	}
 
 	protected Consumer<Criteria> scoreBetween(Range.Bound<? extends Score> lower, Range.Bound<? extends Score> upper) {
@@ -173,7 +184,7 @@ public class MongoAotRepositoryFragmentSupport {
 		};
 	}
 
-	protected ScoringFunction scoringFunction(Range<? extends Score> scoreRange) {
+	protected ScoringFunction scoringFunction(@Nullable Range<? extends Score> scoreRange) {
 
 		if (scoreRange != null) {
 			if (scoreRange.getUpperBound().isBounded()) {
@@ -188,26 +199,12 @@ public class MongoAotRepositoryFragmentSupport {
 		return ScoringFunction.unspecified();
 	}
 
-	// Range<Score> scoreRange = accessor.getScoreRange();
-	//
-	// if (scoreRange != null) {
-	// if (scoreRange.getUpperBound().isBounded()) {
-	// return scoreRange.getUpperBound().getValue().get().getFunction();
-	// }
-	//
-	// if (scoreRange.getLowerBound().isBounded()) {
-	// return scoreRange.getLowerBound().getValue().get().getFunction();
-	// }
-	// }
-	//
-	// return ScoringFunction.unspecified();
-
 	protected Collation collationOf(@Nullable Object source) {
 
 		if (source == null) {
 			return Collation.simple();
 		}
-		if (source instanceof String) {
+		if (source instanceof CharSequence) {
 			return Collation.parse(source.toString());
 		}
 		if (source instanceof Locale locale) {
@@ -223,15 +220,9 @@ public class MongoAotRepositoryFragmentSupport {
 				"Unsupported collation source [%s]".formatted(ObjectUtils.nullSafeClassName(source)));
 	}
 
-	protected BasicQuery createQuery(String queryString, Object[] parameters) {
+	protected BasicQuery createQuery(Method method, String queryString, Object... parameters) {
 
-		Document queryDocument = bindParameters(queryString, parameters);
-		return new BasicQuery(queryDocument);
-	}
-
-	protected BasicQuery createQuery(String queryString, Map<String, Object> parameters) {
-
-		Document queryDocument = bindParameters(queryString, parameters);
+		Document queryDocument = bindParameters(method, queryString, parameters);
 		return new BasicQuery(queryDocument);
 	}
 
@@ -315,10 +306,4 @@ public class MongoAotRepositoryFragmentSupport {
 		return converter.getConversionService().convert(value, targetType);
 	}
 
-	static class NoMongoParameters extends MongoParameters {
-
-		NoMongoParameters() {
-			super();
-		}
-	}
 }

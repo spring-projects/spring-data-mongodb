@@ -425,6 +425,18 @@ public class MongoQueryMethod extends QueryMethod {
 		return findAnnotatedVectorSearch().isPresent();
 	}
 
+	/**
+	 * Returns the required {@link VectorSearch} annotation or throws {@link IllegalStateException} if the method is not
+	 * annotated with {@link VectorSearch}.
+	 *
+	 * @return
+	 * @since 5.0
+	 */
+	public VectorSearch getRequiredVectorSearchAnnotation() {
+		return doFindAnnotation(VectorSearch.class)
+				.orElseThrow(() -> new IllegalStateException("Method is not annotated with @VectorSearch"));
+	}
+
 	Optional<VectorSearch> findAnnotatedVectorSearch() {
 		return lookupVectorSearchAnnotation();
 	}

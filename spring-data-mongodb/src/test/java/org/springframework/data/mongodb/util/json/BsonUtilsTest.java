@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.springframework.data.mongodb.core.mapping.FieldName;
 import org.springframework.data.mongodb.util.BsonUtils;
 
@@ -60,9 +61,9 @@ class BsonUtilsTest {
 	@Test // DATAMONGO-625
 	void simpleToBsonValue() {
 
-		assertThat(BsonUtils.simpleToBsonValue(Long.valueOf(10))).isEqualTo(new BsonInt64(10));
-		assertThat(BsonUtils.simpleToBsonValue(new Integer(10))).isEqualTo(new BsonInt32(10));
-		assertThat(BsonUtils.simpleToBsonValue(Double.valueOf(0.1D))).isEqualTo(new BsonDouble(0.1D));
+		assertThat(BsonUtils.simpleToBsonValue(10L)).isEqualTo(new BsonInt64(10));
+		assertThat(BsonUtils.simpleToBsonValue(10)).isEqualTo(new BsonInt32(10));
+		assertThat(BsonUtils.simpleToBsonValue(0.1D)).isEqualTo(new BsonDouble(0.1D));
 		assertThat(BsonUtils.simpleToBsonValue("value")).isEqualTo(new BsonString("value"));
 	}
 

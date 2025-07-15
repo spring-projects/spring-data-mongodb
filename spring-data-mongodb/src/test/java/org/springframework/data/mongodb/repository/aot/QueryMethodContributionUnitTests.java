@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import example.aot.User;
 import example.aot.UserRepository;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -29,6 +30,7 @@ import javax.lang.model.element.Modifier;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -60,9 +62,12 @@ import org.springframework.javapoet.FieldSpec;
 import org.springframework.javapoet.MethodSpec;
 
 /**
+ * Unit tests for AOT query method contributions in MongoDB repositories.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class QueryMethodContributionUnitTests {
+class QueryMethodContributionUnitTests {
 
 	@Test // GH-5004
 	void rendersQueryForNearUsingPoint() throws NoSuchMethodException {
@@ -70,8 +75,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByLocationCoordinatesNear", Point.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("{'location.coordinates':{'$near':?0}}") //
-				.contains("arguments(location)") //
+				.contains(string("{\"location.coordinates\": {\"$near\": ?0}}")) //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -81,9 +85,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByLocationCoordinatesWithin", Circle.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("{'location.coordinates':{'$geoWithin':{'$center':?0}}") //
-				.contains(
-						"List.of(circle.getCenter().getX(), circle.getCenter().getY()), circle.getRadius().getNormalizedValue())") //
+				.contains(string("{\"location.coordinates\": {\"$geoWithin\": {\"$center\": ?0}}}")) //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -93,9 +95,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByLocationCoordinatesWithin", Sphere.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("{'location.coordinates':{'$geoWithin':{'$centerSphere':?0}}") //
-				.contains(
-						"List.of(circle.getCenter().getX(), circle.getCenter().getY()), circle.getRadius().getNormalizedValue())") //
+				.contains(string("{\"location.coordinates\": {\"$geoWithin\": {\"$centerSphere\": ?0}}}")) //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -105,9 +105,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByLocationCoordinatesWithin", Box.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("{'location.coordinates':{'$geoWithin':{'$box':?0}}") //
-				.contains("List.of(box.getFirst().getX(), box.getFirst().getY())") //
-				.contains("List.of(box.getSecond().getX(), box.getSecond().getY())") //
+				.contains(string("{\"location.coordinates\": {\"$geoWithin\": {\"$box\": ?0}}}")) //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -117,9 +115,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByLocationCoordinatesWithin", Polygon.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("{'location.coordinates':{'$geoWithin':{'$polygon':?0}}") //
-				.contains("polygon.getPoints().stream().map(_p ->") //
-				.contains("List.of(_p.getX(), _p.getY())") //
+				.contains(string("{\"location.coordinates\": {\"$geoWithin\": {\"$polygon\": ?0}}}")) //
 				.contains("return finder.matching(filterQuery).all()");
 	}
 
@@ -129,9 +125,35 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByLocationCoordinatesWithin", GeoJsonPolygon.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("{'location.coordinates':{'$geoWithin':{'$geometry':?0}}") //
-				.contains("arguments(polygon)") //
+				.contains(string("{\"location.coordinates\": {\"$geoWithin\": {\"$geometry\": ?0}}}")) //
 				.contains("return finder.matching(filterQuery).all()");
+	}
+
+	@Test // GH-5004
+	void inConsidersTopLevelPlaceholder() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findByUsernameIn", Collection.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains(string("{\"username\": {\"$in\": ?0}}"));
+	}
+
+	@Test // GH-5004
+	void notInConsidersTopLevelPlaceholder() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findByUsernameNotIn", Collection.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains(string("{\"username\": {\"$nin\": ?0}}"));
+	}
+
+	@Test // GH-5004
+	void existsConsidersTopLevelPlaceholder() throws NoSuchMethodException {
+
+		MethodSpec methodSpec = codeOf(UserRepository.class, "findByVisitsExists", boolean.class);
+
+		assertThat(methodSpec.toString()) //
+				.contains(string("{\"visits\": {\"$exists\": ?0}}"));
 	}
 
 	@Test // GH-5004
@@ -188,7 +210,8 @@ public class QueryMethodContributionUnitTests {
 		assertThat(methodSpec.toString()) //
 				.contains("NearQuery.near(point)") //
 				.contains("nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric())") //
-				.contains("filterQuery = createQuery(\"{'lastname':?0}\", arguments(lastname))") //
+				.contains(
+						"filterQuery = createQuery(ExpressionMarker.class.getEnclosingMethod(), \"{\\\"lastname\\\": ?0}\", point, maxDistance, lastname)") //
 				.contains("nearQuery.query(filterQuery)") //
 				.contains(".near(nearQuery)") //
 				.contains("return nearFinder.all()");
@@ -200,7 +223,7 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findWithExpressionUsingParameterIndex", String.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("createQuery(\"{ firstname : ?#{[0]} }\", argumentMap(\"firstname\", firstname))");
+				.contains("createQuery(ExpressionMarker.class.getEnclosingMethod(), \"{ firstname : ?#{[0]} }\", firstname)");
 	}
 
 	@Test // GH-5006
@@ -209,7 +232,8 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findWithExpressionUsingParameterName", String.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("createQuery(\"{ firstname : :#{#firstname} }\", argumentMap(\"firstname\", firstname))");
+				.contains(
+						"createQuery(ExpressionMarker.class.getEnclosingMethod(), \"{ firstname : :#{#firstname} }\", firstname)");
 	}
 
 	@Test // GH-4939
@@ -218,7 +242,8 @@ public class QueryMethodContributionUnitTests {
 		MethodSpec methodSpec = codeOf(UserRepository.class, "findByFirstnameRegex", Pattern.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("createQuery(\"{'firstname':{'$regex':?0}}\", arguments(pattern))");
+				.contains(
+						"createQuery(ExpressionMarker.class.getEnclosingMethod(), \"{\\\"firstname\\\": {\\\"$regex\\\": ?0}}\", pattern)");
 	}
 
 	@Test // GH-4939
@@ -246,7 +271,7 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.containsIgnoringWhitespaces(
-						"collationOf(evaluate(\"?#{[1]}\", argumentMap(\"firstname\", firstname, \"locale\", locale)))");
+						"collationOf(evaluate(ExpressionMarker.class.getEnclosingMethod(), \"?#{[1]}\", firstname, locale))");
 	}
 
 	@Test
@@ -258,7 +283,8 @@ public class QueryMethodContributionUnitTests {
 		assertThat(methodSpec.toString()) //
 				.containsSubsequence("$vectorSearch =",
 						"Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(limit);")
-				.contains("filter = createQuery(\"{lastname: ?0}\", arguments(lastname, distance))")
+				.contains(
+						"filter = createQuery(ExpressionMarker.class.getEnclosingMethod(), \"{lastname: ?0}\", lastname, vector, distance, limit)")
 				.contains("$vectorSearch.filter(filter.getQueryObject())");
 	}
 
@@ -270,7 +296,7 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.containsSubsequence("$vectorSearch.numCandidates",
-						"evaluate(\"#{10+10}\", argumentMap(\"lastname\", lastname, \"distance\", distance)))");
+						"evaluate(ExpressionMarker.class.getEnclosingMethod(), \"#{10+10}\", lastname, vector, distance, limit))");
 	}
 
 	@Test
@@ -300,7 +326,8 @@ public class QueryMethodContributionUnitTests {
 				Vector.class, Score.class, Limit.class);
 
 		assertThat(methodSpec.toString()) //
-				.contains("filter = createQuery(\"{'lastname':?0}\", arguments(lastname, similarity))");
+				.contains(
+						"filter = createQuery(ExpressionMarker.class.getEnclosingMethod(), \"{\\\"lastname\\\": ?0}\", lastname, vector, similarity, limit)");
 	}
 
 	@Test
@@ -333,7 +360,7 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.containsSubsequence("var limitToUse = ",
-						"evaluate(\"#{5+5}\", argumentMap(\"lastname\", lastname, \"distance\", distance)")
+						"evaluate(ExpressionMarker.class.getEnclosingMethod(), \"#{5+5}\", lastname, vector, distance)")
 				.contains(
 						"Aggregation.vectorSearch(\"embedding.vector_cos\").path(\"embedding\").vector(vector).limit(limitToUse)")
 				.contains("$vectorSearch.numCandidates(limitToUse * 20)");
@@ -359,10 +386,10 @@ public class QueryMethodContributionUnitTests {
 
 		assertThat(methodSpec.toString()) //
 				.containsSubsequence("var $sort = ", //
-						"(_ctx) -> {", //
-						"_mappedSort = _ctx.getMappedObject(", //
-						"Document.parse(\"{'firstname':{'$numberInt':'1'}}\")", //
-						"Document(\"$sort\", _mappedSort.append(\"__score__\", -1))");
+						"(ctx) -> {", //
+						"mappedSort = ctx.getMappedObject(", //
+						"Document.parse(\"{\\\"firstname\\\": 1}\")", //
+						"Document(\"$sort\", mappedSort.append(\"__score__\", -1))");
 	}
 
 	private static MethodSpec codeOf(Class<?> repository, String methodName, Class<?>... args)
@@ -385,6 +412,17 @@ public class QueryMethodContributionUnitTests {
 		TestQueryMethodGenerationContext methodContext = new TestQueryMethodGenerationContext(
 				repoContext.getRepositoryInformation(), method, methodContributor.getQueryMethod(), metadata);
 		return methodContributor.contribute(methodContext);
+	}
+
+	/**
+	 * Escape the given string to a quoted and escaped string literal like it is rendered in the generated code (i.e.
+	 * adding additional backslashes).
+	 *
+	 * @param s
+	 * @return
+	 */
+	private static CharSequence string(String s) {
+		return s.replaceAll("\"", "\\\\\\\"");
 	}
 
 	static class TestQueryMethodGenerationContext extends AotQueryMethodGenerationContext {

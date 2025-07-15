@@ -315,16 +315,13 @@ public interface MongoQueryExecution {
 
 		private final FindWithQuery<?> operation;
 		private final ConvertingParameterAccessor accessor;
-		private final AbstractMongoQuery mongoQuery;
 
-		PagingGeoNearExecution(FindWithQuery<?> operation, MongoQueryMethod method, ConvertingParameterAccessor accessor,
-				AbstractMongoQuery query) {
+		PagingGeoNearExecution(FindWithQuery<?> operation, MongoQueryMethod method, ConvertingParameterAccessor accessor) {
 
 			super(operation, method, accessor);
 
 			this.accessor = accessor;
 			this.operation = operation;
-			this.mongoQuery = query;
 		}
 
 		@Override
