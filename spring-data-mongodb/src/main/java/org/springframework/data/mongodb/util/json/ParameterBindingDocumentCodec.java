@@ -168,7 +168,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	}
 
 	// Spring Data Customization START
-	public Document decode(@Nullable String json, Object[] values) {
+	public Document decode(@Nullable String json, Object... values) {
 
 		return decode(json, new ParameterBindingContext((index) -> values[index], new SpelExpressionParser(),
 				() -> EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
@@ -221,7 +221,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 				return document;
 			} else if (bindingReader.currentValue instanceof String stringValue) {
 				try {
-					return decode(stringValue, new Object[0]);
+					return decode(stringValue);
 				} catch (JsonParseException jsonParseException) {
 					throw new IllegalArgumentException("Expression result is not a valid json document", jsonParseException);
 				}

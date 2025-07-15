@@ -258,13 +258,14 @@ class QueryBlocks {
 			String source = this.source.getQuery().getQueryString();
 			if (!StringUtils.hasText(source)) {
 				return CodeBlock.of("new $T(new $T())", BasicQuery.class, Document.class);
+			} else if (MongoCodeBlocks.containsPlaceholder(source)) {
+				Builder builder = CodeBlock.builder();
+				builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, parameterNames);
+				return builder.build();
 			}
-			if (!MongoCodeBlocks.containsPlaceholder(source)) {
-				return CodeBlock.of("new $T($T.parse($S))", BasicQuery.class, Document.class, source);
+			else {
+				return CodeBlock.of("new $T(parse($S))", BasicQuery.class, source);
 			}
-			Builder builder = CodeBlock.builder();
-			builder.add("createQuery(ExpressionMarker.class.getEnclosingMethod(), $S, $L)", source, parameterNames);
-			return builder.build();
 		}
 	}
 }

@@ -165,7 +165,7 @@ class VectorSearchBlocks {
 			builder.add("($T) ($L) -> {\n", AggregationOperation.class, ctx);
 			builder.indent();
 
-			builder.add("$1T $4L = $5L.getMappedObject($1T.parse($2S), $3T.class);\n", Document.class, filter.getSortString(),
+			builder.add("$1T $4L = $5L.getMappedObject(parse($2S), $3T.class);\n", Document.class, filter.getSortString(),
 					context.getActualReturnType().getType(), mappedSort, ctx);
 			builder.add("return new $1T($2S, $3L.append(\"__score__\", -1));\n", Document.class, "$sort", mappedSort);
 			builder.unindent();

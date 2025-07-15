@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.aot;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
@@ -171,10 +168,10 @@ class MongoCodeBlocks {
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
 			builder.add("new $T()", Document.class);
-		} else if (!containsPlaceholder(source)) {
-			builder.add("$T.parse($S)", Document.class, source);
-		} else {
+		} else if (containsPlaceholder(source)) {
 			builder.add("bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L);\n", source, argNames);
+		} else {
+			builder.add("parse($S)", source);
 		}
 		return builder.build();
 	}
@@ -185,44 +182,12 @@ class MongoCodeBlocks {
 		Builder builder = CodeBlock.builder();
 		if (!StringUtils.hasText(source)) {
 			builder.addStatement("$1T $2L = new $1T()", Document.class, variableName);
-		} else if (!containsPlaceholder(source)) {
-			builder.addStatement("$1T $2L = $1T.parse($3S)", Document.class, variableName, source);
-		} else {
+		} else if (containsPlaceholder(source)) {
 			builder.add("$T $L = bindParameters(ExpressionMarker.class.getEnclosingMethod(), $S, $L);\n", Document.class,
 					variableName, source, argNames);
+		} else {
+			builder.addStatement("$1T $2L = parse($3S)", Document.class, variableName, source);
 		}
-		return builder.build();
-	}
-
-	static CodeBlock renderArgumentMap(Map<String, CodeBlock> arguments) {
-
-		Builder builder = CodeBlock.builder();
-		builder.add("argumentMap(");
-		Iterator<Entry<String, CodeBlock>> iterator = arguments.entrySet().iterator();
-		while (iterator.hasNext()) {
-			Entry<String, CodeBlock> next = iterator.next();
-			builder.add("$S, ", next.getKey());
-			builder.add(next.getValue());
-			if (iterator.hasNext()) {
-				builder.add(", ");
-			}
-		}
-		builder.add(")");
-		return builder.build();
-	}
-
-	static CodeBlock renderArgumentArray(Map<String, CodeBlock> arguments) {
-
-		Builder builder = CodeBlock.builder();
-		builder.add("arguments(");
-		Iterator<CodeBlock> iterator = arguments.values().iterator();
-		while (iterator.hasNext()) {
-			builder.add(iterator.next());
-			if (iterator.hasNext()) {
-				builder.add(", ");
-			}
-		}
-		builder.add(")");
 		return builder.build();
 	}
 

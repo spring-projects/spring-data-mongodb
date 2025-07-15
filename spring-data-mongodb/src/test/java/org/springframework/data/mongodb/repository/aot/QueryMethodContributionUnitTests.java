@@ -388,7 +388,7 @@ class QueryMethodContributionUnitTests {
 				.containsSubsequence("var $sort = ", //
 						"(ctx) -> {", //
 						"mappedSort = ctx.getMappedObject(", //
-						"Document.parse(\"{\\\"firstname\\\": 1}\")", //
+						"parse(\"{\\\"firstname\\\": 1}\")", //
 						"Document(\"$sort\", mappedSort.append(\"__score__\", -1))");
 	}
 

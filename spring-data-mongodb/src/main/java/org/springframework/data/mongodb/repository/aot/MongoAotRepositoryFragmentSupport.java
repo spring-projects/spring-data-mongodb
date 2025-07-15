@@ -101,6 +101,10 @@ public class MongoAotRepositoryFragmentSupport {
 				it -> valueExpressions.createValueContextProvider(mongoParameters.get().get(it))));
 	}
 
+	protected Document parse(String json) {
+		return CODEC.decode(json);
+	}
+
 	protected Document bindParameters(Method method, String source, Object... args) {
 
 		expandGeoShapes(args);

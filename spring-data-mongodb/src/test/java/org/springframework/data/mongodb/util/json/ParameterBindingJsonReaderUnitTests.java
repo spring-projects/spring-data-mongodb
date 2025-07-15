@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.util.json;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -31,6 +30,7 @@ import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
@@ -635,9 +635,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	private static Document parse(String json, Object... args) {
-
-		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
-		return new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+		return new ParameterBindingDocumentCodec().decode(json, args);
 	}
 
 	// DATAMONGO-2545

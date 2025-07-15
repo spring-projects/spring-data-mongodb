@@ -26,18 +26,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Score;
-import org.springframework.data.domain.ScrollPosition;
-import org.springframework.data.domain.SearchResults;
-import org.springframework.data.domain.Similarity;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Vector;
-import org.springframework.data.domain.Window;
+import org.springframework.data.domain.*;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -297,6 +286,9 @@ public interface UserRepository extends CrudRepository<User, String> {
 			"{ '$project': { '_id' : '$last_name' } }" }, collation = "no_collation")
 	List<String> findAllLastnamesWithCollation();
 
+	@Aggregation("{ $group : { _id : $customerId, total : { $sum : 1 } } }")
+	List<OrdersPerCustomer> totalOrdersPerCustomer(Sort sort);
+
 	// Vector Search
 
 	@VectorSearch(indexName = "embedding.vector_cos", filter = "{lastname: ?0}", numCandidates = "#{10+10}",
@@ -361,5 +353,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 		public int hashCode() {
 			return Objects.hash(lastname, names);
 		}
+	}
+
+	record OrdersPerCustomer(Object id, long total) {
 	}
 }

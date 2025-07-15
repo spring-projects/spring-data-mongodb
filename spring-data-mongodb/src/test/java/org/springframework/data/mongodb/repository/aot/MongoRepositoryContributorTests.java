@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.bson.BsonString;
 import org.bson.Document;
+import org.bson.json.JsonParseException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -686,6 +687,16 @@ class MongoRepositoryContributorTests {
 	void testAggregationWithCollation() {
 		assertThatException().isThrownBy(() -> fragment.findAllLastnamesWithCollation())
 				.withMessageContaining("'locale' is invalid");
+	}
+
+	@Test // GH-5018
+	void aggregationIsParsedLeniently() {
+
+		List<UserRepository.OrdersPerCustomer> result = fragment.totalOrdersPerCustomer(Sort.by("_id"));
+		assertThat(result).hasSize(1);
+
+		assertThatExceptionOfType(JsonParseException.class)
+				.isThrownBy(() -> Document.parse("{ $group : { _id : $customerId, total : { $sum : 1 } } }"));
 	}
 
 	@Test // GH-5004
